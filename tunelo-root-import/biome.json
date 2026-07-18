@@ -14,6 +14,9 @@
 			"**/*.d.ts",
 			"**/*.tsbuildinfo",
 			"**/node_modules",
+			"**/node_modules/**",
+			".pnpm-store",
+			".pnpm-store/**",
 			"repomix-output.xml",
 			".claude/**",
 			"pnpm-lock.yaml"
