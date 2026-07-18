@@ -39,21 +39,22 @@ Cập nhật bản mới: `npm update -g @dattqh/tunelo` (hoặc `pnpm update -g
 
 ### Bước 1 — xác thực thiết bị
 
-Chạy `tunelo login` rồi **dán access token** (do quản trị cấp). Token được kiểm tra với server và lưu vào `~/.tunelo/config.json`:
+Chạy `tunelo login` → trình duyệt mở trang hiển thị **mã ngẫu nhiên**. Copy mã đó, dán vào terminal. Xác nhận xong, trình duyệt chuyển sang màn hình thành công và CLI đã đăng nhập (token lưu `~/.tunelo/config.json`):
 
 ```bash
 tunelo login
-#   Paste your Tunelo access token: tunelo_xxxxxxxx
-#   ✓ Verified & saved.
+#   Opening browser to authorize this device...
+#   Paste the code shown in your browser: XXXX-XXXX
+#   ✓ Device authorized & signed in.
 ```
 
-Hoặc truyền thẳng, không tương tác:
+Máy không có trình duyệt (CI/server)? Dùng access token trực tiếp:
 
 ```bash
 tunelo login --key tunelo_xxxxxxxx
 ```
 
-> Không có tài khoản/đăng ký — mỗi access token là một khóa truy cập độc lập do quản trị cấp.
+> Không có tài khoản/đăng ký — xác thực thiết bị qua trình duyệt là đủ.
 
 ### Bước 2 — mở tunnel
 

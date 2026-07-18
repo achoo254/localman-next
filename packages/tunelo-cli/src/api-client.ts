@@ -1,6 +1,6 @@
 /**
  * Minimal HTTP client for the Tunelo server API.
- * Only surface after the account/admin removal: access-token verification.
+ * Surfaces after the account/admin removal: device pairing + token verify.
  */
 
 interface ApiErrorResponse {
@@ -29,14 +29,16 @@ export function getApiBaseUrl(serverUrl: string): string {
 async function request<T>(
 	baseUrl: string,
 	path: string,
-	options: { method?: string; apiKey?: string } = {},
+	options: { method?: string; apiKey?: string; body?: unknown } = {},
 ): Promise<T> {
 	const headers: Record<string, string> = {};
 	if (options.apiKey) headers.Authorization = `Bearer ${options.apiKey}`;
+	if (options.body !== undefined) headers["Content-Type"] = "application/json";
 
 	const res = await fetch(`${baseUrl}/api${path}`, {
 		method: options.method ?? "GET",
 		headers,
+		body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
 	});
 
 	const text = await res.text();
@@ -60,6 +62,18 @@ async function request<T>(
 	}
 
 	return data;
+}
+
+/** Claims a pairing code shown in the browser; returns the issued access token. */
+export async function claimDeviceCode(
+	baseUrl: string,
+	code: string,
+): Promise<string> {
+	const data = await request<{ token: string }>(baseUrl, "/device/claim", {
+		method: "POST",
+		body: { code },
+	});
+	return data.token;
 }
 
 /** Checks an access token with the server. true = valid, false = rejected (401). */
