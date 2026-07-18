@@ -15,7 +15,8 @@ if (!uri) {
 	process.exit(1);
 }
 
-const label = process.argv[2] ?? `token-${new Date().toISOString().slice(0, 10)}`;
+const label =
+	process.argv[2] ?? `token-${new Date().toISOString().slice(0, 10)}`;
 const maxTunnels = Number(process.env.MAX_TUNNELS ?? 3);
 
 // Matches packages/server/src/db/models/api-key-model.ts (collection: apikeys).
