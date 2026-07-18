@@ -6,7 +6,6 @@ import { renderLoginPage } from "./api/render-login-page.js";
 import { createKeyStore } from "./key-store/create-key-store.js";
 import { createLogger } from "./logger.js";
 import { createRelayHandler } from "./request-relay.js";
-import * as deviceLogin from "./services/device-login-service.js";
 import { usageTracker } from "./services/usage-tracker.js";
 import { tunnelManager } from "./tunnel-manager.js";
 import { attachWsHandler } from "./ws-handler.js";
@@ -27,15 +26,10 @@ async function start(): Promise<void> {
 	const apiRouter = createApiRouter();
 	app.use("/api", apiRouter);
 
-	// Browser pairing page for `tunelo login` — creates a session and renders
-	// the code the user pastes into their terminal.
-	app.get("/login", async (_req, res, next) => {
-		try {
-			const { code } = await deviceLogin.createSession();
-			res.type("html").send(renderLoginPage(code));
-		} catch (err) {
-			next(err);
-		}
+	// Browser approve page for `tunelo login` — CLI opens /login?req=<id>.
+	app.get("/login", (req, res) => {
+		const requestId = String(req.query.req ?? "");
+		res.type("html").send(renderLoginPage(requestId));
 	});
 
 	// Catch-all: relay handler gets raw req/res (no Express middleware)

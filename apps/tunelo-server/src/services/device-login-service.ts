@@ -1,55 +1,81 @@
 import { randomBytes } from "node:crypto";
 import { TuneloError } from "../api/middleware/error-handler.js";
-import { DeviceSession } from "../db/models/device-session-model.js";
+import { LoginRequest } from "../db/models/login-request-model.js";
 import { issueAccessToken } from "./access-token-service.js";
 
-const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I
-const SESSION_TTL_MS = 5 * 60 * 1000;
+const REQUEST_TTL_MS = 5 * 60 * 1000;
 
-function generateCode(): string {
-	const bytes = randomBytes(8);
-	let code = "";
-	for (let i = 0; i < 8; i++) code += CODE_CHARS[bytes[i] % CODE_CHARS.length];
-	return `${code.slice(0, 4)}-${code.slice(4)}`;
+function generateRequestId(): string {
+	return randomBytes(18).toString("hex");
 }
 
-/** Creates a pending pairing session; returns the code shown in the browser. */
-export async function createSession(): Promise<{ code: string }> {
-	const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
-	for (let attempt = 0; attempt < 3; attempt++) {
-		const code = generateCode();
-		try {
-			await DeviceSession.create({ code, status: "pending", expiresAt });
-			return { code };
-		} catch (err: unknown) {
-			if ((err as { code?: number }).code !== 11000 || attempt === 2) throw err;
-		}
-	}
-	throw new TuneloError("TUNELO_DEVICE_001", "Could not create session", 500);
+/** CLI starts a login: registers its device and gets a request id. */
+export async function initRequest(
+	deviceId: string,
+	deviceName: string,
+): Promise<{ requestId: string }> {
+	const requestId = generateRequestId();
+	await LoginRequest.create({
+		requestId,
+		deviceId,
+		deviceName,
+		status: "pending",
+		expiresAt: new Date(Date.now() + REQUEST_TTL_MS),
+	});
+	return { requestId };
 }
 
-/** Browser polls this; only exposes status, never the token. */
-export async function getStatus(
-	code: string,
-): Promise<"pending" | "claimed" | "expired"> {
-	const session = await DeviceSession.findOne({ code });
-	if (!session) return "expired";
-	if (session.expiresAt < new Date()) return "expired";
-	return session.status === "claimed" ? "claimed" : "pending";
+/** Browser reads the device it is about to approve (never the token). */
+export async function getRequest(
+	requestId: string,
+): Promise<{ deviceName: string; deviceId: string; status: string } | null> {
+	const req = await LoginRequest.findOne({ requestId });
+	if (!req || req.expiresAt < new Date()) return null;
+	return {
+		deviceName: req.deviceName ?? "",
+		deviceId: req.deviceId,
+		status: req.status ?? "pending",
+	};
 }
 
-/** CLI submits the code; issues a token and flips the session to claimed. */
-export async function claim(code: string): Promise<{ token: string }> {
-	const session = await DeviceSession.findOneAndUpdate(
-		{ code, status: "pending", expiresAt: { $gt: new Date() } },
-		{ status: "claimed" },
+/** Browser approves: mint (or rotate) the device's token and attach it. */
+export async function approve(requestId: string): Promise<void> {
+	const req = await LoginRequest.findOneAndUpdate(
+		{ requestId, status: "pending", expiresAt: { $gt: new Date() } },
+		{ status: "approved" },
 		{ new: true },
 	);
-	if (!session) {
-		throw new TuneloError("TUNELO_DEVICE_002", "Invalid or expired code", 400);
+	if (!req) {
+		throw new TuneloError(
+			"TUNELO_DEVICE_002",
+			"Invalid or expired login request",
+			400,
+		);
 	}
 	const { token } = await issueAccessToken(
-		`device-${new Date().toISOString().slice(0, 10)}`,
+		`device:${req.deviceName || req.deviceId}`,
+		{
+			deviceId: req.deviceId,
+		},
 	);
-	return { token };
+	await LoginRequest.updateOne({ _id: req._id }, { issuedToken: token });
+}
+
+/** CLI polls; once approved it returns the token exactly once. */
+export async function poll(
+	requestId: string,
+): Promise<
+	| { status: "pending" }
+	| { status: "approved"; token: string }
+	| { status: "expired" }
+> {
+	const req = await LoginRequest.findOne({ requestId });
+	if (!req || req.expiresAt < new Date()) return { status: "expired" };
+	if (req.status !== "approved" || !req.issuedToken) {
+		return { status: "pending" };
+	}
+	const token = req.issuedToken;
+	// Deliver once, then drop the plaintext.
+	await LoginRequest.deleteOne({ _id: req._id });
+	return { status: "approved", token };
 }

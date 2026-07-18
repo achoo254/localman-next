@@ -64,16 +64,33 @@ async function request<T>(
 	return data;
 }
 
-/** Claims a pairing code shown in the browser; returns the issued access token. */
-export async function claimDeviceCode(
+/** Starts a device login; returns the request id the browser will approve. */
+export async function initDeviceLogin(
 	baseUrl: string,
-	code: string,
+	deviceId: string,
+	name: string,
 ): Promise<string> {
-	const data = await request<{ token: string }>(baseUrl, "/device/claim", {
+	const data = await request<{ requestId: string }>(baseUrl, "/device/init", {
 		method: "POST",
-		body: { code },
+		body: { deviceId, name },
 	});
-	return data.token;
+	return data.requestId;
+}
+
+export type DeviceLoginPoll =
+	| { status: "pending" }
+	| { status: "approved"; token: string }
+	| { status: "expired" };
+
+/** Polls a device-login request; returns the token once approved. */
+export async function pollDeviceLogin(
+	baseUrl: string,
+	requestId: string,
+): Promise<DeviceLoginPoll> {
+	return request<DeviceLoginPoll>(baseUrl, "/device/poll", {
+		method: "POST",
+		body: { req: requestId },
+	});
 }
 
 /** Checks an access token with the server. true = valid, false = rejected (401). */

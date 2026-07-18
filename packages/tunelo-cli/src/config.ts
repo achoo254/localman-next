@@ -5,6 +5,8 @@ import { join } from "node:path";
 export interface TuneloConfig {
 	server?: string;
 	key?: string;
+	/** Stable per-machine id used for idempotent device login. */
+	deviceId?: string;
 }
 
 function getConfigDir(): string {

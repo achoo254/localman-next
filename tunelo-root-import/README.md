@@ -39,14 +39,16 @@ Cập nhật bản mới: `npm update -g @dattqh/tunelo` (hoặc `pnpm update -g
 
 ### Bước 1 — xác thực thiết bị
 
-Chạy `tunelo login` → trình duyệt mở trang hiển thị **mã ngẫu nhiên**. Copy mã đó, dán vào terminal. Xác nhận xong, trình duyệt chuyển sang màn hình thành công và CLI đã đăng nhập (token lưu `~/.tunelo/config.json`):
+Chạy `tunelo login` → trình duyệt mở trang hiển thị **thiết bị của bạn** (tên máy) + nút **Approve**. Bấm Approve → trang báo thành công và CLI tự nhận token (lưu `~/.tunelo/config.json`):
 
 ```bash
 tunelo login
 #   Opening browser to authorize this device...
-#   Paste the code shown in your browser: XXXX-XXXX
+#   Waiting for approval in the browser...   ← bấm "Approve" trên trang
 #   ✓ Device authorized & signed in.
 ```
+
+Đăng nhập lại trên cùng máy là **idempotent** — nếu token còn hạn, CLI báo "Already authorized" (dùng `--force` để làm lại). Mỗi máy giữ 1 token; login lại thu hồi token cũ của máy đó.
 
 Máy không có trình duyệt (CI/server)? Dùng access token trực tiếp:
 
