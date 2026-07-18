@@ -1,6 +1,5 @@
 import { connectDb, disconnectDb } from "../db/connection-manager.js";
 import { ApiKey } from "../db/models/api-key-model.js";
-import { User } from "../db/models/user-model.js";
 import { createLogger } from "../logger.js";
 import type { KeyInfo, KeyStore } from "./key-store-types.js";
 
@@ -22,13 +21,6 @@ export class MongoKeyStore implements KeyStore {
 			return null;
 		}
 
-		const user = await User.findOne({
-			_id: apiKey.userId,
-			status: "active",
-		}).lean();
-
-		if (!user) return null;
-
 		// Fire-and-forget lastUsedAt update
 		ApiKey.updateOne(
 			{ _id: apiKey._id },
@@ -37,13 +29,16 @@ export class MongoKeyStore implements KeyStore {
 			logger.warn({ err }, "Failed to update lastUsedAt");
 		});
 
+		// No user accounts: the key stands alone. Its _id is the identity used
+		// for tunnel ownership/usage; limits come from the key itself.
+		const keyId = String(apiKey._id);
 		return {
-			userId: String(apiKey.userId),
-			keyId: String(apiKey._id),
+			userId: keyId,
+			keyId,
 			keyHash,
-			maxTunnels: user.limits?.maxTunnelsPerKey ?? 3,
-			plan: user.plan ?? "free",
-			role: (user.role as "user" | "admin") ?? "user",
+			maxTunnels: apiKey.maxTunnels ?? 3,
+			plan: "free",
+			role: "user",
 		};
 	}
 

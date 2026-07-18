@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 import type { RegisterTunnelResult } from "@tunelo/shared";
 import { program } from "commander";
-import { registerDeviceAuthCommands } from "./cli-device-auth.js";
-import { registerKeysCommands } from "./cli-keys-commands.js";
+import { registerLoginCommands } from "./cli-login-command.js";
 import { registerTcpCommand } from "./cli-tcp-command.js";
 import { getConfigPath, loadConfig, saveConfig } from "./config.js";
 import { Display } from "./display.js";
@@ -16,7 +15,7 @@ const display = new Display();
 
 program
 	.name("tunelo")
-	.version("1.0.2")
+	.version("1.1.0")
 	.description("Expose local services to the internet");
 
 program
@@ -77,7 +76,7 @@ program
 			if (options.quiet) display.setLogLevel("quiet");
 			else if (options.verbose) display.setLogLevel("verbose");
 
-			display.showBanner("1.0.2");
+			display.showBanner("1.1.0");
 			display.showConnecting(serverUrl);
 
 			const primary = tunnels[0];
@@ -192,8 +191,7 @@ program
 	);
 
 registerTcpCommand(program, display);
-registerDeviceAuthCommands(program);
-registerKeysCommands(program);
+registerLoginCommands(program);
 
 program
 	.command("config")

@@ -1,6 +1,6 @@
 {
 	"name": "@dattqh/tunelo",
-	"version": "1.0.2",
+	"version": "1.1.0",
 	"type": "module",
 	"description": "Self-hosted ngrok alternative — expose local services via public HTTPS tunnels",
 	"main": "dist/cli.js",

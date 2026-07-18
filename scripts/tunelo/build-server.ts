@@ -1,11 +1,5 @@
 import { execSync } from "node:child_process";
-import {
-	cpSync,
-	existsSync,
-	readFileSync,
-	rmSync,
-	writeFileSync,
-} from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
@@ -22,13 +16,6 @@ if (existsSync(distDir)) {
 // Build shared (server bundle imports from @tunelo/shared)
 console.log("Building @tunelo/shared...");
 execSync("pnpm --filter @tunelo/shared build", { stdio: "inherit", cwd: root });
-
-// Build dashboard SPA
-console.log("Building @tunelo/dashboard...");
-execSync("pnpm --filter @tunelo/dashboard build", {
-	stdio: "inherit",
-	cwd: root,
-});
 
 // Read server's runtime deps to compute external list
 // Bundle @tunelo/* workspace packages INTO server.mjs (so VPS doesn't need them)
@@ -56,17 +43,6 @@ await build({
 	},
 });
 
-// Copy dashboard build output next to server bundle (dist/dashboard/)
-// server.ts resolves dashboardDist to <serverFileDir>/dashboard in production
-const dashboardSrc = resolve(root, "packages/dashboard/dist");
-const dashboardDest = resolve(distDir, "dashboard");
-if (existsSync(dashboardSrc)) {
-	cpSync(dashboardSrc, dashboardDest, { recursive: true });
-	console.log(`Copied dashboard → ${dashboardDest}`);
-} else {
-	console.warn(`Dashboard dist not found at ${dashboardSrc} — skipping copy`);
-}
-
 // Generate sanitized package.json for production install on VPS
 // - Strip workspace dep (@tunelo/shared is bundled into server.mjs)
 // - Strip devDependencies
@@ -88,6 +64,4 @@ writeFileSync(
 );
 console.log("Wrote dist/package.json (production deps only)");
 
-console.log(
-	"Build complete: dist/server.mjs + dist/dashboard/ + dist/package.json",
-);
+console.log("Build complete: dist/server.mjs + dist/package.json");

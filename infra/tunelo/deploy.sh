@@ -11,18 +11,13 @@ echo "Building bundle (server + dashboard)..."
 pnpm build:server
 
 echo "Ensuring remote directories exist..."
-ssh "$VPS_HOST" "mkdir -p $REMOTE_DIR/dashboard"
+ssh "$VPS_HOST" "mkdir -p $REMOTE_DIR"
 
 echo "Syncing server bundle..."
 rsync -avz \
   dist/server.mjs \
   dist/server.mjs.map \
   "$VPS_HOST:$REMOTE_DIR/"
-
-echo "Syncing dashboard SPA..."
-rsync -avz --delete \
-  dist/dashboard/ \
-  "$VPS_HOST:$REMOTE_DIR/dashboard/"
 
 echo "Syncing package.json (sanitized for prod)..."
 rsync -avz dist/package.json "$VPS_HOST:$REMOTE_DIR/package.json"
