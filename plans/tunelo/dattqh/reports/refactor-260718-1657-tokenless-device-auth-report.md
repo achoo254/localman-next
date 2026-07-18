@@ -1,6 +1,17 @@
-# Bỏ account/admin — auth bằng access token paste (report)
+# Bỏ account/admin — device auth (report)
 
-**Ngày:** 2026-07-18 | **Branch:** main | **Client:** `@dattqh/tunelo@1.1.0`
+**Ngày:** 2026-07-18 | **Branch:** main | **Client:** `@dattqh/tunelo@1.2.0`
+
+> **Cập nhật v1.2.0 (luồng cuối — browser pairing):** `tunelo login` mở browser → server render trang hiện **mã ngẫu nhiên** → user copy mã, paste vào terminal → CLI `claim` mã → server cấp access token (browser không thấy token), trang **poll** thấy `claimed` → chuyển màn hình success. Phần "paste token thẳng" ở dưới vẫn còn qua `tunelo login --key <token>` cho máy không có browser (CI/server).
+>
+> **Server thêm:** `db/models/device-session-model.ts` (TTL), `services/device-login-service.ts` (createSession/getStatus/claim), `services/access-token-service.ts` (mint token khi claim), `api/render-login-page.ts` (trang HTML), `api/device-routes.ts` (`/api/device/{status,claim}`), `GET /login` trong server.ts.
+> **Client:** `login` mở browser + prompt paste mã + `claim`; `api-client.claimDeviceCode`.
+> **E2E verified:** `/login`→mã `F8AS-TB6F` | status pending→claimed | claim lại bị từ chối (single-use) | tunnel bằng token cấp → curl public **HTTP 200**. Pipeline deploy #7148 + publish v1.2.0 #7149 xanh.
+>
+> **Bảo mật lưu ý:** claim theo mã đơn thuần → bất kỳ ai mở được `/login` + paste mã đều lấy được token (không có cổng xác thực người dùng). Gate thực tế hiện là: cần đọc được registry token để cài CLI + reachable tới server. Muốn siết → thêm mật khẩu/secret trên trang `/login`.
+
+---
+_Bên dưới là mô tả bản trung gian (v1.1.0, paste token) — giữ lại để tham chiếu:_
 
 ## Mục tiêu
 Bỏ hẳn account/admin/login/dashboard. End-user: cài CLI → `tunelo login` → paste access token (BE sinh, lưu Mongo) → `tunelo http`.
