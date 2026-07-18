@@ -1,6 +1,6 @@
 /** Modal for creating a new API key — shows plaintext key once after creation */
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "../api/client.js";
 
 interface KeyCreateModalProps {
@@ -26,6 +26,12 @@ export function KeyCreateModal({
 	const [error, setError] = useState<string | null>(null);
 	const [copied, setCopied] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const nameInputRef = useRef<HTMLInputElement>(null);
+
+	// Focus the name field when the create form opens (dialog-open UX).
+	useEffect(() => {
+		nameInputRef.current?.focus();
+	}, []);
 
 	async function handleCreate(e: React.FormEvent): Promise<void> {
 		e.preventDefault();
@@ -61,6 +67,9 @@ export function KeyCreateModal({
 			className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
 			onClick={(e) => {
 				if (e.target === e.currentTarget) onClose();
+			}}
+			onKeyDown={(e) => {
+				if (e.key === "Escape") onClose();
 			}}
 		>
 			<div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
@@ -108,6 +117,7 @@ export function KeyCreateModal({
 								Key name
 							</label>
 							<input
+								ref={nameInputRef}
 								id="key-name"
 								type="text"
 								placeholder="e.g. My laptop"
@@ -115,7 +125,6 @@ export function KeyCreateModal({
 								onChange={(e) => setName(e.target.value)}
 								className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
 								disabled={loading}
-								autoFocus
 							/>
 						</div>
 						{error && <p className="text-sm text-red-600">{error}</p>}

@@ -88,4 +88,6 @@ writeFileSync(
 );
 console.log("Wrote dist/package.json (production deps only)");
 
-console.log("Build complete: dist/server.mjs + dist/dashboard/ + dist/package.json");
+console.log(
+	"Build complete: dist/server.mjs + dist/dashboard/ + dist/package.json",
+);

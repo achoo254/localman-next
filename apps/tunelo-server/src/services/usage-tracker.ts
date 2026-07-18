@@ -56,7 +56,7 @@ class UsageTracker {
 		this.buffer.clear();
 
 		const ops = entries.map(([compositeKey, entry]) => {
-			const date = compositeKey.split(":").pop()!;
+			const date = compositeKey.slice(compositeKey.lastIndexOf(":") + 1);
 			return {
 				updateOne: {
 					filter: { keyId: entry.keyId, userId: entry.userId, date },

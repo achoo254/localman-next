@@ -1,11 +1,17 @@
 // Root app component — router setup with protected routes and layout
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
+import {
+	BrowserRouter,
+	Navigate,
+	Outlet,
+	Route,
+	Routes,
+} from "react-router-dom";
 import { NavBar } from "./components/nav-bar.js";
 import { useAuth } from "./hooks/use-auth.js";
 import { KeysPage } from "./pages/keys-page.js";
 import { LoginPage } from "./pages/login-page.js";
-import { SignupPage } from "./pages/signup-page.js";
 import { OverviewPage } from "./pages/overview-page.js";
+import { SignupPage } from "./pages/signup-page.js";
 import { TunnelsPage } from "./pages/tunnels-page.js";
 import { UsagePage } from "./pages/usage-page.js";
 import { UsersPage } from "./pages/users-page.js";

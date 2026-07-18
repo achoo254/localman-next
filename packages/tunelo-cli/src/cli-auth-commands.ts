@@ -45,9 +45,7 @@ function promptPassword(question: string): Promise<string> {
 function getServerBaseUrl(): string {
 	const config = loadConfig();
 	const serverUrl =
-		process.env.TUNELO_SERVER ??
-		config.server ??
-		"wss://tunnel.inetdev.io.vn";
+		process.env.TUNELO_SERVER ?? config.server ?? "wss://tunnel.inetdev.io.vn";
 	return api.getApiBaseUrl(serverUrl);
 }
 
@@ -107,9 +105,7 @@ export function registerAuthCommands(program: Command): void {
 						console.log("✓ 2FA verified!");
 					}
 
-					console.log(
-						"✓ Registered! Run `tunelo login` to get your API key.",
-					);
+					console.log("✓ Registered! Run `tunelo login` to get your API key.");
 					return;
 				} catch (err) {
 					if (err instanceof api.ApiClientError) {
@@ -162,9 +158,7 @@ export function registerAuthCommands(program: Command): void {
 				} catch (err) {
 					if (err instanceof api.ApiClientError) {
 						if (err.code === "TUNELO_AUTH_005") {
-							console.error(
-								"Error: TOTP code is required for this account.\n",
-							);
+							console.error("Error: TOTP code is required for this account.\n");
 						} else {
 							console.error(`Error: ${err.message} (${err.code})\n`);
 						}
@@ -185,7 +179,7 @@ export function registerAuthCommands(program: Command): void {
 				console.log("Not logged in (no API key in config).");
 				return;
 			}
-			delete config.key;
+			config.key = undefined;
 			saveConfig(config);
 			console.log("✓ Logged out. API key removed from config.");
 		});

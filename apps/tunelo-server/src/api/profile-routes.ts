@@ -2,6 +2,7 @@ import { Router } from "express";
 import { User } from "../db/models/user-model.js";
 import * as authService from "../services/auth-service.js";
 import { cookieAuth } from "./middleware/cookie-auth.js";
+import { requireUserId } from "./middleware/require-user-id.js";
 import { validateBody } from "./middleware/validate-body.js";
 import { changePasswordSchema } from "./schemas/auth-schemas.js";
 
@@ -41,7 +42,7 @@ export function createProfileRouter(): Router {
 		async (req, res, next) => {
 			try {
 				await authService.changePassword(
-					req.userId!,
+					requireUserId(req),
 					req.body.oldPassword,
 					req.body.newPassword,
 				);

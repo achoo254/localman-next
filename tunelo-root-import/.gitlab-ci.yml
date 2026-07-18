@@ -33,6 +33,7 @@ build:
     - pnpm config set store-dir .pnpm-store
   script:
     - pnpm install --frozen-lockfile
+    - pnpm lint
     - pnpm test
     - pnpm build:server
   artifacts:
