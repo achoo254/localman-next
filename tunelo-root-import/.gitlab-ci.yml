@@ -1,0 +1,68 @@
+# Tunelo CI/CD — build + deploy to staging (.65)
+#
+# Chạy CHỈ khi push vào nhánh main (yêu cầu). MR / nhánh khác không tạo pipeline.
+# Pipeline: build (install → test → bundle) → deploy_staging (rsync + PM2 restart).
+#
+# Deploy mirror lại infra/deploy.sh nhưng dùng SSH port + private key inject từ
+# CI/CD Variables (SSH_PRIVATE_KEY, STAGING_HOST, STAGING_PORT, STAGING_USER, DEPLOY_PATH).
+# .env trên server KHÔNG bị đụng tới — secret nằm sẵn trên máy staging.
+
+stages:
+  - build
+  - deploy
+
+default:
+  image: node:20-bookworm-slim
+
+# Toàn bộ pipeline chỉ chạy trên push nhánh main
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - when: never
+
+build:
+  stage: build
+  cache:
+    key:
+      files:
+        - pnpm-lock.yaml
+    paths:
+      - .pnpm-store
+  before_script:
+    - corepack enable
+    - pnpm config set store-dir .pnpm-store
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm test
+    - pnpm build:server
+  artifacts:
+    name: "tunelo-dist-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - dist/
+    expire_in: 1 day
+
+deploy_staging:
+  stage: deploy
+  needs:
+    - build
+  environment:
+    name: staging
+    url: https://tunnel.inetdev.io.vn
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends openssh-client rsync
+    - install -m 700 -d ~/.ssh
+    # SSH_PRIVATE_KEY là biến kiểu "file" → giá trị là ĐƯỜNG DẪN tới file chứa key
+    - install -m 600 /dev/null ~/.ssh/id_rsa
+    - cat "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - ssh-keyscan -p "$STAGING_PORT" "$STAGING_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+  script:
+    - SSH_OPTS="-i $HOME/.ssh/id_rsa -p $STAGING_PORT -o StrictHostKeyChecking=yes"
+    - TARGET="$STAGING_USER@$STAGING_HOST"
+    - echo "Deploying $CI_COMMIT_SHORT_SHA to $TARGET:$DEPLOY_PATH"
+    - ssh $SSH_OPTS "$TARGET" "mkdir -p $DEPLOY_PATH/dashboard"
+    - rsync -avz -e "ssh $SSH_OPTS" dist/server.mjs dist/server.mjs.map dist/package.json "$TARGET:$DEPLOY_PATH/"
+    - rsync -avz --delete -e "ssh $SSH_OPTS" dist/dashboard/ "$TARGET:$DEPLOY_PATH/dashboard/"
+    - rsync -avz -e "ssh $SSH_OPTS" infra/ecosystem.config.cjs "$TARGET:$DEPLOY_PATH/ecosystem.config.cjs"
+    - ssh $SSH_OPTS "$TARGET" "cd $DEPLOY_PATH && (pnpm install --prod --no-frozen-lockfile || npm install --omit=dev)"
+    - ssh $SSH_OPTS "$TARGET" "cd $DEPLOY_PATH && pm2 delete tunelo 2>/dev/null || true; pm2 start ecosystem.config.cjs --update-env && pm2 save"
+    - ssh $SSH_OPTS "$TARGET" "pm2 status tunelo && (curl -sf http://localhost:3001/health && echo 'Health OK' || echo 'Health check failed')"
