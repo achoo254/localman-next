@@ -52,6 +52,14 @@ Cấu hình CI/CD trên GitLab để build + deploy tự động lên staging `.
   - modal: `autoFocus` → `nameInputRef`+`useEffect`; backdrop thêm `onKeyDown` (Escape close).
 - `pnpm lint` xanh (126 files). Bật `pnpm lint` trong build job → **lint gate active**.
 
+### 8. Publish CLI lên GitLab Package Registry (client)
+- Client đổi tên `@achoo254/tunelo` → **`@dattqh/tunelo`** (khớp namespace + registry cũ), version **1.0.0**, URL → GitLab; CLI `--version` đồng bộ 1.0.0.
+- `build-client.ts` sinh `dist/package.json` self-contained (bỏ `@tunelo/shared workspace:*` đã bundle, giữ runtime deps) + `files` list loại `.npmrc` (chống lộ CI token). Thêm root script `build:client`.
+- `.gitlab-ci.yml`: stage `publish` + job **`publish-cli`** (rule `$CI_COMMIT_TAG`) — build + `npm publish` lên `projects/343/packages/npm/`, auth `CI_JOB_TOKEN`. workflow.rules cho phép tag; build/deploy scope về `main` (tag không deploy).
+- README: mục "Cài CLI từ GitLab Package Registry" — config scope `@dattqh` + deploy token read-only (`tunelo-npm-install`), `npm i -g @dattqh/tunelo`.
+- **Verified E2E:** tag `v1.0.0` → pipeline #7128 `publish-cli` success → `@dattqh/tunelo@1.0.0` là `latest`. Cài thật từ registry OK (`tunelo --version`→1.0.0). Tarball publish KHÔNG chứa `.npmrc` (token an toàn).
+- Release sau: bump version client → `git tag vX.Y.Z && git push --tags` (publish lại version cũ sẽ fail).
+
 ## Điều kiện vận hành
 - `main` là protected branch + runner #15 online nhận job untagged.
 - Pipeline **không** sync `.env` — secret nằm trên server (`/var/www/tunelo/.env`), nạp qua `--env-file` (ecosystem).
