@@ -53,7 +53,7 @@ export async function createDeviceCode(serverBaseUrl: string): Promise<{
 		}
 	}
 
-	const verificationUrl = `${serverBaseUrl}/portal/auth/device?code=${userCode}`;
+	const verificationUrl = `${serverBaseUrl}/dashboard/auth/device?code=${userCode}`;
 
 	return {
 		deviceCode,

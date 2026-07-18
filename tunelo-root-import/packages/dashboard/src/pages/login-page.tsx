@@ -1,11 +1,13 @@
 // Login page — email + password + TOTP, redirects to /dashboard/overview on success
 import { type FormEvent, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/use-auth.js";
+import { getSafeNext } from "../lib/safe-next.js";
 
 export function LoginPage(): React.ReactElement {
 	const { login } = useAuth();
 	const navigate = useNavigate();
+	const location = useLocation();
 
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -19,7 +21,7 @@ export function LoginPage(): React.ReactElement {
 		setError(null);
 		try {
 			await login({ email, password, totpCode });
-			navigate("/overview", { replace: true });
+			navigate(getSafeNext(location.search) ?? "/overview", { replace: true });
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "Login failed");
 		} finally {
@@ -117,7 +119,7 @@ export function LoginPage(): React.ReactElement {
 					<p className="text-center text-sm text-gray-500">
 						Don't have an account?{" "}
 						<Link
-							to="/signup"
+							to={`/signup${location.search}`}
 							className="text-indigo-600 hover:text-indigo-700 font-medium"
 						>
 							Create account

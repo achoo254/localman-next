@@ -1,7 +1,8 @@
 // Signup page — 2-step: register (email+password) → verify TOTP (scan QR + enter code)
 import { type FormEvent, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { apiFetch } from "../api/client.js";
+import { getSafeNext } from "../lib/safe-next.js";
 
 type Step = "register" | "verify-totp";
 
@@ -12,6 +13,7 @@ interface SignupResult {
 
 export function SignupPage(): React.ReactElement {
 	const navigate = useNavigate();
+	const location = useLocation();
 
 	const [step, setStep] = useState<Step>("register");
 	const [email, setEmail] = useState("");
@@ -59,7 +61,7 @@ export function SignupPage(): React.ReactElement {
 				method: "POST",
 				body: JSON.stringify({ userId, totpCode }),
 			});
-			navigate("/overview", { replace: true });
+			navigate(getSafeNext(location.search) ?? "/overview", { replace: true });
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "Verification failed");
 		} finally {
@@ -158,7 +160,7 @@ export function SignupPage(): React.ReactElement {
 						<p className="text-center text-sm text-gray-500">
 							Already have an account?{" "}
 							<Link
-								to="/login"
+								to={`/login${location.search}`}
 								className="text-indigo-600 hover:text-indigo-700 font-medium"
 							>
 								Sign in

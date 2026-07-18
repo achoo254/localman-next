@@ -42,10 +42,11 @@ async function deviceAuthFlow(mode: "login" | "signup"): Promise<void> {
 	const { deviceCode, userCode, verificationUrl } =
 		await api.createDeviceCode(baseUrl);
 
-	// For signup: redirect through signup page first, then back to device auth
+	// For signup: go through the dashboard signup page first, then return to the
+	// device-approve page (next is relative to the /dashboard router base).
 	const url =
 		mode === "signup"
-			? `${baseUrl}/portal/signup?next=${encodeURIComponent(`/auth/device?code=${userCode}`)}`
+			? `${baseUrl}/dashboard/signup?next=${encodeURIComponent(`/auth/device?code=${userCode}`)}`
 			: verificationUrl;
 
 	console.log();

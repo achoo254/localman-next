@@ -5,9 +5,11 @@ import {
 	Outlet,
 	Route,
 	Routes,
+	useLocation,
 } from "react-router-dom";
 import { NavBar } from "./components/nav-bar.js";
 import { useAuth } from "./hooks/use-auth.js";
+import { DeviceApprovePage } from "./pages/device-approve-page.js";
 import { KeysPage } from "./pages/keys-page.js";
 import { LoginPage } from "./pages/login-page.js";
 import { OverviewPage } from "./pages/overview-page.js";
@@ -19,6 +21,7 @@ import { UsersPage } from "./pages/users-page.js";
 // Protected layout — wraps authenticated pages with NavBar, renders child via Outlet
 function ProtectedLayout(): React.ReactElement {
 	const { user, loading, isAuthenticated, logout } = useAuth();
+	const location = useLocation();
 
 	if (loading) {
 		return (
@@ -29,7 +32,10 @@ function ProtectedLayout(): React.ReactElement {
 	}
 
 	if (!isAuthenticated || !user) {
-		return <Navigate to="login" replace />;
+		// Preserve where the user was headed (e.g. the device-approve page) so
+		// login/signup can return there. Paths are relative to the /dashboard base.
+		const next = encodeURIComponent(location.pathname + location.search);
+		return <Navigate to={`/login?next=${next}`} replace />;
 	}
 
 	return (
@@ -49,6 +55,7 @@ export function App(): React.ReactElement {
 				<Route path="login" element={<LoginPage />} />
 				<Route path="signup" element={<SignupPage />} />
 				<Route element={<ProtectedLayout />}>
+					<Route path="auth/device" element={<DeviceApprovePage />} />
 					<Route path="overview" element={<OverviewPage />} />
 					<Route path="users" element={<UsersPage />} />
 					<Route path="keys" element={<KeysPage />} />
