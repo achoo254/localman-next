@@ -1,17 +1,17 @@
 # Bỏ account/admin — device auth (report)
 
-**Ngày:** 2026-07-18 | **Branch:** main | **Client:** `@dattqh/tunelo@1.2.0`
+**Ngày:** 2026-07-18 | **Branch:** main | **Client:** `@dattqh/tunelo@1.3.0`
 
-> **Cập nhật v1.2.0 (luồng cuối — browser pairing):** `tunelo login` mở browser → server render trang hiện **mã ngẫu nhiên** → user copy mã, paste vào terminal → CLI `claim` mã → server cấp access token (browser không thấy token), trang **poll** thấy `claimed` → chuyển màn hình success. Phần "paste token thẳng" ở dưới vẫn còn qua `tunelo login --key <token>` cho máy không có browser (CI/server).
->
-> **Server thêm:** `db/models/device-session-model.ts` (TTL), `services/device-login-service.ts` (createSession/getStatus/claim), `services/access-token-service.ts` (mint token khi claim), `api/render-login-page.ts` (trang HTML), `api/device-routes.ts` (`/api/device/{status,claim}`), `GET /login` trong server.ts.
-> **Client:** `login` mở browser + prompt paste mã + `claim`; `api-client.claimDeviceCode`.
-> **E2E verified:** `/login`→mã `F8AS-TB6F` | status pending→claimed | claim lại bị từ chối (single-use) | tunnel bằng token cấp → curl public **HTTP 200**. Pipeline deploy #7148 + publish v1.2.0 #7149 xanh.
->
-> **Bảo mật lưu ý:** claim theo mã đơn thuần → bất kỳ ai mở được `/login` + paste mã đều lấy được token (không có cổng xác thực người dùng). Gate thực tế hiện là: cần đọc được registry token để cài CLI + reachable tới server. Muốn siết → thêm mật khẩu/secret trên trang `/login`.
+> **Cập nhật v1.3.0 (LUỒNG CUỐI — device-initiated, browser approve):**
+> `tunelo login`: CLI có **device id** cố định (`config.deviceId`) → `POST /api/device/init {deviceId,name}` → mở browser `/login?req=<id>` → CLI **poll**. Trang hiện **thiết bị + nút Approve**; bấm Approve → server cấp token gắn `deviceId` (revoke token active cũ cùng device) → CLI poll nhận token (browser KHÔNG thấy token) → trang báo success.
+> - **Idempotent/máy:** token local còn hạn → `login` báo "Already authorized" (không round-trip); mint token mới revoke token cũ cùng deviceId → mỗi máy đúng 1 token. `--force` để làm lại, `--key <token>` cho headless.
+> - **Server:** `login-request-model` (TTL, thay device-session), `device-login-service` (init/getRequest/approve/poll), `access-token-service` (nhận deviceId + rotate), `api/device-routes` (`/init,/request,/approve,/poll`), `render-login-page` (thiết bị + Approve), `GET /login?req=`. `api-key-model` thêm `deviceId`.
+> - **Client:** `login` init→browser→poll; `config.deviceId`; `api-client.initDeviceLogin/pollDeviceLogin`.
+> - **E2E verified:** init→request(pending)→approve→poll(token)→poll lại(expired) | verify token 200 | **cùng device login lại: token cũ→401 (revoked), token mới→200** | tunnel bằng token → curl public **HTTP 200**. Deploy #7153 + publish v1.3.0 #7154 xanh.
+> - **Bảo mật:** nút Approve không có cổng (ai mở trang cũng approve được). Gate thực tế: cần registry token để cài + reachable server. Muốn siết → thêm mật khẩu trên trang Approve.
 
 ---
-_Bên dưới là mô tả bản trung gian (v1.1.0, paste token) — giữ lại để tham chiếu:_
+_Bên dưới là mô tả các bản trung gian (v1.1.0 paste-token, v1.2.0 browser-code) — giữ để tham chiếu:_
 
 ## Mục tiêu
 Bỏ hẳn account/admin/login/dashboard. End-user: cài CLI → `tunelo login` → paste access token (BE sinh, lưu Mongo) → `tunelo http`.
