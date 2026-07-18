@@ -36,27 +36,20 @@ async function openBrowser(url: string): Promise<void> {
 	}
 }
 
-async function deviceAuthFlow(mode: "login" | "signup"): Promise<void> {
+async function deviceAuthFlow(): Promise<void> {
 	const baseUrl = getServerBaseUrl();
 
 	const { deviceCode, userCode, verificationUrl } =
 		await api.createDeviceCode(baseUrl);
 
-	// For signup: go through the dashboard signup page first, then return to the
-	// device-approve page (next is relative to the /dashboard router base).
-	const url =
-		mode === "signup"
-			? `${baseUrl}/dashboard/signup?next=${encodeURIComponent(`/auth/device?code=${userCode}`)}`
-			: verificationUrl;
-
 	console.log();
-	console.log(`  Opening browser to ${mode}...`);
-	console.log(`  ${url}`);
+	console.log("  Opening browser to authorize this device...");
+	console.log(`  ${verificationUrl}`);
 	console.log();
 	console.log(`  Your code: ${userCode}`);
 	console.log();
 
-	await openBrowser(url);
+	await openBrowser(verificationUrl);
 
 	console.log("  Waiting for authentication...");
 
@@ -107,16 +100,9 @@ async function deviceAuthFlow(mode: "login" | "signup"): Promise<void> {
 export function registerDeviceAuthCommands(program: Command): void {
 	program
 		.command("login")
-		.description("Login via browser")
+		.description("Authorize this device via browser")
 		.action(async () => {
-			await deviceAuthFlow("login");
-		});
-
-	program
-		.command("register")
-		.description("Create account via browser")
-		.action(async () => {
-			await deviceAuthFlow("signup");
+			await deviceAuthFlow();
 		});
 
 	program

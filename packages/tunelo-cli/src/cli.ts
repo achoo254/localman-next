@@ -16,7 +16,7 @@ const display = new Display();
 
 program
 	.name("tunelo")
-	.version("1.0.1")
+	.version("1.0.2")
 	.description("Expose local services to the internet");
 
 program
@@ -77,7 +77,7 @@ program
 			if (options.quiet) display.setLogLevel("quiet");
 			else if (options.verbose) display.setLogLevel("verbose");
 
-			display.showBanner("1.0.1");
+			display.showBanner("1.0.2");
 			display.showConnecting(serverUrl);
 
 			const primary = tunnels[0];

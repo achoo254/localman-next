@@ -37,15 +37,15 @@ Cập nhật bản mới: `npm update -g @dattqh/tunelo` (hoặc `pnpm update -g
 
 ## Sử dụng nhanh
 
-### Bước 1 — đăng ký / đăng nhập
+### Bước 1 — đăng nhập (xác thực thiết bị)
 
-Mở trình duyệt xác thực; API key tự lưu vào `~/.tunelo/config.json`:
+Mở trình duyệt để xác thực thiết bị; API key tự lưu vào `~/.tunelo/config.json`:
 
 ```bash
-tunelo register   # tạo tài khoản mới
-# hoặc
-tunelo login      # đã có tài khoản
+tunelo login
 ```
+
+> Chưa có tài khoản? Tạo tại `https://tunnel.inetdev.io.vn/dashboard/signup` (hoặc nhờ quản trị cấp), rồi chạy lại `tunelo login`.
 
 ### Bước 2 — mở tunnel
 
