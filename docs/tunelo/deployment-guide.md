@@ -1,5 +1,45 @@
 # Deployment Guide
 
+## CI/CD (GitLab) — Automated Deploy to Staging
+
+Repo được host trên `gitlabs.inet.vn/dattqh/tunelo`. Pipeline (`.gitlab-ci.yml`)
+**chỉ chạy khi push vào nhánh `main`** — feature branch / MR không tạo pipeline,
+không đụng tới server.
+
+**Luồng:** `build` (pnpm install → test → `pnpm build:server`) → `deploy_staging`
+(rsync bundle + PM2 restart trên staging `.65`). Deploy mirror `infra/deploy.sh`
+nhưng dùng SSH port riêng và private key inject từ CI/CD Variables.
+
+**CI/CD Variables** (Settings → CI/CD → Variables — tất cả `Protected`, chỉ lộ
+trên nhánh protected `main`):
+
+| Variable | Type | Ghi chú |
+|----------|------|---------|
+| `SSH_PRIVATE_KEY` | File | Private key SSH của staging (không mask được vì đa dòng) |
+| `STAGING_HOST` | Var | `103.72.98.65` |
+| `STAGING_PORT` | Var | `24700` |
+| `STAGING_USER` | Var | `root` |
+| `DEPLOY_PATH` | Var | `/var/www/tunelo` |
+
+Pipeline **không** đồng bộ `.env` — file secret nằm sẵn trên server tại
+`/var/www/tunelo/.env` và được `ecosystem.config.cjs` nạp qua `--env-file`.
+Bản server hiện tại (MongoDB key-store) **bắt buộc** `MONGO_URI` và `JWT_SECRET`
+trong file này, nếu thiếu process crash-loop lúc khởi động. Set tối thiểu:
+
+```bash
+TUNNEL_PORT=3001
+TUNNEL_DOMAIN=tunnel.inetdev.io.vn
+MONGO_URI=mongodb://<user>:<pass>@localhost:27017/<db>   # required
+JWT_SECRET=<openssl rand -base64 48>                     # required
+ADMIN_EMAILS=you@example.com                             # optional
+NODE_ENV=production
+```
+
+**Điều kiện chạy:** nhánh `main` là protected branch và có ít nhất 1 runner online
+nhận job untagged (hiện dùng shared runner instance của GitLab).
+
+Deploy thủ công vẫn dùng được: `bash infra/deploy.sh` (chạy từ máy có SSH tới server).
+
 ## Prerequisites
 
 - VPS: Ubuntu 22.04+, 2-4 vCPU, 4-8GB RAM
