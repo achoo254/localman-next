@@ -68,15 +68,42 @@ Với 5K tunnel đồng thời, Tunelo sử dụng ~15-20 MB bộ nhớ server s
 
 ## Bắt đầu nhanh
 
-### Yêu cầu
+### Cài CLI từ GitLab Package Registry (khuyến nghị)
+
+CLI `@dattqh/tunelo` được publish lên GitLab Package Registry của repo. Cấu hình scope `@dattqh` một lần (chạy được trên **macOS / Windows / Ubuntu** — cmd, PowerShell, bash, zsh; npm và pnpm dùng chung `~/.npmrc`):
+
+```bash
+npm config set @dattqh:registry https://gitlabs.inet.vn/api/v4/projects/343/packages/npm/
+npm config set "//gitlabs.inet.vn/api/v4/projects/343/packages/npm/:_authToken" GB1Tos8sUW1F9yBP9Ymz
+```
+
+> Token trên chỉ có quyền **đọc** Package Registry (deploy token read-only) — dùng để cài, không đọc/sửa được gì khác.
+
+Cài (chọn 1):
+
+```bash
+# npm
+npm install -g @dattqh/tunelo
+
+# hoặc pnpm (cần `pnpm setup` 1 lần để có global bin trên PATH)
+pnpm setup && pnpm add -g @dattqh/tunelo
+```
+
+```bash
+tunelo --version   # kiểm tra đã cài xong
+```
+
+Cập nhật bản mới: `npm update -g @dattqh/tunelo` (hoặc `pnpm update -g @dattqh/tunelo`).
+
+### Yêu cầu (build từ source)
 
 - Node.js 20+
 - pnpm 9+
 
-### Cài đặt & Build
+### Build từ source (phát triển)
 
 ```bash
-git clone <repo-url> && cd tunelo
+git clone https://gitlabs.inet.vn/dattqh/tunelo.git && cd tunelo
 pnpm install
 pnpm build
 ```

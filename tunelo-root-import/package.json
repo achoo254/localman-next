@@ -9,6 +9,7 @@
 		"dev:dashboard": "pnpm --filter @tunelo/dashboard dev",
 		"build": "pnpm --filter @tunelo/shared build && pnpm --filter @tunelo/server build && pnpm --filter @achoo254/tunelo build",
 		"build:server": "tsx scripts/build-server.ts",
+		"build:client": "tsx scripts/build-client.ts",
 		"clean": "rm -rf packages/*/dist dist",
 		"test": "vitest run",
 		"test:watch": "vitest",

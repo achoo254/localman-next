@@ -1,7 +1,15 @@
-# Tunelo CI/CD — build + deploy to staging (.65)
+# Tunelo CI/CD
 #
-# Chạy CHỈ khi push vào nhánh main (yêu cầu). MR / nhánh khác không tạo pipeline.
-# Pipeline: build (install → test → bundle) → deploy_staging (rsync + PM2 restart).
+# Hai luồng tách biệt:
+#   - Push nhánh main → build (install → lint → test → bundle) → deploy_staging (.65).
+#   - Push git tag    → publish-cli: build + publish @dattqh/tunelo lên GitLab
+#                       Package Registry (auth bằng CI_JOB_TOKEN, không cần token cá nhân).
+# MR / nhánh khác không tạo pipeline.
+#
+# Release CLI:
+#   npm version <patch|minor|major> --workspace @dattqh/tunelo   # bump version
+#   git commit -am "release: vX.Y.Z" && git tag vX.Y.Z && git push && git push --tags
+# (publish lại một version đã tồn tại sẽ fail — luôn bump trước khi tag.)
 #
 # Deploy mirror lại infra/deploy.sh nhưng dùng SSH port + private key inject từ
 # CI/CD Variables (SSH_PRIVATE_KEY, STAGING_HOST, STAGING_PORT, STAGING_USER, DEPLOY_PATH).
@@ -10,18 +18,22 @@
 stages:
   - build
   - deploy
+  - publish
 
 default:
   image: node:20-bookworm-slim
 
-# Toàn bộ pipeline chỉ chạy trên push nhánh main
+# Pipeline chạy trên push nhánh main HOẶC trên git tag
 workflow:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: "$CI_COMMIT_TAG"
     - when: never
 
 build:
   stage: build
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
   cache:
     key:
       files:
@@ -44,6 +56,8 @@ build:
 
 deploy_staging:
   stage: deploy
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
   needs:
     - build
   environment:
@@ -77,3 +91,31 @@ deploy_staging:
       done
       ssh $SSH_OPTS "$TARGET" "pm2 status tunelo"
       [ "$ok" = "1" ] || { echo "Health check FAILED after retries"; exit 1; }
+
+# Publish CLI (@dattqh/tunelo) to the project's GitLab Package Registry on a git tag.
+# Publishes the version in packages/client/package.json — bump it before tagging.
+# Auth: built-in CI_JOB_TOKEN (no personal token). Publishes from dist/ where
+# build:client emits a self-contained package.json (files list excludes .npmrc).
+publish-cli:
+  stage: publish
+  rules:
+    - if: "$CI_COMMIT_TAG"
+  cache:
+    key:
+      files:
+        - pnpm-lock.yaml
+    paths:
+      - .pnpm-store
+  before_script:
+    - corepack enable
+    - pnpm config set store-dir .pnpm-store
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm build:client
+    - cd packages/client/dist
+    - |
+      {
+        echo "@dattqh:registry=${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/npm/"
+        echo "${CI_API_V4_URL#https:}/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${CI_JOB_TOKEN}"
+      } > .npmrc
+    - npm publish
