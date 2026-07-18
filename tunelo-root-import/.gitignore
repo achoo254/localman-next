@@ -4,6 +4,7 @@ dist/
 *.tgz
 .DS_Store
 *.log
+*.tsbuildinfo
 
 # ctxsync-secrets: env & Claude transient — NEVER commit
 .env.*
