@@ -15,6 +15,7 @@ import { customAlphabet } from "nanoid";
 import { type WebSocket, WebSocketServer } from "ws";
 import type { KeyInfo, KeyStore } from "./key-store/key-store-types.js";
 import { createLogger } from "./logger.js";
+import { extractSubdomain } from "./request-relay.js";
 import {
 	type TcpConnectionState,
 	cleanupTcpState,
@@ -24,6 +25,7 @@ import {
 	handleTcpRegister,
 } from "./tcp-ws-handler.js";
 import { tunnelManager } from "./tunnel-manager.js";
+import { wsAppRelay } from "./ws-app-relay.js";
 import { safeSend } from "./ws-send.js";
 
 const generateSubdomain = customAlphabet(
@@ -55,16 +57,49 @@ export function attachWsHandler(server: http.Server, keyStore: KeyStore): void {
 		noServer: true,
 		maxPayload: DEFAULTS.MAX_BODY_SIZE,
 	});
+	// Browser→app WebSocket relay (echoes the first requested subprotocol so
+	// subprotocol-based clients — e.g. socket.io — handshake cleanly).
+	const appWss = new WebSocketServer({
+		noServer: true,
+		maxPayload: DEFAULTS.MAX_BODY_SIZE,
+		handleProtocols: (protocols) => protocols.values().next().value ?? false,
+	});
 
 	server.on("upgrade", (req, socket, head) => {
-		const pathname = new URL(req.url ?? "/", "http://localhost").pathname;
-		if (pathname !== DEFAULTS.WS_PATH) {
-			socket.destroy();
+		const url = new URL(req.url ?? "/", "http://localhost");
+		const subdomain = extractSubdomain(req.headers.host ?? "");
+
+		// Control channel: reserved /tunnel path on the apex host (no subdomain).
+		if (url.pathname === DEFAULTS.WS_PATH && !subdomain) {
+			wss.handleUpgrade(req, socket, head, (ws) => {
+				wss.emit("connection", ws, req);
+			});
 			return;
 		}
-		wss.handleUpgrade(req, socket, head, (ws) => {
-			wss.emit("connection", ws, req);
-		});
+
+		// Browser WebSocket to a tunneled app → relay through the control socket.
+		if (subdomain && tunnelManager.has(subdomain)) {
+			if (!tunnelManager.checkAuth(subdomain, req.headers.authorization)) {
+				socket.write(
+					'HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm="tunelo"\r\nConnection: close\r\n\r\n',
+				);
+				socket.destroy();
+				return;
+			}
+			const proto = req.headers["sec-websocket-protocol"];
+			appWss.handleUpgrade(req, socket, head, (browserWs) => {
+				wsAppRelay.register(
+					browserWs,
+					subdomain,
+					url.pathname + url.search,
+					req.headers as Record<string, string | string[]>,
+					Array.isArray(proto) ? proto.join(", ") : proto,
+				);
+			});
+			return;
+		}
+
+		socket.destroy();
 	});
 
 	wss.on("connection", (ws: WebSocket) => {
@@ -146,6 +181,14 @@ export function attachWsHandler(server: http.Server, keyStore: KeyStore): void {
 					if (!state.authenticated) return;
 					handleTcpConnectionClose(msg, state.tcpState);
 					break;
+				case "ws-data":
+					if (!state.authenticated) return;
+					wsAppRelay.handleData(msg);
+					break;
+				case "ws-close":
+					if (!state.authenticated) return;
+					wsAppRelay.handleClose(msg);
+					break;
 				case "pong":
 					break;
 				default:
@@ -159,6 +202,7 @@ export function attachWsHandler(server: http.Server, keyStore: KeyStore): void {
 			if (state.pingInterval) clearInterval(state.pingInterval);
 			cleanupTcpState(state.tcpState);
 			if (state.subdomain) tunnelManager.unregisterByConnectionId(state.id);
+			wsAppRelay.cleanupByConnection(state.id);
 		});
 
 		ws.on("error", (err) => {

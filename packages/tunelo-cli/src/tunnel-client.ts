@@ -17,6 +17,7 @@ import {
 import WebSocket from "ws";
 import { proxyRequest } from "./local-proxy.js";
 import type { TunnelMapping } from "./tunnel-config-parser.js";
+import { WsAppProxy } from "./ws-app-proxy.js";
 
 export interface TunnelClientOptions {
 	serverUrl: string;
@@ -37,6 +38,12 @@ export class TunnelClient extends EventEmitter {
 	private readonly options: TunnelClientOptions;
 	/** Maps subdomain → local port for multi-tunnel routing */
 	private subdomainPortMap = new Map<string, number>();
+	/** Browser→app WebSocket relay: opens a local WS per `ws-open` and bridges frames. */
+	private readonly wsAppProxy = new WsAppProxy(
+		(msg) => this.socket?.send(JSON.stringify(msg)),
+		(subdomain) =>
+			this.subdomainPortMap.get(subdomain) ?? this.options.localPort,
+	);
 
 	constructor(options: TunnelClientOptions) {
 		super();
@@ -91,12 +98,22 @@ export class TunnelClient extends EventEmitter {
 					case "tcp-connection-close":
 						this.emit("tcp-connection-close", msg);
 						break;
+					case "ws-open":
+						this.wsAppProxy.open(msg);
+						break;
+					case "ws-data":
+						this.wsAppProxy.data(msg);
+						break;
+					case "ws-close":
+						this.wsAppProxy.close(msg);
+						break;
 					default:
 						break;
 				}
 			});
 
 			this.socket.on("close", () => {
+				this.wsAppProxy.closeAll();
 				this.emit("disconnected");
 				if (!this.stopped && authResolved) {
 					this.reconnect();

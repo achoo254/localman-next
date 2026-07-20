@@ -26,6 +26,12 @@ export const DEFAULTS = {
 	TCP_IDLE_TIMEOUT_MS: 10 * 60 * 1000,
 	/** Max new TCP connections per second per tunnel */
 	TCP_CONNECT_RATE_LIMIT: 10,
+	/** Max concurrent browser WebSocket connections per tunnel */
+	WS_APP_MAX_PER_TUNNEL: 50,
+	/** Local WS handshake timeout (ms) for the browser→app relay */
+	WS_APP_HANDSHAKE_TIMEOUT_MS: 10_000,
+	/** Max frames buffered before the local WS finishes opening */
+	WS_APP_PREOPEN_QUEUE_MAX: 64,
 } as const;
 
 export const SUBDOMAIN_REGEX = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;

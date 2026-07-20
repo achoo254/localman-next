@@ -108,6 +108,35 @@ export interface TcpConnectionClose {
 	connectionId: string;
 }
 
+/** Browser WebSocket relay — ask the client to open a local WS (server → client) */
+export interface WsOpenMessage {
+	type: "ws-open";
+	id: string;
+	/** Tunnel subdomain the browser connected to. */
+	subdomain: string;
+	/** Request path/query of the upgrade (e.g. "/socket.io?token=x"). */
+	path: string;
+	headers: Record<string, string | string[]>;
+	/** Requested Sec-WebSocket-Protocol subprotocol(s), if any. */
+	protocol?: string;
+}
+/** Browser WebSocket relay — frame payload (bidirectional). */
+export interface WsDataMessage {
+	type: "ws-data";
+	id: string;
+	/** base64-encoded frame payload. */
+	data: string;
+	/** true = binary frame, false = UTF-8 text frame. */
+	binary: boolean;
+}
+/** Browser WebSocket relay — connection closed (bidirectional). */
+export interface WsCloseMessage {
+	type: "ws-close";
+	id: string;
+	code?: number;
+	reason?: string;
+}
+
 export type ServerToClientMessage =
 	| TunnelRequest
 	| AuthResult
@@ -116,6 +145,9 @@ export type ServerToClientMessage =
 	| TcpConnectionOpen
 	| TcpDataMessage
 	| TcpConnectionClose
+	| WsOpenMessage
+	| WsDataMessage
+	| WsCloseMessage
 	| ErrorMessage
 	| PingMessage;
 export type ClientToServerMessage =
@@ -125,6 +157,8 @@ export type ClientToServerMessage =
 	| TcpRegisterMessage
 	| TcpDataMessage
 	| TcpConnectionClose
+	| WsDataMessage
+	| WsCloseMessage
 	| ErrorMessage
 	| PongMessage;
 export type TunnelMessage = ServerToClientMessage | ClientToServerMessage;
