@@ -2,12 +2,14 @@
 import type { RegisterTunnelResult } from "@tunelo/shared";
 import { program } from "commander";
 import { registerLoginCommands } from "./cli-login-command.js";
+import { registerStatusCommands } from "./cli-status-commands.js";
 import { registerTcpCommand } from "./cli-tcp-command.js";
 import { getConfigPath, loadConfig, saveConfig } from "./config.js";
 import { Display } from "./display.js";
 import { createInspectorIntegration } from "./inspector-integration.js";
 import { startPortalServer, stopPortalServer } from "./portal-server.js";
 import type { InspectorEntry } from "./request-store.js";
+import { type RunTunnel, startRunRecord } from "./run-registry.js";
 import { TunnelClient } from "./tunnel-client.js";
 import { parseTunnelArgs } from "./tunnel-config-parser.js";
 
@@ -102,11 +104,17 @@ program
 				additionalTunnels: additional,
 			});
 
+			// Record this process so `tunelo status`/`kill` can see and stop it.
+			const run = startRunRecord("http", serverUrl);
+			const runTunnels: RunTunnel[] = [];
+
 			const portalPort = Number(options.portalPort) || 4041;
 			const portalEnabled = options.portal !== false;
 
 			client.on("connected", (result: { url: string; subdomain: string }) => {
 				subdomainPortMap.set(result.subdomain, primary.port);
+				runTunnels.push({ url: result.url, localPort: primary.port });
+				run.update(runTunnels);
 				display.showConnected(
 					result.url,
 					`http://localhost:${primary.port}`,
@@ -132,6 +140,8 @@ program
 
 			client.on("tunnel-registered", (result: RegisterTunnelResult) => {
 				subdomainPortMap.set(result.subdomain, result.localPort);
+				runTunnels.push({ url: result.url, localPort: result.localPort });
+				run.update(runTunnels);
 				display.showTunnelRegistered(
 					result.subdomain,
 					result.url,
@@ -192,6 +202,7 @@ program
 
 registerTcpCommand(program, display);
 registerLoginCommands(program);
+registerStatusCommands(program);
 
 program
 	.command("config")
