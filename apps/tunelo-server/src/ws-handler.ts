@@ -169,6 +169,13 @@ export function attachWsHandler(server: http.Server, keyStore: KeyStore): void {
 					if (!state.authenticated) return;
 					tunnelManager.handleResponseByConnectionId(state.id, msg);
 					break;
+				case "stream-start":
+				case "stream-data":
+				case "stream-end":
+				case "stream-error":
+					if (!state.authenticated) return;
+					tunnelManager.handleStreamFrame(msg);
+					break;
 				case "tcp-register":
 					if (!state.authenticated) return;
 					handleTcpRegister(ws, state.id, msg, state.tcpState);

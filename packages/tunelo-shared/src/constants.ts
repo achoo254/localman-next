@@ -6,6 +6,8 @@ export const DEFAULTS = {
 	HEALTH_PATH: "/health",
 	MAX_BODY_SIZE: 50 * 1024 * 1024,
 	REQUEST_TIMEOUT_MS: 30_000,
+	/** Idle timeout (ms) for a relayed response stream — reset on every frame so SSE/long downloads stay open */
+	STREAM_IDLE_TIMEOUT_MS: 60_000,
 	PING_INTERVAL_MS: 30_000,
 	RECONNECT_BASE_MS: 1_000,
 	RECONNECT_MAX_MS: 30_000,

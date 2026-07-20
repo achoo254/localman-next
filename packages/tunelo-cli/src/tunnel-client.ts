@@ -15,7 +15,7 @@ import {
 	parseMessage,
 } from "@tunelo/shared";
 import WebSocket from "ws";
-import { proxyRequest } from "./local-proxy.js";
+import { type ActiveStream, proxyRequestStream } from "./http-stream.js";
 import type { TunnelMapping } from "./tunnel-config-parser.js";
 import { WsAppProxy } from "./ws-app-proxy.js";
 
@@ -38,6 +38,8 @@ export class TunnelClient extends EventEmitter {
 	private readonly options: TunnelClientOptions;
 	/** Maps subdomain → local port for multi-tunnel routing */
 	private subdomainPortMap = new Map<string, number>();
+	/** In-flight response streams keyed by request id (for cancel/cleanup). */
+	private activeStreams = new Map<string, ActiveStream>();
 	/** Browser→app WebSocket relay: opens a local WS per `ws-open` and bridges frames. */
 	private readonly wsAppProxy = new WsAppProxy(
 		(msg) => this.socket?.send(JSON.stringify(msg)),
@@ -89,6 +91,11 @@ export class TunnelClient extends EventEmitter {
 					case "request":
 						this.handleRequest(msg);
 						break;
+					case "stream-error":
+						// Server signals the downstream consumer is gone — stop producing.
+						this.activeStreams.get(msg.id)?.cancel();
+						this.activeStreams.delete(msg.id);
+						break;
 					case "tcp-connection-open":
 						this.emit("tcp-connection-open", msg);
 						break;
@@ -113,6 +120,9 @@ export class TunnelClient extends EventEmitter {
 			});
 
 			this.socket.on("close", () => {
+				// Abort in-flight local requests — their responses can't be delivered.
+				for (const stream of this.activeStreams.values()) stream.cancel();
+				this.activeStreams.clear();
 				this.wsAppProxy.closeAll();
 				this.emit("disconnected");
 				if (!this.stopped && authResolved) {
@@ -223,18 +233,25 @@ export class TunnelClient extends EventEmitter {
 			? (this.subdomainPortMap.get(request.subdomain) ?? this.options.localPort)
 			: this.options.localPort;
 
-		const response = await proxyRequest(
+		const stream = proxyRequestStream(
 			request,
 			targetPort,
+			{
+				send: (msg) => this.sendMsg(msg),
+				bufferedAmount: () => this.socket?.bufferedAmount ?? 0,
+			},
 			this.options.localHost,
 		);
-		this.sendMsg(response);
+		this.activeStreams.set(request.id, stream);
+
+		const result = await stream.done;
+		this.activeStreams.delete(request.id);
 		const durationMs = Date.now() - start;
 
 		this.emit("request", {
 			method: request.method,
 			path: request.path,
-			status: response.status,
+			status: result.status,
 			durationMs,
 			subdomain: request.subdomain,
 		});
@@ -247,9 +264,9 @@ export class TunnelClient extends EventEmitter {
 			path: request.path,
 			requestHeaders: request.headers,
 			requestBody: request.body,
-			status: response.status,
-			responseHeaders: response.headers,
-			responseBody: response.body,
+			status: result.status,
+			responseHeaders: result.headers,
+			responseBody: result.bodyPreview,
 			durationMs,
 			entryType: "normal" as const,
 		});

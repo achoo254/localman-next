@@ -19,6 +19,40 @@ export interface TunnelResponse {
 	body: string | null;
 }
 
+/**
+ * Generic streaming frames, keyed by `id`, for relaying a body incrementally
+ * (SSE, chunked responses, large downloads) instead of buffering it whole.
+ *
+ * Deliberately direction-agnostic and not named "response" so a future
+ * bidirectional relay can reuse the same start → data* → end/error lifecycle
+ * keyed by a stream id.
+ */
+export interface StreamStartMessage {
+	type: "stream-start";
+	id: string;
+	/** HTTP status for response streams (unused/0 for non-HTTP reuse). */
+	status: number;
+	headers: Record<string, string | string[]>;
+}
+
+export interface StreamDataMessage {
+	type: "stream-data";
+	id: string;
+	/** base64-encoded chunk. */
+	data: string;
+}
+
+export interface StreamEndMessage {
+	type: "stream-end";
+	id: string;
+}
+
+export interface StreamErrorMessage {
+	type: "stream-error";
+	id: string;
+	message: string;
+}
+
 export interface AuthMessage {
 	type: "auth";
 	key: string;
@@ -137,8 +171,16 @@ export interface WsCloseMessage {
 	reason?: string;
 }
 
+/** Streaming lifecycle frames for one relayed body (start → data* → end/error). */
+export type StreamMessage =
+	| StreamStartMessage
+	| StreamDataMessage
+	| StreamEndMessage
+	| StreamErrorMessage;
+
 export type ServerToClientMessage =
 	| TunnelRequest
+	| StreamMessage
 	| AuthResult
 	| RegisterTunnelResult
 	| TcpRegisterResult
@@ -152,6 +194,7 @@ export type ServerToClientMessage =
 	| PingMessage;
 export type ClientToServerMessage =
 	| TunnelResponse
+	| StreamMessage
 	| AuthMessage
 	| RegisterTunnelMessage
 	| TcpRegisterMessage

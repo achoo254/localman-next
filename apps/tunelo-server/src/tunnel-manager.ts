@@ -1,7 +1,12 @@
-import type { TunnelRequest, TunnelResponse } from "@tunelo/shared";
+import type {
+	StreamMessage,
+	TunnelRequest,
+	TunnelResponse,
+} from "@tunelo/shared";
 import { DEFAULTS, ErrorCode } from "@tunelo/shared";
 import type { WebSocket } from "ws";
 import { createLogger } from "./logger.js";
+import { StreamRegistry, type StreamSink } from "./stream/stream-registry.js";
 import { checkBasicAuth, hashCredentials } from "./tunnel-auth-checker.js";
 import { safeSend } from "./ws-send.js";
 
@@ -36,6 +41,8 @@ class TunnelManager {
 	private orphanedRequests = new Map<string, Map<string, PendingRequest>>();
 	/** Grace period timers — reject orphaned requests after timeout */
 	private graceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+	/** In-flight response streams keyed by request id (live HTTP relay path). */
+	private streams = new StreamRegistry();
 
 	register(
 		subdomain: string,
@@ -137,6 +144,8 @@ class TunnelManager {
 
 	/** Unregister all subdomains associated with a specific connection */
 	unregisterByConnectionId(connectionId: string): void {
+		// Fail in-flight streams first — an open response can't survive a reconnect.
+		this.streams.cleanupByConnection(connectionId);
 		const subdomains = this.getSubdomainsByConnectionId(connectionId);
 		for (const subdomain of subdomains) {
 			this.unregister(subdomain);
@@ -178,6 +187,44 @@ class TunnelManager {
 		});
 	}
 
+	/**
+	 * Relay a request and stream its response back through `sink`. This is the
+	 * live HTTP relay path — nothing is buffered whole, so SSE / chunked / large
+	 * responses flow straight to the browser.
+	 */
+	openStream(
+		subdomain: string,
+		request: TunnelRequest,
+		sink: StreamSink,
+	): void {
+		const tunnel = this.tunnels.get(subdomain);
+		if (!tunnel) {
+			sink.onError(new Error(`No tunnel for ${subdomain}`));
+			return;
+		}
+		this.streams.register(request.id, tunnel.connectionId, sink);
+		safeSend(tunnel.socket, request);
+	}
+
+	/** Route streaming frames (stream-start/data/end/error) from a client. */
+	handleStreamFrame(frame: StreamMessage): void {
+		this.streams.push(frame);
+	}
+
+	/** Downstream consumer (e.g. browser) went away — tell the client to stop producing. */
+	cancelStream(subdomain: string, id: string): void {
+		if (!this.streams.has(id)) return;
+		this.streams.drop(id);
+		const tunnel = this.tunnels.get(subdomain);
+		if (tunnel) {
+			safeSend(tunnel.socket, {
+				type: "stream-error",
+				id,
+				message: "client aborted",
+			});
+		}
+	}
+
 	/** Handle response from client — search all subdomains for this connection to find matching pending request */
 	handleResponseByConnectionId(
 		connectionId: string,
@@ -204,6 +251,9 @@ class TunnelManager {
 				return;
 			}
 		}
+		// A streaming client that sent a single legacy "response" — adapt it to
+		// the start → data → end lifecycle so the open stream sink completes.
+		this.streams.pushLegacyResponse(response);
 	}
 
 	/** Check if request passes Basic Auth for the given tunnel */
@@ -276,6 +326,7 @@ class TunnelManager {
 		this.orphanedRequests.clear();
 
 		for (const [subdomain, tunnel] of this.tunnels) {
+			this.streams.cleanupByConnection(tunnel.connectionId);
 			tunnel.socket.close();
 			this.unregister(subdomain);
 		}

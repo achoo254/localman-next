@@ -5,9 +5,11 @@ import {
 	TUNNEL_DOMAIN,
 	type TunnelRequest,
 	generateRequestId,
+	stripHopByHopHeaders,
 } from "@tunelo/shared";
 import { createLogger } from "./logger.js";
 import { usageTracker } from "./services/usage-tracker.js";
+import type { StreamSink } from "./stream/stream-registry.js";
 import { tunnelManager } from "./tunnel-manager.js";
 
 const logger = createLogger("tunelo-relay");
@@ -17,6 +19,68 @@ export function extractSubdomain(host: string): string | null {
 	const regex = new RegExp(`^([^.]+)\\.${domainEscaped}`);
 	const match = host.match(regex);
 	return match ? match[1] : null;
+}
+
+/**
+ * Build a sink that streams a relayed response straight into the HTTP response:
+ * write headers on start, each chunk as it arrives, end on completion. This is
+ * what makes SSE / chunked responses work — nothing is buffered whole.
+ * `onComplete` fires exactly once with the bytes written, for usage tracking.
+ */
+function createResponseSink(
+	res: http.ServerResponse,
+	subdomain: string,
+	requestId: string,
+	onComplete: (bytesOut: number) => void,
+): StreamSink {
+	let bytesOut = 0;
+	let completed = false;
+	const complete = (): void => {
+		if (completed) return;
+		completed = true;
+		onComplete(bytesOut);
+	};
+	return {
+		onStart(status, headers) {
+			if (res.headersSent || res.writableEnded || res.destroyed) return;
+			try {
+				res.writeHead(
+					status,
+					stripHopByHopHeaders(headers) as http.OutgoingHttpHeaders,
+				);
+				res.flushHeaders();
+			} catch (err) {
+				// Malformed header name/value from the local service — don't crash.
+				logger.warn({ err, subdomain, requestId }, "Invalid response headers");
+				if (!res.headersSent) {
+					res.writeHead(502, { "content-type": "text/plain" });
+					res.end("Bad Gateway");
+				}
+			}
+		},
+		onData(chunk) {
+			if (res.writableEnded || res.destroyed) return;
+			bytesOut += chunk.length;
+			res.write(chunk);
+		},
+		onEnd() {
+			if (!res.writableEnded) res.end();
+			complete();
+		},
+		onError(err) {
+			// Headers already sent — can only cut the connection.
+			if (res.headersSent) {
+				if (!res.writableEnded) res.end();
+				complete();
+				return;
+			}
+			logger.error({ err, subdomain, requestId }, "Relay error");
+			const isTimeout = err.message.includes(ErrorCode.REQUEST_TIMEOUT);
+			res.writeHead(isTimeout ? 504 : 502, { "content-type": "text/plain" });
+			res.end(isTimeout ? "Gateway Timeout" : "Bad Gateway");
+			complete();
+		},
+	};
 }
 
 export function createRelayHandler(): http.RequestListener {
@@ -92,43 +156,27 @@ export function createRelayHandler(): http.RequestListener {
 				subdomain,
 			};
 
-			tunnelManager
-				.sendRequest(subdomain, tunnelReq)
-				.then((tunnelRes) => {
-					const responseBody = tunnelRes.body
-						? Buffer.from(tunnelRes.body, "base64")
-						: null;
-					res.writeHead(
-						tunnelRes.status,
-						tunnelRes.headers as http.OutgoingHttpHeaders,
-					);
-					if (responseBody) {
-						res.end(responseBody);
-					} else {
-						res.end();
-					}
+			// Attribute usage to the tunnel that owns the request at dispatch time.
+			const tunnel = tunnelManager.get(subdomain);
+			const bytesIn = body ? Buffer.byteLength(body, "base64") : 0;
 
-					// Fire-and-forget usage tracking
-					const tunnel = tunnelManager.get(subdomain);
+			// If the downstream consumer disconnects, tell the client to stop
+			// producing (no-op once the stream has already finished).
+			res.on("close", () =>
+				tunnelManager.cancelStream(subdomain, tunnelReq.id),
+			);
+
+			const sink = createResponseSink(
+				res,
+				subdomain,
+				tunnelReq.id,
+				(bytesOut) => {
 					if (tunnel) {
-						const bytesIn = body ? Buffer.byteLength(body, "base64") : 0;
-						const bytesOut = responseBody ? responseBody.length : 0;
 						usageTracker.record(tunnel.keyId, tunnel.userId, bytesIn, bytesOut);
 					}
-				})
-				.catch((err) => {
-					logger.error(
-						{ err, subdomain, requestId: tunnelReq.id },
-						"Relay error",
-					);
-					const isTimeout = (err as Error).message.includes(
-						ErrorCode.REQUEST_TIMEOUT,
-					);
-					res.writeHead(isTimeout ? 504 : 502, {
-						"content-type": "text/plain",
-					});
-					res.end(isTimeout ? "Gateway Timeout" : "Bad Gateway");
-				});
+				},
+			);
+			tunnelManager.openStream(subdomain, tunnelReq, sink);
 		});
 
 		req.on("error", (err) => {
