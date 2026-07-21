@@ -186,5 +186,19 @@ Code-review (`code-reviewer`) phát hiện **1 lỗ hổng Critical** đã vá:
 - **Bypass Basic Auth qua cache** (tunnel `--auth`): vá bằng `proxy_cache_bypass/no_cache $http_upgrade $http_authorization`. Verified: `cli.ts:32` `--auth`, `tunnel-manager.ts:260` checkAuth là feature thật.
 - Nit không chặn (chưa làm, chấp nhận): `location /api|/login|/health` prefix rộng hơn segment của Express (path `/apidocs` mất cache, không sai); chưa có test riêng cho wiring `X-Accel-Buffering` trong `onStart` (helper đã test kỹ, wiring one-liner); `X-Cache-Status` lộ nhẹ info hạ tầng (cần cho verify phase-1, có thể gate sau).
 
-### Còn lại (ops, ngoài session)
-Verify code xong. Các bước trên .65 do người vận hành chạy: `mkdir -p /var/cache/nginx/tunelo` + chown user nginx; `nginx -t`; `systemctl reload nginx`; deploy server build mới; rồi chạy checklist acceptance (HIT/MISS, SSE, 2-subdomain, `--auth` bypass).
+### Deploy lên staging .65 (Session 3) — ĐÃ TRIỂN KHAI
+Server `103.72.98.65` (nhãn "SERVER STAGING .65"), shared host nhiều service, config tunelo ở `/etc/nginx/conf.d/tunelo.conf` (include http-context → `proxy_cache_path` đặt trong file này OK). nginx 1.20.1, user `nginx`, Node v22, pm2.
+
+Đã làm:
+- Server: `pnpm build:server` → rsync `server.mjs`(+map) vào `/var/www/tunelo` → `pm2 restart tunelo`. Health `{"status":"ok"}`. Backup: `server.mjs.bak-<ts>`.
+- nginx: backup `tunelo.conf.bak-edgecache-260721-153804` → upload config mới → tạo `/var/cache/nginx/tunelo` (chown nginx) → `nginx -t` OK → `systemctl reload nginx`.
+
+Verify:
+- ✅ Tầng cache engaged: `location /` trả header `X-Cache-Status`; `/health` (control-plane) KHÔNG có → bypass đúng.
+- ✅ Không regression: onedash-staging vẫn HTTP 200; không lỗi mới trong nginx error log sau reload.
+- ⚠️ **CHƯA quan sát được HIT thật**: tunnel active duy nhất (onedash-staging) **không gửi `Cache-Control`** kể cả asset tĩnh (PNG) → mọi request `MISS`, cache dir rỗng. Đúng hành vi an toàn phase-1, nhưng nghĩa là app này **không hưởng lợi** từ cache → mâu thuẫn với giả định "dev server có sẵn Cache-Control" ở validate. Cơ chế store+HIT chưa được chứng minh end-to-end (cần 1 origin gửi Cache-Control để demo MISS→HIT).
+- ⬜ Chưa test: SSE stream, 2-subdomain isolation, `--auth` bypass (cần tunnel/app phù hợp).
+
+Rollback: server `cp server.mjs.bak-<ts> server.mjs && pm2 restart tunelo`; nginx `cp tunelo.conf.bak-edgecache-260721-153804 tunelo.conf && nginx -t && systemctl reload nginx`.
+
+Lưu ý: commit `5ed63c7` mới ở local main, **chưa push** — server build từ local nên đã có thay đổi; máy khác pull sẽ chưa thấy tới khi push.
