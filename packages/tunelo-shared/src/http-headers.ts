@@ -24,3 +24,25 @@ export function stripHopByHopHeaders(
 	}
 	return out;
 }
+
+/**
+ * True when a response must be relayed without buffering — Server-Sent Events,
+ * or any body with no `content-length` (chunked / unknown-length stream). The
+ * tunnel server sets `X-Accel-Buffering: no` on these so a fronting nginx
+ * streams them straight through and skips caching, while length-bounded static
+ * responses stay bufferable and cacheable.
+ */
+export function needsUnbufferedRelay(
+	headers: Record<string, string | string[]>,
+): boolean {
+	let contentType = "";
+	let hasContentLength = false;
+	for (const [key, value] of Object.entries(headers)) {
+		const lower = key.toLowerCase();
+		if (lower === "content-type") {
+			contentType = Array.isArray(value) ? value.join(" ") : value;
+		}
+		if (lower === "content-length") hasContentLength = true;
+	}
+	return contentType.includes("text/event-stream") || !hasContentLength;
+}

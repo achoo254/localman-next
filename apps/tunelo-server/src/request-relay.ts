@@ -5,6 +5,7 @@ import {
 	TUNNEL_DOMAIN,
 	type TunnelRequest,
 	generateRequestId,
+	needsUnbufferedRelay,
 	stripHopByHopHeaders,
 } from "@tunelo/shared";
 import { createLogger } from "./logger.js";
@@ -44,10 +45,12 @@ function createResponseSink(
 		onStart(status, headers) {
 			if (res.headersSent || res.writableEnded || res.destroyed) return;
 			try {
-				res.writeHead(
-					status,
-					stripHopByHopHeaders(headers) as http.OutgoingHttpHeaders,
-				);
+				const outHeaders = stripHopByHopHeaders(headers);
+				// SSE / unknown-length streams must not be buffered or cached by a
+				// fronting nginx — signal it to relay them straight through.
+				if (needsUnbufferedRelay(headers))
+					outHeaders["x-accel-buffering"] = "no";
+				res.writeHead(status, outHeaders as http.OutgoingHttpHeaders);
 				res.flushHeaders();
 			} catch (err) {
 				// Malformed header name/value from the local service — don't crash.
