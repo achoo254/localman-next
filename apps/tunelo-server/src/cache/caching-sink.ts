@@ -2,12 +2,9 @@ import type http from "node:http";
 import { stripHopByHopHeaders } from "@tunelo/shared";
 import { createLogger } from "../logger.js";
 import type { StreamSink } from "../stream/stream-registry.js";
+import { normalizeAcceptEncoding } from "./asset-rules.js";
 import { CACHE_CONFIG } from "./cache-config.js";
-import {
-	classifyResponse,
-	isLookupEligible,
-	normalizeAcceptEncoding,
-} from "./cacheability.js";
+import { classifyResponse, isLookupEligible } from "./cacheability.js";
 import { type CachedResponse, getCached, setCached } from "./response-cache.js";
 
 const logger = createLogger("tunelo-cache-serve");

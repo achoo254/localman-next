@@ -1,10 +1,9 @@
 import { describe, expect, test } from "vitest";
+import { isApiPath, normalizeAcceptEncoding } from "../asset-rules.js";
 import {
 	classifyResponse,
-	isApiPath,
 	isCacheableRequest,
 	isLookupEligible,
-	normalizeAcceptEncoding,
 } from "../cacheability.js";
 
 const config = { maxTtlSeconds: 86_400 };
@@ -189,6 +188,59 @@ describe("classifyResponse — API / dynamic always bypass", () => {
 			"cache-control": "max-age=60.9",
 		});
 		expect(d).toEqual({ cacheable: true, ttl: 60 });
+	});
+});
+
+describe("content-hashed auto-cache (no origin headers needed)", () => {
+	const jsNoCC = {
+		"content-type": "application/javascript",
+		"content-length": "100",
+	};
+
+	test("Vite-style hashed asset cached without Cache-Control", () => {
+		expect(classify("/assets/index-DqxaS-SZ.js", jsNoCC)).toEqual({
+			cacheable: true,
+			ttl: 86_400,
+		});
+	});
+
+	test("webpack-style hashed asset (digits) cached without Cache-Control", () => {
+		expect(classify("/static/main.a1b2c3d4.js", jsNoCC).cacheable).toBe(true);
+	});
+
+	test("hashed asset with no-cache is still cached (content-addressed)", () => {
+		expect(
+			classify("/assets/index-DqxaS-SZ.js", {
+				...jsNoCC,
+				"cache-control": "no-cache",
+			}).cacheable,
+		).toBe(true);
+	});
+
+	test("hashed asset honors a smaller origin max-age", () => {
+		expect(
+			classify("/assets/index-DqxaS-SZ.css", {
+				"content-type": "text/css",
+				"content-length": "10",
+				"cache-control": "max-age=120",
+			}),
+		).toEqual({ cacheable: true, ttl: 120 });
+	});
+
+	test("hashed asset with no-store/private still bypasses", () => {
+		for (const cc of ["no-store", "private"]) {
+			expect(
+				classify("/assets/index-DqxaS-SZ.js", {
+					...jsNoCC,
+					"cache-control": cc,
+				}).cacheable,
+			).toBe(false);
+		}
+	});
+
+	test("plain-word filenames are NOT treated as hashed (stay fresh)", () => {
+		expect(classify("/my-component.js", jsNoCC).cacheable).toBe(false);
+		expect(classify("/dashboard.js", jsNoCC).cacheable).toBe(false);
 	});
 });
 

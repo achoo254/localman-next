@@ -22,7 +22,7 @@ Cache response ở **Node relay** (backed by Valkey trên `127.0.0.1:6379`) đ�
 
 ## Định hướng: tunelo là công cụ DEV (chi phối toàn bộ policy)
 
-tunelo chủ yếu dùng để **dev/preview/demo**, không phục vụ production traffic. Với công cụ dev, **freshness > hit-rate**: sai lầm tệ nhất là trả asset cũ cho lập trình viên đang sửa code. Vì vậy policy chốt là **respect-origin thuần — KHÔNG force-cache, KHÔNG TTL bịa ra**. Cache chỉ giữ đúng thứ origin đã tuyên bố cacheable; mọi thứ khác luôn đi thẳng xuống app.
+tunelo chủ yếu dùng để **dev/preview/demo**, không phục vụ production traffic. Với công cụ dev, **freshness > hit-rate**: sai lầm tệ nhất là trả asset cũ cho lập trình viên đang sửa code. Cache chỉ giữ hai loại **an toàn không thể stale**: (1) asset origin tự tuyên bố cacheable, và (2) asset **content-hashed** (tên file đổi khi nội dung đổi — nhận diện qua pattern tên). File non-hashed không có cache-header → luôn đi thẳng xuống app. **KHÔNG force-cache theo TTL bịa** cho file non-hashed. (Bổ sung auto-cache hashed sau khi user chọn phương án B, 2026-07-24.)
 
 ## Chính sách cache (tóm tắt — chi tiết ở phase-02)
 
