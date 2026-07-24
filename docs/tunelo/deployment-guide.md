@@ -319,11 +319,28 @@ curl -i -N \
 | `ADMIN_EMAILS` | No | String | `admin@ex.com,dev@ex.com` | Comma-separated admin emails |
 | `TUNNEL_DOMAIN` | No | String | `tunnel.inetdev.io.vn` | Base domain for tunnels |
 
+### Response Cache (Valkey — optional, dev-first)
+
+Tunnel server caches static FE responses in Valkey to skip the WS round-trip on
+repeated loads. Respect-origin only (dev servers sending `no-cache` are never
+cached); API/JSON/SSE/authed requests always bypass. Disabled entirely if
+`REDIS_URL` is unset. See
+`plans/dattqh/260724-1332-redis-response-cache/` and ADR-0001.
+
+| Variable | Required | Default | Notes |
+|----------|----------|---------|-------|
+| `REDIS_URL` | No | (unset → cache off) | e.g. `redis://:<pass>@127.0.0.1:6379/0` |
+| `CACHE_ENABLED` | No | `true` if `REDIS_URL` set | Kill-switch (`false` disables) |
+| `CACHE_MAX_OBJECT_BYTES` | No | `5242880` (5MB) | Max cached response size |
+| `CACHE_MAX_TTL_SECONDS` | No | `86400` | Cap on TTL (effective TTL = origin max-age) |
+
+Install (CentOS Stream 9): `dnf install -y valkey`, deploy `infra/valkey.conf`
+to `/etc/valkey/valkey.conf` (set `requirepass`), `systemctl enable --now valkey`.
+
 ### Optional (Future)
 
 | Variable | Purpose |
 |----------|---------|
-| `REDIS_URI` | Redis connection (v0.3+, for rate limiting) |
 | `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS` | Email service (future notifications) |
 
 ### .env.example Template

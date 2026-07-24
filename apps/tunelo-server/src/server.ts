@@ -62,6 +62,12 @@ async function start(): Promise<void> {
 
 	process.on("SIGTERM", () => shutdown("SIGTERM"));
 	process.on("SIGINT", () => shutdown("SIGINT"));
+
+	// Defense-in-depth: never let a stray rejection (e.g. from a best-effort
+	// cache op) take the relay down. Log and keep serving.
+	process.on("unhandledRejection", (reason) => {
+		logger.error({ reason }, "Unhandled promise rejection");
+	});
 }
 
 start().catch((err) => {

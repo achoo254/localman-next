@@ -5,6 +5,7 @@ import type {
 } from "@tunelo/shared";
 import { DEFAULTS, ErrorCode } from "@tunelo/shared";
 import type { WebSocket } from "ws";
+import { purgeSubdomain } from "./cache/response-cache.js";
 import { createLogger } from "./logger.js";
 import { StreamRegistry, type StreamSink } from "./stream/stream-registry.js";
 import { checkBasicAuth, hashCredentials } from "./tunnel-auth-checker.js";
@@ -72,6 +73,10 @@ class TunnelManager {
 				{ subdomain, recoveredRequests: orphaned.size },
 				"Recovered pending requests after reconnect",
 			);
+		} else {
+			// Fresh tunnel session (not a grace-period reconnect) — drop any stale
+			// cached responses so a restarted local app never serves old assets.
+			void purgeSubdomain(subdomain);
 		}
 
 		this.tunnels.set(subdomain, {
