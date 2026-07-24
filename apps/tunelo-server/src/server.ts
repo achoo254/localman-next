@@ -5,7 +5,7 @@ import { createApiRouter } from "./api/create-api-router.js";
 import { renderLoginPage } from "./api/render-login-page.js";
 import { createKeyStore } from "./key-store/create-key-store.js";
 import { createLogger } from "./logger.js";
-import { createRelayHandler } from "./request-relay.js";
+import { createRelayHandler, extractSubdomain } from "./request-relay.js";
 import { usageTracker } from "./services/usage-tracker.js";
 import { tunnelManager } from "./tunnel-manager.js";
 import { attachWsHandler } from "./ws-handler.js";
@@ -21,8 +21,19 @@ async function start(): Promise<void> {
 	usageTracker.start();
 
 	const app = express();
+	const relay = createRelayHandler();
 
-	// Mount API router (device pairing + token verify)
+	// Control-plane (device pairing, token verify, login page) lives on the apex
+	// host `tunnel.inetdev.io.vn` only. On a tenant subdomain every path belongs
+	// to the user's app, so relay straight through before any reserved route can
+	// shadow it (e.g. an app that has its own /login or /api).
+	app.use((req, res, next) => {
+		if (extractSubdomain(req.headers.host ?? "") !== null)
+			return relay(req, res);
+		next();
+	});
+
+	// Mount API router (device pairing + token verify) — apex only.
 	const apiRouter = createApiRouter();
 	app.use("/api", apiRouter);
 
@@ -32,8 +43,7 @@ async function start(): Promise<void> {
 		res.type("html").send(renderLoginPage(requestId));
 	});
 
-	// Catch-all: relay handler gets raw req/res (no Express middleware)
-	const relay = createRelayHandler();
+	// Apex fallthrough (health, unknown paths): relay handler gets raw req/res.
 	app.use((req, res) => relay(req, res));
 
 	const server = http.createServer(app);

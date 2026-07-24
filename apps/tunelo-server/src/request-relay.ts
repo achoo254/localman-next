@@ -22,17 +22,18 @@ export function extractSubdomain(host: string): string | null {
 
 export function createRelayHandler(): http.RequestListener {
 	return (req, res) => {
-		// Health check — handled before relay
-		if (req.url === DEFAULTS.HEALTH_PATH && req.method === "GET") {
-			res.writeHead(200, { "content-type": "application/json" });
-			res.end(JSON.stringify({ status: "ok", ...tunnelManager.getStats() }));
-			return;
-		}
-
 		const host = req.headers.host ?? "";
 		const subdomain = extractSubdomain(host);
 
+		// Apex control-plane host (no subdomain): serve tunelo's own /health, else
+		// reject. On a tenant subdomain `/health` belongs to the user's app and is
+		// relayed like any other path.
 		if (!subdomain) {
+			if (req.url === DEFAULTS.HEALTH_PATH && req.method === "GET") {
+				res.writeHead(200, { "content-type": "application/json" });
+				res.end(JSON.stringify({ status: "ok", ...tunnelManager.getStats() }));
+				return;
+			}
 			res.writeHead(400, { "content-type": "text/plain" });
 			res.end("Bad Request: no tunnel subdomain in Host header");
 			return;
