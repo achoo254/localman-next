@@ -2,9 +2,11 @@
 
 import http from "node:http";
 import { getInspectorHtml } from "./inspector-ui.js";
+import { listenWithPortFallback } from "./listen-with-port-fallback.js";
 import type { InspectorEntry, RequestStore } from "./request-store.js";
 
 interface InspectorServerOptions {
+	/** Preferred port — the next free one is used when it is taken */
 	port: number;
 	store: RequestStore;
 	/** Callback to replay a request by ID — returns the new entry */
@@ -39,9 +41,17 @@ function createRateLimiter(maxPerSec: number) {
 	};
 }
 
-export function startInspectorServer(
+export interface InspectorServerHandle {
+	server: http.Server;
+	/** Port the inspector is actually reachable on */
+	port: number;
+	/** True when the preferred port was busy */
+	fellBack: boolean;
+}
+
+export async function startInspectorServer(
 	options: InspectorServerOptions,
-): http.Server {
+): Promise<InspectorServerHandle> {
 	const { port, store, onReplay, onReplayCustom, getTunnels } = options;
 	const sseClients = new Set<http.ServerResponse>();
 	const replayLimiter = createRateLimiter(10);
@@ -55,7 +65,8 @@ export function startInspectorServer(
 	});
 
 	const server = http.createServer((req, res) => {
-		const url = new URL(req.url ?? "/", `http://localhost:${port}`);
+		// Base is only needed so relative request targets parse; the host is irrelevant.
+		const url = new URL(req.url ?? "/", "http://localhost");
 		const pathname = url.pathname;
 
 		// CORS for local dev
@@ -190,11 +201,12 @@ export function startInspectorServer(
 		res.end("Not Found");
 	});
 
-	server.listen(port, "127.0.0.1", () => {
-		// Server started — logged by caller
-	});
+	const { port: boundPort, fellBack } = await listenWithPortFallback(
+		server,
+		port,
+	);
 
-	return server;
+	return { server, port: boundPort, fellBack };
 }
 
 function sendJson(

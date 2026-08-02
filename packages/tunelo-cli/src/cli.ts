@@ -30,9 +30,17 @@ program
 	.option("-k, --key <apikey>", "API key for authentication")
 	.option("--server <url>", "Tunnel server URL")
 	.option("-a, --auth <user:pass>", "Protect tunnel(s) with Basic Auth")
-	.option("--inspect-port <port>", "Inspector UI port (default: 4040)", "4040")
+	.option(
+		"--inspect-port <port>",
+		"Inspector UI port; next free port is used if taken (default: 4040)",
+		"4040",
+	)
 	.option("--no-inspect", "Disable request inspector")
-	.option("--portal-port <port>", "Portal server port (default: 4041)", "4041")
+	.option(
+		"--portal-port <port>",
+		"Portal server port; next free port is used if taken (default: 4041)",
+		"4041",
+	)
 	.option("--no-portal", "Disable the portal server")
 	.option("-q, --quiet", "Suppress request logging")
 	.option("-v, --verbose", "Show extra details (body size)")
@@ -122,13 +130,19 @@ program
 					options.auth !== undefined,
 				);
 				if (inspector) {
-					inspector.start();
-					display.showInspector(inspectPort);
+					inspector
+						.start()
+						.then((boundPort) => {
+							display.showInspector(boundPort, inspectPort);
+						})
+						.catch((err: Error) => {
+							display.showError(`Inspector failed to start: ${err.message}`);
+						});
 				}
 				if (portalEnabled) {
 					startPortalServer(portalPort)
-						.then(() => {
-							display.showPortal(portalPort);
+						.then((boundPort) => {
+							display.showPortal(boundPort, portalPort);
 						})
 						.catch((err: Error) => {
 							display.showError(

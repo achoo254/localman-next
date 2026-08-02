@@ -4,6 +4,7 @@ import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { listenWithPortFallback } from "./listen-with-port-fallback.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -57,42 +58,38 @@ function serveFile(
 	});
 }
 
-export function startPortalServer(port: number): Promise<void> {
-	return new Promise((resolve, reject) => {
-		const distDir = resolveDistDir();
-		const indexPath = path.join(distDir, "index.html");
+/**
+ * Serves the portal on `port`, or the next free port when it is taken,
+ * so parallel CLI runs do not collide. Resolves with the bound port.
+ */
+export async function startPortalServer(port: number): Promise<number> {
+	const distDir = resolveDistDir();
+	const indexPath = path.join(distDir, "index.html");
 
-		const server = http.createServer((req, res) => {
-			const rawPath = new URL(req.url ?? "/", `http://localhost:${port}`)
-				.pathname;
+	const server = http.createServer((req, res) => {
+		const rawPath = new URL(req.url ?? "/", "http://localhost").pathname;
 
-			// Sanitize path to prevent directory traversal
-			const safePath = path.normalize(rawPath).replace(/^(\.\.[/\\])+/, "");
-			const filePath = path.join(distDir, safePath);
+		// Sanitize path to prevent directory traversal
+		const safePath = path.normalize(rawPath).replace(/^(\.\.[/\\])+/, "");
+		const filePath = path.join(distDir, safePath);
 
-			// Ensure resolved path stays within distDir
-			if (!filePath.startsWith(distDir)) {
-				res.writeHead(403, { "content-type": "text/plain" });
-				res.end("Forbidden");
-				return;
-			}
+		// Ensure resolved path stays within distDir
+		if (!filePath.startsWith(distDir)) {
+			res.writeHead(403, { "content-type": "text/plain" });
+			res.end("Forbidden");
+			return;
+		}
 
-			// If path is a directory, serve index.html inside it
-			const targetPath =
-				safePath === "/" || safePath.endsWith("/") ? indexPath : filePath;
+		// If path is a directory, serve index.html inside it
+		const targetPath =
+			safePath === "/" || safePath.endsWith("/") ? indexPath : filePath;
 
-			serveFile(res, targetPath, indexPath);
-		});
-
-		server.on("error", (err) => {
-			reject(err);
-		});
-
-		server.listen(port, "127.0.0.1", () => {
-			activeServer = server;
-			resolve();
-		});
+		serveFile(res, targetPath, indexPath);
 	});
+
+	const { port: boundPort } = await listenWithPortFallback(server, port);
+	activeServer = server;
+	return boundPort;
 }
 
 export function stopPortalServer(): Promise<void> {

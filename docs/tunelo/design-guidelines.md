@@ -119,7 +119,9 @@ tunelo http 3000 --server wss://my-tunnel-server.com
 
 ## Portal UI Guidelines (v0.3)
 
-### Client Portal (localhost:4040)
+### Client Portal (localhost:4041)
+
+**Port:** defaults to 4041 (`--portal-port`), the inspector to 4040 (`--inspect-port`). Both bind to the next free port when the preferred one is taken, so parallel `tunelo http` runs never collide — the CLI prints the port it actually used.
 
 **Purpose:** Self-service for users — sign up, verify TOTP, manage API keys, view usage.
 

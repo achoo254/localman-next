@@ -6,6 +6,7 @@ import type { InspectorEntry } from "./request-store.js";
 import { RequestStore } from "./request-store.js";
 
 interface InspectorIntegrationOptions {
+	/** Preferred inspector port — the next free one is used when it is taken */
 	inspectPort: number;
 	/** Subdomain→port map (mutated externally as tunnels register) */
 	subdomainPortMap: Map<string, number>;
@@ -15,7 +16,8 @@ interface InspectorIntegrationOptions {
 
 export interface InspectorIntegration {
 	store: RequestStore;
-	start(): void;
+	/** Resolves with the port the inspector actually bound to */
+	start(): Promise<number>;
 }
 
 export function createInspectorIntegration(
@@ -24,8 +26,8 @@ export function createInspectorIntegration(
 	const { inspectPort, subdomainPortMap, defaultPort } = options;
 	const store = new RequestStore();
 
-	function start(): void {
-		startInspectorServer({
+	async function start(): Promise<number> {
+		const handle = await startInspectorServer({
 			port: inspectPort,
 			store,
 			onReplay: async (id) => {
@@ -100,6 +102,7 @@ export function createInspectorIntegration(
 					url: `https://${subdomain}.tunnel.inetdev.io.vn`,
 				})),
 		});
+		return handle.port;
 	}
 
 	return { store, start };

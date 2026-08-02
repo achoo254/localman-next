@@ -18,6 +18,12 @@ function formatUptime(ms: number): string {
 	return `${seconds}s`;
 }
 
+/** Explains why a local UI is not on the port the user expected */
+function portFallbackNote(port: number, requestedPort?: number): string {
+	if (requestedPort === undefined || requestedPort === port) return "";
+	return chalk.gray(` (${requestedPort} in use)`);
+}
+
 export class Display {
 	private logLevel: LogLevel = "normal";
 	private startTime = 0;
@@ -55,15 +61,19 @@ export class Display {
 		console.log(chalk.gray("  ─".repeat(20)));
 	}
 
-	showInspector(port: number): void {
+	showInspector(port: number, requestedPort?: number): void {
 		console.log(
-			chalk.green("  Inspector: ") + chalk.cyan(`http://localhost:${port}`),
+			chalk.green("  Inspector: ") +
+				chalk.cyan(`http://localhost:${port}`) +
+				portFallbackNote(port, requestedPort),
 		);
 	}
 
-	showPortal(port: number): void {
+	showPortal(port: number, requestedPort?: number): void {
 		console.log(
-			chalk.green("  Portal:    ") + chalk.cyan(`http://localhost:${port}`),
+			chalk.green("  Portal:    ") +
+				chalk.cyan(`http://localhost:${port}`) +
+				portFallbackNote(port, requestedPort),
 		);
 	}
 
