@@ -33,7 +33,16 @@ Kiểm tra:
 tunelo --version
 ```
 
-Cập nhật bản mới: `npm update -g @dattqh/tunelo` (hoặc `pnpm update -g @dattqh/tunelo`).
+### Cập nhật
+
+```bash
+tunelo update           # kiểm tra rồi cài bản mới nhất
+tunelo update --check   # chỉ xem có bản mới không, không cài
+```
+
+Lệnh này tự nhận biết bạn cài bằng npm hay pnpm và gọi đúng trình quản lý. Nếu registry không truy cập được, nó in ra lệnh cài thủ công tương ứng.
+
+Tunnel đang chạy vẫn giữ code cũ trong bộ nhớ — khởi động lại để dùng bản mới.
 
 ## Sử dụng nhanh
 

@@ -6,6 +6,7 @@ import { loadConfig } from "./config.js";
 import type { Display } from "./display.js";
 import { TcpProxy } from "./tcp-proxy.js";
 import { TunnelClient } from "./tunnel-client.js";
+import { VERSION } from "./version.js";
 
 export function registerTcpCommand(program: Command, display: Display): void {
 	program
@@ -38,7 +39,7 @@ export function registerTcpCommand(program: Command, display: Display): void {
 					process.exit(1);
 				}
 
-				display.showBanner("0.1.0");
+				display.showBanner(VERSION);
 				display.showConnecting(serverUrl);
 
 				const client = new TunnelClient({ serverUrl, apiKey, localPort: port });

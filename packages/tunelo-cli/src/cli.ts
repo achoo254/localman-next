@@ -4,6 +4,7 @@ import { program } from "commander";
 import { registerLoginCommands } from "./cli-login-command.js";
 import { registerStatusCommands } from "./cli-status-commands.js";
 import { registerTcpCommand } from "./cli-tcp-command.js";
+import { registerUpdateCommand } from "./cli-update-command.js";
 import { getConfigPath, loadConfig, saveConfig } from "./config.js";
 import { Display } from "./display.js";
 import { createInspectorIntegration } from "./inspector-integration.js";
@@ -12,12 +13,13 @@ import type { InspectorEntry } from "./request-store.js";
 import { type RunTunnel, startRunRecord } from "./run-registry.js";
 import { TunnelClient } from "./tunnel-client.js";
 import { parseTunnelArgs } from "./tunnel-config-parser.js";
+import { VERSION } from "./version.js";
 
 const display = new Display();
 
 program
 	.name("tunelo")
-	.version("1.4.1")
+	.version(VERSION)
 	.description("Expose local services to the internet");
 
 program
@@ -86,7 +88,7 @@ program
 			if (options.quiet) display.setLogLevel("quiet");
 			else if (options.verbose) display.setLogLevel("verbose");
 
-			display.showBanner("1.4.1");
+			display.showBanner(VERSION);
 			display.showConnecting(serverUrl);
 
 			const primary = tunnels[0];
@@ -217,6 +219,7 @@ program
 registerTcpCommand(program, display);
 registerLoginCommands(program);
 registerStatusCommands(program);
+registerUpdateCommand(program);
 
 program
 	.command("config")
