@@ -35,6 +35,8 @@ export class TunnelClient extends EventEmitter {
 	private socket: WebSocket | null = null;
 	private stopped = false;
 	private attempts = 0;
+	/** Guards against more than one retry loop running at a time. */
+	private reconnecting = false;
 	private readonly options: TunnelClientOptions;
 	/** Maps subdomain → local port for multi-tunnel routing */
 	private subdomainPortMap = new Map<string, number>();
@@ -55,21 +57,29 @@ export class TunnelClient extends EventEmitter {
 	connect(): Promise<AuthResult> {
 		return new Promise((resolve, reject) => {
 			const wsUrl = this.buildWsUrl();
-			this.socket = new WebSocket(wsUrl);
+			// Bind every handler to this exact socket. Reading `this.socket`
+			// inside them lets a superseded socket's late events act on the
+			// live one — an "open" arriving after a newer socket was assigned
+			// used to send the auth frame into a still-CONNECTING socket and
+			// throw out of the event loop, killing the CLI mid-reconnect.
+			const socket = new WebSocket(wsUrl);
+			this.socket = socket;
 
 			let authResolved = false;
+			/** Set only when the server actually granted a tunnel. */
+			let authAccepted = false;
 
-			this.socket.on("open", () => {
+			socket.on("open", () => {
 				const authMsg: AuthMessage = {
 					type: "auth",
 					key: this.options.apiKey,
 					subdomain: this.options.subdomain ?? "",
 					auth: this.options.auth,
 				};
-				this.socket?.send(JSON.stringify(authMsg));
+				socket.send(JSON.stringify(authMsg));
 			});
 
-			this.socket.on("message", (data) => {
+			socket.on("message", (data) => {
 				let msg: ServerToClientMessage;
 				try {
 					msg = parseMessage(data.toString()) as ServerToClientMessage;
@@ -79,8 +89,9 @@ export class TunnelClient extends EventEmitter {
 
 				switch (msg.type) {
 					case "auth-result":
-						this.handleAuthResult(msg, authResolved, resolve, reject);
+						this.handleAuthResult(msg, authResolved, socket, resolve, reject);
 						if (!authResolved) authResolved = true;
+						if (msg.success) authAccepted = true;
 						break;
 					case "register-tunnel-result":
 						this.handleRegisterTunnelResult(msg);
@@ -119,18 +130,24 @@ export class TunnelClient extends EventEmitter {
 				}
 			});
 
-			this.socket.on("close", () => {
+			socket.on("close", () => {
+				// A superseded socket's teardown must not touch live state.
+				if (this.socket !== socket) return;
 				// Abort in-flight local requests — their responses can't be delivered.
 				for (const stream of this.activeStreams.values()) stream.cancel();
 				this.activeStreams.clear();
 				this.wsAppProxy.closeAll();
 				this.emit("disconnected");
-				if (!this.stopped && authResolved) {
+				// Only chase a connection that was actually granted. A rejected auth
+				// closes this socket too, but the caller's retry loop already owns
+				// that case — reconnecting here as well forks a second loop, and each
+				// fork restarts the backoff at 1s, so the delay never grows.
+				if (!this.stopped && authAccepted) {
 					this.reconnect();
 				}
 			});
 
-			this.socket.on("error", (err: Error) => {
+			socket.on("error", (err: Error) => {
 				if (!authResolved) {
 					authResolved = true;
 					reject(err);
@@ -178,13 +195,14 @@ export class TunnelClient extends EventEmitter {
 	private handleAuthResult(
 		result: AuthResult,
 		alreadyResolved: boolean,
+		socket: WebSocket,
 		resolve: (r: AuthResult) => void,
 		reject: (e: Error) => void,
 	): void {
 		if (alreadyResolved) return;
 
 		if (!result.success) {
-			this.socket?.close();
+			socket.close();
 			reject(new Error(result.error ?? "Auth failed"));
 			return;
 		}
@@ -273,18 +291,30 @@ export class TunnelClient extends EventEmitter {
 	}
 
 	private async reconnect(): Promise<void> {
+		// One retry loop at a time. Concurrent loops each hold their own `delay`,
+		// so the backoff stops growing and the client hammers the server at the
+		// base interval exactly when the server is least able to take it.
+		if (this.reconnecting) return;
+		this.reconnecting = true;
 		this.subdomainPortMap.clear();
 		let delay: number = DEFAULTS.RECONNECT_BASE_MS;
-		while (!this.stopped) {
-			this.attempts++;
-			this.emit("reconnecting", { attempt: this.attempts, delay });
-			await new Promise((r) => setTimeout(r, delay));
-			try {
-				await this.connect();
-				return;
-			} catch {
-				delay = Math.min(delay * 2, DEFAULTS.RECONNECT_MAX_MS);
+		try {
+			while (!this.stopped) {
+				this.attempts++;
+				// Jitter: every tunnel on a restarted server wakes up together
+				// otherwise, and they retry in lockstep for as long as it takes.
+				const wait = Math.round(delay * (0.5 + Math.random() / 2));
+				this.emit("reconnecting", { attempt: this.attempts, delay: wait });
+				await new Promise((r) => setTimeout(r, wait));
+				try {
+					await this.connect();
+					return;
+				} catch {
+					delay = Math.min(delay * 2, DEFAULTS.RECONNECT_MAX_MS);
+				}
 			}
+		} finally {
+			this.reconnecting = false;
 		}
 	}
 }
