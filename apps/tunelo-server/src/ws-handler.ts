@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import type http from "node:http";
+import type { Duplex } from "node:stream";
 import {
 	type AuthMessage,
 	type ClientToServerMessage,
@@ -36,6 +37,35 @@ const logger = createLogger("tunelo-ws");
 
 function hashKey(key: string): string {
 	return createHash("sha256").update(key).digest("hex");
+}
+
+/**
+ * Refuse a WebSocket upgrade with a real HTTP response.
+ *
+ * Destroying the socket without writing anything leaves the peer reading a
+ * response header that never arrives: a reverse proxy reports "upstream
+ * prematurely closed connection" and the browser sees a reset instead of a
+ * status it can act on. Mirrors the plain-HTTP relay, which answers the same
+ * conditions with 400/502.
+ */
+function rejectUpgrade(
+	socket: Duplex,
+	statusLine: string,
+	message: string,
+	extraHeaders: Record<string, string> = {},
+): void {
+	const body = `${message}\n`;
+	const headers = {
+		"content-type": "text/plain",
+		"content-length": String(Buffer.byteLength(body)),
+		connection: "close",
+		...extraHeaders,
+	};
+	const headerLines = Object.entries(headers)
+		.map(([name, value]) => `${name}: ${value}\r\n`)
+		.join("");
+	socket.write(`HTTP/1.1 ${statusLine}\r\n${headerLines}\r\n${body}`);
+	socket.destroy();
 }
 
 /** Per-connection state attached after upgrade */
@@ -80,10 +110,9 @@ export function attachWsHandler(server: http.Server, keyStore: KeyStore): void {
 		// Browser WebSocket to a tunneled app → relay through the control socket.
 		if (subdomain && tunnelManager.has(subdomain)) {
 			if (!tunnelManager.checkAuth(subdomain, req.headers.authorization)) {
-				socket.write(
-					'HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm="tunelo"\r\nConnection: close\r\n\r\n',
-				);
-				socket.destroy();
+				rejectUpgrade(socket, "401 Unauthorized", "Unauthorized", {
+					"www-authenticate": 'Basic realm="tunelo"',
+				});
 				return;
 			}
 			const proto = req.headers["sec-websocket-protocol"];
@@ -99,7 +128,27 @@ export function attachWsHandler(server: http.Server, keyStore: KeyStore): void {
 			return;
 		}
 
-		socket.destroy();
+		// No control channel and no live tunnel — answer instead of hanging up.
+		// A silent destroy left no trace in the relay log while the proxy logged
+		// thousands of "upstream prematurely closed connection" errors.
+		if (!subdomain) {
+			logger.warn(
+				{ host: req.headers.host, path: url.pathname },
+				"WS upgrade rejected: no tunnel subdomain in Host header",
+			);
+			rejectUpgrade(
+				socket,
+				"400 Bad Request",
+				"Bad Request: no tunnel subdomain in Host header",
+			);
+			return;
+		}
+
+		logger.warn(
+			{ subdomain, path: url.pathname },
+			"WS upgrade rejected: tunnel not found",
+		);
+		rejectUpgrade(socket, "502 Bad Gateway", `Tunnel not found: ${subdomain}`);
 	});
 
 	wss.on("connection", (ws: WebSocket) => {
