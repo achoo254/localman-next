@@ -69,6 +69,32 @@ lại vốn đã có sẵn.
 - **Thời gian phát hiện là 2×`PING_INTERVAL_MS`**, không phải 1×. Chu kỳ đầu gửi, chu kỳ sau mới thấy
   thiếu pong. Chỉnh hằng số thì nhớ nhân đôi.
 
+## Bổ sung sau khi nghiệm thu trên lab: hạn chờ cho một lần kết nối
+
+Chạy lại đúng ca hỏng trên `171` (`iptables -j DROP` tới edge, tức chết im lặng) cho thấy client phát
+hiện sau **56 giây** như thiết kế — nhưng lộ ra nửa còn lại của cùng một lỗi:
+
+```
+11:56:12  đặt DROP
+11:57:08  Disconnected + Reconnecting (attempt 1, 764ms)   ← phát hiện, đúng như mong đợi
+11:58:42  gỡ DROP                                          ← đường truyền đã thông
+11:59:23  Error: connect ETIMEDOUT                         ← 135 giây kẹt trên MỘT lần thử
+11:59:24  Status: Online
+```
+
+Cùng cái hố đen nuốt gói keepalive thì cũng nuốt gói SYN của lần kết nối lại. `new WebSocket()` không
+có hạn chờ nên lần thử đó nằm chờ hết ngân sách gửi lại SYN của kernel — đo được 135 giây — và suốt
+thời gian ấy vòng backoff **kẹt trên đúng một lần thử**, không lùi cũng không tiến. Đường truyền thông
+lại lúc 11:58:42 mà client tới 11:59:24 mới nối được: **42 giây chết oan**, dài hơn cả thời gian phát
+hiện mà ADR này vừa mua được.
+
+⟹ Đặt `handshakeTimeout` (hằng số `CONNECT_TIMEOUT_MS`, 10s) cho mỗi lần kết nối. Lần thử hỏng nhanh,
+backoff lấy lại quyền định nhịp, và thời gian hồi phục lệ thuộc vào nhịp lùi của ta chứ không vào
+tham số `tcp_syn_retries` của máy đang chạy.
+
+**Bài học rộng hơn:** phát hiện nhanh mà kết nối lại không có hạn chờ thì chỉ dời điểm nghẽn, không gỡ
+nó. Cả hai đầu của vòng hồi phục đều phải có mốc thời gian của riêng mình.
+
 ## Phương án đã cân nhắc
 
 - **Watchdog ngoài (timer systemd gọi `curl` qua đường công khai, hỏng thì restart unit).** Loại vì nó

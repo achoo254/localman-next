@@ -9,6 +9,10 @@ export const DEFAULTS = {
 	/** Idle timeout (ms) for a relayed response stream — reset on every frame so SSE/long downloads stay open */
 	STREAM_IDLE_TIMEOUT_MS: 60_000,
 	PING_INTERVAL_MS: 30_000,
+	/** Cap on the WS handshake, TCP connect included. Without one, a blackholed
+	 *  SYN stalls the attempt for the kernel's whole retry budget (~135s
+	 *  measured), and the reconnect backoff sits idle for all of it. */
+	CONNECT_TIMEOUT_MS: 10_000,
 	RECONNECT_BASE_MS: 1_000,
 	RECONNECT_MAX_MS: 30_000,
 	MAX_SUBDOMAIN_LENGTH: 63,

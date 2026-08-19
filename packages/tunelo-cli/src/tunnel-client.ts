@@ -32,6 +32,8 @@ export interface TunnelClientOptions {
 	/** Keepalive probe period (ms). Overridden only by tests — the wait for a
 	 *  missed pong is two of these, and the default makes that a full minute. */
 	pingIntervalMs?: number;
+	/** Cap on one connect attempt (ms). Overridden only by tests. */
+	connectTimeoutMs?: number;
 }
 
 export class TunnelClient extends EventEmitter {
@@ -65,7 +67,15 @@ export class TunnelClient extends EventEmitter {
 			// live one — an "open" arriving after a newer socket was assigned
 			// used to send the auth frame into a still-CONNECTING socket and
 			// throw out of the event loop, killing the CLI mid-reconnect.
-			const socket = new WebSocket(wsUrl);
+			// Cap the handshake. A path that blackholes packets — the same one that
+			// strands the keepalive — swallows our SYN too, and an uncapped attempt
+			// then waits out the kernel's retry budget: measured at 135s against a
+			// DROP rule, during which the backoff loop is stuck on that one attempt
+			// and cannot retry. The path came back 42s before the client noticed.
+			const socket = new WebSocket(wsUrl, {
+				handshakeTimeout:
+					this.options.connectTimeoutMs ?? DEFAULTS.CONNECT_TIMEOUT_MS,
+			});
 			this.socket = socket;
 
 			let authResolved = false;
