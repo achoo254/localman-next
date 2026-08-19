@@ -29,6 +29,9 @@ export interface TunnelClientOptions {
 	auth?: string;
 	/** Additional tunnels to register after initial auth */
 	additionalTunnels?: TunnelMapping[];
+	/** Keepalive probe period (ms). Overridden only by tests — the wait for a
+	 *  missed pong is two of these, and the default makes that a full minute. */
+	pingIntervalMs?: number;
 }
 
 export class TunnelClient extends EventEmitter {
@@ -68,6 +71,14 @@ export class TunnelClient extends EventEmitter {
 			let authResolved = false;
 			/** Set only when the server actually granted a tunnel. */
 			let authAccepted = false;
+			/** Cleared on close so a dead socket's probes cannot outlive it. */
+			let keepalive: ReturnType<typeof setInterval> | null = null;
+			/** Flipped back by every pong; a probe finding it false kills the socket. */
+			let alive = true;
+
+			socket.on("pong", () => {
+				alive = true;
+			});
 
 			socket.on("open", () => {
 				const authMsg: AuthMessage = {
@@ -77,6 +88,26 @@ export class TunnelClient extends EventEmitter {
 					auth: this.options.auth,
 				};
 				socket.send(JSON.stringify(authMsg));
+
+				// The server probes us and drops the tunnel when we stop answering,
+				// but nothing told us it had. A path that dies without a FIN — a NAT
+				// or firewall dropping the flow, which is how every tunnel behind one
+				// eventually goes — leaves this socket ESTABLISHED forever: no
+				// "close" event, so no reconnect, while the server has long since
+				// unregistered the subdomain and answers callers 502. Probe back so
+				// we notice on our own instead of waiting for an event that is never
+				// coming. `terminate` (not `close`) is what a dead peer needs: a
+				// close handshake waits for a reply that will not arrive.
+				keepalive = setInterval(() => {
+					if (socket.readyState !== WebSocket.OPEN) return;
+					if (!alive) {
+						socket.terminate();
+						return;
+					}
+					alive = false;
+					socket.ping();
+				}, this.options.pingIntervalMs ?? DEFAULTS.PING_INTERVAL_MS);
+				keepalive.unref?.();
 			});
 
 			socket.on("message", (data) => {
@@ -131,6 +162,12 @@ export class TunnelClient extends EventEmitter {
 			});
 
 			socket.on("close", () => {
+				// Belongs to this socket, so it is cleared even when a superseded
+				// socket closes — otherwise its probes keep firing forever.
+				if (keepalive) {
+					clearInterval(keepalive);
+					keepalive = null;
+				}
 				// A superseded socket's teardown must not touch live state.
 				if (this.socket !== socket) return;
 				// Abort in-flight local requests — their responses can't be delivered.
