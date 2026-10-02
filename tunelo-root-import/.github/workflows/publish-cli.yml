@@ -2,6 +2,7 @@
 #
 # Release:
 #   npm version <patch|minor|major> --workspace tunelo --no-git-tag-version   # bump packages/client
+#   then set the same version in packages/client/src/version.ts (VERSION; a test checks they match)
 #   git commit -am "chore(release): X.Y.Z" && git tag vX.Y.Z && git push && git push --tags
 # The tag must match packages/client/package.json version, and a version
 # already on npmjs cannot be published again — always bump before tagging.
