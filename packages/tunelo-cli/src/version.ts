@@ -5,4 +5,4 @@
 export const VERSION = "1.6.1";
 
 /** npm package name, used by `tunelo update` to talk to the registry */
-export const PACKAGE_NAME = "@dattqh/tunelo";
+export const PACKAGE_NAME = "tunelo";

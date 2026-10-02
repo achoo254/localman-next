@@ -4,27 +4,14 @@ Expose dịch vụ local ra internet qua HTTPS wildcard subdomain — `https://<
 
 ## Cài đặt
 
-Yêu cầu: **Node.js 20+** (kèm npm; hoặc pnpm 9+). Không cần clone repo.
-
-### Bước 1 — cấu hình registry `@dattqh` (làm 1 lần)
-
-CLI phát hành trên GitLab Package Registry. Lệnh dưới chạy được trên **macOS / Windows / Linux** (cmd, PowerShell, bash, zsh); npm và pnpm dùng chung `~/.npmrc`:
-
-```bash
-npm config set @dattqh:registry https://gitlabs.inet.vn/api/v4/projects/343/packages/npm/
-npm config set "//gitlabs.inet.vn/api/v4/projects/343/packages/npm/:_authToken" GB1Tos8sUW1F9yBP9Ymz
-```
-
-> Token trên chỉ có quyền **đọc** registry — dùng để cài, không truy cập được gì khác.
-
-### Bước 2 — cài global
+Yêu cầu: **Node.js 20+** (kèm npm; hoặc pnpm 9+). Không cần clone repo, không cần cấu hình registry hay token — CLI phát hành công khai trên [npmjs](https://www.npmjs.com/package/tunelo). Lệnh chạy được trên **macOS / Windows / Linux** (cmd, PowerShell, bash, zsh).
 
 ```bash
 # npm
-npm install -g @dattqh/tunelo
+npm install -g tunelo
 
 # hoặc pnpm (chạy `pnpm setup` 1 lần để có global bin trên PATH)
-pnpm setup && pnpm add -g @dattqh/tunelo
+pnpm setup && pnpm add -g tunelo
 ```
 
 Kiểm tra:
@@ -43,6 +30,17 @@ tunelo update --check   # chỉ xem có bản mới không, không cài
 Lệnh này tự nhận biết bạn cài bằng npm hay pnpm và gọi đúng trình quản lý. Nếu registry không truy cập được, nó in ra lệnh cài thủ công tương ứng.
 
 Tunnel đang chạy vẫn giữ code cũ trong bộ nhớ — khởi động lại để dùng bản mới.
+
+### Chuyển từ bản cũ `@dattqh/tunelo` (cài từ GitLab registry)
+
+Bản cũ không tự cập nhật sang tên gói mới. Làm một lần: gỡ bản cũ, xóa cấu hình registry cũ, rồi cài lại như trên. Thông tin đăng nhập trong `~/.tunelo/config.json` được giữ nguyên, không cần `tunelo login` lại.
+
+```bash
+npm uninstall -g @dattqh/tunelo          # hoặc: pnpm remove -g @dattqh/tunelo
+npm config delete @dattqh:registry
+npm config delete "//gitlabs.inet.vn/api/v4/projects/343/packages/npm/:_authToken"
+npm install -g tunelo
+```
 
 ## Sử dụng nhanh
 

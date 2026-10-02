@@ -59,23 +59,21 @@ describe("detectPackageManager", () => {
 		expect(detectPackageManager("C:\\Users\\u\\AppData\\Roaming\\npm\\x")).toBe(
 			"npm",
 		);
-		expect(detectPackageManager("/usr/lib/node_modules/@dattqh/tunelo")).toBe(
-			"npm",
-		);
+		expect(detectPackageManager("/usr/lib/node_modules/tunelo")).toBe("npm");
 	});
 });
 
 describe("buildInstallArgs", () => {
 	it("uses the global install verb of each manager", () => {
-		expect(buildInstallArgs("npm", "@dattqh/tunelo@latest")).toEqual([
+		expect(buildInstallArgs("npm", "tunelo@latest")).toEqual([
 			"install",
 			"-g",
-			"@dattqh/tunelo@latest",
+			"tunelo@latest",
 		]);
-		expect(buildInstallArgs("pnpm", "@dattqh/tunelo@latest")).toEqual([
+		expect(buildInstallArgs("pnpm", "tunelo@latest")).toEqual([
 			"add",
 			"-g",
-			"@dattqh/tunelo@latest",
+			"tunelo@latest",
 		]);
 	});
 });

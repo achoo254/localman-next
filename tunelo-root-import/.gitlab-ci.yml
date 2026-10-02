@@ -1,15 +1,10 @@
 # Tunelo CI/CD
 #
-# Hai luồng tách biệt:
-#   - Push nhánh main → build (install → lint → test → bundle) → deploy_staging (.65).
-#   - Push git tag    → publish-cli: build + publish @dattqh/tunelo lên GitLab
-#                       Package Registry (auth bằng CI_JOB_TOKEN, không cần token cá nhân).
+# Push nhánh main → build (install → lint → test → bundle) → deploy_staging (.65).
 # MR / nhánh khác không tạo pipeline.
 #
-# Release CLI:
-#   npm version <patch|minor|major> --workspace @dattqh/tunelo   # bump version
-#   git commit -am "release: vX.Y.Z" && git tag vX.Y.Z && git push && git push --tags
-# (publish lại một version đã tồn tại sẽ fail — luôn bump trước khi tag.)
+# CLI `tunelo` phát hành lên npmjs bằng GitHub Actions (.github/workflows/publish-cli.yml)
+# khi đẩy git tag vX.Y.Z lên GitHub; GitLab không còn publish CLI.
 #
 # Deploy mirror lại infra/deploy.sh nhưng dùng SSH port + private key inject từ
 # CI/CD Variables (SSH_PRIVATE_KEY, STAGING_HOST, STAGING_PORT, STAGING_USER, DEPLOY_PATH).
@@ -18,7 +13,6 @@
 stages:
   - build
   - deploy
-  - publish
 
 default:
   image: node:20-bookworm-slim
@@ -90,31 +84,3 @@ deploy_staging:
       done
       ssh $SSH_OPTS "$TARGET" "pm2 status tunelo"
       [ "$ok" = "1" ] || { echo "Health check FAILED after retries"; exit 1; }
-
-# Publish CLI (@dattqh/tunelo) to the project's GitLab Package Registry on a git tag.
-# Publishes the version in packages/client/package.json — bump it before tagging.
-# Auth: built-in CI_JOB_TOKEN (no personal token). Publishes from dist/ where
-# build:client emits a self-contained package.json (files list excludes .npmrc).
-publish-cli:
-  stage: publish
-  rules:
-    - if: "$CI_COMMIT_TAG"
-  cache:
-    key:
-      files:
-        - pnpm-lock.yaml
-    paths:
-      - .pnpm-store
-  before_script:
-    - corepack enable
-    - pnpm config set store-dir .pnpm-store
-  script:
-    - pnpm install --frozen-lockfile
-    - pnpm build:client
-    - cd packages/client/dist
-    - |
-      {
-        echo "@dattqh:registry=${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/npm/"
-        echo "${CI_API_V4_URL#https:}/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${CI_JOB_TOKEN}"
-      } > .npmrc
-    - npm publish

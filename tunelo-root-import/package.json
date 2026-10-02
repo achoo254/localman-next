@@ -5,8 +5,8 @@
 	"workspaces": ["packages/*"],
 	"scripts": {
 		"dev:server": "pnpm --filter @tunelo/shared build && tsx watch --env-file=.env packages/server/src/server.ts",
-		"dev:client": "pnpm --filter @dattqh/tunelo dev",
-		"build": "pnpm --filter @tunelo/shared build && pnpm --filter @tunelo/server build && pnpm --filter @dattqh/tunelo build",
+		"dev:client": "pnpm --filter tunelo dev",
+		"build": "pnpm --filter @tunelo/shared build && pnpm --filter @tunelo/server build && pnpm --filter tunelo build",
 		"build:server": "tsx scripts/build-server.ts",
 		"build:client": "tsx scripts/build-client.ts",
 		"clean": "rm -rf packages/*/dist dist",
