@@ -1,27 +1,50 @@
 # Deployment Guide
 
-## CI/CD (GitLab) — Automated Deploy to Staging
+## Release & Deploy
 
-Repo được host trên `gitlabs.inet.vn/dattqh/tunelo`. Pipeline (`.gitlab-ci.yml`)
-**chỉ chạy khi push vào nhánh `main`** — feature branch / MR không tạo pipeline,
-không đụng tới server.
+Repo được host trên GitHub: `achoo254/tunelo`. CLI và server được phát hành theo
+hai đường riêng.
 
-**Luồng:** `build` (pnpm install → test → `pnpm build:server`) → `deploy_staging`
-(rsync bundle + PM2 restart trên staging `.65`). Deploy mirror `infra/deploy.sh`
-nhưng dùng SSH port riêng và private key inject từ CI/CD Variables.
+### CLI — publish lên npm (GitHub Actions)
 
-**CI/CD Variables** (Settings → CI/CD → Variables — tất cả `Protected`, chỉ lộ
-trên nhánh protected `main`):
+CLI phát hành công khai trên npm với tên gói **`tunelo`**
+(<https://www.npmjs.com/package/tunelo>). Workflow
+`.github/workflows/publish-cli.yml` chạy khi đẩy git tag `vX.Y.Z`: kiểm tra tag
+khớp version → `pnpm lint` → `pnpm test` → `pnpm build:client` → `npm publish`
+từ `packages/client/dist`.
 
-| Variable | Type | Ghi chú |
-|----------|------|---------|
-| `SSH_PRIVATE_KEY` | File | Private key SSH của staging (không mask được vì đa dòng) |
-| `STAGING_HOST` | Var | `103.72.98.65` |
-| `STAGING_PORT` | Var | `24700` |
-| `STAGING_USER` | Var | `root` |
-| `DEPLOY_PATH` | Var | `/var/www/tunelo` |
+Quy trình phát hành:
 
-Pipeline **không** đồng bộ `.env` — file secret nằm sẵn trên server tại
+```bash
+npm version <patch|minor|major> --workspace tunelo --no-git-tag-version   # bump packages/client
+# đặt cùng version vào packages/client/src/version.ts (VERSION) — test version.test.ts kiểm tra khớp
+git commit -am "chore(release): X.Y.Z" && git tag vX.Y.Z && git push && git push --tags
+```
+
+- Secret `NPM_TOKEN` (Settings → Secrets and variables → Actions): npm granular
+  access token có quyền publish gói `tunelo`.
+- Một version đã lên npm không publish lại được — luôn bump version trước khi tag.
+- Người dùng cài bằng `npm install -g tunelo`, cập nhật bằng `tunelo update`
+  (xem `README.md`). Bản cũ `@dattqh/tunelo` từng phát hành trên GitLab registry
+  đã ngừng; hướng dẫn chuyển nằm trong `README.md`.
+
+### Server — deploy thủ công lên staging
+
+Server **không** có pipeline tự động. Deploy từ máy có SSH tới staging:
+
+```bash
+bash infra/deploy.sh      # VPS_HOST, REMOTE_DIR có thể override qua biến môi trường
+```
+
+Script build bundle (`pnpm build:server`), rsync `dist/server.mjs`, `package.json`
+và `ecosystem.config.cjs` lên server, cài dependency production rồi restart PM2.
+
+Trước đây deploy staging chạy tự động bằng GitLab CI mỗi lần push `main`; pipeline
+này đã gỡ cùng với repo GitLab. Nếu dựng lại bằng GitHub Actions, workflow cần các
+secret tương ứng: `SSH_PRIVATE_KEY`, `STAGING_HOST`, `STAGING_PORT`,
+`STAGING_USER`, `DEPLOY_PATH`.
+
+Deploy **không** đồng bộ `.env` — file secret nằm sẵn trên server tại
 `/var/www/tunelo/.env` và được `ecosystem.config.cjs` nạp qua `--env-file`.
 Bản server hiện tại (MongoDB key-store) **bắt buộc** `MONGO_URI` và `JWT_SECRET`
 trong file này, nếu thiếu process crash-loop lúc khởi động. Set tối thiểu:
@@ -34,11 +57,6 @@ JWT_SECRET=<openssl rand -base64 48>                     # required
 ADMIN_EMAILS=you@example.com                             # optional
 NODE_ENV=production
 ```
-
-**Điều kiện chạy:** nhánh `main` là protected branch và có ít nhất 1 runner online
-nhận job untagged (hiện dùng shared runner instance của GitLab).
-
-Deploy thủ công vẫn dùng được: `bash infra/deploy.sh` (chạy từ máy có SSH tới server).
 
 ## Prerequisites
 

@@ -37,7 +37,7 @@ await build({
 // there. @tunelo/shared is bundled in, so it must NOT stay a workspace dep; keep
 // only the externalized runtime deps. Paths are relative to dist/ (publish root).
 // The explicit `files` list is a safety guard: publishing from dist/ must never
-// ship the CI .npmrc (it holds the CI job token).
+// ship a stray .npmrc (it can hold a registry auth token).
 const clientPkg = JSON.parse(
 	readFileSync(resolve(clientDir, "package.json"), "utf-8"),
 ) as Record<string, unknown>;

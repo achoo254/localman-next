@@ -68,6 +68,24 @@ At 5K concurrent tunnels, Tunelo uses ~15-20 MB server memory vs ~150-200 MB wit
 
 ## Quick Start
 
+### Install the CLI
+
+The CLI is published on [npm](https://www.npmjs.com/package/tunelo) as `tunelo` — no repo clone, registry setup or token needed. Requires Node.js 20+.
+
+```bash
+# npm
+npm install -g tunelo
+
+# or pnpm (run `pnpm setup` once so the global bin is on PATH)
+pnpm setup && pnpm add -g tunelo
+
+tunelo --version
+tunelo update           # upgrade to the latest version
+tunelo update --check   # only check, do not install
+```
+
+Upgrading from the old `@dattqh/tunelo` (installed from a GitLab registry)? See [README.md](./README.md#chuyển-từ-bản-cũ-dattqhtunelo-cài-từ-gitlab-registry) for the one-time migration.
+
 ### Prerequisites
 
 - Node.js 20+
@@ -149,7 +167,7 @@ tunelo/
 ├── packages/
 │   ├── shared/    # WS protocol types, constants, error codes
 │   ├── server/    # Tunnel server (HTTP + WebSocket relay)
-│   └── client/    # CLI tool (npm: @achoo254/tunelo)
+│   └── client/    # CLI tool (npm: tunelo)
 ├── infra/         # nginx, certbot, PM2, deploy script
 ├── tests/         # E2E test suite
 └── docs/          # Documentation
