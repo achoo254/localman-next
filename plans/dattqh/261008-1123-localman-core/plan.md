@@ -323,6 +323,13 @@ Không dùng design system của bên thứ ba. Jev chọn:
   - Jev chọn **Inter** (1.00) và **JetBrains Mono** (1.00).
 - Badge và nhãn dạng soft ở light mode dùng step 12 để đạt tương phản ≥ 4.5:1.
 
+### Vòng 20: sau khi xong phase 01 (2026-10-08)
+Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng site với dashboard, nên trang mock độc hại có thể gửi request kèm cookie phiên. Router đã sửa: mutation chỉ nhận JSON (body khác trả 415), không đọc query cho method khác GET, GET phải chỉ đọc. User giao 4 câu hỏi còn lại cho Jev (`jev-1.13.0`):
+- Push `main` lên `localman-next`, giữ 13 tag `tunelo-v*` ở local tới bản phát hành đầu từ monorepo (0.90). Đã push.
+- Giữ mock runtime ở `{secret}.localman.hoandat.com`, phòng CSRF ở phase 02: cookie `__Host-` SameSite=Strict, kiểm `Origin`/`Sec-Fetch-Site`, mutation chỉ nhận JSON (0.90). Không mua domain riêng (0.10).
+- Làm plan IdP (đợt 0) trước Localman phase 02, không dùng auth stub (0.96).
+- Repo `achoo254/tunelo` cũ: commit README chuyển hướng ngay, archive sau khi `tunelo-v1.7.0` phát hành từ monorepo (0.46; archive ngay 0.35; để nguyên tới khi phát hành 0.19). Độ tin cậy thấp, và `localman-next` đang private nên README chuyển hướng sẽ trỏ tới repo người ngoài không mở được. Chưa làm, chờ user.
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 
