@@ -17,9 +17,12 @@
 			"**/node_modules/**",
 			".pnpm-store",
 			".pnpm-store/**",
-			"repomix-output.xml",
 			".claude/**",
-			"pnpm-lock.yaml"
+			"**/.claude/**",
+			"pnpm-lock.yaml",
+			"plans/**",
+			"**/*.css",
+			"**/*.html"
 		]
 	},
 	"formatter": {
@@ -30,7 +33,13 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true
+			"recommended": true,
+			"suspicious": {
+				"noExplicitAny": "error"
+			},
+			"style": {
+				"noNonNullAssertion": "error"
+			}
 		}
 	},
 	"javascript": {

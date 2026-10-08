@@ -1,0 +1,7 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+allowBuilds:
+  '@biomejs/biome': true
+  bcrypt: true
+  esbuild: true

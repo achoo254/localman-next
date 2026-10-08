@@ -3,13 +3,12 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
 	test: {
-		include: ["packages/*/src/**/*.test.ts", "tests/**/*.test.ts"],
-		exclude: ["tests/load/**"],
+		include: ["src/**/*.test.ts"],
 		testTimeout: 30_000,
 	},
 	resolve: {
 		alias: {
-			"@tunelo/shared": resolve(__dirname, "packages/shared/src/index.ts"),
+			"@tunelo/shared": resolve(__dirname, "../tunelo-shared/src/index.ts"),
 		},
 	},
 });

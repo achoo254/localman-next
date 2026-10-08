@@ -1,0 +1,37 @@
+{
+	"name": "localman-next",
+	"private": true,
+	"type": "module",
+	"description": "Localman suite: mock API, web API client, Tunelo, MCP and DevOps toolkit",
+	"engines": {
+		"node": ">=22"
+	},
+	"packageManager": "pnpm@11.9.0",
+	"scripts": {
+		"dev": "pnpm --parallel --filter @localman/web --filter @localman/api dev",
+		"build": "pnpm -r build",
+		"lint": "biome check .",
+		"lint:fix": "biome check --fix .",
+		"typecheck": "pnpm -r --workspace-concurrency=1 typecheck",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"check:mcp-coverage": "tsx scripts/check-mcp-coverage.ts",
+		"check:tokens": "tsx scripts/check-tokens.ts",
+		"dev:tunelo-server": "pnpm --filter @tunelo/shared build && tsx watch --env-file=apps/tunelo-server/.env apps/tunelo-server/src/server.ts",
+		"dev:tunelo-cli": "pnpm --filter tunelo dev",
+		"build:tunelo-server": "tsx scripts/tunelo/build-server.ts",
+		"build:tunelo-cli": "tsx scripts/tunelo/build-client.ts",
+		"test:tunelo-e2e": "vitest run --project tunelo-e2e"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"@types/node": "^22.15.0",
+		"@types/ws": "^8.5.0",
+		"esbuild": "^0.27.4",
+		"nanoid": "^5.0.0",
+		"tsx": "^4.20.0",
+		"typescript": "^5.9.2",
+		"vitest": "^3.2.4",
+		"ws": "^8.16.0"
+	}
+}

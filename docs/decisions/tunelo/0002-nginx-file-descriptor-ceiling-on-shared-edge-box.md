@@ -37,7 +37,7 @@ Mục tiêu thiết kế của Tunelo là 5-10k tunnel đồng thời. Mỗi tun
 - **Được:** trần connection tầng nginx tăng ~16 lần; mục tiêu 5-10k tunnel không còn bị chặn bởi fd.
 - **Mất / nợ kỹ thuật:** trần thật tiếp theo chuyển sang **RAM** — box 7,6 GB đã dùng 4,5 GB và chia cho 14 site. Con số 32.768 là trần lý thuyết, không phải năng lực thật. Nâng limit cũng có nghĩa dưới tải cực đại nginx sẽ nhận connection tới lúc RAM cạn thay vì từ chối sớm.
 - **Ảnh hưởng:** file này dùng chung cho cả 14 site, nên thay đổi có lợi (hoặc rủi ro) cho tất cả, không riêng Tunelo.
-- File global không nằm trong repo (repo chỉ version `infra/nginx.conf` = site config `conf.d/tunelo.conf`), nên ADR này là nơi duy nhất ghi lại thay đổi. Backup trên máy: `/etc/nginx/nginx.conf.bak-fdlimit-20260816-122824`.
+- File global không nằm trong repo (repo chỉ version `infra/tunelo/nginx.conf` = site config `conf.d/tunelo.conf`), nên ADR này là nơi duy nhất ghi lại thay đổi. Backup trên máy: `/etc/nginx/nginx.conf.bak-fdlimit-20260816-122824`.
 
 ## Phương án đã cân nhắc
 

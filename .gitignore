@@ -1,8 +1,17 @@
 node_modules/
 dist/
+portal-dist/
 coverage/
+*.tsbuildinfo
+*.tgz
+*.log
+.DS_Store
+
+# Secrets: every env file except the examples
 .env
 .env.*
 !.env.example
-*.log
-.DS_Store
+
+# Claude transient state
+.claude/session-state/
+.claude/agent-memory/

@@ -11,13 +11,13 @@ tunelo/
 │   ├── server/           # Tunnel server (Express + WS + MongoDB)
 │   ├── client/           # CLI tool + Client Portal SPA (npm: tunelo)
 │   ├── dashboard/        # Admin Dashboard SPA (planned v0.3)
-│   └── infra/            # nginx, certbot, PM2 configs
+│   └── infra/tunelo/            # nginx, certbot, PM2 configs
 ├── tests/                # E2E test suite
 ├── docs/                 # Documentation
 └── plans/                # Implementation plans & reports
 ```
 
-## Shared Package (`packages/shared`)
+## Shared Package (`packages/tunelo-shared`)
 
 **Purpose:** Type definitions and constants shared between server and client.
 
@@ -55,7 +55,7 @@ Format: `TUNELO_{DOMAIN}_{NUMBER}`
 | Server | `SERVER_` | 001-099 | `SERVER_001` Startup failed |
 | Client | `CLIENT_` | 001-099 | `CLIENT_001` Connection failed |
 
-## Server Package (`packages/server`) — v0.3 Complete Implementation
+## Server Package (`apps/tunelo-server`) — v0.3 Complete Implementation
 
 **Purpose:** Express.js + MongoDB + WebSocket server for authentication, user management, and tunnel relay.
 
@@ -139,7 +139,7 @@ Format: `TUNELO_{DOMAIN}_{NUMBER}`
 | `ws-handler.ts` | WebSocket lifecycle (auth, register, relay, cleanup) |
 | `request-relay.ts` | HTTP request serialization + WS relay |
 
-## Server Package (`packages/server`) — v0.1 Architecture
+## Server Package (`apps/tunelo-server`) — v0.1 Architecture
 
 ### Architecture
 
@@ -219,12 +219,12 @@ API key validation:
 
 ### Tests (Unit)
 
-File: `packages/server/src/__tests__/`
+File: `apps/tunelo-server/src/__tests__/`
 
 - `auth.test.ts` (4 tests) — Hash validation, env loading
 - `request-relay.test.ts` (5 tests) — Request serialization, error handling
 
-## Client Package (`packages/client`)
+## Client Package (`packages/tunelo-cli`)
 
 **Purpose:** CLI tool for end users to create tunnels.
 
@@ -341,7 +341,7 @@ File: `tests/e2e/`
 
 **Access:** Protected by admin role (ADMIN_EMAILS env var)
 
-## Client Package (`packages/client`) — v0.3 Complete
+## Client Package (`packages/tunelo-cli`) — v0.3 Complete
 
 ### CLI (HTTP Tunnel)
 | Module | Purpose |
@@ -390,7 +390,7 @@ File: `tests/e2e/`
 5. User copies key → returns to CLI → enters key → tunnel connects
 6. Subsequent use: email → password → TOTP → manage keys/view usage
 
-## Infrastructure (`infra/`)
+## Infrastructure (`infra/tunelo/`)
 
 ### nginx Config
 
@@ -413,7 +413,7 @@ Host: tunnel.io.vn     → WS endpoint for /tunnel
 ```javascript
 {
   name: 'tunelo-server',
-  script: 'packages/server/dist/server.js',
+  script: 'apps/tunelo-server/dist/server.js',
   instances: 1,
   env: {
     NODE_ENV: 'production',
@@ -450,8 +450,8 @@ Auto-renewal via cron (installed by certbot).
 ### Test Results (MVP Complete)
 
 ```
-✓ packages/server/src/__tests__/auth.test.ts        (4 tests)
-✓ packages/server/src/__tests__/request-relay.test.ts (5 tests)
+✓ apps/tunelo-server/src/__tests__/auth.test.ts        (4 tests)
+✓ apps/tunelo-server/src/__tests__/request-relay.test.ts (5 tests)
 ✓ tests/e2e/auth-flow.test.ts                       (5 tests)
 ✓ tests/e2e/tunnel-flow.test.ts                     (5 tests)
 

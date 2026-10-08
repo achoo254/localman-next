@@ -5,8 +5,8 @@ import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const root = resolve(__dirname, "..");
-const distDir = resolve(root, "dist");
+const root = resolve(__dirname, "../..");
+const distDir = resolve(root, "dist/tunelo-server");
 
 // Clean previous build
 if (existsSync(distDir)) {
@@ -21,7 +21,7 @@ execSync("pnpm --filter @tunelo/shared build", { stdio: "inherit", cwd: root });
 // Bundle @tunelo/* workspace packages INTO server.mjs (so VPS doesn't need them)
 // Externalize npm packages — VPS runs `pnpm install --prod` to provide them
 const serverPkg = JSON.parse(
-	readFileSync(resolve(root, "packages/server/package.json"), "utf-8"),
+	readFileSync(resolve(root, "apps/tunelo-server/package.json"), "utf-8"),
 );
 const npmDeps = Object.keys(
 	serverPkg.dependencies as Record<string, string>,
@@ -29,7 +29,7 @@ const npmDeps = Object.keys(
 
 console.log("Bundling server...");
 await build({
-	entryPoints: [resolve(root, "packages/server/src/server.ts")],
+	entryPoints: [resolve(root, "apps/tunelo-server/src/server.ts")],
 	bundle: true,
 	platform: "node",
 	target: "node20",
@@ -62,6 +62,6 @@ writeFileSync(
 	resolve(distDir, "package.json"),
 	`${JSON.stringify(prodPkg, null, 2)}\n`,
 );
-console.log("Wrote dist/package.json (production deps only)");
+console.log("Wrote dist/tunelo-server/package.json (production deps only)");
 
-console.log("Build complete: dist/server.mjs + dist/package.json");
+console.log("Build complete: dist/tunelo-server/server.mjs + package.json");

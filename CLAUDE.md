@@ -1,41 +1,40 @@
 # CLAUDE.md
 
-## Project Overview
+Monorepo `localman-next`: bộ Localman (mock API, API client trên web, MCP, DevOps toolkit) và Tunelo (tunnel tới localhost). Thứ tự triển khai: `plans/dattqh/EXECUTION.md`.
 
-**Tunelo** — self-hosted ngrok alternative. WebSocket relay tunnel proxy that exposes local services via public HTTPS wildcard subdomains (`*.tunnel.inetdev.io.vn`).
+<!-- LOCALMAN-SECTION -->
 
-- **Tech:** Node.js / TypeScript (ESM, strict mode)
-- **Architecture:** WebSocket Relay — nginx (TLS) → Node.js server → WS → client CLI → localhost
-- **Target:** 5-10k concurrent tunnels on single VPS
+## Tunelo
 
-## Monorepo Structure
+Self-hosted ngrok alternative. WebSocket relay tunnel proxy that exposes local services via public HTTPS wildcard subdomains. Gộp vào monorepo này (lịch sử giữ nguyên, tag cũ đổi thành `tunelo-v*`).
 
 ```
-tunelo/
-├── packages/
-│   ├── server/    # Tunnel server (deployed to VPS)
-│   ├── client/    # CLI tool (npm package: tunelo)
-│   └── shared/    # Shared types & WS protocol
-├── infra/         # nginx, certbot, PM2 configs
-├── docs/          # Project documentation
-└── plans/         # Implementation plans
+apps/tunelo-server/      # Tunnel server (deployed to VPS, PM2)
+packages/tunelo-cli/     # CLI tool (npm package: tunelo)
+packages/tunelo-shared/  # Shared types & WS protocol (@tunelo/shared)
+infra/tunelo/            # nginx, certbot, PM2 configs, deploy.sh
+docs/tunelo/             # Tunelo documentation
+tests/tunelo/            # E2E tests
 ```
 
-## Commands
+Commands (run from the repo root):
 
 ```bash
-pnpm install              # Install all deps
-pnpm dev:server           # Dev server (tsx --watch)
-pnpm dev:client           # Dev client
-pnpm build                # Build all packages (tsc)
-pnpm test                 # Run all tests (vitest)
-pnpm lint                 # Lint + format check (biome check)
-pnpm lint:fix             # Auto-fix (biome check --fix)
+pnpm dev:tunelo-server                 # Dev server (reads apps/tunelo-server/.env)
+pnpm dev:tunelo-cli                    # Dev client
+pnpm build:tunelo-server               # Bundle server into dist/tunelo-server/
+pnpm build:tunelo-cli                  # Bundle CLI into packages/tunelo-cli/dist/
+pnpm --filter @tunelo/server test
+pnpm --filter tunelo test
+pnpm test:tunelo-e2e
+bash infra/tunelo/deploy.sh            # Deploy server (PM2)
 ```
 
-## Coding Rules
+Release CLI: tag `tunelo-vX.Y.Z` triggers `.github/workflows/tunelo-publish-cli.yml`.
 
-Read `docs/code-standards.md` for full details. Quick reference:
+### Coding Rules
+
+Read `docs/tunelo/code-standards.md` for full details. Quick reference:
 
 - **TypeScript strict** — `strict: true`, no `any` (use `unknown` + type guards)
 - **ESM only** — `"type": "module"` in all package.json
@@ -47,7 +46,7 @@ Read `docs/code-standards.md` for full details. Quick reference:
 - **vitest** — co-located `__tests__/` directories
 - **Biome** — lint + format, run before commit
 
-## Security Rules
+### Security Rules
 
 This is a **tunnel proxy** — it relays untrusted HTTP traffic. Critical rules:
 
@@ -60,7 +59,7 @@ This is a **tunnel proxy** — it relays untrusted HTTP traffic. Critical rules:
 7. **API keys** — store hashed (SHA-256), never log plaintext
 8. **No eval/exec** — never use `eval()`, `Function()`, `child_process.exec()` with user input
 
-## What NOT to Do
+### What NOT to Do
 
 - Never use `any` type — use `unknown` + narrowing
 - Never log API keys or sensitive data in plaintext
@@ -72,7 +71,7 @@ This is a **tunnel proxy** — it relays untrusted HTTP traffic. Critical rules:
 - Never use `console.log` — use pino logger
 - Never skip Biome lint before committing
 
-## Error Code Reference
+### Error Code Reference
 
 | Code | Meaning |
 |------|---------|
@@ -85,9 +84,9 @@ This is a **tunnel proxy** — it relays untrusted HTTP traffic. Critical rules:
 | `TUNELO_RELAY_002` | Response too large |
 | `TUNELO_SERVER_001` | Server startup failed |
 
-## Architecture Reference
+### Architecture Reference
 
-See `docs/system-architecture.md` for full details.
+See `docs/tunelo/system-architecture.md` for full details.
 
 ```
 Browser → nginx (443, TLS, wildcard cert)
@@ -97,12 +96,12 @@ Browser → nginx (443, TLS, wildcard cert)
        → localhost:PORT
 ```
 
-## Đồng bộ context & ghi lý do thay đổi
+## Đồng bộ context và ghi lý do thay đổi
 
 Vì code clone/chạy trên nhiều máy, "lý do thay đổi" phải đi theo `git pull` — KHÔNG để trong session/memory cục bộ của Claude. Quy ước:
 
 - **Commit message phải có "why"** trong body (conventional commit), không chỉ "what".
-- **Quyết định kiến trúc / đánh đổi lâu dài** → ghi ADR vào `docs/decisions/` (copy `0000-adr-template.md`).
-- **Kế hoạch feature/fix** → `plans/<user>/` (scope theo người, tránh xung đột merge — xem `plans/README.md`).
+- **Quyết định kiến trúc / đánh đổi lâu dài** → ghi ADR vào `docs/decisions/` (ADR của Tunelo ở `docs/decisions/tunelo/`) (copy `0000-adr-template.md`).
+- **Kế hoạch feature/fix** → `plans/<user>/` (scope theo người, tránh xung đột merge).
 - **Đặt tên file/ADR theo nội dung**, không theo số phase / mã plan (plan đổi tên thì reference thành rác).
 - **Secret**: mọi `.env.*` đã gitignore — KHÔNG commit. Lỡ lộ lên git → **rotate ngay** (`git rm --cached` không đủ vì secret vẫn trong history).

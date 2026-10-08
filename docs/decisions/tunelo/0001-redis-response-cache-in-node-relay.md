@@ -30,7 +30,7 @@ Tải asset qua tunnel phải đi chặng `nginx → Node relay → WS → máy 
 
 - **Được:** guarantee API-bypass mạnh; dev không bao giờ thấy code cũ; purge theo subdomain; cache bounded, best-effort (Valkey chết thì relay vẫn chạy, chỉ mất cache).
 - **Mất:** bỏ "edge-offload" của nginx (HIT giờ đi qua Node) — chấp nhận được vì tunelo là dev tool, traffic mỗi tunnel thấp. Node buffer object cacheable tạm thời (cap 5MB/object) → RSS tăng nhẹ.
-- **Ảnh hưởng:** `request-relay.ts` (lookup + tee sink), `tunnel-manager.ts` (purge khi register phiên mới), `infra/nginx.conf` (tenant passthrough), thêm service Valkey + biến `REDIS_URL`/`CACHE_*`. Thay thế tầng edge-cache nginx (commit `5ed63c7`).
+- **Ảnh hưởng:** `request-relay.ts` (lookup + tee sink), `tunnel-manager.ts` (purge khi register phiên mới), `infra/tunelo/nginx.conf` (tenant passthrough), thêm service Valkey + biến `REDIS_URL`/`CACHE_*`. Thay thế tầng edge-cache nginx (commit `5ed63c7`).
 
 ## Phương án đã cân nhắc
 

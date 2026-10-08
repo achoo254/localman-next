@@ -6,7 +6,9 @@
 	"scripts": {
 		"build": "tsc",
 		"dev": "tsx watch src/server.ts",
-		"start": "node dist/server.js"
+		"start": "node dist/server.js",
+		"test": "vitest run",
+		"typecheck": "tsc -b ../../packages/tunelo-shared && tsc --noEmit"
 	},
 	"dependencies": {
 		"@tunelo/shared": "workspace:*",

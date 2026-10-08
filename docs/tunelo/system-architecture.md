@@ -55,7 +55,7 @@ Starting from v0.3.1, Tunelo supports **Device Code Authorization Flow** — a b
 - Proxies to tunnel server on localhost:3001
 - Handles WebSocket upgrade (`Upgrade: websocket`)
 
-### 2. Tunnel Server (`packages/server`) — v0.3 Complete Architecture
+### 2. Tunnel Server (`apps/tunelo-server`) — v0.3 Complete Architecture
 
 Express.js + MongoDB + Node.js http server on port 3001 (behind nginx).
 
@@ -123,7 +123,7 @@ Express.js + MongoDB + Node.js http server on port 3001 (behind nginx).
 - **In-memory:** `Map<subdomain, TunnelInfo>` for tunnel relay (v0.1 unchanged)
 - **Persistent:** MongoDB for users, API keys, usage logs (new v0.3)
 
-### 3. Tunnel Client (`packages/client`) — v0.3 Complete
+### 3. Tunnel Client (`packages/tunelo-cli`) — v0.3 Complete
 
 CLI tool + embedded React Portal SPA. Distributes via npm.
 
@@ -199,7 +199,7 @@ const usage = await UsageLog
   .exec();
 ```
 
-### 5. Shared Package (`packages/shared`)
+### 5. Shared Package (`packages/tunelo-shared`)
 
 Types and constants shared between server and client.
 

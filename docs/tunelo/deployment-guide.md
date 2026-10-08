@@ -10,14 +10,14 @@ hai đường riêng.
 CLI phát hành công khai trên npm với tên gói **`tunelo`**
 (<https://www.npmjs.com/package/tunelo>). Workflow
 `.github/workflows/publish-cli.yml` chạy khi đẩy git tag `vX.Y.Z`: kiểm tra tag
-khớp version → `pnpm lint` → `pnpm test` → `pnpm build:client` → `npm publish`
-từ `packages/client/dist`.
+khớp version → `pnpm lint` → `pnpm test` → `pnpm build:tunelo-cli` → `npm publish`
+từ `packages/tunelo-cli/dist`.
 
 Quy trình phát hành:
 
 ```bash
-npm version <patch|minor|major> --workspace tunelo --no-git-tag-version   # bump packages/client
-# đặt cùng version vào packages/client/src/version.ts (VERSION) — test version.test.ts kiểm tra khớp
+npm version <patch|minor|major> --workspace tunelo --no-git-tag-version   # bump packages/tunelo-cli
+# đặt cùng version vào packages/tunelo-cli/src/version.ts (VERSION) — test version.test.ts kiểm tra khớp
 git commit -am "chore(release): X.Y.Z" && git tag vX.Y.Z && git push && git push --tags
 ```
 
@@ -33,10 +33,10 @@ git commit -am "chore(release): X.Y.Z" && git tag vX.Y.Z && git push && git push
 Server **không** có pipeline tự động. Deploy từ máy có SSH tới staging:
 
 ```bash
-bash infra/deploy.sh      # VPS_HOST, REMOTE_DIR có thể override qua biến môi trường
+bash infra/tunelo/deploy.sh      # VPS_HOST, REMOTE_DIR có thể override qua biến môi trường
 ```
 
-Script build bundle (`pnpm build:server`), rsync `dist/server.mjs`, `package.json`
+Script build bundle (`pnpm build:tunelo-server`), rsync `dist/tunelo-server/server.mjs`, `package.json`
 và `ecosystem.config.cjs` lên server, cài dependency production rồi restart PM2.
 
 Trước đây deploy staging chạy tự động bằng GitLab CI mỗi lần push `main`; pipeline
@@ -214,19 +214,19 @@ pnpm install --frozen-lockfile
 pnpm build
 
 # Start using config file
-pm2 start infra/pm2.config.cjs
+pm2 start infra/tunelo/pm2.config.cjs
 
 # Save for auto-start on reboot
 pm2 save
 pm2 startup
 ```
 
-PM2 config (`infra/pm2.config.cjs`):
+PM2 config (`infra/tunelo/pm2.config.cjs`):
 ```javascript
 module.exports = {
   apps: [{
     name: 'tunelo-server',
-    script: 'packages/server/dist/server.js',
+    script: 'apps/tunelo-server/dist/server.js',
     instances: 1,
     exec_mode: 'fork',
     env: {
@@ -290,11 +290,11 @@ echo "JWT_REFRESH_SECRET: $JWT_REFRESH_SECRET"
 # ... (see MongoDB Setup section above)
 
 # Edit PM2 config with secrets + MongoDB URI
-vim infra/pm2.config.cjs
+vim infra/tunelo/pm2.config.cjs
 # Set: MONGO_URI, JWT_SECRET, JWT_REFRESH_SECRET, ADMIN_EMAILS
 
 # Start tunnel server
-pm2 start infra/pm2.config.cjs
+pm2 start infra/tunelo/pm2.config.cjs
 
 # Verify it's running
 pm2 status
@@ -352,7 +352,7 @@ cached); API/JSON/SSE/authed requests always bypass. Disabled entirely if
 | `CACHE_MAX_OBJECT_BYTES` | No | `5242880` (5MB) | Max cached response size |
 | `CACHE_MAX_TTL_SECONDS` | No | `86400` | Cap on TTL (effective TTL = origin max-age) |
 
-Install (CentOS Stream 9): `dnf install -y valkey`, deploy `infra/valkey.conf`
+Install (CentOS Stream 9): `dnf install -y valkey`, deploy `infra/tunelo/valkey.conf`
 to `/etc/valkey/valkey.conf` (set `requirepass`), `systemctl enable --now valkey`.
 
 ### Optional (Future)

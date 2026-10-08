@@ -55,7 +55,7 @@ Tunelo is a self-hosted ngrok alternative — a multi-tenant tunnel proxy with u
 | **Express API** | Planned | Auth, keys, usage, admin endpoints |
 | **TOTP Flow** | Planned | Setup QR + verify, otplib + qrcode |
 | **Admin Dashboard** | Planned | React SPA, charts, user/key/tunnel management |
-| **Client Portal** | Planned | React SPA in packages/client, sign up/login/keys |
+| **Client Portal** | Planned | React SPA in packages/tunelo-cli, sign up/login/keys |
 | **JWT/Cookie Auth** | Planned | Tokens, refresh flow, CSRF protection |
 | **Rate Limiter** | Planned | Redis-backed, per-key limits, interface design |
 | **Usage Tracking** | Planned | Log requests, calculate daily snapshots |

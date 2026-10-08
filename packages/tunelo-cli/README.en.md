@@ -114,7 +114,7 @@ cp .env.example .env
 
 ### API Keys
 
-Create a `keys.json` file (see `packages/server/keys.json.example`):
+Create a `keys.json` file (see `apps/tunelo-server/keys.json.example`):
 
 ```json
 {
@@ -162,31 +162,35 @@ Config priority: CLI flags > env vars (`TUNELO_KEY`, `TUNELO_SERVER`) > `~/.tune
 
 ## Project Structure
 
+Tunelo lives in the [localman-next](https://github.com/achoo254/localman-next) monorepo:
+
 ```
-tunelo/
-├── packages/
-│   ├── shared/    # WS protocol types, constants, error codes
-│   ├── server/    # Tunnel server (HTTP + WebSocket relay)
-│   └── client/    # CLI tool (npm: tunelo)
-├── infra/         # nginx, certbot, PM2, deploy script
-├── tests/         # E2E test suite
-└── docs/          # Documentation
+localman-next/
+├── apps/tunelo-server/      # Tunnel server (HTTP + WebSocket relay)
+├── packages/tunelo-cli/     # CLI tool (npm: tunelo)
+├── packages/tunelo-shared/  # WS protocol types, constants, error codes
+├── infra/tunelo/            # nginx, certbot, PM2, deploy script
+├── tests/tunelo/            # E2E test suite
+└── docs/tunelo/             # Documentation
 ```
 
 ## Development
 
+Run from the monorepo root:
+
 ```bash
-pnpm dev:server    # Dev server (tsx --watch)
-pnpm dev:client    # Dev client
-pnpm build         # Build all packages
-pnpm test          # Run tests (vitest, 19 tests, <400ms)
-pnpm lint          # Lint (biome)
-pnpm lint:fix      # Auto-fix lint
+pnpm dev:tunelo-server   # Dev server (tsx --watch)
+pnpm dev:tunelo-cli      # Dev client
+pnpm build:tunelo-server # Bundle server into dist/tunelo-server
+pnpm build:tunelo-cli    # Bundle CLI into packages/tunelo-cli/dist
+pnpm --filter @tunelo/server test
+pnpm --filter tunelo test
+pnpm lint                # Lint (biome)
 ```
 
 ## Deploy to VPS
 
-See `docs/deployment-guide.md` for full instructions. Quick summary:
+See `docs/tunelo/deployment-guide.md` in the monorepo for full instructions. Quick summary:
 
 1. Setup DNS: `A *.tunnel.inetdev.io.vn → VPS_IP`
 2. Get wildcard SSL: `bash infra/certbot-setup.sh`

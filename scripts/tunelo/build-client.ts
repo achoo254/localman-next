@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const root = resolve(__dirname, "..");
-const clientDir = resolve(root, "packages/client");
+const root = resolve(__dirname, "../..");
+const clientDir = resolve(root, "packages/tunelo-cli");
 const distDir = resolve(clientDir, "dist");
 
 // npm deps kept external in the bundle — users install these at runtime.
@@ -22,7 +22,7 @@ await build({
 	minify: false,
 	// Resolve @tunelo/shared from monorepo source (bundled into cli.js)
 	alias: {
-		"@tunelo/shared": resolve(root, "packages/shared/src/index.ts"),
+		"@tunelo/shared": resolve(root, "packages/tunelo-shared/src/index.ts"),
 	},
 	// Externalize node builtins and heavy deps that users install
 	external: runtimeDeps,
@@ -66,10 +66,10 @@ writeFileSync(
 	`${JSON.stringify(distPkg, null, 2)}\n`,
 );
 
-// Copy the repo README so the registry package page has content.
-const readme = resolve(root, "README.md");
+// Copy the CLI README so the registry package page has content.
+const readme = resolve(clientDir, "README.md");
 if (existsSync(readme)) copyFileSync(readme, resolve(distDir, "README.md"));
 
 console.log(
-	`Built packages/client/dist/ — cli.js + package.json (${distPkg.name}@${distPkg.version})`,
+	`Built packages/tunelo-cli/dist/ — cli.js + package.json (${distPkg.name}@${distPkg.version})`,
 );

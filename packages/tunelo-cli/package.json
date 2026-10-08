@@ -11,9 +11,11 @@
 	"scripts": {
 		"build": "tsc",
 		"build:portal": "vite build --config vite.config.portal.ts",
-		"build:bundle": "tsx ../../scripts/build-client.ts",
+		"build:bundle": "tsx ../../scripts/tunelo/build-client.ts",
 		"dev": "tsx watch src/cli.ts",
-		"prepublishOnly": "pnpm run build:bundle"
+		"prepublishOnly": "pnpm run build:bundle",
+		"test": "vitest run",
+		"typecheck": "tsc -b ../tunelo-shared && tsc --noEmit"
 	},
 	"keywords": [
 		"tunnel",
@@ -26,8 +28,8 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/achoo254/tunelo.git",
-		"directory": "packages/client"
+		"url": "https://github.com/achoo254/localman-next.git",
+		"directory": "packages/tunelo-cli"
 	},
 	"homepage": "https://www.npmjs.com/package/tunelo",
 	"license": "MIT",
