@@ -75,5 +75,15 @@ Access token là JWT ngắn hạn (15 phút), ký bằng ES256, có `aud` theo t
 ## Rollback
 Lúc chuyển: Localman chưa có user thật nên đổi thẳng. Tunelo giữ đường token ẩn danh trong 60 ngày (grandfather), nên nếu IdP lỗi thì tắt nhánh OIDC bằng cờ `AUTH_MODE=legacy` và CLI cũ vẫn chạy.
 
+## Validation Log
+
+### Vòng 1: khi cook phase 01–02 (2026-10-08, Jev `jev-1.13.0`)
+- Bỏ `arctic` (npm đánh dấu ngừng hỗ trợ từ 07/2026), dùng `openid-client` cho Google/GitHub (1.00).
+- Phiên có refresh token trượt 30 ngày theo lần dùng, trần 90 ngày kể từ lúc đăng nhập (0.78).
+- Email chưa xác minh bị chiếm trước: đăng nhập Google/GitHub có email đã xác minh lấy lại email đó; tài khoản chiếm trước vẫn dùng được bằng username (0.95).
+- Đổi mật khẩu ở `/account`: đăng xuất mọi phiên trình duyệt khác, kèm ô "đăng xuất mọi thiết bị và ứng dụng" bật sẵn (0.80). Đặt lại mật khẩu thì luôn thu hồi tất cả.
+- Sau mỗi lần đặt lại mật khẩu: trang rà soát bảo mật bắt buộc, chỉ vào được bằng mật khẩu mới, liệt kê mọi phương thức đã liên kết kèm nút gỡ (0.93).
+- Review bảo mật 4 vòng; quy tắc cuối: mọi token một lần gắn tài khoản mang `securityVersion` và kênh cấp, ghi có điều kiện theo version (ADR 0002 mục 10 trong repo `hoandat-auth`).
+
 ## Câu hỏi mở
 - Nếu sau này muốn có xác minh email hoặc reset mật khẩu qua email, có thể cắm một dịch vụ gửi mail miễn phí (ví dụ Brevo, Resend) vào IdP mà không đổi app nào. Jev nghiêng về có (0.71), nhưng plan giữ quy tắc "không gửi mail" cho tới khi user đồng ý.

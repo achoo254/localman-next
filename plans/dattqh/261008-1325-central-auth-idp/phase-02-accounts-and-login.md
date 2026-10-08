@@ -17,7 +17,7 @@ Phần này **chuyển từ phase 02 cũ của Localman** sang. Quyết định 
 ## Files to Create
 - `src/accounts/user-model.ts`: `{_id(sub), username (unique, ^[a-z0-9_]{3,30}$), email (unique), emailVerifiedBy:null|'google'|'github', passwordHash?, recoveryCodeHashes[], name, picture, providers:{google?,github?}, telegram?:{chatId, linkedAt}, createdAt, disabledAt?}`
 - `src/accounts/password-hasher.ts` (argon2id), `recovery-codes.ts` (8 mã dùng một lần), `account-linking.ts` (chỉ tự liên kết khi email đã xác minh; còn lại phải đăng nhập mật khẩu trước)
-- `src/accounts/upstream-google.ts`, `upstream-github.ts` (dùng thư viện `arctic`)
+- `src/accounts/upstream-google.ts`, `upstream-github.ts` (ban đầu là `arctic`; đổi sang `openid-client` vì `arctic` ngừng được hỗ trợ, Jev 1.00, xem Validation Log của plan)
 - `src/telegram/`: `bot-client.ts`, `link-routes.ts` (deep link `t.me/<bot>?start=<code>`, TTL 10 phút, dùng một lần), `webhook-routes.ts` (kiểm header secret token), `reset-link-service.ts` (link reset gửi qua bot, TTL 15 phút)
 - `src/interactions/`: `login-page`, `signup-page` (hiện mã khôi phục một lần, có nút tải .txt), `consent-page` (hiện scope bằng lời dễ hiểu), `device-verify-page` (nhập user code, hiện tên thiết bị, nút Cho phép hoặc Từ chối), `forgot-password-page` (3 lựa chọn: mã khôi phục, Telegram, Google/GitHub), `logout-page`. Server render HTML, dùng chung token màu của Localman, wordmark "hoandat · Tài khoản".
 - `src/account-portal/`: trang `/account` gồm hồ sơ, đổi mật khẩu, tạo lại mã khôi phục, liên kết hoặc huỷ Google/GitHub/Telegram, danh sách phiên đang mở (thu hồi được), thiết bị Tunelo, và ứng dụng đã cấp quyền gồm client MCP (thu hồi được)
@@ -58,17 +58,17 @@ Phần này **chuyển từ phase 02 cũ của Localman** sang. Quyết định 
 
 ### Checklist
 - [ ] T1 OAuth app Google, GitHub và bot Telegram đã tạo sau khi user xác nhận; secret nằm trên VPS, không commit
-- [ ] T2 Model tài khoản, argon2id, mã khôi phục và claim `email_verified` đúng luật
-- [ ] T3 Đăng nhập Google/GitHub và 3 nhánh liên kết chạy đúng
-- [ ] T4 Liên kết Telegram, webhook và link reset qua bot chạy đúng TTL, dùng một lần
-- [ ] T5 Layout server render khớp prototype IdP, `pnpm check:tokens` sạch
-- [ ] T6 Đăng nhập, đăng ký, logout có CSRF, rate-limit và khoá tạm
-- [ ] T7 Consent, duyệt thiết bị và quên mật khẩu (3 đường) chạy đúng
-- [ ] T8 Trang `/account` đủ mục, thu hồi được phiên và ứng dụng
-- [ ] T9 Unit test pass
-- [ ] T10 Playwright pass
+- [x] T2 Model tài khoản, argon2id, mã khôi phục và claim `email_verified` đúng luật
+- [x] T3 Đăng nhập Google/GitHub và 3 nhánh liên kết chạy đúng
+- [x] T4 Liên kết Telegram, webhook và link reset qua bot chạy đúng TTL, dùng một lần
+- [x] T5 Layout server render khớp prototype IdP, `pnpm check:tokens` sạch
+- [x] T6 Đăng nhập, đăng ký, logout có CSRF, rate-limit và khoá tạm
+- [x] T7 Consent, duyệt thiết bị và quên mật khẩu (3 đường) chạy đúng
+- [x] T8 Trang `/account` đủ mục, thu hồi được phiên và ứng dụng
+- [x] T9 Unit test pass
+- [x] T10 Playwright pass
 - [ ] T11 Staging có bản phase 02
-- [ ] T12 Review không còn finding mức high
-- [ ] Verification: unit và Playwright pass; `grep -ri "nodemailer\|smtp" src` không ra kết quả nào
-- [ ] lint/typecheck/test sạch: `pnpm lint` (Biome), `tsc --noEmit`, `pnpm test`
-- [ ] `pnpm check:mcp-coverage`: N/A (repo `hoandat-auth` không dùng operation registry của Localman)
+- [x] T12 Review không còn finding mức high
+- [x] Verification: unit và Playwright pass; `grep -ri "nodemailer\|smtp" src` không ra kết quả nào
+- [x] lint/typecheck/test sạch: `pnpm lint` (Biome), `tsc --noEmit`, `pnpm test`
+- [x] `pnpm check:mcp-coverage`: N/A (repo `hoandat-auth` không dùng operation registry của Localman)

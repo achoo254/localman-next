@@ -66,18 +66,18 @@ Repo riêng: `achoo254/hoandat-auth` (private; tạo bằng `gh repo create` khi
 | T12 | Review cuối phase | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 Repo `achoo254/hoandat-auth` đã tạo sau khi user xác nhận, đã clone về máy
-- [ ] T2 Server khởi động được, `/healthz` trả 200, env thiếu hoặc sai thì zod báo lỗi ngay lúc khởi động
-- [ ] T3 Adapter Mongo, JWKS nhiều key có `kid` và map claim hoạt động
-- [ ] T4 Discovery liệt kê đủ endpoint và feature; 3 client tĩnh cùng policy DCR đã khai báo, secret lấy từ env
-- [ ] T5 Rate-limit và trust proxy theo Cloudflare đã bật
-- [ ] T6 ADR `0001-own-oidc-idp.md` đã viết
-- [ ] T7 Test 4 luồng pass
-- [ ] T8 Image build được, healthcheck xanh khi chạy compose local
+- [x] T1 Repo `achoo254/hoandat-auth` đã tạo sau khi user xác nhận, đã clone về máy
+- [x] T2 Server khởi động được, `/healthz` trả 200, env thiếu hoặc sai thì zod báo lỗi ngay lúc khởi động
+- [x] T3 Adapter Mongo, JWKS nhiều key có `kid` và map claim hoạt động
+- [x] T4 Discovery liệt kê đủ endpoint và feature; 3 client tĩnh cùng policy DCR đã khai báo, secret lấy từ env
+- [x] T5 Rate-limit và trust proxy theo Cloudflare đã bật
+- [x] T6 ADR `0001-own-oidc-idp.md` đã viết
+- [x] T7 Test 4 luồng pass
+- [ ] T8 Image build được, healthcheck xanh khi chạy compose local (Dockerfile và compose đã viết; máy dev không có Docker nên chưa build)
 - [ ] T9 `auth.hoandat.com` phân giải qua Cloudflare và có TLS hợp lệ
 - [ ] T10 Staging và production chạy, key ký nằm ngoài repo
 - [ ] T11 Conformance Basic OP và Config OP pass trên staging
-- [ ] T12 Review không còn finding mức high
+- [x] T12 Review không còn finding mức high
 - [ ] Verification: Code + PKCE, device flow, refresh xoay vòng và từ chối `aud` sai đều pass bằng `openid-client`; conformance suite pass trên staging
-- [ ] lint/typecheck/test sạch: `pnpm lint` (Biome), `tsc --noEmit`, `pnpm test`
-- [ ] `pnpm check:mcp-coverage`: N/A (repo `hoandat-auth` không dùng operation registry của Localman)
+- [x] lint/typecheck/test sạch: `pnpm lint` (Biome), `tsc --noEmit`, `pnpm test`
+- [x] `pnpm check:mcp-coverage`: N/A (repo `hoandat-auth` không dùng operation registry của Localman)
