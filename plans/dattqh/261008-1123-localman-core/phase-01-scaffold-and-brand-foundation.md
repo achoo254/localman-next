@@ -10,7 +10,7 @@ dependencies: []
 # Phase 01: Scaffold monorepo và nền tảng brand
 
 ## Goal
-Dựng monorepo trong **repo mới `achoo254/localman-next`** (private, tạo ngày 2026-10-08; Jev chọn repo mới thay cho phương án xoá code repo cũ, 0.90). Monorepo chạy được cả web lẫn api ở local. Repo có design system riêng của Localman (Radix Colors (violet làm màu chủ đạo, slate làm màu xám; giấy phép MIT), font IBM Plex Sans và IBM Plex Mono), cùng lint, typecheck và test.
+Dựng monorepo trong **repo mới `achoo254/localman-next`** (private, tạo ngày 2026-10-08; Jev chọn repo mới thay cho phương án xoá code repo cũ, 0.90). Monorepo chạy được cả web lẫn api ở local. Repo có design system riêng của Localman (Radix Colors (violet làm màu chủ đạo, slate làm màu xám; giấy phép MIT), font Inter và JetBrains Mono), cùng lint, typecheck và test.
 
 Repo root: root của repo `localman-next`. Mọi path dưới đây tính tương đối từ root này.
 
@@ -60,7 +60,7 @@ Repo Tunelo gốc **không bị sửa**, mọi thao tác chạy trên bản clon
    - Màu chủ đạo `violet`, màu xám `slate`; semantic: success `green`, warning `amber`, error `red`, info `blue`. Dùng các bước theo đúng ý nghĩa của Radix: 1–2 nền, 3–5 nền component (thường, hover, active), 6–8 viền, 9–10 màu đặc, 11 chữ độ tương phản thấp, 12 chữ độ tương phản cao. Dark mode dùng các thang `*Dark`.
    - Màu semantic: success `#0B7F58`, warning `#A35F08`, error `#B91C1C`.
    - Radius 4/8/12/16/24. Motion 150/200/300ms với các easing standard, decelerate, accelerate.
-   - Font: IBM Plex Sans cho UI và văn xuôi, IBM Plex Mono cho code, URL, nhãn method và wordmark (OFL, có tiếng Việt; tự host qua `@fontsource`).
+   - Font: **Inter** cho UI và văn xuôi, **JetBrains Mono** cho code, URL, nhãn method và wordmark (OFL; chọn sau khi so sánh hiển thị tiếng Việt có dấu chồng, xem Validation Log; tự host qua `@fontsource` kèm subset `vietnamese`).
    - Dark mode: viết `@media (prefers-color-scheme: dark)`, có guard `:root:not([data-theme="light"])`, kèm khối `:root[data-theme="dark"]`.
 3. Map các token này vào Tailwind `@theme` để class kiểu `bg-surface` hay `text-primary` không phải hardcode hex.
 4. Viết `global.css`: nền lưới 100px bằng `linear-gradient` dùng token, `prefers-reduced-motion` đưa duration về 1ms.
@@ -69,7 +69,7 @@ Repo Tunelo gốc **không bị sửa**, mọi thao tác chạy trên bản clon
    - Modal bo 16px với 4 size sm/md/lg/xl. Animation fade cùng trượt từ -20px trong 200ms, easing decelerate. Footer dính đáy gồm 2 cột.
    - Badge chữ mono uppercase. Icon dạng Tabler stroke 1.5 (`@tabler/icons-react`).
    - Gắn `data-id` cho các khối cấp trang.
-6. Wordmark `Localman`: IBM Plex Mono đậm, chữ "Local" màu violet bước 11. Không dùng logo của mockapi.io hay Postman.
+6. Wordmark `Localman`: JetBrains Mono đậm, chữ "Local" màu violet bước 11. Không dùng logo của mockapi.io hay Postman.
 7. **Operation registry, nguồn duy nhất cho REST, MCP và OpenAPI.** User yêu cầu mọi tính năng đều có MCP tool (2026-10-08).
    - `packages/operations/src/define-operation.ts`: `defineOperation({id, method, path, input: zod, output: zod, scopes, policy, annotations:{readOnly, destructive, idempotent}, toolset, mcp: true | {exempt: '<lý do>'}, dryRun?: boolean, handler})`.
    - Từ một khai báo, hệ thống sinh ra: (a) route Express có validate và check quyền, (b) MCP tool có JSON Schema lấy từ zod (phase 17 dựng server), (c) OpenAPI 3.1 cho docs.
@@ -97,7 +97,7 @@ Repo Tunelo gốc **không bị sửa**, mọi thao tác chạy trên bản clon
 | T3 | Gộp file root trong một commit riêng (bước 0b.3 và 0b.6): `biome.json` chung bật `noExplicitAny` và `noNonNullAssertion` mức error, script root có filter, mục Tunelo trong `CLAUDE.md`, workflow `tunelo-publish-cli.yml` theo tag `tunelo-v*`, ADR sang `docs/decisions/tunelo/`, field `repository` của npm `tunelo` trỏ sang `achoo254/localman-next`, sửa path trong `infra/tunelo/deploy.sh`, rồi xoá `tunelo-root-import/`. Chạy kiểm tra ở bước 0b.4 | fullstack-developer | — | `biome.json`, `CLAUDE.md`, `.github/workflows/tunelo-publish-cli.yml`, `packages/tunelo-cli/package.json`, `infra/tunelo/deploy.sh` |
 | T4 | Push nhánh và các tag `tunelo-v*` lên `achoo254/localman-next`. Trước khi push, xác nhận commit của tag lịch sử không có `.github/workflows/` ở root (filter-repo đã dời vào `tunelo-root-import/`), để tag cũ không kích hoạt publish npm **(cần user xác nhận)** | fullstack-developer | — | remote `origin` |
 | T5 | Commit README cuối "Đã chuyển sang github.com/achoo254/localman-next (packages/tunelo-cli, apps/tunelo-server)" vào repo `achoo254/tunelo` cũ, rồi archive repo đó trên GitHub (bước 0b.5) **(cần user xác nhận)** | fullstack-developer | với T6–T10 | repo `achoo254/tunelo` |
-| T6 | Viết design token dựa trên Radix Colors và IBM Plex (bước 2–4): `tokens.css` đủ neutral, primary/accent, semantic, radius, motion, font và dark mode; map token vào Tailwind `@theme`; nền lưới 100px và `prefers-reduced-motion` trong `global.css`. Đối chiếu màu, chữ và nền lưới với `prototype/index.html` | ui-ux-designer | với T8, T9 | `apps/web/src/styles/tokens.css`, `apps/web/src/styles/global.css` |
+| T6 | Viết design token dựa trên Radix Colors và Inter và JetBrains Mono (bước 2–4): `tokens.css` đủ neutral, primary/accent, semantic, radius, motion, font và dark mode; map token vào Tailwind `@theme`; nền lưới 100px và `prefers-reduced-motion` trong `global.css`. Đối chiếu màu, chữ và nền lưới với `prototype/index.html` | ui-ux-designer | với T8, T9 | `apps/web/src/styles/tokens.css`, `apps/web/src/styles/global.css` |
 | T7 | Dựng khung `apps/web` (Vite, React 19, router) và 13 primitive UI theo bước 5: nút bo 12px scale 1.03/0.97, modal 4 size với animation 200ms decelerate và footer dính đáy, badge mono uppercase, icon Tabler stroke 1.5, `data-id` cho khối cấp trang. Thêm wordmark `Localman` (bước 6). Đối chiếu primitive với `prototype/index.html` | fullstack-developer | với T8, T9 (sau T6) | `apps/web/vite.config.ts`, `apps/web/index.html`, `apps/web/src/{main,app,router}.tsx`, `apps/web/src/components/ui/*` |
 | T8 | Khung `apps/api` (bước 8): `env.ts` validate bằng zod, `connect-mongo.ts`, hai entrypoint có `helmet`, `express.json({limit:'100kb'})`, error handler `{error:{code,message}}`, `async-handler` và `GET /healthz` ở cổng 4000 và 4100. Tạo `@localman/shared` với `plan-limits.ts` và `limitsFor(plan)` đúng số ở bước 9 | fullstack-developer | với T6, T7 | `apps/api/src/{config/env.ts,db/connect-mongo.ts,dashboard-server.ts,mock-server.ts}`, `apps/api/src/http/*`, `apps/api/vitest.config.ts`, `packages/shared/src/{index,plan-limits}.ts` |
 | T9 | Operation registry (bước 7): `defineOperation` sinh route Express có validate và check quyền, descriptor MCP tool có JSON Schema lấy từ zod, và OpenAPI 3.1. Viết script `pnpm check:mcp-coverage` fail khi operation thiếu MCP mà không có `exempt` kèm lý do. Phần mount route vào `dashboard-server.ts` làm sau khi T8 xong | fullstack-developer | với T6, T7 | `packages/operations/src/*`, `scripts/check-mcp-coverage.ts` |

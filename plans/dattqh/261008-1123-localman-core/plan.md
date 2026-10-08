@@ -39,7 +39,7 @@ Một SaaS cá nhân, độc lập, tên **Localman** (do Jev chọn), chạy �
 - **Quyết định đã chốt với user (2026-10-08):**
   - **Repo mới `achoo254/localman-next`** (private) là monorepo để code. Repo cũ `achoo254/localman` giữ nguyên để đọc khi port, archive sau phase 10 (Jev 0.90, thay cho phương án xoá code repo cũ). Frontend React + Tailwind (Vite, TypeScript), backend Express 5 + Mongoose (TypeScript).
   - Domain: dashboard ở `localman.hoandat.com`, mock runtime ở wildcard `{secret}.localman.hoandat.com`.
-  - **Design system riêng của Localman** (Jev 2026-10-08): Radix Colors (violet làm màu chủ đạo, slate làm màu xám; giấy phép MIT), font IBM Plex Sans và IBM Plex Mono. Giữ nền lưới 100px làm chữ ký thị giác.
+  - **Design system riêng của Localman** (Jev 2026-10-08): Radix Colors (violet làm màu chủ đạo, slate làm màu xám; giấy phép MIT), font Inter và JetBrains Mono. Giữ nền lưới 100px làm chữ ký thị giác.
   - Ngang tính năng với nguồn: hạn mức Free (1 project, 2 resource) và trả phí (20 project, 50 resource), custom response, object template, collaboration, magic link, clone, generator 0–100, route lồng, các query search/filter/page/limit/sortBy/order.
   - Cổng thanh toán làm ở **plan riêng sau**. Trong plan này gói của user được admin gán qua CLI script.
   - Auth gồm email/password, Google và GitHub. Magic link là link mời tham gia project. Sinh dữ liệu cho resource con theo tổng N bản ghi, chia ngẫu nhiên cho các bản ghi cha.
@@ -313,6 +313,15 @@ Jev chọn:
 - MCP cho Tunelo đi qua registry của Localman (0.98).
 
 Sửa phụ thuộc: 15 và 16 phụ thuộc 14; 18 phụ thuộc 19, 20, 21; DevOps 03 và 05 phụ thuộc 02. Parser OpenAPI dùng chung trong `packages/shared`.
+
+### Vòng 19: design system riêng (2026-10-08)
+Không dùng design system của bên thứ ba. Jev chọn:
+- Radix Colors (0.96), màu chủ đạo violet (0.91; hỏi lại khi đã nêu rõ màu của đối thủ), màu xám slate (0.92).
+- Font: lúc đầu chọn IBM Plex. User thấy tiếng Việt hiển thị chưa ổn. So sánh trực quan 12 font sans và 6 font mono có dấu chồng (ặ ẫ ầ ẩ ề ễ ồ ộ ừ ự) ở cỡ 12–24px:
+  - IBM Plex đặt dấu thanh lệch sang bên dấu mũ.
+  - Fira Code lỗi tiếng Việt.
+  - Jev chọn **Inter** (1.00) và **JetBrains Mono** (1.00).
+- Badge và nhãn dạng soft ở light mode dùng step 12 để đạt tương phản ≥ 4.5:1.
 
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
