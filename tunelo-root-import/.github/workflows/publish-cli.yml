@@ -1,0 +1,50 @@
+# Publish CLI `tunelo` to npmjs when a version tag is pushed.
+#
+# Release:
+#   npm version <patch|minor|major> --workspace tunelo --no-git-tag-version   # bump packages/client
+#   then set the same version in packages/client/src/version.ts (VERSION; a test checks they match)
+#   git commit -am "chore(release): X.Y.Z" && git tag vX.Y.Z && git push && git push --tags
+# The tag must match packages/client/package.json version, and a version
+# already on npmjs cannot be published again — always bump before tagging.
+#
+# Secret: NPM_TOKEN — npm granular access token with publish rights on `tunelo`.
+name: publish-cli
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Check tag matches package version
+        run: |
+          version="$(node -p "require('./packages/client/package.json').version")"
+          [ "v${version}" = "${GITHUB_REF_NAME}" ] || { echo "Tag ${GITHUB_REF_NAME} != package version v${version}"; exit 1; }
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build:client
+
+      # build:client emits a self-contained package.json in packages/client/dist
+      # (explicit `files` list), so publish from there.
+      - name: Publish to npmjs
+        working-directory: packages/client/dist
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

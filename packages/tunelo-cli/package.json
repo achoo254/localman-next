@@ -1,0 +1,61 @@
+{
+	"name": "tunelo",
+	"version": "1.6.2",
+	"type": "module",
+	"description": "Self-hosted ngrok alternative — expose local services via public HTTPS tunnels",
+	"main": "dist/cli.js",
+	"bin": {
+		"tunelo": "dist/cli.js"
+	},
+	"files": ["dist/cli.js", "dist/cli.js.map"],
+	"scripts": {
+		"build": "tsc",
+		"build:portal": "vite build --config vite.config.portal.ts",
+		"build:bundle": "tsx ../../scripts/build-client.ts",
+		"dev": "tsx watch src/cli.ts",
+		"prepublishOnly": "pnpm run build:bundle"
+	},
+	"keywords": [
+		"tunnel",
+		"ngrok",
+		"localhost",
+		"websocket",
+		"proxy",
+		"https",
+		"tcp"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/achoo254/tunelo.git",
+		"directory": "packages/client"
+	},
+	"homepage": "https://www.npmjs.com/package/tunelo",
+	"license": "MIT",
+	"engines": {
+		"node": ">=20"
+	},
+	"dependencies": {
+		"@tunelo/shared": "workspace:*",
+		"chalk": "^5.3.0",
+		"commander": "^12.0.0",
+		"pino": "^9.0.0",
+		"ws": "^8.16.0"
+	},
+	"devDependencies": {
+		"@tailwindcss/vite": "^4.1.3",
+		"@types/react": "^18.3.1",
+		"@types/react-dom": "^18.3.1",
+		"@types/ws": "^8.5.0",
+		"@vitejs/plugin-react": "^4.3.4",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"react-router-dom": "^6.28.0",
+		"recharts": "^2.15.0",
+		"tailwindcss": "^4.1.3",
+		"vite": "^6.2.0"
+	},
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org/"
+	}
+}

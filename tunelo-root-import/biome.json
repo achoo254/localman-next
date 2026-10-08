@@ -1,0 +1,41 @@
+{
+	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"ignore": [
+			"**/dist",
+			"**/dist/**",
+			"**/portal-dist",
+			"**/portal-dist/**",
+			"**/*.d.ts",
+			"**/*.tsbuildinfo",
+			"**/node_modules",
+			"**/node_modules/**",
+			".pnpm-store",
+			".pnpm-store/**",
+			"repomix-output.xml",
+			".claude/**",
+			"pnpm-lock.yaml"
+		]
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"lineWidth": 80
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double"
+		}
+	}
+}
