@@ -1,0 +1,12 @@
+{
+	"name": "@localman/design-tokens",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./tokens.css": "./tokens.css"
+	},
+	"dependencies": {
+		"@radix-ui/colors": "^3.0.0"
+	}
+}

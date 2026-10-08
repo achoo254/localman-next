@@ -1,0 +1,101 @@
+import * as Dialog from "@radix-ui/react-dialog";
+import { IconX } from "@tabler/icons-react";
+import type { ReactNode } from "react";
+import { cn } from "../../lib/cn";
+import { IconButton } from "./icon-button";
+
+export type ModalSize = "sm" | "md" | "lg" | "xl";
+
+/** Max widths from the prototype: 384 / 448 / 576 / 768px. */
+const SIZE_CLASSES: Record<ModalSize, string> = {
+	sm: "max-w-sm",
+	md: "max-w-md",
+	lg: "max-w-xl",
+	xl: "max-w-3xl",
+};
+
+export interface ModalProps {
+	open?: boolean;
+	defaultOpen?: boolean;
+	onOpenChange?: (open: boolean) => void;
+	/** Element that opens the modal (rendered via Radix `asChild`). */
+	trigger?: ReactNode;
+	title: ReactNode;
+	description?: ReactNode;
+	size?: ModalSize;
+	/** Usually a <ModalFooter>; stays pinned below the scrolling body. */
+	footer?: ReactNode;
+	children?: ReactNode;
+	closeLabel?: string;
+	"data-id"?: string;
+}
+
+/** Re-exported so footers can close the modal: `<ModalClose asChild>…`. */
+export const ModalClose = Dialog.Close;
+
+export function Modal({
+	open,
+	defaultOpen,
+	onOpenChange,
+	trigger,
+	title,
+	description,
+	size = "md",
+	footer,
+	children,
+	closeLabel = "Đóng",
+	"data-id": dataId,
+}: ModalProps) {
+	return (
+		<Dialog.Root
+			open={open}
+			defaultOpen={defaultOpen}
+			onOpenChange={onOpenChange}
+		>
+			{trigger ? <Dialog.Trigger asChild>{trigger}</Dialog.Trigger> : null}
+			<Dialog.Portal>
+				<Dialog.Overlay
+					className={cn(
+						"fixed inset-0 z-100 flex items-start justify-center overflow-y-auto bg-backdrop",
+						"p-gutter pt-(--modal-offset-top)",
+						"data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in",
+					)}
+				>
+					<Dialog.Content
+						data-id={dataId}
+						data-size={size}
+						// Without a description, opt out of Radix's describedby wiring.
+						{...(description ? {} : { "aria-describedby": undefined })}
+						className={cn(
+							"relative flex w-full flex-col overflow-hidden rounded-lg border border-border bg-surface text-fg shadow-lg",
+							"max-h-[calc(100dvh-var(--modal-offset-top)-var(--gutter))] focus:outline-none",
+							"data-[state=closed]:animate-modal-out data-[state=open]:animate-modal-in",
+							SIZE_CLASSES[size],
+						)}
+					>
+						<div className="flex items-center justify-between gap-3 border-border-subtle border-b py-3 pr-3 pl-6">
+							<Dialog.Title className="truncate font-bold font-mono text-base">
+								{title}
+							</Dialog.Title>
+							<Dialog.Close asChild>
+								<IconButton
+									label={closeLabel}
+									icon={<IconX size={18} aria-hidden="true" />}
+								/>
+							</Dialog.Close>
+						</div>
+						<div className="grid flex-1 grid-cols-[minmax(0,1fr)] content-start gap-6 overflow-y-auto p-6">
+							{description ? (
+								<Dialog.Description className="text-muted text-sm">
+									{description}
+								</Dialog.Description>
+							) : null}
+							{children}
+						</div>
+						{footer}
+					</Dialog.Content>
+				</Dialog.Overlay>
+			</Dialog.Portal>
+		</Dialog.Root>
+	);
+}

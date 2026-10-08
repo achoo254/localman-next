@@ -1,0 +1,75 @@
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { RouterProvider, createMemoryRouter } from "react-router";
+import { describe, expect, it } from "vitest";
+import { AppLayout } from "../../components/layout/app-layout";
+import { ToastProvider } from "../../components/ui/toast";
+import { TooltipProvider } from "../../components/ui/tooltip";
+import { PrimitivesPage } from "./primitives-page";
+
+function renderPage() {
+	const router = createMemoryRouter([
+		{
+			path: "/",
+			element: <AppLayout />,
+			children: [{ index: true, element: <PrimitivesPage /> }],
+		},
+	]);
+	return render(
+		<TooltipProvider>
+			<ToastProvider>
+				<RouterProvider router={router} />
+			</ToastProvider>
+		</TooltipProvider>,
+	);
+}
+
+describe("PrimitivesPage", () => {
+	it("renders the shell and every page-level block with a data-id", () => {
+		const { container } = renderPage();
+		for (const id of [
+			"topbar",
+			"topbar-home",
+			"topbar-theme",
+			"primitives",
+			"primitives-buttons",
+			"primitives-forms",
+			"primitives-feedback",
+			"primitives-overlays",
+		]) {
+			expect(container.querySelector(`[data-id="${id}"]`)).not.toBeNull();
+		}
+		expect(
+			screen.getByRole("link", { name: "Localman — trang chủ" }),
+		).toHaveTextContent("Localman");
+	});
+
+	it("switches the theme attribute on <html>", async () => {
+		renderPage();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Giao diện tối" }),
+		);
+		expect(document.documentElement.dataset.theme).toBe("dark");
+		await userEvent.click(
+			screen.getByRole("button", { name: "Theo hệ thống" }),
+		);
+		expect(document.documentElement.dataset.theme).toBeUndefined();
+	});
+
+	it("opens the dropdown menu from the keyboard", async () => {
+		renderPage();
+		screen.getByRole("button", { name: "Thao tác project" }).focus();
+		await userEvent.keyboard("{Enter}");
+		expect(
+			await screen.findByRole("menuitem", { name: "Xoá project" }),
+		).toHaveClass("text-error");
+	});
+
+	it("shows a toast", async () => {
+		renderPage();
+		await userEvent.click(screen.getByRole("button", { name: "Toast lỗi" }));
+		expect(
+			await screen.findByText("Không lưu được, thử lại."),
+		).toBeInTheDocument();
+	});
+});
