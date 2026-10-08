@@ -2,7 +2,27 @@
 
 Monorepo `localman-next`: bộ Localman (mock API, API client trên web, MCP, DevOps toolkit) và Tunelo (tunnel tới localhost). Thứ tự triển khai: `plans/dattqh/EXECUTION.md`.
 
-<!-- LOCALMAN-SECTION -->
+## Localman
+
+```
+apps/web/                # React 19 + Vite 7 + Tailwind 4 (:5173)
+apps/api/                # Express 5: dashboard API (:4000) và mock runtime (:4100)
+packages/operations/     # defineOperation → route REST, MCP tool, OpenAPI 3.1
+packages/shared/         # @localman/shared, plan-limits.ts là nguồn duy nhất của hạn mức
+packages/design-tokens/  # tokens.css, nơi duy nhất chứa literal màu
+scripts/                 # check-mcp-coverage.ts, check-tokens.ts
+```
+
+Commands: `pnpm dev`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm check:mcp-coverage`, `pnpm check:tokens`. Mỗi phase phải chạy sạch `pnpm lint && pnpm typecheck && pnpm test && pnpm check:mcp-coverage`.
+
+Quy tắc:
+- **API nghiệp vụ chỉ khai báo qua `defineOperation`** rồi thêm vào `apps/api/src/operations/registry.ts`; không viết route Express tay. Mọi operation có MCP tool, hoặc `mcp: { exempt: "<lý do>" }`. Xem `docs/operation-registry.md`.
+- **Hạn mức gói** chỉ đọc qua `limitsFor(plan)` từ `@localman/shared`. `Infinity` thành `null` khi `JSON.stringify`, nên map tường minh trước khi trả cho client.
+- **UI** chỉ dùng token và utility Tailwind đã map (`bg-surface`, `text-fg`, `text-muted`…), không hex/rgb/px khoảng cách. Dùng primitive trong `apps/web/src/components/ui/` trước khi tạo mới. Xem `docs/design-system.md`.
+- Lỗi API theo dạng `{ error: { code, message } }`; không lộ stack ra client, không log secret.
+- Internal package `@localman/*` là source-only TS (`exports` trỏ vào `src/index.ts`); import tương đối dùng đuôi `.js` (NodeNext), trừ `apps/web` (Bundler).
+- TypeScript strict, không `any` (dùng `unknown` + type guard), không non-null assertion `!`, named exports, file kebab-case, ≤ 200 dòng.
+- Kiến trúc tổng thể: `docs/system-architecture.md`.
 
 ## Tunelo
 
