@@ -34,7 +34,7 @@ User không có mail server, nên mọi thông báo trước đây gửi qua ema
   - `notification-service.ts`: gửi tới mọi kênh user đã bật, theo từng loại sự kiện.
   - `channels/in-app-channel.ts`
   - `channels/web-push-channel.ts`: thư viện `web-push` với VAPID; lưu subscription theo từng thiết bị; subscription trả 410 thì xoá.
-  - `channels/telegram-channel.ts`: bot riêng của Localman. `chatId` lấy từ IdP qua endpoint `userinfo` mở rộng, chỉ cấp cho client first-party. Chưa liên kết thì hiện nút "Liên kết Telegram", dẫn tới trang `/account` của IdP.
+  - `channels/telegram-channel.ts`: bot riêng của Localman. `chatId` lấy từ IdP qua `userinfo` với scope `telegram` (claim `telegram_chat_id`, `telegram_username`; chỉ `localman-web` được xin). Chưa liên kết thì hiện nút "Liên kết Telegram", dẫn tới trang `/account` của IdP. Giữ bot riêng của Localman, không dùng chung bot của IdP (Jev 0.99): sau khi liên kết, hiện lời nhắc một lần "Mở @<bot Localman> và bấm Start"; Telegram trả 403 thì đánh dấu kênh chưa kích hoạt. Đọc lại `userinfo` khi đăng nhập, khi refresh và khi nhận audit event `method.linked`/`method.unlinked` có `method: "telegram"`.
 - Create `apps/web/public/sw.js` (service worker nhận push), `apps/web/src/features/auth/use-current-user.ts`, `apps/web/src/lib/api-client.ts` (gặp 401 thì chuyển tới `/auth/login?returnTo=…`), `apps/web/src/features/notifications/` (chuông thông báo, trang cài đặt kênh).
 
 ## Tasks & Steps

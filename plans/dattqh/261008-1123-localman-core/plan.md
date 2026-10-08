@@ -330,6 +330,10 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Làm plan IdP (đợt 0) trước Localman phase 02, không dùng auth stub (0.96).
 - Repo `achoo254/tunelo` cũ: commit README chuyển hướng ngay, archive sau khi `tunelo-v1.7.0` phát hành từ monorepo (0.46; archive ngay 0.35; để nguyên tới khi phát hành 0.19). Độ tin cậy thấp, và `localman-next` đang private nên README chuyển hướng sẽ trỏ tới repo người ngoài không mở được. Chưa làm, chờ user.
 
+### Vòng 21: khi cook plan IdP (2026-10-08)
+- Localman không xin `offline_access`; refresh token gắn phiên IdP, đăng xuất ở IdP tự huỷ (Jev 0.94).
+- Giữ bot Telegram riêng của Localman, tách khỏi bot bảo mật của IdP; nhắc user bấm Start một lần (Jev 0.99).
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 
