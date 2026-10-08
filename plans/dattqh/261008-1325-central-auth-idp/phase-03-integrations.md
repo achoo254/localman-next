@@ -57,14 +57,14 @@ Nối 4 client vào IdP và mô tả rõ phần việc mỗi repo phải làm. C
 | T8 | Review cuối phase | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 Token exchange bật, policy chỉ cho `localman-web`, audience Tunelo, scope `tunnels:read`
-- [ ] T2 Cấu hình 3 client và policy DCR khớp bảng hợp đồng
-- [ ] T3 `scripts/seed-clients.ts` chạy hai lần liên tiếp không sinh thay đổi
-- [ ] T4 `docs/integration-guide.md` đủ mục cho Localman, Tunelo và client MCP
-- [ ] T5 Test token exchange và bộ test cũ pass
+- [x] T1 Token exchange bật, policy chỉ cho `localman-web`, audience Tunelo, scope `tunnels:read`
+- [x] T2 Cấu hình 3 client và policy DCR khớp bảng hợp đồng
+- [x] T3 `scripts/seed-clients.ts` chạy hai lần liên tiếp không sinh thay đổi
+- [x] T4 `docs/integration-guide.md` đủ mục cho Localman, Tunelo và client MCP
+- [x] T5 Test token exchange và bộ test cũ pass
 - [ ] T6 Staging và production đã seed client sau khi user xác nhận
 - [ ] T7 E2E 3 dịch vụ pass (theo dõi mở cho tới khi Localman phase 02 và Tunelo phase 02 lên staging)
-- [ ] T8 Review không còn finding mức high
+- [x] T8 Review không còn finding mức high
 - [ ] Verification: token exchange bị từ chối đúng 2 trường hợp; E2E đăng nhập một lần, tự nhận tunnel và back-channel logout pass trên staging
-- [ ] lint/typecheck/test sạch: `pnpm lint` (Biome), `tsc --noEmit`, `pnpm test`
-- [ ] `pnpm check:mcp-coverage`: N/A (repo `hoandat-auth` không dùng operation registry của Localman)
+- [x] lint/typecheck/test sạch: `pnpm lint` (Biome), `tsc --noEmit`, `pnpm test`
+- [x] `pnpm check:mcp-coverage`: N/A (repo `hoandat-auth` không dùng operation registry của Localman)

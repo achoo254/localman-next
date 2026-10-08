@@ -83,6 +83,8 @@ Lúc chuyển: Localman chưa có user thật nên đổi thẳng. Tunelo giữ 
 - Email chưa xác minh bị chiếm trước: đăng nhập Google/GitHub có email đã xác minh lấy lại email đó; tài khoản chiếm trước vẫn dùng được bằng username (0.95).
 - Đổi mật khẩu ở `/account`: đăng xuất mọi phiên trình duyệt khác, kèm ô "đăng xuất mọi thiết bị và ứng dụng" bật sẵn (0.80). Đặt lại mật khẩu thì luôn thu hồi tất cả.
 - Sau mỗi lần đặt lại mật khẩu: trang rà soát bảo mật bắt buộc, chỉ vào được bằng mật khẩu mới, liệt kê mọi phương thức đã liên kết kèm nút gỡ (0.93).
+- Refresh token của `localman-web` gắn với phiên IdP, không xin `offline_access`: đăng xuất ở IdP tự huỷ grant, không phụ thuộc back-channel của Localman (0.94).
+- Audit có thêm `grant.created` khi duyệt thiết bị Tunelo và khi consent client MCP bên thứ ba (0.96).
 - Review bảo mật 4 vòng; quy tắc cuối: mọi token một lần gắn tài khoản mang `securityVersion` và kênh cấp, ghi có điều kiện theo version (ADR 0002 mục 10 trong repo `hoandat-auth`).
 
 ## Câu hỏi mở
