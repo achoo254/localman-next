@@ -48,7 +48,7 @@ Repo Tunelo gốc **không bị sửa**, mọi thao tác chạy trên bản clon
 ## Files to Create
 - `package.json`, `pnpm-workspace.yaml`, `tsconfig.base.json`, `.editorconfig`, `.gitignore`, `.env.example`, `docker-compose.yml` (mongo:7 cho dev)
 - `biome.json` dùng chung cho monorepo (gộp với cấu hình của Tunelo ở bước 0b): bật `noExplicitAny` và `noNonNullAssertion` ở mức error
-- `apps/web/`: `vite.config.ts`, `index.html`, `src/main.tsx`, `src/app.tsx`, `src/router.tsx`, `src/styles/tokens.css`, `src/styles/global.css`, `tailwind` theme qua `@theme` trong `global.css`
+- `apps/web/`: `vite.config.ts`, `index.html`, `src/main.tsx`, `src/app.tsx`, `src/router.tsx`, `src/styles/global.css` (token nằm ở `packages/design-tokens/tokens.css`, theo bước 2), `tailwind` theme qua `@theme` trong `global.css`
 - `apps/web/src/components/ui/`: `button.tsx`, `icon-button.tsx`, `input.tsx`, `select.tsx`, `textarea.tsx`, `modal.tsx`, `dropdown-menu.tsx`, `badge.tsx`, `alert.tsx`, `tooltip.tsx`, `toast.tsx`, `form-field.tsx`, `modal-footer.tsx`
 - `apps/api/`: `src/config/env.ts` (zod validate env), `src/db/connect-mongo.ts`, `src/dashboard-server.ts`, `src/mock-server.ts`, `src/http/error-handler.ts`, `src/http/async-handler.ts`, `vitest.config.ts`
 - `packages/shared/` (tên package `@localman/shared`, tránh trùng `@tunelo/shared`): `src/index.ts`, `src/plan-limits.ts`
@@ -97,7 +97,7 @@ Repo Tunelo gốc **không bị sửa**, mọi thao tác chạy trên bản clon
 | T3 | Gộp file root trong một commit riêng (bước 0b.3 và 0b.6): `biome.json` chung bật `noExplicitAny` và `noNonNullAssertion` mức error, script root có filter, mục Tunelo trong `CLAUDE.md`, workflow `tunelo-publish-cli.yml` theo tag `tunelo-v*`, ADR sang `docs/decisions/tunelo/`, field `repository` của npm `tunelo` trỏ sang `achoo254/localman-next`, sửa path trong `infra/tunelo/deploy.sh`, rồi xoá `tunelo-root-import/`. Chạy kiểm tra ở bước 0b.4 | fullstack-developer | — | `biome.json`, `CLAUDE.md`, `.github/workflows/tunelo-publish-cli.yml`, `packages/tunelo-cli/package.json`, `infra/tunelo/deploy.sh` |
 | T4 | Push nhánh và các tag `tunelo-v*` lên `achoo254/localman-next`. Trước khi push, xác nhận commit của tag lịch sử không có `.github/workflows/` ở root (filter-repo đã dời vào `tunelo-root-import/`), để tag cũ không kích hoạt publish npm **(cần user xác nhận)** | fullstack-developer | — | remote `origin` |
 | T5 | Commit README cuối "Đã chuyển sang github.com/achoo254/localman-next (packages/tunelo-cli, apps/tunelo-server)" vào repo `achoo254/tunelo` cũ, rồi archive repo đó trên GitHub (bước 0b.5) **(cần user xác nhận)** | fullstack-developer | với T6–T10 | repo `achoo254/tunelo` |
-| T6 | Viết design token dựa trên Radix Colors và Inter và JetBrains Mono (bước 2–4): `tokens.css` đủ neutral, primary/accent, semantic, radius, motion, font và dark mode; map token vào Tailwind `@theme`; nền lưới 100px và `prefers-reduced-motion` trong `global.css`. Đối chiếu màu, chữ và nền lưới với `prototype/index.html` | ui-ux-designer | với T8, T9 | `apps/web/src/styles/tokens.css`, `apps/web/src/styles/global.css` |
+| T6 | Viết design token dựa trên Radix Colors và Inter và JetBrains Mono (bước 2–4): `tokens.css` đủ neutral, primary/accent, semantic, radius, motion, font và dark mode; map token vào Tailwind `@theme`; nền lưới 100px và `prefers-reduced-motion` trong `global.css`. Đối chiếu màu, chữ và nền lưới với `prototype/index.html` | ui-ux-designer | với T8, T9 | `packages/design-tokens/tokens.css` (dùng chung cho web và extension), `apps/web/src/styles/global.css` |
 | T7 | Dựng khung `apps/web` (Vite, React 19, router) và 13 primitive UI theo bước 5: nút bo 12px scale 1.03/0.97, modal 4 size với animation 200ms decelerate và footer dính đáy, badge mono uppercase, icon Tabler stroke 1.5, `data-id` cho khối cấp trang. Thêm wordmark `Localman` (bước 6). Đối chiếu primitive với `prototype/index.html` | fullstack-developer | với T8, T9 (sau T6) | `apps/web/vite.config.ts`, `apps/web/index.html`, `apps/web/src/{main,app,router}.tsx`, `apps/web/src/components/ui/*` |
 | T8 | Khung `apps/api` (bước 8): `env.ts` validate bằng zod, `connect-mongo.ts`, hai entrypoint có `helmet`, `express.json({limit:'100kb'})`, error handler `{error:{code,message}}`, `async-handler` và `GET /healthz` ở cổng 4000 và 4100. Tạo `@localman/shared` với `plan-limits.ts` và `limitsFor(plan)` đúng số ở bước 9 | fullstack-developer | với T6, T7 | `apps/api/src/{config/env.ts,db/connect-mongo.ts,dashboard-server.ts,mock-server.ts}`, `apps/api/src/http/*`, `apps/api/vitest.config.ts`, `packages/shared/src/{index,plan-limits}.ts` |
 | T9 | Operation registry (bước 7): `defineOperation` sinh route Express có validate và check quyền, descriptor MCP tool có JSON Schema lấy từ zod, và OpenAPI 3.1. Viết script `pnpm check:mcp-coverage` fail khi operation thiếu MCP mà không có `exempt` kèm lý do. Phần mount route vào `dashboard-server.ts` làm sau khi T8 xong | fullstack-developer | với T6, T7 | `packages/operations/src/*`, `scripts/check-mcp-coverage.ts` |
@@ -106,21 +106,21 @@ Repo Tunelo gốc **không bị sửa**, mọi thao tác chạy trên bản clon
 | T12 | Review cuối phase | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 Clone chỉ đọc repo cũ; workspace pnpm, script gốc và Mongo replica set chạy được
-- [ ] T2 Tunelo đã gộp với path mới, tag `tunelo-v*`, lịch sử còn nguyên
-- [ ] T3 File root đã gộp trong một commit riêng; `tunelo-root-import/` đã xoá
+- [x] T1 Clone chỉ đọc repo cũ; workspace pnpm, script gốc và Mongo replica set chạy được
+- [x] T2 Tunelo đã gộp với path mới, tag `tunelo-v*`, lịch sử còn nguyên
+- [x] T3 File root đã gộp trong một commit riêng; `tunelo-root-import/` đã xoá
 - [ ] T4 Đã push nhánh và tag `tunelo-v*` sau khi user xác nhận
 - [ ] T5 Repo `achoo254/tunelo` cũ có README chuyển hướng và đã archive sau khi user xác nhận
-- [ ] T6 `tokens.css`, `@theme` và `global.css` xong, khớp prototype
-- [ ] T7 Khung web, 13 primitive và wordmark xong
-- [ ] T8 Khung api, hai `/healthz` và `plan-limits` xong
-- [ ] T9 Operation registry và `check:mcp-coverage` xong
-- [ ] T10 README, CLAUDE.md và docs phản ánh kiến trúc mới
-- [ ] T11 Test mới pass và các mục Verification đã chạy
-- [ ] T12 Review không còn finding chặn
-- [ ] Verification: `pnpm install && pnpm lint && pnpm typecheck && pnpm test` pass
+- [x] T6 `tokens.css`, `@theme` và `global.css` xong, khớp prototype
+- [x] T7 Khung web, 13 primitive và wordmark xong
+- [x] T8 Khung api, hai `/healthz` và `plan-limits` xong
+- [x] T9 Operation registry và `check:mcp-coverage` xong
+- [x] T10 README, CLAUDE.md và docs phản ánh kiến trúc mới
+- [x] T11 Test mới pass và các mục Verification đã chạy
+- [x] T12 Review không còn finding chặn
+- [x] Verification: `pnpm install && pnpm lint && pnpm typecheck && pnpm test` pass
 - [ ] Verification: `docker compose up -d mongo && pnpm dev` mở được web ở `localhost:5173`; `curl localhost:4000/healthz` và `curl localhost:4100/healthz` trả 200
-- [ ] Verification: `pnpm check:tokens` sạch; không có hex nằm ngoài `tokens.css`; tương phản đạt ở cả hai theme
-- [ ] Verification: `pnpm --filter @tunelo/server test`, `pnpm --filter tunelo test` và `pnpm --filter tunelo build` pass; `git log --follow apps/tunelo-server/src/tunnel-manager.ts` thấy lịch sử cũ
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
-- [ ] `pnpm check:mcp-coverage` chạy được và fail đúng khi có operation thiếu MCP (phase này tạo script)
+- [x] Verification: `pnpm check:tokens` sạch; không có hex nằm ngoài `tokens.css`; tương phản đạt ở cả hai theme
+- [x] Verification: `pnpm --filter @tunelo/server test`, `pnpm --filter tunelo test` và `pnpm --filter tunelo build` pass; `git log --follow apps/tunelo-server/src/tunnel-manager.ts` thấy lịch sử cũ
+- [x] `pnpm lint && pnpm typecheck && pnpm test` sạch
+- [x] `pnpm check:mcp-coverage` chạy được và fail đúng khi có operation thiếu MCP (phase này tạo script)
