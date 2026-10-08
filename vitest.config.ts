@@ -8,6 +8,7 @@ export default defineConfig({
 			"apps/*/vitest.config.ts",
 			"packages/*/vitest.config.ts",
 			"tests/tunelo/vitest.config.ts",
+			"scripts/vitest.config.ts",
 		],
 	},
 });

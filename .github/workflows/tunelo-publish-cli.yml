@@ -38,8 +38,10 @@ jobs:
           [ "tunelo-v${version}" = "${GITHUB_REF_NAME}" ] || { echo "Tag ${GITHUB_REF_NAME} != package version tunelo-v${version}"; exit 1; }
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
+      # Lint and test only Tunelo so unrelated Localman work cannot block a CLI release.
+      - run: pnpm exec biome check apps/tunelo-server packages/tunelo-cli packages/tunelo-shared tests/tunelo scripts/tunelo
       - run: pnpm --filter @tunelo/shared --filter @tunelo/server --filter tunelo test
+      - run: pnpm test:tunelo-e2e
       - run: pnpm build:tunelo-cli
 
       # build:tunelo-cli emits a self-contained package.json in packages/tunelo-cli/dist

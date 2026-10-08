@@ -4,7 +4,7 @@
 	"type": "module",
 	"description": "Localman suite: mock API, web API client, Tunelo, MCP and DevOps toolkit",
 	"engines": {
-		"node": ">=22"
+		"node": ">=22.12"
 	},
 	"packageManager": "pnpm@11.9.0",
 	"scripts": {
@@ -12,7 +12,7 @@
 		"build": "pnpm -r build",
 		"lint": "biome check .",
 		"lint:fix": "biome check --fix .",
-		"typecheck": "pnpm -r --workspace-concurrency=1 typecheck",
+		"typecheck": "pnpm -r --workspace-concurrency=1 typecheck && tsc -p scripts/tsconfig.json",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"check:mcp-coverage": "tsx scripts/check-mcp-coverage.ts",
@@ -32,6 +32,8 @@
 		"tsx": "^4.20.0",
 		"typescript": "^5.9.2",
 		"vitest": "^3.2.4",
-		"ws": "^8.16.0"
+		"ws": "^8.16.0",
+		"apca-w3": "^0.1.9",
+		"zod": "^4.3.6"
 	}
 }
