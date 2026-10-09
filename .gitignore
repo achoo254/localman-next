@@ -2,6 +2,9 @@ node_modules/
 dist/
 portal-dist/
 coverage/
+# E2E: web build, traces and reports of the Playwright run
+e2e/.web-dist/
+e2e/test-results/
 *.tsbuildinfo
 *.tgz
 *.log
@@ -11,6 +14,7 @@ coverage/
 .env
 .env.*
 !.env.example
+!.env.production.example
 
 # Claude transient state
 .claude/session-state/

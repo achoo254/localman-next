@@ -11,9 +11,10 @@ packages/operations/     # defineOperation → route REST, MCP tool, OpenAPI 3.1
 packages/shared/         # @localman/shared, plan-limits.ts là nguồn duy nhất của hạn mức
 packages/design-tokens/  # tokens.css, nơi duy nhất chứa literal màu
 scripts/                 # check-mcp-coverage.ts, check-tokens.ts
+e2e/                     # Playwright: whole stack on fixed ports 46xx (support/stack.ts)
 ```
 
-Commands: `pnpm dev`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm check:mcp-coverage`, `pnpm check:tokens`. Mỗi phase phải chạy sạch `pnpm lint && pnpm typecheck && pnpm test && pnpm check:mcp-coverage`.
+Commands: `pnpm dev`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm e2e`, `pnpm check:mcp-coverage`, `pnpm check:tokens`. Mỗi phase phải chạy sạch `pnpm lint && pnpm typecheck && pnpm test && pnpm check:mcp-coverage`.
 
 Quy tắc:
 - **API nghiệp vụ chỉ khai báo qua `defineOperation`** rồi thêm vào `apps/api/src/operations/registry.ts`; không viết route Express tay. Mọi operation có MCP tool, hoặc `mcp: { exempt: "<lý do>" }`. Xem `docs/operation-registry.md`.
