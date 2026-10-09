@@ -87,4 +87,5 @@ Một số route nói giao thức (OpenID Connect) với trình duyệt hoặc v
 Operation có `mcp: { exempt }` vì chỉ trình duyệt dùng được:
 
 - `notifications.getVapidPublicKey`, `notifications.createPushSubscription`, `notifications.deletePushSubscription`: subscription Web Push do service worker tạo, agent không có push endpoint.
+- `mock.previewInvite`, `mock.acceptInvite`: người được mời mở link `/invite/:token` trên trình duyệt; nhận lời mời là quyết định của chính người đó, không phải của agent.
 - `feedback.submitProInterest`, `feedback.getProInterestFormConfig`: form quan tâm gói Pro là form công khai cho người. Khách phải qua Cloudflare Turnstile (agent không giải được), và việc để lại email liên hệ phải do chính người đó đồng ý.

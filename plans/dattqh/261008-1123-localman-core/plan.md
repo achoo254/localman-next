@@ -340,6 +340,14 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - `/auth/*` và `/internal/audit-events` là route giao thức ngoài registry, liệt kê trong `apps/api/src/operations/protocol-routes.ts` để `check:mcp-coverage` in ra.
 - IdP hỗ trợ `prompt=create` (OIDC Prompt Create) để nút "Bắt đầu miễn phí" mở thẳng trang đăng ký.
 
+### Vòng 23: khi cook phase 06 và 07 (2026-10-09)
+- Kích thước dữ liệu: 32 KB mỗi bản ghi, 2 MB mỗi resource, mọi gói (Jev, phương án `balanced`).
+- Generator và lưu dữ liệu chạy ngay như mockapi.io; chỉ khi thao tác làm mất bản ghi của resource con mới hỏi xác nhận, liệt kê từng resource con bị ảnh hưởng (Jev 0.95).
+- Magic link là link mời tham gia project dùng lại được, theo quyết định của user; prototype vẽ nó thành link nhân bản project là bản cũ. Magic link không giữ chỗ trong trần thành viên, trần được kiểm lúc accept.
+- Link mời dùng một lần luôn gắn với tài khoản hoặc email được mời, không có link mời không gắn ai (Jev 0.74). Link ai đăng nhập cũng vào được chỉ là magic link.
+- Thành viên bị xoá hoặc tự rời mất quyền dashboard ngay, nhưng vẫn biết secret của URL mock. Owner có thao tác "Đổi URL mock" (xoay secret) và được gợi ý dùng sau khi xoá thành viên; không tự xoay vì sẽ làm gãy frontend đang dùng URL cũ (Jev 0.59).
+- Owner hạ gói thì thành viên đang có giữ nguyên quyền; chỉ chặn mời hoặc tham gia mới cho tới khi số người dưới trần (Jev 0.65).
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 

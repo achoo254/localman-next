@@ -58,15 +58,15 @@ Owner mời được collaborator ở mọi gói, không qua email (phase 02). F
 | T6 | Review cuối phase, ưu tiên điều kiện accept và chống chiếm quyền qua email chưa xác minh | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 State và `data-id` của modal và trang mời đã chốt theo prototype
-- [ ] T2 Model, operation mời, liệt kê, xoá và giới hạn thành viên xong
-- [ ] T3 Magic link, điều kiện accept và vai trò collaborator xong
-- [ ] T4 Modal, trang accept và mục menu xong
-- [ ] T5 Integration pass
-- [ ] T6 Review không còn finding chặn
-- [ ] Verification: luồng mời, accept rồi truy cập chạy đúng; tài khoản không thoả điều kiện accept nhận 403
-- [ ] Verification: link dùng lại hoặc hết hạn bị từ chối; thông báo mời tới đúng kênh
-- [ ] Verification: owner Free mời người thứ 3 được, người thứ 4 nhận 403 `PLAN_LIMIT_REACHED`; collaborator tự rời thì mất quyền
-- [ ] Verification: magic link hết hạn, đã thu hồi hoặc dùng sai project đều bị từ chối
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
-- [ ] `pnpm check:mcp-coverage` pass
+- [x] T1 State và `data-id` của modal và trang mời đã chốt theo prototype
+- [x] T2 Model, operation mời, liệt kê, xoá và giới hạn thành viên xong
+- [x] T3 Magic link, điều kiện accept và vai trò collaborator xong
+- [x] T4 Modal, trang accept và mục menu xong
+- [x] T5 Integration pass
+- [x] T6 Review không còn finding chặn
+- [x] Verification: luồng mời, accept rồi truy cập chạy đúng; tài khoản không thoả điều kiện accept nhận 403
+- [x] Verification: link dùng lại hoặc hết hạn bị từ chối; thông báo mời tới đúng kênh
+- [x] Verification: owner Free mời người thứ 3 được, người thứ 4 nhận 403 `PLAN_LIMIT_REACHED`; collaborator tự rời thì mất quyền
+- [x] Verification: magic link hết hạn, đã thu hồi hoặc dùng sai project đều bị từ chối
+- [x] `pnpm lint && pnpm typecheck && pnpm test` sạch
+- [x] `pnpm check:mcp-coverage` pass
