@@ -96,9 +96,15 @@ export async function verifyLogoutToken(
 	return { jti, sid, sub };
 }
 
-function isJwksFetchError(error: errors.JOSEError): boolean {
+/**
+ * The JWKS could not be fetched or is not a valid key set: a failure of
+ * the IdP or the network, not a bad token (answer 503, not 401).
+ */
+export function isJwksFetchError(error: errors.JOSEError): boolean {
 	return (
-		error instanceof errors.JWKSTimeout || error.code === "ERR_JOSE_GENERIC"
+		error instanceof errors.JWKSTimeout ||
+		error instanceof errors.JWKSInvalid ||
+		error.code === "ERR_JOSE_GENERIC"
 	);
 }
 

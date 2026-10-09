@@ -1,5 +1,4 @@
 import type { JsonValue } from "@localman/shared";
-import type { Request } from "express";
 import { RecordModel } from "../resources/record-model.js";
 import { createRecord, deleteRecord, updateRecord } from "./crud-handlers.js";
 import {
@@ -31,6 +30,16 @@ export interface EndpointResult {
 	readonly readBytes: number;
 }
 
+/**
+ * What an endpoint reads of a call: the list query (strings, as Express's
+ * simple parser gives them) and the write body. A REST request and an MCP
+ * tool call both supply it.
+ */
+export interface EndpointCall {
+	readonly query: Readonly<Record<string, unknown>>;
+	readonly body: unknown;
+}
+
 const notFound: EndpointResult = {
 	status: 404,
 	data: null,
@@ -53,12 +62,12 @@ export async function runEndpoint(
 	kind: EndpointKind,
 	target: MockTarget,
 	recordId: string | null,
-	req: Request,
+	call: EndpointCall,
 	wantsCount: boolean,
 ): Promise<EndpointResult> {
 	if (kind === "list") {
 		// Validate the query before touching the database.
-		const query = parseListQuery(req.query, queryFieldsOf(target));
+		const query = parseListQuery(call.query, queryFieldsOf(target));
 		if (!(await ancestorsExist(target))) return notFound;
 		const { views, bytes } = await readRecords(target);
 		const { items, total } = applyListQuery(views, query);
@@ -70,7 +79,7 @@ export async function runEndpoint(
 		};
 	}
 	if (kind === "create") {
-		const created = await createRecord(target, req.body);
+		const created = await createRecord(target, call.body);
 		if (!created) return notFound;
 		return {
 			status: 201,
@@ -90,7 +99,7 @@ export async function runEndpoint(
 			data = view ?? null;
 		}
 	} else if (kind === "update") {
-		data = await updateRecord(target, recordId, req.body);
+		data = await updateRecord(target, recordId, call.body);
 	} else {
 		data = await deleteRecord(target, recordId);
 	}

@@ -11,12 +11,15 @@ import {
 	disconnectMongo,
 	initModels,
 } from "./db/connect-mongo.js";
+import { closeServer } from "./http/close-server.js";
 import { type Logger, createLogger } from "./logger.js";
 import { createMockApp } from "./mock-server.js";
 import {
 	authSettingsFromEnv,
 	createAuthModule,
 } from "./modules/auth/auth-module.js";
+import { createLocalmanMcpRouter } from "./modules/mcp/localman-mcp-server.js";
+import { McpHandlerRegistry } from "./modules/mcp/mcp-handler-registry.js";
 import { notifyQuotaWarning } from "./modules/mock-runtime/quota-warnings.js";
 import { UsageMeter } from "./modules/mock-runtime/usage-meter.js";
 import {
@@ -58,13 +61,6 @@ function listen(
 	});
 }
 
-function closeServer(server: Server): Promise<void> {
-	return new Promise((resolve, reject) => {
-		server.close((error) => (error ? reject(error) : resolve()));
-		server.closeIdleConnections();
-	});
-}
-
 const env = loadEnvOrExit();
 const logger: Logger = createLogger(env.LOG_LEVEL);
 const servers: Server[] = [];
@@ -75,6 +71,7 @@ const usageMeter = new UsageMeter({
 	warn: notifyQuotaWarning(getNotificationService),
 });
 const tombstoneSweeper = new TombstoneSweeper(logger);
+const mcpHandlers = new McpHandlerRegistry();
 
 async function shutdown(reason: string, exitCode: number): Promise<void> {
 	if (shuttingDown) return;
@@ -86,6 +83,10 @@ async function shutdown(reason: string, exitCode: number): Promise<void> {
 	}, SHUTDOWN_TIMEOUT_MS);
 	forceExit.unref();
 	try {
+		// End open MCP streams (SSE) first: the HTTP servers wait for them.
+		await mcpHandlers.closeAll((error) =>
+			logger.warn({ err: error }, "Closing an MCP handler failed"),
+		);
 		await Promise.all(servers.map(closeServer));
 		// Write the mock requests counted since the last flush.
 		await usageMeter.stop();
@@ -122,11 +123,21 @@ try {
 	configureRuntime(runtimeSettingsFromEnv(env));
 	notifications = createNotificationService(env, logger);
 	setNotificationService(notifications);
+	const auth = createAuthModule(authSettingsFromEnv(env), logger);
+	const allowedOrigins = [env.PUBLIC_URL, env.WEB_ORIGIN];
 	const dashboard = createDashboardApp({
 		logger,
 		trustProxy: env.TRUST_PROXY,
-		allowedOrigins: [env.PUBLIC_URL, env.WEB_ORIGIN],
-		auth: createAuthModule(authSettingsFromEnv(env), logger),
+		allowedOrigins,
+		auth,
+		mcp: createLocalmanMcpRouter({
+			publicUrl: env.PUBLIC_URL,
+			issuer: env.OIDC_ISSUER,
+			keys: auth.oidc,
+			allowedOrigins,
+			logger,
+			handlers: mcpHandlers,
+		}),
 	});
 	servers.push(await listen(dashboard, env.DASHBOARD_PORT, env.HOST));
 	logger.info(
@@ -137,6 +148,7 @@ try {
 	const mock = createMockApp({
 		logger,
 		usageMeter,
+		mcpHandlers,
 		trustProxy: env.TRUST_PROXY,
 		rateLimits: {
 			perSecret: env.MOCK_RATE_LIMIT_PER_SECRET,

@@ -14,6 +14,8 @@ export const projectView = z.object({
 	secret: z.string(),
 	/** Base URL of the project's mock API, prefix included. */
 	mockBaseUrl: z.string(),
+	/** Page of the project in the Localman web app. */
+	uiUrl: z.string(),
 	role: z.enum(["owner", "collaborator"]),
 	owner: z.object({
 		sub: z.string(),
@@ -37,6 +39,14 @@ function schemeOf(domain: string): "http" | "https" {
 export function mockBaseUrlOf(secret: string, prefix: string): string {
 	const domain = runtimeSettings().mockBaseDomain;
 	return `${schemeOf(domain)}://${secret}.${domain}${prefix}`;
+}
+
+/** `{PUBLIC_URL}/projects/{id}`: the project's page in the web app. */
+export function projectUiUrlOf(projectId: string): string {
+	return new URL(
+		`/projects/${encodeURIComponent(projectId)}`,
+		runtimeSettings().publicUrl,
+	).href;
 }
 
 interface OwnerProfile {
@@ -78,6 +88,7 @@ export async function toProjectViews(
 			prefix: project.prefix,
 			secret: project.secret,
 			mockBaseUrl: mockBaseUrlOf(project.secret, project.prefix),
+			uiUrl: projectUiUrlOf(project._id.toHexString()),
 			role: project.owner === viewerSub ? "owner" : "collaborator",
 			owner: {
 				sub: project.owner,

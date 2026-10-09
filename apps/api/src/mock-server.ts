@@ -2,6 +2,8 @@ import type { Express } from "express";
 import type { TrustProxy } from "./config/trust-proxy.js";
 import { createBaseApp } from "./http/create-base-app.js";
 import type { Logger } from "./logger.js";
+import type { McpHandlerRegistry } from "./modules/mcp/mcp-handler-registry.js";
+import { createMockMcpRouter } from "./modules/mcp/mock-mcp-server.js";
 import {
 	addressOf,
 	mockCors,
@@ -30,13 +32,16 @@ export interface MockAppOptions {
 	/** Express `trust proxy` (TRUST_PROXY): the client IP of the IP limit. */
 	readonly trustProxy?: TrustProxy;
 	readonly rateLimits?: MockRateLimits;
+	/** Hosted Mock MCP handlers, closed by main at shutdown. */
+	readonly mcpHandlers?: McpHandlerRegistry;
 }
 
 /**
  * Public mock runtime (port 4100) on `{secret}.{MOCK_BASE_DOMAIN}` and
  * `/m/{secret}`. Order: request id and log line (secret masked), CORS
  * (preflights end here), project address, rate limits (before the body
- * is read), JSON body ≤ 100 KB, then the mock router; requests without
+ * is read), JSON body ≤ 100 KB, then the project's MCP endpoint
+ * (`{prefix}/mcp`) and the mock router; requests without
  * a project address fall through to `/healthz` and the 404. Helmet lets
  * other origins embed responses (`Cross-Origin-Resource-Policy:
  * cross-origin`), as a public API must.
@@ -53,13 +58,14 @@ export function createMockApp(options: MockAppOptions): Express {
 		describeRoute: mockRouteOf,
 		beforeBody: [mockCors, readAddress, mockRateLimit(limiters, addressOf)],
 		mountRoutes: (app) => {
-			app.use(
-				createMockRouter({
-					logger: options.logger,
-					meter: options.usageMeter,
-					limiters,
-				}),
-			);
+			const deps = {
+				logger: options.logger,
+				meter: options.usageMeter,
+				limiters,
+			};
+			// `{prefix}/mcp` (Hosted Mock MCP) before the REST catch-all.
+			app.use(createMockMcpRouter({ ...deps, handlers: options.mcpHandlers }));
+			app.use(createMockRouter(deps));
 		},
 	});
 }

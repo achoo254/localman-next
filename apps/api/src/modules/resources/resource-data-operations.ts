@@ -78,6 +78,8 @@ export const generateAllResourceData = defineOperation({
 	toolset: "mock",
 	mcp: true,
 	dryRun: true,
+	// Rewrites every resource of the project: same blast radius as reset_all.
+	requiresConfirmation: true,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
 		const project = await requireProject(sub, "editResources", input.projectId);
@@ -101,6 +103,8 @@ export const resetAllResourceData = defineOperation({
 	toolset: "mock",
 	mcp: true,
 	dryRun: true,
+	// Wide blast radius: the MCP tool needs a dry run and its confirm token.
+	requiresConfirmation: true,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
 		const project = await requireProject(sub, "editResources", input.projectId);

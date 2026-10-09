@@ -1,7 +1,8 @@
 /**
  * `vite preview` for the E2E build of the web app. The app's own preview
- * proxies `/api` and `/auth` to the dev API port (4000); this config points
- * them at the E2E API so the browser stays on one origin, as in production.
+ * proxies the API paths (`/api`, `/auth`, Localman MCP) to the dev API port
+ * (4000); this config points them at the E2E API so the browser stays on
+ * one origin, as in production.
  */
 import { fileURLToPath } from "node:url";
 import { PORTS } from "./ports.js";
@@ -16,6 +17,11 @@ export default {
 		host: "127.0.0.1",
 		port: PORTS.web,
 		strictPort: true,
-		proxy: { "/api": API, "/auth": API },
+		proxy: {
+			"/api": API,
+			"/auth": API,
+			"/mcp": API,
+			"/.well-known/oauth-protected-resource": API,
+		},
 	},
 };

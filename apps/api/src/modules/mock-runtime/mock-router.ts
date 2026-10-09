@@ -9,7 +9,7 @@ import { loadResources, parentKeyIn } from "../resources/resource-store.js";
 import { runEndpoint } from "./mock-endpoints.js";
 import { addressOf, maskSecret } from "./mock-http.js";
 import type { MockTarget } from "./mock-records.js";
-import type { MockLimiters } from "./rate-limit.js";
+import { type MockLimiters, owesWrite, tooManyRequests } from "./rate-limit.js";
 import {
 	enabledEndpoint,
 	endpointKind,
@@ -18,6 +18,7 @@ import {
 } from "./render-response.js";
 import {
 	type MockAddress,
+	type MockProject,
 	resolveProject,
 	stripPrefix,
 } from "./resolve-project.js";
@@ -31,16 +32,26 @@ function notFound(res: Response): void {
 	res.status(404).json(NOT_FOUND_BODY);
 }
 
-function quotaExceeded(res: Response): void {
-	res
-		.status(429)
-		.json(
-			new OperationError(
-				429,
-				"MONTHLY_QUOTA_EXCEEDED",
-				"The project owner's monthly mock request quota is used up",
-			).toBody(),
-		);
+export function monthlyQuotaExceeded(): OperationError {
+	return new OperationError(
+		429,
+		"MONTHLY_QUOTA_EXCEEDED",
+		"The project owner's monthly mock request quota is used up",
+	);
+}
+
+/**
+ * Counts one request (REST call or MCP tool call) against the owner's
+ * monthly quota and the project's activity; false once it is used up.
+ */
+export function admitMonthly(
+	meter: UsageMeter,
+	project: MockProject,
+): Promise<boolean> {
+	const limit = limitsFor(
+		effectivePlan(project.ownerPlan),
+	).mockRequestsPerMonth;
+	return meter.admit(project.owner, limit, project.id.toHexString());
 }
 
 interface RouteNodeOf {
@@ -73,16 +84,18 @@ async function serve(
 	address: MockAddress,
 	{ meter, limiters }: MockRouterDeps,
 ): Promise<void> {
+	if (owesWrite(req.method, address)) {
+		const write = limiters.admitWrite(address.secret);
+		if (!write.ok) return tooManyRequests(res, write.retryAfterSeconds);
+	}
 	const project = await resolveProject(address.secret);
 	if (!project) return notFound(res);
 	const projectId = project.id.toHexString();
 	// Read by the request log line.
 	res.locals.projectId = projectId;
-	const limit = limitsFor(
-		effectivePlan(project.ownerPlan),
-	).mockRequestsPerMonth;
-	if (!(await meter.admit(project.owner, limit, projectId))) {
-		return quotaExceeded(res);
+	if (!(await admitMonthly(meter, project))) {
+		res.status(429).json(monthlyQuotaExceeded().toBody());
+		return;
 	}
 
 	const segments = stripPrefix(address.segments, project.prefix);

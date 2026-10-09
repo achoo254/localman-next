@@ -10,6 +10,7 @@ import {
 	getProInterestFormConfig,
 	submitProInterest,
 } from "../modules/feedback/pro-interest-operations.js";
+import { mcpTokenOperations } from "../modules/mcp/mcp-token-operations.js";
 import {
 	listNotifications,
 	markAllNotificationsRead,
@@ -26,7 +27,9 @@ import {
 } from "../modules/notifications/push-operations.js";
 import { projectOperations } from "../modules/projects/project-operations.js";
 import { rotateProjectSecret } from "../modules/projects/project-secret-operations.js";
+import { getMockUrls } from "../modules/resources/mock-url-operations.js";
 import { resourceDataOperations } from "../modules/resources/resource-data-operations.js";
+import { createResourceFromSchema } from "../modules/resources/resource-import-operations.js";
 import { resourceOperations } from "../modules/resources/resource-operations.js";
 import { resourceTreeOperations } from "../modules/resources/resource-tree-operations.js";
 import { getMe } from "../modules/users/user-operations.js";
@@ -49,12 +52,15 @@ export const operations: readonly AnyOperation[] = [
 	deletePushSubscription,
 	...projectOperations,
 	rotateProjectSecret,
+	...mcpTokenOperations,
 	...collaboratorOperations,
 	...inviteOperations,
 	...magicLinkOperations,
 	...resourceOperations,
+	createResourceFromSchema,
 	...resourceTreeOperations,
 	...resourceDataOperations,
+	getMockUrls,
 	getAccountUsage,
 	submitProInterest,
 	getProInterestFormConfig,

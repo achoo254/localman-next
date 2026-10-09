@@ -91,3 +91,23 @@ export async function syncUserFromUserInfo(
 		await upsert();
 	}
 }
+
+/**
+ * Makes sure a user row exists for a subject known only from a verified
+ * access token (Localman MCP). The token carries no profile, so a missing
+ * row gets the fallbacks of a sign-in without claims: `username` is the
+ * `sub`, no email, unverified. An existing row is never changed; the next
+ * web sign-in fills the profile from userinfo.
+ */
+export async function ensureUserForSubject(sub: string): Promise<void> {
+	try {
+		await UserModel.updateOne(
+			{ sub },
+			{ $setOnInsert: { username: sub, emailVerified: false } },
+			{ upsert: true, setDefaultsOnInsert: true },
+		);
+	} catch (error) {
+		// Another request inserted the row first: it exists, which is the goal.
+		if (!isDuplicateKeyError(error)) throw error;
+	}
+}

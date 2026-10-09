@@ -30,6 +30,8 @@ export const deleteResourceOperation = defineOperation({
 	toolset: "mock",
 	mcp: true,
 	dryRun: true,
+	// Wide blast radius: the MCP tool needs a dry run and its confirm token.
+	requiresConfirmation: true,
 	handler: async (ctx, input) => {
 		const project = await requireProject(
 			requireSubject(ctx),

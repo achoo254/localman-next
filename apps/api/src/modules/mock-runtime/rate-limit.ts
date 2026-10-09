@@ -1,7 +1,7 @@
 import { OperationError } from "@localman/operations";
 import type { Request, RequestHandler, Response } from "express";
 import { clientIpBucket } from "../../lib/rate-limit-windows.js";
-import type { MockAddress } from "./resolve-project.js";
+import { type MockAddress, looksLikeMcp } from "./resolve-project.js";
 
 export type RateDecision =
 	| { readonly ok: true }
@@ -127,22 +127,49 @@ export class MockLimiters {
 		return this.bytes.check(secret);
 	}
 
+	/**
+	 * Takes a write of `secret` for a REST write admitted as a read because
+	 * its path looked like the MCP endpoint (see `rateMethodOf`).
+	 */
+	admitWrite(secret: string): RateDecision {
+		return this.writes.take(secret);
+	}
+
 	chargeResponse(secret: string, bytes: number): void {
 		this.bytes.add(secret, bytes);
 	}
 }
 
-function tooManyRequests(res: Response, retryAfterSeconds: number): void {
+/**
+ * The method a request is admitted as. A path that may be the MCP
+ * endpoint (`looksLikeMcp`) is admitted as a read (every MCP exchange is
+ * a POST); `callMockTool` admits each tool call again with its own method.
+ */
+export function rateMethodOf(method: string, address: MockAddress): string {
+	return looksLikeMcp(address) ? "GET" : method;
+}
+
+/** Whether a REST request still owes the write `rateMethodOf` skipped. */
+export function owesWrite(method: string, address: MockAddress): boolean {
+	return looksLikeMcp(address) && WRITE_METHODS.has(method);
+}
+
+/** `details.retryAfterSeconds` stands in for `Retry-After` in MCP results. */
+export function rateLimited(retryAfterSeconds?: number): OperationError {
+	return new OperationError(
+		429,
+		"RATE_LIMITED",
+		"Too many requests, slow down",
+		retryAfterSeconds === undefined ? undefined : { retryAfterSeconds },
+	);
+}
+
+export function tooManyRequests(
+	res: Response,
+	retryAfterSeconds: number,
+): void {
 	res.setHeader("Retry-After", String(retryAfterSeconds));
-	res
-		.status(429)
-		.json(
-			new OperationError(
-				429,
-				"RATE_LIMITED",
-				"Too many requests, slow down",
-			).toBody(),
-		);
+	res.status(429).json(rateLimited().toBody());
 }
 
 /**
@@ -161,7 +188,11 @@ export function mockRateLimit(
 			next();
 			return;
 		}
-		const decision = limiters.admit(req.ip ?? null, address.secret, req.method);
+		const decision = limiters.admit(
+			req.ip ?? null,
+			address.secret,
+			rateMethodOf(req.method, address),
+		);
 		if (decision.ok) next();
 		else tooManyRequests(res, decision.retryAfterSeconds);
 	};

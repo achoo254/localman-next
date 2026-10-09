@@ -3,9 +3,14 @@ import { type JWK, exportJWK, generateKeyPair } from "jose";
 import Provider, {
 	type Configuration,
 	type KoaContextWithOIDC,
-	errors,
 } from "oidc-provider";
 import { autoCompleteInteraction } from "./auto-interaction.js";
+import {
+	AUTHORIZATION_PATH,
+	dcrClientMetadata,
+	ignoreDcrOfflineAccess,
+} from "./fake-idp-dcr.js";
+import { SUPPORTED_SCOPES, mcpResourceIndicators } from "./fake-idp-mcp.js";
 import { TOKEN_EXCHANGE_GRANT, exchangeToken } from "./fake-token-exchange.js";
 
 /** Mutable profile of the single test account; tests change it in place. */
@@ -74,7 +79,7 @@ function configuration(
 			email: ["email", "email_verified"],
 			telegram: ["telegram_chat_id", "telegram_username"],
 		},
-		scopes: ["openid", "offline_access", "profile", "email", "telegram"],
+		scopes: [...SUPPORTED_SCOPES],
 		findAccount: async (_ctx, sub) => {
 			const account = accounts.get(sub);
 			if (!account) return undefined;
@@ -98,6 +103,7 @@ function configuration(
 			};
 		},
 		responseTypes: ["code"],
+		routes: { authorization: AUTHORIZATION_PATH },
 		pkce: { required: () => true },
 		interactions: { url: async (_ctx, i) => `/interaction/${i.uid}` },
 		// No offline_access: refresh tokens live with the IdP session.
@@ -127,16 +133,15 @@ function configuration(
 			rpInitiatedLogout: { enabled: true },
 			backchannelLogout: { enabled: true },
 			userinfo: { enabled: true },
-			resourceIndicators: {
-				enabled: true,
-				// A plain sign-in gets an opaque access token (no resource).
-				defaultResource: async () => undefined,
-				getResourceServerInfo: async () => {
-					throw new errors.InvalidTarget("no resource on sign-in");
-				},
-				useGrantedResource: async () => false,
-			},
+			// A plain sign-in gets an opaque access token (no resource); MCP
+			// clients register themselves and get tokens for `/mcp`.
+			resourceIndicators: mcpResourceIndicators(options.localmanPublicUrl),
+			registration: { enabled: true },
+			revocation: { enabled: true },
 		},
+		extraClientMetadata: dcrClientMetadata(options.localmanPublicUrl),
+		// The only signing key is EC: dynamically registered clients too.
+		clientDefaults: { id_token_signed_response_alg: "ES256" },
 	};
 }
 
@@ -144,7 +149,9 @@ function configuration(
  * An OpenID provider shaped like auth.hoandat.com for `localman-web`:
  * confidential client, PKCE, refresh tokens without offline_access that
  * rotate, back-channel logout with `sid`, the `telegram` scope at userinfo
- * and the token exchange to Tunelo. Sign-in and consent complete
+ * and the token exchange to Tunelo; MCP clients register through DCR
+ * (scope policy of `dcrScopeOf`, `offline_access` ignored) and get JWT
+ * access tokens for Localman MCP. Sign-in and consent complete
  * automatically for the one test account.
  */
 export async function startFakeIdp(options: FakeIdpOptions): Promise<FakeIdp> {
@@ -162,6 +169,7 @@ export async function startFakeIdp(options: FakeIdpOptions): Promise<FakeIdp> {
 		options.issuer,
 		configuration(options, signingKey, accounts),
 	);
+	provider.use(ignoreDcrOfflineAccess);
 	provider.registerGrantType(TOKEN_EXCHANGE_GRANT, exchangeToken, [
 		"subject_token",
 		"subject_token_type",

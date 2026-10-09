@@ -20,6 +20,8 @@ export type HeavyOperation = "generate" | "replaceData" | "reset" | "clone";
 export interface RuntimeSettings {
 	/** Mock URLs are `{secret}.{mockBaseDomain}`. */
 	readonly mockBaseDomain: string;
+	/** Origin of the web app (`PUBLIC_URL`), for links into the UI. */
+	readonly publicUrl: string;
 	/** IdP subjects allowed on admin operations. */
 	readonly ownerSubs: ReadonlySet<string>;
 	/** `null`: guests are not challenged (development only, see env). */
@@ -49,6 +51,12 @@ export interface RuntimeSettings {
 		readonly perIp: RateLimitWindow;
 	};
 	/**
+	 * Localman MCP requests (`/mcp`) per IdP subject, every JSON-RPC
+	 * message counted (tool calls, lists, subscriptions): 429 with
+	 * `Retry-After` past it. Far above what an agent sends while working.
+	 */
+	readonly localmanMcpRateLimit: RateLimitWindow;
+	/**
 	 * Heavy dashboard operations per account and per project, both must
 	 * pass: they render, write and measure megabytes in the process that
 	 * also serves every mock API. Far above what a person clicks.
@@ -68,6 +76,7 @@ const perMinute = (max: number): RateLimitWindow => ({ max, windowMs: 60_000 });
 
 export const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = Object.freeze({
 	mockBaseDomain: "localman.hoandat.com",
+	publicUrl: "http://localhost:5173",
 	ownerSubs: new Set<string>(),
 	turnstile: null,
 	feedbackRateLimit: {
@@ -80,6 +89,7 @@ export const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = Object.freeze({
 		perUser: { max: 30, windowMs: 10 * 60_000 },
 		perIp: { max: 60, windowMs: 10 * 60_000 },
 	},
+	localmanMcpRateLimit: perMinute(120),
 	heavyOperationRateLimit: {
 		generate: { perUser: perMinute(30), perProject: perMinute(60) },
 		replaceData: { perUser: perMinute(60), perProject: perMinute(120) },
@@ -104,6 +114,7 @@ export function runtimeSettingsFromEnv(env: Env): RuntimeSettings {
 	return {
 		...DEFAULT_RUNTIME_SETTINGS,
 		mockBaseDomain: env.MOCK_BASE_DOMAIN,
+		publicUrl: env.PUBLIC_URL,
 		ownerSubs: new Set(env.OWNER_SUBS),
 		turnstile:
 			TURNSTILE_SITE_KEY && TURNSTILE_SECRET_KEY

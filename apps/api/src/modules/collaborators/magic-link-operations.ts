@@ -15,7 +15,7 @@ const NOTE =
 	"Owner only (403 for collaborators, 404 for projects the caller cannot read). The magic link is a reusable invite: anyone signed in who opens it joins as a collaborator while the owner's plan has a free member seat.";
 
 export const getMagicLink = defineOperation({
-	id: "mock.getMagicLink",
+	id: "collab.getMagicLink",
 	method: "GET",
 	path: PATH,
 	summary: "Get the state of a project's magic link",
@@ -24,7 +24,7 @@ export const getMagicLink = defineOperation({
 	output: magicLinkState,
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: true, destructive: false, idempotent: true },
-	toolset: "mock",
+	toolset: "collab",
 	mcp: true,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
@@ -35,7 +35,7 @@ export const getMagicLink = defineOperation({
 });
 
 export const rotateMagicLinkOperation = defineOperation({
-	id: "mock.rotateMagicLink",
+	id: "collab.rotateMagicLink",
 	method: "POST",
 	path: PATH,
 	summary: "Create a new magic link for a project",
@@ -44,7 +44,7 @@ export const rotateMagicLinkOperation = defineOperation({
 	output: magicLinkState.extend({ link: z.string() }),
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: false, destructive: false, idempotent: false },
-	toolset: "mock",
+	toolset: "collab",
 	mcp: true,
 	successStatus: 201,
 	handler: async (ctx, input) => {
@@ -55,7 +55,7 @@ export const rotateMagicLinkOperation = defineOperation({
 });
 
 export const revokeMagicLinkOperation = defineOperation({
-	id: "mock.revokeMagicLink",
+	id: "collab.revokeMagicLink",
 	method: "DELETE",
 	path: PATH,
 	summary: "Revoke a project's magic link",
@@ -64,7 +64,7 @@ export const revokeMagicLinkOperation = defineOperation({
 	output: magicLinkState,
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: false, destructive: false, idempotent: true },
-	toolset: "mock",
+	toolset: "collab",
 	mcp: true,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);

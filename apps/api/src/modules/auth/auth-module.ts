@@ -40,6 +40,8 @@ export interface AuthModule {
 	/** `METHOD path` pairs exempt from the CSRF origin check. */
 	readonly csrfExempt: readonly string[];
 	readonly sessions: SessionStore;
+	/** The IdP's issuer and JWKS, e.g. to verify Localman MCP access tokens. */
+	readonly oidc: OidcClient;
 	/** Session → Tunelo API token (RFC 8693), for the tunnel list. */
 	readonly tunnelTokens: TunnelTokenExchange;
 }
@@ -120,6 +122,7 @@ export function createAuthModule(
 		},
 		csrfExempt,
 		sessions,
+		oidc,
 		tunnelTokens: new TunnelTokenExchange({
 			oidc,
 			sessions,

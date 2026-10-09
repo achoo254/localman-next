@@ -1,0 +1,742 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildMockTools > describes the users → posts → comments tree 1`] = `
+[
+  {
+    "annotations": {
+      "readOnlyHint": true,
+    },
+    "description": "List records of mock resource "users" (GET /users): search, filter by field, sort with sortBy/order, page with page/limit.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "active": {
+          "description": "Filter on "active" (exact)",
+          "type": "boolean",
+        },
+        "age": {
+          "description": "Filter on "age" (exact)",
+          "type": "number",
+        },
+        "joinedAt": {
+          "description": "Filter on "joinedAt" (case-insensitive substring)",
+          "type": "string",
+        },
+        "limit": {
+          "description": "Records per page (at most 100); omit to get every match",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "name": {
+          "description": "Filter on "name" (substring for text, exact otherwise)",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+          ],
+        },
+        "order": {
+          "description": "Sort direction (default asc)",
+          "enum": [
+            "asc",
+            "desc",
+          ],
+          "type": "string",
+        },
+        "page": {
+          "description": "1-based page number, used with limit",
+          "minimum": 1,
+          "type": "integer",
+        },
+        "search": {
+          "description": "Case-insensitive text matched against every top-level string value",
+          "type": "string",
+        },
+        "sortBy": {
+          "description": "Field to sort by",
+          "enum": [
+            "id",
+            "name",
+            "age",
+            "active",
+            "joinedAt",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [],
+      "type": "object",
+    },
+    "name": "list_users",
+    "target": {
+      "action": "list",
+      "parentChain": [],
+      "resourceId": "000000000000000000000001",
+    },
+    "title": "List users",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "description": "Get one record of mock resource "users" (GET /users/{id}) by id.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Id of the record",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+      },
+      "required": [
+        "id",
+      ],
+      "type": "object",
+    },
+    "name": "get_users",
+    "target": {
+      "action": "get",
+      "parentChain": [],
+      "resourceId": "000000000000000000000001",
+    },
+    "title": "Get users",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false,
+    },
+    "description": "Create a record in mock resource "users" (POST /users). The mock assigns the id and generates omitted fields.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "additionalProperties": false,
+          "description": "Fields of the new record; omitted fields get generated values.",
+          "properties": {
+            "active": {
+              "type": "boolean",
+            },
+            "age": {
+              "type": "number",
+            },
+            "joinedAt": {
+              "format": "date-time",
+              "type": "string",
+            },
+            "name": {
+              "description": "Any JSON value; generated with Faker name.fullName",
+            },
+          },
+          "type": "object",
+        },
+      },
+      "required": [],
+      "type": "object",
+    },
+    "name": "create_users",
+    "target": {
+      "action": "create",
+      "parentChain": [],
+      "resourceId": "000000000000000000000001",
+    },
+    "title": "Create users",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "readOnlyHint": false,
+    },
+    "description": "Update a record of mock resource "users" (PUT /users/{id}) by id: the given fields are merged, others are kept.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "additionalProperties": false,
+          "description": "Fields to change; they are merged into the record, others are kept.",
+          "properties": {
+            "active": {
+              "type": "boolean",
+            },
+            "age": {
+              "type": "number",
+            },
+            "joinedAt": {
+              "format": "date-time",
+              "type": "string",
+            },
+            "name": {
+              "description": "Any JSON value; generated with Faker name.fullName",
+            },
+          },
+          "type": "object",
+        },
+        "id": {
+          "description": "Id of the record",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+      },
+      "required": [
+        "id",
+        "data",
+      ],
+      "type": "object",
+    },
+    "name": "update_users",
+    "target": {
+      "action": "update",
+      "parentChain": [],
+      "resourceId": "000000000000000000000001",
+    },
+    "title": "Update users",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "readOnlyHint": false,
+    },
+    "description": "Delete a record of mock resource "users" (DELETE /users/{id}) by id, with every record nested under it.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Id of the record",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+      },
+      "required": [
+        "id",
+      ],
+      "type": "object",
+    },
+    "name": "delete_users",
+    "target": {
+      "action": "delete",
+      "parentChain": [],
+      "resourceId": "000000000000000000000001",
+    },
+    "title": "Delete users",
+  },
+  {
+    "annotations": {
+      "readOnlyHint": true,
+    },
+    "description": "List records of mock resource "posts" (GET /users/{userId}/posts): search, filter by field, sort with sortBy/order, page with page/limit. parentId (a "users" id) lists one parent's records only.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "description": "Records per page (at most 100); omit to get every match",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "order": {
+          "description": "Sort direction (default asc)",
+          "enum": [
+            "asc",
+            "desc",
+          ],
+          "type": "string",
+        },
+        "page": {
+          "description": "1-based page number, used with limit",
+          "minimum": 1,
+          "type": "integer",
+        },
+        "parentId": {
+          "description": "Id of the parent "users" record; only its records are listed (omit for all)",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+        "search": {
+          "description": "Case-insensitive text matched against every top-level string value",
+          "type": "string",
+        },
+        "sortBy": {
+          "description": "Field to sort by",
+          "enum": [
+            "id",
+            "userId",
+            "title",
+            "tags",
+            "meta",
+          ],
+          "type": "string",
+        },
+        "title": {
+          "description": "Filter on "title" (case-insensitive substring)",
+          "type": "string",
+        },
+      },
+      "required": [],
+      "type": "object",
+    },
+    "name": "list_posts",
+    "target": {
+      "action": "list",
+      "parentChain": [
+        "000000000000000000000001",
+      ],
+      "resourceId": "000000000000000000000002",
+    },
+    "title": "List users/posts",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "description": "Get one record of mock resource "posts" (GET /users/{userId}/posts/{id}) by id.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Id of the record",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+        "parentId": {
+          "description": "Id of the parent "users" record; when given, the record must belong to it",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+      },
+      "required": [
+        "id",
+      ],
+      "type": "object",
+    },
+    "name": "get_posts",
+    "target": {
+      "action": "get",
+      "parentChain": [
+        "000000000000000000000001",
+      ],
+      "resourceId": "000000000000000000000002",
+    },
+    "title": "Get users/posts",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false,
+    },
+    "description": "Create a record in mock resource "posts" (POST /users/{userId}/posts). The mock assigns the id and generates omitted fields. parentId (a "users" id) is required.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "additionalProperties": false,
+          "description": "Fields of the new record; omitted fields get generated values.",
+          "properties": {
+            "meta": {
+              "type": "object",
+            },
+            "tags": {
+              "type": "array",
+            },
+            "title": {
+              "type": "string",
+            },
+          },
+          "type": "object",
+        },
+        "parentId": {
+          "description": "Id of the parent "users" record; the new record belongs to it",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+      },
+      "required": [
+        "parentId",
+      ],
+      "type": "object",
+    },
+    "name": "create_posts",
+    "target": {
+      "action": "create",
+      "parentChain": [
+        "000000000000000000000001",
+      ],
+      "resourceId": "000000000000000000000002",
+    },
+    "title": "Create users/posts",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "readOnlyHint": false,
+    },
+    "description": "Update a record of mock resource "posts" (PUT /users/{userId}/posts/{id}) by id: the given fields are merged, others are kept.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "additionalProperties": false,
+          "description": "Fields to change; they are merged into the record, others are kept.",
+          "properties": {
+            "meta": {
+              "type": "object",
+            },
+            "tags": {
+              "type": "array",
+            },
+            "title": {
+              "type": "string",
+            },
+          },
+          "type": "object",
+        },
+        "id": {
+          "description": "Id of the record",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+        "parentId": {
+          "description": "Id of the parent "users" record; when given, the record must belong to it",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+      },
+      "required": [
+        "id",
+        "data",
+      ],
+      "type": "object",
+    },
+    "name": "update_posts",
+    "target": {
+      "action": "update",
+      "parentChain": [
+        "000000000000000000000001",
+      ],
+      "resourceId": "000000000000000000000002",
+    },
+    "title": "Update users/posts",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "readOnlyHint": false,
+    },
+    "description": "Delete a record of mock resource "posts" (DELETE /users/{userId}/posts/{id}) by id, with every record nested under it.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Id of the record",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+        "parentId": {
+          "description": "Id of the parent "users" record; when given, the record must belong to it",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+      },
+      "required": [
+        "id",
+      ],
+      "type": "object",
+    },
+    "name": "delete_posts",
+    "target": {
+      "action": "delete",
+      "parentChain": [
+        "000000000000000000000001",
+      ],
+      "resourceId": "000000000000000000000002",
+    },
+    "title": "Delete users/posts",
+  },
+  {
+    "annotations": {
+      "readOnlyHint": true,
+    },
+    "description": "List records of mock resource "comments" (GET /users/{userId}/posts/{postId}/comments): search, filter by field, sort with sortBy/order, page with page/limit. parentId (a "posts" id) lists one parent's records only.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "description": "Filter on "body" (case-insensitive substring)",
+          "type": "string",
+        },
+        "limit": {
+          "description": "Records per page (at most 100); omit to get every match",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "order": {
+          "description": "Sort direction (default asc)",
+          "enum": [
+            "asc",
+            "desc",
+          ],
+          "type": "string",
+        },
+        "page": {
+          "description": "1-based page number, used with limit",
+          "minimum": 1,
+          "type": "integer",
+        },
+        "parentId": {
+          "description": "Id of the parent "posts" record; only its records are listed (omit for all)",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+        "search": {
+          "description": "Case-insensitive text matched against every top-level string value",
+          "type": "string",
+        },
+        "sortBy": {
+          "description": "Field to sort by",
+          "enum": [
+            "id",
+            "postId",
+            "body",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [],
+      "type": "object",
+    },
+    "name": "list_comments",
+    "target": {
+      "action": "list",
+      "parentChain": [
+        "000000000000000000000001",
+        "000000000000000000000002",
+      ],
+      "resourceId": "000000000000000000000003",
+    },
+    "title": "List users/posts/comments",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "description": "Get one record of mock resource "comments" (GET /users/{userId}/posts/{postId}/comments/{id}) by id.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Id of the record",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+        "parentId": {
+          "description": "Id of the parent "posts" record; when given, the record must belong to it",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+      },
+      "required": [
+        "id",
+      ],
+      "type": "object",
+    },
+    "name": "get_comments",
+    "target": {
+      "action": "get",
+      "parentChain": [
+        "000000000000000000000001",
+        "000000000000000000000002",
+      ],
+      "resourceId": "000000000000000000000003",
+    },
+    "title": "Get users/posts/comments",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "readOnlyHint": false,
+    },
+    "description": "Create a record in mock resource "comments" (POST /users/{userId}/posts/{postId}/comments). The mock assigns the id and generates omitted fields. parentId (a "posts" id) is required.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "additionalProperties": false,
+          "description": "Fields of the new record; omitted fields get generated values.",
+          "properties": {
+            "body": {
+              "type": "string",
+            },
+          },
+          "type": "object",
+        },
+        "parentId": {
+          "description": "Id of the parent "posts" record; the new record belongs to it",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+      },
+      "required": [
+        "parentId",
+      ],
+      "type": "object",
+    },
+    "name": "create_comments",
+    "target": {
+      "action": "create",
+      "parentChain": [
+        "000000000000000000000001",
+        "000000000000000000000002",
+      ],
+      "resourceId": "000000000000000000000003",
+    },
+    "title": "Create users/posts/comments",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "readOnlyHint": false,
+    },
+    "description": "Update a record of mock resource "comments" (PUT /users/{userId}/posts/{postId}/comments/{id}) by id: the given fields are merged, others are kept.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "additionalProperties": false,
+          "description": "Fields to change; they are merged into the record, others are kept.",
+          "properties": {
+            "body": {
+              "type": "string",
+            },
+          },
+          "type": "object",
+        },
+        "id": {
+          "description": "Id of the record",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+        "parentId": {
+          "description": "Id of the parent "posts" record; when given, the record must belong to it",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+      },
+      "required": [
+        "id",
+        "data",
+      ],
+      "type": "object",
+    },
+    "name": "update_comments",
+    "target": {
+      "action": "update",
+      "parentChain": [
+        "000000000000000000000001",
+        "000000000000000000000002",
+      ],
+      "resourceId": "000000000000000000000003",
+    },
+    "title": "Update users/posts/comments",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "readOnlyHint": false,
+    },
+    "description": "Delete a record of mock resource "comments" (DELETE /users/{userId}/posts/{postId}/comments/{id}) by id.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Id of the record",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+        "parentId": {
+          "description": "Id of the parent "posts" record; when given, the record must belong to it",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]+$",
+          "type": "string",
+        },
+      },
+      "required": [
+        "id",
+      ],
+      "type": "object",
+    },
+    "name": "delete_comments",
+    "target": {
+      "action": "delete",
+      "parentChain": [
+        "000000000000000000000001",
+        "000000000000000000000002",
+      ],
+      "resourceId": "000000000000000000000003",
+    },
+    "title": "Delete users/posts/comments",
+  },
+]
+`;

@@ -1,3 +1,4 @@
+import { MOCK_MCP_SEGMENT } from "@localman/shared";
 import type { Types } from "mongoose";
 import { type StoredPlan, storedPlanOf } from "../billing/plan-guard.js";
 import { LIVE_PROJECT, ProjectModel } from "../projects/project-model.js";
@@ -79,9 +80,19 @@ export function stripPrefix(
 	return segments.slice(expected.length);
 }
 
+/**
+ * Whether the path may be the project's MCP endpoint (`{prefix}/mcp`);
+ * only the prefix tells for sure, and it is known once the project is.
+ */
+export function looksLikeMcp(address: MockAddress): boolean {
+	return address.segments.at(-1) === MOCK_MCP_SEGMENT;
+}
+
 /** What the runtime needs of a project. */
 export interface MockProject {
 	readonly id: Types.ObjectId;
+	/** Shown in the MCP endpoint's OpenAPI title. */
+	readonly name: string;
 	readonly prefix: string;
 	readonly owner: string;
 	/** The owner's stored plan; its expiry is checked on every request. */
@@ -99,11 +110,17 @@ const cache = new TtlLruCache<Promise<MockProject | null>>(10_000, 60_000);
 
 async function loadProject(secret: string): Promise<MockProject | null> {
 	const project = await ProjectModel.findOne({ secret, ...LIVE_PROJECT })
-		.select("_id prefix owner")
-		.lean<{ _id: Types.ObjectId; prefix?: string; owner: string }>();
+		.select("_id name prefix owner")
+		.lean<{
+			_id: Types.ObjectId;
+			name: string;
+			prefix?: string;
+			owner: string;
+		}>();
 	if (!project) return null;
 	return {
 		id: project._id,
+		name: project.name,
 		prefix: project.prefix ?? "",
 		owner: project.owner,
 		ownerPlan: await storedPlanOf(project.owner),

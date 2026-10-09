@@ -8,6 +8,7 @@ import {
 } from "../config/runtime-settings.js";
 import { createDashboardApp } from "../dashboard-server.js";
 import { createLogger } from "../logger.js";
+import { clearKnownSubjects } from "../modules/mcp/localman-mcp-limits.js";
 import { clearCollections, connectTestMongo } from "./test-mongo.js";
 
 const ORIGIN = "https://localman.test";
@@ -76,6 +77,8 @@ export function useDashboardTestDb(
 	});
 	beforeEach(async () => {
 		await clearCollections();
+		// The users collection was emptied: forget the users known to exist.
+		clearKnownSubjects();
 		configureRuntime({ ...DEFAULT_RUNTIME_SETTINGS, ...settings() });
 	});
 }

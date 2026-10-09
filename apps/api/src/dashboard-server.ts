@@ -36,6 +36,12 @@ export interface DashboardAppOptions {
 	readonly trustProxy?: boolean | number | string;
 	/** Sign-in routes and session lookup; without it every caller is anonymous. */
 	readonly auth?: DashboardAuth;
+	/**
+	 * Localman MCP (`/mcp` and its OAuth metadata). It authenticates with
+	 * Bearer tokens only and reads its own body, so it runs before the CSRF
+	 * guard and the JSON parsers; other paths pass through.
+	 */
+	readonly mcp?: RequestHandler;
 }
 
 const anonymous: OperationRouterOptions["resolveAuth"] = () => null;
@@ -99,6 +105,7 @@ export function createDashboardApp(options: DashboardAppOptions): Express {
 		logger: options.logger,
 		trustProxy: options.trustProxy,
 		beforeBody: [
+			...(options.mcp ? [options.mcp] : []),
 			createCsrfGuard({
 				allowedOrigins: options.allowedOrigins,
 				exempt: auth?.csrfExempt,

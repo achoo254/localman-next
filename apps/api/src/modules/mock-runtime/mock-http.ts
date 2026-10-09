@@ -12,14 +12,15 @@ const MAX_REQUESTED_HEADERS = 1024;
 /**
  * Open CORS for a public API: any origin (`*`, so browsers never send
  * cookies or credentials with it), every mock method, and whatever
- * request headers the preflight names (so `Authorization` works).
+ * request headers the preflight names (so `Authorization` works; the
+ * MCP endpoint's 401 challenge is readable through `WWW-Authenticate`).
  * Preflights end here with 204 and are not rate limited or counted.
  */
 export const mockCors: RequestHandler = (req, res, next) => {
 	res.setHeader("Access-Control-Allow-Origin", "*");
 	res.setHeader(
 		"Access-Control-Expose-Headers",
-		`${REQUEST_ID_HEADER}, Retry-After`,
+		`${REQUEST_ID_HEADER}, Retry-After, WWW-Authenticate`,
 	);
 	if (req.method !== "OPTIONS") {
 		next();

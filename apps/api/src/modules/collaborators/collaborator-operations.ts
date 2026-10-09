@@ -24,7 +24,7 @@ const OWNER_NOTE =
 	"Owner only (403 for collaborators, 404 for projects the caller cannot read). Lookups and invitations share a budget per owner (429 RATE_LIMITED). The owner (400 CANNOT_INVITE_SELF) and existing members (409 ALREADY_MEMBER) are refused without account details.";
 
 export const listCollaboratorsOperation = defineOperation({
-	id: "mock.listCollaborators",
+	id: "collab.listCollaborators",
 	method: "GET",
 	path: PATH,
 	summary: "List the members of a mock project",
@@ -34,7 +34,7 @@ export const listCollaboratorsOperation = defineOperation({
 	output: collaboratorList,
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: true, destructive: false, idempotent: true },
-	toolset: "mock",
+	toolset: "collab",
 	mcp: true,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
@@ -44,7 +44,7 @@ export const listCollaboratorsOperation = defineOperation({
 });
 
 export const lookupInviteeOperation = defineOperation({
-	id: "mock.lookupInvitee",
+	id: "collab.lookupInvitee",
 	method: "POST",
 	path: `${PATH}/lookup`,
 	summary: "Find the account an invitation would go to",
@@ -53,7 +53,7 @@ export const lookupInviteeOperation = defineOperation({
 	output: z.object({ match: inviteeView.nullable() }),
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: true, destructive: false, idempotent: true },
-	toolset: "mock",
+	toolset: "collab",
 	mcp: true,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
@@ -69,7 +69,7 @@ export const lookupInviteeOperation = defineOperation({
 });
 
 export const inviteCollaboratorOperation = defineOperation({
-	id: "mock.inviteCollaborator",
+	id: "collab.inviteCollaborator",
 	method: "POST",
 	path: PATH,
 	summary: "Invite someone to a mock project",
@@ -83,7 +83,7 @@ export const inviteCollaboratorOperation = defineOperation({
 	}),
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: false, destructive: false, idempotent: false },
-	toolset: "mock",
+	toolset: "collab",
 	mcp: true,
 	successStatus: 201,
 	handler: async (ctx, input) => {
@@ -107,7 +107,7 @@ export const inviteCollaboratorOperation = defineOperation({
 });
 
 export const removeCollaboratorOperation = defineOperation({
-	id: "mock.removeCollaborator",
+	id: "collab.removeCollaborator",
 	method: "DELETE",
 	path: `${PATH}/:collaboratorId`,
 	summary: "Remove a member, cancel an invitation or leave a project",
@@ -121,7 +121,7 @@ export const removeCollaboratorOperation = defineOperation({
 	}),
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: false, destructive: true, idempotent: true },
-	toolset: "mock",
+	toolset: "collab",
 	mcp: true,
 	dryRun: true,
 	handler: async (ctx, input) => {

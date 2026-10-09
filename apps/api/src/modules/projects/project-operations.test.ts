@@ -1,5 +1,4 @@
-import type { Types } from "mongoose";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
 	DEFAULT_RUNTIME_SETTINGS,
 	configureRuntime,
@@ -9,50 +8,15 @@ import {
 	guest,
 	useDashboardTestDb,
 } from "../../test-support/dashboard-test-app.js";
-import { UserModel } from "../users/user-model.js";
-import { registerProjectDependent } from "./project-dependents.js";
 import { ProjectModel } from "./project-model.js";
+import { useProjectFixture } from "./testing/project-fixture.js";
 
 const ALICE = "acc_alice";
 const BOB = "acc_bob";
 
 useDashboardTestDb(() => ({ mockBaseDomain: "mock.test" }));
 
-/** In-memory stand-in for a dependent module: rows keyed by project id. */
-const stubRows = new Map<string, string[]>();
-let unregister: () => void = () => undefined;
-beforeEach(async () => {
-	stubRows.clear();
-	unregister = registerProjectDependent({
-		kind: "stub-rows",
-		count: async (id: Types.ObjectId) =>
-			stubRows.get(id.toHexString())?.length ?? 0,
-		deleteAll: async (id) => {
-			stubRows.delete(id.toHexString());
-		},
-		copy: async (from, to) => {
-			stubRows.set(to.toHexString(), [
-				...(stubRows.get(from.toHexString()) ?? []),
-			]);
-		},
-	});
-	await UserModel.create([
-		{
-			sub: ALICE,
-			username: "alice",
-			name: "Alice",
-			picture: "https://cdn.test/a.png",
-		},
-		{ sub: BOB, username: "bob" },
-	]);
-});
-afterEach(() => unregister());
-
-async function createAs(sub: string, name = "Demo", prefix = "") {
-	const res = await as(sub).send("post", "/projects", { name, prefix });
-	expect(res.status).toBe(201);
-	return res.body as { id: string; secret: string; name: string };
-}
+const { createAs } = useProjectFixture(ALICE, BOB);
 
 describe("project operations", () => {
 	it("create a project with a DNS-safe secret, a normalized prefix and the mock URL", async () => {
@@ -129,54 +93,6 @@ describe("project operations", () => {
 			prefix: "/x/y",
 			secret: project.secret,
 		});
-	});
-
-	it("clone with a new secret, a (copy) name and the dependents' data", async () => {
-		const source = await createAs(ALICE, "Shop");
-		stubRows.set(source.id, ["users", "orders"]);
-		const res = await as(ALICE).send("post", `/projects/${source.id}/clone`);
-		expect(res.status).toBe(201);
-		expect(res.body.name).toBe("Shop (copy)");
-		expect(res.body.secret).not.toBe(source.secret);
-		expect(res.body.id).not.toBe(source.id);
-		expect(stubRows.get(res.body.id)).toEqual(["users", "orders"]);
-		// The clone is editable as is: its name passes validation.
-		const edit = await as(ALICE).send("put", `/projects/${res.body.id}`, {
-			name: res.body.name,
-		});
-		expect(edit.status).toBe(200);
-	});
-
-	it("preview a delete with dryRun, then cascade it", async () => {
-		const project = await createAs(ALICE);
-		stubRows.set(project.id, ["users"]);
-		const preview = await as(ALICE).send(
-			"delete",
-			`/projects/${project.id}?dryRun=true`,
-		);
-		expect(preview.status).toBe(200);
-		expect(preview.body).toMatchObject({
-			id: project.id,
-			deleted: false,
-			dryRun: true,
-		});
-		// Registration order follows module imports; compare as a set.
-		expect(preview.body.dependents).toHaveLength(5);
-		expect(preview.body.dependents).toEqual(
-			expect.arrayContaining([
-				{ kind: "resources", count: 0 },
-				{ kind: "records", count: 0 },
-				{ kind: "collaborators", count: 0 },
-				{ kind: "magicLinks", count: 0 },
-				{ kind: "stub-rows", count: 1 },
-			]),
-		);
-		expect(await ProjectModel.countDocuments()).toBe(1);
-
-		const real = await as(ALICE).send("delete", `/projects/${project.id}`);
-		expect(real.body).toMatchObject({ deleted: true, dryRun: false });
-		expect(await ProjectModel.countDocuments()).toBe(0);
-		expect(stubRows.has(project.id)).toBe(false);
 	});
 
 	it("answer 404 to another user for every action, without changing anything", async () => {

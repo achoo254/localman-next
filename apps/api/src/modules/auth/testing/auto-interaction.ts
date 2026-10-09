@@ -9,7 +9,8 @@ function stringArray(value: unknown): string[] {
 
 /**
  * TEST ONLY. Stands in for the IdP's login and consent pages: signs
- * `accountId` in and grants every requested scope and claim.
+ * `accountId` in and grants every requested scope, claim and resource
+ * scope (the consent of an MCP client).
  */
 export async function autoCompleteInteraction(
 	provider: Provider,
@@ -41,6 +42,13 @@ export async function autoCompleteInteraction(
 	if (scopes.length > 0) grant.addOIDCScope(scopes.join(" "));
 	const claims = stringArray(prompt.details.missingOIDCClaims);
 	if (claims.length > 0) grant.addOIDCClaims(claims);
+	const resourceScopes = prompt.details.missingResourceScopes;
+	if (typeof resourceScopes === "object" && resourceScopes !== null) {
+		for (const [resource, scopes] of Object.entries(resourceScopes)) {
+			const granted = stringArray(scopes);
+			if (granted.length > 0) grant.addResourceScope(resource, granted);
+		}
+	}
 	await provider.interactionFinished(
 		req,
 		res,
