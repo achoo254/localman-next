@@ -12,13 +12,15 @@ export type IneligibleReason =
 	| "NOT_INVITEE"
 	| "EMAIL_NOT_VERIFIED"
 	| "ALREADY_MEMBER"
-	| "MEMBER_LIMIT";
+	| "MEMBER_LIMIT"
+	| "REMOVED_BY_OWNER";
 
 const REASONS: readonly IneligibleReason[] = [
 	"NOT_INVITEE",
 	"EMAIL_NOT_VERIFIED",
 	"ALREADY_MEMBER",
 	"MEMBER_LIMIT",
+	"REMOVED_BY_OWNER",
 ];
 
 export interface InvitePreview {

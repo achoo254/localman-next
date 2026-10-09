@@ -1,6 +1,6 @@
 import { IconBox } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { Alert } from "../../components/ui/alert";
 import { Button, buttonClassName } from "../../components/ui/button";
@@ -26,11 +26,9 @@ import {
 } from "./project-detail-dialogs";
 import { ProjectDetailHeader } from "./project-detail-header";
 import { ResourcesCard, type ResourcesState } from "./resources-card";
+import { useFirstResourcePrompt } from "./use-first-resource-prompt";
 import { useProject } from "./use-project";
 import { useProjectActions } from "./use-project-actions";
-
-/** Delay before an empty project offers "Resource mới" (as in the source). */
-export const EMPTY_PROMPT_DELAY_MS = 500;
 
 /** `/projects/:projectId`: API endpoint card, resource tree and modals. */
 export function ProjectDetailPage() {
@@ -110,19 +108,14 @@ function ProjectDetail({ project }: { project: Project }) {
 	);
 	const openNew = () => setDialog({ kind: "form", resource: null });
 
-	// An empty project offers its first resource once, shortly after opening.
-	const prompted = useRef(false);
-	const empty = query.isSuccess && query.data.length === 0;
-	useEffect(() => {
-		if (!empty || prompted.current) return;
-		const timer = window.setTimeout(() => {
-			prompted.current = true;
+	useFirstResourcePrompt(
+		query.isSuccess && query.data.length === 0,
+		members !== null || rotating,
+		() =>
 			setDialog((current) =>
 				current.kind === "none" ? { kind: "form", resource: null } : current,
-			);
-		}, EMPTY_PROMPT_DELAY_MS);
-		return () => window.clearTimeout(timer);
-	}, [empty]);
+			),
+	);
 
 	const state: ResourcesState = query.isPending
 		? { status: "loading" }

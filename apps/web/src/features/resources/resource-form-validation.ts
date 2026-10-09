@@ -6,6 +6,7 @@ import {
 	OBJECT_ID_FIELD,
 	RESOURCE_NAME_MAX,
 	RESOURCE_NAME_PATTERN,
+	relationSourceOf,
 } from "@localman/shared/constants";
 import { isFakerMethodId } from "@localman/shared/faker-catalog";
 import { isRecord } from "../../lib/json-guards";
@@ -37,10 +38,34 @@ function nameError(name: string, place: FormPlace): string | undefined {
 	return undefined;
 }
 
+/** Names already used, and the first field reading each relation source. */
+interface SeenFields {
+	readonly names: Set<string>;
+	readonly sources: Map<string, string>;
+}
+
+/** A second field reading the same parent or child would repeat its records. */
+function repeatedSourceError(
+	field: FieldDraft,
+	name: string,
+	sources: Map<string, string>,
+): string | undefined {
+	const source = relationSourceOf(field);
+	if (source === null) return undefined;
+	const first = sources.get(source);
+	if (first === undefined) {
+		sources.set(source, name);
+		return undefined;
+	}
+	return field.type === "Parent Resource"
+		? `Đã có field “${first}” lấy bản ghi cha.`
+		: `Đã có field “${first}” lấy resource con này.`;
+}
+
 function fieldError(
 	field: FieldDraft,
 	reserved: ReadonlySet<string>,
-	seen: Set<string>,
+	seen: SeenFields,
 	place: FormPlace,
 ): string | undefined {
 	const name = field.name.trim();
@@ -52,8 +77,8 @@ function fieldError(
 	}
 	if (FORBIDDEN_KEYS.includes(name)) return `Không dùng được tên “${name}”.`;
 	if (reserved.has(name)) return `Field “${name}” được sinh tự động.`;
-	if (seen.has(name)) return `Field “${name}” bị trùng.`;
-	seen.add(name);
+	if (seen.names.has(name)) return `Field “${name}” bị trùng.`;
+	seen.names.add(name);
 	if (field.type === "Faker.js" && !isFakerMethodId(field.fakerMethod)) {
 		return "Chọn một Faker method trong danh sách.";
 	}
@@ -66,7 +91,7 @@ function fieldError(
 	if (field.type === "Parent Resource" && place.parentKey === null) {
 		return "Resource gốc không có Parent Resource.";
 	}
-	return undefined;
+	return repeatedSourceError(field, name, seen.sources);
 }
 
 function toField(field: FieldDraft): SchemaField {
@@ -97,7 +122,7 @@ export function validateDraft(
 		OBJECT_ID_FIELD,
 		...(place.parentKey ? [place.parentKey] : []),
 	]);
-	const seen = new Set<string>();
+	const seen: SeenFields = { names: new Set(), sources: new Map() };
 	for (const field of draft.fields) {
 		const error = fieldError(field, reserved, seen, place);
 		if (error) errors.fields[field.key] = error;

@@ -56,7 +56,7 @@ export function MemberConfirmModal({
 		>
 			{leave
 				? "Bạn sẽ mất quyền truy cập cho tới khi được mời lại."
-				: "Họ sẽ mất quyền truy cập project ngay."}
+				: "Họ sẽ mất quyền truy cập project ngay và không tham gia lại được bằng magic link. Muốn họ quay lại, hãy gửi lời mời mới."}
 		</ConfirmModal>
 	);
 }

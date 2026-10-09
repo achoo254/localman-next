@@ -10,6 +10,8 @@ const DIALOG_MESSAGES: Messages = {
 	INVITEE_NOT_FOUND: NOT_FOUND_MESSAGE,
 	ALREADY_MEMBER: "Người này đã có trong project.",
 	CANNOT_INVITE_SELF: "Người này đã có trong project.",
+	AMBIGUOUS_USERNAME:
+		"Có nhiều tài khoản dùng username này. Hãy mời bằng email.",
 	VALIDATION_ERROR: "Nhập username hoặc email hợp lệ.",
 	RATE_LIMITED:
 		"Bạn đã tra cứu hoặc mời quá nhiều lần. Hãy thử lại sau ít phút.",

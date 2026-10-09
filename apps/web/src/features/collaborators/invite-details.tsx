@@ -30,7 +30,11 @@ type View =
 /** Accept refusals that mean the same as a preview `reason`. */
 function refusalOf(error: unknown): IneligibleReason | null {
 	if (!(error instanceof ApiError)) return null;
-	if (error.code === "NOT_INVITEE" || error.code === "EMAIL_NOT_VERIFIED") {
+	if (
+		error.code === "NOT_INVITEE" ||
+		error.code === "EMAIL_NOT_VERIFIED" ||
+		error.code === "REMOVED_BY_OWNER"
+	) {
 		return error.code;
 	}
 	return error.code === "PLAN_LIMIT_REACHED" ? "MEMBER_LIMIT" : null;

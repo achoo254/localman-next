@@ -22,6 +22,20 @@ describe("members from the project page", () => {
 	beforeEach(() => resetCurrentUserCache());
 	afterEach(() => vi.unstubAllGlobals());
 
+	it("does not open New resource over the members dialog of an empty project", async () => {
+		renderDetail({
+			[`GET ${RESOURCES_PATH}`]: { body: { items: [] } },
+			[`GET ${MEMBERS}`]: listBody([]),
+		});
+		await screen.findByText(/Chưa có resource nào/);
+		await userEvent.click(
+			screen.getByRole("button", { name: /^Cộng tác viên/ }),
+		);
+		await screen.findByRole("dialog", { name: "Cộng tác viên · Demo shop" });
+		await new Promise((resolve) => setTimeout(resolve, 800));
+		expect(screen.queryByRole("dialog", { name: "Resource mới" })).toBeNull();
+	});
+
 	it("gives the owner the collaborators and magic link dialogs", async () => {
 		renderDetail({
 			...TREE,

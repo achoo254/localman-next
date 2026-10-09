@@ -66,7 +66,20 @@ describe("/invite/:token eligibility", () => {
 		expect(screen.queryByRole("button", { name: "Xem gói" })).toBeNull();
 	});
 
+	it("tells a member the owner removed that the link no longer admits them", async () => {
+		renderInvite({
+			[PREVIEW]: preview({ eligible: false, reason: "REMOVED_BY_OWNER" }),
+		});
+		expect(
+			await screen.findByText(
+				"Chủ project đã gỡ bạn khỏi project này. Liên hệ chủ project nếu cần tham gia lại.",
+			),
+		).toBeInTheDocument();
+		expect(screen.queryByRole("button", { name: "Tham gia" })).toBeNull();
+	});
+
 	it.each([
+		[403, "REMOVED_BY_OWNER", "invite-page-removed"],
 		[403, "EMAIL_NOT_VERIFIED", "invite-page-ineligible"],
 		[403, "PLAN_LIMIT_REACHED", "invite-page-full"],
 		[410, "INVITE_USED", "invite-page-invalid"],

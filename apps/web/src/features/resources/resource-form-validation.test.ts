@@ -96,6 +96,33 @@ describe("validateDraft", () => {
 		]);
 	});
 
+	it("refuses a second relation field reading the same resource", () => {
+		const relation = (
+			name: string,
+			type: "Parent Resource" | "Child Resource",
+		) => ({
+			...fieldDraft(),
+			name,
+			type,
+			childId: type === "Child Resource" ? "c1" : "",
+		});
+		const fields = [
+			relation("owner", "Parent Resource"),
+			relation("comments", "Child Resource"),
+			relation("author", "Parent Resource"),
+			relation("replies", "Child Resource"),
+		];
+		const { input, errors } = validateDraft(
+			{ ...draftOf(null), name: "posts", fields },
+			NESTED,
+		);
+		expect(input).toBeNull();
+		expect(errors.fields).toEqual({
+			[fields[2]?.key ?? ""]: "Đã có field “owner” lấy bản ghi cha.",
+			[fields[3]?.key ?? ""]: "Đã có field “comments” lấy resource con này.",
+		});
+	});
+
 	it("checks the template and the responses are JSON", () => {
 		const draft = draftOf(null);
 		const [first, ...rest] = draft.endpoints;

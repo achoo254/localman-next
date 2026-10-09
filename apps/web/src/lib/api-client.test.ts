@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { navigateToLogin } from "../platform/navigation";
 import { UNAUTHENTICATED, mockFetch } from "../test/mock-fetch";
-import { ApiError, apiRequest } from "./api-client";
+import { ApiError, apiRequest, errorMessage } from "./api-client";
 
 vi.mock("../platform/navigation", async (importOriginal) => ({
 	...(await importOriginal<typeof import("../platform/navigation")>()),
@@ -92,5 +92,14 @@ describe("apiRequest", () => {
 			status: 0,
 			code: "NETWORK_ERROR",
 		});
+	});
+});
+
+describe("errorMessage", () => {
+	it("explains a rate limit in Vietnamese instead of the API's English", () => {
+		expect(
+			errorMessage(new ApiError(429, "RATE_LIMITED", "Too many requests")),
+		).toBe("Bạn thao tác quá nhanh. Hãy đợi khoảng một phút rồi thử lại.");
+		expect(errorMessage(new ApiError(400, "X", "As sent"))).toBe("As sent");
 	});
 });

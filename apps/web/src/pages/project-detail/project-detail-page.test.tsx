@@ -12,7 +12,6 @@ import { openExternal } from "../../platform/navigation";
 import { makeProject } from "../../test/fixtures";
 import type { MockReply } from "../../test/mock-fetch";
 import { findToast } from "../../test/toast";
-import { EMPTY_PROMPT_DELAY_MS } from "./project-detail-page";
 import {
 	RESOURCES_PATH,
 	apiError,
@@ -22,6 +21,7 @@ import {
 	renderDetail,
 	sampleTree,
 } from "./project-detail-test-helpers";
+import { EMPTY_PROMPT_DELAY_MS } from "./use-first-resource-prompt";
 
 vi.mock("../../platform/navigation", async (importOriginal) => ({
 	...(await importOriginal<typeof import("../../platform/navigation")>()),

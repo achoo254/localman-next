@@ -108,6 +108,12 @@ export function InvitePreviewCard({
 					bớt thành viên.
 				</Alert>
 			) : null}
+			{reason === "REMOVED_BY_OWNER" ? (
+				<Alert tone="warning" data-id="invite-page-removed">
+					Chủ project đã gỡ bạn khỏi project này. Liên hệ chủ project nếu cần
+					tham gia lại.
+				</Alert>
+			) : null}
 			{ineligible ? (
 				<>
 					<Alert

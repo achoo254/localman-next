@@ -26,6 +26,11 @@ describe("resourceErrorMessage", () => {
 			"Bạn đã dùng hết số resource gói hiện tại cho phép.",
 		],
 		[403, "FORBIDDEN", "Bạn chỉ có quyền xem project này."],
+		[
+			429,
+			"RATE_LIMITED",
+			"Bạn thao tác quá nhanh. Hãy đợi khoảng một phút rồi thử lại.",
+		],
 		[400, "VALIDATION_ERROR", "Dữ liệu gửi lên không hợp lệ."],
 		[
 			413,

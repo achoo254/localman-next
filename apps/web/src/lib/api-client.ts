@@ -107,8 +107,15 @@ export async function apiRequest(
 export const withDryRun = (path: string, dryRun: boolean): string =>
 	dryRun ? `${path}?dryRun=true` : path;
 
-/** Message safe to show the user for any thrown value. */
+const RATE_LIMITED_MESSAGE =
+	"Bạn thao tác quá nhanh. Hãy đợi khoảng một phút rồi thử lại.";
+
+/**
+ * Message safe to show the user for any thrown value. A rate limit (429
+ * `RATE_LIMITED`, e.g. on generate, data replace or clone) gets its own
+ * sentence; flows with a more specific one map it before calling this.
+ */
 export function errorMessage(error: unknown): string {
-	if (error instanceof ApiError) return error.message;
-	return FALLBACK_MESSAGE;
+	if (!(error instanceof ApiError)) return FALLBACK_MESSAGE;
+	return error.code === "RATE_LIMITED" ? RATE_LIMITED_MESSAGE : error.message;
 }

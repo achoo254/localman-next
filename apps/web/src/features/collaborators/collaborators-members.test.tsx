@@ -94,6 +94,9 @@ describe("members of a project", () => {
 		);
 		const confirm = screen.getByRole("dialog", { name: "Xoá cộng tác viên" });
 		expect(confirm).toHaveTextContent("Xoá An khỏi Demo?");
+		expect(confirm).toHaveTextContent(
+			"Họ sẽ mất quyền truy cập project ngay và không tham gia lại được bằng magic link. Muốn họ quay lại, hãy gửi lời mời mới.",
+		);
 		expect(within(confirm).getByRole("button", { name: "Huỷ" })).toHaveFocus();
 		await userEvent.click(
 			within(confirm).getByRole("button", { name: "Xoá khỏi project" }),
