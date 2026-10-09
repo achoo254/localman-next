@@ -1,5 +1,8 @@
 import type { AnyOperation } from "@localman/operations";
 import { getAccountUsage } from "../modules/billing/usage-operations.js";
+import { collaboratorOperations } from "../modules/collaborators/collaborator-operations.js";
+import { inviteOperations } from "../modules/collaborators/invite-operations.js";
+import { magicLinkOperations } from "../modules/collaborators/magic-link-operations.js";
 import { proInterestAdminOperations } from "../modules/feedback/pro-interest-admin-operations.js";
 import {
 	getProInterestFormConfig,
@@ -20,6 +23,7 @@ import {
 	getVapidPublicKey,
 } from "../modules/notifications/push-operations.js";
 import { projectOperations } from "../modules/projects/project-operations.js";
+import { rotateProjectSecret } from "../modules/projects/project-secret-operations.js";
 import { resourceDataOperations } from "../modules/resources/resource-data-operations.js";
 import { resourceOperations } from "../modules/resources/resource-operations.js";
 import { resourceTreeOperations } from "../modules/resources/resource-tree-operations.js";
@@ -42,6 +46,10 @@ export const operations: readonly AnyOperation[] = [
 	createPushSubscription,
 	deletePushSubscription,
 	...projectOperations,
+	rotateProjectSecret,
+	...collaboratorOperations,
+	...inviteOperations,
+	...magicLinkOperations,
 	...resourceOperations,
 	...resourceTreeOperations,
 	...resourceDataOperations,

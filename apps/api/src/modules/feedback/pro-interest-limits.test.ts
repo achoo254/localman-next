@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { clientIpBucket } from "../../lib/rate-limit-windows.js";
 import { as, guest } from "../../test-support/dashboard-test-app.js";
 import { FeedbackModel } from "./feedback-model.js";
 import { alertOwnerThrottled } from "./owner-alert-throttle.js";
-import { clientIpBucket } from "./submission-rate-limit.js";
 import { TURNSTILE_TOKENS } from "./testing/fake-turnstile.js";
 import {
 	FORM,

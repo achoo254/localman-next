@@ -33,7 +33,7 @@ export const deleteResourceOperation = defineOperation({
 	handler: async (ctx, input) => {
 		const project = await requireProject(
 			requireSubject(ctx),
-			"update",
+			"editResources",
 			input.projectId,
 		);
 		const removed = await deleteResource(project, input.resourceId, ctx.dryRun);
@@ -65,7 +65,7 @@ export const moveResourceOperation = defineOperation({
 	handler: async (ctx, input) => {
 		const project = await requireProject(
 			requireSubject(ctx),
-			"update",
+			"editResources",
 			input.projectId,
 		);
 		const moved = await moveResource(

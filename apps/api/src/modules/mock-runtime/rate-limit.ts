@@ -1,6 +1,6 @@
 import { OperationError } from "@localman/operations";
 import type { Request, RequestHandler, Response } from "express";
-import { clientIpBucket } from "../feedback/submission-rate-limit.js";
+import { clientIpBucket } from "../../lib/rate-limit-windows.js";
 import type { MockAddress } from "./resolve-project.js";
 
 export type RateDecision =

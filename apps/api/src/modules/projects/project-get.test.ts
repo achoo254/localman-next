@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { createLogger } from "../../logger.js";
 import {
 	as,
 	guest,
 	useDashboardTestDb,
 } from "../../test-support/dashboard-test-app.js";
+import { setNotificationService } from "../notifications/notification-runtime.js";
+import { NotificationService } from "../notifications/notification-service.js";
 import { UserModel } from "../users/user-model.js";
 import { ProjectModel } from "./project-model.js";
 
@@ -13,6 +16,9 @@ const BOB = "acc_bob";
 useDashboardTestDb(() => ({ mockBaseDomain: "mock.test" }));
 
 beforeEach(async () => {
+	setNotificationService(
+		new NotificationService({ logger: createLogger("silent") }),
+	);
 	await UserModel.create([
 		{ sub: ALICE, username: "alice", name: "Alice" },
 		{ sub: BOB, username: "bob" },
@@ -68,11 +74,27 @@ describe("GET /projects/:projectId", () => {
 		}
 	});
 
-	// Accepted collaborations are not stored yet (`acceptedCollaborations`
-	// in project-access.ts answers none), so a test cannot create one.
-	it.todo(
-		"lets an accepted collaborator read the project with role collaborator",
-	);
+	it("lets an accepted collaborator read the project with role collaborator", async () => {
+		const { id } = await createAs(ALICE);
+		const invited = await as(ALICE).send(
+			"post",
+			`/projects/${id}/collaborators`,
+			{ usernameOrEmail: "bob" },
+		);
+		expect(invited.status).toBe(201);
+		const token = String(invited.body.inviteLink).replace("/invite/", "");
+		expect((await as(BOB).get(`/projects/${id}`)).status).toBe(404);
+		const accepted = await as(BOB).send("post", "/invites/accept", { token });
+		expect(accepted.status).toBe(200);
+		const res = await as(BOB).get(`/projects/${id}`);
+		expect(res.status).toBe(200);
+		expect(res.body).toMatchObject({
+			id,
+			role: "collaborator",
+			memberCount: 2,
+			owner: { sub: ALICE, username: "alice" },
+		});
+	});
 
 	it("requires sign-in", async () => {
 		const { id } = await createAs(ALICE);

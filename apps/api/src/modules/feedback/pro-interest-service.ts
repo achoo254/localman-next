@@ -1,10 +1,13 @@
 import { OperationError } from "@localman/operations";
 import type { ProInterestSubmission } from "@localman/shared";
 import { runtimeSettings } from "../../config/runtime-settings.js";
+import {
+	clientIpBucket,
+	takeRateLimitSlot,
+} from "../../lib/rate-limit-windows.js";
 import { alertOwnerThrottled } from "./owner-alert-throttle.js";
 import { proInterestAlertText } from "./pro-interest-alert.js";
 import { saveProInterest } from "./pro-interest-store.js";
-import { clientIpBucket, takeRateLimitSlot } from "./submission-rate-limit.js";
 import { verifyTurnstile } from "./turnstile-verifier.js";
 
 /** Turnstile `action` the web widget declares for this form. */

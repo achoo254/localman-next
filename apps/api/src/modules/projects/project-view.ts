@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { runtimeSettings } from "../../config/runtime-settings.js";
+import {
+	CollaboratorModel,
+	acceptedCountsPipeline,
+} from "../collaborators/collaborator-model.js";
 import { UserModel } from "../users/user-model.js";
 import type { StoredProject } from "./project-model.js";
 
@@ -17,6 +21,8 @@ export const projectView = z.object({
 		name: z.string().nullable(),
 		picture: z.string().nullable(),
 	}),
+	/** Owner plus accepted collaborators (pending invitations excluded). */
+	memberCount: z.number(),
 	createdAt: z.string(),
 });
 export type ProjectView = z.input<typeof projectView>;
@@ -40,15 +46,29 @@ interface OwnerProfile {
 	picture?: string | null;
 }
 
+/** Accepted collaborators per project id (hex), in one query. */
+async function acceptedCounts(
+	projects: readonly StoredProject[],
+): Promise<Map<string, number>> {
+	const counts = await CollaboratorModel.aggregate<{
+		_id: StoredProject["_id"];
+		count: number;
+	}>(acceptedCountsPipeline(projects.map((project) => project._id)));
+	return new Map(counts.map((row) => [row._id.toHexString(), row.count]));
+}
+
 /** Views of projects as seen by `viewerSub`, owners loaded in one query. */
 export async function toProjectViews(
 	projects: readonly StoredProject[],
 	viewerSub: string,
 ): Promise<ProjectView[]> {
 	const subs = [...new Set(projects.map((project) => project.owner))];
-	const owners = await UserModel.find({ sub: { $in: subs } })
-		.select("sub username name picture")
-		.lean<OwnerProfile[]>();
+	const [owners, members] = await Promise.all([
+		UserModel.find({ sub: { $in: subs } })
+			.select("sub username name picture")
+			.lean<OwnerProfile[]>(),
+		acceptedCounts(projects),
+	]);
 	const bySub = new Map(owners.map((owner) => [owner.sub, owner]));
 	return projects.map((project) => {
 		const owner = bySub.get(project.owner);
@@ -66,6 +86,7 @@ export async function toProjectViews(
 				name: owner?.name ?? null,
 				picture: owner?.picture ?? null,
 			},
+			memberCount: 1 + (members.get(project._id.toHexString()) ?? 0),
 			createdAt: project.createdAt.toISOString(),
 		};
 	});

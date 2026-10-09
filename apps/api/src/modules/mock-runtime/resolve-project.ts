@@ -92,7 +92,7 @@ export interface MockProject {
  * Projects by secret for 60 seconds, unknown secrets included (a flood of
  * random secrets costs one lookup each, then hits the bounded cache). The
  * dashboard runs in the same process and forgets a project when its
- * prefix changes or its deletion starts; other changes (the owner's plan
+ * prefix changes, its secret is rotated or its deletion starts; other changes (the owner's plan
  * set by the CLI) show within the TTL.
  */
 const cache = new TtlLruCache<Promise<MockProject | null>>(10_000, 60_000);
@@ -121,7 +121,7 @@ export function resolveProject(secret: string): Promise<MockProject | null> {
 	return loading;
 }
 
-/** Drops a project from the cache (prefix changed, deletion started). */
+/** Drops a project from the cache (prefix or secret changed, deletion started). */
 export function forgetMockProject(secret: string): void {
 	cache.delete(secret);
 }

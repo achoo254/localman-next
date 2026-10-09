@@ -48,7 +48,7 @@ export const generateResourceDataOperation = defineOperation({
 	handler: async (ctx, input) => {
 		const project = await requireProject(
 			requireSubject(ctx),
-			"update",
+			"editResources",
 			input.projectId,
 		);
 		const changes = await generateResourceData(
@@ -80,7 +80,7 @@ export const generateAllResourceData = defineOperation({
 	handler: async (ctx, input) => {
 		const project = await requireProject(
 			requireSubject(ctx),
-			"update",
+			"editResources",
 			input.projectId,
 		);
 		const changes = await generateAllData(project, input.count, ctx.dryRun);
@@ -105,7 +105,7 @@ export const resetAllResourceData = defineOperation({
 	handler: async (ctx, input) => {
 		const project = await requireProject(
 			requireSubject(ctx),
-			"update",
+			"editResources",
 			input.projectId,
 		);
 		return {
@@ -178,7 +178,7 @@ export const replaceResourceDataOperation = defineOperation({
 	handler: async (ctx, input) => {
 		const project = await requireProject(
 			requireSubject(ctx),
-			"update",
+			"editResources",
 			input.projectId,
 		);
 		const changes = await replaceResourceData(

@@ -104,6 +104,15 @@ export class NotificationService {
 	}
 
 	/**
+	 * `notify` without waiting, for callers whose own write already
+	 * committed (an invitation must not fail because the bell's store did).
+	 * Every failure, the in-app store included, is logged, never thrown.
+	 */
+	notifyLater(userSub: string, event: NotificationMessage): void {
+		this.inBackground(this.notify(userSub, event), event.type);
+	}
+
+	/**
 	 * Sends a short text to the owner's Telegram chat in the background.
 	 * Returns false when the bot or the owner chat is not configured.
 	 */

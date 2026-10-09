@@ -1,9 +1,9 @@
 import { runtimeSettings } from "../../config/runtime-settings.js";
-import { getNotificationService } from "../notifications/notification-runtime.js";
 import {
 	RateLimitWindowModel,
 	takeRateLimitSlot,
-} from "./submission-rate-limit.js";
+} from "../../lib/rate-limit-windows.js";
+import { getNotificationService } from "../notifications/notification-runtime.js";
 
 /** Suppressed alerts are remembered this long while waiting for a slot. */
 const PENDING_TTL_MS = 7 * 24 * 60 * 60 * 1000;

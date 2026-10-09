@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { isIPv4, isIPv6 } from "node:net";
 import mongoose, { Schema } from "mongoose";
-import type { RateLimitWindow } from "../../config/runtime-settings.js";
-import { isDuplicateKeyError } from "../../db/mongo-errors.js";
+import type { RateLimitWindow } from "../config/runtime-settings.js";
+import { isDuplicateKeyError } from "../db/mongo-errors.js";
 
 /**
  * Fixed-window hit counters, in Mongo so limits hold across processes and

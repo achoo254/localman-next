@@ -29,6 +29,7 @@ export const PRO_INTEREST_SOURCES = [
 	"subscription_modal",
 	"plan_limit_projects",
 	"plan_limit_resources",
+	"plan_limit_members",
 	"plan_limit_proxy",
 	"devops",
 	"account",

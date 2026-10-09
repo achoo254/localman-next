@@ -39,4 +39,18 @@ const userSchema = new Schema(
 	{ collection: "users", timestamps: true, versionKey: false },
 );
 
+/**
+ * Exact match ignoring case (`Alice` finds `alice`), never a prefix. The
+ * `username` and `email` indexes use it, so lookups must pass the same
+ * collation to be served by them.
+ */
+export const CASE_INSENSITIVE_COLLATION = {
+	locale: "en",
+	strength: 2,
+} as const;
+
+// Invite lookups by username or email (not unique: the IdP owns identity).
+userSchema.index({ username: 1 }, { collation: CASE_INSENSITIVE_COLLATION });
+userSchema.index({ email: 1 }, { collation: CASE_INSENSITIVE_COLLATION });
+
 export const UserModel = mongoose.model("User", userSchema);

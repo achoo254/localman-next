@@ -6,7 +6,7 @@ export const projectIdParam = z.string().min(1).max(64);
 export const resourceIdParam = z.string().min(1).max(64);
 export const RESOURCES_PATH = "/projects/:projectId/resources";
 export const ACCESS_NOTE =
-	"Unknown or inaccessible projects and resources answer 404; collaborators may read but not change.";
+	"Unknown or inaccessible projects and resources answer 404; accepted collaborators may read and change them like the owner.";
 export const PLAN_NOTE =
 	"Fails with 403 PLAN_LIMIT_REACHED (details: limit, max, used) when the project owner already has as many resources, over all their projects, as their plan allows.";
 export const SIZE_NOTE =

@@ -5,7 +5,7 @@ import { isDuplicateKeyError } from "../../db/mongo-errors.js";
 import { assertProjectQuota, currentPlanOf } from "../billing/plan-guard.js";
 import { MAX_QUOTA_ATTEMPTS, lowestFreeSlots } from "../billing/quota-slots.js";
 import { forgetMockProject } from "../mock-runtime/resolve-project.js";
-import { type ProjectAction, can } from "./project-access.js";
+import { type ProjectAction, roleAllows, roleIn } from "./project-access.js";
 import { projectDependents } from "./project-dependents.js";
 import { inProjectTransaction } from "./project-lock.js";
 import {
@@ -80,11 +80,11 @@ export async function requireProject(
 	projectId: string,
 ): Promise<StoredProject> {
 	const project = await findProjectById(projectId, action === "delete");
-	const user = { sub: userSub };
-	if (!project || !(await can(user, "read", project))) {
+	const role = project ? await roleIn({ sub: userSub }, project) : null;
+	if (!project || !roleAllows(role, "read")) {
 		throw new OperationError(404, "NOT_FOUND", "Project not found");
 	}
-	if (action !== "read" && !(await can(user, action, project))) {
+	if (!roleAllows(role, action)) {
 		throw new OperationError(
 			403,
 			"FORBIDDEN",

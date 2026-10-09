@@ -86,6 +86,13 @@ describe("notification operations", () => {
 					telegram: false,
 				},
 				{
+					type: "project.mockUrlChanged",
+					label: expect.any(String),
+					inApp: true,
+					webPush: false,
+					telegram: false,
+				},
+				{
 					type: "usage.quota",
 					label: expect.any(String),
 					inApp: true,

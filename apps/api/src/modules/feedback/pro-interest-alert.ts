@@ -1,28 +1,6 @@
 import type { ProInterestSubmission } from "@localman/shared";
+import { maskEmail } from "../../lib/mask-email.js";
 import type { ProInterestSaveOutcome } from "./pro-interest-store.js";
-
-const VISIBLE = 2;
-
-function maskPart(part: string): string {
-	return `${part.slice(0, VISIBLE)}***`;
-}
-
-/**
- * Hides most of an address for chat alerts: `nguyen@gmail.com` becomes
- * `ng***@gm***.com`. The top-level domain stays readable.
- */
-export function maskEmail(email: string): string {
-	const at = email.lastIndexOf("@");
-	if (at <= 0) return "***";
-	const local = email.slice(0, at);
-	const domain = email.slice(at + 1);
-	const dot = domain.lastIndexOf(".");
-	const masked =
-		dot > 0
-			? `${maskPart(domain.slice(0, dot))}${domain.slice(dot)}`
-			: maskPart(domain);
-	return `${maskPart(local)}@${masked}`;
-}
 
 const HEADLINES: Readonly<Record<ProInterestSaveOutcome, string>> = {
 	created: "Quan tâm gói Pro: đăng ký mới",

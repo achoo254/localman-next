@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { maskEmail } from "../../lib/mask-email.js";
 import { csvCell, toCsv } from "./csv-export.js";
-import { maskEmail } from "./pro-interest-alert.js";
 
 describe("maskEmail", () => {
 	it.each([

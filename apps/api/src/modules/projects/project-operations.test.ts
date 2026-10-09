@@ -155,16 +155,22 @@ describe("project operations", () => {
 			`/projects/${project.id}?dryRun=true`,
 		);
 		expect(preview.status).toBe(200);
-		expect(preview.body).toEqual({
+		expect(preview.body).toMatchObject({
 			id: project.id,
 			deleted: false,
 			dryRun: true,
-			dependents: [
+		});
+		// Registration order follows module imports; compare as a set.
+		expect(preview.body.dependents).toHaveLength(5);
+		expect(preview.body.dependents).toEqual(
+			expect.arrayContaining([
 				{ kind: "resources", count: 0 },
 				{ kind: "records", count: 0 },
+				{ kind: "collaborators", count: 0 },
+				{ kind: "magicLinks", count: 0 },
 				{ kind: "stub-rows", count: 1 },
-			],
-		});
+			]),
+		);
 		expect(await ProjectModel.countDocuments()).toBe(1);
 
 		const real = await as(ALICE).send("delete", `/projects/${project.id}`);

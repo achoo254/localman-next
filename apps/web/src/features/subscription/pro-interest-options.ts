@@ -57,6 +57,7 @@ const SOURCE_LABELS: Readonly<Record<ProInterestSource, string>> = {
 	subscription_modal: "Quản lý gói",
 	plan_limit_projects: "Giới hạn project",
 	plan_limit_resources: "Giới hạn resource",
+	plan_limit_members: "Giới hạn thành viên",
 	plan_limit_proxy: "Hết quota proxy",
 	devops: "DevOps",
 	account: "Tài khoản",
@@ -72,6 +73,7 @@ export const SOURCE_NEED: Readonly<
 > = {
 	plan_limit_projects: "mock",
 	plan_limit_resources: "mock",
+	plan_limit_members: "team",
 	plan_limit_proxy: "api_client",
 	devops: "devops_ci",
 };

@@ -59,7 +59,7 @@ export const createResourceOperation = defineOperation({
 	handler: async (ctx, input) => {
 		const project = await requireProject(
 			requireSubject(ctx),
-			"update",
+			"editResources",
 			input.projectId,
 		);
 		const { resource, resources } = await createResource(project, input);
@@ -108,7 +108,7 @@ export const updateResourceOperation = defineOperation({
 	handler: async (ctx, input) => {
 		const project = await requireProject(
 			requireSubject(ctx),
-			"update",
+			"editResources",
 			input.projectId,
 		);
 		const { resource, resources } = await updateResource(

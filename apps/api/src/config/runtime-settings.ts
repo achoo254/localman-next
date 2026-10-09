@@ -31,6 +31,20 @@ export interface RuntimeSettings {
 	};
 	/** Telegram alerts to the owner per kind; the excess is summarized later. */
 	readonly ownerAlertLimit: RateLimitWindow;
+	/**
+	 * Account lookups per owner: invitations and the invite dialog's
+	 * lookups share this budget, so looking accounts up by username or
+	 * email cannot be used to enumerate them.
+	 */
+	readonly inviteRateLimit: RateLimitWindow;
+	/**
+	 * Invite and magic link previews and accepts, per account and per
+	 * client IP (IPv6 grouped by /64), so tokens cannot be probed.
+	 */
+	readonly inviteTokenRateLimit: {
+		readonly perUser: RateLimitWindow;
+		readonly perIp: RateLimitWindow;
+	};
 }
 
 export const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = Object.freeze({
@@ -42,6 +56,11 @@ export const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = Object.freeze({
 		perUser: { max: 3, windowMs: 10 * 60_000 },
 	},
 	ownerAlertLimit: { max: 10, windowMs: 60 * 60_000 },
+	inviteRateLimit: { max: 20, windowMs: 60 * 60_000 },
+	inviteTokenRateLimit: {
+		perUser: { max: 30, windowMs: 10 * 60_000 },
+		perIp: { max: 60, windowMs: 10 * 60_000 },
+	},
 });
 
 let current: RuntimeSettings = DEFAULT_RUNTIME_SETTINGS;
