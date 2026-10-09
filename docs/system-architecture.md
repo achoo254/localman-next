@@ -9,7 +9,7 @@ Monorepo `localman-next` là pnpm workspace gồm `apps/*` và `packages/*`, ch�
 | `apps/web` | `@localman/web` | Dashboard React 19, Vite 7, Tailwind 4 và React Router 7. Dev server ở cổng 5173 |
 | `apps/api` | `@localman/api` | Hai server Express 5 trong một process: dashboard API ở cổng 4000 và mock runtime công khai ở cổng 4100 |
 | `packages/operations` | `@localman/operations` | Operation registry: một khai báo sinh route REST, MCP tool descriptor và OpenAPI 3.1. Xem [operation-registry.md](operation-registry.md) |
-| `packages/shared` | `@localman/shared` | Code dùng chung cho web và api. `plan-limits.ts` là nguồn duy nhất của mọi hạn mức gói |
+| `packages/shared` | `@localman/shared` | Code dùng chung cho web và api. `plan-limits.ts` là nguồn duy nhất của mọi hạn mức gói. Ngoài entry gốc có subpath nhẹ: `@localman/shared/constants` (hạn mức, giới hạn resource, `FIELD_TYPES`, `ENDPOINT_*`, `parentKeyOf`; không zod, không catalog Faker), `@localman/shared/faker-catalog` (danh sách id Faker, không Faker) và `@localman/shared/faker-methods` (hàm chạy Faker, chỉ api) |
 | `packages/design-tokens` | `@localman/design-tokens` | `tokens.css`, nơi duy nhất được chứa literal màu. Xem [design-system.md](design-system.md) |
 | `apps/tunelo-server`, `packages/tunelo-cli`, `packages/tunelo-shared` | `@tunelo/server`, `tunelo`, `@tunelo/shared` | Tunelo, gộp từ repo cũ và giữ nguyên lịch sử. Xem `docs/tunelo/` |
 | `scripts/` | — | Script kiểm tra cho CI (`check-mcp-coverage.ts`, `check-tokens.ts`) và script build của Tunelo (`scripts/tunelo/`) |
@@ -64,7 +64,7 @@ Không có email. `apps/api/src/modules/notifications/` gửi mỗi sự kiện 
 
 ## Projects và giới hạn gói
 
-Module `apps/api/src/modules/projects/`, operation `mock.*` dưới `/api/v1/projects`.
+Module `apps/api/src/modules/projects/`, operation `mock.*` dưới `/api/v1/projects`: `listProjects` (`GET /projects`), `getProject` (`GET /projects/:projectId`, cùng shape với một item của danh sách, 404 khi không đọc được, không tồn tại hoặc đang xoá), `createProject`, `updateProject`, `deleteProject`, `cloneProject`.
 
 - **Project** (collection `projects`): `name`, `prefix`, `secret`, `owner` (`sub`), `quotaSlot`, timestamps. Zod của tên và prefix nằm ở `packages/shared/src/project-schema.ts`, web và api dùng chung. Tên bắt đầu bằng chữ hoặc số, sau đó nhận chữ mọi ngôn ngữ (có tiếng Việt, chuẩn hoá NFC), số, `_`, khoảng trắng, `-` và dấu ngoặc (để bản clone "X (copy)" sửa được mà không phải đổi tên). Prefix theo `^[\w\-/]*$` rồi chuẩn hoá thành `/x/y`, rỗng là không có prefix. Prefix trùng nhau trong cùng owner được phép như mockapi.io, vì mỗi project có subdomain riêng theo secret.
 - **Secret** là nhãn DNS của mock runtime: nanoid 24 ký tự chỉ gồm `a-z0-9` (hostname không phân biệt hoa thường, `_` không hợp lệ trong hostname), khoảng 124 bit, unique index. `mockBaseUrl` = `https://{secret}.{MOCK_BASE_DOMAIN}{prefix}`; domain `localhost…` dùng `http`.
@@ -76,7 +76,7 @@ Module `apps/api/src/modules/projects/`, operation `mock.*` dưới `/api/v1/pro
 
 ## Resources và dữ liệu mock
 
-Module `apps/api/src/modules/resources/`, operation `mock.*` dưới `/api/v1/projects/:projectId/resources` (cộng `GET /api/v1/faker-methods`). Zod, whitelist Faker và template nằm ở `packages/shared`, web và api dùng chung.
+Module `apps/api/src/modules/resources/`, operation `mock.*` dưới `/api/v1/projects/:projectId/resources` (cộng `GET /api/v1/faker-methods`). Zod, whitelist Faker và template nằm ở `packages/shared`, web và api dùng chung. Hằng của resource (`resource-constants.ts`) tách khỏi các module zod (`resource-schema.ts`, `resource-templates.ts` re-export lại), để web đọc qua `@localman/shared/constants` mà không kéo zod và catalog Faker vào trang; catalog chỉ nằm trong chunk modal resource.
 
 - **Resource** (collection `resources`): `projectId`, `parentId` (cây cha–con), `name` (một đoạn path: `^[A-Za-z0-9][\w-]*$`, tối đa 64), `schema[]`, `template` (object template hoặc `null`), `endpoints[]` (đúng 5 endpoint `GET /:res`, `GET /:res/:id`, `POST /:res`, `PUT /:res/:id` dùng chung cho PATCH, `DELETE /:res/:id`, mỗi cái `enabled` và `response`), `count`, `nextId`, `ownerSub`, `quotaSlot`. Unique `(projectId, parentId, name)`: tên chỉ cần khác giữa các anh em. Cây sâu tối đa `MAX_RESOURCE_DEPTH` (10) tầng.
 - **Schema:** field `{ name: /^[\w\-.]+$/, type, fakerMethod?, childId? }`, tối đa 50 field, không được tên `__proto__`, `constructor`, `prototype` (cùng danh sách `FORBIDDEN_KEYS` với key JSON). `id` (Object ID) và `{parent}Id` (Parent ID, `parentKeyOf(tên cha)`: `users` → `userId`) là field hệ thống, không nằm trong `schema`; field schema hay key cấp một của object template trùng tên với chúng bị từ chối (giá trị sẽ bị giá trị sinh ra che mất). Đổi tên cha mà bản ghi con đã có key trùng `{parent}Id` mới thì 409 `FIELD_CONFLICT`. `Parent Resource` và `Child Resource` là field quan hệ: không lưu vào record, mock runtime phân giải khi trả lời. Mặc định khi tạo: `createdAt` (`date.past`), `name` (`name.fullName`), `avatar` (`image.avatar`).

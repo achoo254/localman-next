@@ -63,19 +63,19 @@ Làm màn `/projects/:id` có tương tác giống nguồn: thẻ API endpoint, 
 | T10 | Review cuối phase | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 State, `data-id` và kích thước đã chốt theo prototype
-- [ ] T2 `tree-layout` và `canConnect` cùng unit xong
-- [ ] T3 `json-editor` xong
-- [ ] T4 Trang và thẻ API endpoint xong
-- [ ] T5 Canvas, generator bar và thao tác lồng xong
-- [ ] T6 Các modal resource, data và delete xong
-- [ ] T7 Trang đã ghép, toast và prompt 500ms chạy đúng
-- [ ] T8 Component test generator bar pass
-- [ ] T9 So khớp trực quan và kiểm token, brand xong
-- [ ] T10 Review không còn finding chặn
-- [ ] Verification: unit `tree-layout` và `canConnect` pass trên các bộ cây mẫu
-- [ ] Verification: generator bar chạy đúng bằng chuột và bàn phím
-- [ ] Verification: khớp prototype `#/projects/demo` ở 375, 768, 1440px, light và dark
-- [ ] Verification: `pnpm check:tokens` sạch và axe-core không có lỗi a11y mức serious
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
-- [ ] `pnpm check:mcp-coverage` pass
+- [x] T1 State, `data-id` và kích thước đã chốt theo prototype — giữ hình học prototype (node 208×104, cột 268, hàng 128, generator 106×25), lệch spec 150/50 có chủ đích, ghi ở `docs/design-system.md`
+- [x] T2 `tree-layout` và `canConnect` cùng unit xong
+- [x] T3 `json-editor` xong
+- [x] T4 Trang và thẻ API endpoint xong
+- [x] T5 Canvas, generator bar và thao tác lồng xong
+- [x] T6 Các modal resource, data và delete xong
+- [x] T7 Trang đã ghép, toast và prompt 500ms chạy đúng
+- [x] T8 Component test generator bar pass
+- [x] T9 So khớp trực quan và kiểm token, brand xong — đã so khớp trên stack local ở 375/768/1440, light/dark; axe 0 serious
+- [x] T10 Review không còn finding chặn
+- [x] Verification: unit `tree-layout` và `canConnect` pass trên các bộ cây mẫu
+- [x] Verification: generator bar chạy đúng bằng chuột và bàn phím
+- [x] Verification: khớp prototype `#/projects/demo` ở 375, 768, 1440px, light và dark
+- [x] Verification: `pnpm check:tokens` sạch và axe-core không có lỗi a11y mức serious
+- [x] `pnpm lint && pnpm typecheck && pnpm test` sạch
+- [x] `pnpm check:mcp-coverage` pass

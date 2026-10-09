@@ -38,7 +38,7 @@ Localman dùng design system riêng, không lấy từ bên thứ ba. Prototype 
 
 ## Primitive UI
 
-`apps/web/src/components/ui/`: `button`, `icon-button`, `input`, `select`, `textarea`, `modal`, `modal-footer`, `confirm-modal`, `card`, `empty-state`, `dropdown-menu`, `badge`, `alert`, `tooltip`, `toast`, `form-field`, `external-link`.
+`apps/web/src/components/ui/`: `button`, `icon-button`, `input`, `select`, `textarea`, `modal`, `modal-footer`, `confirm-modal`, `card`, `empty-state`, `dropdown-menu`, `badge`, `alert`, `tooltip`, `toast`, `form-field`, `external-link`, `json-editor`.
 
 - Nút bo 12px, hover scale 1.03, active 0.97, focus ring 2px offset 2.
 - Modal bo 16px, 4 size `sm`/`md`/`lg`/`xl`, fade và trượt từ -20px trong 200ms easing decelerate, footer dính đáy 2 cột.
@@ -48,12 +48,23 @@ Localman dùng design system riêng, không lấy từ bên thứ ba. Prototype 
 - `ExternalLink` mở trang của site khác (IdP, `t.me`) qua `openExternal` trong `src/platform/navigation.ts`: trên web là tab mới với `noopener,noreferrer`; click có phím bổ trợ giữ hành vi mặc định của trình duyệt. Muốn trông như nút thì truyền `className={buttonClassName(…)}`.
 - Thẻ: `cardClassName` / `Card` (`card.tsx`) là bề mặt chung, bo 24px (`rounded-xl`), viền `--c-border`, nền `--c-surface`, `shadow-sm`. Dùng class trên phần tử ngữ nghĩa (`li`, `article`, `section`); padding thẻ là `p-6`. `EmptyState` (`empty-state.tsx`) là thẻ rỗng có ô icon, tiêu đề, mô tả và một hành động.
 - `IconButton` là ô vuông 32/36px (`sm`/`md`), lên 40/44px trên màn cảm ứng. Nút chỉ có icon dựng từ `buttonClassName` phải truyền `iconOnly: true` để bỏ `min-h-*` và `px-*` của nút chữ.
-- `Modal` nhận `initialFocusRef`: ref của phần tử cần focus khi mở, hoặc `"dialog"` để focus khung (nội dung chỉ đọc như Quản lý gói). Ref còn rỗng (thân modal tải lazy) thì focus khung. Quy ước: form focus ô đầu tiên cần nhập; hộp thoại phá huỷ focus nút "Huỷ".
+- `Modal` nhận `initialFocusRef`: ref của phần tử cần focus khi mở, hoặc `"dialog"` để focus khung (nội dung chỉ đọc như Quản lý gói). Ref còn rỗng (thân modal tải lazy) thì focus khung. Quy ước: form focus ô đầu tiên cần nhập; hộp thoại phá huỷ focus nút "Huỷ". Escape trong một combobox đang mở (`role="combobox"`, `aria-expanded="true"`) chỉ đóng danh sách của nó, không đóng modal.
+- `JsonEditor` (`json-editor.tsx`) là ô JSON trên CodeMirror 6: tô màu, khớp ngoặc, undo, kiểm tra khi blur (gạch chân chỗ lỗi, báo "JSON không hợp lệ ở dòng X, cột Y" qua `onValidate`; `validate` thêm kiểm tra ngữ nghĩa, `allowEmpty` cho template tuỳ chọn). Theme chỉ dùng biến token nên theo light/dark; Tab để rời ô, `Ctrl/Cmd+]` để thụt lề. Có tên truy cập qua `label` hoặc `labelledBy`. CodeMirror nặng (chunk `vendor-codemirror` khoảng 331 kB) nên chỉ import trong modal tải lazy, không import từ trang. Trang và component nhẹ đọc hằng qua `@localman/shared/constants` (không zod, không catalog Faker); catalog Faker qua `@localman/shared/faker-catalog`, chỉ dùng trong modal resource.
 - `ConfirmModal` là modal `sm` cho thao tác phá huỷ (xoá project, xoá đăng ký): khối cảnh báo nền tint error có icon cảnh báo, footer Huỷ / nút `danger`, mở ra là focus nút Huỷ. `onConfirm` trả Promise; modal chỉ đóng khi thành công, lỗi thì hiện ngay trong modal.
 - Avatar project (`pages/projects/project-avatar.tsx`) chia chữ cái đầu (bỏ dấu, `đ` thành `d`) thành 7 nhóm, nền là token `--c-viz-*` (bước 11 ở light), chữ `--c-on-tone`; mọi cặp đạt ≥ 4.6:1 ở cả hai theme.
 - `FormField` truyền id, `aria-describedby`, `aria-invalid` và `required` qua context cho Input, Select và Textarea.
 - Wordmark `Localman` (`components/brand/wordmark.tsx`): JetBrains Mono đậm, chữ "Local" màu `--c-primary`.
 - Khối cấp trang, nút, input và link có `data-id` để trỏ bằng lời, phân cấp tối đa 3 bậc.
+
+## Canvas cây resource
+
+`features/resource-tree/` (trang `/projects/:projectId`), theo `TREE_GEOMETRY` của prototype:
+
+- Hình học trong `tree-layout.ts` (hàm thuần): thẻ node 208×104, cột 268, hàng 128, gốc (72, 24), connector cách mép trên 22, thanh "Thêm vào root" rộng 32. Đường nối gấp khúc bo góc tối đa 10. Số đo này là toán học SVG/định vị tuyệt đối, không phải class khoảng cách.
+- **Lệch spec có chủ đích:** spec phase 06 ghi cột 150px, hàng 50px (số của mockapi.io, nơi node chỉ là tên và thanh generator). Localman giữ hình học của prototype vì prototype là nguồn sự thật UI: node là thẻ có thêm hàng Sửa / Dữ liệu / Xoá, nên cột 150 sẽ làm các thẻ rộng 208 chồng lên nhau. Thanh generator giữ đúng 106×25.
+- Thanh generator 106×25 (`generator-bar.tsx`): rê chuột hiện số 0–100 tại con trỏ, click sinh đúng số đó; bàn phím ←/→ (↓/↑) bước 10, Home/End, Enter để sinh, Escape bỏ giá trị chờ; `role="slider"` với `aria-valuenow/min/max`. Fill gradient từ `--c-primary`, chạy 200ms (`--dur-base`), tắt khi `prefers-reduced-motion`. Resource con chưa sinh được khi cha chưa có dữ liệu: nền gạch chéo và `aria-disabled`.
+- Nút Sửa / Dữ liệu / Xoá của node hiện khi hover hoặc focus, luôn hiện trên màn cảm ứng. Canvas nằm trong `overflow-x-auto` nên cây rộng cuộn trong thẻ, trang không cuộn ngang ở 375px.
+- Chip URL ở thẻ API endpoint: secret dùng tone `--c-text-muted`, prefix `--c-accent`, `:endpoint` `--c-primary` (utility `tint-soft`), mỗi chip focus được để đọc tooltip.
 
 ## Kiểm tra
 
