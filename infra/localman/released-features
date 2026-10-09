@@ -2,3 +2,4 @@
 # A flag goes here only once its feature runs in production; deploy.sh
 # reads this file unless VITE_FEATURES is set on the command line.
 mockMcp
+mockPowerUps
