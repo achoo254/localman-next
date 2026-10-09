@@ -47,6 +47,28 @@ export const listProjects = defineOperation({
 	},
 });
 
+export const getProject = defineOperation({
+	id: "mock.getProject",
+	method: "GET",
+	path: "/projects/:projectId",
+	summary: "Get one mock project",
+	description:
+		"The project with the same fields as an item of list_projects (mock base URL, secret, prefix, owner and the caller's role). Projects the caller cannot read, unknown ids and projects being deleted answer 404.",
+	input: z.object({ projectId }),
+	output: projectView,
+	scopes: [USER_SCOPE],
+	annotations: { readOnly: true, destructive: false, idempotent: true },
+	toolset: "mock",
+	mcp: true,
+	handler: async (ctx, input) => {
+		const sub = requireSubject(ctx);
+		return toProjectView(
+			await requireProject(sub, "read", input.projectId),
+			sub,
+		);
+	},
+});
+
 export const createProject = defineOperation({
 	id: "mock.createProject",
 	method: "POST",
@@ -141,6 +163,7 @@ export const cloneProjectCopy = defineOperation({
 
 export const projectOperations = [
 	listProjects,
+	getProject,
 	createProject,
 	updateProjectDetails,
 	deleteProject,
