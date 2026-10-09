@@ -357,6 +357,14 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Lời mời theo email vẫn gắn vào tài khoản có email chưa xác minh như đã chốt ở phase 07; audit phase 09 không đưa thêm bằng chứng mới nên giữ nguyên.
 - Backup Mongo của Localman tạm giữ trên chính .65 (hằng ngày, 14 bản, báo Telegram khi lỗi); bản sao ngoài server làm khi đã có người dùng thật (Jev 0.44, phương án `defer`). User chốt hướng chung: ưu tiên có người dùng trước, không làm hạ tầng quá kỹ.
 
+### Vòng 25: khi cook phase 17 (2026-10-09)
+- Token MCP theo project chỉ hiện một lần lúc bật hoặc xoay; snippet cấu hình đọc token từ biến môi trường, không chép token vào file cấu hình (thường bị commit).
+- Dry-run kèm `confirm_token` chỉ bắt buộc cho tool ảnh hưởng nhiều thứ: xoá project, xoá resource kèm con, `reset_all`, `generate_all` (ghi đè mọi resource), xoay secret project và xoay token MCP; các tool `destructive` khác như sinh dữ liệu một resource hay di chuyển resource chạy thẳng, để agent AI không bị phiền.
+- Thao tác thành viên (mời, xoá, magic link) thuộc toolset `collab`, không mở qua OAuth `mock:*`: agent cầm `mock:write` không tự mời người hay lấy link tham gia project được (review phase 17).
+- Localman MCP qua OAuth chỉ mở toolset có scope ở IdP (`mock`, `client`); scope `credentials:write` không cấp mặc định, consent có cảnh báo đỏ.
+- Tên resource `mcp` bị cấm vì trùng route `/mcp` của Hosted Mock MCP.
+- OpenAPI nhập từ JSON; YAML cân nhắc ở phase 19.
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 

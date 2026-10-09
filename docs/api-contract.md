@@ -4,7 +4,7 @@ Tài liệu cho người duy trì: client bên ngoài thấy gì khi gọi mock 
 
 Test là chủ sở hữu thực thi của hợp đồng này: `contract.test.ts` và `contract-custom-responses.test.ts` (chạy lại các ví dụ trong wiki mockapi.io), `security.test.ts` và các `mock-*.test.ts` trong `apps/api/src/modules/mock-runtime/`. Đổi hành vi thì sửa test, tài liệu này và trang docs người dùng trong cùng một thay đổi.
 
-Mock runtime không đi qua operation registry: không có trong OpenAPI và không có MCP tool. MCP cho dữ liệu mock là các operation `mock.*` của dashboard API.
+Mock runtime không đi qua operation registry: không có trong OpenAPI của dashboard. Mỗi project có một MCP endpoint riêng ở `{prefix}/mcp` (Hosted Mock MCP, xem [mục MCP](#mcp)) thao tác trên cùng dữ liệu; MCP để quản lý project và resource là các operation `mock.*` của dashboard API.
 
 Đường dẫn file bên dưới tính từ `apps/api/src/` nếu không ghi package.
 
@@ -25,6 +25,7 @@ Mock runtime không đi qua operation registry: không có trong OpenAPI và kh�
 
 Path được tách theo cây resource thành `/{res}[/{id}]/{childRes}[/{id}]…`, độ sâu tuỳ ý (`matchRoute` trong `modules/mock-runtime/route-matcher.ts`). Tên resource so khớp phân biệt hoa thường.
 
+- **`{prefix}/mcp`** là MCP endpoint của project, xét trước các route REST. Tên resource `mcp` bị từ chối khi lưu (400 `VALIDATION_ERROR`, `RESERVED_RESOURCE_NAMES` trong `packages/shared/src/resource-constants.ts`). Dữ liệu cũ có resource gốc tên `mcp` vẫn chạy REST ở `/mcp/{id}`, còn `/mcp` thuộc về MCP; lần đầu gặp project như vậy, process ghi một dòng log cảnh báo (chỉ `projectId`).
 - **Đoạn đầu:** khớp resource gốc cùng tên; không có gốc thì khớp resource lồng **duy nhất** mang tên đó (route phẳng `/{child}` của mockapi.io). Tên trùng ở nhiều nhánh mà không có gốc thì 404.
 - **Route lồng** (`/users/1/posts`): mọi bản ghi tổ tiên phải tồn tại và đúng cha, kết quả lọc theo bản ghi cha trên path.
 - **Route phẳng** (`/posts`): trả mọi bản ghi của resource, không lọc theo cha.
@@ -51,7 +52,7 @@ Path được tách theo cây resource thành `/{res}[/{id}]/{childRes}[/{id}]�
 ## Header
 
 - Mọi response, kể cả lỗi: `X-Localman-Request-Id` (UUID, `REQUEST_ID_HEADER` trong `http/request-log.ts`), trùng id trong dòng log của request.
-- CORS (`mockCors` trong `modules/mock-runtime/mock-http.ts`): `Access-Control-Allow-Origin: *`, không bao giờ kèm credentials; `Access-Control-Expose-Headers` gồm `X-Localman-Request-Id` và `Retry-After`. Preflight trả 204 với `ALLOWED_METHODS`, lặp lại đúng danh sách `Access-Control-Request-Headers` nếu hợp lệ (nên `Authorization` dùng được), có `Access-Control-Max-Age`. Preflight không bị rate limit và không tính vào hạn mức tháng.
+- CORS (`mockCors` trong `modules/mock-runtime/mock-http.ts`): `Access-Control-Allow-Origin: *`, không bao giờ kèm credentials; `Access-Control-Expose-Headers` gồm `X-Localman-Request-Id`, `Retry-After` và `WWW-Authenticate` (thử MCP endpoint từ trình duyệt). Preflight trả 204 với `ALLOWED_METHODS`, lặp lại đúng danh sách `Access-Control-Request-Headers` nếu hợp lệ (nên `Authorization` dùng được), có `Access-Control-Max-Age`. Preflight không bị rate limit và không tính vào hạn mức tháng.
 - `Cross-Origin-Resource-Policy: cross-origin` (cấu hình helmet trong `mock-server.ts`).
 - Body luôn là JSON.
 
@@ -78,7 +79,7 @@ Mỗi endpoint có một `response`. Giá trị mặc định `DEFAULT_RESPONSE`
 
 | Lớp | Giới hạn và nguồn | Vượt thì |
 |---|---|---|
-| nginx (production) | `limit_req`/`limit_conn` theo IP và `client_max_body_size` trên `*.localman` và `/m/`, zone ở [`infra/localman/nginx/localman-http.conf`](../infra/localman/nginx/localman-http.conf) | 429 hoặc 413 do nginx trả, body là trang mặc định của nginx, không theo dạng lỗi của API |
+| nginx (production) | `limit_req`/`limit_conn` theo IP và `client_max_body_size` trên `*.localman` và `/m/`, `limit_req` theo IP trên `/mcp` (Localman MCP), zone ở [`infra/localman/nginx/localman-http.conf`](../infra/localman/nginx/localman-http.conf) | 429 hoặc 413 do nginx trả, body là trang mặc định của nginx, không theo dạng lỗi của API |
 | Rate limit của app | Cửa sổ cố định 1 giây trong bộ nhớ process, kiểm theo thứ tự IP (IPv6 gộp /64) → secret → lượt ghi của secret → byte response của secret, trước khi đọc body (`MockLimiters` trong `modules/mock-runtime/rate-limit.ts`). Mặc định ở `DEFAULT_MOCK_RATE_LIMITS` (`mock-server.ts`), ghi đè bằng `MOCK_RATE_LIMIT_PER_IP`, `MOCK_RATE_LIMIT_PER_SECRET`, `MOCK_WRITE_RATE_LIMIT_PER_SECRET`, `MOCK_RESPONSE_BYTES_PER_SECOND` (`config/feature-env.ts`) | 429 `RATE_LIMITED` kèm `Retry-After` |
 | Ngân sách byte | Request bị từ chối khi giây hiện tại đã tiêu hết ngân sách; response bắt đầu trong ngân sách được gửi trọn. List tính số lớn hơn giữa byte gửi đi và byte collection đã quét, nên lượt lọc không ra kết quả vẫn tốn ngân sách | 429 `RATE_LIMITED` |
 | Hạn mức tháng | Theo **chủ project**: `limitsFor(plan hiệu lực).mockRequestsPerMonth` ([`packages/shared/src/plan-limits.ts`](../packages/shared/src/plan-limits.ts)); `null` là không giới hạn, Pro hết hạn tính như Free, tháng theo giờ Asia/Saigon. Mọi request đã qua rate limit và trỏ tới project có thật đều được tính, kể cả 404 trong project | 429 `MONTHLY_QUOTA_EXCEEDED`, không có `Retry-After` |
@@ -88,6 +89,23 @@ Mỗi endpoint có một `response`. Giá trị mặc định `DEFAULT_RESPONSE`
 | Kích thước response | `MAX_RESPONSE_BYTES`, bằng `MAX_RESOURCE_BYTES` (`render-response.ts`); field quan hệ bị chặn trong lúc nạp (`relation-budget.ts`) | 422 `RESPONSE_TOO_LARGE` |
 
 Rate limit, bộ đếm tháng và cache chỉ chính xác khi mock runtime chạy một process; vì vậy production chạy một instance pm2 (xem [deployment-guide.md](deployment-guide.md)). Giới hạn thao tác nặng trong `config/runtime-settings.ts` (`heavyOperationRateLimit`) thuộc dashboard API, không áp cho mock runtime.
+
+## MCP
+
+Hosted Mock MCP (`modules/mcp/mock-mcp-server.ts`, mount trước router REST trong `mock-server.ts`): transport Streamable HTTP, protocol 2026-07-28 (request kiểu 2025 được phục vụ stateless).
+
+| Dạng | URL |
+|---|---|
+| Subdomain | `https://{secret}.localman.hoandat.com{prefix}/mcp` |
+| Fallback | `https://localman.hoandat.com/m/{secret}{prefix}/mcp` |
+
+- **Tool:** `list_`, `get_`, `create_`, `update_`, `delete_<res>` cho mọi resource (kể cả lồng), chỉ khi endpoint REST tương ứng đang bật (`buildMockTools` trong `modules/mcp/mock-tool-factory.ts`, tên từ `packages/shared/src/mock-tool-names.ts`). Danh sách tool cache theo secret và revision của cây resource (`mock-mcp-tools-cache.ts`), đổi cây là có hiệu lực ở request kế tiếp.
+- **Ngữ nghĩa:** tool chạy đúng code CRUD/query của REST trên cùng store, nên ghi qua MCP thì REST thấy ngay. Resource lồng nhận `parentId` (id bản ghi cha trực tiếp); runtime đi ngược `parentRecordId` để dựng route lồng, có `parentId` thì như route lồng (cha sai hoặc thiếu là `NOT_FOUND`), không có thì như route phẳng; `create_` của resource lồng bắt buộc `parentId`. `list_` nhận tham số query như REST (tên chính trong `MOCK_QUERY_PARAMS`) và filter theo field.
+- **Kết quả:** JSON thuần trong `structuredContent` (kèm bản text): `list_` trả `{ items, total }` (`total` là số bản ghi sau lọc, trước phân trang), tool khác trả bản ghi. Custom response **không** áp cho MCP. Lỗi là tool error (`isError`) mang đúng body `{ error: { code, message, details? } }` của REST; 404 là `NOT_FOUND` thay cho chuỗi `"Not found"`.
+- **Resources:** `mock://schema` (cây resource, route lồng, schema hoặc template, endpoint, tool của từng resource) và `mock://openapi` (OpenAPI 3.1 sinh từ resource và endpoint đang bật, `modules/mcp/mock-openapi.ts`).
+- **Giới hạn:** request tới `…/mcp` qua cùng rate limit như REST nhưng tính như lượt đọc; ngoài ra **mỗi tool call** được xét lại theo IP, theo secret và ngân sách byte của secret (tool ghi `create_`, `update_`, `delete_` lấy thêm một lượt ghi), nên một tool call tính hai lượt vào hạn mức mỗi giây. Mỗi tool call tính **1 request** vào `mockRequestsPerMonth` của chủ project và cập nhật `lastRequestAt` như REST (`initialize`, `tools/list`, đọc resource không tính). Body JSON-RPC theo `MAX_JSON_BODY_KB`; byte kết quả trừ vào ngân sách byte của secret, trần response như REST. Vượt thì tool error `RATE_LIMITED` (`details.retryAfterSeconds`) hoặc `MONTHLY_QUOTA_EXCEEDED`.
+- **Một message mỗi request:** body là mảng (JSON-RPC batch, MCP bỏ từ 2025-06-18) bị từ chối 400 với lỗi JSON-RPC `-32600` trước khi tới SDK. `subscriptions/listen` bị từ chối (HTTP 200, lỗi JSON-RPC `-32601`): danh sách tool chỉ đổi khi cây resource đổi, server khai `listChanged: false`; client gọi lại `tools/list`.
+- **Token tuỳ chọn** ("Yêu cầu token cho MCP", mọi gói): bật thì `/mcp` cần `Authorization: Bearer lmmcp_…`; thiếu hoặc sai trả 401 `UNAUTHENTICATED` kèm `WWW-Authenticate: Bearer realm="localman-mock-mcp"` (thêm `error="invalid_token"` khi có gửi token). REST không bị ảnh hưởng. Token là `lmmcp_` + 32 byte base64url, chỉ lưu SHA-256, 4 ký tự cuối và thời điểm tạo (`modules/mcp/mcp-token-model.ts`), chỉ trả một lần lúc tạo. Quản lý bằng operation owner-only (`modules/mcp/mcp-token-operations.ts`): `GET`/`PUT /api/v1/projects/:projectId/mcp-token` (`mock.getMcpTokenSettings`, `mock.setMcpTokenRequired`) và `POST …/mcp-token/rotate` (`mock.rotateMcpToken`, có `dryRun`, tool MCP cần `confirm_token`). Xoá project thì token bị xoá; clone không mang theo token.
 
 ## Mã lỗi
 
@@ -99,12 +117,13 @@ Lỗi theo dạng `{ "error": { "code", "message", "details"? } }`, trừ 404 `"
 | 400 | `INVALID_JSON` | Body khai báo JSON nhưng parse lỗi | `BODY_ERRORS` trong `http/error-handler.ts` |
 | 400 | `VALIDATION_ERROR` | Body không phải object, có key cấm, vượt `DEFAULT_JSON_LIMITS`; `{parent}Id` không trỏ tới bản ghi cha có thật trên route phẳng | `record-body.ts`, `new-record.ts` |
 | 400 | `BAD_REQUEST` | Request bị ngắt khi đang gửi body, hoặc lỗi client khác của Express | `http/error-handler.ts` |
+| 401 | `UNAUTHENTICATED` | MCP endpoint bật token mà thiếu hoặc sai Bearer token; kèm `WWW-Authenticate` | `modules/mcp/mock-mcp-auth.ts` |
 | 404 | `"Not found"` (chuỗi) | Secret đúng định dạng nhưng không có project còn sống; path ngoài prefix; không khớp resource, bản ghi hoặc tổ tiên; endpoint tắt; method không phục vụ route | `NOT_FOUND_BODY` trong `modules/mock-runtime/mock-router.ts` |
 | 404 | `NOT_FOUND` | Request không trỏ tới project nào (secret sai định dạng, path hỏng) | `notFoundHandler` trong `http/error-handler.ts` |
 | 409 | `RECORD_LIMIT_REACHED` | POST khi resource đã đủ bản ghi; `details.max` | `crud-handlers.ts` |
 | 413 | `PAYLOAD_TOO_LARGE` | Body vượt `MAX_JSON_BODY_KB` | `http/error-handler.ts` |
 | 413 | `DATA_TOO_LARGE` | Bản ghi hoặc resource vượt trần byte; `details` có `limit`, `maxBytes`, `actualBytes`, `resourceId`, `name` | `modules/resources/data-size.ts`, `modules/mock-runtime/data-bytes.ts` |
-| 415 | `UNSUPPORTED_MEDIA_TYPE` | `Content-Encoding` hoặc charset không đọc được | `http/error-handler.ts` |
+| 415 | `UNSUPPORTED_MEDIA_TYPE` | `Content-Encoding` hoặc charset không đọc được; POST tới MCP endpoint không phải JSON | `http/error-handler.ts`, `modules/mcp/mcp-express-bridge.ts` |
 | 422 | `RESPONSE_TOO_LARGE` | Response sẽ vượt trần; `details` có `maxBytes`, `actualBytes` | `render-response.ts`, `relation-budget.ts` |
 | 422 | `TEMPLATE_TOO_DEEP` | Template đã lưu vượt `TEMPLATE_LIMITS` hiện hành (chỉ xảy ra nếu giới hạn bị hạ sau khi lưu, vì lúc lưu đã kiểm cùng giới hạn) | `render-response.ts` |
 | 429 | `RATE_LIMITED` | Vượt một mức rate limit; kèm `Retry-After` | `modules/mock-runtime/rate-limit.ts` |

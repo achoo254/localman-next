@@ -97,21 +97,21 @@ Làm keyword thứ ba **"Mock MCP tức thì"** (Jev 0.67) cùng phần mock c�
 | T12 | Review cuối phase, chú trọng xác minh token, scope và tool phá huỷ | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 Spec tab MCP và câu chữ scope đã chốt; mục ứng dụng đã cấp quyền trỏ sang IdP
-- [ ] T2 Toolsets, dry-run/`confirm_token`, `credentials:write`, `exempt`, bảng coverage
-- [ ] T3 `mock-tool-factory` có snapshot, endpoint tắt không sinh tool
-- [ ] T4 Parser TypeScript và OpenAPI có giới hạn, không eval
-- [ ] T5 Hosted Mock MCP đủ tool, resources, token, hạn mức, rate-limit, fallback path
-- [ ] T6 Localman MCP phần mock, Protected Resource Metadata, xác minh JWT
-- [ ] T7 UI tab MCP
-- [ ] T8 Integration bằng SDK pass
-- [ ] T9 E2E OAuth pass
-- [ ] T10 Trang docs "MCP tools" đã đăng
+- [x] T1 Spec tab MCP và câu chữ scope đã chốt; mục ứng dụng đã cấp quyền trỏ sang IdP (`plans/dattqh/reports/ui-phase-17-mcp-spec.md`)
+- [x] T2 Toolsets, dry-run/`confirm_token`, `credentials:write`, `exempt`, bảng coverage (`apps/api/src/modules/mcp/`: `operation-mcp-server.ts`, `operation-tool*.ts`, `toolset-*.ts`, `confirm-token.ts`; `executeOperation` dùng chung REST/MCP; `pnpm check:mcp-coverage --markdown <path>`; `confirm_token` chỉ cho operation khai `requiresConfirmation`: xoá project, xoá resource, `reset_all`, xoay secret project)
+- [x] T3 `mock-tool-factory` có snapshot, endpoint tắt không sinh tool
+- [x] T4 Parser TypeScript và OpenAPI có giới hạn, không eval (nằm ở `packages/shared/src/`: `schema-from-typescript.ts`, `schema-from-openapi.ts` cùng các module `typescript-*`, `openapi-*`, `schema-import-fields.ts`, `schema-field-hints.ts`; OpenAPI chỉ nhận JSON, chưa nhận YAML)
+- [x] T5 Hosted Mock MCP đủ tool, resources, token, hạn mức, rate-limit, fallback path (`apps/api/src/modules/mcp/`: `mock-mcp-server.ts` mount trước REST trong `mock-server.ts`, `mock-tool-call.ts`, `mock-tool-args.ts`, `mock-mcp-tools-cache.ts`, `mock-mcp-resources.ts`, `mock-openapi*.ts`, `mock-mcp-auth.ts`, `mcp-token-model.ts`, `mcp-token-operations.ts`: `get_mcp_token_settings`, `set_mcp_token_required`, `rotate_mcp_token`; tên resource `mcp` bị từ chối)
+- [x] T6 Localman MCP phần mock, Protected Resource Metadata, xác minh JWT (`apps/api/src/modules/mcp/`: `localman-mcp-server.ts` mount `/mcp` trước CSRF guard trong `dashboard-server.ts`, `localman-mcp-access.ts`, `mcp-resource-metadata.ts`, `mcp-access-token.ts`, `mcp-fetch-bridge.ts`; operation mới `create_resource_from_schema`, `get_mock_urls`; view project có `uiUrl`; bảng tên plan → tool ở `docs/system-architecture.md` mục Localman MCP; nginx và proxy Vite có `/mcp`, `/.well-known/oauth-protected-resource`)
+- [x] T7 UI tab MCP (`apps/web/src/features/mcp/`: tab REST/MCP lưu `?endpoint=mcp`, snippet đọc token từ biến môi trường, token hiện một lần, xoay có xác nhận, danh sách tool từ `mockToolEntries`, panel lệnh MCP Inspector; khối landing "Mock MCP tức thì" và mục `account-menu-apps` gắn cờ `mockMcp`; primitive mới `Tabs`, `Switch`, `SegmentedControl`, `CodeBlock` chuyển sang `components/ui`)
+- [x] T8 Integration bằng SDK pass (phần Hosted Mock MCP đã xong: `mock-mcp-server.test.ts`, `mock-mcp-token.test.ts` qua HTTP thật; dry-run/`confirm_token` nằm ở test của T2)
+- [x] T9 E2E OAuth pass trên stack E2E (`e2e/specs/localman-mcp-oauth.spec.ts`: discovery, DCR, consent, token có `resource`, `create_project`, project hiện trên UI, thu hồi refresh token; fake IdP có thêm DCR, resource `/mcp`, revocation). SDK client MCP 2.3.1 đăng ký kèm `offline_access`; IdP thật bỏ qua scope đó cho client DCR từ commit `2ff6bad` của `hoandat-auth` (đã deploy 2026-10-09), fake IdP khớp hành vi này
+- [ ] T10 Trang docs "MCP tools" đã đăng (làm cùng đợt đa ngôn ngữ, viết tiếng Anh: `plans/dattqh/261009-1741-i18n-en-zh-and-brand-cleanup/`)
 - [ ] T11 Staging deploy, kiểm thủ công bằng Claude Code, cờ `features.mockMcp` bật sau khi user xác nhận
-- [ ] T12 Review không còn finding mức high
-- [ ] Verification: unit `mock-tool-factory` và parse TypeScript/OpenAPI (input xấu bị từ chối) pass
-- [ ] Verification: integration `list_users`, `create_posts` với `parentId`, 401 khi bật token, `MONTHLY_QUOTA_EXCEEDED` pass
-- [ ] Verification: E2E OAuth (discovery, consent, token, `create_project`, thu hồi) pass
+- [x] T12 Review không còn finding mức high (H1 batch JSON-RPC bị chặn 400 và mỗi tool call tính hạn mức riêng; H2 `allOf` OpenAPI có trần bước; M1 thao tác thành viên sang toolset `collab`; M2 giới hạn theo `sub`)
+- [x] Verification: unit `mock-tool-factory` và parse TypeScript/OpenAPI (input xấu bị từ chối) pass
+- [x] Verification: integration `list_users`, `create_posts` với `parentId`, 401 khi bật token, `MONTHLY_QUOTA_EXCEEDED` pass
+- [x] Verification: E2E OAuth (discovery, consent, token, `create_project`, thu hồi) pass
 - [ ] Verification: kiểm thủ công agent tạo mock users 20 bản ghi, thấy trên UI
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
-- [ ] `pnpm check:mcp-coverage` pass và in được bảng theo toolset
+- [x] `pnpm lint && pnpm typecheck && pnpm test` sạch
+- [x] `pnpm check:mcp-coverage` pass và in được bảng theo toolset
