@@ -17,13 +17,28 @@ Localman dùng design system riêng, không lấy từ bên thứ ba. Prototype 
 `apps/web/src/styles/global.css` map token vào Tailwind bằng `@theme inline reference` và xoá bảng màu mặc định. Utility trỏ thẳng vào biến token, nên đổi `data-theme` là đổi màu ngay.
 
 - Màu: `bg-surface`, `bg-bg`, `text-fg` (chữ chính), `text-muted` (chữ phụ), `text-primary`, `border-border`, `bg-primary-solid`…
-- Khoảng cách: `--spacing` = `--space-1` (4px), nên `p-4` = 16px.
+- Khoảng cách: `--spacing` = `--space-1` (4px), nên `p-4` = 16px. Quy đổi token sang utility:
+
+  | Token | px | Tailwind |
+  |---|---|---|
+  | `--space-1` | 4 | `1` (`p-1`, `gap-1`) |
+  | `--space-2` | 8 | `2` |
+  | `--space-3` | 12 | `3` |
+  | `--space-4` | 16 | `4` |
+  | `--space-5` | 24 | `6` |
+  | `--space-6` | 32 | `8` |
+  | `--space-7` | 48 | `12` |
+  | `--space-8` | 64 | `16` |
+  | `--space-9` | 96 | `24` |
+
+  Ví dụ prototype `padding: var(--space-5)` là `p-6`; trạng thái rỗng `var(--space-7) var(--space-5)` là `px-6 py-12`.
+- Chữ nhỏ: `text-sm` và `text-xs` dùng line-height 1.55 như body (đặt trong `@theme` của `global.css`).
 - Nhãn soft: utility `tint-soft` đọc biến `--tone`.
 - Nền lưới 100px dùng token `--c-grid`.
 
 ## Primitive UI
 
-`apps/web/src/components/ui/`: `button`, `icon-button`, `input`, `select`, `textarea`, `modal`, `modal-footer`, `dropdown-menu`, `badge`, `alert`, `tooltip`, `toast`, `form-field`, `external-link`.
+`apps/web/src/components/ui/`: `button`, `icon-button`, `input`, `select`, `textarea`, `modal`, `modal-footer`, `confirm-modal`, `card`, `empty-state`, `dropdown-menu`, `badge`, `alert`, `tooltip`, `toast`, `form-field`, `external-link`.
 
 - Nút bo 12px, hover scale 1.03, active 0.97, focus ring 2px offset 2.
 - Modal bo 16px, 4 size `sm`/`md`/`lg`/`xl`, fade và trượt từ -20px trong 200ms easing decelerate, footer dính đáy 2 cột.
@@ -31,6 +46,11 @@ Localman dùng design system riêng, không lấy từ bên thứ ba. Prototype 
 - Modal, dropdown, tooltip và toast dựng trên Radix primitives để có a11y; select dùng `<select>` native.
 - `DropdownMenuLabel` (trong `dropdown-menu`) là tiêu đề hoặc ghi chú không bấm được bên trong menu, ví dụ tên tài khoản hay "Chưa có thông báo nào". Không dùng `<p>` thường trong menu vì `role="menu"` chỉ nên chứa menuitem, label và separator.
 - `ExternalLink` mở trang của site khác (IdP, `t.me`) qua `openExternal` trong `src/platform/navigation.ts`: trên web là tab mới với `noopener,noreferrer`; click có phím bổ trợ giữ hành vi mặc định của trình duyệt. Muốn trông như nút thì truyền `className={buttonClassName(…)}`.
+- Thẻ: `cardClassName` / `Card` (`card.tsx`) là bề mặt chung, bo 24px (`rounded-xl`), viền `--c-border`, nền `--c-surface`, `shadow-sm`. Dùng class trên phần tử ngữ nghĩa (`li`, `article`, `section`); padding thẻ là `p-6`. `EmptyState` (`empty-state.tsx`) là thẻ rỗng có ô icon, tiêu đề, mô tả và một hành động.
+- `IconButton` là ô vuông 32/36px (`sm`/`md`), lên 40/44px trên màn cảm ứng. Nút chỉ có icon dựng từ `buttonClassName` phải truyền `iconOnly: true` để bỏ `min-h-*` và `px-*` của nút chữ.
+- `Modal` nhận `initialFocusRef`: ref của phần tử cần focus khi mở, hoặc `"dialog"` để focus khung (nội dung chỉ đọc như Quản lý gói). Ref còn rỗng (thân modal tải lazy) thì focus khung. Quy ước: form focus ô đầu tiên cần nhập; hộp thoại phá huỷ focus nút "Huỷ".
+- `ConfirmModal` là modal `sm` cho thao tác phá huỷ (xoá project, xoá đăng ký): khối cảnh báo nền tint error có icon cảnh báo, footer Huỷ / nút `danger`, mở ra là focus nút Huỷ. `onConfirm` trả Promise; modal chỉ đóng khi thành công, lỗi thì hiện ngay trong modal.
+- Avatar project (`pages/projects/project-avatar.tsx`) chia chữ cái đầu (bỏ dấu, `đ` thành `d`) thành 7 nhóm, nền là token `--c-viz-*` (bước 11 ở light), chữ `--c-on-tone`; mọi cặp đạt ≥ 4.6:1 ở cả hai theme.
 - `FormField` truyền id, `aria-describedby`, `aria-invalid` và `required` qua context cho Input, Select và Textarea.
 - Wordmark `Localman` (`components/brand/wordmark.tsx`): JetBrains Mono đậm, chữ "Local" màu `--c-primary`.
 - Khối cấp trang, nút, input và link có `data-id` để trỏ bằng lời, phân cấp tối đa 3 bậc.

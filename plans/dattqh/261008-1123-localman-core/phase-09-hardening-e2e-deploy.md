@@ -30,6 +30,9 @@ dependencies: [5, 6, 7, 8]
    - Backup Mongo hằng ngày.
    - **IP client thật cho rate-limit** (review phase 02): `/auth/login` giới hạn theo IP, nên `TRUST_PROXY` phải đúng topo thật. Nếu deploy theo quy ước của server .65 như IdP (pm2 + nginx cùng máy, real-IP của Cloudflare đặt ở cấp `http` của nginx) thì `TRUST_PROXY=127.0.0.1` và nginx chuyển `X-Forwarded-For $remote_addr`. Nếu dùng Docker Compose thì đặt đúng địa chỉ container nginx (không tin cả dải mạng) và cấu hình `set_real_ip_from` cho dải IP Cloudflare; thiếu bước này thì mọi user dùng chung một quota đăng nhập. Chốt khi bắt đầu phase này.
    - Secret của kênh thông báo: `TELEGRAM_BOT_TOKEN` (một bot **riêng** cho Localman, tạo qua @BotFather), `TELEGRAM_WEBHOOK_SECRET`, `OWNER_TELEGRAM_CHAT_ID`, `VAPID_PUBLIC_KEY` và `VAPID_PRIVATE_KEY` (sinh bằng `web-push generate-vapid-keys`, hoặc dùng project FCM sẵn có). Đăng ký webhook bằng `setWebhook` sau khi deploy. Không có SMTP.
+   - **Turnstile và CSP** (review phase 03): CSP của web phải cho `https://challenges.cloudflare.com` ở `script-src` và `frame-src`; production bắt buộc `TURNSTILE_SITE_KEY`/`TURNSTILE_SECRET_KEY`, và `PUBLIC_URL` phải đúng host công khai vì server so `hostname` của token với nó.
+   - **CGNAT di động** (review phase 03): rate limit form công khai theo IP (IPv6 gộp /64) có thể chặn nhầm nhiều người sau một IP nhà mạng; theo dõi 429 `RATE_LIMITED` sau khi mở form rồi chỉnh `feedbackRateLimit.perIp` nếu cần.
+   - **MCP không có `clientIp`** (review phase 03): `OperationContext.clientIp` chỉ có qua HTTP; khi dựng MCP server (phase 17) phải truyền địa chỉ thật hoặc `null`, và mọi rate limit theo IP phải có hạn mức theo token/tài khoản thay thế.
 4. Observability: log JSON có `requestId`, đếm request theo project (phục vụ hạn mức và cleanup về sau).
 5. Docs: cập nhật đúng các mục trên, link tới script và manifest thay vì chép nội dung.
 

@@ -71,20 +71,20 @@ Mục đích: biết có bao nhiêu người muốn dùng Pro, thay cho giá "ch
 | T10 | Review cuối phase | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 State và `data-id` của màn Projects, Account và admin đã chốt theo prototype
-- [ ] T2 Module projects với CRUD, clone và `can()` xong
-- [ ] T3 `plan-guard`, CLI gán gói và operation usage xong
-- [ ] T4 Nền module `feedback` cho form quan tâm Pro xong
-- [ ] T5 Trang admin `/admin/pro-interest` xong
-- [ ] T6 Màn Projects xong
-- [ ] T7 Modal gói, form quan tâm Pro và đồng hồ hạn mức xong
-- [ ] T8 Integration pass
-- [ ] T9 UI khớp prototype ở 375px và 1440px
-- [ ] T10 Review không còn finding chặn
-- [ ] Verification: Free tạo được 3 project, bị 403 `PLAN_LIMIT_REACHED` ở project thứ 4; Pro bị chặn ở project thứ 21; test không hardcode số
-- [ ] Verification: clone đúng cây resource, secret mới khác secret cũ
-- [ ] Verification: user B đọc, sửa, xoá project của user A đều nhận 404
-- [ ] Verification: form Pro chặn khi thiếu đồng ý, gộp trùng theo email, bot Telegram nhận đúng 1 tin, admin đếm đúng, user thường nhận 403 ở API admin
-- [ ] Verification: UI khớp prototype `#/projects` ở 375px và 1440px
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
-- [ ] `pnpm check:mcp-coverage` pass
+- [x] T1 State và `data-id` của màn Projects, Account và admin đã chốt theo prototype
+- [x] T2 Module projects với CRUD, clone và `can()` xong
+- [x] T3 `plan-guard`, CLI gán gói và operation usage xong
+- [x] T4 Nền module `feedback` cho form quan tâm Pro xong
+- [x] T5 Trang admin `/admin/pro-interest` xong
+- [x] T6 Màn Projects xong
+- [x] T7 Modal gói, form quan tâm Pro và đồng hồ hạn mức xong
+- [x] T8 Integration pass
+- [x] T9 UI khớp prototype ở 375px và 1440px (chụp và đo trên stack local IdP + API + Vite bằng agent-browser, light và dark; 4 lỗi cần sửa đã sửa và kiểm lại)
+- [x] T10 Review không còn finding chặn
+- [x] Verification: Free tạo được 3 project, bị 403 `PLAN_LIMIT_REACHED` ở project thứ 4; Pro bị chặn ở project thứ 21; test không hardcode số
+- [x] Verification: clone đúng cây resource, secret mới khác secret cũ (phase này chưa có resource: clone và cascade đi qua hook `registerProjectDependent`, phase 04 đăng ký cây resource và dữ liệu)
+- [x] Verification: user B đọc, sửa, xoá project của user A đều nhận 404
+- [x] Verification: form Pro chặn khi thiếu đồng ý, gộp trùng theo email, bot Telegram nhận đúng 1 tin, admin đếm đúng, user thường nhận 403 ở API admin
+- [x] Verification: UI khớp prototype `#/projects` ở 375px và 1440px
+- [x] `pnpm lint && pnpm typecheck && pnpm test` sạch
+- [x] `pnpm check:mcp-coverage` pass

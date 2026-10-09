@@ -49,14 +49,18 @@ Khi dựng router, `createOperationRouter` ném lỗi nếu hai operation trùng
 
 ## Xử lý một request
 
-Thứ tự trong router: xác thực → check scope (401 `UNAUTHENTICATED`, 403 `FORBIDDEN`) → validate input (400 `VALIDATION_ERROR`) → `policy` (403) → `handler` → validate output (sai schema thì 500).
+Thứ tự trong router: xác thực → check scope (401 `UNAUTHENTICATED`, 403 `FORBIDDEN`) → `guard` (403) → đọc `dryRun` và validate input (400 `VALIDATION_ERROR`) → `policy` (403) → `handler` → validate output (sai schema thì 500).
+
+- `guard(ctx)` (tuỳ chọn) chỉ thấy `{ auth, clientIp }`, dùng cho điều kiện không cần input như "chỉ owner". Vì chạy trước khi parse input, người bị từ chối luôn nhận 403 và không dò được gì qua lỗi validate. `policy(ctx, input)` dùng cho quyền theo tài nguyên, cần input đã parse.
 
 - **Nguồn input:** `GET` lấy input từ query string và path params. Các method khác chỉ lấy từ JSON body và path params, không đọc query. Request có body mà `Content-Type` không phải `application/json` bị trả 415 `UNSUPPORTED_MEDIA_TYPE`. Nhờ vậy form submit từ site khác (không qua preflight CORS) không gọi được mutation.
 - Path params được ưu tiên cao nhất để body không ghi đè được tham số trên route.
 - Giá trị query và path param của field kiểu number/integer/boolean được chuyển kiểu theo JSON Schema trước khi validate, để `?limit=5` khớp với tài liệu OpenAPI.
-- `handler` và `policy` nhận `ctx = { auth, dryRun }`, không phụ thuộc transport, nên MCP server dùng lại được nguyên handler.
+- `handler` và `policy` nhận `ctx = { auth, dryRun, clientIp }`, không phụ thuộc transport, nên MCP server dùng lại được nguyên handler. `clientIp` là địa chỉ của bên gọi do transport xác định (qua HTTP là `req.ip` của Express, tôn trọng `TRUST_PROXY`), `null` khi không biết; chỉ dùng cho hạn mức theo client (rate limit, Turnstile `remoteip`), không dùng để phân quyền.
 - Operation có `dryRun` nhận `?dryRun=true` qua HTTP; handler phải chỉ xem trước, không ghi dữ liệu. Gửi `?dryRun` tới operation không hỗ trợ thì bị trả 400, thay vì âm thầm ghi thật.
 - ZodError do handler tự ném (khi parse dữ liệu phía server) trả 500, không phải 400.
+- `OperationError` có thể kèm `details`: mảng `{ path, message }` cho lỗi validate, hoặc một object phẳng cho lỗi nghiệp vụ, ví dụ 403 `PLAN_LIMIT_REACHED` kèm `{ limit: "projects", max, used }`.
+- Operation chỉ dành cho owner của deployment (toolset `admin`) khai `guard: ownerOnly` (`apps/api/src/modules/users/owner-access.ts`, đọc `OWNER_SUBS`); user khác nhận 403 `FORBIDDEN`.
 - `resolveAuth` đọc cookie phiên (`__Host-lm_session`, hoặc `lm_session` khi `PUBLIC_URL` là http) và trả `{ subjectId: sub, scopes: ["user"], sessionId }`; không có phiên thì `null`. `user` (`USER_SCOPE` trong `apps/api/src/http/require-auth.ts`) là scope nội bộ của user đăng nhập bằng trình duyệt; operation của user khai `scopes: [USER_SCOPE]` và lấy `sub` bằng `requireSubject(ctx)`. Access token sắp hết hạn được refresh ngay trong bước này, user không thấy.
 - Mọi response dưới `/api/v1` có `Cache-Control: no-store`, vì dữ liệu là của từng user.
 - **CSRF:** mọi request không phải GET/HEAD/OPTIONS tới dashboard phải có `Origin` bằng `PUBLIC_URL`/`WEB_ORIGIN` hoặc `Sec-Fetch-Site: same-origin`, sai thì 403 `CSRF_REJECTED`. Kiểm trước khi parse body. Mock runtime nằm ở subdomain cùng site nên SameSite=Strict của cookie chưa đủ.
@@ -79,4 +83,7 @@ Một số route nói giao thức (OpenID Connect) với trình duyệt hoặc v
 | `POST /auth/backchannel-logout` | IdP gọi server-to-server (OIDC Back-Channel Logout), không phải thao tác của user; miễn kiểm CSRF vì logout token đã ký là bằng chứng xác thực |
 | `POST /internal/audit-events` | IdP đẩy sự kiện audit server-to-server (SET ký ES256 + HTTP Basic), không phải thao tác của user; miễn kiểm CSRF vì xác thực bằng Basic và chữ ký |
 
-Operation có `mcp: { exempt }` vì chỉ trình duyệt dùng được: `notifications.getVapidPublicKey`, `notifications.createPushSubscription`, `notifications.deletePushSubscription` (subscription Web Push do service worker tạo, agent không có push endpoint).
+Operation có `mcp: { exempt }` vì chỉ trình duyệt dùng được:
+
+- `notifications.getVapidPublicKey`, `notifications.createPushSubscription`, `notifications.deletePushSubscription`: subscription Web Push do service worker tạo, agent không có push endpoint.
+- `feedback.submitProInterest`, `feedback.getProInterestFormConfig`: form quan tâm gói Pro là form công khai cho người. Khách phải qua Cloudflare Turnstile (agent không giải được), và việc để lại email liên hệ phải do chính người đó đồng ý.

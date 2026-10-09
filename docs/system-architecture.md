@@ -23,6 +23,7 @@ Các internal package `@localman/*` là package chỉ có source TypeScript: `ex
 apps/api/src/main.ts
   ├─ loadEnv()            zod validate biến môi trường, sai thì log fatal và exit 1
   ├─ connectMongo()       không kết nối được thì exit 1 (fail-fast, PM2/Compose tự restart)
+  ├─ initModels()         chờ mọi model dựng xong index; index unique dựng lỗi thì exit 1
   ├─ dashboard app :4000  helmet → CSRF guard → json 100kb → /healthz → /auth/*, /internal/audit-events → /api/v1/openapi.json → no-store + router từ registry → 404 → error handler
   └─ mock app      :4100  helmet → json 100kb → /healthz → 404 → error handler (route mock thêm ở phase 05)
 ```
@@ -60,6 +61,35 @@ Không có email. `apps/api/src/modules/notifications/` gửi mỗi sự kiện 
 - **Telegram** (mặc định tắt): bot riêng của Localman (`TELEGRAM_BOT_TOKEN`, tuỳ chọn), `chatId` lấy từ `userinfo` của IdP. 429 thì gửi lại theo `retry_after` hoặc backoff luỹ thừa, tối đa 3 lượt và chờ không quá 10 giây; 403 thì đánh dấu kênh chưa kích hoạt cho tới khi chat đổi hoặc user bật lại Telegram trong tuỳ chọn.
 
 `notify()` lưu bản trong app rồi trả về ngay; Web Push và Telegram chạy nền, lỗi chỉ ghi log. Khi tắt server, `drain()` chờ các lượt gửi nền xong. Danh mục sự kiện ở `notification-events.ts`; module khác gọi `getNotificationService().notify(sub, { type, title, body, link })`.
+
+## Projects và giới hạn gói
+
+Module `apps/api/src/modules/projects/`, operation `mock.*` dưới `/api/v1/projects`.
+
+- **Project** (collection `projects`): `name`, `prefix`, `secret`, `owner` (`sub`), `quotaSlot`, timestamps. Zod của tên và prefix nằm ở `packages/shared/src/project-schema.ts`, web và api dùng chung. Tên bắt đầu bằng chữ hoặc số, sau đó nhận chữ mọi ngôn ngữ (có tiếng Việt, chuẩn hoá NFC), số, `_`, khoảng trắng, `-` và dấu ngoặc (để bản clone "X (copy)" sửa được mà không phải đổi tên). Prefix theo `^[\w\-/]*$` rồi chuẩn hoá thành `/x/y`, rỗng là không có prefix. Prefix trùng nhau trong cùng owner được phép như mockapi.io, vì mỗi project có subdomain riêng theo secret.
+- **Secret** là nhãn DNS của mock runtime: nanoid 24 ký tự chỉ gồm `a-z0-9` (hostname không phân biệt hoa thường, `_` không hợp lệ trong hostname), khoảng 124 bit, unique index. `mockBaseUrl` = `https://{secret}.{MOCK_BASE_DOMAIN}{prefix}`; domain `localhost…` dùng `http`.
+- **Phân quyền:** `project-access.ts` chỉ để lộ `can(user, action, project)` (`read`, `update`, `delete`, `clone`) và `accessibleProjectsFilter(user)` cho truy vấn danh sách. Owner làm được mọi việc; collaborator đã accept được `read` và `clone` (chưa có lời mời nào cho tới khi module collaborators lưu chúng). Không đọc được project thì 404 `NOT_FOUND` để không lộ project tồn tại; đọc được nhưng không có quyền thao tác thì 403 `FORBIDDEN`.
+- **Dữ liệu phụ thuộc:** module khác đăng ký `registerProjectDependent({ kind, count, deleteAll, copy? })` ở `project-dependents.ts`. Xoá project (`dryRun` trả số lượng theo `kind`) xoá các dependent trước rồi mới xoá project, nên lỗi giữa chừng để lại project xoá lại được chứ không để dữ liệu mồ côi. Clone tạo project mới (secret mới, tên "X (copy)" cắt theo code point cho vừa giới hạn, tính vào hạn mức của người clone) rồi gọi `copy` của từng dependent; `copy` lỗi thì xoá bản clone dở. Dependent không có `copy` (thành viên) không đi theo bản clone.
+- **Hạn mức project** (`billing/plan-guard.ts`): chỉ đếm project user sở hữu, theo `limitsFor(plan).projects`; vượt thì 403 `PLAN_LIMIT_REACHED` kèm `details: { limit: "projects", max, used }`. Pro có `planExpiresAt` đã qua thì tính như Free (cả ở `GET /users/me`). Chống tạo song song vượt hạn mức không cần transaction: mỗi project giữ một `quotaSlot`, unique index `(owner, quotaSlot)`. Lượt tạo đọc các slot đang dùng, từ chối khi đủ hạn mức, rồi lấy slot trống nhỏ nhất; các lượt đọc cùng dữ liệu chọn cùng một slot nên chỉ một lượt insert thắng, các lượt khác đọc lại và kiểm lại.
+- **Bộ đếm tháng** (`billing/usage-counter-model.ts`, collection `usage_counters`): một document theo `ownerSub` + `yyyymm` (tháng theo lịch Asia/Saigon) với `mockRequests` và `proxyRequests`; `incrementUsage()` tăng nguyên tử và trả tổng mới cho mock runtime và proxy. `GET /api/v1/account/usage` trả gói đang áp dụng, project đã dùng và hai bộ đếm tháng so với hạn mức; `max: null` là không giới hạn (`Infinity` được map tường minh).
+- **Gán gói tạm thời** (chưa có billing): `MONGO_URI=… pnpm --filter @localman/api set-user-plan --username <u> --plan pro --expires YYYY-MM-DD` (`--expires` tính hết ngày đó theo giờ Saigon, ngày đã qua phải thêm `--force`; `--plan free` xoá hạn). Script chỉ in `sub`, `username`, `plan`, `planExpiresAt`.
+
+## Form quan tâm gói Pro
+
+Module `apps/api/src/modules/feedback/` (collection `feedback`, field `type`; giờ chỉ có `pro_interest`). Không có mail server: form chỉ lưu email để owner liên hệ sau.
+
+- `POST /api/v1/feedback/pro-interest` công khai; có phiên thì gắn `userSub`. Thứ tự kiểm:
+  - Rate limit: theo IP (IPv6 gộp theo /64, IPv4-mapped tính như IPv4) 5 lần mỗi 10 phút; người đã đăng nhập còn bị giới hạn theo tài khoản 3 lần mỗi 10 phút (cả hai phải qua). Đếm trong Mongo `rate_limit_windows` theo hash của khoá, tự hết hạn theo cửa sổ.
+  - Honeypot `website`: có giá trị thì trả 201 như thật nhưng không lưu, không báo.
+  - Cloudflare Turnstile cho khách khi `TURNSTILE_*` được cấu hình (production bắt buộc). Token phải được giải trên đúng host của `PUBLIC_URL` (bỏ qua với secret thử nghiệm của Cloudflare) và, nếu widget khai `action`, đúng `pro_interest`. Siteverify quá 5 giây hoặc lỗi 5xx thì 503 `TURNSTILE_UNAVAILABLE` (chặn chứ không cho qua); token thiếu hoặc sai thì 400 `TURNSTILE_FAILED`. Bắt buộc `consent: true`.
+- `source` thuộc danh sách cố định `PRO_INTEREST_SOURCES` trong `packages/shared`; giá trị lạ được lưu thành `other`.
+- Gộp theo email đã chuẩn hoá (unique index một phần trên `type: "pro_interest"`). Mọi lượt gửi được thêm vào `submissions[]` (giữ 20 lượt gần nhất, có cờ `applied`). Câu trả lời của bản ghi chỉ đổi khi cùng danh tính: bản ghi đã gắn tài khoản thì chỉ chính tài khoản đó sửa được (`userSub` không bao giờ bị thay); bản ghi chưa gắn thì khách khác ghi đè được (không phân biệt được khách), còn user đăng nhập chỉ nhận bản ghi đó khi email trùng email đã xác minh ở IdP. `emailMatchesAccount` ghi lại điều kiện xác minh này.
+- Sau khi lưu, bot Telegram của Localman báo nền về `OWNER_TELEGRAM_CHAT_ID` (mới, cập nhật hay chỉ lưu lịch sử; nhu cầu, quy mô, nguồn, email che dạng `ng***@gm***.com`; không có tên, ghi chú hay email đầy đủ). Tối đa 10 tin mỗi giờ; tin vượt được đếm và cộng thành "và X lượt khác" vào tin đầu tiên của cửa sổ kế tiếp.
+- Admin (`admin.*`, `guard: ownerOnly` theo `OWNER_SUBS`, `GET /users/me` có `isOwner`): thống kê, danh sách lọc theo nguồn, nhu cầu, đã liên hệ, đoạn email, phân trang (item có `emailMatchesAccount` và `submissions`); xuất CSV trả JSON `{ filename, csv }` (registry chỉ trả JSON, và agent MCP cũng đọc được), UTF-8 có BOM, ô bắt đầu bằng `= + - @`, tab hoặc CR được thêm `'` để chống formula injection; đánh dấu đã liên hệ; xoá theo yêu cầu (`dryRun`).
+
+## Cấu hình sản phẩm
+
+Ngoài biến nền tảng, `apps/api/src/config/feature-env.ts` đọc `MOCK_BASE_DOMAIN`, `OWNER_SUBS`, `OWNER_TELEGRAM_CHAT_ID`, `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `TURNSTILE_VERIFY_URL` (xem `.env.example`). Operation được khai báo tĩnh nên đọc các giá trị này qua `config/runtime-settings.ts`, do `main.ts` cài khi khởi động.
 
 ## Dữ liệu
 
