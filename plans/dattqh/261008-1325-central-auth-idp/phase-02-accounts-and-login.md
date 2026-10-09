@@ -57,7 +57,7 @@ Phần này **chuyển từ phase 02 cũ của Localman** sang. Quyết định 
 | T12 | Review cuối phase | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 OAuth app Google, GitHub và bot Telegram đã tạo sau khi user xác nhận; secret nằm trên VPS, không commit (bot Telegram `@auth_hoandat_bot` đã bật 2026-10-09; còn OAuth app Google và GitHub)
+- [x] T1 OAuth app Google (project `hoandat-auth`, đã publish production), GitHub (OAuth App id 3916221) và bot Telegram `@auth_hoandat_bot` đã tạo và bật trên .65 ngày 2026-10-09; secret nằm trong `.env` trên server và thư mục iCloud `auth-hoandat`, không commit
 - [x] T2 Model tài khoản, argon2id, mã khôi phục và claim `email_verified` đúng luật
 - [x] T3 Đăng nhập Google/GitHub và 3 nhánh liên kết chạy đúng
 - [x] T4 Liên kết Telegram, webhook và link reset qua bot chạy đúng TTL, dùng một lần
