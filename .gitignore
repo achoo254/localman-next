@@ -16,6 +16,5 @@ e2e/test-results/
 !.env.example
 !.env.production.example
 
-# Claude transient state
-.claude/session-state/
-.claude/agent-memory/
+# Claude local state and skills (ops skills name servers and credential entries; never pushed)
+.claude/
