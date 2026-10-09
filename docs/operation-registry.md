@@ -57,10 +57,26 @@ Thứ tự trong router: xác thực → check scope (401 `UNAUTHENTICATED`, 403
 - `handler` và `policy` nhận `ctx = { auth, dryRun }`, không phụ thuộc transport, nên MCP server dùng lại được nguyên handler.
 - Operation có `dryRun` nhận `?dryRun=true` qua HTTP; handler phải chỉ xem trước, không ghi dữ liệu. Gửi `?dryRun` tới operation không hỗ trợ thì bị trả 400, thay vì âm thầm ghi thật.
 - ZodError do handler tự ném (khi parse dữ liệu phía server) trả 500, không phải 400.
-- `resolveAuth` hiện trả `null` cho mọi request, nên operation có scope luôn trả 401. Phase 02 thay bằng xác thực qua IdP. `AuthContext` mở rộng được bằng declaration merging.
+- `resolveAuth` đọc cookie phiên (`__Host-lm_session`, hoặc `lm_session` khi `PUBLIC_URL` là http) và trả `{ subjectId: sub, scopes: ["user"], sessionId }`; không có phiên thì `null`. `user` (`USER_SCOPE` trong `apps/api/src/http/require-auth.ts`) là scope nội bộ của user đăng nhập bằng trình duyệt; operation của user khai `scopes: [USER_SCOPE]` và lấy `sub` bằng `requireSubject(ctx)`. Access token sắp hết hạn được refresh ngay trong bước này, user không thấy.
+- Mọi response dưới `/api/v1` có `Cache-Control: no-store`, vì dữ liệu là của từng user.
+- **CSRF:** mọi request không phải GET/HEAD/OPTIONS tới dashboard phải có `Origin` bằng `PUBLIC_URL`/`WEB_ORIGIN` hoặc `Sec-Fetch-Site: same-origin`, sai thì 403 `CSRF_REJECTED`. Kiểm trước khi parse body. Mock runtime nằm ở subdomain cùng site nên SameSite=Strict của cookie chưa đủ.
 
 ## Kiểm tra coverage trong CI
 
 `pnpm check:mcp-coverage` nạp registry của api và gọi `findMcpCoverageViolations`. Script exit 1 khi có operation thiếu MCP mà không có `exempt` kèm lý do, hoặc khi trùng `id`, route hay tên tool. Tên tool là bản snake_case của phần sau dấu chấm, ví dụ `mock.listUsers` thành `list_users` (theo cách đặt tên tool ở phase 17). Vì tên tool không có tiền tố toolset, động từ và danh từ phải duy nhất trên toàn registry.
 
 Để chạy với registry khác (dùng trong test): `pnpm check:mcp-coverage <đường-dẫn-registry>` hoặc đặt biến `MCP_COVERAGE_REGISTRY`.
+
+## Ngoại lệ: route giao thức ngoài registry
+
+Một số route nói giao thức (OpenID Connect) với trình duyệt hoặc với IdP, không phải API nghiệp vụ, nên viết tay và không có MCP tool. Chúng được liệt kê trong `apps/api/src/operations/protocol-routes.ts` kèm lý do; `pnpm check:mcp-coverage` in danh sách này sau dòng `MCP coverage OK`, và `protocol-routes.test.ts` kiểm danh sách khớp với route thật.
+
+| Route | Lý do miễn MCP |
+|---|---|
+| `GET /auth/login?returnTo=&prompt=create` | luồng redirect OIDC trên trình duyệt |
+| `GET /auth/callback` | luồng redirect OIDC trên trình duyệt |
+| `POST /auth/logout` | luồng redirect OIDC trên trình duyệt |
+| `POST /auth/backchannel-logout` | IdP gọi server-to-server (OIDC Back-Channel Logout), không phải thao tác của user; miễn kiểm CSRF vì logout token đã ký là bằng chứng xác thực |
+| `POST /internal/audit-events` | IdP đẩy sự kiện audit server-to-server (SET ký ES256 + HTTP Basic), không phải thao tác của user; miễn kiểm CSRF vì xác thực bằng Basic và chữ ký |
+
+Operation có `mcp: { exempt }` vì chỉ trình duyệt dùng được: `notifications.getVapidPublicKey`, `notifications.createPushSubscription`, `notifications.deletePushSubscription` (subscription Web Push do service worker tạo, agent không có push endpoint).

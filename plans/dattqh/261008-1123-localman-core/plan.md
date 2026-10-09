@@ -334,6 +334,12 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Localman không xin `offline_access`; refresh token gắn phiên IdP, đăng xuất ở IdP tự huỷ (Jev 0.94).
 - Giữ bot Telegram riêng của Localman, tách khỏi bot bảo mật của IdP; nhắc user bấm Start một lần (Jev 0.99).
 
+### Vòng 22: khi cook phase 02 (2026-10-09)
+- Cho phép tắt thông báo trong app theo từng loại sự kiện, đúng như prototype (Jev 0.89). Thay cho câu "thông báo trong app luôn có" ở phase 02; mặc định vẫn bật.
+- Web giữ React; để sau này đóng gói Tauri (desktop) và Capacitor (mobile), client gọi API qua một hàm `apiUrl()` có base URL cấu hình được (`VITE_API_BASE_URL`) và gom phần phụ thuộc trình duyệt vào `apps/web/src/platform/`. Bản native sau này cần client OIDC public (PKCE + deep link) ở IdP, API chấp nhận bearer token, và kênh push gốc (FCM/APNs) thay Web Push.
+- `/auth/*` và `/internal/audit-events` là route giao thức ngoài registry, liệt kê trong `apps/api/src/operations/protocol-routes.ts` để `check:mcp-coverage` in ra.
+- IdP hỗ trợ `prompt=create` (OIDC Prompt Create) để nút "Bắt đầu miễn phí" mở thẳng trang đăng ký.
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 

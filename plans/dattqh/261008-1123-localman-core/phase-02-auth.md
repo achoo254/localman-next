@@ -73,18 +73,18 @@ User không có mail server, nên mọi thông báo trước đây gửi qua ema
 | T9 | Review cuối phase, chú ý cookie flags, PKCE, xác minh logout token và nơi lưu refresh token | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 State và `data-id` của các màn auth và thông báo đã chốt theo prototype
-- [ ] T2 OIDC client, auth routes, session store và `require-auth` xong
-- [ ] T3 User model, `GET /api/users/me` và token exchange xong
-- [ ] T4 Module `notifications` với 3 kênh xong
-- [ ] T5 Web auth, route guard và header tối thiểu xong
-- [ ] T6 Service worker, chuông và trang cài đặt kênh xong
-- [ ] T7 Integration với IdP local pass
-- [ ] T8 Unit `notification-service` pass
-- [ ] T9 Review không còn finding chặn
-- [ ] Verification: đăng nhập, callback có cookie; `GET /api/users/me` trả đúng user
-- [ ] Verification: back-channel logout huỷ phiên; access token hết hạn thì tự refresh; token `aud` sai bị từ chối
-- [ ] Verification: thông báo đi đúng kênh, subscription 410 bị xoá, Telegram rate-limit gửi lại có backoff
-- [ ] Verification: `grep -ri "nodemailer\|smtp\|passwordHash" apps/` không ra kết quả
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
-- [ ] `pnpm check:mcp-coverage` pass
+- [x] T1 State và `data-id` của các màn auth và thông báo đã chốt theo prototype
+- [x] T2 OIDC client, auth routes, session store và `require-auth` xong
+- [x] T3 User model, `GET /api/users/me` và token exchange xong
+- [x] T4 Module `notifications` với 3 kênh xong
+- [x] T5 Web auth, route guard và header tối thiểu xong
+- [x] T6 Service worker, chuông và trang cài đặt kênh xong
+- [x] T7 Integration với IdP local pass (chạy với IdP thật `hoandat-auth` build và chạy trên máy dev, không cần Docker: 14/14 bước gồm đăng ký, đăng nhập, refresh, token exchange, back-channel và RP-initiated logout, audit event)
+- [x] T8 Unit `notification-service` pass
+- [x] T9 Review không còn finding chặn
+- [x] Verification: đăng nhập, callback có cookie; `GET /api/users/me` trả đúng user
+- [x] Verification: back-channel logout huỷ phiên; access token hết hạn thì tự refresh; token `aud` sai bị từ chối
+- [x] Verification: thông báo đi đúng kênh, subscription 410 bị xoá, Telegram rate-limit gửi lại có backoff
+- [x] Verification: `grep -ri "nodemailer\|smtp\|passwordHash" apps/` không ra kết quả
+- [x] `pnpm lint && pnpm typecheck && pnpm test` sạch
+- [x] `pnpm check:mcp-coverage` pass

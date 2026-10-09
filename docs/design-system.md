@@ -23,12 +23,14 @@ Localman dùng design system riêng, không lấy từ bên thứ ba. Prototype 
 
 ## Primitive UI
 
-`apps/web/src/components/ui/`: `button`, `icon-button`, `input`, `select`, `textarea`, `modal`, `modal-footer`, `dropdown-menu`, `badge`, `alert`, `tooltip`, `toast`, `form-field`.
+`apps/web/src/components/ui/`: `button`, `icon-button`, `input`, `select`, `textarea`, `modal`, `modal-footer`, `dropdown-menu`, `badge`, `alert`, `tooltip`, `toast`, `form-field`, `external-link`.
 
 - Nút bo 12px, hover scale 1.03, active 0.97, focus ring 2px offset 2.
 - Modal bo 16px, 4 size `sm`/`md`/`lg`/`xl`, fade và trượt từ -20px trong 200ms easing decelerate, footer dính đáy 2 cột.
 - Badge chữ mono uppercase. Icon Tabler, nét 1.5 áp chung bằng CSS.
 - Modal, dropdown, tooltip và toast dựng trên Radix primitives để có a11y; select dùng `<select>` native.
+- `DropdownMenuLabel` (trong `dropdown-menu`) là tiêu đề hoặc ghi chú không bấm được bên trong menu, ví dụ tên tài khoản hay "Chưa có thông báo nào". Không dùng `<p>` thường trong menu vì `role="menu"` chỉ nên chứa menuitem, label và separator.
+- `ExternalLink` mở trang của site khác (IdP, `t.me`) qua `openExternal` trong `src/platform/navigation.ts`: trên web là tab mới với `noopener,noreferrer`; click có phím bổ trợ giữ hành vi mặc định của trình duyệt. Muốn trông như nút thì truyền `className={buttonClassName(…)}`.
 - `FormField` truyền id, `aria-describedby`, `aria-invalid` và `required` qua context cho Input, Select và Textarea.
 - Wordmark `Localman` (`components/brand/wordmark.tsx`): JetBrains Mono đậm, chữ "Local" màu `--c-primary`.
 - Khối cấp trang, nút, input và link có `data-id` để trỏ bằng lời, phân cấp tối đa 3 bậc.
