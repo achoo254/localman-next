@@ -1,12 +1,13 @@
 import { OperationError } from "@localman/operations";
 import { limitsFor } from "@localman/shared";
 import type { Request, RequestHandler, Response } from "express";
+import { requestIdOf } from "../../http/request-log.js";
 import type { Logger } from "../../logger.js";
 import { effectivePlan } from "../billing/plan-guard.js";
 import type { StoredResource } from "../resources/resource-model.js";
 import { loadResources, parentKeyIn } from "../resources/resource-store.js";
 import { runEndpoint } from "./mock-endpoints.js";
-import { addressOf, maskSecret, requestIdOf } from "./mock-http.js";
+import { addressOf, maskSecret } from "./mock-http.js";
 import type { MockTarget } from "./mock-records.js";
 import type { MockLimiters } from "./rate-limit.js";
 import {
@@ -62,7 +63,7 @@ function routeNodes(resources: readonly StoredResource[]): RouteNodeOf[] {
 export interface MockRouterDeps {
 	readonly logger: Logger;
 	readonly meter: UsageMeter;
-	/** Charged with the bytes of every response body. */
+	/** Charged with the bytes of every response body or of the scan behind it. */
 	readonly limiters: MockLimiters;
 }
 
@@ -74,10 +75,15 @@ async function serve(
 ): Promise<void> {
 	const project = await resolveProject(address.secret);
 	if (!project) return notFound(res);
+	const projectId = project.id.toHexString();
+	// Read by the request log line.
+	res.locals.projectId = projectId;
 	const limit = limitsFor(
 		effectivePlan(project.ownerPlan),
 	).mockRequestsPerMonth;
-	if (!(await meter.admit(project.owner, limit))) return quotaExceeded(res);
+	if (!(await meter.admit(project.owner, limit, projectId))) {
+		return quotaExceeded(res);
+	}
 
 	const segments = stripPrefix(address.segments, project.prefix);
 	const resources = segments ? await loadResources(project.id) : [];
@@ -111,7 +117,11 @@ async function serve(
 	);
 	if (result.data === null) return notFound(res);
 	const rendered = renderResponse(endpoint.response, result.data, result.count);
-	limiters.chargeResponse(address.secret, rendered.bytes);
+	// A scan costs its reads even when little of it is sent.
+	limiters.chargeResponse(
+		address.secret,
+		Math.max(rendered.bytes, result.readBytes),
+	);
 	res.status(result.status).json(rendered.body);
 }
 

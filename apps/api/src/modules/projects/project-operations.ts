@@ -2,6 +2,7 @@ import { defineOperation } from "@localman/operations";
 import { projectInputSchema } from "@localman/shared";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import { takeOperationSlot } from "../../lib/operation-rate-limit.js";
 import { accessibleProjectsFilter } from "./project-access.js";
 import {
 	LIVE_PROJECT,
@@ -157,6 +158,7 @@ export const cloneProjectCopy = defineOperation({
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
 		const source = await requireProject(sub, "clone", input.projectId);
+		await takeOperationSlot("clone", sub, source._id.toHexString());
 		return toProjectView(await cloneProject(source, sub), sub);
 	},
 });

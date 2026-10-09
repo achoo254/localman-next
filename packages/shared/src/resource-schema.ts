@@ -10,6 +10,7 @@ import {
 	OBJECT_ID_PATTERN,
 	RESOURCE_NAME_MAX,
 	RESOURCE_NAME_PATTERN,
+	relationSourceOf,
 } from "./resource-constants.js";
 import {
 	endpointsInputSchema,
@@ -97,7 +98,21 @@ export const resourceFieldsSchema = z
 	.max(MAX_SCHEMA_FIELDS, `A resource has at most ${MAX_SCHEMA_FIELDS} fields`)
 	.superRefine((fields, ctx) => {
 		const seen = new Set<string>();
+		const sources = new Map<string, string>();
 		fields.forEach((field, index) => {
+			const source = relationSourceOf(field);
+			const first = source === null ? undefined : sources.get(source);
+			if (source !== null && first === undefined) {
+				sources.set(source, field.name);
+			} else if (first !== undefined) {
+				const isParent = field.type === "Parent Resource";
+				const verb = isParent ? "embeds" : "lists";
+				ctx.addIssue({
+					code: "custom",
+					path: [index, isParent ? "type" : "childId"],
+					message: `Field "${field.name}" ${verb} the same resource as "${first}"`,
+				});
+			}
 			if (field.name === OBJECT_ID_FIELD) {
 				ctx.addIssue({
 					code: "custom",

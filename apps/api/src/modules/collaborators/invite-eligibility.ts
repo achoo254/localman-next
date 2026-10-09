@@ -1,9 +1,4 @@
 import { OperationError } from "@localman/operations";
-import { runtimeSettings } from "../../config/runtime-settings.js";
-import {
-	clientIpBucket,
-	takeRateLimitSlot,
-} from "../../lib/rate-limit-windows.js";
 import { can } from "../projects/project-access.js";
 import {
 	type StoredProject,
@@ -18,6 +13,7 @@ import {
 } from "./collaborator-model.js";
 import { hashInviteToken } from "./invite-token.js";
 import { MagicLinkModel, type StoredMagicLink } from "./magic-link-model.js";
+import { wasRemovedByOwner } from "./member-removal-model.js";
 import { memberSeats } from "./member-seats.js";
 
 export const INELIGIBLE_REASONS = [
@@ -25,6 +21,7 @@ export const INELIGIBLE_REASONS = [
 	"EMAIL_NOT_VERIFIED",
 	"ALREADY_MEMBER",
 	"MEMBER_LIMIT",
+	"REMOVED_BY_OWNER",
 ] as const;
 export type IneligibleReason = (typeof INELIGIBLE_REASONS)[number];
 
@@ -53,34 +50,6 @@ export function expiryOf(token: ResolvedToken): Date | null {
 
 const inviteNotFound = (): OperationError =>
 	new OperationError(404, "INVITE_NOT_FOUND", "This invite link is not valid");
-
-/**
- * Counts one preview or accept per account and per client IP: tokens have
- * 256 bits, and the limit also keeps anyone from hammering the lookups.
- */
-export async function takeInviteTokenSlot(
-	sub: string,
-	clientIp: string | null,
-): Promise<void> {
-	const limits = runtimeSettings().inviteTokenRateLimit;
-	const userOk = await takeRateLimitSlot(
-		"invite-token:user",
-		sub,
-		limits.perUser,
-	);
-	const ipOk = await takeRateLimitSlot(
-		"invite-token:ip",
-		clientIpBucket(clientIp),
-		limits.perIp,
-	);
-	if (!userOk || !ipOk) {
-		throw new OperationError(
-			429,
-			"RATE_LIMITED",
-			"Too many invite links opened; try again later",
-		);
-	}
-}
 
 /**
  * The invitation or magic link a token belongs to. Unknown tokens, tokens
@@ -137,7 +106,8 @@ function assertUsable(token: ResolvedToken, now: Date): void {
 }
 
 /**
- * Who may accept an invitation (a magic link admits anyone signed in):
+ * Who may accept an invitation (a magic link admits anyone signed in but
+ * the members the owner removed, see `MemberRemovalModel`):
  * - an invitation bound to an account: that account only;
  * - an invitation to an email without an account: an account whose email
  *   the IdP verified (Google/GitHub) and that equals it, lower-cased. An
@@ -190,6 +160,8 @@ export async function ineligibility(
 	if (token.kind === "invite") {
 		const problem = await addresseeProblem(sub, token.row);
 		if (problem) return problem;
+	} else if (await wasRemovedByOwner(token.project._id, sub)) {
+		return "REMOVED_BY_OWNER";
 	}
 	const seats = await memberSeats(token.project, null, now);
 	const adding = await seatsToAdd(sub, token, now);

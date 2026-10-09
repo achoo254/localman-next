@@ -9,11 +9,11 @@ import {
 	removeCollaborator,
 } from "./collaborator-service.js";
 import { collaboratorView, toCollaboratorView } from "./collaborator-view.js";
+import { takeInviteLookupSlot } from "./invite-rate-limits.js";
 import { inviteCollaborator } from "./invite-service.js";
 import {
 	assertInvitable,
 	resolveInviteTarget,
-	takeInviteLookupSlot,
 	usernameOrEmailSchema,
 } from "./invitee-lookup.js";
 import { inviteeView, toInviteeView } from "./invitee-view.js";

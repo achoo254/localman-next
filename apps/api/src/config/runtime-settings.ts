@@ -13,6 +13,9 @@ export interface RateLimitWindow {
 	readonly windowMs: number;
 }
 
+/** Dashboard operations that load the shared process (see `heavyOperationRateLimit`). */
+export type HeavyOperation = "generate" | "replaceData" | "reset" | "clone";
+
 /** Settings that operations read at request time (they are declared statically). */
 export interface RuntimeSettings {
 	/** Mock URLs are `{secret}.{mockBaseDomain}`. */
@@ -45,7 +48,23 @@ export interface RuntimeSettings {
 		readonly perUser: RateLimitWindow;
 		readonly perIp: RateLimitWindow;
 	};
+	/**
+	 * Heavy dashboard operations per account and per project, both must
+	 * pass: they render, write and measure megabytes in the process that
+	 * also serves every mock API. Far above what a person clicks.
+	 */
+	readonly heavyOperationRateLimit: Readonly<
+		Record<
+			HeavyOperation,
+			{
+				readonly perUser: RateLimitWindow;
+				readonly perProject: RateLimitWindow;
+			}
+		>
+	>;
 }
+
+const perMinute = (max: number): RateLimitWindow => ({ max, windowMs: 60_000 });
 
 export const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = Object.freeze({
 	mockBaseDomain: "localman.hoandat.com",
@@ -60,6 +79,12 @@ export const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = Object.freeze({
 	inviteTokenRateLimit: {
 		perUser: { max: 30, windowMs: 10 * 60_000 },
 		perIp: { max: 60, windowMs: 10 * 60_000 },
+	},
+	heavyOperationRateLimit: {
+		generate: { perUser: perMinute(30), perProject: perMinute(60) },
+		replaceData: { perUser: perMinute(60), perProject: perMinute(120) },
+		reset: { perUser: perMinute(30), perProject: perMinute(60) },
+		clone: { perUser: perMinute(10), perProject: perMinute(20) },
 	},
 });
 

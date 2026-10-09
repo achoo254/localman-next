@@ -9,6 +9,7 @@ import {
 	type StoredCollaborator,
 	holdsSeat,
 } from "./collaborator-model.js";
+import { takeInviteLookupSlot } from "./invite-rate-limits.js";
 import {
 	INVITE_TTL_MS,
 	inviteLinkOf,
@@ -20,7 +21,6 @@ import {
 	assertInvitable,
 	isTargetsMembership,
 	resolveInviteTarget,
-	takeInviteLookupSlot,
 	targetRowsFilter,
 } from "./invitee-lookup.js";
 import { assertMemberSeats } from "./member-seats.js";

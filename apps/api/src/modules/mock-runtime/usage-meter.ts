@@ -4,6 +4,7 @@ import {
 	readUsage,
 	yyyymmOf,
 } from "../billing/usage-counter-model.js";
+import { ProjectActivity } from "./project-activity.js";
 import { type QuotaWarning, crossedThresholds } from "./quota-warnings.js";
 
 /** How often counted requests are written to `usage_counters`. */
@@ -45,6 +46,7 @@ export interface UsageMeterOptions {
  * Warnings at 80% and 100% are sent when a flush's `$inc` moves the
  * stored total across the threshold. Each `$inc` covers a disjoint
  * range of the counter, so every threshold is crossed once a month.
+ * Admitted requests are also counted per project (`ProjectActivity`).
  */
 export class UsageMeter {
 	/** Loaded months; only touched synchronously, so admits never race it. */
@@ -54,16 +56,19 @@ export class UsageMeter {
 	private flushing: Promise<void> | undefined;
 	private flushAgain: Promise<void> | undefined;
 	private readonly now: () => Date;
+	private readonly activity: ProjectActivity;
 
 	constructor(private readonly options: UsageMeterOptions) {
 		this.now = options.now ?? (() => new Date());
+		this.activity = new ProjectActivity(options.logger);
 	}
 
-	/**
-	 * Counts one request of `owner` and returns true, or returns false
-	 * without counting when the month's `limit` is used up.
-	 */
-	async admit(owner: string, limit: number | null): Promise<boolean> {
+	/** Counts a request of `owner` and `projectId`; false once `limit` is hit. */
+	async admit(
+		owner: string,
+		limit: number | null,
+		projectId?: string,
+	): Promise<boolean> {
 		const at = this.now();
 		const key = `${owner}:${yyyymmOf(at)}`;
 		const loaded = this.months.get(key) ?? (await this.load(key, owner, at));
@@ -76,6 +81,7 @@ export class UsageMeter {
 		const used = month.stored + month.sending + month.pending;
 		if (limit !== null && used >= limit) return false;
 		month.pending += 1;
+		if (projectId !== undefined) this.activity.record(projectId, at);
 		return true;
 	}
 
@@ -120,6 +126,7 @@ export class UsageMeter {
 	}
 
 	private async flushAll(): Promise<void> {
+		await this.activity.flush();
 		for (const month of [...this.months.values()]) {
 			if (month.pending > 0) await this.send(month);
 		}
@@ -182,10 +189,7 @@ export class UsageMeter {
 		this.timer.unref();
 	}
 
-	/**
-	 * Stops the timer and writes what is still pending (shutdown): waits
-	 * for a running flush, then flushes once more.
-	 */
+	/** Shutdown: stops the timer, then flushes (after a running flush). */
 	async stop(): Promise<void> {
 		if (this.timer) clearInterval(this.timer);
 		this.timer = undefined;

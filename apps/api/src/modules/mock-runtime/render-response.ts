@@ -76,7 +76,7 @@ export function usesCount(response: JsonValue): boolean {
 	return JSON.stringify(response).includes('"$count"');
 }
 
-function responseTooLarge(bytes: number): OperationError {
+export function responseTooLarge(bytes: number): OperationError {
 	return new OperationError(
 		422,
 		"RESPONSE_TOO_LARGE",

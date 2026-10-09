@@ -1,6 +1,4 @@
-import { OperationError } from "@localman/operations";
 import type { ClientSession } from "mongoose";
-import { PlanLimitError } from "../billing/plan-guard.js";
 import { inProjectTransaction } from "../projects/project-lock.js";
 import {
 	callerRows,
@@ -13,13 +11,21 @@ import {
 	holdsSeat,
 } from "./collaborator-model.js";
 import {
-	type IneligibleReason,
 	type ResolvedToken,
 	ineligibility,
 	resolveToken,
 } from "./invite-eligibility.js";
+import {
+	changedMeanwhile,
+	refusal,
+	removedByOwner,
+} from "./invite-refusals.js";
 import { MagicLinkModel } from "./magic-link-model.js";
-import { assertMemberSeats, memberSeats } from "./member-seats.js";
+import {
+	MemberRemovalModel,
+	wasRemovedByOwner,
+} from "./member-removal-model.js";
+import { assertMemberSeats } from "./member-seats.js";
 
 export interface AcceptResult {
 	readonly projectId: string;
@@ -27,40 +33,12 @@ export interface AcceptResult {
 	readonly alreadyMember: boolean;
 }
 
-const changedMeanwhile = (): OperationError =>
-	new OperationError(
-		409,
-		"CONFLICT",
-		"The invite link changed meanwhile; open it again",
-	);
-
-async function refusal(
-	reason: Exclude<IneligibleReason, "ALREADY_MEMBER">,
-	token: ResolvedToken,
-): Promise<OperationError> {
-	if (reason === "MEMBER_LIMIT") {
-		const seats = await memberSeats(token.project);
-		return new PlanLimitError("members", seats.max, seats.used);
-	}
-	if (reason === "EMAIL_NOT_VERIFIED") {
-		return new OperationError(
-			403,
-			"EMAIL_NOT_VERIFIED",
-			"Your email matches the invitation but is not verified; link Google or GitHub with this email, or sign in with the invited account",
-		);
-	}
-	return new OperationError(
-		403,
-		"NOT_INVITEE",
-		"This invitation is for another account",
-	);
-}
-
 /**
- * Accepts the invitation: the row becomes the caller's membership. The
- * caller's other pending rows (bound to them, or unbound to the email
- * their IdP verified) are dropped with their seats. The invitation already holds a seat, but the count is
- * checked again in case the owner's plan shrank since.
+ * Accepts the invitation: the row becomes the caller's membership and
+ * clears a removal mark. The caller's other pending rows (bound to them,
+ * or unbound to the email their IdP verified) are dropped with their
+ * seats. The invitation already holds a seat, but the count is checked
+ * again in case the owner's plan shrank since.
  */
 async function acceptInvitation(
 	sub: string,
@@ -91,6 +69,11 @@ async function acceptInvitation(
 		{ $set: { status: "accepted", inviteeUserId: sub, acceptedAt: now } },
 		{ session },
 	);
+	// The owner invited this account again: an earlier removal no longer holds.
+	await MemberRemovalModel.deleteOne(
+		{ projectId: token.project._id, userSub: sub },
+		{ session },
+	);
 }
 
 /**
@@ -113,6 +96,10 @@ async function joinWithMagicLink(
 		expiresAt: { $gt: now },
 	}).session(session);
 	if (!live) throw changedMeanwhile();
+	// The owner may have removed the caller since the eligibility check.
+	if (await wasRemovedByOwner(token.project._id, sub, session)) {
+		throw removedByOwner();
+	}
 	const [own, ...others] = await callerRows(
 		token.project._id,
 		sub,

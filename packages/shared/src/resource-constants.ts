@@ -53,6 +53,20 @@ export const RELATION_FIELD_TYPES: ReadonlySet<FieldType> = new Set([
 ]);
 
 /**
+ * Where a relation field reads its value: `parent`, or `child:<childId>`
+ * for a Child Resource field; `null` for stored fields. A resource keeps
+ * one field per source (a repeat would load and embed the same records
+ * again), and the mock runtime queries each source once.
+ */
+export function relationSourceOf(
+	field: Pick<ResourceFieldDefinition, "type" | "childId">,
+): string | null {
+	if (field.type === "Parent Resource") return "parent";
+	if (field.type === "Child Resource") return `child:${field.childId ?? ""}`;
+	return null;
+}
+
+/**
  * Generated, non-removable fields: `id` (Object ID) on every resource and
  * `{parent}Id` (Parent ID, see `parentKeyOf`) on a nested one. They are
  * not part of `schema`; user fields may not reuse their names.

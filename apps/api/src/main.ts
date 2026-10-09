@@ -27,6 +27,7 @@ import {
 	type NotificationService,
 	createNotificationService,
 } from "./modules/notifications/notification-service.js";
+import { TombstoneSweeper } from "./modules/projects/tombstone-sweeper.js";
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
@@ -40,9 +41,15 @@ function loadEnvOrExit(): Env {
 	}
 }
 
-function listen(app: Express, port: number): Promise<Server> {
+/** `host` undefined: every interface (Node's default). */
+function listen(
+	app: Express,
+	port: number,
+	host: string | undefined,
+): Promise<Server> {
 	return new Promise((resolve, reject) => {
-		const server = app.listen(port);
+		const server =
+			host === undefined ? app.listen(port) : app.listen(port, host);
 		server.once("error", reject);
 		server.once("listening", () => {
 			server.off("error", reject);
@@ -67,6 +74,7 @@ const usageMeter = new UsageMeter({
 	logger,
 	warn: notifyQuotaWarning(getNotificationService),
 });
+const tombstoneSweeper = new TombstoneSweeper(logger);
 
 async function shutdown(reason: string, exitCode: number): Promise<void> {
 	if (shuttingDown) return;
@@ -81,6 +89,7 @@ async function shutdown(reason: string, exitCode: number): Promise<void> {
 		await Promise.all(servers.map(closeServer));
 		// Write the mock requests counted since the last flush.
 		await usageMeter.stop();
+		await tombstoneSweeper.stop();
 		// Let background Web Push / Telegram deliveries (owner alerts
 		// included) finish their writes.
 		await notifications?.drain();
@@ -119,8 +128,11 @@ try {
 		allowedOrigins: [env.PUBLIC_URL, env.WEB_ORIGIN],
 		auth: createAuthModule(authSettingsFromEnv(env), logger),
 	});
-	servers.push(await listen(dashboard, env.DASHBOARD_PORT));
-	logger.info({ port: env.DASHBOARD_PORT }, "Dashboard API listening");
+	servers.push(await listen(dashboard, env.DASHBOARD_PORT, env.HOST));
+	logger.info(
+		{ host: env.HOST, port: env.DASHBOARD_PORT },
+		"Dashboard API listening",
+	);
 	usageMeter.start();
 	const mock = createMockApp({
 		logger,
@@ -133,8 +145,13 @@ try {
 			responseBytesPerSecret: env.MOCK_RESPONSE_BYTES_PER_SECOND,
 		},
 	});
-	servers.push(await listen(mock, env.MOCK_PORT));
-	logger.info({ port: env.MOCK_PORT }, "Mock runtime listening");
+	servers.push(await listen(mock, env.MOCK_PORT, env.HOST));
+	logger.info(
+		{ host: env.HOST, port: env.MOCK_PORT },
+		"Mock runtime listening",
+	);
+	// Finishes project deletions cut off by an error or a restart.
+	tombstoneSweeper.start();
 } catch (error) {
 	logger.fatal({ err: error }, "Startup failed");
 	await shutdown("startup failure", 1);

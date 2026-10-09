@@ -24,9 +24,19 @@ export interface EndpointResult {
 	 * Other endpoints count the route's collection when the template asks.
 	 */
 	readonly count: number | null;
+	/**
+	 * Bytes of records read to answer: a list scans its whole collection
+	 * before filtering, so this can exceed the response.
+	 */
+	readonly readBytes: number;
 }
 
-const notFound: EndpointResult = { status: 404, data: null, count: null };
+const notFound: EndpointResult = {
+	status: 404,
+	data: null,
+	count: null,
+	readBytes: 0,
+};
 
 async function collectionCount(
 	target: MockTarget,
@@ -50,11 +60,13 @@ export async function runEndpoint(
 		// Validate the query before touching the database.
 		const query = parseListQuery(req.query, queryFieldsOf(target));
 		if (!(await ancestorsExist(target))) return notFound;
-		const { items, total } = applyListQuery(await readRecords(target), query);
+		const { views, bytes } = await readRecords(target);
+		const { items, total } = applyListQuery(views, query);
 		return {
 			status: 200,
 			data: await withRelations(target, items),
 			count: total,
+			readBytes: bytes,
 		};
 	}
 	if (kind === "create") {
@@ -64,6 +76,7 @@ export async function runEndpoint(
 			status: 201,
 			data: created,
 			count: await collectionCount(target, wantsCount),
+			readBytes: 0,
 		};
 	}
 	if (recordId === null) return notFound;
@@ -86,5 +99,6 @@ export async function runEndpoint(
 		status: 200,
 		data,
 		count: await collectionCount(target, wantsCount),
+		readBytes: 0,
 	};
 }

@@ -5,8 +5,8 @@ import type { Logger } from "./logger.js";
 import {
 	addressOf,
 	mockCors,
+	mockRouteOf,
 	readAddress,
-	requestId,
 } from "./modules/mock-runtime/mock-http.js";
 import { createMockRouter } from "./modules/mock-runtime/mock-router.js";
 import {
@@ -34,11 +34,12 @@ export interface MockAppOptions {
 
 /**
  * Public mock runtime (port 4100) on `{secret}.{MOCK_BASE_DOMAIN}` and
- * `/m/{secret}`. Order: request id, CORS (preflights end here), project
- * address, rate limits (before the body is read), JSON body ≤ 100 KB,
- * then the mock router; requests without a project address fall through
- * to `/healthz` and the 404. Helmet lets other origins embed responses
- * (`Cross-Origin-Resource-Policy: cross-origin`), as a public API must.
+ * `/m/{secret}`. Order: request id and log line (secret masked), CORS
+ * (preflights end here), project address, rate limits (before the body
+ * is read), JSON body ≤ 100 KB, then the mock router; requests without
+ * a project address fall through to `/healthz` and the 404. Helmet lets
+ * other origins embed responses (`Cross-Origin-Resource-Policy:
+ * cross-origin`), as a public API must.
  * Building the app never opens a socket.
  */
 export function createMockApp(options: MockAppOptions): Express {
@@ -49,12 +50,8 @@ export function createMockApp(options: MockAppOptions): Express {
 		logger: options.logger,
 		trustProxy: options.trustProxy ?? false,
 		helmet: { crossOriginResourcePolicy: { policy: "cross-origin" } },
-		beforeBody: [
-			requestId,
-			mockCors,
-			readAddress,
-			mockRateLimit(limiters, addressOf),
-		],
+		describeRoute: mockRouteOf,
+		beforeBody: [mockCors, readAddress, mockRateLimit(limiters, addressOf)],
 		mountRoutes: (app) => {
 			app.use(
 				createMockRouter({

@@ -119,6 +119,8 @@ describe("sign-in start without the IdP", () => {
 			publicUrl: PUBLIC_URL,
 			sessionEncryptionKey: `k1:${Buffer.alloc(32, 2).toString("base64")}`,
 			loginLimitPerMinute: 2,
+			serverLimitPerMinute: 2,
+			audit: { clientId: "idp", clientSecret: "s".repeat(32) },
 		},
 		logger,
 	);
@@ -146,5 +148,38 @@ describe("sign-in start without the IdP", () => {
 			.get("/auth/login")
 			.set("x-forwarded-for", "198.51.100.4");
 		expect(otherClient.status).toBe(303);
+	});
+
+	it("rate limits forged callbacks per IP like sign-in starts", async () => {
+		const callback = () =>
+			request(app)
+				.get("/auth/callback?state=forged&code=x")
+				.set("x-forwarded-for", "203.0.113.8");
+		for (let i = 0; i < 2; i += 1) {
+			expect((await callback()).headers.location).toBe(
+				"/?authError=login_expired",
+			);
+		}
+		expect((await callback()).headers.location).toBe(
+			"/?authError=rate_limited",
+		);
+	});
+
+	it.each([
+		["/auth/backchannel-logout", "application/x-www-form-urlencoded", "x=1"],
+		["/internal/audit-events", "application/secevent+jwt", "x"],
+	])("rate limits %s per IP", async (path, type, body) => {
+		const post = () =>
+			request(app)
+				.post(path)
+				.set("x-forwarded-for", "203.0.113.9")
+				.set("content-type", type)
+				.send(body);
+		for (let i = 0; i < 2; i += 1) {
+			expect((await post()).status).not.toBe(429);
+		}
+		const limited = await post();
+		expect(limited.status).toBe(429);
+		expect(limited.body.error.code).toBe("RATE_LIMITED");
 	});
 });

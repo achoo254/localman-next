@@ -1,8 +1,6 @@
 import { OperationError } from "@localman/operations";
 import type { Types } from "mongoose";
 import { z } from "zod";
-import { runtimeSettings } from "../../config/runtime-settings.js";
-import { takeRateLimitSlot } from "../../lib/rate-limit-windows.js";
 import { CASE_INSENSITIVE_COLLATION, UserModel } from "../users/user-model.js";
 import { CollaboratorModel } from "./collaborator-model.js";
 
@@ -32,21 +30,6 @@ export type InviteTarget =
 			readonly email: string | null;
 	  }
 	| { readonly kind: "email"; readonly email: string };
-
-/**
- * Counts one account lookup of `ownerSub`. Invitations and the dialog's
- * lookups share one budget, so neither can enumerate accounts.
- */
-export async function takeInviteLookupSlot(ownerSub: string): Promise<void> {
-	const window = runtimeSettings().inviteRateLimit;
-	if (!(await takeRateLimitSlot("invite-lookup", ownerSub, window))) {
-		throw new OperationError(
-			429,
-			"RATE_LIMITED",
-			"Too many invitations or lookups; try again later",
-		);
-	}
-}
 
 interface StoredAccount {
 	sub: string;
@@ -91,6 +74,30 @@ async function accountByEmail(email: string): Promise<StoredAccount | null> {
 }
 
 /**
+ * The account with this username. Usernames are copied from the IdP and
+ * not unique here (a stale copy may keep a name another account took
+ * since), so two matches answer 409 `AMBIGUOUS_USERNAME` rather than
+ * binding the invitation to whichever comes first.
+ */
+async function accountByUsername(
+	username: string,
+): Promise<StoredAccount | null> {
+	const users = await UserModel.find({ username })
+		.collation(CASE_INSENSITIVE_COLLATION)
+		.select(ACCOUNT_FIELDS)
+		.limit(2)
+		.lean<StoredAccount[]>();
+	if (users.length > 1) {
+		throw new OperationError(
+			409,
+			"AMBIGUOUS_USERNAME",
+			"Several accounts use this username; invite by email instead",
+		);
+	}
+	return users[0] ?? null;
+}
+
+/**
  * Resolves what the owner typed, by exact case-insensitive match served
  * by the `username`/`email` indexes. `null`: a username nobody has.
  */
@@ -98,11 +105,7 @@ export async function resolveInviteTarget(
 	typed: string,
 ): Promise<InviteTarget | null> {
 	if (!typed.includes("@") || typed.startsWith("@")) {
-		const username = typed.replace(/^@/, "");
-		const user = await UserModel.findOne({ username })
-			.collation(CASE_INSENSITIVE_COLLATION)
-			.select(ACCOUNT_FIELDS)
-			.lean<StoredAccount>();
+		const user = await accountByUsername(typed.replace(/^@/, ""));
 		return user
 			? { kind: "account", account: toAccount(user), email: null }
 			: null;

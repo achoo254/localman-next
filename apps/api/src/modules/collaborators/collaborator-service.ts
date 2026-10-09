@@ -2,6 +2,7 @@ import { OperationError } from "@localman/operations";
 import { z } from "zod";
 import { toJsonLimit } from "../billing/plan-guard.js";
 import { can } from "../projects/project-access.js";
+import { inProjectTransaction } from "../projects/project-lock.js";
 import type { StoredProject } from "../projects/project-model.js";
 import { UserModel } from "../users/user-model.js";
 import {
@@ -15,6 +16,7 @@ import {
 	toCollaboratorView,
 	toCollaboratorViews,
 } from "./collaborator-view.js";
+import { MemberRemovalModel } from "./member-removal-model.js";
 import { memberSeats } from "./member-seats.js";
 
 export const collaboratorList = z.object({
@@ -73,8 +75,10 @@ const OBJECT_ID = /^[a-f\d]{24}$/i;
 /**
  * Removes a member or cancels an invitation (owner), or leaves the
  * project (a collaborator removing their own membership). Access is read
- * from Mongo on every request, so the person loses it at once. Rows a
- * collaborator cannot see (pending invitations) answer 404.
+ * from Mongo on every request, so the person loses it at once. A member
+ * the owner removes is marked (`MemberRemovalModel`) so the magic link
+ * cannot bring them back. Rows a collaborator cannot see (pending
+ * invitations) answer 404.
  */
 export async function removeCollaborator(
 	project: StoredProject,
@@ -100,6 +104,20 @@ export async function removeCollaborator(
 		);
 	}
 	const view = await toCollaboratorView(row, { showEmails: isOwner });
-	if (!dryRun) await CollaboratorModel.deleteOne({ _id: row._id });
+	if (dryRun) return view;
+	const removedSub = row.status === "accepted" ? row.inviteeUserId : null;
+	if (!isOwner || !removedSub) {
+		await CollaboratorModel.deleteOne({ _id: row._id });
+		return view;
+	}
+	// Under the project lock, so no mark outlives a project deletion.
+	await inProjectTransaction(project._id, async (session) => {
+		await MemberRemovalModel.updateOne(
+			{ projectId: project._id, userSub: removedSub },
+			{ $set: { removedBy: callerSub, removedAt: new Date() } },
+			{ upsert: true, session },
+		);
+		await CollaboratorModel.deleteOne({ _id: row._id }, { session });
+	});
 	return view;
 }

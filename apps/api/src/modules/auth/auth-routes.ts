@@ -25,14 +25,16 @@ export interface AuthRoutesOptions {
 	readonly cookies: AuthCookies;
 	readonly publicUrl: string;
 	readonly logger: Logger;
-	/** `GET /auth/login` per client IP and minute (default 20). */
+	/** `/auth/login` and `/auth/callback` per client IP and minute (default 20 each). */
 	readonly loginLimitPerMinute?: number;
+	/** `POST /auth/backchannel-logout` per client IP and minute. */
+	readonly serverLimitPerMinute?: number;
 }
 
 /**
  * Sign-in starts are cheap to request but each stores a transaction and
- * may hit the IdP's discovery: cap them per client IP (`trust proxy` makes
- * that the real client behind nginx).
+ * may hit the IdP's discovery, and each callback consumes one: cap both
+ * per client IP (`trust proxy` makes that the real client behind nginx).
  */
 function loginRateLimit(limit: number): RequestHandler {
 	return rateLimit({
@@ -99,6 +101,7 @@ export function createAuthRouter(options: AuthRoutesOptions): Router {
 	router.get(
 		AUTH_PATHS.callback,
 		noStore,
+		loginRateLimit(options.loginLimitPerMinute ?? 20),
 		asyncHandler(async (req, res) => {
 			const transaction = await consumeLoginTransaction(
 				readCookie(req, cookies.login.name),
@@ -188,6 +191,7 @@ export function createAuthRouter(options: AuthRoutesOptions): Router {
 		}),
 	);
 
-	registerBackchannelLogout(router, { oidc, sessions, logger });
+	const limitPerMinute = options.serverLimitPerMinute;
+	registerBackchannelLogout(router, { oidc, sessions, logger, limitPerMinute });
 	return router;
 }

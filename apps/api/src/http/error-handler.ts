@@ -1,6 +1,7 @@
 import { OperationError } from "@localman/operations";
 import type { ErrorRequestHandler, RequestHandler } from "express";
 import type { Logger } from "../logger.js";
+import { requestIdOf } from "./request-log.js";
 
 /** body-parser / raw-body error types mapped to client-safe errors. */
 const BODY_ERRORS: Readonly<
@@ -85,8 +86,10 @@ export function createErrorHandler(logger: Logger): ErrorRequestHandler {
 			res.status(known.status).json(known.toBody());
 			return;
 		}
+		// No path: the request log line with the same id carries the
+		// normalized route (a mock path may hold the project secret).
 		logger.error(
-			{ err, method: req.method, path: req.path },
+			{ err, method: req.method, requestId: requestIdOf(res) },
 			"Unhandled request error",
 		);
 		res

@@ -54,6 +54,17 @@ describe("per-secret budgets", () => {
 		expect(fresh.status).toBe(200);
 	});
 
+	it("charges the collection a list scans, even when nothing matches", async () => {
+		const project = await projectWithUsers();
+		const mock = kit.client(project.secret, {
+			limits: { responseBytesPerSecret: 1_000 },
+		});
+		const responses = await run(() => mock.get("/users?search=khong-co-ai"), 8);
+		expect(responses[0]?.status).toBe(200);
+		expect(responses[0]?.body).toEqual([]);
+		expect(responses.map((res) => res.status)).toContain(429);
+	});
+
 	it("limits writes separately from reads", async () => {
 		const project = await projectWithUsers();
 		const mock = kit.client(project.secret, { limits: { writesPerSecret: 2 } });

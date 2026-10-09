@@ -10,8 +10,8 @@ import {
 	ineligibility,
 	inviterOf,
 	resolveToken,
-	takeInviteTokenSlot,
 } from "./invite-eligibility.js";
+import { takeInviteTokenSlot } from "./invite-rate-limits.js";
 import { inviteTokenSchema } from "./invite-token.js";
 
 const BROWSER_ONLY =

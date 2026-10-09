@@ -1,10 +1,12 @@
 import { registerProjectDependent } from "../projects/project-dependents.js";
 import { CollaboratorModel } from "./collaborator-model.js";
 import { MagicLinkModel } from "./magic-link-model.js";
+import { MemberRemovalModel } from "./member-removal-model.js";
 
 // Registered at module load; collaborator-operations imports this module,
 // so any process serving the registry cascades members and the magic link
-// on project deletion. Neither has `copy`: a clone gets no members.
+// (with the marks of removed members) on project deletion. Neither has
+// `copy`: a clone gets no members.
 // Writes to both run under the project lock and check the tombstone, so
 // nothing is added after this cleanup.
 registerProjectDependent({
@@ -12,6 +14,7 @@ registerProjectDependent({
 	count: (projectId) => CollaboratorModel.countDocuments({ projectId }),
 	deleteAll: async (projectId) => {
 		await CollaboratorModel.deleteMany({ projectId });
+		await MemberRemovalModel.deleteMany({ projectId });
 	},
 });
 

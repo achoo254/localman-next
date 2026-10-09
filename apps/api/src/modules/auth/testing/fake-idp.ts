@@ -26,6 +26,11 @@ export interface FakeIdpOptions {
 	readonly localmanPublicUrl: string;
 	readonly backchannelLogoutUri: string;
 	readonly account: FakeAccount;
+	/**
+	 * Account a sign-in completes as, picked per interaction request. Unset:
+	 * always `account`. The E2E stack signs several users in through one IdP.
+	 */
+	readonly accountOf?: (req: IncomingMessage) => FakeAccount;
 }
 
 export interface FakeIdp {
@@ -39,8 +44,8 @@ export interface FakeIdp {
 function configuration(
 	options: FakeIdpOptions,
 	signingKey: JWK,
+	accounts: ReadonlyMap<string, FakeAccount>,
 ): Configuration {
-	const { account } = options;
 	return {
 		clients: [
 			{
@@ -70,27 +75,28 @@ function configuration(
 			telegram: ["telegram_chat_id", "telegram_username"],
 		},
 		scopes: ["openid", "offline_access", "profile", "email", "telegram"],
-		findAccount: async (_ctx, sub) =>
-			sub === account.sub
-				? {
-						accountId: sub,
-						// The chat is released at userinfo only, as by the real IdP.
-						claims: async (use) => ({
-							sub,
-							preferred_username: account.username,
-							name: account.name,
-							email: account.email,
-							email_verified: false,
-							telegram_linked: account.telegram !== undefined,
-							...(use === "userinfo" && account.telegram
-								? {
-										telegram_chat_id: account.telegram.chatId,
-										telegram_username: account.telegram.username,
-									}
-								: {}),
-						}),
-					}
-				: undefined,
+		findAccount: async (_ctx, sub) => {
+			const account = accounts.get(sub);
+			if (!account) return undefined;
+			return {
+				accountId: sub,
+				// The chat is released at userinfo only, as by the real IdP.
+				claims: async (use) => ({
+					sub,
+					preferred_username: account.username,
+					name: account.name,
+					email: account.email,
+					email_verified: false,
+					telegram_linked: account.telegram !== undefined,
+					...(use === "userinfo" && account.telegram
+						? {
+								telegram_chat_id: account.telegram.chatId,
+								telegram_username: account.telegram.username,
+							}
+						: {}),
+				}),
+			};
+		},
 		responseTypes: ["code"],
 		pkce: { required: () => true },
 		interactions: { url: async (_ctx, i) => `/interaction/${i.uid}` },
@@ -149,9 +155,12 @@ export async function startFakeIdp(options: FakeIdpOptions): Promise<FakeIdp> {
 		alg: "ES256",
 		use: "sig",
 	};
+	const accounts = new Map<string, FakeAccount>([
+		[options.account.sub, options.account],
+	]);
 	const provider = new Provider(
 		options.issuer,
-		configuration(options, signingKey),
+		configuration(options, signingKey, accounts),
 	);
 	provider.registerGrantType(TOKEN_EXCHANGE_GRANT, exchangeToken, [
 		"subject_token",
@@ -167,7 +176,9 @@ export async function startFakeIdp(options: FakeIdpOptions): Promise<FakeIdp> {
 	const callback = provider.callback();
 	options.server.on("request", (req: IncomingMessage, res: ServerResponse) => {
 		if (req.url?.startsWith("/interaction/")) {
-			autoCompleteInteraction(provider, options.account.sub, req, res).catch(
+			const account = options.accountOf?.(req) ?? options.account;
+			accounts.set(account.sub, account);
+			autoCompleteInteraction(provider, account.sub, req, res).catch(
 				(error: unknown) => {
 					res.statusCode = 500;
 					res.end(String(error));

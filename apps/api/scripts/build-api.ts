@@ -18,9 +18,19 @@ const external = Object.keys(manifest.dependencies).filter(
 );
 
 rmSync(distDir, { recursive: true, force: true });
+// One self-contained file per entry: the server (`dist/main.mjs`, run by
+// pm2) and the operator command `dist/cleanup-abandoned-projects.mjs`, run
+// on the server with the same env file.
 await build({
-	entryPoints: [resolve(apiRoot, "src/main.ts")],
-	outfile: resolve(distDir, "main.mjs"),
+	entryPoints: {
+		main: resolve(apiRoot, "src/main.ts"),
+		"cleanup-abandoned-projects": resolve(
+			apiRoot,
+			"scripts/cleanup-abandoned-projects.ts",
+		),
+	},
+	outdir: distDir,
+	outExtension: { ".js": ".mjs" },
 	bundle: true,
 	platform: "node",
 	target: "node22",

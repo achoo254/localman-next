@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
+import { UserModel } from "../users/user-model.js";
 import {
 	BOB,
 	OWNER,
@@ -71,5 +72,19 @@ describe("POST /projects/:projectId/collaborators/lookup", () => {
 		// Another owner keeps their own budget.
 		const bobProject = await createProject(BOB);
 		expect((await lookup(BOB, bobProject, "dave")).status).toBe(200);
+	});
+
+	it("refuses a username two accounts share instead of picking one", async () => {
+		const projectId = await createProject(OWNER);
+		// A stale copy of an IdP account that later took the name, in other case.
+		await UserModel.create({ sub: "acc_old_dave", username: "Dave" });
+		for (const send of [lookup, invite]) {
+			const res = await send(OWNER, projectId, "@dave");
+			expect(res.status).toBe(409);
+			expect(res.body.error.code).toBe("AMBIGUOUS_USERNAME");
+		}
+		expect((await invite(OWNER, projectId, "dave@example.com")).status).toBe(
+			201,
+		);
 	});
 });

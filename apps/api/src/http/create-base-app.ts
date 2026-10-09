@@ -4,6 +4,7 @@ import helmet, { type HelmetOptions } from "helmet";
 import { getDbState } from "../db/connect-mongo.js";
 import type { Logger } from "../logger.js";
 import { createErrorHandler, notFoundHandler } from "./error-handler.js";
+import { type DescribeRoute, requestLog } from "./request-log.js";
 
 export const JSON_BODY_LIMIT = `${MAX_JSON_BODY_KB}kb`;
 
@@ -41,11 +42,13 @@ export interface BaseAppOptions {
 	 * claim `/healthz` on hosts it serves and pass the rest on.
 	 */
 	readonly mountRoutes?: (app: Express) => void;
+	/** Route logged for a request instead of the matched template (masked). */
+	readonly describeRoute?: DescribeRoute;
 }
 
 /**
- * Shared shell of both HTTP servers: security headers, JSON body limit,
- * `/healthz`, 404 and the error handler.
+ * Shared shell of both HTTP servers: request id and log line, security
+ * headers, JSON body limit, `/healthz`, 404 and the error handler.
  */
 export function createBaseApp({
 	logger,
@@ -54,10 +57,12 @@ export function createBaseApp({
 	routeBodyLimits = [],
 	helmet: helmetOptions,
 	mountRoutes,
+	describeRoute,
 }: BaseAppOptions): Express {
 	const app = express();
 	app.disable("x-powered-by");
 	app.set("trust proxy", trustProxy);
+	app.use(requestLog(logger, describeRoute));
 	app.use(helmet(helmetOptions));
 	for (const middleware of beforeBody) app.use(middleware);
 	for (const { method, path, limit, before = [] } of routeBodyLimits) {

@@ -25,8 +25,10 @@ export interface AuthSettings {
 	readonly publicUrl: string;
 	/** `kid:base64key[,…]`; see token-cipher.ts. */
 	readonly sessionEncryptionKey: string;
-	/** `GET /auth/login` per client IP and minute (default 20). */
+	/** `/auth/login` and `/auth/callback` per client IP and minute (default 20 each). */
 	readonly loginLimitPerMinute?: number;
+	/** Back-channel logouts and audit pushes per client IP and minute (default 600 each). */
+	readonly serverLimitPerMinute?: number;
 	/** Basic credentials of the IdP's audit pushes; no route without them. */
 	readonly audit?: BasicCredentials;
 }
@@ -91,6 +93,7 @@ export function createAuthModule(
 		publicUrl: settings.publicUrl,
 		logger,
 		loginLimitPerMinute: settings.loginLimitPerMinute,
+		serverLimitPerMinute: settings.serverLimitPerMinute,
 	});
 	// Both authenticate otherwise (signed token, Basic + SET). The audit path
 	// is exempt even when unconfigured so it answers 404, not 403.
@@ -104,6 +107,7 @@ export function createAuthModule(
 			credentials: settings.audit,
 			audience: new URL(INTERNAL_PATHS.auditEvents, settings.publicUrl).href,
 			logger,
+			limitPerMinute: settings.serverLimitPerMinute,
 		});
 	}
 

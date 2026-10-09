@@ -2,6 +2,7 @@ import { defineOperation } from "@localman/operations";
 import { MAX_GENERATE_COUNT, MAX_RECORDS_PER_RESOURCE } from "@localman/shared";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import { takeOperationSlot } from "../../lib/operation-rate-limit.js";
 import { requireProject } from "../projects/project-service.js";
 import {
 	generateResourceData,
@@ -24,6 +25,8 @@ const changesOutput = z.object({
 	/** Resources whose record count changes (or is regenerated). */
 	changes: z.array(dataChange),
 });
+const idOf = (project: { _id: { toHexString(): string } }): string =>
+	project._id.toHexString();
 const generateCount = z.number().int().min(0).max(MAX_GENERATE_COUNT);
 const NESTED_NOTE =
 	"A nested resource spreads its records at random over the parent's records and needs parent data first (409 PARENT_HAS_NO_DATA). Children of a resource left empty are reset; children pointing at parent records that no longer exist get a random existing one.";
@@ -46,11 +49,9 @@ export const generateResourceDataOperation = defineOperation({
 	mcp: true,
 	dryRun: true,
 	handler: async (ctx, input) => {
-		const project = await requireProject(
-			requireSubject(ctx),
-			"editResources",
-			input.projectId,
-		);
+		const sub = requireSubject(ctx);
+		const project = await requireProject(sub, "editResources", input.projectId);
+		if (!ctx.dryRun) await takeOperationSlot("generate", sub, idOf(project));
 		const changes = await generateResourceData(
 			project,
 			input.resourceId,
@@ -78,11 +79,9 @@ export const generateAllResourceData = defineOperation({
 	mcp: true,
 	dryRun: true,
 	handler: async (ctx, input) => {
-		const project = await requireProject(
-			requireSubject(ctx),
-			"editResources",
-			input.projectId,
-		);
+		const sub = requireSubject(ctx);
+		const project = await requireProject(sub, "editResources", input.projectId);
+		if (!ctx.dryRun) await takeOperationSlot("generate", sub, idOf(project));
 		const changes = await generateAllData(project, input.count, ctx.dryRun);
 		return { dryRun: ctx.dryRun, changes };
 	},
@@ -103,11 +102,9 @@ export const resetAllResourceData = defineOperation({
 	mcp: true,
 	dryRun: true,
 	handler: async (ctx, input) => {
-		const project = await requireProject(
-			requireSubject(ctx),
-			"editResources",
-			input.projectId,
-		);
+		const sub = requireSubject(ctx);
+		const project = await requireProject(sub, "editResources", input.projectId);
+		if (!ctx.dryRun) await takeOperationSlot("reset", sub, idOf(project));
 		return {
 			dryRun: ctx.dryRun,
 			changes: await resetAllData(project, ctx.dryRun),
@@ -176,11 +173,10 @@ export const replaceResourceDataOperation = defineOperation({
 	dryRun: true,
 	bodyLimit: RESOURCE_DATA_BODY_LIMIT,
 	handler: async (ctx, input) => {
-		const project = await requireProject(
-			requireSubject(ctx),
-			"editResources",
-			input.projectId,
-		);
+		const sub = requireSubject(ctx);
+		const project = await requireProject(sub, "editResources", input.projectId);
+		// A dry run validates the whole body too, so it counts.
+		await takeOperationSlot("replaceData", sub, idOf(project));
 		const changes = await replaceResourceData(
 			project,
 			input.resourceId,

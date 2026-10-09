@@ -41,12 +41,12 @@ export function createQueryCoercer(input: OperationInputSchema): QueryCoercer {
 		if (kind) kinds.set(name, kind);
 	}
 
-	return (query) => {
-		const coerced: Record<string, unknown> = {};
-		for (const [name, raw] of Object.entries(query)) {
-			const kind = kinds.get(name);
-			coerced[name] = kind ? coerceValue(raw, kind) : raw;
-		}
-		return coerced;
-	};
+	// fromEntries defines own properties: a `__proto__` key stays data.
+	return (query) =>
+		Object.fromEntries(
+			Object.entries(query).map(([name, raw]) => {
+				const kind = kinds.get(name);
+				return [name, kind ? coerceValue(raw, kind) : raw];
+			}),
+		);
 }

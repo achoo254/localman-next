@@ -93,7 +93,8 @@ const WRITE_METHODS: ReadonlySet<string> = new Set([
  * The limits of one mock app. Requests are admitted by IP, by secret, by
  * secret for writes (each write takes the project lock), and while the
  * secret's response bytes of the current second stay under budget; the
- * router charges the bytes it sends (`chargeResponse`). A response that
+ * router charges the bytes it sends, or the bytes a list scanned when
+ * that is more (`chargeResponse`). A response that
  * starts under budget is sent whole, so a second may exceed it by one
  * response (at most `MAX_RESPONSE_BYTES`).
  */

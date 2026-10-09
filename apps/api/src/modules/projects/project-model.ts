@@ -22,6 +22,12 @@ const projectSchema = new Schema(
 		 * (and its quota slot) goes last. Groundwork for a 30-day trash.
 		 */
 		deletingAt: { type: Date, default: null },
+		/**
+		 * Mock runtime activity, added in batches by `recordProjectRequests`
+		 * (every few seconds, never per request). `null`: no request yet.
+		 */
+		lastRequestAt: { type: Date, default: null },
+		mockRequests: { type: Number, default: 0 },
 	},
 	{ collection: "projects", timestamps: true, versionKey: false },
 );
@@ -38,6 +44,8 @@ export interface StoredProject {
 	readonly owner: string;
 	readonly quotaSlot: number;
 	readonly deletingAt?: Date | null;
+	readonly lastRequestAt?: Date | null;
+	readonly mockRequests?: number;
 	readonly createdAt: Date;
 }
 
@@ -57,4 +65,35 @@ export async function findProjectById(
 	if (!OBJECT_ID.test(id)) return null;
 	const filter = includeDeleting ? { _id: id } : { _id: id, ...LIVE_PROJECT };
 	return ProjectModel.findOne(filter).lean<StoredProject>();
+}
+
+/** Mock requests a process counted for one project since its last flush. */
+export interface ProjectRequests {
+	readonly projectId: string;
+	readonly count: number;
+	readonly lastAt: Date;
+}
+
+/**
+ * Adds counted mock requests to their projects in one bulk write. Only
+ * live projects are touched (never re-creating a deleted one), and
+ * `updatedAt` stays as it is: traffic is not an edit of the project.
+ */
+export async function recordProjectRequests(
+	batch: readonly ProjectRequests[],
+): Promise<void> {
+	if (batch.length === 0) return;
+	await ProjectModel.bulkWrite(
+		batch.map(({ projectId, count, lastAt }) => ({
+			updateOne: {
+				filter: { _id: projectId, ...LIVE_PROJECT },
+				update: {
+					$inc: { mockRequests: count },
+					$max: { lastRequestAt: lastAt },
+				},
+				timestamps: false,
+			},
+		})),
+		{ ordered: false },
+	);
 }

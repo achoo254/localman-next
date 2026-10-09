@@ -19,6 +19,18 @@ const envSchema = z
 		NODE_ENV: z
 			.enum(["development", "test", "production"])
 			.default("development"),
+		/**
+		 * Interface both servers listen on. Production defaults to loopback
+		 * so only nginx on the same host reaches them; unset elsewhere keeps
+		 * Node's default (every interface).
+		 */
+		HOST: z
+			.string()
+			.regex(
+				/^(?:[A-Za-z0-9.-]+|[0-9A-Fa-f:.]+)$/,
+				"must be an IP address or a host name",
+			)
+			.optional(),
 		DASHBOARD_PORT: port.default(4000),
 		MOCK_PORT: port.default(4100),
 		MONGO_URI: z
@@ -127,7 +139,11 @@ const envSchema = z
 				});
 			}
 		}
-	});
+	})
+	.transform((env) => ({
+		...env,
+		HOST: env.HOST ?? (env.NODE_ENV === "production" ? "127.0.0.1" : undefined),
+	}));
 
 export type Env = z.output<typeof envSchema>;
 

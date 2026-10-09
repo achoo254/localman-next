@@ -1,6 +1,10 @@
 import { OperationError } from "@localman/operations";
 import express, { type RequestHandler, type Router } from "express";
 import { asyncHandler } from "../../http/async-handler.js";
+import {
+	DEFAULT_SERVER_LIMIT_PER_MINUTE,
+	ipRateLimit,
+} from "../../http/ip-rate-limit.js";
 import { noStore } from "../../http/no-store.js";
 import type { Logger } from "../../logger.js";
 import { INTERNAL_PATHS } from "../../operations/protocol-routes.js";
@@ -34,6 +38,8 @@ export interface AuditEventsRouteOptions {
 	/** The absolute URL of this endpoint: the SET's expected `aud`. */
 	readonly audience: string;
 	readonly logger: Logger;
+	/** Calls per client IP and minute (default `DEFAULT_SERVER_LIMIT_PER_MINUTE`). */
+	readonly limitPerMinute?: number;
 }
 
 function invalidEvent(message: string): OperationError {
@@ -69,6 +75,7 @@ export function registerAuditEventsRoute(
 	router.post(
 		INTERNAL_PATHS.auditEvents,
 		noStore,
+		ipRateLimit(options.limitPerMinute ?? DEFAULT_SERVER_LIMIT_PER_MINUTE),
 		requireIdpCredentials(options.credentials),
 		express.text({ type: SET_MEDIA_TYPE, limit: BODY_LIMIT }),
 		asyncHandler(async (req, res) => {

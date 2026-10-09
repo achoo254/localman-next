@@ -77,6 +77,33 @@ describe("schema fields", () => {
 		}));
 		expect(resourceFieldsSchema.safeParse(many).success).toBe(false);
 	});
+
+	it("allows one relation field per source", () => {
+		const childId = "a".repeat(24);
+		const otherChild = "b".repeat(24);
+		const result = resourceFieldsSchema.safeParse([
+			{ name: "posts", type: "Child Resource", childId },
+			{ name: "comments", type: "Child Resource", childId: otherChild },
+			{ name: "user", type: "Parent Resource" },
+			{ name: "posts2", type: "Child Resource", childId },
+			{ name: "owner", type: "Parent Resource" },
+		]);
+		expect(result.success).toBe(false);
+		expect(
+			result.success
+				? []
+				: result.error.issues.map(({ path, message }) => ({ path, message })),
+		).toEqual([
+			{
+				path: [3, "childId"],
+				message: 'Field "posts2" lists the same resource as "posts"',
+			},
+			{
+				path: [4, "type"],
+				message: 'Field "owner" embeds the same resource as "user"',
+			},
+		]);
+	});
 });
 
 describe("templates and endpoints", () => {

@@ -1,31 +1,13 @@
-import { randomUUID } from "node:crypto";
-import type { Request, RequestHandler, Response } from "express";
+import type { Request, RequestHandler } from "express";
 import { runtimeSettings } from "../../config/runtime-settings.js";
+import { REQUEST_ID_HEADER } from "../../http/request-log.js";
 import { type MockAddress, readMockAddress } from "./resolve-project.js";
 
-export const REQUEST_ID_HEADER = "X-Localman-Request-Id";
 const ALLOWED_METHODS = "GET,POST,PUT,PATCH,DELETE,OPTIONS";
 /** A comma-separated list of header names (RFC 9110 tokens). */
 const HEADER_NAMES =
 	/^[\w!#$%&'*+.^`|~-]+(?:[ \t]*,[ \t]*[\w!#$%&'*+.^`|~-]+)*$/;
 const MAX_REQUESTED_HEADERS = 1024;
-
-/**
- * A random id on every response, for support requests; kept in
- * `res.locals` so error logs carry the id the client saw.
- */
-export const requestId: RequestHandler = (_req, res, next) => {
-	const id = randomUUID();
-	res.locals.requestId = id;
-	res.setHeader(REQUEST_ID_HEADER, id);
-	next();
-};
-
-/** The id `requestId` gave this response, if any. */
-export function requestIdOf(res: Response): string | undefined {
-	const id: unknown = res.locals.requestId;
-	return typeof id === "string" ? id : undefined;
-}
 
 /**
  * Open CORS for a public API: any origin (`*`, so browsers never send
@@ -81,4 +63,21 @@ export function addressOf(req: Request): MockAddress | undefined {
 /** The first characters of a secret, enough to correlate logs. */
 export function maskSecret(secret: string): string {
 	return `${secret.slice(0, 4)}…`;
+}
+
+/**
+ * The path logged for a mock request: the raw path without its query,
+ * with the secret masked when it is in the path (`/m/{secret}/…`; a
+ * secret in the Host is never logged). `null` when the request addresses
+ * no project, so the matched template (`/healthz`) or "unmatched" is used.
+ */
+export function mockRouteOf(req: Request): string | null {
+	const address = addressOf(req);
+	if (!address) return null;
+	const raw = req.path.split("/").slice(1);
+	if (raw.at(-1) === "") raw.pop();
+	// The path fallback adds `m` and the secret before the segments.
+	if (raw.length !== address.segments.length + 2) return req.path;
+	const rest = raw.slice(2).map((segment) => `/${segment}`);
+	return `/m/${maskSecret(address.secret)}${rest.join("")}`;
 }

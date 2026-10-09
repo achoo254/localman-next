@@ -1,6 +1,10 @@
 import { OperationError } from "@localman/operations";
 import express, { type Router } from "express";
 import { asyncHandler } from "../../http/async-handler.js";
+import {
+	DEFAULT_SERVER_LIMIT_PER_MINUTE,
+	ipRateLimit,
+} from "../../http/ip-rate-limit.js";
 import { noStore } from "../../http/no-store.js";
 import type { Logger } from "../../logger.js";
 import { AUTH_PATHS } from "../../operations/protocol-routes.js";
@@ -20,6 +24,8 @@ export interface BackchannelLogoutOptions {
 	readonly oidc: OidcClient;
 	readonly sessions: SessionStore;
 	readonly logger: Logger;
+	/** Calls per client IP and minute (default `DEFAULT_SERVER_LIMIT_PER_MINUTE`). */
+	readonly limitPerMinute?: number;
 }
 
 function invalidToken(): OperationError {
@@ -44,6 +50,7 @@ export function registerBackchannelLogout(
 	router.post(
 		AUTH_PATHS.backchannelLogout,
 		noStore,
+		ipRateLimit(options.limitPerMinute ?? DEFAULT_SERVER_LIMIT_PER_MINUTE),
 		express.urlencoded({ extended: false, limit: FORM_LIMIT }),
 		asyncHandler(async (req, res) => {
 			// The spec mandates a form post; a JSON body is not a logout request.

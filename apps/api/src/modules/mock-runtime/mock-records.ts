@@ -4,6 +4,7 @@ import {
 	RELATION_FIELD_TYPES,
 } from "@localman/shared";
 import type { ClientSession, Types } from "mongoose";
+import { recordBytes } from "../resources/data-size.js";
 import {
 	RecordModel,
 	type StoredRecord,
@@ -68,13 +69,25 @@ export async function ancestorsExist(
 	return found.every((hit) => hit !== null);
 }
 
-/** The route's records as users see them, in insertion order. */
-export async function readRecords(target: MockTarget): Promise<JsonObject[]> {
+/**
+ * The route's records as users see them, in insertion order, and the
+ * bytes read for them. A flat route reads the whole resource, whose size
+ * is stored (`dataBytes`); a nested one reads one parent's records,
+ * measured here.
+ */
+export async function readRecords(
+	target: MockTarget,
+): Promise<{ views: JsonObject[]; bytes: number }> {
 	const records = await RecordModel.find(collectionFilter(target))
 		.select("id parentRecordId data")
 		.sort({ _id: 1 })
 		.lean<StoredRecord[]>();
-	return records.map((record) => toRecordView(record, target.parentKey));
+	const stored =
+		target.ancestors.length === 0 ? target.resource.dataBytes : undefined;
+	const bytes =
+		stored ?? records.reduce((sum, record) => sum + recordBytes(record), 0);
+	const views = records.map((record) => toRecordView(record, target.parentKey));
+	return { views, bytes };
 }
 
 /** One record of the route's collection, or `null`. */
