@@ -9,7 +9,7 @@ Localman dùng design system riêng, không lấy từ bên thứ ba. Prototype 
 - **Nhãn soft** (chữ trên nền tint như badge, method chip): dùng token `*-text`, ở light là step 12 để đạt ≥ 4.5:1.
 - **Chữ success/warning ở light** chỉ đặt trên `--c-surface`; trên `--c-bg` chúng chỉ đạt khoảng 4.4:1.
 - **Dark mode:** `@media (prefers-color-scheme: dark)` với guard `:root:not([data-theme="light"])`, cùng khối `:root[data-theme="dark"]`. Hai khối phải giống hệt nhau; `check:tokens` kiểm điều này.
-- **Font:** Inter cho UI, JetBrains Mono cho code, URL, method và wordmark. Tự host qua `@fontsource`; import theo weight để có đủ subset vietnamese kèm `unicode-range`.
+- **Font:** Inter cho UI, JetBrains Mono cho code, URL, method và wordmark. Tự host file của `@fontsource`, nhưng khai báo `@font-face` riêng (`styles/fonts-inter.css`, `styles/fonts-jetbrains-mono.css`): chỉ subset latin, latin-ext, vietnamese, và range latin-ext bỏ các chữ tiếng Việt đã có trong subset vietnamese (đ, ơ, ư, ă…). Dùng CSS theo weight của fontsource thì mỗi trang tiếng Việt tải cả hai file, nặng thêm khoảng 36 kB mỗi weight Inter. Font không được nhúng base64 vào CSS (`assetsInlineLimit`).
 - **Khác:** radius 4/8/12/16/24, motion 150/200/300ms với easing standard, decelerate và accelerate. Khi `prefers-reduced-motion`, mọi duration về 1ms.
 
 ## Tailwind
@@ -40,7 +40,7 @@ Localman dùng design system riêng, không lấy từ bên thứ ba. Prototype 
 
 `apps/web/src/components/ui/`: `button`, `icon-button`, `input`, `select`, `textarea`, `modal`, `modal-footer`, `confirm-modal`, `card`, `empty-state`, `dropdown-menu`, `badge`, `alert`, `tooltip`, `toast`, `form-field`, `external-link`, `json-editor`.
 
-- Nút bo 12px, hover scale 1.03, active 0.97, focus ring 2px offset 2.
+- Nút bo 12px, hover scale 1.03, active 0.97, focus ring 2px offset 2. Ba size: `sm`, `md` (mặc định) và `lg` (cao 48px, chữ 16px) chỉ cho CTA cấp trang như hero và dải cuối landing.
 - Modal bo 16px, 4 size `sm`/`md`/`lg`/`xl`, fade và trượt từ -20px trong 200ms easing decelerate, footer dính đáy 2 cột.
 - Badge chữ mono uppercase. Icon Tabler, nét 1.5 áp chung bằng CSS.
 - Modal, dropdown, tooltip và toast dựng trên Radix primitives để có a11y; select dùng `<select>` native.
@@ -66,6 +66,7 @@ Localman dùng design system riêng, không lấy từ bên thứ ba. Prototype 
 - **Lệch spec có chủ đích:** spec phase 06 ghi cột 150px, hàng 50px (số của mockapi.io, nơi node chỉ là tên và thanh generator). Localman giữ hình học của prototype vì prototype là nguồn sự thật UI: node là thẻ có thêm hàng Sửa / Dữ liệu / Xoá, nên cột 150 sẽ làm các thẻ rộng 208 chồng lên nhau. Thanh generator giữ đúng 106×25.
 - Thanh generator 106×25 (`generator-bar.tsx`): rê chuột hiện số 0–100 tại con trỏ, click sinh đúng số đó; bàn phím ←/→ (↓/↑) bước 10, Home/End, Enter để sinh, Escape bỏ giá trị chờ; `role="slider"` với `aria-valuenow/min/max`. Fill gradient từ `--c-primary`, chạy 200ms (`--dur-base`), tắt khi `prefers-reduced-motion`. Resource con chưa sinh được khi cha chưa có dữ liệu: nền gạch chéo và `aria-disabled`.
 - Nút Sửa / Dữ liệu / Xoá của node hiện khi hover hoặc focus, luôn hiện trên màn cảm ứng. Canvas nằm trong `overflow-x-auto` nên cây rộng cuộn trong thẻ, trang không cuộn ngang ở 375px.
+- Chế độ `mode="demo"` (landing, khối "Quan hệ giữa resources"): hình học `DEMO_TREE_GEOMETRY` (node 156×44, cột 200, hàng 60, gốc (64, 12)), node chỉ có tên và hai chấm nối, không link, không thanh generator, không hàng thao tác; `data-id` là `demo-node-{name}` và `demo-node-root`. Thao tác lồng chỉ đổi state phía client, không gọi API. Hai chế độ dùng chung `tree-canvas-frame.tsx` (hint, đường nối, thanh root) và `node-connectors.tsx`.
 - Chip URL ở thẻ API endpoint: secret dùng tone `--c-text-muted`, prefix `--c-accent`, `:endpoint` `--c-primary` (utility `tint-soft`), mỗi chip focus được để đọc tooltip.
 
 ## Kiểm tra

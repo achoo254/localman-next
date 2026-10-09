@@ -54,18 +54,18 @@ Làm landing giới thiệu sản phẩm, có demo tương tác dùng lại canv
 | T9 | Review cuối phase, kiểm không quảng cáo keyword khi cờ chưa bật | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 Bố cục, copy và state landing đã chốt theo prototype
-- [ ] T2 Cờ tính năng, hero, so sánh, Live Mock Sync và bảng giá xong
-- [ ] T3 Các demo và khối "Và nhiều hơn" xong
-- [ ] T4 Landing đã ghép, SEO và header đầy đủ
-- [ ] T5 Form góp ý, inbox admin và footer xong
-- [ ] T6 Ba trang docs xong
-- [ ] T7 Snapshot, demo và Lighthouse đạt
-- [ ] T8 Copy, token và brand không còn vi phạm high
-- [ ] T9 Review không còn finding chặn
-- [ ] Verification: bảng so sánh render từ `competitor-facts.ts` và có ngày cập nhật; thẻ giá khớp `plan-limits` (snapshot)
-- [ ] Verification: relations demo cập nhật đúng endpoint với 4 cấu hình cây mẫu
-- [ ] Verification: Lighthouse landing có Performance và Accessibility ≥ 90
-- [ ] Verification: copy landing đã rà theo `docs/ux-writing.md`
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
-- [ ] `pnpm check:mcp-coverage` pass
+- [x] T1 Bố cục, copy và state landing đã chốt theo prototype
+- [x] T2 Cờ tính năng, hero, so sánh, Live Mock Sync và bảng giá xong
+- [x] T3 Các demo và khối "Và nhiều hơn" xong
+- [x] T4 Landing đã ghép, SEO và header đầy đủ
+- [x] T5 Form góp ý, inbox admin và footer xong
+- [x] T6 Ba trang docs xong
+- [x] T7 Snapshot, demo và Lighthouse đạt
+- [x] T8 Copy, token và brand không còn vi phạm high
+- [x] T9 Review không còn finding chặn
+- [x] Verification: bảng so sánh render từ `competitor-facts.ts` và có ngày cập nhật; thẻ giá khớp `plan-limits` (snapshot)
+- [x] Verification: relations demo cập nhật đúng endpoint với 4 cấu hình cây mẫu
+- [x] Verification: Lighthouse landing có Performance và Accessibility ≥ 90
+- [x] Verification: copy landing đã rà theo `docs/ux-writing.md`
+- [x] `pnpm lint && pnpm typecheck && pnpm test` sạch
+- [x] `pnpm check:mcp-coverage` pass
