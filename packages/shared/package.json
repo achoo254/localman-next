@@ -5,6 +5,7 @@
 	"type": "module",
 	"exports": {
 		".": "./src/index.ts",
+		"./api-client": "./src/api-client/index.ts",
 		"./constants": "./src/constants.ts",
 		"./endpoint-behavior": "./src/endpoint-behavior.ts",
 		"./faker-catalog": "./src/faker-method-catalog.ts",

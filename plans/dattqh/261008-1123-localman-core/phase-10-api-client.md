@@ -199,6 +199,9 @@ Không thêm Zustand, Dexie, Firebase, `react-resizable-panels`, meta-package `q
 ### Checklist
 - [x] T1 Xia xong, danh sách file đã chốt và khớp prototype (`plans/dattqh/reports/xia-phase-10-api-client-port.md`)
 - [ ] T2 Logic thuần đã port kèm test gốc pass
+  - [x] T2a Nền `packages/shared/src/api-client/` (2026-10-09): model request/response, zod draft và envelope proxy, nội suy có cờ secret, preparer (auth 5 kiểu, body 5 dạng), host local, URL tunnel, header cấm/hop-by-hop, hằng giới hạn; subpath `@localman/shared/api-client`; 216 test pass. Chưa thêm `quickjs-emscripten-core` và `@jitl/quickjs-wasmfile-release-sync` vào `packages/shared/package.json` (đụng `pnpm-lock.yaml`, để T2c làm khi được duyệt)
+  - [ ] T2b Import, export, 16 snippet
+  - [ ] T2c Sandbox QuickJS
 - [ ] T3 Proxy và `ssrf-guard` xong
 - [ ] T4 History và draft phía server xong
 - [ ] T5 UI request builder, tab và scripts xong
