@@ -112,6 +112,12 @@ export interface OperationSpec<
 	readonly mcp: McpExposure;
 	/** Required (true) for destructive operations. */
 	readonly dryRun?: boolean;
+	/**
+	 * Largest JSON body in bytes this route accepts, when it needs more
+	 * than the server-wide default (e.g. a whole resource's records). The
+	 * server mounts a parser with this limit for this route only.
+	 */
+	readonly bodyLimit?: number;
 	readonly successStatus?: SuccessStatus;
 	handler(
 		ctx: OperationContext,

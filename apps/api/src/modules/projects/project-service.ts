@@ -3,9 +3,12 @@ import { PROJECT_NAME_MAX, type ProjectInput } from "@localman/shared";
 import { customAlphabet } from "nanoid";
 import { isDuplicateKeyError } from "../../db/mongo-errors.js";
 import { assertProjectQuota, currentPlanOf } from "../billing/plan-guard.js";
+import { MAX_QUOTA_ATTEMPTS, lowestFreeSlots } from "../billing/quota-slots.js";
 import { type ProjectAction, can } from "./project-access.js";
 import { projectDependents } from "./project-dependents.js";
+import { inProjectTransaction } from "./project-lock.js";
 import {
+	LIVE_PROJECT,
 	ProjectModel,
 	type StoredProject,
 	findProjectById,
@@ -21,19 +24,7 @@ export const newProjectSecret = customAlphabet(
 	24,
 );
 
-/**
- * Every losing racer of a slot retries; each round lets at least one
- * create through, so only a burst this large from one owner can exhaust it.
- */
-const MAX_CREATE_ATTEMPTS = 25;
 const COPY_SUFFIX = " (copy)";
-
-function lowestFreeSlot(taken: readonly number[]): number {
-	const used = new Set(taken);
-	let slot = 0;
-	while (used.has(slot)) slot += 1;
-	return slot;
-}
 
 /**
  * Creates a project owned by `ownerSub` within the plan's project quota.
@@ -48,7 +39,7 @@ export async function createOwnedProject(
 	input: ProjectInput,
 ): Promise<StoredProject> {
 	const plan = await currentPlanOf(ownerSub);
-	for (let attempt = 0; attempt < MAX_CREATE_ATTEMPTS; attempt += 1) {
+	for (let attempt = 0; attempt < MAX_QUOTA_ATTEMPTS; attempt += 1) {
 		const owned = await ProjectModel.find({ owner: ownerSub })
 			.select("quotaSlot")
 			.lean<{ quotaSlot: number }[]>();
@@ -59,7 +50,10 @@ export async function createOwnedProject(
 				prefix: input.prefix,
 				secret: newProjectSecret(),
 				owner: ownerSub,
-				quotaSlot: lowestFreeSlot(owned.map((p) => p.quotaSlot)),
+				quotaSlot: lowestFreeSlots(
+					owned.map((p) => p.quotaSlot),
+					1,
+				)[0],
 			});
 			return created.toObject<StoredProject>();
 		} catch (error) {
@@ -84,7 +78,7 @@ export async function requireProject(
 	action: ProjectAction,
 	projectId: string,
 ): Promise<StoredProject> {
-	const project = await findProjectById(projectId);
+	const project = await findProjectById(projectId, action === "delete");
 	const user = { sub: userSub };
 	if (!project || !(await can(user, "read", project))) {
 		throw new OperationError(404, "NOT_FOUND", "Project not found");
@@ -130,12 +124,28 @@ export async function countDependents(
 }
 
 /**
- * Deletes dependents first, then the project: a failure midway leaves a
- * project that can be deleted again rather than orphaned data.
+ * Deletes a project in three steps, safe to repeat:
+ * 1. under the project lock, set the `deletingAt` tombstone: from then on
+ *    every read and lock-checked write treats the project as gone, and a
+ *    write racing this step either commits first or retries into 404;
+ * 2. let every dependent remove its data (`deleteAll` is idempotent);
+ * 3. delete the document, which frees the project's quota slot.
+ * If step 2 fails, the tombstone stays and a repeated DELETE resumes.
  */
 export async function deleteProjectCascade(
 	project: StoredProject,
 ): Promise<void> {
+	await inProjectTransaction(
+		project._id,
+		async (session) => {
+			await ProjectModel.updateOne(
+				{ _id: project._id, ...LIVE_PROJECT },
+				{ $set: { deletingAt: new Date() } },
+				{ session },
+			);
+		},
+		{ allowDeletedProject: true },
+	);
 	for (const dependent of projectDependents()) {
 		await dependent.deleteAll(project._id);
 	}

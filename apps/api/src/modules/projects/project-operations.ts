@@ -3,7 +3,11 @@ import { projectInputSchema } from "@localman/shared";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
 import { accessibleProjectsFilter } from "./project-access.js";
-import { ProjectModel, type StoredProject } from "./project-model.js";
+import {
+	LIVE_PROJECT,
+	ProjectModel,
+	type StoredProject,
+} from "./project-model.js";
 import {
 	cloneProject,
 	countDependents,
@@ -33,9 +37,10 @@ export const listProjects = defineOperation({
 	mcp: true,
 	handler: async (ctx) => {
 		const sub = requireSubject(ctx);
-		const projects = await ProjectModel.find(
-			await accessibleProjectsFilter({ sub }),
-		)
+		const projects = await ProjectModel.find({
+			...(await accessibleProjectsFilter({ sub })),
+			...LIVE_PROJECT,
+		})
 			.sort({ createdAt: 1, _id: 1 })
 			.lean<StoredProject[]>();
 		return { items: await toProjectViews(projects, sub) };

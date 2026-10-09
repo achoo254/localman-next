@@ -12,6 +12,7 @@
 		"set-user-plan": "tsx --env-file-if-exists=../../.env scripts/set-user-plan.ts"
 	},
 	"dependencies": {
+		"@faker-js/faker": "^10.6.0",
 		"@localman/operations": "workspace:*",
 		"@localman/shared": "workspace:*",
 		"express": "^5.2.1",

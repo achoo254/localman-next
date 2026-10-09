@@ -18,21 +18,21 @@ const BOB = "acc_bob";
 
 useDashboardTestDb(() => ({ mockBaseDomain: "mock.test" }));
 
-/** In-memory stand-in for resources: rows keyed by project id. */
-const resources = new Map<string, string[]>();
+/** In-memory stand-in for a dependent module: rows keyed by project id. */
+const stubRows = new Map<string, string[]>();
 let unregister: () => void = () => undefined;
 beforeEach(async () => {
-	resources.clear();
+	stubRows.clear();
 	unregister = registerProjectDependent({
-		kind: "resources",
+		kind: "stub-rows",
 		count: async (id: Types.ObjectId) =>
-			resources.get(id.toHexString())?.length ?? 0,
+			stubRows.get(id.toHexString())?.length ?? 0,
 		deleteAll: async (id) => {
-			resources.delete(id.toHexString());
+			stubRows.delete(id.toHexString());
 		},
 		copy: async (from, to) => {
-			resources.set(to.toHexString(), [
-				...(resources.get(from.toHexString()) ?? []),
+			stubRows.set(to.toHexString(), [
+				...(stubRows.get(from.toHexString()) ?? []),
 			]);
 		},
 	});
@@ -133,13 +133,13 @@ describe("project operations", () => {
 
 	it("clone with a new secret, a (copy) name and the dependents' data", async () => {
 		const source = await createAs(ALICE, "Shop");
-		resources.set(source.id, ["users", "orders"]);
+		stubRows.set(source.id, ["users", "orders"]);
 		const res = await as(ALICE).send("post", `/projects/${source.id}/clone`);
 		expect(res.status).toBe(201);
 		expect(res.body.name).toBe("Shop (copy)");
 		expect(res.body.secret).not.toBe(source.secret);
 		expect(res.body.id).not.toBe(source.id);
-		expect(resources.get(res.body.id)).toEqual(["users", "orders"]);
+		expect(stubRows.get(res.body.id)).toEqual(["users", "orders"]);
 		// The clone is editable as is: its name passes validation.
 		const edit = await as(ALICE).send("put", `/projects/${res.body.id}`, {
 			name: res.body.name,
@@ -149,7 +149,7 @@ describe("project operations", () => {
 
 	it("preview a delete with dryRun, then cascade it", async () => {
 		const project = await createAs(ALICE);
-		resources.set(project.id, ["users"]);
+		stubRows.set(project.id, ["users"]);
 		const preview = await as(ALICE).send(
 			"delete",
 			`/projects/${project.id}?dryRun=true`,
@@ -159,14 +159,18 @@ describe("project operations", () => {
 			id: project.id,
 			deleted: false,
 			dryRun: true,
-			dependents: [{ kind: "resources", count: 1 }],
+			dependents: [
+				{ kind: "resources", count: 0 },
+				{ kind: "records", count: 0 },
+				{ kind: "stub-rows", count: 1 },
+			],
 		});
 		expect(await ProjectModel.countDocuments()).toBe(1);
 
 		const real = await as(ALICE).send("delete", `/projects/${project.id}`);
 		expect(real.body).toMatchObject({ deleted: true, dryRun: false });
 		expect(await ProjectModel.countDocuments()).toBe(0);
-		expect(resources.has(project.id)).toBe(false);
+		expect(stubRows.has(project.id)).toBe(false);
 	});
 
 	it("answer 404 to another user for every action, without changing anything", async () => {

@@ -134,4 +134,23 @@ describe("defineOperation", () => {
 			}),
 		).toThrow(/no JSON Schema form/);
 	});
+	it("accepts a positive byte bodyLimit on methods with a body only", () => {
+		expect(defineOperation(validSpec({ bodyLimit: 2_000_000 })).bodyLimit).toBe(
+			2_000_000,
+		);
+		for (const bodyLimit of [0, -1, 1.5]) {
+			expect(() => defineOperation(validSpec({ bodyLimit }))).toThrow(
+				/bodyLimit/,
+			);
+		}
+		expect(() =>
+			defineOperation(
+				validSpec({
+					method: "GET",
+					annotations: { readOnly: true, destructive: false, idempotent: true },
+					bodyLimit: 1_000,
+				}),
+			),
+		).toThrow(/needs a method that has a body/);
+	});
 });

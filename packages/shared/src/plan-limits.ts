@@ -11,6 +11,15 @@
  */
 export type PlanId = "free" | "pro";
 
+/**
+ * Size caps of mock data, the same for every plan (Jev 0.60): a record
+ * holds at most 32 KB and a resource's records together at most 2 MB of
+ * compact JSON. They stop a template or a pasted array from turning a
+ * resource into a data store or a memory bomb.
+ */
+export const MAX_RECORD_BYTES = 32 * 1024;
+export const MAX_RESOURCE_BYTES = 2 * 1024 * 1024;
+
 export interface PlanLimits {
 	readonly projects: number;
 	readonly resources: number;

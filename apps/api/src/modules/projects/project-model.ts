@@ -15,6 +15,13 @@ const projectSchema = new Schema(
 		/** IdP `sub` of the owner. */
 		owner: { type: String, required: true },
 		quotaSlot: { type: Number, required: true, min: 0 },
+		/**
+		 * Tombstone: set when deletion starts, before dependents are
+		 * cleaned up. A project with it is gone for every read and write
+		 * except a repeated DELETE, which resumes the cleanup; the document
+		 * (and its quota slot) goes last. Groundwork for a 30-day trash.
+		 */
+		deletingAt: { type: Date, default: null },
 	},
 	{ collection: "projects", timestamps: true, versionKey: false },
 );
@@ -30,15 +37,24 @@ export interface StoredProject {
 	readonly secret: string;
 	readonly owner: string;
 	readonly quotaSlot: number;
+	readonly deletingAt?: Date | null;
 	readonly createdAt: Date;
 }
 
+/** Matches projects that are not being deleted (absent field included). */
+export const LIVE_PROJECT = { deletingAt: null } as const;
+
 const OBJECT_ID = /^[a-f\d]{24}$/i;
 
-/** Loads a project by id; a malformed id is simply not found. */
+/**
+ * Loads a project by id; a malformed id is simply not found, and so is a
+ * project being deleted unless `includeDeleting` (only DELETE resumes).
+ */
 export async function findProjectById(
 	id: string,
+	includeDeleting = false,
 ): Promise<StoredProject | null> {
 	if (!OBJECT_ID.test(id)) return null;
-	return ProjectModel.findById(id).lean<StoredProject>();
+	const filter = includeDeleting ? { _id: id } : { _id: id, ...LIVE_PROJECT };
+	return ProjectModel.findOne(filter).lean<StoredProject>();
 }

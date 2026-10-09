@@ -20,6 +20,9 @@ import {
 	getVapidPublicKey,
 } from "../modules/notifications/push-operations.js";
 import { projectOperations } from "../modules/projects/project-operations.js";
+import { resourceDataOperations } from "../modules/resources/resource-data-operations.js";
+import { resourceOperations } from "../modules/resources/resource-operations.js";
+import { resourceTreeOperations } from "../modules/resources/resource-tree-operations.js";
 import { getMe } from "../modules/users/user-operations.js";
 
 /**
@@ -39,6 +42,9 @@ export const operations: readonly AnyOperation[] = [
 	createPushSubscription,
 	deletePushSubscription,
 	...projectOperations,
+	...resourceOperations,
+	...resourceTreeOperations,
+	...resourceDataOperations,
 	getAccountUsage,
 	submitProInterest,
 	getProInterestFormConfig,

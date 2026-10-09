@@ -4,13 +4,15 @@
 	"private": true,
 	"type": "module",
 	"exports": {
-		".": "./src/index.ts"
+		".": "./src/index.ts",
+		"./faker-methods": "./src/faker-methods.ts"
 	},
 	"scripts": {
 		"test": "vitest run",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@faker-js/faker": "^10.6.0",
 		"zod": "^4.6.5"
 	}
 }

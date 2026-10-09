@@ -3,7 +3,7 @@ import { type PlanId, limitsFor } from "@localman/shared";
 import { UserModel } from "../users/user-model.js";
 
 /** Quotas enforced by count; extend when another resource gets a cap. */
-export type CountedLimit = "projects";
+export type CountedLimit = "projects" | "resources";
 
 /** 403 `PLAN_LIMIT_REACHED` with the numbers the upgrade dialog shows. */
 export class PlanLimitError extends OperationError {
@@ -62,5 +62,23 @@ export function assertProjectQuota(plan: PlanId, ownedProjects: number): void {
 	const max = limitsFor(plan).projects;
 	if (ownedProjects >= max) {
 		throw new PlanLimitError("projects", max, ownedProjects);
+	}
+}
+
+/**
+ * Throws `PLAN_LIMIT_REACHED` when adding `adding` resources to the
+ * `ownedResources` the owner already has would pass the plan. The limit
+ * counts every resource of every project the user owns (an account-wide
+ * total like `projects`; per-project limits are named `…Per…` in
+ * plan-limits), never resources of projects shared with them.
+ */
+export function assertResourceQuota(
+	plan: PlanId,
+	ownedResources: number,
+	adding = 1,
+): void {
+	const max = limitsFor(plan).resources;
+	if (ownedResources + adding > max) {
+		throw new PlanLimitError("resources", max, ownedResources);
 	}
 }

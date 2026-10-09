@@ -88,6 +88,13 @@ function structuralProblems(
 			`\`successStatus\` must be one of ${SUCCESS_STATUSES.join(", ")}`,
 		);
 	}
+	if (spec.bodyLimit !== undefined) {
+		if (!Number.isSafeInteger(spec.bodyLimit) || spec.bodyLimit <= 0) {
+			problems.push("`bodyLimit` must be a positive integer of bytes");
+		} else if (spec.method === "GET") {
+			problems.push("`bodyLimit` needs a method that has a body");
+		}
+	}
 	if (typeof spec.handler !== "function") {
 		problems.push("`handler` must be a function");
 	}

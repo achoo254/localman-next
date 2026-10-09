@@ -39,6 +39,7 @@ export {
 	DRY_RUN_QUERY_PARAM,
 	HTTP_METHODS,
 	type HttpMethod,
+	LOWERCASE_METHOD,
 	type McpExposure,
 	type OperationAnnotations,
 	type OperationContext,

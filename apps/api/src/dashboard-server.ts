@@ -1,11 +1,13 @@
 import {
 	type AnyOperation,
+	LOWERCASE_METHOD,
+	OperationError,
 	type OperationRouterOptions,
 	buildOpenApiDocument,
 	createOperationRouter,
 } from "@localman/operations";
-import type { Express, Router } from "express";
-import { createBaseApp } from "./http/create-base-app.js";
+import type { Express, RequestHandler, Router } from "express";
+import { type RouteBodyLimit, createBaseApp } from "./http/create-base-app.js";
 import { createCsrfGuard } from "./http/csrf-guard.js";
 import { noStore } from "./http/no-store.js";
 import {
@@ -38,6 +40,46 @@ export interface DashboardAppOptions {
 
 const anonymous: OperationRouterOptions["resolveAuth"] = () => null;
 
+/** 401 before a large body is read, for operations that need a caller. */
+function signedInBeforeBody(
+	resolveAuth: OperationRouterOptions["resolveAuth"],
+): RequestHandler {
+	return async (req, _res, next) => {
+		if (!(await resolveAuth(req))) {
+			throw new OperationError(
+				401,
+				"UNAUTHENTICATED",
+				"Authentication required",
+			);
+		}
+		next();
+	};
+}
+
+/**
+ * Larger body parsers for the operations that declare `bodyLimit`. Scoped
+ * operations resolve the session first (the router resolves it again,
+ * which costs one session lookup), so anonymous callers get 401 unread.
+ */
+function bodyLimitsOf(
+	operations: readonly AnyOperation[],
+	resolveAuth: OperationRouterOptions["resolveAuth"],
+): RouteBodyLimit[] {
+	return operations.flatMap((op) =>
+		op.bodyLimit === undefined || op.method === "GET"
+			? []
+			: [
+					{
+						method: LOWERCASE_METHOD[op.method],
+						path: `${API_PREFIX}${op.path}`,
+						limit: op.bodyLimit,
+						before:
+							op.scopes.length > 0 ? [signedInBeforeBody(resolveAuth)] : [],
+					},
+				],
+	);
+}
+
 /** Dashboard API (port 4000). Building the app never opens a socket. */
 export function createDashboardApp(options: DashboardAppOptions): Express {
 	const { auth } = options;
@@ -48,11 +90,10 @@ export function createDashboardApp(options: DashboardAppOptions): Express {
 		{ title: "Localman API", version: "1.0.0" },
 		[{ url: API_PREFIX }],
 	);
-	const router = createOperationRouter(operations, {
-		resolveAuth: auth
-			? createSessionAuthResolver(auth.authenticate)
-			: anonymous,
-	});
+	const resolveAuth = auth
+		? createSessionAuthResolver(auth.authenticate)
+		: anonymous;
+	const router = createOperationRouter(operations, { resolveAuth });
 
 	return createBaseApp({
 		logger: options.logger,
@@ -63,6 +104,7 @@ export function createDashboardApp(options: DashboardAppOptions): Express {
 				exempt: auth?.csrfExempt,
 			}),
 		],
+		routeBodyLimits: bodyLimitsOf(operations, resolveAuth),
 		mountRoutes: (app) => {
 			if (auth) app.use(auth.router);
 			app.get(`${API_PREFIX}/openapi.json`, (_req, res) => {
