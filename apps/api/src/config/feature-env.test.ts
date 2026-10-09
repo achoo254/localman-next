@@ -83,4 +83,21 @@ describe("product settings in the environment", () => {
 			testing.TURNSTILE_SECRET_KEY,
 		);
 	});
+
+	it("reads the proxy block list as IPs and CIDRs", () => {
+		const env = parseEnv({
+			...REQUIRED,
+			PROXY_BLOCKED_CIDRS: " 103.72.98.65, ,2001:db8::/32,198.51.100.0/24 ",
+		});
+		expect(env.PROXY_BLOCKED_CIDRS).toEqual([
+			"103.72.98.65",
+			"2001:db8::/32",
+			"198.51.100.0/24",
+		]);
+		for (const bad of ["10.0.0.0/33", "example.com", "1.2.3.4/8/1"]) {
+			expect(errorOf({ ...REQUIRED, PROXY_BLOCKED_CIDRS: bad })).toContain(
+				"PROXY_BLOCKED_CIDRS:",
+			);
+		}
+	});
 });

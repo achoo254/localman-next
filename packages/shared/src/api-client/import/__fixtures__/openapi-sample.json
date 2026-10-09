@@ -1,0 +1,177 @@
+{
+	"openapi": "3.1.0",
+	"info": {
+		"title": "Pet Store",
+		"version": "1.2.0",
+		"description": "Sample pets API."
+	},
+	"servers": [
+		{
+			"url": "https://{env}.example.com/v1/",
+			"variables": { "env": { "default": "api", "enum": ["api", "staging"] } }
+		}
+	],
+	"tags": [
+		{ "name": "users" },
+		{ "name": "pets", "description": "Everything about pets" }
+	],
+	"security": [{ "bearerAuth": [] }],
+	"paths": {
+		"/pets": {
+			"parameters": [{ "$ref": "#/components/parameters/Trace" }],
+			"get": {
+				"tags": ["pets"],
+				"summary": "List pets",
+				"operationId": "listPets",
+				"parameters": [
+					{
+						"name": "limit",
+						"in": "query",
+						"required": true,
+						"schema": { "type": "integer", "default": 20 }
+					},
+					{
+						"name": "tag",
+						"in": "query",
+						"schema": { "type": "array", "items": { "type": "string" } },
+						"example": ["a", "b"]
+					},
+					{
+						"name": "session",
+						"in": "cookie",
+						"required": true,
+						"example": "abc"
+					},
+					{ "name": "Accept", "in": "header", "example": "text/html" }
+				],
+				"responses": { "200": { "description": "OK" } }
+			},
+			"post": {
+				"tags": ["pets"],
+				"operationId": "createPet",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/xml": {
+							"schema": { "$ref": "#/components/schemas/Pet" }
+						},
+						"application/json": {
+							"schema": { "$ref": "#/components/schemas/Pet" }
+						}
+					}
+				},
+				"responses": { "201": { "description": "Created" } }
+			}
+		},
+		"/pets/{petId}": {
+			"get": {
+				"tags": ["pets"],
+				"summary": "Get a pet",
+				"description": "Returns one pet.",
+				"security": [],
+				"parameters": [
+					{
+						"name": "petId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" },
+						"examples": { "one": { "value": "p 1" } }
+					}
+				],
+				"responses": { "200": { "description": "OK" } }
+			},
+			"delete": {
+				"parameters": [
+					{
+						"name": "petId",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "string" }
+					}
+				],
+				"security": [{ "apiKeyAuth": [] }],
+				"responses": { "204": { "description": "Deleted" } }
+			},
+			"trace": { "responses": { "200": { "description": "OK" } } }
+		},
+		"/users/{id}/avatar": {
+			"put": {
+				"tags": ["users"],
+				"summary": "Upload avatar",
+				"parameters": [
+					{ "name": "id", "in": "path", "required": true, "example": 7 }
+				],
+				"requestBody": {
+					"content": {
+						"multipart/form-data": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"caption": { "type": "string", "example": "me" },
+									"file": { "type": "string", "format": "binary" }
+								}
+							}
+						}
+					}
+				},
+				"responses": { "200": { "description": "OK" } }
+			}
+		},
+		"/login": {
+			"post": {
+				"summary": "Log in",
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"example": { "user": "ann", "remember": true }
+						}
+					}
+				},
+				"responses": { "200": { "description": "OK" } }
+			}
+		}
+	},
+	"components": {
+		"parameters": {
+			"Trace": {
+				"name": "X-Trace-Id",
+				"in": "header",
+				"required": true,
+				"schema": { "type": "string", "format": "uuid" }
+			}
+		},
+		"schemas": {
+			"Pet": {
+				"type": "object",
+				"required": ["name"],
+				"properties": {
+					"id": { "type": ["integer", "null"], "minimum": 1 },
+					"name": { "type": "string", "examples": ["Rex"] },
+					"born": { "type": "string", "format": "date" },
+					"status": { "type": "string", "enum": ["available", "sold"] },
+					"owner": { "$ref": "#/components/schemas/Owner" },
+					"tags": { "type": "array", "items": { "type": "string" } },
+					"parent": { "$ref": "#/components/schemas/Pet" },
+					"remote": { "$ref": "https://example.com/schemas/remote.json" }
+				}
+			},
+			"Owner": {
+				"allOf": [
+					{
+						"type": "object",
+						"properties": { "email": { "type": "string", "format": "email" } }
+					},
+					{ "type": "object", "properties": { "vip": { "type": "boolean" } } }
+				]
+			}
+		},
+		"securitySchemes": {
+			"bearerAuth": {
+				"type": "http",
+				"scheme": "bearer",
+				"bearerFormat": "JWT"
+			},
+			"apiKeyAuth": { "type": "apiKey", "in": "header", "name": "X-API-Key" }
+		}
+	}
+}

@@ -1,0 +1,553 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`csharp-httpclient snippet > matches the golden output for a JSON POST 1`] = `
+"using System.Net.Http.Headers;
+
+using var client = new HttpClient();
+using var request = new HttpRequestMessage(new HttpMethod("POST"), "https://api.example.com/users?notify=true");
+request.Headers.TryAddWithoutValidation("Authorization", "Bearer abc123");
+request.Headers.TryAddWithoutValidation("Accept", "application/json");
+request.Headers.TryAddWithoutValidation("X-Tag", "a");
+request.Headers.TryAddWithoutValidation("X-Tag", "b");
+request.Content = new StringContent("{\\n  \\"name\\": \\"Ann\\",\\n  \\"age\\": 30\\n}");
+request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+using var response = await client.SendAsync(request);
+Console.WriteLine(await response.Content.ReadAsStringAsync());"
+`;
+
+exports[`csharp-httpclient snippet > matches the golden output for hostile text 1`] = `
+"using System.Net.Http.Headers;
+
+using var client = new HttpClient();
+using var request = new HttpRequestMessage(new HttpMethod("PATCH"), "https://api.example.com/items/1?q=%24HOME&x=%27");
+request.Headers.TryAddWithoutValidation("X-Note", "it's \\"q\\" $HOME \`id\` #{x} \\\\ ‘s’ Tiếng Việt");
+request.Content = new StringContent("it's \\"quoted\\" | $HOME \${x} $(id) \`id\` | back\\\\slash \\\\n \\\\u0041 \\\\$ | line1\\nline2 | tab\\there | #{x} #$x #@x | @/etc/passwd | Tiếng Việt 🚀 中文 | ‘smart’ “double” ‚low‛");
+request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("text/plain; charset=utf-8");
+
+using var response = await client.SendAsync(request);
+Console.WriteLine(await response.Content.ReadAsStringAsync());"
+`;
+
+exports[`curl snippet > matches the golden output for a JSON POST 1`] = `
+"curl 'https://api.example.com/users?notify=true' \\
+  -H 'Authorization: Bearer abc123' \\
+  -H 'Accept: application/json' \\
+  -H 'X-Tag: a' \\
+  -H 'X-Tag: b' \\
+  -H 'Content-Type: application/json' \\
+  --data-raw '{
+  "name": "Ann",
+  "age": 30
+}'"
+`;
+
+exports[`curl snippet > matches the golden output for hostile text 1`] = `
+"curl -X PATCH 'https://api.example.com/items/1?q=%24HOME&x=%27' \\
+  -H 'X-Note: it'\\''s "q" $HOME \`id\` #{x} \\ ‘s’ Tiếng Việt' \\
+  -H 'Content-Type: text/plain; charset=utf-8' \\
+  --data-raw 'it'\\''s "quoted" | $HOME \${x} $(id) \`id\` | back\\slash \\n \\u0041 \\$ | line1
+line2 | tab	here | #{x} #$x #@x | @/etc/passwd | Tiếng Việt 🚀 中文 | ‘smart’ “double” ‚low‛'"
+`;
+
+exports[`dart-http snippet > matches the golden output for a JSON POST 1`] = `
+"import 'package:http/http.dart' as http;
+
+void main() async {
+  final request = http.Request('POST', Uri.parse('https://api.example.com/users?notify=true'));
+  request.headers.addAll({
+    'Authorization': 'Bearer abc123',
+    'Accept': 'application/json',
+    'X-Tag': 'a, b',
+    'Content-Type': 'application/json',
+  });
+  request.body = '{\\n  "name": "Ann",\\n  "age": 30\\n}';
+
+  final response = await http.Response.fromStream(await request.send());
+  print(response.body);
+}"
+`;
+
+exports[`dart-http snippet > matches the golden output for hostile text 1`] = `
+"import 'package:http/http.dart' as http;
+
+void main() async {
+  final request = http.Request('PATCH', Uri.parse('https://api.example.com/items/1?q=%24HOME&x=%27'));
+  request.headers.addAll({
+    'X-Note': 'it\\'s "q" \\$HOME \`id\` #{x} \\\\ ‘s’ Tiếng Việt',
+    'Content-Type': 'text/plain; charset=utf-8',
+  });
+  request.body = 'it\\'s "quoted" | \\$HOME \\\${x} \\$(id) \`id\` | back\\\\slash \\\\n \\\\u0041 \\\\\\$ | line1\\nline2 | tab\\there | #{x} #\\$x #@x | @/etc/passwd | Tiếng Việt 🚀 中文 | ‘smart’ “double” ‚low‛';
+
+  final response = await http.Response.fromStream(await request.send());
+  print(response.body);
+}"
+`;
+
+exports[`go-native snippet > matches the golden output for a JSON POST 1`] = `
+"package main
+
+import (
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
+)
+
+func main() {
+	body := strings.NewReader("{\\n  \\"name\\": \\"Ann\\",\\n  \\"age\\": 30\\n}")
+	req, err := http.NewRequest("POST", "https://api.example.com/users?notify=true", body)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Add("Authorization", "Bearer abc123")
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("X-Tag", "a")
+	req.Header.Add("X-Tag", "b")
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(data))
+}"
+`;
+
+exports[`go-native snippet > matches the golden output for hostile text 1`] = `
+"package main
+
+import (
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
+)
+
+func main() {
+	body := strings.NewReader("it's \\"quoted\\" | $HOME \${x} $(id) \`id\` | back\\\\slash \\\\n \\\\u0041 \\\\$ | line1\\nline2 | tab\\there | #{x} #$x #@x | @/etc/passwd | Tiếng Việt 🚀 中文 | ‘smart’ “double” ‚low‛")
+	req, err := http.NewRequest("PATCH", "https://api.example.com/items/1?q=%24HOME&x=%27", body)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Add("X-Note", "it's \\"q\\" $HOME \`id\` #{x} \\\\ ‘s’ Tiếng Việt")
+	req.Header.Add("Content-Type", "text/plain; charset=utf-8")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(data))
+}"
+`;
+
+exports[`httpie snippet > matches the golden output for a JSON POST 1`] = `
+"printf '%s' '{
+  "name": "Ann",
+  "age": 30
+}' | http POST 'https://api.example.com/users?notify=true' \\
+  'Authorization:Bearer abc123' \\
+  'Accept:application/json' \\
+  'X-Tag:a' \\
+  'X-Tag:b' \\
+  'Content-Type:application/json'"
+`;
+
+exports[`httpie snippet > matches the golden output for hostile text 1`] = `
+"printf '%s' 'it'\\''s "quoted" | $HOME \${x} $(id) \`id\` | back\\slash \\n \\u0041 \\$ | line1
+line2 | tab	here | #{x} #$x #@x | @/etc/passwd | Tiếng Việt 🚀 中文 | ‘smart’ “double” ‚low‛' | http PATCH 'https://api.example.com/items/1?q=%24HOME&x=%27' \\
+  'X-Note:it'\\''s "q" $HOME \`id\` #{x} \\ ‘s’ Tiếng Việt' \\
+  'Content-Type:text/plain; charset=utf-8'"
+`;
+
+exports[`java-httpurlconnection snippet > matches the golden output for a JSON POST 1`] = `
+"import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+
+URL url = new URL("https://api.example.com/users?notify=true");
+HttpURLConnection con = (HttpURLConnection) url.openConnection();
+con.setRequestMethod("POST");
+con.addRequestProperty("Authorization", "Bearer abc123");
+con.addRequestProperty("Accept", "application/json");
+con.addRequestProperty("X-Tag", "a");
+con.addRequestProperty("X-Tag", "b");
+con.addRequestProperty("Content-Type", "application/json");
+con.setDoOutput(true);
+try (OutputStream os = con.getOutputStream()) {
+    os.write("{\\n  \\"name\\": \\"Ann\\",\\n  \\"age\\": 30\\n}".getBytes(StandardCharsets.UTF_8));
+}
+
+int status = con.getResponseCode();
+InputStream stream = status < 400 ? con.getInputStream() : con.getErrorStream();
+String response = stream == null ? "" : new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+System.out.println(status + " " + response);"
+`;
+
+exports[`java-httpurlconnection snippet > matches the golden output for hostile text 1`] = `
+"import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+
+URL url = new URL("https://api.example.com/items/1?q=%24HOME&x=%27");
+HttpURLConnection con = (HttpURLConnection) url.openConnection();
+// HttpURLConnection rejects PATCH; use java.net.http.HttpClient for it.
+con.setRequestMethod("PATCH");
+con.addRequestProperty("X-Note", "it's \\"q\\" $HOME \`id\` #{x} \\\\ ‘s’ Tiếng Việt");
+con.addRequestProperty("Content-Type", "text/plain; charset=utf-8");
+con.setDoOutput(true);
+try (OutputStream os = con.getOutputStream()) {
+    os.write("it's \\"quoted\\" | $HOME \${x} $(id) \`id\` | back\\\\slash \\\\n \\\\u0041 \\\\$ | line1\\nline2 | tab\\there | #{x} #$x #@x | @/etc/passwd | Tiếng Việt 🚀 中文 | ‘smart’ “double” ‚low‛".getBytes(StandardCharsets.UTF_8));
+}
+
+int status = con.getResponseCode();
+InputStream stream = status < 400 ? con.getInputStream() : con.getErrorStream();
+String response = stream == null ? "" : new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+System.out.println(status + " " + response);"
+`;
+
+exports[`java-okhttp snippet > matches the golden output for a JSON POST 1`] = `
+"OkHttpClient client = new OkHttpClient();
+
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create("{\\n  \\"name\\": \\"Ann\\",\\n  \\"age\\": 30\\n}", mediaType);
+Request request = new Request.Builder()
+    .url("https://api.example.com/users?notify=true")
+    .method("POST", body)
+    .addHeader("Authorization", "Bearer abc123")
+    .addHeader("Accept", "application/json")
+    .addHeader("X-Tag", "a")
+    .addHeader("X-Tag", "b")
+    .build();
+
+try (Response response = client.newCall(request).execute()) {
+    System.out.println(response.body().string());
+}"
+`;
+
+exports[`java-okhttp snippet > matches the golden output for hostile text 1`] = `
+"OkHttpClient client = new OkHttpClient();
+
+MediaType mediaType = MediaType.parse("text/plain; charset=utf-8");
+RequestBody body = RequestBody.create("it's \\"quoted\\" | $HOME \${x} $(id) \`id\` | back\\\\slash \\\\n \\\\u0041 \\\\$ | line1\\nline2 | tab\\there | #{x} #$x #@x | @/etc/passwd | Tiếng Việt 🚀 中文 | ‘smart’ “double” ‚low‛", mediaType);
+Request request = new Request.Builder()
+    .url("https://api.example.com/items/1?q=%24HOME&x=%27")
+    .method("PATCH", body)
+    .addHeader("X-Note", "it's \\"q\\" $HOME \`id\` #{x} \\\\ ‘s’ Tiếng Việt")
+    .build();
+
+try (Response response = client.newCall(request).execute()) {
+    System.out.println(response.body().string());
+}"
+`;
+
+exports[`javascript-axios snippet > matches the golden output for a JSON POST 1`] = `
+"import axios from 'axios';
+
+const response = await axios({
+  method: 'post',
+  url: 'https://api.example.com/users?notify=true',
+  headers: {
+    'Authorization': 'Bearer abc123',
+    'Accept': 'application/json',
+    'X-Tag': 'a, b',
+    'Content-Type': 'application/json',
+  },
+  data: '{\\n  "name": "Ann",\\n  "age": 30\\n}',
+});
+console.log(response.data);"
+`;
+
+exports[`javascript-axios snippet > matches the golden output for hostile text 1`] = `
+"import axios from 'axios';
+
+const response = await axios({
+  method: 'patch',
+  url: 'https://api.example.com/items/1?q=%24HOME&x=%27',
+  headers: {
+    'X-Note': 'it\\'s "q" $HOME \`id\` #{x} \\\\ ‘s’ Tiếng Việt',
+    'Content-Type': 'text/plain; charset=utf-8',
+  },
+  data: 'it\\'s "quoted" | $HOME \${x} $(id) \`id\` | back\\\\slash \\\\n \\\\u0041 \\\\$ | line1\\nline2 | tab\\there | #{x} #$x #@x | @/etc/passwd | Tiếng Việt 🚀 中文 | ‘smart’ “double” ‚low‛',
+});
+console.log(response.data);"
+`;
+
+exports[`javascript-fetch snippet > matches the golden output for a JSON POST 1`] = `
+"const response = await fetch('https://api.example.com/users?notify=true', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer abc123',
+    'Accept': 'application/json',
+    'X-Tag': 'a, b',
+    'Content-Type': 'application/json',
+  },
+  body: '{\\n  "name": "Ann",\\n  "age": 30\\n}',
+});
+console.log(await response.text());"
+`;
+
+exports[`javascript-fetch snippet > matches the golden output for hostile text 1`] = `
+"const response = await fetch('https://api.example.com/items/1?q=%24HOME&x=%27', {
+  method: 'PATCH',
+  headers: {
+    'X-Note': 'it\\'s "q" $HOME \`id\` #{x} \\\\ ‘s’ Tiếng Việt',
+    'Content-Type': 'text/plain; charset=utf-8',
+  },
+  body: 'it\\'s "quoted" | $HOME \${x} $(id) \`id\` | back\\\\slash \\\\n \\\\u0041 \\\\$ | line1\\nline2 | tab\\there | #{x} #$x #@x | @/etc/passwd | Tiếng Việt 🚀 中文 | ‘smart’ “double” ‚low‛',
+});
+console.log(await response.text());"
+`;
+
+exports[`kotlin-okhttp snippet > matches the golden output for a JSON POST 1`] = `
+"val client = OkHttpClient()
+
+val body = "{\\n  \\"name\\": \\"Ann\\",\\n  \\"age\\": 30\\n}".toRequestBody("application/json".toMediaType())
+val request = Request.Builder()
+    .url("https://api.example.com/users?notify=true")
+    .method("POST", body)
+    .addHeader("Authorization", "Bearer abc123")
+    .addHeader("Accept", "application/json")
+    .addHeader("X-Tag", "a")
+    .addHeader("X-Tag", "b")
+    .build()
+
+client.newCall(request).execute().use { response ->
+    println(response.body?.string())
+}"
+`;
+
+exports[`kotlin-okhttp snippet > matches the golden output for hostile text 1`] = `
+"val client = OkHttpClient()
+
+val body = "it's \\"quoted\\" | \\$HOME \\\${x} \\$(id) \`id\` | back\\\\slash \\\\n \\\\u0041 \\\\\\$ | line1\\nline2 | tab\\there | #{x} #\\$x #@x | @/etc/passwd | Tiếng Việt 🚀 中文 | ‘smart’ “double” ‚low‛".toRequestBody("text/plain; charset=utf-8".toMediaType())
+val request = Request.Builder()
+    .url("https://api.example.com/items/1?q=%24HOME&x=%27")
+    .method("PATCH", body)
+    .addHeader("X-Note", "it's \\"q\\" \\$HOME \`id\` #{x} \\\\ ‘s’ Tiếng Việt")
+    .build()
+
+client.newCall(request).execute().use { response ->
+    println(response.body?.string())
+}"
+`;
+
+exports[`php-curl snippet > matches the golden output for a JSON POST 1`] = `
+"<?php
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, 'https://api.example.com/users?notify=true');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Authorization: Bearer abc123',
+    'Accept: application/json',
+    'X-Tag: a',
+    'X-Tag: b',
+    'Content-Type: application/json',
+]);
+curl_setopt($ch, CURLOPT_POSTFIELDS, '{
+  "name": "Ann",
+  "age": 30
+}');
+
+$response = curl_exec($ch);
+curl_close($ch);
+echo $response;"
+`;
+
+exports[`php-curl snippet > matches the golden output for hostile text 1`] = `
+"<?php
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, 'https://api.example.com/items/1?q=%24HOME&x=%27');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'X-Note: it\\'s "q" $HOME \`id\` #{x} \\\\ ‘s’ Tiếng Việt',
+    'Content-Type: text/plain; charset=utf-8',
+]);
+curl_setopt($ch, CURLOPT_POSTFIELDS, 'it\\'s "quoted" | $HOME \${x} $(id) \`id\` | back\\\\slash \\\\n \\\\u0041 \\\\$ | line1
+line2 | tab	here | #{x} #$x #@x | @/etc/passwd | Tiếng Việt 🚀 中文 | ‘smart’ “double” ‚low‛');
+
+$response = curl_exec($ch);
+curl_close($ch);
+echo $response;"
+`;
+
+exports[`powershell snippet > matches the golden output for a JSON POST 1`] = `
+"$params = @{
+    Uri = 'https://api.example.com/users?notify=true'
+    Method = 'POST'
+    Headers = @{
+        'Authorization' = 'Bearer abc123'
+        'Accept' = 'application/json'
+        'X-Tag' = 'a, b'
+    }
+    ContentType = 'application/json'
+    Body = '{
+  "name": "Ann",
+  "age": 30
+}'
+}
+Invoke-RestMethod @params"
+`;
+
+exports[`powershell snippet > matches the golden output for hostile text 1`] = `
+"$params = @{
+    Uri = 'https://api.example.com/items/1?q=%24HOME&x=%27'
+    Method = 'PATCH'
+    Headers = @{
+        'X-Note' = 'it''s "q" $HOME \`id\` #{x} \\ ‘‘s’’ Tiếng Việt'
+    }
+    ContentType = 'text/plain; charset=utf-8'
+    Body = [System.Text.Encoding]::UTF8.GetBytes('it''s "quoted" | $HOME \${x} $(id) \`id\` | back\\slash \\n \\u0041 \\$ | line1
+line2 | tab	here | #{x} #$x #@x | @/etc/passwd | Tiếng Việt 🚀 中文 | ‘‘smart’’ “double” ‚‚low‛‛')
+}
+Invoke-RestMethod @params"
+`;
+
+exports[`python-requests snippet > matches the golden output for a JSON POST 1`] = `
+"import requests
+
+response = requests.request(
+    'POST',
+    'https://api.example.com/users?notify=true',
+    headers={
+        'Authorization': 'Bearer abc123',
+        'Accept': 'application/json',
+        'X-Tag': 'a, b',
+        'Content-Type': 'application/json',
+    },
+    data='{\\n  "name": "Ann",\\n  "age": 30\\n}',
+)
+print(response.text)"
+`;
+
+exports[`python-requests snippet > matches the golden output for hostile text 1`] = `
+"import requests
+
+response = requests.request(
+    'PATCH',
+    'https://api.example.com/items/1?q=%24HOME&x=%27',
+    headers={
+        'X-Note': 'it\\'s "q" $HOME \`id\` #{x} \\\\ ‘s’ Tiếng Việt',
+        'Content-Type': 'text/plain; charset=utf-8',
+    },
+    data='it\\'s "quoted" | $HOME \${x} $(id) \`id\` | back\\\\slash \\\\n \\\\u0041 \\\\$ | line1\\nline2 | tab\\there | #{x} #$x #@x | @/etc/passwd | Tiếng Việt 🚀 中文 | ‘smart’ “double” ‚low‛'.encode('utf-8'),
+)
+print(response.text)"
+`;
+
+exports[`ruby-net-http snippet > matches the golden output for a JSON POST 1`] = `
+"require 'net/http'
+require 'uri'
+
+uri = URI("https://api.example.com/users?notify=true")
+request = Net::HTTP::Post.new(uri)
+request.add_field("Authorization", "Bearer abc123")
+request.add_field("Accept", "application/json")
+request.add_field("X-Tag", "a")
+request.add_field("X-Tag", "b")
+request.add_field("Content-Type", "application/json")
+request.body = "{\\n  \\"name\\": \\"Ann\\",\\n  \\"age\\": 30\\n}"
+
+response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == 'https') do |http|
+  http.request(request)
+end
+puts response.body"
+`;
+
+exports[`ruby-net-http snippet > matches the golden output for hostile text 1`] = `
+"require 'net/http'
+require 'uri'
+
+uri = URI("https://api.example.com/items/1?q=%24HOME&x=%27")
+request = Net::HTTP::Patch.new(uri)
+request.add_field("X-Note", "it's \\"q\\" $HOME \`id\` \\#{x} \\\\ ‘s’ Tiếng Việt")
+request.add_field("Content-Type", "text/plain; charset=utf-8")
+request.body = "it's \\"quoted\\" | $HOME \${x} $(id) \`id\` | back\\\\slash \\\\n \\\\u0041 \\\\$ | line1\\nline2 | tab\\there | \\#{x} \\#$x \\#@x | @/etc/passwd | Tiếng Việt 🚀 中文 | ‘smart’ “double” ‚low‛"
+
+response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == 'https') do |http|
+  http.request(request)
+end
+puts response.body"
+`;
+
+exports[`rust-reqwest snippet > matches the golden output for a JSON POST 1`] = `
+"#[tokio::main]
+async fn main() -> Result<(), reqwest::Error> {
+    let client = reqwest::Client::new();
+    let response = client
+        .request(reqwest::Method::POST, "https://api.example.com/users?notify=true")
+        .header("Authorization", "Bearer abc123")
+        .header("Accept", "application/json")
+        .header("X-Tag", "a")
+        .header("X-Tag", "b")
+        .header("Content-Type", "application/json")
+        .body("{\\n  \\"name\\": \\"Ann\\",\\n  \\"age\\": 30\\n}")
+        .send()
+        .await?;
+    println!("{}", response.text().await?);
+    Ok(())
+}"
+`;
+
+exports[`rust-reqwest snippet > matches the golden output for hostile text 1`] = `
+"#[tokio::main]
+async fn main() -> Result<(), reqwest::Error> {
+    let client = reqwest::Client::new();
+    let response = client
+        .request(reqwest::Method::PATCH, "https://api.example.com/items/1?q=%24HOME&x=%27")
+        .header("X-Note", "it's \\"q\\" $HOME \`id\` #{x} \\\\ ‘s’ Tiếng Việt")
+        .header("Content-Type", "text/plain; charset=utf-8")
+        .body("it's \\"quoted\\" | $HOME \${x} $(id) \`id\` | back\\\\slash \\\\n \\\\u0041 \\\\$ | line1\\nline2 | tab\\there | #{x} #$x #@x | @/etc/passwd | Tiếng Việt 🚀 中文 | ‘smart’ “double” ‚low‛")
+        .send()
+        .await?;
+    println!("{}", response.text().await?);
+    Ok(())
+}"
+`;
+
+exports[`swift-urlsession snippet > matches the golden output for a JSON POST 1`] = `
+"import Foundation
+
+var request = URLRequest(url: URL(string: "https://api.example.com/users?notify=true")!)
+request.httpMethod = "POST"
+request.addValue("Bearer abc123", forHTTPHeaderField: "Authorization")
+request.addValue("application/json", forHTTPHeaderField: "Accept")
+request.addValue("a", forHTTPHeaderField: "X-Tag")
+request.addValue("b", forHTTPHeaderField: "X-Tag")
+request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+request.httpBody = Data("{\\n  \\"name\\": \\"Ann\\",\\n  \\"age\\": 30\\n}".utf8)
+
+let (data, _) = try await URLSession.shared.data(for: request)
+print(String(decoding: data, as: UTF8.self))"
+`;
+
+exports[`swift-urlsession snippet > matches the golden output for hostile text 1`] = `
+"import Foundation
+
+var request = URLRequest(url: URL(string: "https://api.example.com/items/1?q=%24HOME&x=%27")!)
+request.httpMethod = "PATCH"
+request.addValue("it's \\"q\\" $HOME \`id\` #{x} \\\\ ‘s’ Tiếng Việt", forHTTPHeaderField: "X-Note")
+request.addValue("text/plain; charset=utf-8", forHTTPHeaderField: "Content-Type")
+request.httpBody = Data("it's \\"quoted\\" | $HOME \${x} $(id) \`id\` | back\\\\slash \\\\n \\\\u0041 \\\\$ | line1\\nline2 | tab\\there | #{x} #$x #@x | @/etc/passwd | Tiếng Việt 🚀 中文 | ‘smart’ “double” ‚low‛".utf8)
+
+let (data, _) = try await URLSession.shared.data(for: request)
+print(String(decoding: data, as: UTF8.self))"
+`;

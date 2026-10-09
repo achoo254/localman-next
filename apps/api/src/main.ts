@@ -13,6 +13,7 @@ import {
 } from "./db/connect-mongo.js";
 import { closeServer } from "./http/close-server.js";
 import { type Logger, createLogger } from "./logger.js";
+import { configureProxyLogger } from "./modules/api-client/proxy-operations.js";
 import { createMockApp } from "./mock-server.js";
 import {
 	authSettingsFromEnv,
@@ -63,6 +64,7 @@ function listen(
 
 const env = loadEnvOrExit();
 const logger: Logger = createLogger(env.LOG_LEVEL);
+configureProxyLogger(logger);
 const servers: Server[] = [];
 let shuttingDown = false;
 let notifications: NotificationService | undefined;

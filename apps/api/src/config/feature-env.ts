@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { parseCidr } from "../modules/api-client/ssrf-guard-ranges.js";
 
 export const TURNSTILE_VERIFY_URL =
 	"https://challenges.cloudflare.com/turnstile/v0/siteverify";
@@ -35,6 +36,21 @@ const subjectList = z
 			.filter((sub) => sub !== ""),
 	);
 
+/** Comma-separated IPs or CIDRs (IPv4 or IPv6); blanks are ignored. */
+const cidrList = z
+	.string()
+	.default("")
+	.transform((value) =>
+		value
+			.split(",")
+			.map((entry) => entry.trim())
+			.filter((entry) => entry !== ""),
+	)
+	.refine(
+		(entries) => entries.every((entry) => parseCidr(entry) !== null),
+		"must be comma-separated IP addresses or CIDRs",
+	);
+
 /**
  * Environment of product features (projects, plans, feedback), kept apart
  * from the platform settings in env.ts.
@@ -65,6 +81,12 @@ export const featureEnvShape = {
 	/** Cloudflare Turnstile on public forms; both keys or none. */
 	TURNSTILE_SITE_KEY: z.string().min(1).max(200).optional(),
 	TURNSTILE_SECRET_KEY: z.string().min(1).max(200).optional(),
+	/**
+	 * Addresses the API client proxy must never reach besides the private
+	 * ranges and the machine's interface addresses it always refuses: the
+	 * server's public IPs when they are not on an interface (NAT).
+	 */
+	PROXY_BLOCKED_CIDRS: cidrList,
 	/** Siteverify endpoint; tests point it at a local fake. */
 	TURNSTILE_VERIFY_URL: z
 		.url({ protocol: /^https?$/, error: "must be an http(s) URL" })

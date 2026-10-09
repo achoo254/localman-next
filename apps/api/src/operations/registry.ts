@@ -1,4 +1,6 @@
 import type { AnyOperation } from "@localman/operations";
+import { clientStoreOperations } from "../modules/api-client/client-store-operations.js";
+import { proxyOperations } from "../modules/api-client/proxy-operations.js";
 import { getAccountUsage } from "../modules/billing/usage-operations.js";
 import { collaboratorOperations } from "../modules/collaborators/collaborator-operations.js";
 import { inviteOperations } from "../modules/collaborators/invite-operations.js";
@@ -61,6 +63,8 @@ export const operations: readonly AnyOperation[] = [
 	...resourceOperations,
 	createResourceFromSchema,
 	...mockAdvancedOperations,
+	...proxyOperations,
+	...clientStoreOperations,
 	...resourceTreeOperations,
 	...resourceDataOperations,
 	getMockUrls,

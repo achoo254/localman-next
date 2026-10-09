@@ -46,6 +46,7 @@ describe("parseEnv", () => {
 			MOCK_WRITE_RATE_LIMIT_PER_SECRET: 10,
 			MOCK_RESPONSE_BYTES_PER_SECOND: 20 * 1024 * 1024,
 			OWNER_SUBS: [],
+			PROXY_BLOCKED_CIDRS: [],
 			TURNSTILE_VERIFY_URL:
 				"https://challenges.cloudflare.com/turnstile/v0/siteverify",
 		});

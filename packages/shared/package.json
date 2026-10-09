@@ -6,6 +6,7 @@
 	"exports": {
 		".": "./src/index.ts",
 		"./api-client": "./src/api-client/index.ts",
+		"./api-client/script-sandbox": "./src/api-client/script-sandbox/index.ts",
 		"./constants": "./src/constants.ts",
 		"./endpoint-behavior": "./src/endpoint-behavior.ts",
 		"./faker-catalog": "./src/faker-method-catalog.ts",
@@ -17,6 +18,10 @@
 	},
 	"dependencies": {
 		"@faker-js/faker": "^10.6.0",
+		"quickjs-emscripten-core": "0.32.0",
 		"zod": "^4.6.5"
+	},
+	"devDependencies": {
+		"@jitl/quickjs-wasmfile-release-sync": "0.32.0"
 	}
 }

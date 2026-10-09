@@ -36,7 +36,7 @@ export const MAX_REQUEST_NAME_LENGTH = 200;
 export const MAX_SCRIPT_LENGTH = 64 * 1024;
 export const SCRIPT_TIMEOUT_MS = 5_000;
 export const SCRIPT_MEMORY_BYTES = 32 * MIB;
-export const SCRIPT_MAX_STACK_BYTES = 512 * 1024;
+export const SCRIPT_MAX_STACK_BYTES = 256 * 1024;
 
 /** History kept per user (`client_history`). */
 export const HISTORY_MAX_ENTRIES = 500;

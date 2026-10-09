@@ -109,3 +109,6 @@ Operation có `mcp: { exempt }` vì chỉ trình duyệt dùng được:
 - `mock.previewInvite`, `mock.acceptInvite`: người được mời mở link `/invite/:token` trên trình duyệt; nhận lời mời là quyết định của chính người đó, không phải của agent.
 - `feedback.submitProInterest`, `feedback.getProInterestFormConfig`: form quan tâm gói Pro là form công khai cho người. Khách phải qua Cloudflare Turnstile (agent không giải được), và việc để lại email liên hệ phải do chính người đó đồng ý.
 - `feedback.submitContactMessage`: form "Góp ý / Liên hệ" là form công khai cho người. Khách phải qua Cloudflare Turnstile (widget khai action `contact`, agent không giải được), và góp ý gửi owner phải do chính người dùng viết. Hộp thư của owner (`admin.listContactMessages`, `admin.updateContactMessageStatus`) có MCP tool.
+- `client.recordHistory`: trình duyệt ghi history sau mỗi lần gửi; tool `send_request` tự ghi history của nó.
+- `client.listDrafts`, `client.saveDraft`, `client.reorderDrafts`, `client.deleteDraft`: trạng thái tab của giao diện API client.
+- `client.rememberRoutingHost`, `client.forgetRoutingHost`: chỉ đường gửi thẳng của trình duyệt dùng; tool `send_request` luôn đi qua proxy.

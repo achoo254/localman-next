@@ -1,0 +1,197 @@
+{
+	"info": {
+		"_postman_id": "6f1c2a8e-3b7d-4c55-9a1e-0c9f2b7d8e41",
+		"name": "Shop API",
+		"description": "Orders and users of the sample shop.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1234567"
+	},
+	"item": [
+		{
+			"name": "Users",
+			"description": "User accounts",
+			"item": [
+				{
+					"name": "List users",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"status is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json", "type": "text" },
+							{
+								"key": "X-Debug",
+								"value": "1",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users?page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["users"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "20" },
+								{
+									"key": "sort",
+									"value": "name",
+									"disabled": true,
+									"description": "Sort field"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user",
+					"request": {
+						"auth": { "type": "noauth" },
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", ":id"],
+							"variable": [{ "key": "id", "value": "42" }]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin",
+					"auth": {
+						"type": "basic",
+						"basic": [
+							{ "key": "password", "value": "{{adminPass}}", "type": "string" },
+							{ "key": "username", "value": "admin", "type": "string" }
+						]
+					},
+					"item": [
+						{
+							"name": "Create user",
+							"protocolProfileBehavior": { "followRedirects": false },
+							"request": {
+								"method": "POST",
+								"header": [
+									{ "key": "Content-Type", "value": "application/json" }
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Ann\",\n  \"note\": \"it's $5\"\n}",
+									"options": { "raw": { "language": "json" } }
+								},
+								"url": "{{baseUrl}}/users",
+								"description": "Creates a user."
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Upload avatar",
+			"request": {
+				"auth": {
+					"type": "apikey",
+					"apikey": [
+						{ "key": "value", "value": "{{apiKey}}", "type": "string" },
+						{ "key": "key", "value": "api_key", "type": "string" },
+						{ "key": "in", "value": "query", "type": "string" }
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{ "key": "caption", "value": "Me", "type": "text" },
+						{ "key": "file", "type": "file", "src": "/Users/me/avatar.png" }
+					]
+				},
+				"url": {
+					"protocol": "https",
+					"host": ["api", "example", "com"],
+					"port": "8443",
+					"path": ["v1", "avatar"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{ "key": "user", "value": "ann", "type": "text" },
+						{ "key": "pass", "value": "s3cret", "type": "text" }
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/login",
+					"host": ["{{baseUrl}}"],
+					"path": ["login"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Search (GraphQL)",
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [{ "key": "accessToken", "value": "x", "type": "string" }]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "query { users { id } }",
+						"variables": "{\"first\": 2}"
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/graphql",
+					"host": ["{{baseUrl}}"],
+					"path": ["graphql"]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": ["lm.variables.set(\"ts\", Date.now());"]
+			}
+		}
+	],
+	"variable": [
+		{ "key": "baseUrl", "value": "https://api.example.com", "type": "string" },
+		{ "key": "token", "value": "abc", "type": "secret" },
+		{ "key": "unused", "value": "", "disabled": true }
+	]
+}

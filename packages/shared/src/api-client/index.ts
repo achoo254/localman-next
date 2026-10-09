@@ -22,3 +22,33 @@ export * from "./response-model.js";
 export * from "./tunnel-url.js";
 export * from "./url-params.js";
 export * from "./variable-interpolation.js";
+// Import (cURL, Collection v2.1, OpenAPI 3.x JSON), export, code snippets.
+export { exportCollectionV21 } from "./export/collection-v21-export.js";
+export { type OpenApiExport, exportOpenApi } from "./export/openapi-export.js";
+export { applyCollectionVariables } from "./import/apply-collection-variables.js";
+export type { CollectionV21 } from "./import/collection-v21-types.js";
+export {
+	type CurlImport,
+	looksLikeCurl,
+	parseCurlCommand,
+} from "./import/curl-parser.js";
+export type { ImportFormat } from "./import/detect-format.js";
+export {
+	MAX_IMPORT_ITEMS,
+	type RequestImportOptions,
+} from "./import/import-context.js";
+export {
+	REQUEST_IMPORT_ERROR_CODES,
+	REQUEST_IMPORT_WARNING_CODES,
+	type RequestImportError,
+	type RequestImportErrorCode,
+	type RequestImportParams,
+	type RequestImportResult,
+	type RequestImportWarning,
+	type RequestImportWarningCode,
+} from "./import/import-error.js";
+export { MAX_IMPORT_BYTES } from "./import/import-json.js";
+export { importText } from "./import/import-text.js";
+export * from "./import/imported-collection.js";
+export type { SnippetRequest } from "./snippets/snippet-input.js";
+export * from "./snippets/snippet-registry.js";

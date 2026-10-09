@@ -63,6 +63,18 @@ export interface RuntimeSettings {
 	 */
 	readonly localmanMcpRateLimit: RateLimitWindow;
 	/**
+	 * API client proxy (`client.sendRequest`, MCP `send_request`) calls
+	 * per account, on top of the plan's monthly `proxyRequestsPerMonth`.
+	 */
+	readonly proxyRateLimit: RateLimitWindow;
+	/**
+	 * CIDRs the proxy never connects to, on top of the private, loopback
+	 * and metadata ranges and the interface addresses it always refuses:
+	 * public addresses of the server not on an interface
+	 * (`PROXY_BLOCKED_CIDRS`).
+	 */
+	readonly proxyBlockedCidrs: readonly string[];
+	/**
 	 * Heavy dashboard operations per account and per project, both must
 	 * pass: they render, write and measure megabytes in the process that
 	 * also serves every mock API. Far above what a person clicks.
@@ -97,6 +109,8 @@ export const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = Object.freeze({
 		perIp: { max: 60, windowMs: 10 * 60_000 },
 	},
 	localmanMcpRateLimit: perMinute(120),
+	proxyRateLimit: perMinute(120),
+	proxyBlockedCidrs: [],
 	heavyOperationRateLimit: {
 		generate: { perUser: perMinute(30), perProject: perMinute(60) },
 		replaceData: { perUser: perMinute(60), perProject: perMinute(120) },
@@ -126,6 +140,7 @@ export function runtimeSettingsFromEnv(env: Env): RuntimeSettings {
 		mockBaseDomain: env.MOCK_BASE_DOMAIN,
 		publicUrl: env.PUBLIC_URL,
 		ownerSubs: new Set(env.OWNER_SUBS),
+		proxyBlockedCidrs: env.PROXY_BLOCKED_CIDRS,
 		turnstile:
 			TURNSTILE_SITE_KEY && TURNSTILE_SECRET_KEY
 				? {
