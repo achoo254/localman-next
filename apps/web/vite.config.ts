@@ -142,6 +142,9 @@ export default defineConfig(({ mode }) => {
 			proxy: {
 				"/api": "http://localhost:4000",
 				"/auth": "http://localhost:4000",
+				// Localman MCP and its OAuth metadata, for agents on PUBLIC_URL.
+				"/mcp": "http://localhost:4000",
+				"/.well-known/oauth-protected-resource": "http://localhost:4000",
 			},
 		},
 		build: {

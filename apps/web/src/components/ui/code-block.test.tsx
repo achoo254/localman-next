@@ -50,4 +50,18 @@ describe("CodeBlock", () => {
 			screen.getByRole("button", { name: "Sao chép mã curl" }),
 		).toBeInTheDocument();
 	});
+
+	it("wraps long lines only when asked, keeping the copied text one line", () => {
+		const command = `claude mcp add --transport http demo ${"x".repeat(120)}`;
+		render(
+			<CodeBlock caption="Terminal" code={command} wrap data-id="wrapped" />,
+		);
+		render(<CodeBlock caption="JSON" code="{}" data-id="scrolled" />);
+		const wrapped = document.querySelector('[data-id="wrapped"] pre');
+		expect(wrapped).toHaveClass("whitespace-pre-wrap", "wrap-anywhere");
+		expect(wrapped?.textContent).toBe(command);
+		expect(document.querySelector('[data-id="scrolled"] pre')).not.toHaveClass(
+			"whitespace-pre-wrap",
+		);
+	});
 });

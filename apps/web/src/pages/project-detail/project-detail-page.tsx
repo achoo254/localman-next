@@ -131,6 +131,7 @@ function ProjectDetail({ project }: { project: Project }) {
 			<ProjectDetailHeader project={project} onOpen={setMembers} />
 			<ApiEndpointCard
 				project={project}
+				resources={resources}
 				busy={actions.busy}
 				onNewResource={openNew}
 				onGenerateAll={() => void actions.generateAll()}

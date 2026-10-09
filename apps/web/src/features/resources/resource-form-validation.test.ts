@@ -42,6 +42,9 @@ describe("validateDraft", () => {
 		expect(validateDraft({ ...draft, name: "users" }, ROOT).errors.name).toBe(
 			"Đã có resource cùng tên ở vị trí này.",
 		);
+		expect(validateDraft({ ...draft, name: "mcp" }, ROOT).errors.name).toMatch(
+			/dành cho endpoint MCP/,
+		);
 	});
 
 	it("keeps generated, duplicate and unknown fields out", () => {

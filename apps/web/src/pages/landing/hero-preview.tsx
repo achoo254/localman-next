@@ -1,6 +1,6 @@
 import { Badge } from "../../components/ui/badge";
 import { cardClassName } from "../../components/ui/card";
-import { DEMO_USERS } from "../../content/landing-samples";
+import { DEMO_MOCK_BASE_URL, DEMO_USERS } from "../../content/landing-samples";
 import { cn } from "../../lib/cn";
 
 const LOCALHOST_ORDERS = [
@@ -66,7 +66,7 @@ export function HeroPreview({ localhost }: { localhost: boolean }) {
 	}));
 	return (
 		<PreviewCard
-			url="https://a1b2c3d4.localman.hoandat.com/api/v1/users?page=1&limit=2"
+			url={`${DEMO_MOCK_BASE_URL}/users?page=1&limit=2`}
 			body={JSON.stringify(users, null, 2)}
 			footer={`${users.length} bản ghi`}
 		/>

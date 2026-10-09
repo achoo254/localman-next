@@ -1,8 +1,9 @@
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { useEffect, useId, useRef, useState } from "react";
-import { COPIED_RESET_MS } from "../../components/ui/copy-field";
-import { IconButton } from "../../components/ui/icon-button";
+import { cn } from "../../lib/cn";
 import { copyText } from "../../platform/clipboard";
+import { COPIED_RESET_MS } from "./copy-field";
+import { IconButton } from "./icon-button";
 
 type CopyState = "idle" | "copied" | "failed";
 
@@ -17,6 +18,11 @@ export interface CodeBlockProps {
 	/** Shown above the code: language or what the snippet does. */
 	caption: string;
 	code: string;
+	/**
+	 * Wraps long lines instead of scrolling: for one-line shell commands,
+	 * which must stay one line in the copied text. JSON keeps scrolling.
+	 */
+	wrap?: boolean;
 	"data-id": string;
 }
 
@@ -30,11 +36,13 @@ function selectContents(element: HTMLElement | null): void {
 /**
  * Read-only snippet in the mono font with a copy button. Long lines scroll
  * inside the block (focusable, so keyboard users can scroll it too), never
- * the page. Plain `<pre>`: the docs chunk stays free of CodeMirror.
+ * the page; `wrap` breaks them visually instead (the copy is unchanged).
+ * Plain `<pre>`: the docs chunk stays free of CodeMirror.
  */
 export function CodeBlock({
 	caption,
 	code,
+	wrap = false,
 	"data-id": dataId,
 }: CodeBlockProps) {
 	const captionId = useId();
@@ -88,7 +96,10 @@ export function CodeBlock({
 				ref={pre}
 				// biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be reachable by keyboard (WCAG 2.1.1).
 				tabIndex={0}
-				className="m-0 overflow-x-auto p-3 font-mono text-fg text-sm leading-relaxed"
+				className={cn(
+					"m-0 overflow-x-auto p-3 font-mono text-fg text-sm leading-relaxed",
+					wrap && "wrap-anywhere whitespace-pre-wrap",
+				)}
 			>
 				<code>{code}</code>
 			</pre>

@@ -17,11 +17,6 @@ import { Input } from "./input";
 /** How long the button shows the check mark after a copy. */
 export const COPIED_RESET_MS = 2000;
 
-const COPIED = "Đã sao chép link";
-/** The automatic copy after a request usually lost the click's permission. */
-const AUTO_FAILED = "Bấm nút sao chép để copy link.";
-const FAILED = "Không sao chép được, hãy chọn link và sao chép thủ công.";
-
 export interface CopyFieldHandle {
 	/** Copies the value, exactly like the copy button. */
 	copy: () => Promise<void>;
@@ -36,6 +31,8 @@ export interface CopyFieldProps {
 	hint?: ReactNode;
 	/** Copies once on mount, e.g. a link that was just created. */
 	autoCopy?: boolean;
+	/** What the value is, in the button name and notes ("Sao chép link"). */
+	itemLabel?: string;
 	"data-id": string;
 	copyDataId: string;
 	ref?: Ref<CopyFieldHandle>;
@@ -44,12 +41,15 @@ export interface CopyFieldProps {
 type CopyState = "idle" | "copied" | "auto-failed" | "failed";
 
 /** Announced in the live region; failures also join the hint. */
-const NOTES: Record<CopyState, string> = {
-	idle: "",
-	copied: COPIED,
-	"auto-failed": AUTO_FAILED,
-	failed: FAILED,
-};
+function notesFor(item: string): Record<CopyState, string> {
+	return {
+		idle: "",
+		copied: `Đã sao chép ${item}`,
+		// The automatic copy after a request usually lost the click's permission.
+		"auto-failed": `Bấm nút sao chép để copy ${item}.`,
+		failed: `Không sao chép được, hãy chọn ${item} và sao chép thủ công.`,
+	};
+}
 
 /**
  * Read-only value with a copy button. The result is announced by its own
@@ -64,6 +64,7 @@ export function CopyField({
 	value,
 	hint,
 	autoCopy = false,
+	itemLabel = "link",
 	"data-id": dataId,
 	copyDataId,
 	ref,
@@ -105,6 +106,7 @@ export function CopyField({
 		void copyAs(true);
 	}, [copyAs]);
 
+	const notes = notesFor(itemLabel);
 	const copied = state === "copied";
 	// A refused clipboard is not an invalid value: a neutral hint, no error.
 	const failure = state === "failed" || state === "auto-failed";
@@ -115,7 +117,7 @@ export function CopyField({
 				failure ? (
 					<>
 						{hint ? <span className="block">{hint}</span> : null}
-						{NOTES[state]}
+						{notes[state]}
 					</>
 				) : (
 					hint
@@ -134,7 +136,7 @@ export function CopyField({
 				<button
 					ref={button}
 					type="button"
-					aria-label={copied ? "Đã sao chép" : "Sao chép link"}
+					aria-label={copied ? "Đã sao chép" : `Sao chép ${itemLabel}`}
 					data-id={copyDataId}
 					className={cn(
 						buttonClassName({ variant: "secondary", iconOnly: true }),
@@ -150,7 +152,7 @@ export function CopyField({
 				</button>
 			</div>
 			<output aria-live="polite" className="sr-only">
-				{NOTES[state]}
+				{notes[state]}
 			</output>
 		</FormField>
 	);

@@ -1,5 +1,10 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import {
+	type FeatureFlags,
+	FeaturesContext,
+	NO_FEATURES,
+} from "../../config/features";
 import { makeProject, makeUser } from "../../test/fixtures";
 import { type MockRoute, mockFetch } from "../../test/mock-fetch";
 import { renderRoutes } from "../../test/render-app";
@@ -70,7 +75,16 @@ export function apiError(status: number, code: string, details?: unknown) {
 	return { status, body: { error: { code, message: code, details } } };
 }
 
-/** Renders `/projects/p1` with the user, the project and `routes` mocked. */
+export interface DetailRenderOptions {
+	flags?: FeatureFlags;
+	/** Initial location, e.g. with `?endpoint=mcp`. */
+	path?: string;
+}
+
+/**
+ * Renders `/projects/p1` (or `path`) with the user, the project and
+ * `routes` mocked, under the given feature flags.
+ */
 export function renderDetail(
 	routes: Record<string, MockRoute>,
 	project: Project = makeProject(PROJECT_ID, {
@@ -79,6 +93,10 @@ export function renderDetail(
 		secret: "abc123",
 		mockBaseUrl: "https://abc123.mock.localman.test/api/v1",
 	}),
+	{
+		flags = NO_FEATURES,
+		path = `/projects/${PROJECT_ID}`,
+	}: DetailRenderOptions = {},
 ) {
 	const api = mockFetch({
 		"GET /api/v1/users/me": { body: makeUser() },
@@ -88,10 +106,17 @@ export function renderDetail(
 	});
 	const view = renderRoutes(
 		[
-			{ path: "/projects/:projectId", element: <ProjectDetailPage /> },
+			{
+				path: "/projects/:projectId",
+				element: (
+					<FeaturesContext value={flags}>
+						<ProjectDetailPage />
+					</FeaturesContext>
+				),
+			},
 			{ path: "/projects", element: <p>Danh sách projects</p> },
 		],
-		`/projects/${PROJECT_ID}`,
+		path,
 	);
 	return { ...api, ...view };
 }

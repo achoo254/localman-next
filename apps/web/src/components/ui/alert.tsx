@@ -47,7 +47,7 @@ export function Alert({
 			{...rest}
 		>
 			<Icon size={20} aria-hidden="true" className="text-(--tone)" />
-			<div className="min-w-0">
+			<div className="min-w-0 flex-1">
 				{title ? (
 					<strong className="mb-0.5 block font-mono text-sm">{title}</strong>
 				) : null}

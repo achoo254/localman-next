@@ -15,6 +15,9 @@ import { RelationsDemo } from "./relations-demo";
 const LiveMockSyncSection = lazy(async () => ({
 	default: (await import("./live-mock-sync-section")).LiveMockSyncSection,
 }));
+const MockMcpSection = lazy(async () => ({
+	default: (await import("./mock-mcp-section")).MockMcpSection,
+}));
 
 /**
  * Tab titles of the landing, one per hero message. `index.html` carries the
@@ -43,6 +46,11 @@ export function LandingPage() {
 			{flags.liveMockSync ? (
 				<Suspense fallback={null}>
 					<LiveMockSyncSection />
+				</Suspense>
+			) : null}
+			{flags.mockMcp ? (
+				<Suspense fallback={null}>
+					<MockMcpSection />
 				</Suspense>
 			) : null}
 			<ComparisonSection />

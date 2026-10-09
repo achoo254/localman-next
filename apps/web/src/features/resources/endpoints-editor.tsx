@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import { Badge, type BadgeTone } from "../../components/ui/badge";
 import { JsonEditor } from "../../components/ui/json-editor";
+import { Switch } from "../../components/ui/switch";
 import { cn } from "../../lib/cn";
 import { type EndpointDraft, endpointKey } from "./resource-form-state";
 import type { EndpointMethod } from "./resource-model";
@@ -70,25 +71,11 @@ export function EndpointsEditor({
 						)}
 					>
 						<div className="flex flex-wrap items-center gap-2 font-mono text-[0.8125rem]">
-							<button
-								type="button"
-								role="switch"
-								aria-checked={endpoint.enabled}
+							<Switch
+								checked={endpoint.enabled}
 								aria-label={`Bật ${title}`}
-								className={cn(
-									"relative inline-flex h-5 w-9 flex-none cursor-pointer items-center rounded-full border border-transparent p-0.5 transition-colors",
-									endpoint.enabled ? "bg-primary-solid" : "bg-border-strong",
-								)}
-								onClick={() => update(key, { enabled: !endpoint.enabled })}
-							>
-								<span
-									aria-hidden="true"
-									className={cn(
-										"size-3.5 rounded-full bg-surface shadow-sm transition-transform motion-reduce:transition-none",
-										endpoint.enabled && "translate-x-4",
-									)}
-								/>
-							</button>
+								onCheckedChange={(enabled) => update(key, { enabled })}
+							/>
 							<Badge tone={METHOD_TONES[endpoint.method]}>
 								{endpoint.method}
 							</Badge>

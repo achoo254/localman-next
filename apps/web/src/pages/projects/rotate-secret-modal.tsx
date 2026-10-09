@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
 import { useToast } from "../../components/ui/toast";
+import { useFeatures } from "../../config/features";
 import { errorMessage } from "../../lib/api-client";
 import {
 	type Project,
@@ -42,6 +43,7 @@ export function RotateSecretModal({
 	onCloseAutoFocus,
 }: RotateSecretModalProps) {
 	const toast = useToast();
+	const flags = useFeatures();
 	const queryClient = useQueryClient();
 	const [preview, setPreview] = useState<Preview>({ status: "loading" });
 
@@ -81,6 +83,11 @@ export function RotateSecretModal({
 				URL cũ ngừng hoạt động ngay. Frontend hoặc tool đang gọi URL cũ phải cập
 				nhật sang URL mới.
 			</p>
+			{flags.mockMcp ? (
+				<p className="m-0" data-id="modal-rotate-secret-mcp">
+					URL MCP cũng đổi theo; agent đã thêm URL cũ phải thêm lại.
+				</p>
+			) : null}
 			<p className="m-0" data-id="modal-rotate-secret-collaborators">
 				{collaboratorsText(preview)}
 			</p>

@@ -5,6 +5,10 @@
  * bundles Faker. Fields follow `DEMO_USER_SCHEMA`.
  */
 
+/** Mock base URL of the landing samples (hero card, Mock MCP block). */
+export const DEMO_MOCK_BASE_URL =
+	"https://a1b2c3d4.localman.hoandat.com/api/v1";
+
 export interface DemoUser {
 	readonly id: string;
 	readonly createdAt: string;

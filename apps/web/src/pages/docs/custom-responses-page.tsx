@@ -1,6 +1,6 @@
 import { MAX_RESOURCE_BYTES, limitsFor } from "@localman/shared/constants";
 import { Fragment } from "react";
-import { CodeBlock } from "./code-block";
+import { CodeBlock } from "../../components/ui/code-block";
 import {
 	DOCS_TEMPLATE_MAX_DEPTH,
 	DOCS_TEMPLATE_MAX_FAKER_CALLS,

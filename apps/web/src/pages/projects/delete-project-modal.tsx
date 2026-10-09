@@ -12,6 +12,7 @@ const KIND_LABELS: Readonly<Record<string, string>> = {
 	resources: "resource",
 	records: "bản ghi dữ liệu",
 	collaborators: "cộng tác viên",
+	mcpTokens: "token MCP",
 };
 
 type Preview =

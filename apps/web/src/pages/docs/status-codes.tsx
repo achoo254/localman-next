@@ -74,6 +74,15 @@ const ROWS: readonly (readonly ReactNode[])[] = [
 		"Request bị ngắt khi body chưa gửi xong, hoặc máy chủ không đọc được request.",
 	],
 	[
+		"401",
+		<Code key="c" code="UNAUTHENTICATED" />,
+		<Fragment key="d">
+			Chỉ ở MCP endpoint (<InlineCode>/mcp</InlineCode>) khi project bật "Yêu
+			cầu token cho MCP": thiếu hoặc sai Bearer token. REST không bao giờ trả mã
+			này.
+		</Fragment>,
+	],
+	[
 		"404",
 		<Code key="c" code={'"Not found"'} />,
 		<Fragment key="d">

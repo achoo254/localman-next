@@ -1,8 +1,10 @@
 import { type ReactNode, useState } from "react";
 import { Link } from "react-router";
-import { buttonClassName } from "../../components/ui/button";
-import { cn } from "../../lib/cn";
-import { CodeBlock } from "./code-block";
+import { CodeBlock } from "../../components/ui/code-block";
+import {
+	SegmentedControl,
+	type SegmentedOption,
+} from "../../components/ui/segmented-control";
 import {
 	type CodeExample,
 	EXAMPLE_LANGUAGES,
@@ -21,40 +23,12 @@ export const CODE_EXAMPLES: readonly CodeExample[] = [
 	ERRORS_EXAMPLE,
 ];
 
-function LanguagePicker({
-	value,
-	onChange,
-}: {
-	value: ExampleLanguage;
-	onChange: (language: ExampleLanguage) => void;
-}) {
-	return (
-		<fieldset
-			data-id="docs-language"
-			className="m-0 flex flex-wrap gap-2 border-0 p-0"
-		>
-			<legend className="sr-only">Ngôn ngữ của ví dụ</legend>
-			{EXAMPLE_LANGUAGES.map((language) => (
-				<button
-					key={language.id}
-					type="button"
-					aria-pressed={value === language.id}
-					data-id={`docs-language-${language.id}`}
-					className={cn(
-						buttonClassName({
-							variant: value === language.id ? "primary" : "secondary",
-							size: "sm",
-						}),
-						"font-mono",
-					)}
-					onClick={() => onChange(language.id)}
-				>
-					{language.label}
-				</button>
-			))}
-		</fieldset>
-	);
-}
+const LANGUAGE_OPTIONS: readonly SegmentedOption<ExampleLanguage>[] =
+	EXAMPLE_LANGUAGES.map((language) => ({
+		value: language.id,
+		label: language.label,
+		"data-id": `docs-language-${language.id}`,
+	}));
 
 /** Extra explanation under some examples, keyed by example id. */
 const NOTES: Readonly<Record<string, ReactNode>> = {
@@ -104,7 +78,13 @@ export function CodeExamplesPage() {
 					<InlineCode>JSON_HEADERS</InlineCode> và <InlineCode>api</InlineCode>{" "}
 					khai báo ở khối đầu tiên.
 				</Prose>
-				<LanguagePicker value={language} onChange={setLanguage} />
+				<SegmentedControl
+					legend="Ngôn ngữ của ví dụ"
+					data-id="docs-language"
+					options={LANGUAGE_OPTIONS}
+					value={language}
+					onChange={setLanguage}
+				/>
 			</section>
 			{CODE_EXAMPLES.map((example) => (
 				<DocsSection key={example.id} id={example.id} title={example.title}>

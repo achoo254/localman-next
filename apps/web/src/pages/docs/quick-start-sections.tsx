@@ -1,6 +1,6 @@
 import { MAX_RESOURCE_DEPTH } from "@localman/shared/constants";
 import { Link } from "react-router";
-import { CodeBlock } from "./code-block";
+import { CodeBlock } from "../../components/ui/code-block";
 import { DocsSection, InlineCode, Prose } from "./docs-content";
 import { docsPath } from "./docs-pages";
 import { QueryParamsTable, ReservedParamsNote } from "./query-params";

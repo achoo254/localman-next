@@ -3,7 +3,9 @@ import {
 	FIELD_NAME_PATTERN,
 	FORBIDDEN_KEYS,
 	MAX_SCHEMA_FIELDS,
+	MOCK_MCP_SEGMENT,
 	OBJECT_ID_FIELD,
+	RESERVED_RESOURCE_NAMES,
 	RESOURCE_NAME_MAX,
 	RESOURCE_NAME_PATTERN,
 	relationSourceOf,
@@ -31,6 +33,9 @@ function nameError(name: string, place: FormPlace): string | undefined {
 	}
 	if (!RESOURCE_NAME_PATTERN.test(name)) {
 		return "Chỉ dùng chữ không dấu, số, - và _, bắt đầu bằng chữ hoặc số.";
+	}
+	if (RESERVED_RESOURCE_NAMES.includes(name)) {
+		return `Tên "${MOCK_MCP_SEGMENT}" dành cho endpoint MCP của project, hãy chọn tên khác.`;
 	}
 	if (place.siblingNames.includes(name)) {
 		return "Đã có resource cùng tên ở vị trí này.";
