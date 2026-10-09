@@ -82,6 +82,9 @@ export {
 export {
 	DEFAULT_GENERATE_COUNT,
 	DEFAULT_RESOURCE_FIELDS,
+	DEFAULT_RESPONSE,
+	ENDPOINT_METHODS,
+	ENDPOINT_PATHS,
 	FIELD_NAME_MAX,
 	FIELD_NAME_PATTERN,
 	FIELD_TYPES,
@@ -95,8 +98,12 @@ export {
 	parentKeyOf,
 	RECORD_ID_MAX,
 	RELATION_FIELD_TYPES,
+	RESOURCE_ENDPOINTS,
 	RESOURCE_NAME_MAX,
 	RESOURCE_NAME_PATTERN,
+	type ResourceFieldDefinition,
+} from "./resource-constants.js";
+export {
 	type ResourceCreate,
 	type ResourceField,
 	type ResourceUpdate,
@@ -108,14 +115,10 @@ export {
 } from "./resource-schema.js";
 export {
 	completeEndpoints,
-	DEFAULT_RESPONSE,
-	ENDPOINT_METHODS,
-	ENDPOINT_PATHS,
 	type EndpointInput,
 	endpointInputSchema,
 	endpointsInputSchema,
 	objectTemplateSchema,
-	RESOURCE_ENDPOINTS,
 	type ResourceEndpoint,
 	responseTemplateSchema,
 	TEMPLATE_LIMITS,

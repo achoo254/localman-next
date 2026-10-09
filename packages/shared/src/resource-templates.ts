@@ -9,6 +9,12 @@ import {
 	isJsonObject,
 	isPlainObject,
 } from "./json-value.js";
+import {
+	DEFAULT_RESPONSE,
+	ENDPOINT_METHODS,
+	ENDPOINT_PATHS,
+	RESOURCE_ENDPOINTS,
+} from "./resource-constants.js";
 
 /** Bounds of an object template and of each custom response. */
 export const TEMPLATE_LIMITS: JsonLimits = Object.freeze({
@@ -16,17 +22,13 @@ export const TEMPLATE_LIMITS: JsonLimits = Object.freeze({
 	maxNodes: 2_000,
 });
 
-/** The five generated endpoints of a resource (PATCH shares PUT). */
-export const RESOURCE_ENDPOINTS = Object.freeze([
-	{ method: "GET", path: "/:res" },
-	{ method: "GET", path: "/:res/:id" },
-	{ method: "POST", path: "/:res" },
-	{ method: "PUT", path: "/:res/:id" },
-	{ method: "DELETE", path: "/:res/:id" },
-] as const);
-export const ENDPOINT_METHODS = ["GET", "POST", "PUT", "DELETE"] as const;
-export const ENDPOINT_PATHS = ["/:res", "/:res/:id"] as const;
-export const DEFAULT_RESPONSE = "$mockData";
+// Defined in the zod-free module; re-exported for older imports.
+export {
+	DEFAULT_RESPONSE,
+	ENDPOINT_METHODS,
+	ENDPOINT_PATHS,
+	RESOURCE_ENDPOINTS,
+} from "./resource-constants.js";
 
 const endpointKey = (endpoint: { method: string; path: string }): string =>
 	`${endpoint.method} ${endpoint.path}`;

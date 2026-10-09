@@ -2,63 +2,40 @@ import { z } from "zod";
 import { isFakerMethodId } from "./faker-method-catalog.js";
 import { FORBIDDEN_KEYS } from "./json-value.js";
 import {
+	FIELD_NAME_MAX,
+	FIELD_NAME_PATTERN,
+	FIELD_TYPES,
+	MAX_SCHEMA_FIELDS,
+	OBJECT_ID_FIELD,
+	OBJECT_ID_PATTERN,
+	RESOURCE_NAME_MAX,
+	RESOURCE_NAME_PATTERN,
+} from "./resource-constants.js";
+import {
 	endpointsInputSchema,
 	objectTemplateSchema,
 } from "./resource-templates.js";
 
-/** Records the generator creates at most (the 0–100 bar). */
-export const MAX_GENERATE_COUNT = 100;
-/** Records "Generate all" gives a resource that has none (prototype). */
-export const DEFAULT_GENERATE_COUNT = 10;
-/**
- * Records a resource may hold at most: the cap of `PUT …/data` and of
- * records created through the mock API. The generator stops at
- * `MAX_GENERATE_COUNT`; `MAX_RESOURCE_BYTES` applies on top.
- */
-export const MAX_RECORDS_PER_RESOURCE = 1000;
-/** Levels of nesting, a root resource being level 1. */
-export const MAX_RESOURCE_DEPTH = 10;
-export const MAX_SCHEMA_FIELDS = 50;
-export const RESOURCE_NAME_MAX = 64;
-export const FIELD_NAME_MAX = 64;
-export const RECORD_ID_MAX = 64;
-
-/** One URL path segment: letters, digits, `_` and `-`. */
-export const RESOURCE_NAME_PATTERN = /^[A-Za-z0-9][\w-]*$/;
-/** Word characters, `-` and `.` (mockapi.io). */
-export const FIELD_NAME_PATTERN = /^[\w\-.]+$/;
-export const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
-
-/**
- * Field types of the schema editor. `Parent Resource` embeds the parent
- * record and `Child Resource` lists the records of a child resource; both
- * are resolved when the mock API answers, never stored in records.
- */
-export const FIELD_TYPES = [
-	"Faker.js",
-	"String",
-	"Number",
-	"Boolean",
-	"Object",
-	"Array",
-	"Date",
-	"Parent Resource",
-	"Child Resource",
-] as const;
-export type FieldType = (typeof FIELD_TYPES)[number];
-
-/** Field types whose value is resolved from other resources. */
-export const RELATION_FIELD_TYPES: ReadonlySet<FieldType> = new Set([
-	"Parent Resource",
-	"Child Resource",
-]);
-
-/**
- * Generated, non-removable fields: `id` (Object ID) on every resource and
- * `{parent}Id` (Parent ID, see `parentKeyOf`) on a nested one. They are
- * not part of `schema`; user fields may not reuse their names.
- */
-export const OBJECT_ID_FIELD = "id";
+// Constants live in the zod-free module; re-exported for older imports.
+export {
+	DEFAULT_GENERATE_COUNT,
+	DEFAULT_RESOURCE_FIELDS,
+	FIELD_NAME_MAX,
+	FIELD_NAME_PATTERN,
+	FIELD_TYPES,
+	type FieldType,
+	MAX_GENERATE_COUNT,
+	MAX_RECORDS_PER_RESOURCE,
+	MAX_RESOURCE_DEPTH,
+	MAX_SCHEMA_FIELDS,
+	OBJECT_ID_FIELD,
+	OBJECT_ID_PATTERN,
+	parentKeyOf,
+	RECORD_ID_MAX,
+	RELATION_FIELD_TYPES,
+	RESOURCE_NAME_MAX,
+	RESOURCE_NAME_PATTERN,
+} from "./resource-constants.js";
 
 export const resourceNameSchema = z
 	.string()
@@ -137,29 +114,6 @@ export const resourceFieldsSchema = z
 			seen.add(field.name);
 		});
 	});
-
-/** Schema of a new resource besides `id` (as in the source). */
-export const DEFAULT_RESOURCE_FIELDS: readonly ResourceField[] = Object.freeze([
-	{ name: "createdAt", type: "Faker.js", fakerMethod: "date.past" },
-	{ name: "name", type: "Faker.js", fakerMethod: "name.fullName" },
-	{ name: "avatar", type: "Faker.js", fakerMethod: "image.avatar" },
-]);
-
-function singular(name: string): string {
-	if (/ies$/i.test(name)) return `${name.slice(0, -3)}y`;
-	if (/(?:ss|sh|ch|x|z)es$/i.test(name)) return name.slice(0, -2);
-	if (/(?:ss|us|is)$/i.test(name)) return name;
-	if (/s$/i.test(name)) return name.slice(0, -1);
-	return name;
-}
-
-/**
- * Name of the Parent ID field of the children of `parentName`:
- * `users` → `userId`, `categories` → `categoryId`, `boxes` → `boxId`.
- */
-export function parentKeyOf(parentName: string): string {
-	return `${singular(parentName) || parentName}Id`;
-}
 
 /**
  * Body of `PUT /resources/:id`. Absent `schema`, `template` or `endpoints`

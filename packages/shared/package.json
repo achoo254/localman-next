@@ -5,6 +5,8 @@
 	"type": "module",
 	"exports": {
 		".": "./src/index.ts",
+		"./constants": "./src/constants.ts",
+		"./faker-catalog": "./src/faker-method-catalog.ts",
 		"./faker-methods": "./src/faker-methods.ts"
 	},
 	"scripts": {
