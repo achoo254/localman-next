@@ -1,13 +1,13 @@
 import { type Request, type RequestHandler, Router } from "express";
+import { executeOperation } from "./execute-operation.js";
 import { assertNoOperationConflicts } from "./operation-conflicts.js";
-import { OperationError, validationError } from "./operation-error.js";
+import { OperationError } from "./operation-error.js";
 import { type QueryCoercer, createQueryCoercer } from "./query-coercion.js";
 import {
 	type AnyOperation,
 	type AuthContext,
 	DRY_RUN_QUERY_PARAM,
 	LOWERCASE_METHOD,
-	type OperationContext,
 } from "./types.js";
 
 export interface OperationRouterOptions {
@@ -88,29 +88,6 @@ function collectRawInput(
 	return { ...body, ...params };
 }
 
-function assertAuthorized(op: AnyOperation, auth: AuthContext | null): void {
-	if (op.scopes.length === 0) return;
-	if (!auth) {
-		throw new OperationError(401, "UNAUTHENTICATED", "Authentication required");
-	}
-	const missing = op.scopes.filter((scope) => !auth.scopes.includes(scope));
-	if (missing.length > 0) {
-		throw new OperationError(
-			403,
-			"FORBIDDEN",
-			`Missing required scope: ${missing.join(", ")}`,
-		);
-	}
-}
-
-function forbidden(): OperationError {
-	return new OperationError(
-		403,
-		"FORBIDDEN",
-		"You are not allowed to perform this operation",
-	);
-}
-
 function createRouteHandler(
 	op: AnyOperation,
 	options: OperationRouterOptions,
@@ -118,35 +95,15 @@ function createRouteHandler(
 	const coerce = createQueryCoercer(op.input);
 	// Express 5 forwards rejected promises to the error handler.
 	return async (req, res) => {
-		const auth = await options.resolveAuth(req);
-		assertAuthorized(op, auth);
-		const clientIp = req.ip ?? null;
-		if (op.guard && !(await op.guard({ auth, clientIp }))) throw forbidden();
-
-		const ctx: OperationContext = {
-			auth,
-			dryRun: readDryRun(req, op),
-			clientIp,
-		};
-		const parsedInput = await op.input.safeParseAsync(
-			collectRawInput(req, op, coerce),
-		);
-		if (!parsedInput.success) throw validationError(parsedInput.error);
-
-		if (op.policy && !(await op.policy(ctx, parsedInput.data))) {
-			throw forbidden();
-		}
-
-		const result = await op.handler(ctx, parsedInput.data);
-		const parsedOutput = await op.output.safeParseAsync(result);
-		if (!parsedOutput.success) {
-			// A contract bug on our side: surface as 500, never as a client error.
-			throw new Error(
-				`Operation "${op.id}" returned output that violates its schema`,
-				{ cause: parsedOutput.error },
-			);
-		}
-		res.status(op.successStatus).json(parsedOutput.data);
+		const { output } = await executeOperation(op, {
+			auth: await options.resolveAuth(req),
+			clientIp: req.ip ?? null,
+			readRequest: () => ({
+				dryRun: readDryRun(req, op),
+				input: collectRawInput(req, op, coerce),
+			}),
+		});
+		res.status(op.successStatus).json(output);
 	};
 }
 

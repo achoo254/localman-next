@@ -1,0 +1,76 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`schemaFromTypeScript > maps an interface to Localman fields with Faker hints 1`] = `
+[
+  {
+    "fakerMethod": "internet.email",
+    "name": "email",
+    "type": "Faker.js",
+  },
+  {
+    "fakerMethod": "image.avatar",
+    "name": "avatar",
+    "type": "Faker.js",
+  },
+  {
+    "fakerMethod": "name.fullName",
+    "name": "fullName",
+    "type": "Faker.js",
+  },
+  {
+    "name": "age",
+    "type": "Number",
+  },
+  {
+    "name": "isActive",
+    "type": "Boolean",
+  },
+  {
+    "name": "createdAt",
+    "type": "Date",
+  },
+  {
+    "fakerMethod": "date.past",
+    "name": "updated_at",
+    "type": "Faker.js",
+  },
+  {
+    "name": "role",
+    "type": "String",
+  },
+  {
+    "name": "tags",
+    "type": "Array",
+  },
+  {
+    "name": "scores",
+    "type": "Array",
+  },
+  {
+    "name": "address",
+    "type": "Object",
+  },
+  {
+    "name": "meta",
+    "type": "Object",
+  },
+  {
+    "fakerMethod": "address.latitude",
+    "name": "lat",
+    "type": "Faker.js",
+  },
+]
+`;
+
+exports[`schemaFromTypeScript > maps an interface to Localman fields with Faker hints 2`] = `
+[
+  {
+    "message": ""id" is generated; skipped",
+    "path": "id",
+  },
+  {
+    "message": "Allowed values are not kept: admin, member, guest",
+    "path": "role",
+  },
+]
+`;

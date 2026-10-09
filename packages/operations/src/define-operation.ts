@@ -80,6 +80,18 @@ function structuralProblems(
 	) {
 		problems.push("a destructive operation cannot be public (empty `scopes`)");
 	}
+	if (spec.createsCredential === true) {
+		if (spec.annotations.readOnly) {
+			problems.push(
+				"an operation that creates a credential cannot be readOnly",
+			);
+		}
+		if (Array.isArray(spec.scopes) && spec.scopes.length === 0) {
+			problems.push(
+				"an operation that creates a credential cannot be public (empty `scopes`)",
+			);
+		}
+	}
 	if (
 		spec.successStatus !== undefined &&
 		!includes(SUCCESS_STATUSES, spec.successStatus)
@@ -128,6 +140,8 @@ export function defineOperation<
 	return Object.freeze({
 		...spec,
 		dryRun: spec.dryRun ?? false,
+		createsCredential: spec.createsCredential ?? false,
+		requiresConfirmation: spec.requiresConfirmation ?? false,
 		successStatus: spec.successStatus ?? 200,
 	});
 }

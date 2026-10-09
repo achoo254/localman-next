@@ -15,6 +15,12 @@ export const LOWERCASE_METHOD = {
 /** Query flag that turns a call to a `dryRun` operation into a preview. */
 export const DRY_RUN_QUERY_PARAM = "dryRun";
 
+/**
+ * MCP token scope required, on top of the toolset scope, by tools that mint
+ * a credential (personal access token, service-account secret, access key).
+ */
+export const CREDENTIALS_WRITE_SCOPE = "credentials:write";
+
 /** MCP toolsets a client can enable; one per product area. */
 export const TOOLSETS = [
 	"mock",
@@ -33,6 +39,12 @@ export const TOOLSETS = [
 	"feedback",
 ] as const;
 export type Toolset = (typeof TOOLSETS)[number];
+
+/**
+ * Toolsets an MCP client gets when it does not choose (`?toolsets=`).
+ * A toolset without any tool yet simply contributes nothing.
+ */
+export const DEFAULT_TOOLSETS: readonly Toolset[] = ["mock", "client"];
 
 export const SUCCESS_STATUSES = [200, 201] as const;
 export type SuccessStatus = (typeof SUCCESS_STATUSES)[number];
@@ -113,6 +125,19 @@ export interface OperationSpec<
 	/** Required (true) for destructive operations. */
 	readonly dryRun?: boolean;
 	/**
+	 * True when the operation mints a credential whose secret is returned
+	 * once (PAT, service-account secret, access key). Its MCP tool then
+	 * also needs the `credentials:write` token scope.
+	 */
+	readonly createsCredential?: boolean;
+	/**
+	 * The MCP tool must be confirmed: a `dry_run` call returns a
+	 * `confirm_token` the real call has to present. Only for changes with a
+	 * wide blast radius (delete a project, a resource tree, reset all data,
+	 * rotate a project secret); needs `dryRun: true`.
+	 */
+	readonly requiresConfirmation?: boolean;
+	/**
 	 * Largest JSON body in bytes this route accepts, when it needs more
 	 * than the server-wide default (e.g. a whole resource's records). The
 	 * server mounts a parser with this limit for this route only.
@@ -130,6 +155,8 @@ export interface OperationDefinition<
 	O extends z.ZodType = z.ZodType,
 > extends OperationSpec<I, O> {
 	readonly dryRun: boolean;
+	readonly createsCredential: boolean;
+	readonly requiresConfirmation: boolean;
 	readonly successStatus: SuccessStatus;
 }
 

@@ -1,18 +1,39 @@
-import { type JsonSchema, toInputJsonSchema } from "./json-schema.js";
-import type { AnyOperation, Toolset } from "./types.js";
+import {
+	type JsonSchema,
+	toInputJsonSchema,
+	toOutputJsonSchema,
+} from "./json-schema.js";
+import {
+	type AnyOperation,
+	CREDENTIALS_WRITE_SCOPE,
+	type Toolset,
+} from "./types.js";
 
 export interface McpToolDescriptor {
 	readonly name: string;
+	readonly operationId: string;
 	readonly description: string;
 	readonly inputSchema: JsonSchema;
+	readonly outputSchema: JsonSchema;
 	readonly annotations: {
 		readonly readOnlyHint: boolean;
 		readonly destructiveHint: boolean;
 		readonly idempotentHint: boolean;
 	};
 	readonly toolset: Toolset;
-	/** The MCP server must offer a dry run and confirm token for this tool. */
+	/**
+	 * Every scope the MCP access token must carry: `<toolset>:read` or
+	 * `<toolset>:write`, plus `credentials:write` for credential minting.
+	 * The operation's own `scopes` are still checked against the caller.
+	 */
+	readonly scopes: readonly string[];
+	/** The tool accepts `dry_run` (the operation supports a preview). */
 	readonly dryRun: boolean;
+	/**
+	 * A real call needs the `confirm_token` returned by a `dry_run` call
+	 * with the same input (operations declaring `requiresConfirmation`).
+	 */
+	readonly requiresConfirmation: boolean;
 }
 
 /** `mock.listResources` -> `list_resources`. */
@@ -32,6 +53,16 @@ export function toolDescriptionOf(op: {
 	return parts.join("\n\n");
 }
 
+/** MCP token scopes a tool needs; see `McpToolDescriptor.scopes`. */
+export function mcpScopesOf(
+	op: Pick<AnyOperation, "toolset" | "annotations" | "createsCredential">,
+): string[] {
+	const access = op.annotations.readOnly ? "read" : "write";
+	const scopes = [`${op.toolset}:${access}`];
+	if (op.createsCredential) scopes.push(CREDENTIALS_WRITE_SCOPE);
+	return scopes;
+}
+
 /** Returns `null` for operations exempt from MCP. */
 export function toMcpToolDescriptor(
 	op: AnyOperation,
@@ -39,14 +70,18 @@ export function toMcpToolDescriptor(
 	if (op.mcp !== true) return null;
 	return {
 		name: toolNameOf(op.id),
+		operationId: op.id,
 		description: toolDescriptionOf(op),
 		inputSchema: toInputJsonSchema(op.input),
+		outputSchema: toOutputJsonSchema(op.output),
 		annotations: {
 			readOnlyHint: op.annotations.readOnly,
 			destructiveHint: op.annotations.destructive,
 			idempotentHint: op.annotations.idempotent,
 		},
 		toolset: op.toolset,
+		scopes: mcpScopesOf(op),
 		dryRun: op.dryRun,
+		requiresConfirmation: op.requiresConfirmation && op.dryRun,
 	};
 }

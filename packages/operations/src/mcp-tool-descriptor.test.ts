@@ -5,7 +5,11 @@ import {
 	downloadExtension,
 	getResource,
 } from "./__fixtures__/sample-operations.js";
-import { toMcpToolDescriptor, toolNameOf } from "./mcp-tool-descriptor.js";
+import {
+	mcpScopesOf,
+	toMcpToolDescriptor,
+	toolNameOf,
+} from "./mcp-tool-descriptor.js";
 
 describe("toMcpToolDescriptor", () => {
 	it("derives snake_case tool names from operation ids", () => {
@@ -48,6 +52,38 @@ describe("toMcpToolDescriptor", () => {
 		const tool = toMcpToolDescriptor(deleteProject);
 		expect(tool?.annotations.destructiveHint).toBe(true);
 		expect(tool?.dryRun).toBe(true);
+		expect(tool?.requiresConfirmation).toBe(true);
+		expect(toMcpToolDescriptor(createResource)?.requiresConfirmation).toBe(
+			false,
+		);
+		// Destructive alone does not demand a confirm token.
+		const direct = toMcpToolDescriptor({
+			...deleteProject,
+			requiresConfirmation: false,
+		});
+		expect(direct?.annotations.destructiveHint).toBe(true);
+		expect(direct?.dryRun).toBe(true);
+		expect(direct?.requiresConfirmation).toBe(false);
+	});
+
+	it("describes the output and the token scopes the tool needs", () => {
+		const read = toMcpToolDescriptor(getResource);
+		expect(read?.operationId).toBe("mock.getResource");
+		expect(read?.outputSchema).toMatchObject({
+			type: "object",
+			required: ["id", "projectId", "name"],
+		});
+		expect(read?.scopes).toEqual(["mock:read"]);
+		expect(toMcpToolDescriptor(deleteProject)?.scopes).toEqual([
+			"client:write",
+		]);
+		expect(
+			mcpScopesOf({
+				toolset: "users",
+				annotations: { readOnly: false, destructive: false, idempotent: false },
+				createsCredential: true,
+			}),
+		).toEqual(["users:write", "credentials:write"]);
 	});
 
 	it("emits no tool for exempt operations", () => {

@@ -24,6 +24,16 @@ export const RECORD_ID_MAX = 64;
 
 /** One URL path segment: letters, digits, `_` and `-`. */
 export const RESOURCE_NAME_PATTERN = /^[A-Za-z0-9][\w-]*$/;
+/**
+ * Last path segment of a project's Hosted Mock MCP endpoint
+ * (`{prefix}/mcp`), served before the REST routes.
+ */
+export const MOCK_MCP_SEGMENT = "mcp";
+/**
+ * Resource names refused when a resource is saved: `{prefix}/mcp` is the
+ * MCP endpoint. Names compare case-sensitively, like routes.
+ */
+export const RESERVED_RESOURCE_NAMES: readonly string[] = [MOCK_MCP_SEGMENT];
 /** Word characters, `-` and `.` (mockapi.io). */
 export const FIELD_NAME_PATTERN = /^[\w\-.]+$/;
 export const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;

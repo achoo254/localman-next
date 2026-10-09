@@ -153,4 +153,40 @@ describe("defineOperation", () => {
 			),
 		).toThrow(/needs a method that has a body/);
 	});
+
+	it("allows requiresConfirmation only with a dry run", () => {
+		const destructive = {
+			annotations: { readOnly: false, destructive: true, idempotent: true },
+			dryRun: true,
+		};
+		expect(defineOperation(validSpec(destructive)).requiresConfirmation).toBe(
+			false,
+		);
+		expect(
+			defineOperation(validSpec({ ...destructive, requiresConfirmation: true }))
+				.requiresConfirmation,
+		).toBe(true);
+		expect(() =>
+			defineOperation(validSpec({ requiresConfirmation: true })),
+		).toThrow(/`requiresConfirmation` needs `dryRun: true`/);
+	});
+
+	it("guards operations that create a credential", () => {
+		expect(defineOperation(validSpec()).createsCredential).toBe(false);
+		expect(
+			defineOperation(validSpec({ createsCredential: true })).createsCredential,
+		).toBe(true);
+		expect(() =>
+			defineOperation(validSpec({ createsCredential: true, scopes: [] })),
+		).toThrow(/creates a credential cannot be public/);
+		expect(() =>
+			defineOperation(
+				validSpec({
+					method: "GET",
+					annotations: { readOnly: true, destructive: false, idempotent: true },
+					createsCredential: true,
+				}),
+			),
+		).toThrow(/creates a credential cannot be readOnly/);
+	});
 });

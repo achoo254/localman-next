@@ -6,8 +6,10 @@ import {
 	FIELD_NAME_PATTERN,
 	FIELD_TYPES,
 	MAX_SCHEMA_FIELDS,
+	MOCK_MCP_SEGMENT,
 	OBJECT_ID_FIELD,
 	OBJECT_ID_PATTERN,
+	RESERVED_RESOURCE_NAMES,
 	RESOURCE_NAME_MAX,
 	RESOURCE_NAME_PATTERN,
 	relationSourceOf,
@@ -49,7 +51,10 @@ export const resourceNameSchema = z
 	.regex(
 		RESOURCE_NAME_PATTERN,
 		"Name must start with a letter or digit and contain only letters, digits, _ and -",
-	);
+	)
+	.refine((name) => !RESERVED_RESOURCE_NAMES.includes(name), {
+		message: `"${MOCK_MCP_SEGMENT}" is reserved for the project's MCP endpoint ({prefix}/${MOCK_MCP_SEGMENT}); choose another name`,
+	});
 
 export const resourceFieldSchema = z
 	.object({

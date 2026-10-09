@@ -1,0 +1,91 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`schemaFromOpenApi > imports a component with references to other components 1`] = `
+[
+  {
+    "fakerMethod": "name.fullName",
+    "name": "name",
+    "type": "Faker.js",
+  },
+  {
+    "name": "category",
+    "type": "Object",
+  },
+  {
+    "name": "photoUrls",
+    "type": "Array",
+  },
+  {
+    "name": "tags",
+    "type": "Array",
+  },
+  {
+    "name": "status",
+    "type": "String",
+  },
+  {
+    "name": "owner",
+    "type": "Object",
+  },
+  {
+    "name": "bornAt",
+    "type": "Date",
+  },
+  {
+    "fakerMethod": "internet.url",
+    "name": "homepage",
+    "type": "Faker.js",
+  },
+  {
+    "name": "vaccinated",
+    "type": "Boolean",
+  },
+  {
+    "name": "sire",
+    "type": "Object",
+  },
+]
+`;
+
+exports[`schemaFromOpenApi > imports a component with references to other components 2`] = `
+[
+  {
+    "message": ""id" is generated; skipped",
+    "path": "id",
+  },
+  {
+    "message": "Allowed values are not kept: available, pending, sold",
+    "path": "status",
+  },
+]
+`;
+
+exports[`schemaFromOpenApi > reads a bare Schema Object or JSON Schema 1`] = `
+[
+  {
+    "fakerMethod": "datatype.uuid",
+    "name": "uid",
+    "type": "Faker.js",
+  },
+  {
+    "name": "kind",
+    "type": "String",
+  },
+  {
+    "name": "at",
+    "type": "Date",
+  },
+  {
+    "name": "count",
+    "type": "Number",
+  },
+  {
+    "name": "payload",
+    "type": "Object",
+  },
+  {
+    "name": "extra",
+    "type": "String",
+  },
+]
+`;

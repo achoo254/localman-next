@@ -59,6 +59,7 @@ export const deleteProject = defineOperation({
 	toolset: "client",
 	mcp: true,
 	dryRun: true,
+	requiresConfirmation: true,
 	handler: (ctx) => ({ deleted: !ctx.dryRun, dryRun: ctx.dryRun }),
 });
 

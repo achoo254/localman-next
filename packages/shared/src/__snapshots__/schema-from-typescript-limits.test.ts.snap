@@ -1,0 +1,18 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`schemaFromTypeScript on unsafe input > renames or drops unsafe field names and skips methods 1`] = `
+[
+  "Methods are skipped",
+  "Index signatures are skipped",
+  "Field name "__proto__" is not allowed; skipped",
+  "Field name "constructor" is not allowed; skipped",
+  "Field name "prototype" is not allowed; skipped",
+  ""id" is generated; skipped",
+  "Renamed to "first_name"",
+  "Renamed to "a_b"",
+  "Field name has no letter or digit; skipped",
+  "Functions are skipped",
+  "Type not recognised; imported as String",
+  "Type not recognised; imported as String",
+]
+`;

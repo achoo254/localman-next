@@ -1,4 +1,10 @@
 export { defineOperation } from "./define-operation.js";
+export {
+	assertScopes,
+	executeOperation,
+	type OperationCall,
+	type OperationResult,
+} from "./execute-operation.js";
 export type { JsonSchema } from "./json-schema.js";
 export {
 	findMcpCoverageViolations,
@@ -7,9 +13,14 @@ export {
 } from "./mcp-coverage.js";
 export {
 	type McpToolDescriptor,
+	mcpScopesOf,
 	toMcpToolDescriptor,
 	toolNameOf,
 } from "./mcp-tool-descriptor.js";
+export {
+	isOperationDefinition,
+	renderMcpToolTable,
+} from "./mcp-tool-table.js";
 export {
 	buildOpenApiDocument,
 	type OpenApiDocument,
@@ -36,6 +47,8 @@ export {
 export {
 	type AnyOperation,
 	type AuthContext,
+	CREDENTIALS_WRITE_SCOPE,
+	DEFAULT_TOOLSETS,
 	DRY_RUN_QUERY_PARAM,
 	HTTP_METHODS,
 	type HttpMethod,

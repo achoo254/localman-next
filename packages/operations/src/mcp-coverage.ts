@@ -12,6 +12,7 @@ export type McpViolationCode =
 	| "EMPTY_EXEMPT_REASON"
 	| "MISSING_DESCRIPTION"
 	| "DESTRUCTIVE_WITHOUT_DRY_RUN"
+	| "CONFIRMATION_WITHOUT_DRY_RUN"
 	| "UNREPRESENTABLE_INPUT_SCHEMA"
 	| OperationConflictCode;
 
@@ -75,6 +76,13 @@ export function mcpProblemsOf(candidate: unknown): McpProblem[] {
 		problems.push({
 			code: "DESTRUCTIVE_WITHOUT_DRY_RUN",
 			message: "destructive operations must set `dryRun: true`",
+		});
+	}
+	// The confirm token comes from a dry run, so there must be one.
+	if (candidate.requiresConfirmation === true && candidate.dryRun !== true) {
+		problems.push({
+			code: "CONFIRMATION_WITHOUT_DRY_RUN",
+			message: "`requiresConfirmation` needs `dryRun: true`",
 		});
 	}
 	return problems;
