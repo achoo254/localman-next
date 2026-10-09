@@ -3,23 +3,23 @@ import {
 	FORBIDDEN_KEYS,
 	type JsonObject,
 	type JsonValue,
+	MAX_PAGE_LIMIT,
+	MOCK_QUERY_PARAMS,
 } from "@localman/shared";
 import { compareValues, matchesFilter, matchesSearch } from "./query-match.js";
 
-/** Most records one page returns; a larger `limit` is lowered to it. */
-export const MAX_PAGE_LIMIT = 100;
+export { MAX_PAGE_LIMIT };
 
-const SEARCH_KEYS = ["search", "filter"] as const;
-const PAGE_KEYS = ["page", "p"] as const;
-const LIMIT_KEYS = ["limit", "l"] as const;
-const SORT_KEYS = ["sortBy", "sortby", "orderBy", "orderby"] as const;
-const RESERVED: ReadonlySet<string> = new Set([
-	...SEARCH_KEYS,
-	...PAGE_KEYS,
-	...LIMIT_KEYS,
-	...SORT_KEYS,
-	"order",
-]);
+const {
+	search: SEARCH_KEYS,
+	page: PAGE_KEYS,
+	limit: LIMIT_KEYS,
+	sort: SORT_KEYS,
+	order: ORDER_KEYS,
+} = MOCK_QUERY_PARAMS;
+const RESERVED: ReadonlySet<string> = new Set(
+	Object.values(MOCK_QUERY_PARAMS).flat(),
+);
 const FORBIDDEN: ReadonlySet<string> = new Set(FORBIDDEN_KEYS);
 
 /** Fields a list may be filtered and sorted by. */
@@ -117,7 +117,7 @@ export function parseListQuery(
 		sort: sortable
 			? {
 					field: sortField,
-					desc: params.get("order")?.toLowerCase() === "desc",
+					desc: firstOf(params, ORDER_KEYS)?.toLowerCase() === "desc",
 				}
 			: null,
 		page:

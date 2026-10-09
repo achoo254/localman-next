@@ -53,7 +53,8 @@ describe("POST /feedback/pro-interest", () => {
 		const tokens = [
 			"forged",
 			TURNSTILE_TOKENS.otherHost,
-			TURNSTILE_TOKENS.otherAction,
+			TURNSTILE_TOKENS.contact,
+			TURNSTILE_TOKENS.noAction,
 		];
 		for (const [i, token] of tokens.entries()) {
 			const res = await asGuest(token, `198.51.100.${10 + i}`);

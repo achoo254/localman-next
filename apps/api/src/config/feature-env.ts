@@ -3,6 +3,13 @@ import { z } from "zod";
 export const TURNSTILE_VERIFY_URL =
 	"https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
+/**
+ * Cloudflare's documented testing secrets (`1x…AA` always passes, `2x…`
+ * always fails, `3x…` reports a duplicate). They pass any token, so they
+ * are for local testing only.
+ */
+export const TURNSTILE_TESTING_SECRET = /^[123]x0{31}AA$/;
+
 /** `host[:port]` without scheme, e.g. `localman.hoandat.com`, `localhost:4100`. */
 const hostWithPort = z
 	.string()
@@ -81,11 +88,18 @@ export function checkFeatureEnv(env: FeatureEnv, ctx: z.RefinementCtx): void {
 		});
 	}
 	// Public forms must not accept unverified guests in production.
-	if (env.NODE_ENV === "production" && !turnstile.every(Boolean)) {
+	if (env.NODE_ENV !== "production") return;
+	if (!turnstile.every(Boolean)) {
 		ctx.addIssue({
 			code: "custom",
 			path: ["TURNSTILE_SECRET_KEY"],
 			message: "is required in production (public forms need Turnstile)",
+		});
+	} else if (TURNSTILE_TESTING_SECRET.test(env.TURNSTILE_SECRET_KEY ?? "")) {
+		ctx.addIssue({
+			code: "custom",
+			path: ["TURNSTILE_SECRET_KEY"],
+			message: "must not be a Cloudflare testing secret in production",
 		});
 	}
 }

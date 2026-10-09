@@ -1,12 +1,12 @@
 import { defineOperation } from "@localman/operations";
-import { proInterestSubmissionSchema } from "@localman/shared";
+import {
+	TURNSTILE_ACTIONS,
+	proInterestSubmissionSchema,
+} from "@localman/shared";
 import { z } from "zod";
 import { runtimeSettings } from "../../config/runtime-settings.js";
-import {
-	assertHumanGuest,
-	recordProInterest,
-	takeProInterestSlot,
-} from "./pro-interest-service.js";
+import { assertHumanGuest, takeFeedbackSlot } from "./feedback-guards.js";
+import { recordProInterest } from "./pro-interest-service.js";
 
 const BROWSER_FORM_ONLY =
 	"Form công khai cho người: khách phải qua Cloudflare Turnstile (agent không giải được) và việc để lại email liên hệ phải do chính người đó đồng ý";
@@ -28,11 +28,15 @@ export const submitProInterest = defineOperation({
 	handler: async (ctx, input) => {
 		const userSub = ctx.auth?.subjectId ?? null;
 		const caller = { userSub, clientIp: ctx.clientIp };
-		await takeProInterestSlot(caller);
+		await takeFeedbackSlot("pro-interest", caller);
 		// Honeypot filled: only a bot sees the hidden field. Answer as if
 		// stored, before any other check, so it learns nothing.
 		if (input.website) return { received: true };
-		await assertHumanGuest(caller, input.turnstileToken);
+		await assertHumanGuest(
+			caller,
+			input.turnstileToken,
+			TURNSTILE_ACTIONS.proInterest,
+		);
 		await recordProInterest(input, userSub);
 		return { received: true };
 	},

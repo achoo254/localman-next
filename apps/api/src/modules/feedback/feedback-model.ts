@@ -6,7 +6,10 @@ import {
 } from "@localman/shared";
 import mongoose, { Schema, type Types } from "mongoose";
 
-/** Kinds of feedback sharing one collection; contact messages come later. */
+/**
+ * Types this model stores. Contact messages (`type: "contact"`) share the
+ * collection through `ContactMessageModel` in contact-message-model.ts.
+ */
 export const FEEDBACK_TYPES = ["pro_interest"] as const;
 export type FeedbackType = (typeof FEEDBACK_TYPES)[number];
 

@@ -1,10 +1,11 @@
+import { MAX_JSON_BODY_KB } from "@localman/shared";
 import express, { type Express, type RequestHandler } from "express";
 import helmet, { type HelmetOptions } from "helmet";
 import { getDbState } from "../db/connect-mongo.js";
 import type { Logger } from "../logger.js";
 import { createErrorHandler, notFoundHandler } from "./error-handler.js";
 
-export const JSON_BODY_LIMIT = "100kb";
+export const JSON_BODY_LIMIT = `${MAX_JSON_BODY_KB}kb`;
 
 /** A route that needs a larger JSON body than `JSON_BODY_LIMIT`. */
 export interface RouteBodyLimit {

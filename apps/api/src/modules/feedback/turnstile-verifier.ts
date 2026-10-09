@@ -1,12 +1,7 @@
+import { TURNSTILE_TESTING_SECRET } from "../../config/feature-env.js";
 import type { TurnstileSettings } from "../../config/runtime-settings.js";
 
 const VERIFY_TIMEOUT_MS = 5_000;
-
-/**
- * Cloudflare's documented testing secrets answer with a fixed dummy
- * hostname, so the hostname check is skipped for them (local testing).
- */
-const TESTING_SECRET = /^[123]x0{31}AA$/;
 
 /** `unavailable`: Cloudflare could not be asked; the token is unknown. */
 export type TurnstileOutcome = "valid" | "invalid" | "unavailable";
@@ -33,11 +28,12 @@ function readReply(body: unknown): SiteverifyReply {
 
 /**
  * Verifies a Cloudflare Turnstile token with siteverify. A token is valid
- * only when it was solved on our public host and, if the widget declared
- * an action, for `expectedAction` (a token minted for another form or
- * site is refused). The secret and the token are never logged; a timeout
- * or a 5xx is `unavailable` so the caller fails closed without blaming
- * the user's token.
+ * only when it was solved on our public host for `expectedAction`: every
+ * widget of the app declares its form's action, so a token minted for
+ * another form or site, or without action, is refused (testing secrets
+ * may answer without one). The secret and the token are never logged; a
+ * timeout or a 5xx is `unavailable` so the caller fails closed without
+ * blaming the user's token.
  */
 export async function verifyTurnstile(
 	settings: TurnstileSettings,
@@ -63,9 +59,11 @@ export async function verifyTurnstile(
 	if (!response.ok) return "unavailable";
 	const reply = readReply(await response.json().catch(() => null));
 	if (!reply.success) return "invalid";
-	const hostOk =
-		TESTING_SECRET.test(settings.secretKey) ||
-		reply.hostname === settings.expectedHostname;
-	const actionOk = !reply.action || reply.action === expectedAction;
+	// Testing secrets (refused in production) answer with a dummy hostname
+	// and may omit the action.
+	const testing = TURNSTILE_TESTING_SECRET.test(settings.secretKey);
+	const hostOk = testing || reply.hostname === settings.expectedHostname;
+	const actionOk =
+		reply.action === expectedAction || (testing && !reply.action);
 	return hostOk && actionOk ? "valid" : "invalid";
 }

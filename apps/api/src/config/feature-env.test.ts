@@ -63,4 +63,24 @@ describe("product settings in the environment", () => {
 		expect(lonelySecret).toContain("TURNSTILE_SITE_KEY: ");
 		expect(lonelySecret).not.toContain("hunter5");
 	});
+
+	it("refuses Cloudflare's testing Turnstile secret in production only", () => {
+		const testing = {
+			TURNSTILE_SITE_KEY: "1x00000000000000000000AA",
+			TURNSTILE_SECRET_KEY: `1x${"0".repeat(31)}AA`,
+		};
+		const production = {
+			...REQUIRED,
+			NODE_ENV: "production",
+			OIDC_ISSUER: "https://auth.hoandat.com",
+			PUBLIC_URL: "https://localman.hoandat.com",
+			WEB_ORIGIN: "https://localman.hoandat.com",
+		};
+		expect(errorOf({ ...production, ...testing })).toContain(
+			"TURNSTILE_SECRET_KEY: must not be a Cloudflare testing secret",
+		);
+		expect(parseEnv({ ...REQUIRED, ...testing }).TURNSTILE_SECRET_KEY).toBe(
+			testing.TURNSTILE_SECRET_KEY,
+		);
+	});
 });

@@ -6,11 +6,14 @@ export const TURNSTILE_TEST_HOSTNAME = "localman.test";
 
 /** Tokens the fake understands; anything else fails verification. */
 export const TURNSTILE_TOKENS = {
+	/** Solved on the Pro interest form (action `pro_interest`). */
 	valid: "turnstile-pass",
+	/** Solved on the contact form (action `contact`). */
+	contact: "turnstile-contact",
 	/** Solved on another site that shares the site key. */
 	otherHost: "turnstile-other-host",
-	/** Solved for another form (action). */
-	otherAction: "turnstile-other-action",
+	/** Solved by a widget that declared no action. */
+	noAction: "turnstile-no-action",
 } as const;
 
 export interface FakeTurnstile {
@@ -41,8 +44,10 @@ function replyFor(token: unknown): Record<string, unknown> {
 			return { success: true, ...base };
 		case TURNSTILE_TOKENS.otherHost:
 			return { success: true, ...base, hostname: "evil.example" };
-		case TURNSTILE_TOKENS.otherAction:
+		case TURNSTILE_TOKENS.contact:
 			return { success: true, ...base, action: "contact" };
+		case TURNSTILE_TOKENS.noAction:
+			return { success: true, hostname: TURNSTILE_TEST_HOSTNAME };
 		default:
 			return { success: false, "error-codes": ["invalid-input-response"] };
 	}
