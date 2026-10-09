@@ -9,7 +9,9 @@
 		"start": "node dist/main.mjs",
 		"test": "vitest run",
 		"typecheck": "tsc --noEmit",
-		"set-user-plan": "tsx --env-file-if-exists=../../.env scripts/set-user-plan.ts"
+		"set-user-plan": "tsx --env-file-if-exists=../../.env scripts/set-user-plan.ts",
+		"load:mock": "tsx scripts/load-mock.ts",
+		"bench:mock-writes": "tsx scripts/bench-mock-writes.ts"
 	},
 	"dependencies": {
 		"@faker-js/faker": "^10.6.0",
@@ -28,11 +30,13 @@
 		"zod": "^4.3.6"
 	},
 	"devDependencies": {
+		"@types/autocannon": "^7.12.7",
 		"@types/express": "^5.0.6",
 		"@types/oidc-provider": "^9.12.1",
 		"@types/proxy-addr": "^2.0.3",
 		"@types/supertest": "^6.0.3",
 		"@types/web-push": "^3.6.4",
+		"autocannon": "^8.0.0",
 		"mongodb-memory-server": "^11.3.0",
 		"oidc-provider": "^9.12.2",
 		"supertest": "^7.1.0"

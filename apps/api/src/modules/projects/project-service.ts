@@ -4,6 +4,7 @@ import { customAlphabet } from "nanoid";
 import { isDuplicateKeyError } from "../../db/mongo-errors.js";
 import { assertProjectQuota, currentPlanOf } from "../billing/plan-guard.js";
 import { MAX_QUOTA_ATTEMPTS, lowestFreeSlots } from "../billing/quota-slots.js";
+import { forgetMockProject } from "../mock-runtime/resolve-project.js";
 import { type ProjectAction, can } from "./project-access.js";
 import { projectDependents } from "./project-dependents.js";
 import { inProjectTransaction } from "./project-lock.js";
@@ -103,6 +104,8 @@ export async function updateProject(
 		{ returnDocument: "after" },
 	).lean<StoredProject>();
 	if (!updated) throw new OperationError(404, "NOT_FOUND", "Project not found");
+	// The mock runtime serves the new prefix at once, not after its cache TTL.
+	forgetMockProject(project.secret);
 	return updated;
 }
 
@@ -146,6 +149,7 @@ export async function deleteProjectCascade(
 		},
 		{ allowDeletedProject: true },
 	);
+	forgetMockProject(project.secret);
 	for (const dependent of projectDependents()) {
 		await dependent.deleteAll(project._id);
 	}

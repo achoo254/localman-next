@@ -47,6 +47,14 @@ const resourceSchema = new Schema(
 		endpoints: { type: [endpointSchema], default: [] },
 		count: { type: Number, required: true, default: 0, min: 0 },
 		nextId: { type: Number, required: true, default: 1, min: 1 },
+		/**
+		 * Sum of `recordBytes` of the records, kept by every write so the
+		 * mock runtime checks `MAX_RESOURCE_BYTES` by delta instead of
+		 * reading all records. No default: resources stored before the
+		 * field existed lack it and are measured once on their next mock
+		 * write (`storedDataBytes`).
+		 */
+		dataBytes: { type: Number, min: 0 },
 		ownerSub: { type: String, required: true },
 		quotaSlot: { type: Number, required: true, min: 0 },
 	},
@@ -72,6 +80,8 @@ export interface StoredResource {
 	readonly endpoints: readonly ResourceEndpoint[];
 	readonly count: number;
 	readonly nextId: number;
+	/** Absent on resources stored before the field existed. */
+	readonly dataBytes?: number;
 	readonly ownerSub: string;
 	readonly quotaSlot: number;
 	readonly createdAt: Date;

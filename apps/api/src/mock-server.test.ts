@@ -2,8 +2,13 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createLogger } from "./logger.js";
 import { createMockApp } from "./mock-server.js";
+import { UsageMeter } from "./modules/mock-runtime/usage-meter.js";
 
-const app = createMockApp({ logger: createLogger("silent") });
+const logger = createLogger("silent");
+const app = createMockApp({
+	logger,
+	usageMeter: new UsageMeter({ logger, warn: async () => {} }),
+});
 
 describe("mock server", () => {
 	it("answers /healthz with 200 without a database", async () => {

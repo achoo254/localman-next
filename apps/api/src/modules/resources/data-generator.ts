@@ -88,7 +88,12 @@ function renderTemplate(
 	}
 }
 
-function recordData(
+/**
+ * Data of the record numbered `index`: the rendered object template, or
+ * one value per schema field. Also fills the fields a mock API POST left
+ * out.
+ */
+export function recordData(
 	spec: GenerationSpec,
 	index: number,
 	faker: Faker,

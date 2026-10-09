@@ -17,7 +17,12 @@ import {
 	authSettingsFromEnv,
 	createAuthModule,
 } from "./modules/auth/auth-module.js";
-import { setNotificationService } from "./modules/notifications/notification-runtime.js";
+import { notifyQuotaWarning } from "./modules/mock-runtime/quota-warnings.js";
+import { UsageMeter } from "./modules/mock-runtime/usage-meter.js";
+import {
+	getNotificationService,
+	setNotificationService,
+} from "./modules/notifications/notification-runtime.js";
 import {
 	type NotificationService,
 	createNotificationService,
@@ -58,6 +63,10 @@ const logger: Logger = createLogger(env.LOG_LEVEL);
 const servers: Server[] = [];
 let shuttingDown = false;
 let notifications: NotificationService | undefined;
+const usageMeter = new UsageMeter({
+	logger,
+	warn: notifyQuotaWarning(getNotificationService),
+});
 
 async function shutdown(reason: string, exitCode: number): Promise<void> {
 	if (shuttingDown) return;
@@ -70,6 +79,8 @@ async function shutdown(reason: string, exitCode: number): Promise<void> {
 	forceExit.unref();
 	try {
 		await Promise.all(servers.map(closeServer));
+		// Write the mock requests counted since the last flush.
+		await usageMeter.stop();
 		// Let background Web Push / Telegram deliveries (owner alerts
 		// included) finish their writes.
 		await notifications?.drain();
@@ -110,7 +121,19 @@ try {
 	});
 	servers.push(await listen(dashboard, env.DASHBOARD_PORT));
 	logger.info({ port: env.DASHBOARD_PORT }, "Dashboard API listening");
-	servers.push(await listen(createMockApp({ logger }), env.MOCK_PORT));
+	usageMeter.start();
+	const mock = createMockApp({
+		logger,
+		usageMeter,
+		trustProxy: env.TRUST_PROXY,
+		rateLimits: {
+			perSecret: env.MOCK_RATE_LIMIT_PER_SECRET,
+			perIp: env.MOCK_RATE_LIMIT_PER_IP,
+			writesPerSecret: env.MOCK_WRITE_RATE_LIMIT_PER_SECRET,
+			responseBytesPerSecret: env.MOCK_RESPONSE_BYTES_PER_SECOND,
+		},
+	});
+	servers.push(await listen(mock, env.MOCK_PORT));
 	logger.info({ port: env.MOCK_PORT }, "Mock runtime listening");
 } catch (error) {
 	logger.fatal({ err: error }, "Startup failed");

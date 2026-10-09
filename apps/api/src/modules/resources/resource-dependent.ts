@@ -79,6 +79,7 @@ async function copyResources(
 					endpoints: resource.endpoints,
 					count: resource.count,
 					nextId: resource.nextId,
+					dataBytes: 0,
 					ownerSub: target.owner,
 					quotaSlot: slots[index],
 				})),
@@ -90,7 +91,12 @@ async function copyResources(
 					.session(session)
 					.lean<StoredRecord[]>();
 				if (records.length === 0) continue;
-				assertResourceSize(records, resourceRef(resource));
+				const dataBytes = assertResourceSize(records, resourceRef(resource));
+				await ResourceModel.updateOne(
+					{ _id: mapped(resource._id) },
+					{ $set: { dataBytes } },
+					{ session },
+				);
 				await RecordModel.insertMany(
 					records.map((record) => ({
 						resourceId: mapped(resource._id),

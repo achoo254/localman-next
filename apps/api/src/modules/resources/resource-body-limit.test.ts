@@ -1,8 +1,9 @@
+import { once } from "node:events";
+import http from "node:http";
 import request from "supertest";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
 	as,
-	guest,
 	testApp,
 	useDashboardTestDb,
 } from "../../test-support/dashboard-test-app.js";
@@ -24,6 +25,59 @@ beforeEach(async () => {
 /** `count` records of about `bytes` each. */
 const records = (count: number, bytes: number) =>
 	Array.from({ length: count }, () => ({ text: "x".repeat(bytes) }));
+
+/**
+ * Sends `body` to the test app and resolves with the status once the
+ * exchange is over. The server may answer before the upload ends and
+ * then discards the rest; a write error after that answer is expected
+ * (supertest reports it as ECONNRESET instead of the status). The
+ * connection is kept alive, so after answering Node reads and discards
+ * the rest of the body instead of closing the socket on the upload (a
+ * reset that can swallow the response); everything closes only once the
+ * exchange is over.
+ */
+async function statusOfLargePut(path: string, body: string): Promise<number> {
+	const server = testApp.listen(0, "127.0.0.1");
+	await once(server, "listening");
+	const agent = new http.Agent({ keepAlive: true, maxSockets: 1 });
+	try {
+		const address = server.address();
+		if (address === null || typeof address === "string") {
+			throw new Error("Test server has no TCP address");
+		}
+		return await new Promise<number>((resolve, reject) => {
+			let status = 0;
+			const req = http.request({
+				host: "127.0.0.1",
+				port: address.port,
+				method: "PUT",
+				path,
+				agent,
+				headers: {
+					origin: "https://localman.test",
+					"content-type": "application/json",
+					"content-length": Buffer.byteLength(body),
+				},
+			});
+			req.on("response", (res) => {
+				status = res.statusCode ?? 0;
+				res.resume();
+			});
+			req.on("error", (error) => {
+				if (status === 0) reject(error);
+			});
+			req.on("close", () => {
+				if (status === 0) reject(new Error("Closed without a response"));
+				else resolve(status);
+			});
+			req.end(body);
+		});
+	} finally {
+		agent.destroy();
+		server.close();
+		server.closeIdleConnections();
+	}
+}
 
 describe("JSON body limits", () => {
 	it("lets PUT data carry a whole resource and nothing larger", async () => {
@@ -84,13 +138,10 @@ describe("JSON body limits", () => {
 			.send('{"data": [');
 		expect(malformed.status).toBe(401);
 		expect(malformed.body.error.code).toBe("UNAUTHENTICATED");
-		const big = await guest().send(
-			"put",
-			resourcesPath(project, `/${users.id}/data`),
-			{
-				data: records(1000, 1_500),
-			},
+		const big = await statusOfLargePut(
+			path,
+			JSON.stringify({ data: records(1000, 1_500) }),
 		);
-		expect(big.status).toBe(401);
+		expect(big).toBe(401);
 	});
 });

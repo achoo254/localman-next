@@ -2,7 +2,7 @@ import { DEFAULT_GENERATE_COUNT } from "@localman/shared";
 import { inProjectTransaction } from "../projects/project-lock.js";
 import type { StoredProject } from "../projects/project-model.js";
 import { generateRecords } from "./data-generator.js";
-import { resourceRef } from "./data-size.js";
+import { assertResourceSize, resourceRef } from "./data-size.js";
 import { RecordModel } from "./record-model.js";
 import { ResourceModel, type StoredResource } from "./resource-model.js";
 import { loadResources, parentKeyIn, toTreeNodes } from "./resource-store.js";
@@ -65,6 +65,7 @@ export async function generateAllData(
 		const resources = await loadResources(project._id, session);
 		const planned = planGenerateAll(resources, count);
 		await RecordModel.deleteMany({ projectId: project._id }, { session });
+		const bytesById = new Map<string, number>();
 		for (const { resource, count: n, parentRecordIds } of planned) {
 			const records = generateRecords(
 				{
@@ -77,6 +78,10 @@ export async function generateAllData(
 				parentRecordIds,
 			);
 			if (records.length === 0) continue;
+			bytesById.set(
+				resource._id.toHexString(),
+				assertResourceSize(records, resourceRef(resource)),
+			);
 			await RecordModel.insertMany(
 				records.map((record) => ({
 					...record,
@@ -90,7 +95,13 @@ export async function generateAllData(
 			planned.map(({ resource, count: n }) => ({
 				updateOne: {
 					filter: { _id: resource._id },
-					update: { $set: { count: n, nextId: n + 1 } },
+					update: {
+						$set: {
+							count: n,
+							nextId: n + 1,
+							dataBytes: bytesById.get(resource._id.toHexString()) ?? 0,
+						},
+					},
 				},
 			})),
 			{ session },
@@ -112,7 +123,7 @@ export async function resetAllData(
 		await RecordModel.deleteMany({ projectId: project._id }, { session });
 		await ResourceModel.updateMany(
 			{ projectId: project._id },
-			{ $set: { count: 0, nextId: 1 } },
+			{ $set: { count: 0, nextId: 1, dataBytes: 0 } },
 			{ session },
 		);
 		return changes;

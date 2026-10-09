@@ -87,7 +87,7 @@ export async function writeRecords(
 	nextId: number,
 	session: ClientSession,
 ): Promise<void> {
-	assertResourceSize(records, resourceRef(resource));
+	const dataBytes = assertResourceSize(records, resourceRef(resource));
 	await RecordModel.deleteMany({ resourceId: resource._id }, { session });
 	if (records.length > 0) {
 		await RecordModel.insertMany(
@@ -101,7 +101,7 @@ export async function writeRecords(
 	}
 	await ResourceModel.updateOne(
 		{ _id: resource._id },
-		{ $set: { count: records.length, nextId } },
+		{ $set: { count: records.length, nextId, dataBytes } },
 		{ session },
 	);
 }
@@ -115,7 +115,7 @@ export async function resetResources(
 	await RecordModel.deleteMany({ resourceId: { $in: ids } }, { session });
 	await ResourceModel.updateMany(
 		{ _id: { $in: ids } },
-		{ $set: { count: 0, nextId: 1 } },
+		{ $set: { count: 0, nextId: 1, dataBytes: 0 } },
 		{ session },
 	);
 }

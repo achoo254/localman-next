@@ -13,6 +13,10 @@ const hostWithPort = z
 		"must be a host name with an optional port, without scheme",
 	);
 
+/** Requests per second allowed by a mock rate limit. */
+const perSecond = (fallback: number) =>
+	z.coerce.number().int().min(1).max(100_000).default(fallback);
+
 /** Comma-separated IdP subjects; blanks are ignored. */
 const subjectList = z
 	.string()
@@ -31,6 +35,19 @@ const subjectList = z
 export const featureEnvShape = {
 	/** Mock URLs are `{secret}.{MOCK_BASE_DOMAIN}`; `localhost…` uses http. */
 	MOCK_BASE_DOMAIN: hostWithPort.default("localman.hoandat.com"),
+	/** Mock runtime requests per second per project secret. */
+	MOCK_RATE_LIMIT_PER_SECRET: perSecond(60),
+	/** Mock runtime requests per second per client IP (IPv6 by /64). */
+	MOCK_RATE_LIMIT_PER_IP: perSecond(30),
+	/** Mock POST/PUT/PATCH/DELETE per second per project secret. */
+	MOCK_WRITE_RATE_LIMIT_PER_SECRET: perSecond(10),
+	/** Mock response bytes per second per project secret (20 MiB). */
+	MOCK_RESPONSE_BYTES_PER_SECOND: z.coerce
+		.number()
+		.int()
+		.min(64 * 1024)
+		.max(1024 * 1024 * 1024)
+		.default(20 * 1024 * 1024),
 	/** IdP `sub` of the Localman owners (admin pages). */
 	OWNER_SUBS: subjectList,
 	/** Chat that receives owner alerts (Pro interest) from Localman's bot. */

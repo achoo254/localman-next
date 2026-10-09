@@ -5,6 +5,7 @@
  */
 export const NOTIFICATION_EVENTS = [
 	{ type: "project.invitation", label: "Lời mời cộng tác project" },
+	{ type: "usage.quota", label: "Cảnh báo hạn mức lượt gọi mock tháng" },
 ] as const;
 
 export type NotificationEventType =

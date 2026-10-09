@@ -85,6 +85,7 @@ export async function createResource(
 						schema,
 						template: input.template ?? null,
 						endpoints: completeEndpoints(input.endpoints),
+						dataBytes: 0,
 						ownerSub: project.owner,
 						quotaSlot: slot,
 					},

@@ -41,6 +41,10 @@ describe("parseEnv", () => {
 			SESSION_ENCRYPTION_KEY: SESSION_KEY,
 			TRUST_PROXY: "loopback",
 			MOCK_BASE_DOMAIN: "localman.hoandat.com",
+			MOCK_RATE_LIMIT_PER_SECRET: 60,
+			MOCK_RATE_LIMIT_PER_IP: 30,
+			MOCK_WRITE_RATE_LIMIT_PER_SECRET: 10,
+			MOCK_RESPONSE_BYTES_PER_SECOND: 20 * 1024 * 1024,
 			OWNER_SUBS: [],
 			TURNSTILE_VERIFY_URL:
 				"https://challenges.cloudflare.com/turnstile/v0/siteverify",
@@ -102,6 +106,28 @@ describe("parseEnv", () => {
 		}
 		for (const secret of ["hunter2", "hunter3", "hunter4", "s3cret"]) {
 			expect(message).not.toContain(secret);
+		}
+	});
+
+	it("reads the mock rate limits as positive integers", () => {
+		const env = parseEnv({
+			...REQUIRED,
+			MOCK_RATE_LIMIT_PER_SECRET: "120",
+			MOCK_RATE_LIMIT_PER_IP: "15",
+			MOCK_WRITE_RATE_LIMIT_PER_SECRET: "5",
+			MOCK_RESPONSE_BYTES_PER_SECOND: "1048576",
+		});
+		expect(env.MOCK_RATE_LIMIT_PER_SECRET).toBe(120);
+		expect(env.MOCK_RATE_LIMIT_PER_IP).toBe(15);
+		expect(env.MOCK_WRITE_RATE_LIMIT_PER_SECRET).toBe(5);
+		expect(env.MOCK_RESPONSE_BYTES_PER_SECOND).toBe(1_048_576);
+		expect(() =>
+			parseEnv({ ...REQUIRED, MOCK_RESPONSE_BYTES_PER_SECOND: "1000" }),
+		).toThrow(/MOCK_RESPONSE_BYTES_PER_SECOND/);
+		for (const value of ["0", "-1", "1.5", "many"]) {
+			expect(() =>
+				parseEnv({ ...REQUIRED, MOCK_RATE_LIMIT_PER_IP: value }),
+			).toThrow(/MOCK_RATE_LIMIT_PER_IP/);
 		}
 	});
 

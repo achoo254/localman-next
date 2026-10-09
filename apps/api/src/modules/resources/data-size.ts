@@ -65,6 +65,11 @@ export function recordBytes(record: {
 export class ByteMeter {
 	private total = 0;
 
+	/** Bytes of the records added so far. */
+	get bytes(): number {
+		return this.total;
+	}
+
 	constructor(private readonly resource: ResourceRef) {}
 
 	add(record: { readonly id: string; readonly data: JsonObject }): void {
@@ -78,11 +83,15 @@ export class ByteMeter {
 	}
 }
 
-/** Throws when the records of one resource pass the resource cap. */
+/**
+ * Throws when the records of one resource pass the resource cap; returns
+ * their bytes, which the resource stores as `dataBytes`.
+ */
 export function assertResourceSize(
 	records: readonly { readonly id: string; readonly data: JsonObject }[],
 	resource: ResourceRef,
-): void {
+): number {
 	const meter = new ByteMeter(resource);
 	for (const record of records) meter.add(record);
+	return meter.bytes;
 }

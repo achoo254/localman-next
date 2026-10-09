@@ -1,5 +1,5 @@
 import express, { type Express, type RequestHandler } from "express";
-import helmet from "helmet";
+import helmet, { type HelmetOptions } from "helmet";
 import { getDbState } from "../db/connect-mongo.js";
 import type { Logger } from "../logger.js";
 import { createErrorHandler, notFoundHandler } from "./error-handler.js";
@@ -32,7 +32,13 @@ export interface BaseAppOptions {
 	 * route keeps `JSON_BODY_LIMIT`.
 	 */
 	readonly routeBodyLimits?: readonly RouteBodyLimit[];
-	/** Registers the server-specific routes between middleware and fallbacks. */
+	/** Helmet settings; the defaults suit the same-origin dashboard. */
+	readonly helmet?: HelmetOptions;
+	/**
+	 * Registers the server-specific routes after the middleware and before
+	 * `/healthz` and the fallbacks, so a catch-all (the mock runtime) can
+	 * claim `/healthz` on hosts it serves and pass the rest on.
+	 */
 	readonly mountRoutes?: (app: Express) => void;
 }
 
@@ -45,24 +51,25 @@ export function createBaseApp({
 	trustProxy = false,
 	beforeBody = [],
 	routeBodyLimits = [],
+	helmet: helmetOptions,
 	mountRoutes,
 }: BaseAppOptions): Express {
 	const app = express();
 	app.disable("x-powered-by");
 	app.set("trust proxy", trustProxy);
-	app.use(helmet());
+	app.use(helmet(helmetOptions));
 	for (const middleware of beforeBody) app.use(middleware);
 	for (const { method, path, limit, before = [] } of routeBodyLimits) {
 		app[method](path, ...before, express.json({ limit }));
 	}
 	app.use(express.json({ limit: JSON_BODY_LIMIT }));
+	mountRoutes?.(app);
 
 	// Liveness only: stays 200 while MongoDB is down; `db` reports its state.
 	app.get("/healthz", (_req, res) => {
 		res.status(200).json({ status: "ok", db: getDbState() });
 	});
 
-	mountRoutes?.(app);
 	app.use(notFoundHandler);
 	app.use(createErrorHandler(logger));
 	return app;
