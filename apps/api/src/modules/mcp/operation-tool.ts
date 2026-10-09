@@ -107,6 +107,7 @@ async function callTool(
 	tool: McpToolDescriptor,
 	args: ToolArgs,
 	deps: OperationToolDeps,
+	signal: AbortSignal | undefined,
 ): Promise<CallToolResult> {
 	const { caller, confirmTokens } = deps;
 	assertTokenScopes(tool, caller.tokenScopes);
@@ -114,6 +115,7 @@ async function callTool(
 	const result = await executeOperation(op, {
 		auth: caller.auth,
 		clientIp: caller.clientIp,
+		...(signal ? { signal } : {}),
 		readRequest: () => {
 			const split = splitArguments(args, tool);
 			confirmToken = split.confirmToken;
@@ -174,9 +176,10 @@ export function registerOperationTool(
 				"localman/operation": tool.operationId,
 			},
 		},
-		async (args) => {
+		async (args, ctx) => {
 			try {
-				return await callTool(op, tool, args, deps);
+				// Aborts when the agent cancels the call or disconnects.
+				return await callTool(op, tool, args, deps, ctx.mcpReq.signal);
 			} catch (error) {
 				return toolFailure(error, tool.name, deps.logger);
 			}

@@ -11,6 +11,7 @@ import { Button } from "../../components/ui/button";
 import { cardClassName } from "../../components/ui/card";
 import { Tooltip } from "../../components/ui/tooltip";
 import { useFeatures } from "../../config/features";
+import { OpenProjectInClientButton } from "../../features/api-client/open-in/open-project-in-client-button";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import type { Project } from "../projects/projects-api";
@@ -168,6 +169,7 @@ export function ApiEndpointCard({
 				>
 					{t("projectDetail.endpoint.resetAll")}
 				</Button>
+				<OpenProjectInClientButton projectId={project.id} />
 				{onRotateSecret ? (
 					<Button
 						variant="ghost"

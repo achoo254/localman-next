@@ -51,6 +51,27 @@ const cidrList = z
 		"must be comma-separated IP addresses or CIDRs",
 	);
 
+/** A DNS name without scheme or port: labels of letters, digits and `-`. */
+const DOMAIN_NAME =
+	/^(?=.{1,253}$)[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/;
+
+/** Comma-separated domain names, lowercased; blanks and repeats dropped. */
+const domainList = z
+	.string()
+	.default("")
+	.transform((value) => [
+		...new Set(
+			value
+				.split(",")
+				.map((entry) => entry.trim().toLowerCase().replace(/\.$/, ""))
+				.filter((entry) => entry !== ""),
+		),
+	])
+	.refine(
+		(entries) => entries.every((entry) => DOMAIN_NAME.test(entry)),
+		"must be comma-separated domain names without scheme or port",
+	);
+
 /**
  * Environment of product features (projects, plans, feedback), kept apart
  * from the platform settings in env.ts.
@@ -87,6 +108,12 @@ export const featureEnvShape = {
 	 * server's public IPs when they are not on an interface (NAT).
 	 */
 	PROXY_BLOCKED_CIDRS: cidrList,
+	/**
+	 * Tunelo domains: a tunnel is `https://<label>.<domain>`. Only these
+	 * URLs can be saved as tunnel mappings, and the proxy may reach them on
+	 * the server's own address (Tunelo may share it). Empty: no tunnels.
+	 */
+	TUNNEL_DOMAINS: domainList,
 	/** Siteverify endpoint; tests point it at a local fake. */
 	TURNSTILE_VERIFY_URL: z
 		.url({ protocol: /^https?$/, error: "must be an http(s) URL" })

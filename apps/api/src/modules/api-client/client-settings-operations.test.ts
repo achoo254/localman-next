@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
 	ClientSettingsModel,
 	MAX_ROUTING_HOSTS,
-	MAX_TUNNEL_MAPPINGS,
 } from "./client-settings-model.js";
 import {
 	ALICE,
 	BOB,
+	TEST_TUNNEL_DOMAINS,
 	as,
 	useClientStoreDb,
 } from "./testing/client-store-fixture.js";
@@ -15,9 +15,11 @@ useClientStoreDb();
 
 const DEFAULTS = {
 	routingHosts: [],
+	secretProxyHosts: [],
 	tunnelMappings: [],
 	defaultRoute: "auto",
 	sendClientIp: true,
+	tunnelDomains: TEST_TUNNEL_DOMAINS,
 };
 
 describe("client settings", () => {
@@ -88,76 +90,6 @@ describe("client settings", () => {
 		expect(known.status).toBe(200);
 	});
 
-	it("maps a local target to a tunnel origin, canonical key, replace and delete", async () => {
-		const set = await as(ALICE).send(
-			"put",
-			"/client/tunnel-mappings/127.0.0.1:3000",
-			{ url: "https://demo.tunnel.hoandat.com/some/path?x=1" },
-		);
-		expect(set.status).toBe(200);
-		expect(set.body.tunnelMappings).toEqual([
-			{ key: "localhost:3000", url: "https://demo.tunnel.hoandat.com" },
-		]);
-		const replaced = await as(ALICE).send(
-			"put",
-			"/client/tunnel-mappings/localhost:3000",
-			{ url: "https://other.tunnel.hoandat.com" },
-		);
-		expect(replaced.body.tunnelMappings).toEqual([
-			{ key: "localhost:3000", url: "https://other.tunnel.hoandat.com" },
-		]);
-		const removed = await as(ALICE).send(
-			"delete",
-			"/client/tunnel-mappings/localhost:3000",
-		);
-		expect(removed.body.tunnelMappings).toEqual([]);
-	});
-
-	it("rejects a non-local key and a local or non-http tunnel URL", async () => {
-		const url = "https://demo.tunnel.hoandat.com";
-		const cases: [string, string][] = [
-			["api.example.com:443", url],
-			["localhost", url],
-			["localhost:3000", "http://192.168.1.5:8080"],
-			["localhost:3000", "ftp://demo.example.com"],
-		];
-		for (const [key, target] of cases) {
-			const res = await as(ALICE).send(
-				"put",
-				`/client/tunnel-mappings/${key}`,
-				{
-					url: target,
-				},
-			);
-			expect(res.status, `${key} -> ${target}`).toBe(400);
-			expect(res.body.error.code).toBe("VALIDATION_ERROR");
-		}
-	});
-
-	it(`keeps at most ${MAX_TUNNEL_MAPPINGS} tunnel mappings`, async () => {
-		await ClientSettingsModel.create({
-			userSub: ALICE,
-			tunnelMappings: Array.from({ length: MAX_TUNNEL_MAPPINGS }, (_, i) => ({
-				key: `localhost:${3000 + i}`,
-				url: "https://demo.tunnel.hoandat.com",
-			})),
-		});
-		const body = { url: "https://new.tunnel.hoandat.com" };
-		const refused = await as(ALICE).send(
-			"put",
-			"/client/tunnel-mappings/localhost:9999",
-			body,
-		);
-		expect(refused.status).toBe(409);
-		expect(refused.body.error.code).toBe("TUNNEL_MAPPING_LIMIT_REACHED");
-		const known = await as(ALICE).send(
-			"put",
-			"/client/tunnel-mappings/localhost:3000",
-			body,
-		);
-		expect(known.status).toBe(200);
-	});
-
 	it("keeps each user's settings and tunnel mappings private", async () => {
 		await as(ALICE).send("put", "/client/tunnel-mappings/localhost:3000", {
 			url: "https://alice.tunnel.hoandat.com",
@@ -170,11 +102,17 @@ describe("client settings", () => {
 		const alice = await as(ALICE).get("/client/settings");
 		expect(alice.body).toEqual({
 			routingHosts: ["api.example.com"],
+			secretProxyHosts: [],
 			tunnelMappings: [
-				{ key: "localhost:3000", url: "https://alice.tunnel.hoandat.com" },
+				{
+					key: "localhost:3000",
+					url: "https://alice.tunnel.hoandat.com",
+					enabled: true,
+				},
 			],
 			defaultRoute: "direct",
 			sendClientIp: true,
+			tunnelDomains: TEST_TUNNEL_DOMAINS,
 		});
 	});
 });

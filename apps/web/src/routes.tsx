@@ -1,7 +1,7 @@
 import { type ComponentType, Suspense, lazy } from "react";
 import { Navigate, type RouteObject } from "react-router";
 import { AppLayout } from "./components/layout/app-layout";
-import { AppShell } from "./components/layout/app-shell";
+import { AppShell, WORKBENCH_HANDLE } from "./components/layout/app-shell";
 import { PageLoading } from "./components/layout/page-loading";
 import { RedirectIfAuthenticated } from "./features/auth/route-guards";
 import { LandingPage } from "./pages/landing/landing-page";
@@ -113,6 +113,15 @@ export const routes: RouteObject[] = [
 				element: lazyPage(
 					() => import("./pages/project-detail/project-detail-page"),
 					"ProjectDetailPage",
+				),
+			},
+			// Full-height workbench without the footer (see AppShell).
+			{
+				path: "api-client",
+				handle: WORKBENCH_HANDLE,
+				element: lazyPage(
+					() => import("./pages/api-client/api-client-page"),
+					"ApiClientPage",
 				),
 			},
 			{

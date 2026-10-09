@@ -147,6 +147,7 @@ function ProjectDetail({ project }: { project: Project }) {
 				onRotateSecret={isOwner ? () => setRotating(true) : undefined}
 			/>
 			<ResourcesCard
+				projectId={project.id}
 				state={state}
 				mockBaseUrl={project.mockBaseUrl}
 				onRetry={() => void query.refetch()}

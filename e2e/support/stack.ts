@@ -3,7 +3,13 @@ import { createRequire } from "node:module";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { MongoMemoryReplSet } from "mongodb-memory-server";
-import { IDP_ORIGIN, MOCK_BASE_DOMAIN, PORTS, WEB_ORIGIN } from "./ports.js";
+import {
+	ECHO_ORIGIN,
+	IDP_ORIGIN,
+	MOCK_BASE_DOMAIN,
+	PORTS,
+	WEB_ORIGIN,
+} from "./ports.js";
 import {
 	type Service,
 	assertPortFree,
@@ -20,6 +26,9 @@ const WEB_OUT = resolve(REPO, "e2e/.web-dist");
 const TSX = resolve(REPO, "node_modules/.bin/tsx");
 const API_ENTRY = resolve(REPO, "apps/api/src/main.ts");
 const IDP_ENTRY = resolve(REPO, "e2e/support/idp-server.ts");
+const ECHO_ENTRY = resolve(REPO, "e2e/support/echo-server.ts");
+/** Tunnel domain of the E2E stack: the tunnel URLs in the Tunelo specs sit under it. */
+const TUNNEL_DOMAIN = "tunnel.hoandat.com";
 const PREVIEW_CONFIG = resolve(REPO, "e2e/support/vite-preview.config.ts");
 const API_ORIGIN = `http://127.0.0.1:${PORTS.api}`;
 // Vite runs through Node, not `pnpm exec`: with the trimmed env below pnpm
@@ -62,6 +71,8 @@ function apiEnv(mongoUri: string, oidcSecret: string): NodeJS.ProcessEnv {
 		SESSION_ENCRYPTION_KEY: `k1:${randomBytes(32).toString("base64")}`,
 		TRUST_PROXY: "loopback",
 		MOCK_BASE_DOMAIN,
+		// Tunnel mappings accept only these domains; the Tunelo specs use one.
+		TUNNEL_DOMAINS: TUNNEL_DOMAIN,
 	};
 }
 
@@ -84,7 +95,8 @@ function webBuildEnv(): NodeJS.ProcessEnv {
 		...baseEnv(),
 		VITE_API_BASE_URL: "",
 		VITE_IDP_ORIGIN: IDP_ORIGIN,
-		VITE_FEATURES: "",
+		// Every flag the specs need; the API client is the only one so far.
+		VITE_FEATURES: "apiClient",
 	};
 }
 
@@ -121,10 +133,15 @@ export async function startStack(): Promise<void> {
 			cwd: REPO,
 			env: idpEnv(oidcSecret),
 		});
-		services.push(api, idp);
+		const echo = startService("echo", TSX, [ECHO_ENTRY], {
+			cwd: REPO,
+			env: baseEnv(),
+		});
+		services.push(api, idp, echo);
 		await waitForHttp(`${API_ORIGIN}/api/v1/openapi.json`, api);
 		await waitForHttp(`http://127.0.0.1:${PORTS.mock}/healthz`, api);
 		await waitForHttp(`${IDP_ORIGIN}/.well-known/openid-configuration`, idp);
+		await waitForHttp(`${ECHO_ORIGIN}/health`, echo);
 
 		const web = startService(
 			"web-preview",

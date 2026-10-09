@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { useFeatures } from "../../config/features";
 import type { CurrentUser } from "../../features/auth/current-user";
 import { NotificationBell } from "../../features/notifications/notification-bell";
 import { useT } from "../../i18n/i18n-context";
@@ -10,11 +11,12 @@ import { buttonClassName } from "../ui/button";
 import { AccountControls } from "./account-controls";
 
 /**
- * Signed-in top bar: wordmark, Docs, language, notification bell, plan
+ * Signed-in top bar: wordmark, API Client (behind its flag), Docs, language, notification bell, plan
  * and account menu.
  */
 export function AppHeader({ user }: { user: CurrentUser }) {
 	const t = useT();
+	const { apiClient } = useFeatures();
 	return (
 		<header
 			data-id="topbar"
@@ -30,6 +32,18 @@ export function AppHeader({ user }: { user: CurrentUser }) {
 					<Wordmark />
 				</Link>
 				<div className="flex items-center gap-2">
+					{apiClient ? (
+						<Link
+							to="/api-client"
+							data-id="topbar-nav-api-client"
+							className={cn(
+								buttonClassName({ variant: "ghost", size: "sm" }),
+								"no-underline max-sm:hidden",
+							)}
+						>
+							{t("apiClient.nav")}
+						</Link>
+					) : null}
 					<Link
 						to="/docs"
 						data-id="topbar-docs"

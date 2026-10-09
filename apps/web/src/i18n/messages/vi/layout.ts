@@ -20,7 +20,7 @@ export const layout: Messages["layout"] = {
 		pro: "Gói Pro",
 	},
 	accountMenu: {
-		trigger: "Tài khoản {name}",
+		trigger: "{name} · Tài khoản",
 		account: "Tài khoản và hạn mức",
 		plan: "Quản lý gói",
 		notifications: "Kênh thông báo",

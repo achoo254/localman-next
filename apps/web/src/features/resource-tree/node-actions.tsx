@@ -7,8 +7,10 @@ export type NodeAction = "edit" | "data" | "delete";
 export interface NodeActionsProps {
 	name: string;
 	onAction: (action: NodeAction) => void;
-	/** `data-id` of the node; buttons append `-edit`, `-data`, `-delete`. */
+	/** `data-id` of the node; buttons append `-edit`, `-data`, `-client`, `-delete`. */
 	dataIdBase: string;
+	/** Shows "API Client" (the resource's list request in a new tab). */
+	onOpenInClient?: () => void;
 	/** Pushed to the end of the row (the "Export types" menu). */
 	trailing?: ReactNode;
 }
@@ -20,7 +22,7 @@ const ACTION_CLASS =
 	"pointer-coarse:before:-inset-y-2 before:absolute before:inset-x-0 before:content-['']";
 
 /**
- * Edit / Data / Delete row of a resource node. Hidden until the node is
+ * Edit / Data / (API Client) / Delete row of a resource node. Hidden until the node is
  * hovered or holds focus; always visible on touch screens, which have no
  * hover.
  */
@@ -28,6 +30,7 @@ export function NodeActions({
 	name,
 	onAction,
 	dataIdBase,
+	onOpenInClient,
 	trailing,
 }: NodeActionsProps) {
 	const t = useT();
@@ -56,6 +59,17 @@ export function NodeActions({
 			>
 				{t("resourceTree.node.data")}
 			</button>
+			{onOpenInClient ? (
+				<button
+					type="button"
+					aria-label={t("apiClientOpen.node.aria", { name })}
+					data-id={`${dataIdBase}-client`}
+					className={cn(ACTION_CLASS, "text-muted hover:text-fg")}
+					onClick={onOpenInClient}
+				>
+					{t("apiClientOpen.node.label")}
+				</button>
+			) : null}
 			<button
 				type="button"
 				aria-label={t("resourceTree.node.deleteLabel", { name })}

@@ -1,4 +1,9 @@
-import { type Request, type RequestHandler, Router } from "express";
+import {
+	type Request,
+	type RequestHandler,
+	type Response,
+	Router,
+} from "express";
 import { executeOperation } from "./execute-operation.js";
 import { assertNoOperationConflicts } from "./operation-conflicts.js";
 import { OperationError } from "./operation-error.js";
@@ -88,6 +93,19 @@ function collectRawInput(
 	return { ...body, ...params };
 }
 
+/**
+ * Aborts when the response closes before it was fully sent: the client
+ * went away. `req` "close" is no signal of that, since Node emits it as
+ * soon as the request body has been read.
+ */
+function clientGoneSignal(res: Response): AbortSignal {
+	const controller = new AbortController();
+	res.once("close", () => {
+		if (!res.writableFinished) controller.abort();
+	});
+	return controller.signal;
+}
+
 function createRouteHandler(
 	op: AnyOperation,
 	options: OperationRouterOptions,
@@ -98,6 +116,7 @@ function createRouteHandler(
 		const { output } = await executeOperation(op, {
 			auth: await options.resolveAuth(req),
 			clientIp: req.ip ?? null,
+			signal: clientGoneSignal(res),
 			readRequest: () => ({
 				dryRun: readDryRun(req, op),
 				input: collectRawInput(req, op, coerce),

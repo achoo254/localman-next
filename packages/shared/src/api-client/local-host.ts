@@ -101,6 +101,18 @@ function isLoopbackBareHost(host: string): boolean {
 	return mapped ? isLoopbackIpv4(mapped) : isLoopbackIpv6(v6);
 }
 
+/**
+ * Loopback target: `localhost`, any `*.localhost` (the browser resolves each
+ * one to the machine, RFC 6761) and loopback addresses. Such a request is
+ * declared with the `loopback` address space; other local targets are `local`.
+ */
+export function isLoopbackTarget(url: string): boolean {
+	const parsed = parseTarget(url);
+	if (!parsed) return false;
+	const host = bareHost(parsed);
+	return host.endsWith(".localhost") || isLoopbackBareHost(host);
+}
+
 function parseTarget(url: string): URL | null {
 	return parseHttpUrl(normalizeRequestUrl(url));
 }

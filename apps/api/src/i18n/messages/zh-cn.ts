@@ -34,6 +34,14 @@ export const zhCN: ServerMessages = {
 		warningBody: (p) =>
 			`你的 project 已使用 ${p.month}的 ${p.used}/${p.limit} 次 mock API request。`,
 	},
+	apiClient: {
+		proxyBusyUser: (p) =>
+			`你已有 ${p.max} 个 request 正在通过 proxy 发送，请等其中一个完成后再试。`,
+		proxyBusyServer: "Proxy 正忙于处理其他 request，请稍后再试。",
+		tunnelUrlInvalid: (p) =>
+			`tunnel URL 必须是 https://<名称>.<domain>，不能带端口、路径或查询参数，且 domain 须为以下之一：${p.domains}。`,
+		tunnelsDisabled: "此服务器未启用 tunnel URL。",
+	},
 	ownerAlerts: {
 		suppressed: (count) => `（另有 ${count} 条因超出提醒上限未发送）`,
 		contactCategories: {

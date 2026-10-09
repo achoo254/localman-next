@@ -10,6 +10,7 @@ import {
 	defineConfig,
 	loadEnv,
 } from "vite";
+import { apiProxy } from "./src/config/dev-api-proxy";
 import { parseFeatureFlags } from "./src/config/feature-flags";
 
 /**
@@ -135,17 +136,20 @@ export default defineConfig(({ mode }) => {
 	parseFeatureFlags(loadEnv(mode, ROOT, "VITE_").VITE_FEATURES);
 	return {
 		plugins: [react(), tailwindcss(), prerenderLanding()],
+		// The API client's script worker imports QuickJS lazily, which needs
+		// code splitting inside the worker: only the ES format allows it.
+		worker: { format: "es" },
+		optimizeDeps: {
+			// Its WASM is found with `new URL("…wasm", import.meta.url)`, a path
+			// pre-bundling would break in dev; Vite serves the file as is.
+			exclude: ["@jitl/quickjs-wasmfile-release-sync"],
+		},
 		server: {
 			port: 5173,
 			strictPort: true,
 			// Same-origin API calls in development, like production behind nginx.
-			proxy: {
-				"/api": "http://localhost:4000",
-				"/auth": "http://localhost:4000",
-				// Localman MCP and its OAuth metadata, for agents on PUBLIC_URL.
-				"/mcp": "http://localhost:4000",
-				"/.well-known/oauth-protected-resource": "http://localhost:4000",
-			},
+			// Localman MCP and its OAuth metadata, for agents on PUBLIC_URL.
+			proxy: apiProxy("http://localhost:4000"),
 		},
 		build: {
 			// Fonts stay separate files: inlined as base64 they would sit in the

@@ -31,7 +31,7 @@ function spyOnSubmit() {
 }
 
 async function openAccountMenu(name: string) {
-	screen.getByRole("button", { name: `Account ${name}` }).focus();
+	screen.getByRole("button", { name: `${name} · Account` }).focus();
 	await userEvent.keyboard("{Enter}");
 }
 

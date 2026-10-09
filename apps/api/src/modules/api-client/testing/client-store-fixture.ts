@@ -5,6 +5,10 @@ import {
 import { Router } from "express";
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach } from "vitest";
+import {
+	DEFAULT_RUNTIME_SETTINGS,
+	configureRuntime,
+} from "../../../config/runtime-settings.js";
 import { createDashboardApp } from "../../../dashboard-server.js";
 import { createLogger } from "../../../logger.js";
 import {
@@ -63,13 +67,24 @@ export function draftWithSecretVar(
 	});
 }
 
-/** TEST ONLY. Mongo per file, emptied before each test. */
+/** `TUNNEL_DOMAINS` while the client store tests run. */
+export const TEST_TUNNEL_DOMAINS = ["tunnel.hoandat.com"];
+
+/**
+ * TEST ONLY. Mongo per file, emptied before each test, with
+ * `TEST_TUNNEL_DOMAINS` as the server's tunnel domains.
+ */
 export function useClientStoreDb(): void {
 	let teardown: (() => Promise<void>) | undefined;
 	beforeAll(async () => {
+		configureRuntime({
+			...DEFAULT_RUNTIME_SETTINGS,
+			tunnelDomains: TEST_TUNNEL_DOMAINS,
+		});
 		teardown = await connectTestMongo();
 	});
 	afterAll(async () => {
+		configureRuntime(DEFAULT_RUNTIME_SETTINGS);
 		await teardown?.();
 	});
 	beforeEach(async () => {

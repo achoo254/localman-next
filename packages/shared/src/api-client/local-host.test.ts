@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	isLocalHostname,
 	isLocalTarget,
+	isLoopbackTarget,
 	localTargetKey,
 } from "./local-host.js";
 
@@ -96,5 +97,26 @@ describe("localTargetKey", () => {
 	it("is null for a public target", () => {
 		expect(localTargetKey("https://api.example.com:8443/")).toBeNull();
 		expect(localTargetKey("garbage")).toBeNull();
+	});
+});
+
+describe("isLoopbackTarget", () => {
+	it.each([
+		"http://localhost:3000/users",
+		"http://abc123.localhost:4610/users",
+		"http://127.1:8080/",
+		"http://[::1]:3000/",
+	])("%s is loopback", (url) => {
+		expect(isLoopbackTarget(url)).toBe(true);
+	});
+
+	it.each([
+		"http://192.168.1.5:8080/",
+		"http://10.0.0.1/",
+		"http://[fd00::1]/",
+		"https://example.com/",
+		"http://localhost.example.com/",
+	])("%s is not loopback", (url) => {
+		expect(isLoopbackTarget(url)).toBe(false);
 	});
 });

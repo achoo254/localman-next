@@ -1,0 +1,32 @@
+import type { Messages } from "../../message-types";
+
+export const apiClientToolsHistory: Messages["apiClientTools"]["history"] = {
+	title: "History",
+	search: "搜索 history",
+	searchPlaceholder: "按 URL 或名称筛选",
+	method: "Method",
+	allMethods: "全部 method",
+	today: "今天",
+	yesterday: "昨天",
+	open: "在新标签页中打开 {method} {url}（{route}）",
+	opening: "正在打开…",
+	openFailed: "无法打开此 request，请重试。",
+	deleteItem: "从 history 中删除 {method} {url}",
+	deleted: "已从 history 中删除该 request。",
+	clear: "全部清除",
+	clearTitle: "清除 history",
+	clearQuestion: "删除你的全部 request history？",
+	clearCount: {
+		other: "将删除 {count} 个 request，已打开的标签页会保留。",
+	},
+	clearCounting: "正在统计 request…",
+	clearConfirm: "清除 history",
+	cleared: "已清除 history。",
+	loadMore: "加载更早的 request",
+	loading: "正在加载 history…",
+	loadFailed: "无法加载 history。",
+	empty: "还没有发送过 request。",
+	noMatch: "已加载的 history 中没有匹配的 request。",
+	note: "History 按账号保存在服务器上，只有你能看到。",
+	redacted: "Secret 已在 history 中隐藏，请重新输入后再发送。",
+};

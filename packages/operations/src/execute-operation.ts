@@ -11,6 +11,8 @@ import type {
 export interface OperationCall {
 	readonly auth: AuthContext | null;
 	readonly clientIp: string | null;
+	/** Aborts when the caller goes away; becomes `ctx.signal`. */
+	readonly signal?: AbortSignal;
 	/**
 	 * Reads the dry-run flag and the raw, unvalidated input. Called only
 	 * after the scope check and `guard`, so a refused caller always gets
@@ -79,7 +81,12 @@ export async function executeOperation(
 	if (op.guard && !(await op.guard({ auth, clientIp }))) throw forbidden();
 
 	const request = call.readRequest();
-	const ctx: OperationContext = { auth, dryRun: request.dryRun, clientIp };
+	const ctx: OperationContext = {
+		auth,
+		dryRun: request.dryRun,
+		clientIp,
+		...(call.signal ? { signal: call.signal } : {}),
+	};
 	const parsedInput = await op.input.safeParseAsync(request.input);
 	if (!parsedInput.success) throw validationError(parsedInput.error);
 	const input = parsedInput.data;

@@ -5,6 +5,7 @@
  * one origin, as in production.
  */
 import { fileURLToPath } from "node:url";
+import { apiProxy } from "../../apps/web/src/config/dev-api-proxy.js";
 import { PORTS } from "./ports.js";
 
 const API = `http://127.0.0.1:${PORTS.api}`;
@@ -17,11 +18,6 @@ export default {
 		host: "127.0.0.1",
 		port: PORTS.web,
 		strictPort: true,
-		proxy: {
-			"/api": API,
-			"/auth": API,
-			"/mcp": API,
-			"/.well-known/oauth-protected-resource": API,
-		},
+		proxy: apiProxy(API),
 	},
 };

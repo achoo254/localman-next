@@ -3,6 +3,7 @@ import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
 import { cardClassName } from "../../components/ui/card";
 import { useFeatures } from "../../config/features";
+import { useOpenInApiClient } from "../../features/api-client/open-in/use-open-in-api-client";
 import type { NodeAction } from "../../features/resource-tree/node-actions";
 import { ResourceTreeCanvas } from "../../features/resource-tree/resource-tree-canvas";
 import { resourceErrorMessage } from "../../features/resources/resource-errors";
@@ -16,6 +17,8 @@ export type ResourcesState =
 	| { status: "ready"; resources: Resource[] };
 
 export interface ResourcesCardProps {
+	/** Project of the resources, for "Open in API Client". */
+	projectId: string;
 	state: ResourcesState;
 	mockBaseUrl: string;
 	onRetry: () => void;
@@ -28,6 +31,7 @@ export interface ResourcesCardProps {
 
 /** "Resources" card: loading, error and empty states, or the tree canvas. */
 export function ResourcesCard({
+	projectId,
 	state,
 	mockBaseUrl,
 	onRetry,
@@ -36,7 +40,8 @@ export function ResourcesCard({
 	...canvas
 }: ResourcesCardProps) {
 	const t = useT();
-	const { mockPowerUps } = useFeatures();
+	const { mockPowerUps, apiClient } = useFeatures();
+	const openInClient = useOpenInApiClient();
 	let body = (
 		<output className="block px-6 py-8 font-mono text-muted text-sm">
 			{t("projectDetail.resources.loading")}
@@ -92,6 +97,11 @@ export function ResourcesCard({
 				resources={state.resources}
 				mockBaseUrl={mockBaseUrl}
 				{...canvas}
+				onOpenInClient={
+					apiClient
+						? (resource) => openInClient({ projectId, resourceId: resource.id })
+						: undefined
+				}
 			/>
 		);
 	}

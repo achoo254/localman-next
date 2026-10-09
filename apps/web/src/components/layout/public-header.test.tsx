@@ -80,7 +80,7 @@ describe("public top bar and skip link", () => {
 		expect(bar.queryByRole("link", { name: "Sign in" })).toBeNull();
 		expect(bar.queryByRole("link", { name: /^Get started/ })).toBeNull();
 		await userEvent.click(
-			bar.getByRole("button", { name: "Account Minh Anh" }),
+			bar.getByRole("button", { name: "Minh Anh · Account" }),
 		);
 		expect(
 			await screen.findByRole("menuitem", { name: "Account and limits" }),

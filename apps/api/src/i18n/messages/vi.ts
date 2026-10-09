@@ -27,6 +27,15 @@ export const vi: ServerMessages = {
 		warningBody: (p) =>
 			`Các project của bạn đã dùng ${p.used}/${p.limit} lượt gọi mock API của tháng ${p.month}.`,
 	},
+	apiClient: {
+		proxyBusyUser: (p) =>
+			`Bạn đang có ${p.max} request chạy qua proxy; chờ một request xong rồi thử lại.`,
+		proxyBusyServer:
+			"Proxy đang bận với các request khác; thử lại sau giây lát.",
+		tunnelUrlInvalid: (p) =>
+			`URL tunnel phải có dạng https://<tên>.<domain>, không có port, path hay query, và domain là một trong: ${p.domains}.`,
+		tunnelsDisabled: "Server này chưa bật URL tunnel.",
+	},
 	ownerAlerts: {
 		suppressed: (count) =>
 			`(và ${count} lượt khác chưa báo vì vượt giới hạn tin báo)`,

@@ -3,6 +3,7 @@ import { Router } from "express";
 import request from "supertest";
 import { createDashboardApp } from "../../dashboard-server.js";
 import { type Logger, createLogger } from "../../logger.js";
+import type { ProxyConcurrency } from "./proxy-concurrency.js";
 import { createProxyOperations } from "./proxy-operations.js";
 import { testGuard } from "./proxy-test-server.js";
 import type { SsrfGuard } from "./ssrf-guard.js";
@@ -15,6 +16,7 @@ export interface ProxyTestAppOptions {
 	/** Express `trust proxy`; off by default, so `X-Forwarded-For` is ignored. */
 	readonly trustProxy?: string | false;
 	readonly logger?: Logger;
+	readonly concurrency?: ProxyConcurrency;
 }
 
 /**
@@ -30,6 +32,7 @@ export function proxyTestApp(options: ProxyTestAppOptions = {}): Express {
 		operations: createProxyOperations({
 			guard: options.guard ?? testGuard(),
 			logger: () => logger,
+			...(options.concurrency ? { concurrency: options.concurrency } : {}),
 		}),
 		auth: {
 			router: Router(),
@@ -41,6 +44,8 @@ export function proxyTestApp(options: ProxyTestAppOptions = {}): Express {
 		},
 	});
 }
+
+export const PROXY_TEST_ORIGIN = ORIGIN;
 
 /** `POST /api/v1/proxy` with the allowed Origin, as `sub` (`null`: guest). */
 export function postProxy(

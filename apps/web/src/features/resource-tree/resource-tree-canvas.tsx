@@ -24,6 +24,8 @@ export interface AppTreeCanvasProps {
 	onGenerate: (resource: Resource, count: number) => void;
 	onAction: (action: NodeAction, resource: Resource) => void;
 	onMove: (resource: Resource, target: Resource | null) => void;
+	/** "API Client" action of each node; absent hides it. */
+	onOpenInClient?: (resource: Resource) => void;
 }
 
 /**
@@ -93,6 +95,7 @@ function AppTreeCanvas({
 	onGenerate,
 	onAction,
 	onMove,
+	onOpenInClient,
 }: AppTreeCanvasProps) {
 	const t = useT();
 	const toast = useToast();
@@ -154,6 +157,9 @@ function AppTreeCanvas({
 					onGenerate={(count) => onGenerate(item, count)}
 					onBlocked={() => blocked(item)}
 					onAction={(action) => onAction(action, item)}
+					onOpenInClient={
+						onOpenInClient ? () => onOpenInClient(item) : undefined
+					}
 					trailingAction={
 						mockPowerUps ? (
 							<ExportTypesMenu

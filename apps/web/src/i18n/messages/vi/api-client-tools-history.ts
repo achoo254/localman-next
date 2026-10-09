@@ -1,0 +1,32 @@
+import type { Messages } from "../../message-types";
+
+export const apiClientToolsHistory: Messages["apiClientTools"]["history"] = {
+	title: "History",
+	search: "Tìm trong history",
+	searchPlaceholder: "Lọc theo URL hoặc tên",
+	method: "Method",
+	allMethods: "Mọi method",
+	today: "Hôm nay",
+	yesterday: "Hôm qua",
+	open: "Mở {method} {url} trong tab mới ({route})",
+	opening: "Đang mở…",
+	openFailed: "Không mở được request này. Hãy thử lại.",
+	deleteItem: "Xoá {method} {url} khỏi history",
+	deleted: "Đã xoá request khỏi history.",
+	clear: "Xoá hết",
+	clearTitle: "Xoá history",
+	clearQuestion: "Xoá toàn bộ history request của bạn?",
+	clearCount: {
+		other: "{count} request sẽ bị xoá. Các tab đang mở vẫn giữ nguyên.",
+	},
+	clearCounting: "Đang đếm request…",
+	clearConfirm: "Xoá history",
+	cleared: "Đã xoá history.",
+	loadMore: "Tải request cũ hơn",
+	loading: "Đang tải history…",
+	loadFailed: "Không tải được history.",
+	empty: "Chưa có request nào được gửi.",
+	noMatch: "Không có request nào trong phần history đã tải khớp.",
+	note: "History lưu trên server theo tài khoản, chỉ mình bạn thấy.",
+	redacted: "Đã ẩn secret, nhập lại để gửi.",
+};

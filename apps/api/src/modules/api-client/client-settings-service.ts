@@ -3,9 +3,12 @@ import {
 	DEFAULT_REQUEST_SETTINGS,
 	type RouteMode,
 } from "@localman/shared/api-client";
+import { runtimeSettings } from "../../config/runtime-settings.js";
 import {
 	ClientSettingsModel,
+	type HostListField,
 	MAX_ROUTING_HOSTS,
+	MAX_SECRET_PROXY_HOSTS,
 	MAX_TUNNEL_MAPPINGS,
 	type StoredClientSettings,
 	type TunnelMapping,
@@ -13,9 +16,12 @@ import {
 
 export interface ClientSettingsView {
 	routingHosts: string[];
+	secretProxyHosts: string[];
 	tunnelMappings: TunnelMapping[];
 	defaultRoute: RouteMode;
 	sendClientIp: boolean;
+	/** `TUNNEL_DOMAINS`: the only hosts a tunnel mapping may use. */
+	tunnelDomains: string[];
 }
 
 export interface ClientDefaultsInput {
@@ -36,12 +42,13 @@ export async function readClientSettings(
 	}).lean<StoredClientSettings>();
 	return {
 		routingHosts: doc?.routingHosts ?? [],
-		tunnelMappings: (doc?.tunnelMappings ?? []).map(({ key, url }) => ({
-			key,
-			url,
-		})),
+		secretProxyHosts: doc?.secretProxyHosts ?? [],
+		tunnelMappings: (doc?.tunnelMappings ?? []).map(
+			({ key, url, enabled }) => ({ key, url, enabled: enabled ?? true }),
+		),
 		defaultRoute: doc?.defaultRoute ?? DEFAULT_REQUEST_SETTINGS.route,
 		sendClientIp: doc?.sendClientIp ?? DEFAULT_REQUEST_SETTINGS.sendClientIp,
+		tunnelDomains: [...runtimeSettings().tunnelDomains],
 	};
 }
 
@@ -79,46 +86,65 @@ export async function updateClientDefaults(
 	return readClientSettings(userSub);
 }
 
-/** Adds `host` (already normalized); a host already listed is kept once. */
-export async function addRoutingHost(
+const HOST_LISTS: Readonly<
+	Record<HostListField, { max: number; code: string; what: string }>
+> = {
+	routingHosts: {
+		max: MAX_ROUTING_HOSTS,
+		code: "ROUTING_HOST_LIMIT_REACHED",
+		what: "hosts pinned to the proxy",
+	},
+	secretProxyHosts: {
+		max: MAX_SECRET_PROXY_HOSTS,
+		code: "SECRET_PROXY_HOST_LIMIT_REACHED",
+		what: "hosts allowed to send secrets through the proxy",
+	},
+};
+
+/** Adds `host` (already normalized) to a list; a listed host is kept once. */
+export async function addHost(
 	userSub: string,
+	field: HostListField,
 	host: string,
 ): Promise<ClientSettingsView> {
+	const { max, code, what } = HOST_LISTS[field];
 	await ensureSettings(userSub);
 	const added = await ClientSettingsModel.updateOne(
 		{
 			userSub,
-			routingHosts: { $ne: host },
-			[`routingHosts.${MAX_ROUTING_HOSTS - 1}`]: { $exists: false },
+			[field]: { $ne: host },
+			[`${field}.${max - 1}`]: { $exists: false },
 		},
-		{ $push: { routingHosts: host } },
+		{ $push: { [field]: host } },
 	);
 	const view = await readClientSettings(userSub);
-	if (added.matchedCount === 0 && !view.routingHosts.includes(host)) {
-		throw limitReached(
-			"ROUTING_HOST_LIMIT_REACHED",
-			"remembered hosts",
-			MAX_ROUTING_HOSTS,
-		);
+	if (added.matchedCount === 0 && !view[field].includes(host)) {
+		throw limitReached(code, what, max);
 	}
 	return view;
 }
 
-export async function removeRoutingHost(
+export async function removeHost(
 	userSub: string,
+	field: HostListField,
 	host: string,
 ): Promise<ClientSettingsView> {
 	await ClientSettingsModel.updateOne(
 		{ userSub },
-		{ $pull: { routingHosts: host } },
+		{ $pull: { [field]: host } },
 	);
 	return readClientSettings(userSub);
 }
 
-function replaceTunnelUrl(userSub: string, mapping: TunnelMapping) {
+function replaceTunnelMapping(userSub: string, mapping: TunnelMapping) {
 	return ClientSettingsModel.updateOne(
 		{ userSub, "tunnelMappings.key": mapping.key },
-		{ $set: { "tunnelMappings.$.url": mapping.url } },
+		{
+			$set: {
+				"tunnelMappings.$.url": mapping.url,
+				"tunnelMappings.$.enabled": mapping.enabled,
+			},
+		},
 	);
 }
 
@@ -128,7 +154,7 @@ export async function putTunnelMapping(
 	mapping: TunnelMapping,
 ): Promise<ClientSettingsView> {
 	await ensureSettings(userSub);
-	if ((await replaceTunnelUrl(userSub, mapping)).matchedCount > 0) {
+	if ((await replaceTunnelMapping(userSub, mapping)).matchedCount > 0) {
 		return readClientSettings(userSub);
 	}
 	const added = await ClientSettingsModel.updateOne(
@@ -137,11 +163,11 @@ export async function putTunnelMapping(
 			"tunnelMappings.key": { $ne: mapping.key },
 			[`tunnelMappings.${MAX_TUNNEL_MAPPINGS - 1}`]: { $exists: false },
 		},
-		{ $push: { tunnelMappings: { key: mapping.key, url: mapping.url } } },
+		{ $push: { tunnelMappings: { ...mapping } } },
 	);
 	if (added.matchedCount === 0) {
 		// Either the cap, or the same key added concurrently: replace it then.
-		if ((await replaceTunnelUrl(userSub, mapping)).matchedCount === 0) {
+		if ((await replaceTunnelMapping(userSub, mapping)).matchedCount === 0) {
 			throw limitReached(
 				"TUNNEL_MAPPING_LIMIT_REACHED",
 				"tunnel mappings",

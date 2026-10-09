@@ -90,6 +90,12 @@ export const TEST_HOSTS: Readonly<Record<string, ResolvedAddress[]>> = {
 	"abc.mock.test": [{ address: "93.184.215.14", family: 4 }],
 	"priv.mock.test": [{ address: "10.0.0.5", family: 4 }],
 	"srv.mock.test": [{ address: "127.0.0.1", family: 4 }],
+	// Tunnel hosts under `tunnel.test`, on the server's own IP too.
+	"app.tunnel.test": [{ address: "93.184.215.14", family: 4 }],
+	"a.b.tunnel.test": [{ address: "93.184.215.14", family: 4 }],
+	"tunnel.test": [{ address: "93.184.215.14", family: 4 }],
+	"app.tunnel.test.evil": [{ address: "93.184.215.14", family: 4 }],
+	"priv.tunnel.test": [{ address: "10.0.0.6", family: 4 }],
 };
 
 /** Plays the server's own public address in tests. */

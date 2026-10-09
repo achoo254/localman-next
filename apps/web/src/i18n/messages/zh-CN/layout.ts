@@ -20,7 +20,7 @@ export const layout: Messages["layout"] = {
 		pro: "Pro 套餐",
 	},
 	accountMenu: {
-		trigger: "账号 {name}",
+		trigger: "{name} · 账号",
 		account: "账号与额度",
 		plan: "管理套餐",
 		notifications: "通知渠道",

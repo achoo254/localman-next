@@ -1,6 +1,7 @@
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { networkInterfaces } from "node:os";
+import { isTunnelUrl } from "@localman/shared/api-client";
 import { dnsFailed, targetBlocked } from "./proxy-errors.js";
 import {
 	type AddressBlockList,
@@ -29,11 +30,12 @@ export interface PinnedTarget {
 	/** Time the DNS lookup took; `null` for an IP literal. */
 	readonly dnsMs: number | null;
 	/**
-	 * A mock host (`*.{MOCK_BASE_DOMAIN}`): it may sit on the server's own
-	 * address, so `Host` must be the URL's host (no user override) and
-	 * nginx routes it to the mock runtime only.
+	 * A mock host (`*.{MOCK_BASE_DOMAIN}`) or a Tunelo tunnel host
+	 * (`<label>.{TUNNEL_DOMAINS}`): it may sit on the server's own address,
+	 * so `Host` must be the URL's host (no user override) and nginx routes
+	 * it to the mock runtime or the tunnel server only.
 	 */
-	readonly mockHost: boolean;
+	readonly forceHost: boolean;
 }
 
 export interface SsrfGuard {
@@ -57,6 +59,11 @@ export interface SsrfGuardOptions {
 	readonly ownAddresses?: () => readonly string[];
 	/** `MOCK_BASE_DOMAIN` (port ignored); its subdomains are mock hosts. */
 	readonly mockBaseDomain?: () => string;
+	/**
+	 * `TUNNEL_DOMAINS`: `https://<label>.<domain>` on port 443, one valid
+	 * Tunelo label deep, is a tunnel host. Tunelo may run on this server.
+	 */
+	readonly tunnelDomains?: () => readonly string[];
 	/** Defaults to the system resolver (`dns.lookup`, so `/etc/hosts` counts). */
 	readonly resolve?: Resolver;
 	/**
@@ -95,6 +102,13 @@ function onDefaultPort(url: URL): boolean {
 	return url.port === "";
 }
 
+/** nginx serves tunnels over https on 443 only (`:443` parses to ""). */
+function isTunnelHost(url: URL, domains: readonly string[]): boolean {
+	return (
+		domains.length > 0 && url.port === "" && isTunnelUrl(url.href, domains)
+	);
+}
+
 const NO_EXTRA: readonly string[] = [];
 const BUILT_IN = builtInBlockList();
 
@@ -102,8 +116,9 @@ const BUILT_IN = builtInBlockList();
  * SSRF guard of the proxy. Two lists: the built-in ranges (private,
  * loopback, metadata…) hold for every host; the server's own addresses
  * (interfaces plus `PROXY_BLOCKED_CIDRS`) hold for every host except a
- * mock host on its default port, which reaches the server's nginx with
- * `Host` forced to the mock host, i.e. only the mock runtime.
+ * mock host on its default port and a tunnel host over https on 443:
+ * those reach the server's nginx with `Host` forced to the URL's host,
+ * i.e. only the mock runtime or the tunnel server.
  */
 export function createSsrfGuard(options: SsrfGuardOptions = {}): SsrfGuard {
 	const resolve = options.resolve ?? systemResolver;
@@ -146,11 +161,15 @@ export function createSsrfGuard(options: SsrfGuardOptions = {}): SsrfGuard {
 					family: literal === 4 ? 4 : 6,
 					port,
 					dnsMs: null,
-					mockHost: false,
+					forceHost: false,
 				};
 			}
 			const mockHost = isMockHost(hostname, options.mockBaseDomain?.() ?? "");
-			const ownAllowed = mockHost && onDefaultPort(url);
+			const tunnelHost = isTunnelHost(
+				url,
+				options.tunnelDomains?.() ?? NO_EXTRA,
+			);
+			const ownAllowed = (mockHost && onDefaultPort(url)) || tunnelHost;
 			const started = performance.now();
 			const addresses = await addressesOf(hostname);
 			const dnsMs = performance.now() - started;
@@ -159,7 +178,8 @@ export function createSsrfGuard(options: SsrfGuardOptions = {}): SsrfGuard {
 			if (addresses.some(({ address }) => blocked(address, ownAllowed))) {
 				throw targetBlocked("address");
 			}
-			return { hostname, ...first, port, dnsMs, mockHost };
+			const forceHost = mockHost || tunnelHost;
+			return { hostname, ...first, port, dnsMs, forceHost };
 		},
 	};
 }

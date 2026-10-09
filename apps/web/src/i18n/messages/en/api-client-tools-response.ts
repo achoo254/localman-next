@@ -1,0 +1,110 @@
+/** Response viewer of the API client (`apiClientTools.response`). */
+export const apiClientToolsResponse = {
+	label: "Response",
+	empty: {
+		title: "No response yet",
+		hint: "Press <b>Send</b> to send the request. The response shows here.",
+	},
+	sending: "Sending…",
+	cancel: "Cancel request",
+	cancelled: "Request cancelled.",
+	route: {
+		direct: "Direct",
+		proxy: "Proxy",
+		tunelo: "Tunelo",
+	},
+	meta: {
+		status: "Status",
+		time: "{ms} ms",
+		timeLabel: "Time {ms} ms, show timings",
+		size: "Size",
+	},
+	timings: {
+		title: "Timings",
+		dns: "DNS lookup",
+		connect: "TCP connect",
+		tls: "TLS handshake",
+		ttfb: "Waiting (TTFB)",
+		download: "Content download",
+		total: "Total",
+		skipped: "n/a",
+		finalUrl: "Final URL: {url}",
+		proxyNote:
+			"Measured from the proxy to the target, without the browser to proxy leg.",
+		limited:
+			"Sent directly from the browser: only the total time is known. DNS, TCP, TLS and TTFB need the target to send <code>Timing-Allow-Origin</code>, or choose Proxy.",
+	},
+	tabs: {
+		label: "Response parts",
+		body: "Body",
+		headers: "Headers",
+		cookies: "Cookies",
+		tests: "Tests",
+	},
+	body: {
+		modes: "Body view",
+		pretty: "Pretty",
+		raw: "Raw",
+		preview: "Preview",
+		search: "Search in body",
+		matches: {
+			one: "{count} match",
+			other: "{count} matches",
+		},
+		matchesCapped: "First {count} matches",
+		copy: "Copy body",
+		copied: "Copied the response body.",
+		copyBlocked: "Your browser blocked copying. Use Save instead.",
+		save: "Save body to a file",
+		saved: "Saved {file}.",
+		empty: "The response has no body.",
+		binary:
+			"The body is binary ({size}) and can't be shown as text. Save it to open it with another app.",
+		truncated:
+			"The body was cut at {max}. Only the first part is shown and saved.",
+		previewHtml: "HTML preview (scripts are off)",
+		previewImage: "Image in the response",
+		previewNone: "Nothing to preview for this content type. Use Pretty or Raw.",
+		previewJsonEmpty: "The JSON has no rows to show as a table.",
+		previewJsonRows: {
+			one: "Showing {count} row",
+			other: "Showing {count} rows",
+		},
+		previewJsonCapped: "Showing the first {count} of {total} rows.",
+	},
+	headers: {
+		name: "Name",
+		value: "Value",
+		empty: "The response has no headers.",
+		directNote:
+			"Sent directly: you only see the headers the target exposes with <code>Access-Control-Expose-Headers</code>. Choose Proxy to see them all.",
+		proxyNote:
+			"<code>Set-Cookie</code> is only shown here; it isn't applied to your browser.",
+	},
+	cookies: {
+		name: "Name",
+		value: "Value",
+		domain: "Domain",
+		path: "Path",
+		expires: "Expires",
+		httpOnly: "HttpOnly",
+		secure: "Secure",
+		session: "Session",
+		maxAge: "{seconds} s",
+		yes: "Yes",
+		no: "No",
+		empty: "The response sets no cookies.",
+		direct:
+			"Sent directly from the browser: the browser doesn't let the page read <code>Set-Cookie</code>. Choose <b>Proxy</b> next to Send to see the cookies the target sets.",
+	},
+	tests: {
+		summary: "{passed} of {total} tests passed",
+		passed: "Passed",
+		failed: "Failed",
+		none: "No tests ran. Add <code>lm.test()</code> to the post-response script to check the response.",
+		scriptError: "The post-response script stopped: {message}",
+		scriptErrorAt: "The post-response script stopped at line {line}: {message}",
+		console: "Console",
+		logsTruncated: "Some console output was cut.",
+	},
+} as const;

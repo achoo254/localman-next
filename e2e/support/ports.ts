@@ -9,6 +9,7 @@ export const PORTS = {
 	mock: 4610,
 	idp: 4620,
 	web: 4630,
+	echo: 4640,
 } as const;
 
 /** Browser origin of the web app (Vite preview, same origin as the API). */
@@ -20,5 +21,7 @@ export const IDP_ORIGIN = `http://127.0.0.1:${PORTS.idp}`;
  * without DNS, so `{secret}.localhost:4610` reaches the mock server.
  */
 export const MOCK_BASE_DOMAIN = `localhost:${PORTS.mock}`;
+/** Origin of the echo server the API client specs send requests to. */
+export const ECHO_ORIGIN = `http://127.0.0.1:${PORTS.echo}`;
 /** Cookie the fake IdP reads to pick the account a sign-in completes as. */
 export const IDP_USER_COOKIE = "e2e_idp_user";

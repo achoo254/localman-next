@@ -1,55 +1,42 @@
 import { defineOperation } from "@localman/operations";
-import { MAX_URL_LENGTH, ROUTE_MODES } from "@localman/shared/api-client";
+import { ROUTE_MODES } from "@localman/shared/api-client";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
 import {
 	MAX_HOST_LENGTH,
 	normalizeRoutingHost,
-	normalizeTunnelKey,
-	normalizeTunnelUrl,
 } from "./client-settings-input.js";
 import {
 	MAX_ROUTING_HOSTS,
-	MAX_TUNNEL_MAPPINGS,
+	MAX_SECRET_PROXY_HOSTS,
 } from "./client-settings-model.js";
 import {
-	addRoutingHost,
-	putTunnelMapping,
+	addHost,
 	readClientSettings,
-	removeRoutingHost,
-	removeTunnelMapping,
+	removeHost,
 	updateClientDefaults,
 } from "./client-settings-service.js";
+import {
+	CREDENTIAL_DESTINATION,
+	SETTINGS_ABOUT,
+	settingsView,
+	settingsWrite,
+} from "./client-settings-view.js";
+import {
+	deleteTunnelMapping,
+	setTunnelMapping,
+} from "./client-tunnel-operations.js";
 
 const DIRECT_SEND_ONLY =
-	"only the browser's direct send reads remembered hosts; the send_request tool always goes through the proxy";
-
-const settingsView = z.object({
-	routingHosts: z.array(z.string()),
-	tunnelMappings: z.array(z.object({ key: z.string(), url: z.string() })),
-	defaultRoute: z.enum(ROUTE_MODES),
-	sendClientIp: z.boolean(),
-});
-
+	"only the browser's direct send reads pinned hosts; the send_request tool always goes through the proxy";
 const host = z.string().min(1).max(MAX_HOST_LENGTH);
-const key = z.string().min(1).max(MAX_HOST_LENGTH);
-
-const ABOUT =
-	"Routing settings of the API client, own settings only: hosts remembered to go through the proxy, manual tunnel URLs for local targets (localhost:port), and the default route and client-IP forwarding of new tabs.";
-
-const write = {
-	scopes: [USER_SCOPE],
-	annotations: { readOnly: false, destructive: false, idempotent: true },
-	toolset: "client",
-	output: settingsView,
-} as const;
 
 export const getClientSettings = defineOperation({
 	id: "client.getClientSettings",
 	method: "GET",
 	path: "/client/settings",
 	summary: "Get the API client's routing settings",
-	description: ABOUT,
+	description: `${SETTINGS_ABOUT} Read only over MCP: the user changes these settings in the web UI.`,
 	input: z.object({}),
 	output: settingsView,
 	scopes: [USER_SCOPE],
@@ -60,73 +47,85 @@ export const getClientSettings = defineOperation({
 });
 
 export const updateClientSettings = defineOperation({
-	...write,
+	...settingsWrite,
 	id: "client.updateClientSettings",
 	method: "PUT",
 	path: "/client/settings",
 	summary: "Set the API client's default route and client-IP forwarding",
-	description: `${ABOUT} Omitted fields keep their value. defaultRoute: auto (direct when possible, else proxy or tunnel), direct or proxy.`,
+	description: `${SETTINGS_ABOUT} Omitted fields keep their value. defaultRoute: auto (direct when possible, else proxy or tunnel), direct or proxy.`,
 	input: z.object({
 		defaultRoute: z.enum(ROUTE_MODES).optional(),
 		sendClientIp: z.boolean().optional(),
 	}),
-	mcp: true,
+	mcp: { exempt: CREDENTIAL_DESTINATION },
 	handler: async (ctx, input) =>
 		updateClientDefaults(requireSubject(ctx), input),
 });
 
 export const rememberRoutingHost = defineOperation({
-	...write,
+	...settingsWrite,
 	id: "client.rememberRoutingHost",
 	method: "PUT",
 	path: "/client/routing-hosts/:host",
-	summary: "Remember a host as needing the proxy",
-	description: `${ABOUT} \`host\` is host[:port] as in the URL. At most ${MAX_ROUTING_HOSTS} hosts (409 ROUTING_HOST_LIMIT_REACHED).`,
+	summary: "Always send a host through the proxy",
+	description: `${SETTINGS_ABOUT} \`host\` is host[:port] as in the URL. At most ${MAX_ROUTING_HOSTS} hosts (409 ROUTING_HOST_LIMIT_REACHED).`,
 	input: z.object({ host }),
 	mcp: { exempt: DIRECT_SEND_ONLY },
 	handler: async (ctx, input) =>
-		addRoutingHost(requireSubject(ctx), normalizeRoutingHost(input.host)),
+		addHost(
+			requireSubject(ctx),
+			"routingHosts",
+			normalizeRoutingHost(input.host),
+		),
 });
 
 export const forgetRoutingHost = defineOperation({
-	...write,
+	...settingsWrite,
 	id: "client.forgetRoutingHost",
 	method: "DELETE",
 	path: "/client/routing-hosts/:host",
-	summary: "Forget a host remembered as needing the proxy",
+	summary: "Stop always sending a host through the proxy",
 	input: z.object({ host }),
 	mcp: { exempt: DIRECT_SEND_ONLY },
 	handler: async (ctx, input) =>
-		removeRoutingHost(requireSubject(ctx), normalizeRoutingHost(input.host)),
+		removeHost(
+			requireSubject(ctx),
+			"routingHosts",
+			normalizeRoutingHost(input.host),
+		),
 });
 
-export const setTunnelMapping = defineOperation({
-	...write,
-	id: "client.setTunnelMapping",
+export const allowSecretProxyHost = defineOperation({
+	...settingsWrite,
+	id: "client.allowSecretProxyHost",
 	method: "PUT",
-	path: "/client/tunnel-mappings/:key",
-	summary: "Send a local target (localhost:port) through a tunnel URL",
-	description: `${ABOUT} \`key\` is a local host and port (loopback spellings become localhost); \`url\` a public http(s) URL whose origin replaces the local one. At most ${MAX_TUNNEL_MAPPINGS} mappings (409 TUNNEL_MAPPING_LIMIT_REACHED).`,
-	input: z.object({ key, url: z.string().min(1).max(MAX_URL_LENGTH) }),
-	mcp: true,
+	path: "/client/secret-proxy-hosts/:host",
+	summary: "Stop asking before credentials for a host go through the proxy",
+	description: `${SETTINGS_ABOUT} \`host\` is host[:port] as in the URL, or a local key such as localhost:3000 for a tunnel. At most ${MAX_SECRET_PROXY_HOSTS} hosts (409 SECRET_PROXY_HOST_LIMIT_REACHED).`,
+	input: z.object({ host }),
+	mcp: { exempt: CREDENTIAL_DESTINATION },
 	handler: async (ctx, input) =>
-		putTunnelMapping(requireSubject(ctx), {
-			key: normalizeTunnelKey(input.key),
-			url: normalizeTunnelUrl(input.url),
-		}),
+		addHost(
+			requireSubject(ctx),
+			"secretProxyHosts",
+			normalizeRoutingHost(input.host),
+		),
 });
 
-export const deleteTunnelMapping = defineOperation({
-	...write,
-	id: "client.deleteTunnelMapping",
+export const forgetSecretProxyHost = defineOperation({
+	...settingsWrite,
+	id: "client.forgetSecretProxyHost",
 	method: "DELETE",
-	path: "/client/tunnel-mappings/:key",
-	summary: "Remove the tunnel URL of a local target",
-	description: ABOUT,
-	input: z.object({ key }),
-	mcp: true,
+	path: "/client/secret-proxy-hosts/:host",
+	summary: "Ask again before credentials for a host go through the proxy",
+	input: z.object({ host }),
+	mcp: { exempt: CREDENTIAL_DESTINATION },
 	handler: async (ctx, input) =>
-		removeTunnelMapping(requireSubject(ctx), normalizeTunnelKey(input.key)),
+		removeHost(
+			requireSubject(ctx),
+			"secretProxyHosts",
+			normalizeRoutingHost(input.host),
+		),
 });
 
 export const clientSettingsOperations = [
@@ -134,6 +133,8 @@ export const clientSettingsOperations = [
 	updateClientSettings,
 	rememberRoutingHost,
 	forgetRoutingHost,
+	allowSecretProxyHost,
+	forgetSecretProxyHost,
 	setTunnelMapping,
 	deleteTunnelMapping,
 ] as const;

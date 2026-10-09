@@ -27,6 +27,8 @@ export interface ResourceNodeProps {
 	onGenerate: (count: number) => void;
 	onBlocked: () => void;
 	onAction: (action: NodeAction) => void;
+	/** Opens the resource in the API client; absent hides the action. */
+	onOpenInClient?: () => void;
 	/** Extra control at the end of the action row. */
 	trailingAction?: ReactNode;
 }
@@ -51,6 +53,7 @@ export function ResourceNode({
 	onGenerate,
 	onBlocked,
 	onAction,
+	onOpenInClient,
 	trailingAction,
 }: ResourceNodeProps) {
 	const t = useT();
@@ -112,6 +115,7 @@ export function ResourceNode({
 				name={name}
 				onAction={onAction}
 				dataIdBase={base}
+				onOpenInClient={onOpenInClient}
 				trailing={trailingAction}
 			/>
 			<NestConnector

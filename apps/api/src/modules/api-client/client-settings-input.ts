@@ -1,5 +1,7 @@
 import { OperationError } from "@localman/operations";
-import { isLocalTarget, localTargetKey } from "@localman/shared/api-client";
+import { isTunnelUrl, localTargetKey } from "@localman/shared/api-client";
+import { messagesFor } from "../../i18n/server-messages.js";
+import { readUserLocale } from "../users/user-locale.js";
 
 /** Longest `host[:port]`: a 253-character name and a port. */
 export const MAX_HOST_LENGTH = 260;
@@ -53,21 +55,41 @@ export function normalizeTunnelKey(input: string): string {
 }
 
 /**
- * Origin of a pasted tunnel URL (a path or query in the link is dropped).
- * Must be a public http(s) URL: a mapping to another local address would
- * not reach anything from the proxy.
+ * Origin of a Tunelo tunnel URL: `https://<label>.<domain>` with `domain`
+ * one of `domains` (`TUNNEL_DOMAINS`) and nothing else (no port, path,
+ * query, fragment or credentials). `null` when the URL is anything else:
+ * the browser sends credentials to this origin, so it must be a tunnel.
  */
-export function normalizeTunnelUrl(input: string): string {
+export function normalizeTunnelUrl(
+	input: string,
+	domains: readonly string[],
+): string | null {
 	const value = input.trim();
-	if (!URL.canParse(value)) {
-		throw invalid("url", "must be an http(s) URL");
-	}
-	const parsed = new URL(value);
-	if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-		throw invalid("url", "must be an http(s) URL");
-	}
-	if (isLocalTarget(parsed.origin)) {
-		throw invalid("url", "must be a public URL, not a local address");
-	}
-	return parsed.origin;
+	if (!URL.canParse(value)) return null;
+	const url = new URL(value);
+	const bare =
+		url.port === "" &&
+		(url.pathname === "/" || url.pathname === "") &&
+		url.search === "" &&
+		url.hash === "" &&
+		url.username === "" &&
+		url.password === "" &&
+		// `https://x.y/?` and `https://x.y/#` parse to empty search and hash.
+		!/[?#]/.test(value);
+	return bare && isTunnelUrl(url.href, domains) ? url.origin : null;
+}
+
+/** 400 `VALIDATION_ERROR` for a tunnel URL, in the user's language. */
+export async function invalidTunnelUrl(
+	sub: string,
+	domains: readonly string[],
+): Promise<OperationError> {
+	const texts = messagesFor(await readUserLocale(sub)).apiClient;
+	const message =
+		domains.length === 0
+			? texts.tunnelsDisabled
+			: texts.tunnelUrlInvalid({ domains: domains.join(", ") });
+	return new OperationError(400, "VALIDATION_ERROR", message, [
+		{ path: "url", message },
+	]);
 }

@@ -18,7 +18,7 @@ describe("createTranslator", () => {
 
 	it("fills {name} placeholders and formats numbers for the language", () => {
 		expect(english.t("layout.accountMenu.trigger", { name: "Minh Anh" })).toBe(
-			"Account Minh Anh",
+			"Minh Anh · Account",
 		);
 		const limits = { projects: 3, resources: 10, proxy: 10_000 };
 		expect(english.t("landing.hero.noteLocalhost", limits)).toContain(

@@ -75,6 +75,12 @@ export interface RuntimeSettings {
 	 */
 	readonly proxyBlockedCidrs: readonly string[];
 	/**
+	 * Tunelo domains (`TUNNEL_DOMAINS`): the only hosts a tunnel mapping
+	 * may use, and the only ones besides mock hosts that the proxy may
+	 * reach on the server's own address.
+	 */
+	readonly tunnelDomains: readonly string[];
+	/**
 	 * Heavy dashboard operations per account and per project, both must
 	 * pass: they render, write and measure megabytes in the process that
 	 * also serves every mock API. Far above what a person clicks.
@@ -111,6 +117,7 @@ export const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = Object.freeze({
 	localmanMcpRateLimit: perMinute(120),
 	proxyRateLimit: perMinute(120),
 	proxyBlockedCidrs: [],
+	tunnelDomains: [],
 	heavyOperationRateLimit: {
 		generate: { perUser: perMinute(30), perProject: perMinute(60) },
 		replaceData: { perUser: perMinute(60), perProject: perMinute(120) },
@@ -141,6 +148,7 @@ export function runtimeSettingsFromEnv(env: Env): RuntimeSettings {
 		publicUrl: env.PUBLIC_URL,
 		ownerSubs: new Set(env.OWNER_SUBS),
 		proxyBlockedCidrs: env.PROXY_BLOCKED_CIDRS,
+		tunnelDomains: env.TUNNEL_DOMAINS,
 		turnstile:
 			TURNSTILE_SITE_KEY && TURNSTILE_SECRET_KEY
 				? {

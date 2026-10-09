@@ -19,7 +19,7 @@ export const layout = {
 		pro: "Pro plan",
 	},
 	accountMenu: {
-		trigger: "Account {name}",
+		trigger: "{name} · Account",
 		account: "Account and limits",
 		plan: "Manage plan",
 		notifications: "Notification channels",

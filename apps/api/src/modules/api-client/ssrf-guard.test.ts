@@ -153,7 +153,7 @@ describe("SSRF guard and the server's own addresses", () => {
 		expect(pinned).toMatchObject({
 			address: TEST_SERVER_IP,
 			hostname: "abc.mock.test",
-			mockHost: true,
+			forceHost: true,
 		});
 		await expect(
 			own.pin(new URL("http://abc.mock.test:80/")),
@@ -176,10 +176,10 @@ describe("SSRF guard and the server's own addresses", () => {
 			ownAddresses: () => [],
 			mockBaseDomain: () => "mock.test",
 		});
-		expect((await guard.pin(new URL("https://public.test/"))).mockHost).toBe(
+		expect((await guard.pin(new URL("https://public.test/"))).forceHost).toBe(
 			false,
 		);
-		expect((await guard.pin(new URL("https://mock.test/"))).mockHost).toBe(
+		expect((await guard.pin(new URL("https://mock.test/"))).forceHost).toBe(
 			false,
 		);
 	});

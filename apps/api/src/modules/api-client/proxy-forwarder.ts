@@ -23,6 +23,8 @@ export interface ForwardOptions {
 	readonly clientIp: string | null;
 	/** Scheme the caller used to reach Localman, for `Forwarded: proto=`. */
 	readonly forwardedProto: string;
+	/** Aborts when the caller goes away; the upstream request stops too. */
+	readonly signal?: AbortSignal;
 }
 
 /** The request of one hop; redirects derive the next one from it. */
@@ -105,7 +107,7 @@ async function sendChecked(
 		clientIp,
 		forwardedProto: options.forwardedProto,
 		contentLength: contentLengthOf(state),
-		forceHost: target.mockHost,
+		forceHost: target.forceHost,
 	});
 	return sendHop({ ...state, headers, target, signal, startedAt });
 }
@@ -116,14 +118,18 @@ async function sendChecked(
  * SSRF guard and connects to the address it pinned; at most
  * `MAX_REDIRECTS` redirects are followed when `followRedirects` is on,
  * otherwise the 3xx itself is the answer. The whole exchange, body read
- * included, shares one deadline of `timeoutMs`.
+ * included, shares one deadline of `timeoutMs`, and stops as soon as
+ * `options.signal` aborts.
  */
 export async function forwardRequest(
 	envelope: ProxyRequest,
 	options: ForwardOptions,
 ): Promise<ClientResponse> {
 	const { followRedirects, timeoutMs, sendClientIp } = envelope.options;
-	const signal = AbortSignal.timeout(timeoutMs);
+	const deadline = AbortSignal.timeout(timeoutMs);
+	const signal = options.signal
+		? AbortSignal.any([deadline, options.signal])
+		: deadline;
 	const clientIp = sendClientIp ? options.clientIp : null;
 	const started = performance.now();
 	let state: HopState = {
@@ -161,6 +167,6 @@ export async function forwardRequest(
 			};
 		}
 	} catch (error) {
-		throw toProxyError(error, signal, timeoutMs);
+		throw toProxyError(error, deadline, timeoutMs);
 	}
 }

@@ -100,4 +100,27 @@ describe("product settings in the environment", () => {
 			);
 		}
 	});
+
+	it("reads the Tunelo domains, lowercased and without repeats", () => {
+		expect(parseEnv(REQUIRED).TUNNEL_DOMAINS).toEqual([]);
+		const env = parseEnv({
+			...REQUIRED,
+			TUNNEL_DOMAINS:
+				" Tunnel.Hoandat.com, ,tunnel.inetdev.io.vn.,tunnel.hoandat.com",
+		});
+		expect(env.TUNNEL_DOMAINS).toEqual([
+			"tunnel.hoandat.com",
+			"tunnel.inetdev.io.vn",
+		]);
+		for (const bad of [
+			"https://tunnel.hoandat.com",
+			"tunnel.hoandat.com:443",
+			"localhost",
+			"*.tunnel.hoandat.com",
+		]) {
+			expect(errorOf({ ...REQUIRED, TUNNEL_DOMAINS: bad })).toContain(
+				"TUNNEL_DOMAINS:",
+			);
+		}
+	});
 });

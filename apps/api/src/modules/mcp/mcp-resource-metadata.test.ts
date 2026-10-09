@@ -50,7 +50,12 @@ describe("protected resource metadata (RFC 9728)", () => {
 		expect(res.body).toEqual({
 			resource: TEST_RESOURCE,
 			authorization_servers: [TEST_ISSUER],
-			scopes_supported: ["mock:read", "mock:write"],
+			scopes_supported: expect.arrayContaining([
+				"mock:read",
+				"mock:write",
+				"client:read",
+				"client:write",
+			]),
 			bearer_methods_supported: ["header"],
 			resource_name: "Localman MCP",
 		});
@@ -92,14 +97,14 @@ describe("Bearer authentication of /mcp", () => {
 	});
 
 	it("refuses a token without a Localman MCP scope with insufficient_scope", async () => {
-		const token = await idp.sign({ scope: "client:read tunnels:read" });
+		const token = await idp.sign({ scope: "openid tunnels:read" });
 		const res = await postMcp(token).send(INITIALIZE);
 		expect(res.status).toBe(403);
 		expect(res.headers["www-authenticate"]).toContain(
 			'error="insufficient_scope"',
 		);
-		expect(res.headers["www-authenticate"]).toContain(
-			'scope="mock:read mock:write"',
+		expect(res.headers["www-authenticate"]).toMatch(
+			/scope="mock:read mock:write client:\w+ client:\w+"/,
 		);
 	});
 

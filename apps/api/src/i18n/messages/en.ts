@@ -75,6 +75,19 @@ export const en = {
 		warningBody: (p: QuotaText): string =>
 			`Your projects have used ${p.used}/${p.limit} mock API requests of ${p.month}.`,
 	},
+	/** Errors of the API client (proxy, tunnel mappings) in the user's language. */
+	apiClient: {
+		/** 429 `PROXY_BUSY`: the account's concurrent proxied requests. */
+		proxyBusyUser: (p: { readonly max: number }): string =>
+			`You already have ${p.max} requests running through the proxy; wait for one to finish and try again.`,
+		/** 429 `PROXY_BUSY`: the whole server's concurrent proxied requests. */
+		proxyBusyServer:
+			"The proxy is busy with other requests; try again in a moment.",
+		/** `domains`: the allowed Tunelo domains, comma separated. */
+		tunnelUrlInvalid: (p: { readonly domains: string }): string =>
+			`The tunnel URL must be https://<name>.<domain> without port, path or query, where the domain is one of: ${p.domains}.`,
+		tunnelsDisabled: "Tunnel URLs are not enabled on this server.",
+	},
 	ownerAlerts: {
 		suppressed: (count: number): string =>
 			`(and ${count} more not sent because of the alert limit)`,

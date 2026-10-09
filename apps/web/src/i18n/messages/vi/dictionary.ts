@@ -1,6 +1,11 @@
 import type { Messages } from "../../message-types";
 import { account } from "./account";
 import { admin } from "./admin";
+import { apiClient } from "./api-client";
+import { apiClientOpen } from "./api-client-open";
+import { apiClientRouting } from "./api-client-routing";
+import { apiClientTools } from "./api-client-tools";
+import { apiClientTunelo } from "./api-client-tunelo";
 import { auth } from "./auth";
 import { collaborators } from "./collaborators";
 import { common } from "./common";
@@ -48,4 +53,9 @@ export const vi: Messages = {
 	feedback,
 	admin,
 	primitives,
+	apiClient,
+	apiClientOpen,
+	apiClientTools,
+	apiClientRouting,
+	apiClientTunelo,
 };

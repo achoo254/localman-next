@@ -33,7 +33,7 @@ async function openMenu(flags: FeatureFlags) {
 		],
 		"/projects",
 	);
-	screen.getByRole("button", { name: "Account Minh Anh" }).focus();
+	screen.getByRole("button", { name: "Minh Anh · Account" }).focus();
 	await userEvent.keyboard("{Enter}");
 	await screen.findByRole("menu");
 }

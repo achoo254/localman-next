@@ -83,6 +83,12 @@ export interface OperationContext {
 	 * For per-client limits only, never for authorization.
 	 */
 	readonly clientIp: string | null;
+	/**
+	 * Aborts when the caller goes away (over HTTP, the response closed
+	 * before it was sent; over MCP, the MCP request's signal). Absent when
+	 * the transport has none. Long handlers pass it to their outbound work.
+	 */
+	readonly signal?: AbortSignal;
 }
 
 /** What a `guard` can see: the caller, not the request's input or flags. */
