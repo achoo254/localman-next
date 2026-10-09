@@ -6,6 +6,7 @@ import { navigateToLogin } from "./platform/navigation";
 import { routes } from "./routes";
 import { makeUser } from "./test/fixtures";
 import { UNAUTHENTICATED, mockFetch } from "./test/mock-fetch";
+import { expectProInterestSource } from "./test/pro-interest";
 import { renderRoutes } from "./test/render-app";
 
 vi.mock("./platform/navigation", async (importOriginal) => ({
@@ -38,10 +39,11 @@ describe("route guards", () => {
 		mockFetch({
 			"GET /api/v1/users/me": { body: makeUser() },
 			"GET /api/v1/notifications": EMPTY_BELL,
+			"GET /api/v1/projects": { body: { items: [] } },
 		});
 		const { router } = renderRoutes(routes, "/");
 		expect(
-			await screen.findByRole("heading", { name: "Project" }),
+			await screen.findByRole("heading", { name: "Projects" }),
 		).toBeInTheDocument();
 		expect(router.state.location.pathname).toBe("/projects");
 		expect(navigateToLogin).not.toHaveBeenCalled();
@@ -121,6 +123,31 @@ describe("route guards", () => {
 		expect(await screen.findByText("Lỗi máy chủ.")).toBeInTheDocument();
 		await userEvent.click(screen.getByRole("button", { name: "Thử lại" }));
 		await waitFor(() => expect(calls).toHaveLength(2));
+		expect(navigateToLogin).not.toHaveBeenCalled();
+	});
+
+	it.each(["/account", "/admin/pro-interest"])(
+		"keeps %s behind sign-in",
+		async (path) => {
+			mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
+			renderRoutes(routes, path);
+			await screen.findByText("Đang chuyển tới trang đăng nhập…");
+			expect(navigateToLogin).toHaveBeenCalledWith({ returnTo: path });
+		},
+	);
+
+	it("lets visitors open the Pro interest form from the landing", async () => {
+		mockFetch({
+			"GET /api/v1/users/me": UNAUTHENTICATED,
+			"GET /api/v1/feedback/pro-interest/config": {
+				body: { turnstileSiteKey: null },
+			},
+		});
+		renderRoutes(routes, "/");
+		await userEvent.click(
+			await screen.findByRole("button", { name: "Liên hệ" }),
+		);
+		await expectProInterestSource("landing");
 		expect(navigateToLogin).not.toHaveBeenCalled();
 	});
 });

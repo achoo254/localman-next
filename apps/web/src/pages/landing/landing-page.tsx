@@ -4,9 +4,19 @@ import { buttonClassName } from "../../components/ui/button";
 import { LoginLink } from "../../features/auth/login-link";
 import { cn } from "../../lib/cn";
 import { AuthErrorAlert } from "./auth-error-alert";
+import { LandingPricing } from "./landing-pricing";
 
 /** Minimal public landing: sign in, or create an account at the IdP. */
 export function LandingPage() {
+	return (
+		<div className="grid gap-8">
+			<LandingHero />
+			<LandingPricing />
+		</div>
+	);
+}
+
+function LandingHero() {
 	return (
 		<section
 			data-id="landing-hero"

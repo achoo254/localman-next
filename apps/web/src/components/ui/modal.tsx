@@ -1,6 +1,6 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { IconX } from "@tabler/icons-react";
-import type { ReactNode } from "react";
+import { type ReactNode, type RefObject, useRef } from "react";
 import { cn } from "../../lib/cn";
 import { IconButton } from "./icon-button";
 
@@ -27,6 +27,13 @@ export interface ModalProps {
 	footer?: ReactNode;
 	children?: ReactNode;
 	closeLabel?: string;
+	/**
+	 * What receives focus on open: an element ref, or "dialog" for the frame
+	 * itself (read-only content). Falls back to the frame while the ref is
+	 * still empty (e.g. a lazily loaded body). Default: Radix picks the first
+	 * focusable element.
+	 */
+	initialFocusRef?: RefObject<HTMLElement | null> | "dialog";
 	"data-id"?: string;
 }
 
@@ -44,8 +51,19 @@ export function Modal({
 	footer,
 	children,
 	closeLabel = "Đóng",
+	initialFocusRef,
 	"data-id": dataId,
 }: ModalProps) {
+	const content = useRef<HTMLDivElement>(null);
+
+	function focusInitial(event: Event) {
+		if (!initialFocusRef) return;
+		event.preventDefault();
+		const target =
+			initialFocusRef === "dialog" ? null : initialFocusRef.current;
+		(target ?? content.current)?.focus();
+	}
+
 	return (
 		<Dialog.Root
 			open={open}
@@ -62,6 +80,8 @@ export function Modal({
 					)}
 				>
 					<Dialog.Content
+						ref={content}
+						onOpenAutoFocus={focusInitial}
 						data-id={dataId}
 						data-size={size}
 						// Without a description, opt out of Radix's describedby wiring.

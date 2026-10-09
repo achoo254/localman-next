@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
+import { cardClassName } from "../../components/ui/card";
 import { useToast } from "../../components/ui/toast";
 import { errorMessage } from "../../lib/api-client";
+import { cn } from "../../lib/cn";
 import { useCurrentUser } from "../auth/use-current-user";
 import { ChannelRow } from "./channel-row";
 import { EventPreferencesTable } from "./event-preferences-table";
@@ -90,7 +92,7 @@ export function NotificationSettingsPage() {
 					<section
 						data-id="notify-channels"
 						aria-labelledby="notify-channels-title"
-						className="grid rounded-lg border border-border bg-surface p-6 pb-3"
+						className={cn(cardClassName, "grid p-6 pb-3")}
 					>
 						<h2
 							id="notify-channels-title"

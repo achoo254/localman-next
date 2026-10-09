@@ -17,6 +17,8 @@ export interface CurrentUser {
 	name: string | null;
 	picture: string | null;
 	plan: Plan;
+	/** Localman operator: may open the admin pages. */
+	isOwner: boolean;
 	telegram: { linked: boolean; username: string | null };
 }
 
@@ -35,6 +37,7 @@ export function parseCurrentUser(data: unknown): CurrentUser {
 		name: optionalString(user, "name"),
 		picture: optionalString(user, "picture"),
 		plan,
+		isOwner: user.isOwner === true,
 		telegram: {
 			linked: expectBoolean(telegram, "linked"),
 			username: optionalString(telegram, "username"),

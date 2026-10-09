@@ -91,6 +91,11 @@
 	--shadow-focus-primary: var(--shadow-focus-primary);
 	--shadow-focus-error: var(--shadow-focus-error);
 
+	/* Small text keeps the body rhythm (1.55) instead of Tailwind's tighter
+	   defaults, matching the prototype's 13–14px copy. */
+	--text-sm--line-height: 1.55;
+	--text-xs--line-height: 1.55;
+
 	--font-*: initial;
 	--font-sans: var(--font-sans);
 	--font-mono: var(--font-mono);

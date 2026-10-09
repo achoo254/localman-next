@@ -1,6 +1,9 @@
 import {
 	IconBell,
+	IconBox,
+	IconChartBar,
 	IconChevronDown,
+	IconGauge,
 	IconLogout,
 	IconUser,
 } from "@tabler/icons-react";
@@ -15,6 +18,7 @@ import {
 	NotificationBell,
 } from "../../features/notifications/notification-bell";
 import { releasePushSubscriptionForLogout } from "../../features/notifications/release-push-on-logout";
+import { useSubscriptionDialogs } from "../../features/subscription/use-subscription-dialogs";
 import { logoutUrl } from "../../lib/api-url";
 import { idpAccountUrl } from "../../lib/app-config";
 import { cn } from "../../lib/cn";
@@ -38,6 +42,7 @@ const PLAN_LABEL = { free: "Gói Free", pro: "Gói Pro" } as const;
 export function AppHeader({ user }: { user: CurrentUser }) {
 	const navigate = useNavigate();
 	const logoutForm = useRef<HTMLFormElement>(null);
+	const subscription = useSubscriptionDialogs(user.plan);
 	const name = displayName(user);
 
 	async function logout() {
@@ -93,6 +98,20 @@ export function AppHeader({ user }: { user: CurrentUser }) {
 							</DropdownMenuLabel>
 							<DropdownMenuSeparator />
 							<DropdownMenuItem
+								data-id="account-menu-account"
+								icon={<IconGauge size={16} aria-hidden="true" />}
+								onSelect={() => navigate("/account")}
+							>
+								Tài khoản và hạn mức
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								data-id="account-menu-plan"
+								icon={<IconBox size={16} aria-hidden="true" />}
+								onSelect={() => subscription.openPlans()}
+							>
+								Quản lý gói
+							</DropdownMenuItem>
+							<DropdownMenuItem
 								data-id="account-menu-notifications"
 								icon={<IconBell size={16} aria-hidden="true" />}
 								onSelect={() => navigate(NOTIFICATION_SETTINGS_PATH)}
@@ -106,6 +125,15 @@ export function AppHeader({ user }: { user: CurrentUser }) {
 							>
 								Quản lý tài khoản
 							</DropdownMenuItem>
+							{user.isOwner ? (
+								<DropdownMenuItem
+									data-id="account-menu-admin-pro"
+									icon={<IconChartBar size={16} aria-hidden="true" />}
+									onSelect={() => navigate("/admin/pro-interest")}
+								>
+									Quản trị · Quan tâm gói Pro
+								</DropdownMenuItem>
+							) : null}
 							<DropdownMenuSeparator />
 							<DropdownMenuItem
 								data-id="topbar-logout"
@@ -125,6 +153,7 @@ export function AppHeader({ user }: { user: CurrentUser }) {
 						data-id="topbar-logout-form"
 						hidden
 					/>
+					{subscription.element}
 				</div>
 			</div>
 		</header>

@@ -75,4 +75,17 @@ describe("IconButton", () => {
 		render(<IconButton label="Đóng" icon={<svg aria-hidden="true" />} />);
 		expect(screen.getByRole("button", { name: "Đóng" })).toHaveClass("size-9");
 	});
+
+	it("stays a 36px square: no text-button min-height or padding", () => {
+		render(<IconButton label="Thêm" icon={<svg aria-hidden="true" />} />);
+		const button = screen.getByRole("button", { name: "Thêm" });
+		expect(button).toHaveClass(
+			"size-9",
+			"pointer-coarse:size-11",
+			"rounded-md",
+		);
+		for (const cls of ["min-h-10", "px-4", "pointer-coarse:min-h-11"]) {
+			expect(button).not.toHaveClass(cls);
+		}
+	});
 });

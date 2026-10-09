@@ -1,11 +1,30 @@
+import { type ComponentType, Suspense, lazy } from "react";
 import type { RouteObject } from "react-router";
 import { AppLayout } from "./components/layout/app-layout";
 import { AppShell } from "./components/layout/app-shell";
+import { PageLoading } from "./components/layout/page-loading";
 import { RedirectIfAuthenticated } from "./features/auth/route-guards";
-import { NotificationSettingsPage } from "./features/notifications/notification-settings-page";
 import { LandingPage } from "./pages/landing/landing-page";
-import { PrimitivesPage } from "./pages/primitives/primitives-page";
-import { ProjectsPage } from "./pages/projects/projects-page";
+
+/**
+ * Page code split into its own chunk, loaded on first visit. The landing and
+ * the shell (header, guards) stay in the main chunk so the first paint and
+ * the session check do not wait for a second request.
+ */
+function lazyPage<K extends string>(
+	load: () => Promise<Record<K, ComponentType>>,
+	name: K,
+) {
+	const Page = lazy(async () => {
+		const page: ComponentType = (await load())[name];
+		return { default: page };
+	});
+	return (
+		<Suspense fallback={<PageLoading />}>
+			<Page />
+		</Suspense>
+	);
+}
 
 /** Route table shared by the browser router and route tests. */
 export const routes: RouteObject[] = [
@@ -22,16 +41,45 @@ export const routes: RouteObject[] = [
 				),
 			},
 			// Design-system reference page kept for comparing with the prototype.
-			{ path: "_primitives", element: <PrimitivesPage /> },
+			{
+				path: "_primitives",
+				element: lazyPage(
+					() => import("./pages/primitives/primitives-page"),
+					"PrimitivesPage",
+				),
+			},
 		],
 	},
 	{
 		element: <AppShell />,
 		children: [
-			{ path: "projects/*", element: <ProjectsPage /> },
+			{
+				path: "projects/*",
+				element: lazyPage(
+					() => import("./pages/projects/projects-page"),
+					"ProjectsPage",
+				),
+			},
+			{
+				path: "account",
+				element: lazyPage(
+					() => import("./pages/account/account-page"),
+					"AccountPage",
+				),
+			},
 			{
 				path: "account/notifications",
-				element: <NotificationSettingsPage />,
+				element: lazyPage(
+					() => import("./features/notifications/notification-settings-page"),
+					"NotificationSettingsPage",
+				),
+			},
+			{
+				path: "admin/pro-interest",
+				element: lazyPage(
+					() => import("./pages/admin/pro-interest-page"),
+					"ProInterestPage",
+				),
 			},
 		],
 	},

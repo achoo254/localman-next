@@ -8,6 +8,8 @@ export interface ButtonStyleOptions {
 	variant?: ButtonVariant;
 	size?: ButtonSize;
 	block?: boolean;
+	/** Square icon-only control: keeps radius and font, drops min-height and padding. */
+	iconOnly?: boolean;
 }
 
 const BASE =
@@ -29,8 +31,14 @@ const VARIANTS: Record<ButtonVariant, string> = {
 };
 
 const SIZES: Record<ButtonSize, string> = {
-	sm: "min-h-8 rounded-sm px-3 text-[0.8125rem] pointer-coarse:min-h-10",
-	md: "min-h-10 rounded-md px-4 text-sm pointer-coarse:min-h-11",
+	sm: "rounded-sm text-[0.8125rem]",
+	md: "rounded-md text-sm",
+};
+
+/** Height and padding of text buttons; icon-only buttons size themselves. */
+const BOX: Record<ButtonSize, string> = {
+	sm: "min-h-8 px-3 pointer-coarse:min-h-10",
+	md: "min-h-10 px-4 pointer-coarse:min-h-11",
 };
 
 /** Class list shared by Button, IconButton and link-styled buttons. */
@@ -38,8 +46,15 @@ export function buttonClassName({
 	variant = "secondary",
 	size = "md",
 	block = false,
+	iconOnly = false,
 }: ButtonStyleOptions = {}): string {
-	return cn(BASE, VARIANTS[variant], SIZES[size], block && "w-full");
+	return cn(
+		BASE,
+		VARIANTS[variant],
+		SIZES[size],
+		!iconOnly && BOX[size],
+		block && "w-full",
+	);
 }
 
 export interface ButtonProps
@@ -53,6 +68,7 @@ export function Button({
 	variant = "secondary",
 	size = "md",
 	block = false,
+	iconOnly = false,
 	leadingIcon,
 	className,
 	type = "button",
@@ -64,7 +80,10 @@ export function Button({
 			type={type}
 			data-variant={variant}
 			data-size={size}
-			className={cn(buttonClassName({ variant, size, block }), className)}
+			className={cn(
+				buttonClassName({ variant, size, block, iconOnly }),
+				className,
+			)}
 			{...rest}
 		>
 			{leadingIcon}

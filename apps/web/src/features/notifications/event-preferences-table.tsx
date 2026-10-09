@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Button } from "../../components/ui/button";
+import { cardClassName } from "../../components/ui/card";
+import { cn } from "../../lib/cn";
 import {
 	EVENT_CHANNELS,
 	type EventChannel,
@@ -67,7 +69,7 @@ export function EventPreferencesTable({
 		<section
 			data-id="notify-events"
 			aria-labelledby="notify-events-title"
-			className="grid gap-4 rounded-lg border border-border bg-surface p-6"
+			className={cn(cardClassName, "grid gap-4 p-6")}
 		>
 			<h2
 				id="notify-events-title"

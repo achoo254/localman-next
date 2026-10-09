@@ -1,0 +1,142 @@
+import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { resetCurrentUserCache } from "../../features/auth/use-current-user";
+import { makeProject } from "../../test/fixtures";
+import { openMenu, renderPage } from "./projects-test-helpers";
+
+describe("ProjectsPage", () => {
+	beforeEach(() => resetCurrentUserCache());
+	afterEach(() => vi.unstubAllGlobals());
+
+	it("shows the empty state with a create button", async () => {
+		renderPage({ "GET /api/v1/projects": { body: { items: [] } } });
+		expect(
+			await screen.findByRole("heading", { name: "Chưa có project nào" }),
+		).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Tạo project" }));
+		expect(
+			screen.getByRole("dialog", { name: "Project mới" }),
+		).toBeInTheDocument();
+	});
+
+	it("lists owned and shared projects; shared ones cannot be edited", async () => {
+		renderPage({
+			"GET /api/v1/projects": {
+				body: {
+					items: [
+						makeProject("p1", { name: "Đơn hàng", prefix: "/api" }),
+						makeProject("p2", { name: "Shop", role: "collaborator" }),
+					],
+				},
+			},
+		});
+		const row = await screen.findByText("Đơn hàng");
+		expect(row.closest("li")).toHaveTextContent("/api");
+		expect(screen.getByText("Được mời")).toBeInTheDocument();
+		await openMenu("Shop");
+		expect(screen.getByRole("menuitem", { name: "Nhân bản" })).toBeVisible();
+		expect(screen.queryByRole("menuitem", { name: "Sửa" })).toBeNull();
+		expect(screen.queryByRole("menuitem", { name: "Xoá" })).toBeNull();
+	});
+
+	it("shows an error with retry when the list fails", async () => {
+		const { calls } = renderPage({
+			"GET /api/v1/projects": {
+				status: 500,
+				body: { error: { code: "INTERNAL", message: "Lỗi máy chủ." } },
+			},
+		});
+		expect(await screen.findByText("Lỗi máy chủ.")).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Thử lại" }));
+		await waitFor(() =>
+			expect(calls.filter((c) => c.path === "/api/v1/projects")).toHaveLength(
+				2,
+			),
+		);
+	});
+
+	it("normalizes the prefix on blur and creates the project", async () => {
+		const { calls } = renderPage({
+			"GET /api/v1/projects": { body: { items: [] } },
+			"POST /api/v1/projects": ({ body }) => ({
+				status: 201,
+				body: makeProject("p9", {
+					name: "Demo shop",
+					prefix: (body as { prefix: string }).prefix,
+				}),
+			}),
+		});
+		await userEvent.click(
+			await screen.findByRole("button", { name: "Tạo project mới" }),
+		);
+		// The modal opens on the name field.
+		await waitFor(() =>
+			expect(screen.getByLabelText(/Tên project/)).toHaveFocus(),
+		);
+		await userEvent.type(screen.getByLabelText(/Tên project/), "Demo shop");
+		const prefix = screen.getByLabelText("API Prefix");
+		await userEvent.type(prefix, "api/v1/");
+		await userEvent.tab();
+		expect(prefix).toHaveValue("/api/v1");
+		expect(screen.getByText(/\/api\/v1\/:endpoint$/)).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Tạo project" }));
+		expect(await screen.findByText("Demo shop")).toBeInTheDocument();
+		expect(calls.find((c) => c.method === "POST")?.body).toEqual({
+			name: "Demo shop",
+			prefix: "/api/v1",
+		});
+	});
+
+	it("rejects an invalid name and prefix before calling the API", async () => {
+		const { calls } = renderPage({
+			"GET /api/v1/projects": { body: { items: [] } },
+		});
+		await userEvent.click(
+			await screen.findByRole("button", { name: "Tạo project mới" }),
+		);
+		await userEvent.type(screen.getByLabelText(/Tên project/), "a/b");
+		await userEvent.type(screen.getByLabelText("API Prefix"), "/xin chào");
+		await userEvent.click(screen.getByRole("button", { name: "Tạo project" }));
+		expect(screen.getByLabelText(/Tên project/)).toHaveAccessibleDescription(
+			/Tên chỉ gồm/,
+		);
+		expect(screen.getByLabelText("API Prefix")).toHaveAttribute(
+			"aria-invalid",
+			"true",
+		);
+		expect(calls.some((c) => c.method === "POST")).toBe(false);
+	});
+
+	it("edits a project", async () => {
+		const { calls } = renderPage({
+			"GET /api/v1/projects": { body: { items: [makeProject("p1")] } },
+			"PUT /api/v1/projects/p1": {
+				body: makeProject("p1", { name: "Đổi tên" }),
+			},
+		});
+		await openMenu("Project p1");
+		await userEvent.click(screen.getByRole("menuitem", { name: "Sửa" }));
+		const name = screen.getByLabelText(/Tên project/);
+		await userEvent.clear(name);
+		await userEvent.type(name, "Đổi tên");
+		await userEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+		expect(await screen.findByText("Đổi tên")).toBeInTheDocument();
+		expect(calls.find((c) => c.method === "PUT")?.body).toEqual({
+			name: "Đổi tên",
+			prefix: "",
+		});
+	});
+
+	it("asks for a name that starts with a letter or digit", async () => {
+		renderPage({ "GET /api/v1/projects": { body: { items: [] } } });
+		await userEvent.click(
+			await screen.findByRole("button", { name: "Tạo project mới" }),
+		);
+		await userEvent.type(screen.getByLabelText(/Tên project/), "-shop");
+		await userEvent.click(screen.getByRole("button", { name: "Tạo project" }));
+		expect(
+			screen.getByText("Tên phải bắt đầu bằng chữ hoặc số."),
+		).toBeInTheDocument();
+	});
+});

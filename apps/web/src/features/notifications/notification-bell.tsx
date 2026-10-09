@@ -48,8 +48,8 @@ export function NotificationBell() {
 						unreadCount > 0 ? `Thông báo, ${unreadCount} chưa đọc` : "Thông báo"
 					}
 					className={cn(
-						buttonClassName({ variant: "ghost" }),
-						"relative size-9 min-h-9 px-0",
+						buttonClassName({ variant: "ghost", iconOnly: true }),
+						"relative size-9 pointer-coarse:size-11",
 					)}
 				>
 					<IconBell size={20} aria-hidden="true" />

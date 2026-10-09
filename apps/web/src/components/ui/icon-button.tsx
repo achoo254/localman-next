@@ -14,9 +14,10 @@ export interface IconButtonProps
 	size?: IconButtonSize;
 }
 
+/** 32/36px squares; 40/44px on touch screens so the tap target stays large. */
 const SQUARE: Record<IconButtonSize, string> = {
-	sm: "size-8 min-h-8 px-0 pointer-coarse:size-10",
-	md: "size-9 min-h-9 px-0 pointer-coarse:size-11",
+	sm: "size-8 pointer-coarse:size-10",
+	md: "size-9 pointer-coarse:size-11",
 };
 
 export function IconButton({
@@ -34,7 +35,7 @@ export function IconButton({
 			aria-label={label}
 			data-variant={variant}
 			className={cn(
-				buttonClassName({ variant, size }),
+				buttonClassName({ variant, size, iconOnly: true }),
 				SQUARE[size],
 				className,
 			)}

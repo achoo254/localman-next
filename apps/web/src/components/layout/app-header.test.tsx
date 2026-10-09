@@ -135,4 +135,32 @@ describe("AppHeader", () => {
 		expect(menu).toHaveTextContent("Gói Free");
 		expect(menu).toHaveTextContent("minhanh@example.com");
 	});
+
+	it("shows the admin entry to the owner only", async () => {
+		const { router } = renderHeader(makeUser({ isOwner: true }));
+		await openAccountMenu("Minh Anh");
+		await userEvent.click(
+			await screen.findByRole("menuitem", {
+				name: "Quản trị · Quan tâm gói Pro",
+			}),
+		);
+		expect(router.state.location.pathname).toBe("/admin/pro-interest");
+	});
+
+	it("hides the admin entry from other users and opens the plans modal", async () => {
+		renderHeader();
+		await openAccountMenu("Minh Anh");
+		expect(
+			await screen.findByRole("menuitem", { name: "Tài khoản và hạn mức" }),
+		).toBeVisible();
+		expect(
+			screen.queryByRole("menuitem", { name: "Quản trị · Quan tâm gói Pro" }),
+		).toBeNull();
+		await userEvent.click(
+			screen.getByRole("menuitem", { name: "Quản lý gói" }),
+		);
+		expect(
+			await screen.findByRole("dialog", { name: "Quản lý gói" }),
+		).toBeInTheDocument();
+	});
 });
