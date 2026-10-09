@@ -4,8 +4,6 @@ export type NodeAction = "edit" | "data" | "delete";
 
 export interface NodeActionsProps {
 	name: string;
-	/** Collaborators only see "Dữ liệu" (read-only). */
-	canEdit: boolean;
 	onAction: (action: NodeAction) => void;
 	/** `data-id` of the node; buttons append `-edit`, `-data`, `-delete`. */
 	dataIdBase: string;
@@ -22,12 +20,7 @@ const ACTION_CLASS =
  * hovered or holds focus; always visible on touch screens, which have no
  * hover.
  */
-export function NodeActions({
-	name,
-	canEdit,
-	onAction,
-	dataIdBase,
-}: NodeActionsProps) {
+export function NodeActions({ name, onAction, dataIdBase }: NodeActionsProps) {
 	return (
 		<div
 			className={cn(
@@ -35,17 +28,15 @@ export function NodeActions({
 				"group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100",
 			)}
 		>
-			{canEdit ? (
-				<button
-					type="button"
-					aria-label={`Sửa ${name}`}
-					data-id={`${dataIdBase}-edit`}
-					className={cn(ACTION_CLASS, "text-muted hover:text-fg")}
-					onClick={() => onAction("edit")}
-				>
-					Sửa
-				</button>
-			) : null}
+			<button
+				type="button"
+				aria-label={`Sửa ${name}`}
+				data-id={`${dataIdBase}-edit`}
+				className={cn(ACTION_CLASS, "text-muted hover:text-fg")}
+				onClick={() => onAction("edit")}
+			>
+				Sửa
+			</button>
 			<button
 				type="button"
 				aria-label={`Dữ liệu ${name}`}
@@ -55,17 +46,15 @@ export function NodeActions({
 			>
 				Dữ liệu
 			</button>
-			{canEdit ? (
-				<button
-					type="button"
-					aria-label={`Xoá ${name}`}
-					data-id={`${dataIdBase}-delete`}
-					className={cn(ACTION_CLASS, "text-error")}
-					onClick={() => onAction("delete")}
-				>
-					Xoá
-				</button>
-			) : null}
+			<button
+				type="button"
+				aria-label={`Xoá ${name}`}
+				data-id={`${dataIdBase}-delete`}
+				className={cn(ACTION_CLASS, "text-error")}
+				onClick={() => onAction("delete")}
+			>
+				Xoá
+			</button>
 		</div>
 	);
 }

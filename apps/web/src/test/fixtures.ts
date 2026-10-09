@@ -50,6 +50,7 @@ export function makeProject(
 			name: "Minh Anh",
 			picture: null,
 		},
+		memberCount: 1,
 		createdAt: "2026-10-09T01:00:00.000Z",
 		...overrides,
 	};

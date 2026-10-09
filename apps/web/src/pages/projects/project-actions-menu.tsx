@@ -1,8 +1,10 @@
 import {
 	IconCopy,
 	IconDotsVertical,
+	IconLink,
 	IconPencil,
 	IconTrash,
+	IconUsers,
 } from "@tabler/icons-react";
 import {
 	DropdownMenu,
@@ -14,7 +16,12 @@ import {
 import { IconButton } from "../../components/ui/icon-button";
 import type { Project } from "./projects-api";
 
-export type ProjectAction = "clone" | "edit" | "delete";
+export type ProjectAction =
+	| "collaborators"
+	| "magic-link"
+	| "clone"
+	| "edit"
+	| "delete";
 
 export interface ProjectActionsMenuProps {
 	project: Project;
@@ -22,8 +29,9 @@ export interface ProjectActionsMenuProps {
 }
 
 /**
- * ⋮ menu of a project row. Collaborators can only clone; edit and delete
- * belong to the owner. Collaborators and Magic link entries come later.
+ * ⋮ menu of a project row. Everyone sees the members ("Cộng tác viên":
+ * the owner manages them, a collaborator may leave) and can clone; the
+ * magic link, edit and delete belong to the owner.
  */
 export function ProjectActionsMenu({
 	project,
@@ -42,6 +50,22 @@ export function ProjectActionsMenu({
 				/>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent data-id="project-menu">
+				<DropdownMenuItem
+					data-id="project-menu-collaborators"
+					icon={<IconUsers size={16} aria-hidden="true" />}
+					onSelect={() => onAction("collaborators", project)}
+				>
+					Cộng tác viên
+				</DropdownMenuItem>
+				{owner ? (
+					<DropdownMenuItem
+						data-id="project-menu-magic-link"
+						icon={<IconLink size={16} aria-hidden="true" />}
+						onSelect={() => onAction("magic-link", project)}
+					>
+						Magic link
+					</DropdownMenuItem>
+				) : null}
 				<DropdownMenuItem
 					data-id="project-menu-clone"
 					icon={<IconCopy size={16} aria-hidden="true" />}

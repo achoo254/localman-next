@@ -1,4 +1,4 @@
-import { IconBolt, IconPlus, IconRefresh } from "@tabler/icons-react";
+import { IconBolt, IconKey, IconPlus, IconRefresh } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { Button } from "../../components/ui/button";
 import { cardClassName } from "../../components/ui/card";
@@ -9,12 +9,12 @@ import { splitMockBaseUrl } from "./mock-url-parts";
 
 export interface ApiEndpointCardProps {
 	project: Project;
-	/** Owner of the project; collaborators get no footer actions. */
-	canEdit: boolean;
 	busy: boolean;
 	onNewResource: () => void;
 	onGenerateAll: () => void;
 	onResetAll: () => void;
+	/** Owner only: "Đổi URL mock" (new secret); absent for collaborators. */
+	onRotateSecret?: () => void;
 }
 
 /** Tinted chip with a tooltip, focusable so keyboard users can read it. */
@@ -52,11 +52,11 @@ function UrlChip({
  */
 export function ApiEndpointCard({
 	project,
-	canEdit,
 	busy,
 	onNewResource,
 	onGenerateAll,
 	onResetAll,
+	onRotateSecret,
 }: ApiEndpointCardProps) {
 	const url = splitMockBaseUrl(
 		project.mockBaseUrl,
@@ -106,35 +106,43 @@ export function ApiEndpointCard({
 					</UrlChip>
 				</p>
 			</div>
-			{canEdit ? (
-				<div className="flex flex-wrap gap-2 border-border-subtle border-t bg-surface-subtle px-6 py-3">
-					<Button
-						variant="primary"
-						data-id="project-detail-new-resource"
-						leadingIcon={<IconPlus size={20} aria-hidden="true" />}
-						onClick={onNewResource}
-					>
-						Thêm resource
-					</Button>
-					<Button
-						data-id="project-detail-generate-all"
-						disabled={busy}
-						leadingIcon={<IconBolt size={20} aria-hidden="true" />}
-						onClick={onGenerateAll}
-					>
-						Sinh tất cả
-					</Button>
+			<div className="flex flex-wrap gap-2 border-border-subtle border-t bg-surface-subtle px-6 py-3">
+				<Button
+					variant="primary"
+					data-id="project-detail-new-resource"
+					leadingIcon={<IconPlus size={20} aria-hidden="true" />}
+					onClick={onNewResource}
+				>
+					Thêm resource
+				</Button>
+				<Button
+					data-id="project-detail-generate-all"
+					disabled={busy}
+					leadingIcon={<IconBolt size={20} aria-hidden="true" />}
+					onClick={onGenerateAll}
+				>
+					Sinh tất cả
+				</Button>
+				<Button
+					variant="ghost"
+					data-id="project-detail-reset-all"
+					disabled={busy}
+					leadingIcon={<IconRefresh size={20} aria-hidden="true" />}
+					onClick={onResetAll}
+				>
+					Reset tất cả
+				</Button>
+				{onRotateSecret ? (
 					<Button
 						variant="ghost"
-						data-id="project-detail-reset-all"
-						disabled={busy}
-						leadingIcon={<IconRefresh size={20} aria-hidden="true" />}
-						onClick={onResetAll}
+						data-id="project-detail-rotate-secret"
+						leadingIcon={<IconKey size={20} aria-hidden="true" />}
+						onClick={onRotateSecret}
 					>
-						Reset tất cả
+						Đổi URL mock
 					</Button>
-				</div>
-			) : null}
+				) : null}
+			</div>
 		</section>
 	);
 }

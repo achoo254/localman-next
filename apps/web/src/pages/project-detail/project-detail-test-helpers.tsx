@@ -87,7 +87,10 @@ export function renderDetail(
 		...routes,
 	});
 	const view = renderRoutes(
-		[{ path: "/projects/:projectId", element: <ProjectDetailPage /> }],
+		[
+			{ path: "/projects/:projectId", element: <ProjectDetailPage /> },
+			{ path: "/projects", element: <p>Danh sách projects</p> },
+		],
 		`/projects/${PROJECT_ID}`,
 	);
 	return { ...api, ...view };

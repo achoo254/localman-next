@@ -44,7 +44,9 @@ describe("ProjectDetailPage", () => {
 		expect(url).toHaveTextContent(
 			"https://abc123.mock.localman.test/api/v1/:endpoint",
 		);
-		// Breadcrumb link first, then the secret chip.
+		// Breadcrumb link, Cộng tác viên, Magic link, then the secret chip.
+		await userEvent.tab();
+		await userEvent.tab();
 		await userEvent.tab();
 		await userEvent.tab();
 		expect(screen.getByText("abc123")).toHaveFocus();

@@ -16,7 +16,6 @@ export type ResourcesState =
 export interface ResourcesCardProps {
 	state: ResourcesState;
 	mockBaseUrl: string;
-	canEdit: boolean;
 	onRetry: () => void;
 	onNewResource: () => void;
 	onGenerate: (resource: Resource, count: number) => void;
@@ -28,7 +27,6 @@ export interface ResourcesCardProps {
 export function ResourcesCard({
 	state,
 	mockBaseUrl,
-	canEdit,
 	onRetry,
 	onNewResource,
 	...canvas
@@ -64,16 +62,14 @@ export function ResourcesCard({
 					Chưa có resource nào. Resource là một bảng dữ liệu có endpoint CRUD
 					riêng.
 				</p>
-				{canEdit ? (
-					<Button
-						variant="primary"
-						data-id="project-detail-tree-empty-create"
-						leadingIcon={<IconPlus size={20} aria-hidden="true" />}
-						onClick={onNewResource}
-					>
-						Thêm resource
-					</Button>
-				) : null}
+				<Button
+					variant="primary"
+					data-id="project-detail-tree-empty-create"
+					leadingIcon={<IconPlus size={20} aria-hidden="true" />}
+					onClick={onNewResource}
+				>
+					Thêm resource
+				</Button>
 			</div>
 		);
 	} else if (state.status === "ready") {
@@ -81,7 +77,6 @@ export function ResourcesCard({
 			<ResourceTreeCanvas
 				resources={state.resources}
 				mockBaseUrl={mockBaseUrl}
-				canEdit={canEdit}
 				{...canvas}
 			/>
 		);

@@ -1,4 +1,4 @@
-import { ApiError, apiRequest } from "../../lib/api-client";
+import { ApiError, apiRequest, withDryRun } from "../../lib/api-client";
 import {
 	InvalidResponseError,
 	expectArray,
@@ -23,6 +23,8 @@ export interface Project {
 	mockBaseUrl: string;
 	role: "owner" | "collaborator";
 	owner: ProjectOwner;
+	/** Owner plus accepted collaborators (pending invitations excluded). */
+	memberCount: number;
 	createdAt: string;
 }
 
@@ -60,6 +62,7 @@ export function parseProject(value: unknown): Project {
 			name: optionalString(owner, "name"),
 			picture: optionalString(owner, "picture"),
 		},
+		memberCount: expectNumber(data, "memberCount"),
 		createdAt: expectString(data, "createdAt"),
 	};
 }
@@ -105,7 +108,7 @@ export async function previewDeleteProject(
 	id: string,
 ): Promise<DeleteDependent[]> {
 	const data = expectRecord(
-		await apiRequest(`${projectPath(id)}?dryRun=true`, { method: "DELETE" }),
+		await apiRequest(withDryRun(projectPath(id), true), { method: "DELETE" }),
 		"delete preview",
 	);
 	const dependents = Array.isArray(data.dependents) ? data.dependents : [];
@@ -120,6 +123,27 @@ export async function previewDeleteProject(
 
 export async function deleteProject(id: string): Promise<void> {
 	await apiRequest(projectPath(id), { method: "DELETE" });
+}
+
+/** `mock.rotateProjectSecret`: `{ dryRun, collaborators, project }`. */
+async function requestRotateSecret(id: string, dryRun: boolean) {
+	return expectRecord(
+		await apiRequest(withDryRun(`${projectPath(id)}/rotate-secret`, dryRun), {
+			method: "POST",
+			body: {},
+		}),
+		"secret rotation",
+	);
+}
+
+/** Dry run: how many collaborators will be told the mock URL changed. */
+export async function previewRotateSecret(id: string): Promise<number> {
+	return expectNumber(await requestRotateSecret(id, true), "collaborators");
+}
+
+/** New secret, so the old mock URL stops working; returns the new project. */
+export async function rotateSecret(id: string): Promise<Project> {
+	return parseProject((await requestRotateSecret(id, false)).project);
 }
 
 export function isPlanLimitError(error: unknown): boolean {

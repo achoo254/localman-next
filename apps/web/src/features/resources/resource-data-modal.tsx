@@ -27,8 +27,6 @@ export interface ResourceDataModalProps {
 	resource: Resource;
 	/** Every resource of the project, to know whether children hold data. */
 	resources: readonly Resource[];
-	/** Collaborators see the records without the Update button. */
-	readOnly: boolean;
 	onOpenChange: (open: boolean) => void;
 	onUpdated: (resource: Resource, changes: DataChange[]) => void;
 }
@@ -44,7 +42,6 @@ export function ResourceDataModal({
 	projectId,
 	resource,
 	resources,
-	readOnly,
 	onOpenChange,
 	onUpdated,
 }: ResourceDataModalProps) {
@@ -115,26 +112,23 @@ export function ResourceDataModal({
 				<ModalFooter>
 					<ModalClose asChild>
 						<Button variant="ghost" disabled={busy}>
-							{readOnly ? "Đóng" : "Huỷ"}
+							Huỷ
 						</Button>
 					</ModalClose>
-					{readOnly ? null : (
-						<Button
-							variant="primary"
-							disabled={busy || !ready}
-							onClick={() => void update()}
-							data-id="modal-resource-data-submit"
-						>
-							{busy ? "Đang cập nhật…" : "Cập nhật"}
-						</Button>
-					)}
+					<Button
+						variant="primary"
+						disabled={busy || !ready}
+						onClick={() => void update()}
+						data-id="modal-resource-data-submit"
+					>
+						{busy ? "Đang cập nhật…" : "Cập nhật"}
+					</Button>
 				</ModalFooter>
 			}
 		>
 			<p id={`${ids}-hint`} className="m-0 text-[0.8125rem] text-muted">
-				{readOnly
-					? "Bản ghi đang lưu của resource."
-					: `Sửa trực tiếp hoặc dán một mảng JSON mới để thay toàn bộ dữ liệu (tối đa ${MAX_RECORDS_PER_RESOURCE} bản ghi).`}
+				Sửa trực tiếp hoặc dán một mảng JSON mới để thay toàn bộ dữ liệu (tối đa{" "}
+				{MAX_RECORDS_PER_RESOURCE} bản ghi).
 			</p>
 			{data.isPending ? (
 				<output className="block py-6 font-mono text-muted text-sm">
@@ -153,7 +147,6 @@ export function ResourceDataModal({
 					}}
 					label={`Dữ liệu JSON của ${resource.name}`}
 					describedBy={`${ids}-hint${blurError ? ` ${ids}-error` : ""}`}
-					readOnly={readOnly}
 					invalid={Boolean(blurError)}
 					validate={recordsProblem}
 					onValidate={setBlurError}

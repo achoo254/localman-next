@@ -22,6 +22,7 @@ export function ProjectRow({ project, onAction }: ProjectRowProps) {
 	const shared = project.role === "collaborator";
 	const ownerName =
 		project.owner.name || project.owner.username || "người khác";
+	const collaborators = project.memberCount - 1;
 	return (
 		<li
 			data-id={`project-row-${project.id}`}
@@ -47,7 +48,10 @@ export function ProjectRow({ project, onAction }: ProjectRowProps) {
 						) : null}
 					</span>
 					<span className="truncate font-mono text-muted text-xs">
-						{project.prefix || "/"} · {project.mockBaseUrl}
+						{project.prefix || "/"} ·{" "}
+						{/* Before the long URL, so truncation never hides it. */}
+						{collaborators > 0 ? `${collaborators} cộng tác viên · ` : null}
+						{project.mockBaseUrl}
 					</span>
 				</div>
 			</Link>

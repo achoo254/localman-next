@@ -33,6 +33,11 @@ export function avatarGroup(name: string): number {
 	return Math.min(GROUPS.length - 2, Math.floor((code - 97) / 4));
 }
 
+/** Background utility of the colour group of `name`. */
+export function avatarToneClass(name: string): string {
+	return GROUPS[avatarGroup(name)];
+}
+
 export function ProjectAvatar({ name }: { name: string }) {
 	const group = avatarGroup(name);
 	return (
@@ -41,7 +46,7 @@ export function ProjectAvatar({ name }: { name: string }) {
 			data-group={group + 1}
 			className={cn(
 				"grid size-11 shrink-0 place-items-center rounded-md font-bold font-mono text-lg text-on-tone uppercase",
-				GROUPS[group],
+				avatarToneClass(name),
 			)}
 		>
 			{avatarInitial(name)}

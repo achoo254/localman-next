@@ -1,4 +1,4 @@
-import { apiRequest } from "../../lib/api-client";
+import { apiRequest, withDryRun } from "../../lib/api-client";
 import {
 	expectArray,
 	expectNumber,
@@ -17,9 +17,6 @@ export const resourcesPath = (projectId: string): string =>
 	`/api/v1/projects/${encodeURIComponent(projectId)}/resources`;
 export const resourcePath = (projectId: string, resourceId: string): string =>
 	`${resourcesPath(projectId)}/${encodeURIComponent(resourceId)}`;
-/** Destructive routes answer a preview instead of writing with `?dryRun=true`. */
-export const withDryRun = (path: string, dryRun: boolean): string =>
-	dryRun ? `${path}?dryRun=true` : path;
 
 /** The project's resources in tree order (parents before children). */
 export async function fetchResources(projectId: string): Promise<Resource[]> {

@@ -6,9 +6,9 @@
  */
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import axe from "axe-core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetCurrentUserCache } from "../../features/auth/use-current-user";
+import { seriousViolations } from "../../test/axe";
 import { makeProject } from "../../test/fixtures";
 import {
 	PROJECT_ID,
@@ -18,17 +18,6 @@ import {
 	renderDetail,
 	sampleTree,
 } from "./project-detail-test-helpers";
-
-async function seriousViolations(root: Element) {
-	const result = await axe.run(root, {
-		rules: { "color-contrast": { enabled: false } },
-	});
-	return result.violations
-		.filter((v) => v.impact === "serious" || v.impact === "critical")
-		.map(
-			(v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`,
-		);
-}
 
 describe("project page accessibility and layout", () => {
 	beforeEach(() => {
@@ -77,23 +66,19 @@ describe("project page accessibility and layout", () => {
 		}
 	});
 
-	it("gives collaborators a read-only view", async () => {
+	it("lets collaborators edit resources, not the project's mock URL", async () => {
 		renderDetail(
 			{ [`GET ${RESOURCES_PATH}`]: { body: { items: sampleTree() } } },
 			makeProject(PROJECT_ID, { role: "collaborator" }),
 		);
 		const users = await findNode("users");
-		expect(screen.queryByRole("button", { name: "Thêm resource" })).toBeNull();
-		expect(screen.queryByRole("button", { name: "Thêm vào root" })).toBeNull();
-		expect(within(users).queryByRole("button", { name: /^Chọn/ })).toBeNull();
 		expect(
-			within(users).queryByRole("button", { name: "Sửa users" }),
-		).toBeNull();
-		expect(
-			within(users).getByRole("button", { name: "Dữ liệu users" }),
+			screen.getByRole("button", { name: "Thêm resource" }),
 		).toBeInTheDocument();
-		expect(bar(users)).toHaveAttribute("aria-disabled", "true");
-		// No empty-project prompt or write for a read-only user.
-		expect(screen.queryByRole("dialog")).toBeNull();
+		expect(
+			within(users).getByRole("button", { name: "Sửa users" }),
+		).toBeInTheDocument();
+		expect(bar(users)).not.toHaveAttribute("aria-disabled", "true");
+		expect(screen.queryByRole("button", { name: "Đổi URL mock" })).toBeNull();
 	});
 });

@@ -13,7 +13,6 @@ export interface ResourceNodeProps {
 	geometry: TreeGeometry;
 	/** Mock URL of the collection, opened by the name link. */
 	href: string;
-	canEdit: boolean;
 	selected: boolean;
 	/** Name of the selected resource, used in the right connector's label. */
 	selectionName: string | null;
@@ -42,7 +41,6 @@ export function ResourceNode({
 	y,
 	geometry,
 	href,
-	canEdit,
 	selected,
 	selectionName,
 	targetState,
@@ -73,23 +71,21 @@ export function ResourceNode({
 					: "border-border hover:border-[color-mix(in_srgb,var(--c-primary)_45%,var(--c-border))]",
 			)}
 		>
-			{canEdit ? (
-				<button
-					type="button"
-					aria-pressed={selected}
-					aria-label={`Chọn ${name} để di chuyển`}
-					data-id={`${base}-select`}
-					style={{ top: geometry.handleY }}
-					className={cn(
-						HANDLE,
-						"left-0",
-						selected
-							? "border-primary bg-primary"
-							: "border-icon-muted bg-surface hover:border-primary",
-					)}
-					onClick={onSelect}
-				/>
-			) : null}
+			<button
+				type="button"
+				aria-pressed={selected}
+				aria-label={`Chọn ${name} để di chuyển`}
+				data-id={`${base}-select`}
+				style={{ top: geometry.handleY }}
+				className={cn(
+					HANDLE,
+					"left-0",
+					selected
+						? "border-primary bg-primary"
+						: "border-icon-muted bg-surface hover:border-primary",
+				)}
+				onClick={onSelect}
+			/>
 			<div className="flex h-6 items-center">
 				<ExternalLink
 					href={href}
@@ -117,32 +113,25 @@ export function ResourceNode({
 					{resource.count}
 				</span>
 			</div>
-			<NodeActions
-				name={name}
-				canEdit={canEdit}
-				onAction={onAction}
-				dataIdBase={base}
+			<NodeActions name={name} onAction={onAction} dataIdBase={base} />
+			<button
+				type="button"
+				aria-label={`Lồng ${selectionName ?? "resource đang chọn"} vào ${name}`}
+				aria-disabled={targetState === "invalid" || undefined}
+				data-id={`${base}-nest`}
+				data-state={targetState}
+				style={{ top: geometry.handleY }}
+				className={cn(
+					HANDLE,
+					"left-full",
+					targetState === "target" && "border-primary bg-primary",
+					targetState === "invalid" &&
+						"cursor-not-allowed border-icon-muted bg-surface opacity-30",
+					targetState === "idle" &&
+						"border-icon-muted bg-surface hover:border-primary",
+				)}
+				onClick={onNest}
 			/>
-			{canEdit ? (
-				<button
-					type="button"
-					aria-label={`Lồng ${selectionName ?? "resource đang chọn"} vào ${name}`}
-					aria-disabled={targetState === "invalid" || undefined}
-					data-id={`${base}-nest`}
-					data-state={targetState}
-					style={{ top: geometry.handleY }}
-					className={cn(
-						HANDLE,
-						"left-full",
-						targetState === "target" && "border-primary bg-primary",
-						targetState === "invalid" &&
-							"cursor-not-allowed border-icon-muted bg-surface opacity-30",
-						targetState === "idle" &&
-							"border-icon-muted bg-surface hover:border-primary",
-					)}
-					onClick={onNest}
-				/>
-			) : null}
 		</div>
 	);
 }

@@ -103,6 +103,10 @@ export async function apiRequest(
 	throw toApiError(response.status, payload);
 }
 
+/** Destructive routes answer a preview instead of writing with `?dryRun=true`. */
+export const withDryRun = (path: string, dryRun: boolean): string =>
+	dryRun ? `${path}?dryRun=true` : path;
+
 /** Message safe to show the user for any thrown value. */
 export function errorMessage(error: unknown): string {
 	if (error instanceof ApiError) return error.message;

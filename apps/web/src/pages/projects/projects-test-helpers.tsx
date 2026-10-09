@@ -21,8 +21,11 @@ export function renderPage(routes: Record<string, MockRoute>) {
 		"GET /api/v1/users/me": { body: makeUser() },
 		...routes,
 	});
-	renderRoutes([{ path: "*", element: <ProjectsPage /> }], "/projects");
-	return api;
+	const view = renderRoutes(
+		[{ path: "*", element: <ProjectsPage /> }],
+		"/projects",
+	);
+	return { ...api, ...view };
 }
 
 export async function openMenu(name: string) {

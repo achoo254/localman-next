@@ -40,6 +40,15 @@ export const routes: RouteObject[] = [
 					</RedirectIfAuthenticated>
 				),
 			},
+			// Public on purpose: anonymous visitors choose sign-in or sign-up
+			// and come back here (the shell's guard would go straight to sign-in).
+			{
+				path: "invite/:token",
+				element: lazyPage(
+					() => import("./pages/accept-invite-page"),
+					"AcceptInvitePage",
+				),
+			},
 			// Design-system reference page kept for comparing with the prototype.
 			{
 				path: "_primitives",

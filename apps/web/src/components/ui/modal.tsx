@@ -34,6 +34,12 @@ export interface ModalProps {
 	 * focusable element.
 	 */
 	initialFocusRef?: RefObject<HTMLElement | null> | "dialog";
+	/**
+	 * Runs when the modal closes, before focus returns to the trigger; call
+	 * `event.preventDefault()` and focus something else when the trigger is
+	 * gone (e.g. the row it belonged to was removed).
+	 */
+	onCloseAutoFocus?: (event: Event) => void;
 	"data-id"?: string;
 }
 
@@ -67,6 +73,7 @@ export function Modal({
 	children,
 	closeLabel = "Đóng",
 	initialFocusRef,
+	onCloseAutoFocus,
 	"data-id": dataId,
 }: ModalProps) {
 	const content = useRef<HTMLDivElement>(null);
@@ -97,6 +104,7 @@ export function Modal({
 					<Dialog.Content
 						ref={content}
 						onOpenAutoFocus={focusInitial}
+						onCloseAutoFocus={onCloseAutoFocus}
 						onEscapeKeyDown={keepOpenForExpandedCombobox}
 						data-id={dataId}
 						data-size={size}

@@ -11,14 +11,10 @@ export interface ResourceTreeCanvasProps {
 	resources: readonly Resource[];
 	/** Project mock base URL, prefix included. */
 	mockBaseUrl: string;
-	/** Owner of the project; collaborators get a read-only canvas. */
-	canEdit: boolean;
 	onGenerate: (resource: Resource, count: number) => void;
 	onAction: (action: NodeAction, resource: Resource) => void;
 	onMove: (resource: Resource, target: Resource | null) => void;
 }
-
-const READ_ONLY_REASON = "Chỉ chủ project được sinh dữ liệu.";
 
 export function mockUrlOf(mockBaseUrl: string, name: string): string {
 	return `${mockBaseUrl.replace(/\/+$/, "")}/${encodeURIComponent(name)}`;
@@ -32,7 +28,6 @@ export function mockUrlOf(mockBaseUrl: string, name: string): string {
 export function ResourceTreeCanvas({
 	resources,
 	mockBaseUrl,
-	canEdit,
 	onGenerate,
 	onAction,
 	onMove,
@@ -51,7 +46,6 @@ export function ResourceTreeCanvas({
 	const selected = connect.selected;
 
 	function blockedReason(resource: Resource): string | null {
-		if (!canEdit) return READ_ONLY_REASON;
 		const parent = resource.parentId ? byId.get(resource.parentId) : undefined;
 		return parent && parent.count === 0
 			? `Sinh dữ liệu cho ${parent.name} trước.`
@@ -62,10 +56,7 @@ export function ResourceTreeCanvas({
 		const parent = resource.parentId ? byId.get(resource.parentId) : undefined;
 		toast.show({
 			tone: "error",
-			title:
-				canEdit && parent
-					? `Cần sinh dữ liệu cho ${parent.name} trước khi sinh cho ${resource.name}.`
-					: READ_ONLY_REASON,
+			title: `Cần sinh dữ liệu cho ${parent?.name ?? "resource cha"} trước khi sinh cho ${resource.name}.`,
 		});
 	}
 
@@ -74,24 +65,21 @@ export function ResourceTreeCanvas({
 			data-id="resource-tree"
 			className="grid min-w-0 grid-cols-[minmax(0,1fr)]"
 		>
-			{canEdit ? (
-				<p
-					aria-live="polite"
-					data-id="resource-tree-hint"
-					className="m-0 px-6 pt-3 text-[0.8125rem] text-muted leading-[1.55]"
-				>
-					{selected ? (
-						<>
-							Đang chọn{" "}
-							<b className="font-mono text-primary">{selected.name}</b>. Bấm
-							chấm tròn bên phải resource đích để lồng vào, hoặc bấm thanh “Thêm
-							vào root”. Nhấn Esc để huỷ.
-						</>
-					) : (
-						"Bấm chấm tròn bên trái một resource để chọn, sau đó bấm chấm tròn bên phải của resource khác để lồng vào."
-					)}
-				</p>
-			) : null}
+			<p
+				aria-live="polite"
+				data-id="resource-tree-hint"
+				className="m-0 px-6 pt-3 text-[0.8125rem] text-muted leading-[1.55]"
+			>
+				{selected ? (
+					<>
+						Đang chọn <b className="font-mono text-primary">{selected.name}</b>.
+						Bấm chấm tròn bên phải resource đích để lồng vào, hoặc bấm thanh
+						“Thêm vào root”. Nhấn Esc để huỷ.
+					</>
+				) : (
+					"Bấm chấm tròn bên trái một resource để chọn, sau đó bấm chấm tròn bên phải của resource khác để lồng vào."
+				)}
+			</p>
 			<div
 				className="overflow-x-auto px-6 pt-4 pb-6"
 				onKeyDown={(event) => {
@@ -119,14 +107,12 @@ export function ResourceTreeCanvas({
 							/>
 						))}
 					</svg>
-					{canEdit ? (
-						<AddToRootRail
-							width={g.railWidth}
-							height={layout.height}
-							active={connect.rootActive}
-							onClick={() => connect.connect(null)}
-						/>
-					) : null}
+					<AddToRootRail
+						width={g.railWidth}
+						height={layout.height}
+						active={connect.rootActive}
+						onClick={() => connect.connect(null)}
+					/>
 					{layout.nodes.map(({ item, x, y }) => (
 						<ResourceNode
 							key={item.id}
@@ -135,7 +121,6 @@ export function ResourceTreeCanvas({
 							y={y}
 							geometry={g}
 							href={mockUrlOf(mockBaseUrl, item.name)}
-							canEdit={canEdit}
 							selected={selected?.id === item.id}
 							selectionName={selected?.name ?? null}
 							targetState={connect.targetState(item.id)}

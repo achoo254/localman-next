@@ -11,6 +11,14 @@ export function currentPath(): string {
 	return `${pathname}${search}${hash}`;
 }
 
+/**
+ * Absolute URL of an in-app page (e.g. an `/invite/:token` link from the
+ * API) for sharing outside the app.
+ */
+export function appPageUrl(path: string): string {
+	return new URL(path, window.location.origin).href;
+}
+
 /** Leaves the SPA for `/auth/login`, which redirects to the IdP. */
 export function navigateToLogin(options: LoginOptions = {}): void {
 	window.location.assign(loginUrl(options));

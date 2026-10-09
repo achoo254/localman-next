@@ -34,7 +34,6 @@ export interface ProjectDetailDialogsProps {
 	projectId: string;
 	dialog: ProjectDialog;
 	resources: readonly Resource[];
-	canEdit: boolean;
 	onClose: () => void;
 	/** The owner's plan has no room for another resource. */
 	onPlanLimit: () => void;
@@ -44,7 +43,6 @@ export function ProjectDetailDialogs({
 	projectId,
 	dialog,
 	resources,
-	canEdit,
 	onClose,
 	onPlanLimit,
 }: ProjectDetailDialogsProps) {
@@ -89,7 +87,6 @@ export function ProjectDetailDialogs({
 						projectId={projectId}
 						resource={dialog.resource}
 						resources={resources}
-						readOnly={!canEdit}
 						onOpenChange={closeOnFalse}
 						onUpdated={(resource, changes) => {
 							onClose();

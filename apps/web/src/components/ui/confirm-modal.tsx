@@ -19,6 +19,8 @@ export interface ConfirmModalProps {
 	onConfirm: () => Promise<void>;
 	/** Keeps the confirm button off, e.g. while a dry run is still loading. */
 	confirmDisabled?: boolean;
+	/** See `Modal`: where focus goes when the trigger no longer exists. */
+	onCloseAutoFocus?: (event: Event) => void;
 	"data-id"?: string;
 }
 
@@ -35,6 +37,7 @@ export function ConfirmModal({
 	confirmLabel,
 	onConfirm,
 	confirmDisabled = false,
+	onCloseAutoFocus,
 	"data-id": dataId,
 }: ConfirmModalProps) {
 	const [busy, setBusy] = useState(false);
@@ -68,6 +71,7 @@ export function ConfirmModal({
 			title={title}
 			size="sm"
 			initialFocusRef={cancel}
+			onCloseAutoFocus={onCloseAutoFocus}
 			data-id={dataId}
 			footer={
 				<ModalFooter>

@@ -58,6 +58,11 @@ export interface FormFieldProps {
 	/** Validation message; marks the control invalid when present. */
 	error?: ReactNode;
 	required?: boolean;
+	/**
+	 * Announce the error as soon as it appears (`role="alert"`), for errors
+	 * that come back from a request rather than from typing.
+	 */
+	announceError?: boolean;
 	/** Overrides the generated control id. */
 	id?: string;
 	className?: string;
@@ -72,6 +77,7 @@ export function FormField({
 	hint,
 	error,
 	required = false,
+	announceError = false,
 	id,
 	className,
 	"data-id": dataId,
@@ -113,7 +119,11 @@ export function FormField({
 					</p>
 				) : null}
 				{error ? (
-					<p id={errorId} className={cn(TEXT_SMALL, "text-error")}>
+					<p
+						id={errorId}
+						role={announceError ? "alert" : undefined}
+						className={cn(TEXT_SMALL, "text-error")}
+					>
 						{error}
 					</p>
 				) : null}

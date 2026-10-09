@@ -7,19 +7,17 @@ import {
 	IconLogout,
 	IconUser,
 } from "@tabler/icons-react";
-import { useRef } from "react";
 import { Link, useNavigate } from "react-router";
 import {
 	type CurrentUser,
 	displayName,
 } from "../../features/auth/current-user";
+import { useLogout } from "../../features/auth/use-logout";
 import {
 	NOTIFICATION_SETTINGS_PATH,
 	NotificationBell,
 } from "../../features/notifications/notification-bell";
-import { releasePushSubscriptionForLogout } from "../../features/notifications/release-push-on-logout";
 import { useSubscriptionDialogs } from "../../features/subscription/use-subscription-dialogs";
-import { logoutUrl } from "../../lib/api-url";
 import { idpAccountUrl } from "../../lib/app-config";
 import { cn } from "../../lib/cn";
 import { openExternal } from "../../platform/navigation";
@@ -41,14 +39,9 @@ const PLAN_LABEL = { free: "Gói Free", pro: "Gói Pro" } as const;
 /** Signed-in top bar: wordmark, notification bell, plan and account menu. */
 export function AppHeader({ user }: { user: CurrentUser }) {
 	const navigate = useNavigate();
-	const logoutForm = useRef<HTMLFormElement>(null);
+	const session = useLogout("topbar-logout-form");
 	const subscription = useSubscriptionDialogs(user.plan);
 	const name = displayName(user);
-
-	async function logout() {
-		await releasePushSubscriptionForLogout();
-		logoutForm.current?.submit();
-	}
 
 	return (
 		<header
@@ -138,21 +131,14 @@ export function AppHeader({ user }: { user: CurrentUser }) {
 							<DropdownMenuItem
 								data-id="topbar-logout"
 								icon={<IconLogout size={16} aria-hidden="true" />}
-								onSelect={() => void logout()}
+								disabled={session.busy}
+								onSelect={() => void session.logout()}
 							>
 								Đăng xuất
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
-					{/* Logout is a top-level form POST: the server ends the session
-					    (and the IdP session) and answers with a redirect. */}
-					<form
-						ref={logoutForm}
-						method="post"
-						action={logoutUrl()}
-						data-id="topbar-logout-form"
-						hidden
-					/>
+					{session.form}
 					{subscription.element}
 				</div>
 			</div>

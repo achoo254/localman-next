@@ -1,4 +1,4 @@
-import { apiRequest } from "../../lib/api-client";
+import { apiRequest, withDryRun } from "../../lib/api-client";
 import {
 	type JsonRecord,
 	expectArray,
@@ -8,7 +8,7 @@ import {
 	optionalString,
 } from "../../lib/json-guards";
 import { type DataChange, parseChanges } from "./resource-model";
-import { resourcePath, resourcesPath, withDryRun } from "./resources-api";
+import { resourcePath, resourcesPath } from "./resources-api";
 
 export interface ResourceData {
 	parentKey: string | null;

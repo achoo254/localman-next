@@ -1,9 +1,10 @@
 import { limitsFor } from "@localman/shared/constants";
 import { IconPlus } from "@tabler/icons-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { IconButton } from "../../components/ui/icon-button";
 import { useToast } from "../../components/ui/toast";
 import { useCurrentUser } from "../../features/auth/use-current-user";
+import { ProjectMemberDialogs } from "../../features/collaborators/project-member-dialogs";
 import { useSubscriptionDialogs } from "../../features/subscription/use-subscription-dialogs";
 import { errorMessage } from "../../lib/api-client";
 import { DeleteProjectModal } from "./delete-project-modal";
@@ -19,12 +20,17 @@ import {
 	isPlanLimitError,
 	updateProject,
 } from "./projects-api";
-import { ProjectsList, type ProjectsState } from "./projects-list";
+import {
+	ProjectsList,
+	type ProjectsState,
+	focusAfterRow,
+	withMemberCount,
+} from "./projects-list";
 
 type Dialog =
 	| { kind: "none" }
 	| { kind: "form"; project: Project | null }
-	| { kind: "delete"; project: Project };
+	| { kind: "delete" | "collaborators" | "magic-link"; project: Project };
 
 const CLOSED: Dialog = { kind: "none" };
 
@@ -36,6 +42,7 @@ export function ProjectsPage() {
 	const subscription = useSubscriptionDialogs(plan);
 	const [state, setState] = useState<ProjectsState>({ status: "loading" });
 	const [dialog, setDialog] = useState<Dialog>(CLOSED);
+	const heading = useRef<HTMLHeadingElement>(null);
 
 	const load = useCallback(async () => {
 		setState({ status: "loading" });
@@ -61,6 +68,14 @@ export function ProjectsPage() {
 		);
 	}
 
+	/** Members changed in the collaborators dialog: refresh the row's count. */
+	const setMemberCount = useCallback((id: string, memberCount: number) => {
+		setState((current) => withMemberCount(current, id, memberCount));
+	}, []);
+
+	const replaceProject = (saved: Project) =>
+		setProjects((list) => list.map((p) => (p.id === saved.id ? saved : p)));
+
 	function hitLimit() {
 		setDialog(CLOSED);
 		subscription.openPlans("projects");
@@ -74,7 +89,7 @@ export function ProjectsPage() {
 	async function save(editing: Project | null, input: ProjectInput) {
 		if (editing) {
 			const saved = await updateProject(editing.id, input);
-			setProjects((list) => list.map((p) => (p.id === saved.id ? saved : p)));
+			replaceProject(saved);
 			toast.show({ title: `Đã cập nhật project ${saved.name}.` });
 		} else {
 			const created = await createProject(input);
@@ -101,7 +116,7 @@ export function ProjectsPage() {
 	function act(action: ProjectAction, project: Project) {
 		if (action === "clone") void clone(project);
 		else if (action === "edit") setDialog({ kind: "form", project });
-		else setDialog({ kind: "delete", project });
+		else setDialog({ kind: action, project });
 	}
 
 	const sample = projects[0]?.mockBaseUrl;
@@ -111,6 +126,8 @@ export function ProjectsPage() {
 			<div className="flex min-h-11 items-center gap-3">
 				<nav aria-label="Breadcrumb" className="flex items-center gap-2">
 					<h1
+						ref={heading}
+						tabIndex={-1}
 						aria-current="page"
 						className="m-0 font-bold font-mono text-xl tracking-[-0.01em]"
 					>
@@ -154,6 +171,22 @@ export function ProjectsPage() {
 						setProjects((list) => list.filter((p) => p.id !== gone.id));
 						toast.show({ title: `Đã xoá project ${gone.name}.` });
 					}}
+				/>
+			) : null}
+			{dialog.kind === "collaborators" || dialog.kind === "magic-link" ? (
+				<ProjectMemberDialogs
+					kind={dialog.kind}
+					project={dialog.project}
+					plan={plan}
+					onClose={() => setDialog(CLOSED)}
+					onPlans={() => subscription.openPlans("members")}
+					onMemberCount={setMemberCount}
+					onProjectChange={replaceProject}
+					onLeft={(gone) => {
+						setDialog(CLOSED);
+						setProjects((list) => list.filter((p) => p.id !== gone.id));
+					}}
+					focusAfterLeave={() => focusAfterRow(dialog.project.id, heading)}
 				/>
 			) : null}
 			{subscription.element}
