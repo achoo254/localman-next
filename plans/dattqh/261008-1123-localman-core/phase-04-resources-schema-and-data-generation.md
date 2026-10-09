@@ -61,16 +61,16 @@ Làm resource dạng cây kèm schema, object template và cấu hình endpoint.
 | T7 | Review cuối phase, ưu tiên `json-template` và whitelist Faker (không có đường thực thi code tuỳ ý) | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 Whitelist Faker và unit chống gọi động xong
-- [ ] T2 `resource-schema` và `json-template` cùng unit xong
-- [ ] T3 Model resource, record và `resource-tree` xong
-- [ ] T4 `data-generator` chạy trong transaction xong
-- [ ] T5 Service và operation resource xong
-- [ ] T6 Integration và đo hiệu năng pass
-- [ ] T7 Review không còn finding chặn
-- [ ] Verification: `json-template` từ chối method lạ và `$constructor`, xử lý đúng template lồng sâu
-- [ ] Verification: whitelist không lộ `faker.helpers.fake` hay gọi động; `resource-tree` chặn chu trình và tên trùng
-- [ ] Verification: generate 0/50/100 đúng số; 101 trả 400; con thiếu dữ liệu cha trả 409; `PUT /data` không phải mảng trả 400
-- [ ] Verification: `generate_all` trên 50 resource × 100 bản ghi chạy dưới 3 giây trên Mongo local
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
-- [ ] `pnpm check:mcp-coverage` pass
+- [x] T1 Whitelist Faker và unit chống gọi động xong
+- [x] T2 `resource-schema` và `json-template` cùng unit xong
+- [x] T3 Model resource, record và `resource-tree` xong
+- [x] T4 `data-generator` chạy trong transaction xong
+- [x] T5 Service và operation resource xong
+- [x] T6 Integration và đo hiệu năng pass
+- [x] T7 Review không còn finding chặn
+- [x] Verification: `json-template` từ chối method lạ và `$constructor`, xử lý đúng template lồng sâu
+- [x] Verification: whitelist không lộ `faker.helpers.fake` hay gọi động; `resource-tree` chặn chu trình và tên trùng
+- [x] Verification: generate 0/50/100 đúng số; 101 trả 400; con thiếu dữ liệu cha trả 409; `PUT /data` không phải mảng trả 400
+- [x] Verification: `generate_all` trên 50 resource × 100 bản ghi chạy dưới 3 giây trên Mongo local
+- [x] `pnpm lint && pnpm typecheck && pnpm test` sạch
+- [x] `pnpm check:mcp-coverage` pass
