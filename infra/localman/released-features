@@ -3,3 +3,4 @@
 # reads this file unless VITE_FEATURES is set on the command line.
 mockMcp
 mockPowerUps
+apiClient
