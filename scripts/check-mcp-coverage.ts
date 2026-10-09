@@ -8,6 +8,7 @@
  */
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { PROTOCOL_ROUTES } from "../apps/api/src/operations/protocol-routes.js";
 import { findMcpCoverageViolations } from "../packages/operations/src/index.js";
 
 const DEFAULT_REGISTRY = resolve(
@@ -63,3 +64,10 @@ const tools = operations.filter(isToolDeclared).length;
 console.log(
 	`MCP coverage OK: ${operations.length} operation(s), ${tools} tool(s), ${operations.length - tools} exempt.`,
 );
+// Hand-written protocol routes have no operation and therefore no tool.
+console.log(
+	`Protocol routes outside the registry (${PROTOCOL_ROUTES.length}):`,
+);
+for (const route of PROTOCOL_ROUTES) {
+	console.log(`  - ${route.method} ${route.path}: ${route.mcpExempt}`);
+}

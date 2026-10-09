@@ -5,6 +5,15 @@ import { createDashboardApp } from "./dashboard-server.js";
 import { connectMongo, disconnectMongo } from "./db/connect-mongo.js";
 import { type Logger, createLogger } from "./logger.js";
 import { createMockApp } from "./mock-server.js";
+import {
+	authSettingsFromEnv,
+	createAuthModule,
+} from "./modules/auth/auth-module.js";
+import { setNotificationService } from "./modules/notifications/notification-runtime.js";
+import {
+	type NotificationService,
+	createNotificationService,
+} from "./modules/notifications/notification-service.js";
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
@@ -40,6 +49,7 @@ const env = loadEnvOrExit();
 const logger: Logger = createLogger(env.LOG_LEVEL);
 const servers: Server[] = [];
 let shuttingDown = false;
+let notifications: NotificationService | undefined;
 
 async function shutdown(reason: string, exitCode: number): Promise<void> {
 	if (shuttingDown) return;
@@ -52,6 +62,8 @@ async function shutdown(reason: string, exitCode: number): Promise<void> {
 	forceExit.unref();
 	try {
 		await Promise.all(servers.map(closeServer));
+		// Let background Web Push / Telegram deliveries finish their writes.
+		await notifications?.drain();
 		await disconnectMongo();
 		logger.info("Shutdown complete");
 		process.exit(exitCode);
@@ -76,9 +88,15 @@ process.on("uncaughtException", (error) => {
 // supervisor (PM2, Compose) restarts the process once the database is back.
 try {
 	await connectMongo(env.MONGO_URI, logger);
-	servers.push(
-		await listen(createDashboardApp({ logger }), env.DASHBOARD_PORT),
-	);
+	notifications = createNotificationService(env, logger);
+	setNotificationService(notifications);
+	const dashboard = createDashboardApp({
+		logger,
+		trustProxy: env.TRUST_PROXY,
+		allowedOrigins: [env.PUBLIC_URL, env.WEB_ORIGIN],
+		auth: createAuthModule(authSettingsFromEnv(env), logger),
+	});
+	servers.push(await listen(dashboard, env.DASHBOARD_PORT));
 	logger.info({ port: env.DASHBOARD_PORT }, "Dashboard API listening");
 	servers.push(await listen(createMockApp({ logger }), env.MOCK_PORT));
 	logger.info({ port: env.MOCK_PORT }, "Mock runtime listening");

@@ -27,6 +27,8 @@ export const TOOLSETS = [
 	"traffic",
 	"devops",
 	"tunnels",
+	"users",
+	"notifications",
 	"admin",
 ] as const;
 export type Toolset = (typeof TOOLSETS)[number];

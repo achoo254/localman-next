@@ -6,6 +6,7 @@ import { API_PREFIX, createDashboardApp } from "./dashboard-server.js";
 import { createLogger } from "./logger.js";
 
 const logger = createLogger("silent");
+const ORIGIN = "https://localman.test";
 
 function failingOperation(id: string, fail: () => never) {
 	return defineOperation({
@@ -25,6 +26,7 @@ function failingOperation(id: string, fail: () => never) {
 
 const fixtureApp = createDashboardApp({
 	logger,
+	allowedOrigins: [ORIGIN],
 	operations: [
 		failingOperation("throwUnexpected", () => {
 			throw new Error("secret connection string in message");
@@ -38,7 +40,7 @@ const fixtureApp = createDashboardApp({
 		}),
 	],
 });
-const realApp = createDashboardApp({ logger });
+const realApp = createDashboardApp({ logger, allowedOrigins: [ORIGIN] });
 
 describe("dashboard server", () => {
 	it("answers /healthz with 200 without a database", async () => {
@@ -76,6 +78,7 @@ describe("dashboard server", () => {
 	it("rejects bodies over 100kb with 413", async () => {
 		const res = await request(realApp)
 			.post("/api/v1/anything")
+			.set("origin", ORIGIN)
 			.set("content-type", "application/json")
 			.send(JSON.stringify({ data: "x".repeat(101 * 1024) }));
 		expect(res.status).toBe(413);
@@ -90,6 +93,7 @@ describe("dashboard server", () => {
 	it("rejects malformed JSON with 400", async () => {
 		const res = await request(realApp)
 			.post("/api/v1/anything")
+			.set("origin", ORIGIN)
 			.set("content-type", "application/json")
 			.send("{not json");
 		expect(res.status).toBe(400);
@@ -97,7 +101,9 @@ describe("dashboard server", () => {
 	});
 
 	it("hides unexpected errors behind a generic 500", async () => {
-		const res = await request(fixtureApp).post(`${API_PREFIX}/throwUnexpected`);
+		const res = await request(fixtureApp)
+			.post(`${API_PREFIX}/throwUnexpected`)
+			.set("origin", ORIGIN);
 		expect(res.status).toBe(500);
 		expect(res.body).toEqual({
 			error: { code: "INTERNAL_ERROR", message: "Internal server error" },
@@ -107,17 +113,52 @@ describe("dashboard server", () => {
 	});
 
 	it("treats a ZodError thrown inside a handler as a server error", async () => {
-		const res = await request(fixtureApp).post(`${API_PREFIX}/throwZod`);
+		const res = await request(fixtureApp)
+			.post(`${API_PREFIX}/throwZod`)
+			.set("origin", ORIGIN);
 		expect(res.status).toBe(500);
 		expect(res.body.error.code).toBe("INTERNAL_ERROR");
 		expect(res.text).not.toContain("name");
 	});
 
 	it("passes OperationError status and code through", async () => {
-		const res = await request(fixtureApp).post(`${API_PREFIX}/throwConflict`);
+		const res = await request(fixtureApp)
+			.post(`${API_PREFIX}/throwConflict`)
+			.set("origin", ORIGIN);
 		expect(res.status).toBe(409);
 		expect(res.body).toEqual({
 			error: { code: "CONFLICT", message: "Name already taken" },
+		});
+	});
+
+	describe("CSRF origin check", () => {
+		it("rejects a mutation without an allowed Origin before parsing it", async () => {
+			for (const origin of [undefined, "https://abc.localman.test", "null"]) {
+				const req = request(fixtureApp)
+					.post(`${API_PREFIX}/throwConflict`)
+					.set("content-type", "application/json");
+				if (origin) req.set("origin", origin);
+				const res = await req.send("{not json");
+				expect(res.status).toBe(403);
+				expect(res.body).toEqual({
+					error: {
+						code: "CSRF_REJECTED",
+						message: "Cross-site request rejected",
+					},
+				});
+			}
+		});
+
+		it("accepts Sec-Fetch-Site: same-origin and leaves reads alone", async () => {
+			const res = await request(fixtureApp)
+				.post(`${API_PREFIX}/throwConflict`)
+				.set("sec-fetch-site", "same-origin");
+			expect(res.status).toBe(409);
+			const sameSite = await request(fixtureApp)
+				.post(`${API_PREFIX}/throwConflict`)
+				.set("sec-fetch-site", "same-site");
+			expect(sameSite.status).toBe(403);
+			expect((await request(realApp).get("/healthz")).status).toBe(200);
 		});
 	});
 });

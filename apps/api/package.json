@@ -14,14 +14,24 @@
 		"@localman/operations": "workspace:*",
 		"@localman/shared": "workspace:*",
 		"express": "^5.2.1",
+		"express-rate-limit": "^8.7.1",
 		"helmet": "^8.1.0",
+		"jose": "^6.2.12",
 		"mongoose": "^9.3.3",
+		"openid-client": "^6.8.8",
 		"pino": "^9.6.0",
+		"proxy-addr": "^2.0.8",
+		"web-push": "^3.6.7",
 		"zod": "^4.3.6"
 	},
 	"devDependencies": {
 		"@types/express": "^5.0.6",
+		"@types/oidc-provider": "^9.12.1",
+		"@types/proxy-addr": "^2.0.3",
 		"@types/supertest": "^6.0.3",
+		"@types/web-push": "^3.6.4",
+		"mongodb-memory-server": "^11.3.0",
+		"oidc-provider": "^9.12.2",
 		"supertest": "^7.1.0"
 	}
 }

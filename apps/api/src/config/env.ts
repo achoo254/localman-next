@@ -1,6 +1,17 @@
 import { z } from "zod";
+import { parseKeyring } from "../modules/auth/token-cipher.js";
+import { type TrustProxy, parseTrustProxy } from "./trust-proxy.js";
 
 const port = z.coerce.number().int().min(1).max(65_535);
+const httpUrl = (error: string) => z.url({ protocol: /^https?$/, error });
+
+/** Absolute http(s) origin without path, query or fragment. */
+const origin = httpUrl("must be an http(s) origin")
+	.refine(
+		(value) => new URL(value).origin === value.replace(/\/$/, ""),
+		"must be an origin without a path",
+	)
+	.transform((value) => new URL(value).origin);
 
 const envSchema = z
 	.object({
@@ -15,16 +26,104 @@ const envSchema = z
 				/^mongodb(\+srv)?:\/\/\S+$/,
 				"must be a mongodb:// or mongodb+srv:// URI",
 			),
-		WEB_ORIGIN: z
-			.url({ protocol: /^https?$/, error: "must be an http(s) origin" })
-			.default("http://localhost:5173"),
+		WEB_ORIGIN: origin.default("http://localhost:5173"),
+		/** Public origin of the dashboard (redirect URIs, CSRF origin check). */
+		PUBLIC_URL: origin.default("http://localhost:5173"),
 		LOG_LEVEL: z
 			.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
 			.default("info"),
+		OIDC_ISSUER: httpUrl("is required and must be an http(s) URL"),
+		OIDC_CLIENT_ID: z.string().min(1).default("localman-web"),
+		OIDC_CLIENT_SECRET: z.string({ error: "is required" }).min(1),
+		SESSION_ENCRYPTION_KEY: z
+			.string({ error: "is required" })
+			.refine(
+				(value) => parseKeyring(value) !== null,
+				"must be `kid:base64key[,kid:base64key…]` with 32-byte keys",
+			),
+		VAPID_PUBLIC_KEY: z.string().min(1).optional(),
+		VAPID_PRIVATE_KEY: z.string().min(1).optional(),
+		VAPID_SUBJECT: z
+			.string()
+			.regex(/^(mailto:|https:\/\/)\S+$/, "must be a mailto: or https:// URI")
+			.optional(),
+		TELEGRAM_BOT_TOKEN: z
+			.string()
+			.regex(/^\d+:[\w-]+$/, "must look like <id>:<secret>")
+			.optional(),
+		/**
+		 * Express `trust proxy`: which hops may set X-Forwarded-For, so
+		 * rate limits see the real client. `false`, a hop count, or names,
+		 * IPs and CIDRs (`loopback`, `10.0.0.0/8`), comma separated.
+		 */
+		TRUST_PROXY: z
+			.string()
+			.default("loopback")
+			.transform((value, ctx): TrustProxy => {
+				const parsed = parseTrustProxy(value);
+				if (parsed.ok) return parsed.value;
+				ctx.addIssue({ code: "custom", message: parsed.message });
+				return z.NEVER;
+			}),
+		/** Basic credentials the IdP uses to push audit events (optional). */
+		AUDIT_CLIENT_ID: z
+			.string()
+			.regex(/^[^:\s]{1,128}$/, "must not contain ':' or spaces")
+			.optional(),
+		AUDIT_CLIENT_SECRET: z
+			.string()
+			.min(32, "must be at least 32 characters")
+			.optional(),
+		TELEGRAM_BOT_USERNAME: z
+			.string()
+			.regex(/^[A-Za-z0-9_]{5,32}$/, "must be a bot username without @")
+			.optional(),
 	})
-	.refine((env) => env.DASHBOARD_PORT !== env.MOCK_PORT, {
-		path: ["MOCK_PORT"],
-		error: "must differ from DASHBOARD_PORT",
+	.superRefine((env, ctx) => {
+		if (env.DASHBOARD_PORT === env.MOCK_PORT) {
+			ctx.addIssue({
+				code: "custom",
+				path: ["MOCK_PORT"],
+				message: "must differ from DASHBOARD_PORT",
+			});
+		}
+		const vapid = [
+			env.VAPID_PUBLIC_KEY,
+			env.VAPID_PRIVATE_KEY,
+			env.VAPID_SUBJECT,
+		];
+		if (vapid.some(Boolean) && !vapid.every(Boolean)) {
+			ctx.addIssue({
+				code: "custom",
+				path: ["VAPID_PUBLIC_KEY"],
+				message:
+					"VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY and VAPID_SUBJECT go together",
+			});
+		}
+		if (Boolean(env.AUDIT_CLIENT_ID) !== Boolean(env.AUDIT_CLIENT_SECRET)) {
+			ctx.addIssue({
+				code: "custom",
+				path: ["AUDIT_CLIENT_ID"],
+				message: "AUDIT_CLIENT_ID and AUDIT_CLIENT_SECRET go together",
+			});
+		}
+		if (env.NODE_ENV !== "production") return;
+		if (typeof env.TRUST_PROXY === "number") {
+			ctx.addIssue({
+				code: "custom",
+				path: ["TRUST_PROXY"],
+				message: "must name the proxy addresses in production, not a hop count",
+			});
+		}
+		for (const key of ["PUBLIC_URL", "WEB_ORIGIN", "OIDC_ISSUER"] as const) {
+			if (!env[key].startsWith("https://")) {
+				ctx.addIssue({
+					code: "custom",
+					path: [key],
+					message: "must use https in production",
+				});
+			}
+		}
 	});
 
 export type Env = z.output<typeof envSchema>;
