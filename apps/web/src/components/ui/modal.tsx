@@ -37,6 +37,21 @@ export interface ModalProps {
 	"data-id"?: string;
 }
 
+/**
+ * Escape inside an expanded combobox closes its list, not the modal (the
+ * combobox handles the key itself after Radix's document listener).
+ */
+function keepOpenForExpandedCombobox(event: KeyboardEvent): void {
+	const target = event.target;
+	if (
+		target instanceof HTMLElement &&
+		target.getAttribute("role") === "combobox" &&
+		target.getAttribute("aria-expanded") === "true"
+	) {
+		event.preventDefault();
+	}
+}
+
 /** Re-exported so footers can close the modal: `<ModalClose asChild>…`. */
 export const ModalClose = Dialog.Close;
 
@@ -82,6 +97,7 @@ export function Modal({
 					<Dialog.Content
 						ref={content}
 						onOpenAutoFocus={focusInitial}
+						onEscapeKeyDown={keepOpenForExpandedCombobox}
 						data-id={dataId}
 						data-size={size}
 						// Without a description, opt out of Radix's describedby wiring.

@@ -13,7 +13,10 @@ export interface MockReply {
 	body?: unknown;
 }
 
-export type MockRoute = MockReply | ((call: FetchCall) => MockReply);
+/** A reply, or a function of the call; return a Promise to hold the response. */
+export type MockRoute =
+	| MockReply
+	| ((call: FetchCall) => MockReply | Promise<MockReply>);
 
 /**
  * Stubs global fetch with routes keyed by "METHOD /path" (query ignored).
@@ -38,7 +41,7 @@ export function mockFetch(routes: Record<string, MockRoute>) {
 			const route = routes[`${method} ${url.pathname}`];
 			const reply: MockReply = route
 				? typeof route === "function"
-					? route(call)
+					? await route(call)
 					: route
 				: {
 						status: 404,

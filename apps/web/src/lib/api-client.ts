@@ -9,6 +9,8 @@ export class ApiError extends Error {
 		readonly status: number,
 		readonly code: string,
 		message: string,
+		/** `error.details` of the response body, unvalidated. */
+		readonly details?: unknown,
 	) {
 		super(message);
 		this.name = "ApiError";
@@ -47,7 +49,7 @@ function toApiError(status: number, payload: unknown): ApiError {
 	if (isRecord(error) && typeof error.code === "string") {
 		const message =
 			typeof error.message === "string" ? error.message : FALLBACK_MESSAGE;
-		return new ApiError(status, error.code, message);
+		return new ApiError(status, error.code, message, error.details);
 	}
 	return new ApiError(status, `HTTP_${status}`, FALLBACK_MESSAGE);
 }

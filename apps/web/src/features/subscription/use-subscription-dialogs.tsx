@@ -1,4 +1,4 @@
-import type { PlanId } from "@localman/shared";
+import type { PlanId } from "@localman/shared/constants";
 import { type ReactNode, useCallback, useState } from "react";
 import {
 	type LimitReason,

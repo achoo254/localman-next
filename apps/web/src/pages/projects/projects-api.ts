@@ -69,6 +69,16 @@ export async function fetchProjects(): Promise<Project[]> {
 	return expectArray(data, "items").map(parseProject);
 }
 
+/** One project, or null when it does not exist or the user cannot read it. */
+export async function fetchProject(id: string): Promise<Project | null> {
+	try {
+		return parseProject(await apiRequest(projectPath(id)));
+	} catch (error) {
+		if (error instanceof ApiError && error.status === 404) return null;
+		throw error;
+	}
+}
+
 export async function createProject(input: ProjectInput): Promise<Project> {
 	return parseProject(
 		await apiRequest(PROJECTS, { method: "POST", body: input }),

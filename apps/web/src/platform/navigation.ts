@@ -16,7 +16,26 @@ export function navigateToLogin(options: LoginOptions = {}): void {
 	window.location.assign(loginUrl(options));
 }
 
-/** Opens a page on another site in a new tab without sharing `opener`. */
-export function openExternal(url: string): void {
+/**
+ * The URL when it is an absolute http(s) address, else null. Links built
+ * from data (mock URLs, IdP pages) must never run `javascript:` or open
+ * `data:`/`file:` documents.
+ */
+export function safeExternalUrl(url: string): string | null {
+	try {
+		const { protocol } = new URL(url);
+		return protocol === "http:" || protocol === "https:" ? url : null;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * Opens a page on another site in a new tab without sharing `opener`.
+ * Anything but http(s) is ignored; returns whether a tab was opened.
+ */
+export function openExternal(url: string): boolean {
+	if (safeExternalUrl(url) === null) return false;
 	window.open(url, "_blank", "noopener,noreferrer");
+	return true;
 }

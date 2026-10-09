@@ -1,0 +1,170 @@
+import { IconBox } from "@tabler/icons-react";
+import { useEffect, useRef, useState } from "react";
+import { Link, useParams } from "react-router";
+import { Alert } from "../../components/ui/alert";
+import { Button, buttonClassName } from "../../components/ui/button";
+import { EmptyState } from "../../components/ui/empty-state";
+import { useCurrentUser } from "../../features/auth/use-current-user";
+import type { Resource } from "../../features/resources/resource-model";
+import { useResources } from "../../features/resources/use-resources";
+import { useSubscriptionDialogs } from "../../features/subscription/use-subscription-dialogs";
+import { errorMessage } from "../../lib/api-client";
+import type { Project } from "../projects/projects-api";
+import { ApiEndpointCard } from "./api-endpoint-card";
+import {
+	NO_DIALOG,
+	ProjectDetailDialogs,
+	type ProjectDialog,
+} from "./project-detail-dialogs";
+import { ResourcesCard, type ResourcesState } from "./resources-card";
+import { useProject } from "./use-project";
+import { useProjectActions } from "./use-project-actions";
+
+/** Delay before an empty project offers "Resource mới" (as in the source). */
+export const EMPTY_PROMPT_DELAY_MS = 500;
+
+/** `/projects/:projectId`: API endpoint card, resource tree and modals. */
+export function ProjectDetailPage() {
+	const { projectId = "" } = useParams();
+	const project = useProject(projectId);
+	if (project.isPending) {
+		return (
+			<output
+				data-id="project-detail-loading"
+				className="block py-8 font-mono text-muted text-sm"
+			>
+				Đang tải project…
+			</output>
+		);
+	}
+	if (project.isError) {
+		return (
+			<div
+				data-id="project-detail-error"
+				className="grid justify-items-start gap-3"
+			>
+				<Alert tone="danger" title="Không tải được project">
+					{errorMessage(project.error)}
+				</Alert>
+				<Button onClick={() => void project.refetch()}>Thử lại</Button>
+			</div>
+		);
+	}
+	if (!project.data) {
+		return (
+			<EmptyState
+				data-id="project-missing"
+				headingLevel={1}
+				icon={<IconBox size={32} aria-hidden="true" />}
+				title="Không tìm thấy project"
+				action={
+					<Link
+						to="/projects"
+						className={buttonClassName({ variant: "primary" })}
+						data-id="project-missing-back"
+					>
+						Về danh sách projects
+					</Link>
+				}
+			>
+				Project có thể đã bị xoá hoặc bạn không có quyền truy cập.
+			</EmptyState>
+		);
+	}
+	return <ProjectDetail project={project.data} />;
+}
+
+function ProjectDetail({ project }: { project: Project }) {
+	const session = useCurrentUser();
+	const plan = session.status === "authenticated" ? session.user.plan : "free";
+	const subscription = useSubscriptionDialogs(plan);
+	const canEdit = project.role === "owner";
+	const query = useResources(project.id);
+	const resources = query.data ?? [];
+	const [dialog, setDialog] = useState<ProjectDialog>(NO_DIALOG);
+	const actions = useProjectActions(project.id, resources, (confirm) =>
+		setDialog({ kind: "confirm", confirm }),
+	);
+	const openNew = () => setDialog({ kind: "form", resource: null });
+
+	// An empty project offers its first resource once, shortly after opening.
+	const prompted = useRef(false);
+	const empty = query.isSuccess && query.data.length === 0;
+	useEffect(() => {
+		if (!empty || !canEdit || prompted.current) return;
+		const timer = window.setTimeout(() => {
+			prompted.current = true;
+			setDialog((current) =>
+				current.kind === "none" ? { kind: "form", resource: null } : current,
+			);
+		}, EMPTY_PROMPT_DELAY_MS);
+		return () => window.clearTimeout(timer);
+	}, [empty, canEdit]);
+
+	const state: ResourcesState = query.isPending
+		? { status: "loading" }
+		: query.isError
+			? { status: "error", error: query.error }
+			: { status: "ready", resources };
+
+	return (
+		<section
+			data-id="project-detail"
+			className="grid grid-cols-[minmax(0,1fr)] gap-6"
+		>
+			<nav
+				aria-label="Breadcrumb"
+				className="flex min-h-11 min-w-0 items-center gap-2"
+			>
+				<Link
+					to="/projects"
+					data-id="project-detail-back"
+					className="font-bold font-mono text-muted text-xl no-underline hover:text-primary"
+				>
+					Projects
+				</Link>
+				<span aria-hidden="true" className="font-mono text-icon-muted text-xl">
+					/
+				</span>
+				<h1
+					aria-current="page"
+					className="m-0 truncate font-bold font-mono text-xl tracking-[-0.01em]"
+				>
+					{project.name}
+				</h1>
+			</nav>
+			<ApiEndpointCard
+				project={project}
+				canEdit={canEdit}
+				busy={actions.busy}
+				onNewResource={openNew}
+				onGenerateAll={() => void actions.generateAll()}
+				onResetAll={() => void actions.resetAll()}
+			/>
+			<ResourcesCard
+				state={state}
+				mockBaseUrl={project.mockBaseUrl}
+				canEdit={canEdit}
+				onRetry={() => void query.refetch()}
+				onNewResource={openNew}
+				onGenerate={(resource, count) => void actions.generate(resource, count)}
+				onAction={(action, resource: Resource) =>
+					setDialog({ kind: action === "edit" ? "form" : action, resource })
+				}
+				onMove={(resource, target) => void actions.move(resource, target)}
+			/>
+			<ProjectDetailDialogs
+				projectId={project.id}
+				dialog={dialog}
+				resources={resources}
+				canEdit={canEdit}
+				onClose={() => setDialog(NO_DIALOG)}
+				onPlanLimit={() => {
+					setDialog(NO_DIALOG);
+					subscription.openPlans("resources");
+				}}
+			/>
+			{subscription.element}
+		</section>
+	);
+}

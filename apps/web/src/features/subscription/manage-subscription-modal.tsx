@@ -1,4 +1,4 @@
-import { type PlanId, limitsFor } from "@localman/shared";
+import { type PlanId, limitsFor } from "@localman/shared/constants";
 import { Alert } from "../../components/ui/alert";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -9,7 +9,7 @@ import { PlanCard } from "./plan-card";
 import type { ProInterestSource } from "./pro-interest-options";
 
 /** Which quota sent the user here; null when opened to compare plans. */
-export type LimitReason = "projects" | "proxy" | null;
+export type LimitReason = "projects" | "resources" | "proxy" | null;
 
 export interface ManageSubscriptionModalProps {
 	open: boolean;
@@ -27,6 +27,7 @@ const PLAN_NAME = { free: "Free", pro: "Pro" } as const;
 function limitText(plan: PlanId, reason: Exclude<LimitReason, null>): string {
 	const limits = limitsFor(plan);
 	if (reason === "projects") return `${limits.projects} project`;
+	if (reason === "resources") return `${limits.resources} resource`;
 	const proxy = limits.proxyRequestsPerMonth;
 	return proxy === null
 		? "request qua proxy"
@@ -35,6 +36,7 @@ function limitText(plan: PlanId, reason: Exclude<LimitReason, null>): string {
 
 const SOURCE: Record<Exclude<LimitReason, null>, ProInterestSource> = {
 	projects: "plan_limit_projects",
+	resources: "plan_limit_resources",
 	proxy: "plan_limit_proxy",
 };
 

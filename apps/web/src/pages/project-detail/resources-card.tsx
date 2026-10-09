@@ -1,0 +1,112 @@
+import { IconDatabase, IconPlus } from "@tabler/icons-react";
+import { Alert } from "../../components/ui/alert";
+import { Button } from "../../components/ui/button";
+import { cardClassName } from "../../components/ui/card";
+import type { NodeAction } from "../../features/resource-tree/node-actions";
+import { ResourceTreeCanvas } from "../../features/resource-tree/resource-tree-canvas";
+import { resourceErrorMessage } from "../../features/resources/resource-errors";
+import type { Resource } from "../../features/resources/resource-model";
+import { cn } from "../../lib/cn";
+
+export type ResourcesState =
+	| { status: "loading" }
+	| { status: "error"; error: unknown }
+	| { status: "ready"; resources: Resource[] };
+
+export interface ResourcesCardProps {
+	state: ResourcesState;
+	mockBaseUrl: string;
+	canEdit: boolean;
+	onRetry: () => void;
+	onNewResource: () => void;
+	onGenerate: (resource: Resource, count: number) => void;
+	onAction: (action: NodeAction, resource: Resource) => void;
+	onMove: (resource: Resource, target: Resource | null) => void;
+}
+
+/** "Resources" card: loading, error and empty states, or the tree canvas. */
+export function ResourcesCard({
+	state,
+	mockBaseUrl,
+	canEdit,
+	onRetry,
+	onNewResource,
+	...canvas
+}: ResourcesCardProps) {
+	let body = (
+		<output className="block px-6 py-8 font-mono text-muted text-sm">
+			Đang tải resource…
+		</output>
+	);
+	if (state.status === "error") {
+		body = (
+			<div className="grid justify-items-start gap-3 p-6">
+				<Alert tone="danger" title="Không tải được resource">
+					{resourceErrorMessage(state.error)}
+				</Alert>
+				<Button data-id="project-detail-tree-retry" onClick={onRetry}>
+					Thử lại
+				</Button>
+			</div>
+		);
+	} else if (state.status === "ready" && state.resources.length === 0) {
+		body = (
+			<div
+				data-id="project-detail-tree-empty"
+				className="grid justify-items-center gap-3 px-4 py-8 text-center text-muted text-sm"
+			>
+				<IconDatabase
+					size={32}
+					aria-hidden="true"
+					className="text-icon-muted"
+				/>
+				<p className="m-0">
+					Chưa có resource nào. Resource là một bảng dữ liệu có endpoint CRUD
+					riêng.
+				</p>
+				{canEdit ? (
+					<Button
+						variant="primary"
+						data-id="project-detail-tree-empty-create"
+						leadingIcon={<IconPlus size={20} aria-hidden="true" />}
+						onClick={onNewResource}
+					>
+						Thêm resource
+					</Button>
+				) : null}
+			</div>
+		);
+	} else if (state.status === "ready") {
+		body = (
+			<ResourceTreeCanvas
+				resources={state.resources}
+				mockBaseUrl={mockBaseUrl}
+				canEdit={canEdit}
+				{...canvas}
+			/>
+		);
+	}
+	const count = state.status === "ready" ? state.resources.length : null;
+	return (
+		<section
+			data-id="project-detail-tree"
+			aria-labelledby="project-detail-tree-title"
+			className={cn(cardClassName, "min-w-0 overflow-hidden")}
+		>
+			<div className="flex flex-wrap items-baseline justify-between gap-2 border-border-subtle border-b px-6 py-4">
+				<h2
+					id="project-detail-tree-title"
+					className="m-0 font-bold font-mono text-[0.9375rem]"
+				>
+					Resources
+				</h2>
+				{count === null ? null : (
+					<span className="font-mono text-[0.8125rem] text-muted">
+						{count} resource
+					</span>
+				)}
+			</div>
+			{body}
+		</section>
+	);
+}

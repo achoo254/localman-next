@@ -1,4 +1,4 @@
-import type { PlanId } from "@localman/shared";
+import type { PlanId } from "@localman/shared/constants";
 import { apiRequest } from "../../lib/api-client";
 import {
 	InvalidResponseError,

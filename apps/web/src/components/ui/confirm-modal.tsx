@@ -17,6 +17,8 @@ export interface ConfirmModalProps {
 	confirmLabel: string;
 	/** Runs the action; the modal closes when it resolves, shows the error if it throws. */
 	onConfirm: () => Promise<void>;
+	/** Keeps the confirm button off, e.g. while a dry run is still loading. */
+	confirmDisabled?: boolean;
 	"data-id"?: string;
 }
 
@@ -32,6 +34,7 @@ export function ConfirmModal({
 	children,
 	confirmLabel,
 	onConfirm,
+	confirmDisabled = false,
 	"data-id": dataId,
 }: ConfirmModalProps) {
 	const [busy, setBusy] = useState(false);
@@ -75,7 +78,7 @@ export function ConfirmModal({
 					</ModalClose>
 					<Button
 						variant="danger"
-						disabled={busy}
+						disabled={busy || confirmDisabled}
 						onClick={() => void confirm()}
 						data-id={dataId ? `${dataId}-confirm` : undefined}
 					>

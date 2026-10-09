@@ -1,4 +1,4 @@
-import { limitsFor } from "@localman/shared";
+import { limitsFor } from "@localman/shared/constants";
 import { useState } from "react";
 import { Badge } from "../../components/ui/badge";
 import { Button, buttonClassName } from "../../components/ui/button";

@@ -1,4 +1,4 @@
-import { limitsFor } from "@localman/shared";
+import { limitsFor } from "@localman/shared/constants";
 import { IconPlus } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
 import { IconButton } from "../../components/ui/icon-button";

@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { Badge } from "../../components/ui/badge";
 import { cardClassName } from "../../components/ui/card";
 import { cn } from "../../lib/cn";
@@ -30,7 +31,11 @@ export function ProjectRow({ project, onAction }: ProjectRowProps) {
 				"flex items-center gap-2 py-2 pr-2 pl-3",
 			)}
 		>
-			<div className="flex min-w-0 flex-1 items-center gap-3 p-2">
+			<Link
+				to={`/projects/${encodeURIComponent(project.id)}`}
+				data-id={`project-row-${project.id}-open`}
+				className="flex min-w-0 flex-1 items-center gap-3 rounded-lg p-2 text-fg no-underline"
+			>
 				<ProjectAvatar name={project.name} />
 				<div className="grid min-w-0">
 					<span className="flex min-w-0 items-center gap-2">
@@ -45,7 +50,7 @@ export function ProjectRow({ project, onAction }: ProjectRowProps) {
 						{project.prefix || "/"} · {project.mockBaseUrl}
 					</span>
 				</div>
-			</div>
+			</Link>
 			<ProjectActionsMenu project={project} onAction={onAction} />
 		</li>
 	);

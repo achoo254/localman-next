@@ -1,4 +1,4 @@
-import type { PlanLimits } from "@localman/shared";
+import type { PlanLimits } from "@localman/shared/constants";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { cardClassName } from "../../components/ui/card";

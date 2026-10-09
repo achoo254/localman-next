@@ -61,6 +61,13 @@ export const routes: RouteObject[] = [
 				),
 			},
 			{
+				path: "projects/:projectId",
+				element: lazyPage(
+					() => import("./pages/project-detail/project-detail-page"),
+					"ProjectDetailPage",
+				),
+			},
+			{
 				path: "account",
 				element: lazyPage(
 					() => import("./pages/account/account-page"),
