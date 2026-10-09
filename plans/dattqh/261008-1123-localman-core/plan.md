@@ -348,6 +348,14 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Thành viên bị xoá hoặc tự rời mất quyền dashboard ngay, nhưng vẫn biết secret của URL mock. Owner có thao tác "Đổi URL mock" (xoay secret) và được gợi ý dùng sau khi xoá thành viên; không tự xoay vì sẽ làm gãy frontend đang dùng URL cũ (Jev 0.59).
 - Owner hạ gói thì thành viên đang có giữ nguyên quyền; chỉ chặn mời hoặc tham gia mới cho tới khi số người dưới trần (Jev 0.65).
 
+### Vòng 24: khi cook phase 09 (2026-10-09, user chốt)
+- Localman production chạy trên server .65 bằng pm2 + nginx như IdP, không dựng VPS riêng hay Docker Compose (thay cho phương án Docker Compose ở bước 3 của phase 09).
+- MongoDB của Localman là một mongod riêng, single-node replica set ở cổng 27018, chỉ nghe localhost; không chuyển mongod chung cổng 27017 của các app khác.
+- Claude tự tạo trên Cloudflare: record `localman` (proxied) và `*.localman` (DNS only), widget Turnstile, và API token chỉ có quyền DNS Edit của `hoandat.com` cho certbot gia hạn wildcard; secret lưu ở iCloud `auth-hoandat`.
+- Bot Telegram riêng cho Localman do user tạo qua @BotFather rồi gửi token.
+- Owner xoá một collaborator thì giữ dấu "đã bị gỡ" cho người đó: magic link từ chối họ với lời giải thích rõ; lời mời trực tiếp của owner xoá dấu. Không tự thu hồi magic link khi xoá thành viên (Jev 0.92).
+- Lời mời theo email vẫn gắn vào tài khoản có email chưa xác minh như đã chốt ở phase 07; audit phase 09 không đưa thêm bằng chứng mới nên giữ nguyên.
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 
