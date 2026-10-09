@@ -9,6 +9,8 @@ import { AuthStatus } from "../../features/auth/auth-status";
 import { useCurrentUser } from "../../features/auth/use-current-user";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
+import { useAppTitle } from "../../lib/use-document-title";
+import { AdminNav } from "./admin-nav";
 import {
 	type ProInterestStats,
 	fetchStats,
@@ -50,6 +52,7 @@ export function AdminForbidden() {
 
 /** `/admin/pro-interest`: who wants Pro, from where, and follow-up status. */
 export function ProInterestPage() {
+	useAppTitle("Quản trị · Quan tâm gói Pro");
 	const session = useCurrentUser();
 	// The signed-in shell normally resolves the session first; never flash
 	// the 403 page while it is still loading.
@@ -83,8 +86,9 @@ function ProInterestDashboard() {
 				<h1 className="m-0 font-bold font-mono text-xl">
 					Quản trị · Quan tâm gói Pro
 				</h1>
-				<Badge tone="accent">Chỉ owner</Badge>
+				<Badge tone="accent">Chỉ chủ sở hữu</Badge>
 			</div>
+			<AdminNav />
 			{stats.status === "loading" ? (
 				<output className="block font-mono text-muted text-sm">
 					Đang tải thống kê…

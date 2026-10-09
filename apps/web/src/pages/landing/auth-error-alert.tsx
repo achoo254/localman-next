@@ -1,5 +1,6 @@
 import { useSearchParams } from "react-router";
 import { Alert } from "../../components/ui/alert";
+import { useHydrated } from "../../lib/use-hydrated";
 
 /** Reasons `/auth/callback` may send back in `?authError=`. */
 const AUTH_ERRORS = {
@@ -31,11 +32,15 @@ function isAuthErrorCode(value: string | null): value is AuthErrorCode {
 	return value !== null && Object.hasOwn(AUTH_ERRORS, value);
 }
 
-/** Explains why the last sign-in did not finish; unknown codes are ignored. */
+/**
+ * Explains why the last sign-in did not finish; unknown codes are ignored.
+ * Shown after hydration: the prerendered landing has no query string.
+ */
 export function AuthErrorAlert() {
 	const [params] = useSearchParams();
+	const hydrated = useHydrated();
 	const code = params.get("authError");
-	if (!isAuthErrorCode(code)) return null;
+	if (!hydrated || !isAuthErrorCode(code)) return null;
 	const { title, text } = AUTH_ERRORS[code];
 	return (
 		<Alert

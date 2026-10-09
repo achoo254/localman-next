@@ -76,7 +76,7 @@ describe("project dialogs", () => {
 			`Bạn đã đạt giới hạn gói Free: ${limitsFor("free").projects} project`,
 		);
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Liên hệ nâng cấp" }),
+			within(dialog).getByRole("button", { name: "Liên hệ" }),
 		);
 		await expectProInterestSource("plan_limit_projects");
 	});

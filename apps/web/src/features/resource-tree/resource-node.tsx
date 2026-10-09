@@ -3,6 +3,7 @@ import { cn } from "../../lib/cn";
 import type { Resource } from "../resources/resource-model";
 import { GeneratorBar } from "./generator-bar";
 import { type NodeAction, NodeActions } from "./node-actions";
+import { NestConnector, SelectConnector } from "./node-connectors";
 import type { TreeGeometry } from "./tree-layout";
 import type { ConnectorState } from "./use-tree-connect";
 
@@ -25,10 +26,6 @@ export interface ResourceNodeProps {
 	onBlocked: () => void;
 	onAction: (action: NodeAction) => void;
 }
-
-const HANDLE =
-	"-translate-x-1/2 -translate-y-1/2 absolute z-2 size-4 cursor-pointer rounded-full border-[1.5px] p-0 " +
-	"transition-[background-color,border-color,opacity] before:absolute before:-inset-2.5 before:rounded-full before:content-['']";
 
 /**
  * Card of one resource on the canvas: connectors on both sides, the name
@@ -71,20 +68,12 @@ export function ResourceNode({
 					: "border-border hover:border-[color-mix(in_srgb,var(--c-primary)_45%,var(--c-border))]",
 			)}
 		>
-			<button
-				type="button"
-				aria-pressed={selected}
-				aria-label={`Chọn ${name} để di chuyển`}
+			<SelectConnector
+				name={name}
+				selected={selected}
+				top={geometry.handleY}
 				data-id={`${base}-select`}
-				style={{ top: geometry.handleY }}
-				className={cn(
-					HANDLE,
-					"left-0",
-					selected
-						? "border-primary bg-primary"
-						: "border-icon-muted bg-surface hover:border-primary",
-				)}
-				onClick={onSelect}
+				onSelect={onSelect}
 			/>
 			<div className="flex h-6 items-center">
 				<ExternalLink
@@ -114,23 +103,13 @@ export function ResourceNode({
 				</span>
 			</div>
 			<NodeActions name={name} onAction={onAction} dataIdBase={base} />
-			<button
-				type="button"
-				aria-label={`Lồng ${selectionName ?? "resource đang chọn"} vào ${name}`}
-				aria-disabled={targetState === "invalid" || undefined}
+			<NestConnector
+				name={name}
+				selectionName={selectionName}
+				state={targetState}
+				top={geometry.handleY}
 				data-id={`${base}-nest`}
-				data-state={targetState}
-				style={{ top: geometry.handleY }}
-				className={cn(
-					HANDLE,
-					"left-full",
-					targetState === "target" && "border-primary bg-primary",
-					targetState === "invalid" &&
-						"cursor-not-allowed border-icon-muted bg-surface opacity-30",
-					targetState === "idle" &&
-						"border-icon-muted bg-surface hover:border-primary",
-				)}
-				onClick={onNest}
+				onNest={onNest}
 			/>
 		</div>
 	);

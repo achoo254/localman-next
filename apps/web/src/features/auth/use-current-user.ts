@@ -58,8 +58,16 @@ function subscribe(listener: () => void): () => void {
 
 const getSnapshot = (): CurrentUserState => state;
 
+/** The prerendered page and its hydration never know the session. */
+const LOADING: CurrentUserState = { status: "loading" };
+const getServerSnapshot = (): CurrentUserState => LOADING;
+
 export function useCurrentUser(): CurrentUserState {
-	const snapshot = useSyncExternalStore(subscribe, getSnapshot);
+	const snapshot = useSyncExternalStore(
+		subscribe,
+		getSnapshot,
+		getServerSnapshot,
+	);
 	useEffect(() => {
 		void load();
 	}, []);

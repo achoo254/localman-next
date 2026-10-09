@@ -7,6 +7,7 @@ import { useCurrentUser } from "../../features/auth/use-current-user";
 import { ProjectMemberDialogs } from "../../features/collaborators/project-member-dialogs";
 import { useSubscriptionDialogs } from "../../features/subscription/use-subscription-dialogs";
 import { errorMessage } from "../../lib/api-client";
+import { useAppTitle } from "../../lib/use-document-title";
 import { DeleteProjectModal } from "./delete-project-modal";
 import type { ProjectAction } from "./project-actions-menu";
 import { ProjectFormModal } from "./project-form-modal";
@@ -36,6 +37,7 @@ const CLOSED: Dialog = { kind: "none" };
 
 /** `/projects`: owned and shared projects with create, edit, clone, delete. */
 export function ProjectsPage() {
+	useAppTitle("Projects");
 	const session = useCurrentUser();
 	const plan = session.status === "authenticated" ? session.user.plan : "free";
 	const toast = useToast();

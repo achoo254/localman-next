@@ -6,6 +6,7 @@ import {
 	useState,
 } from "react";
 import { Alert } from "../../components/ui/alert";
+import { useFeatures } from "../../config/features";
 import { errorMessage } from "../../lib/api-client";
 import {
 	type ProInterestConfig,
@@ -14,7 +15,7 @@ import {
 	submitProInterest,
 } from "./pro-interest-api";
 import { ProInterestFields } from "./pro-interest-fields";
-import { type ProInterestSource, SOURCE_NEED } from "./pro-interest-options";
+import { type ProInterestSource, sourceNeedFor } from "./pro-interest-options";
 import {
 	type ProInterestDraft,
 	type ProInterestErrors,
@@ -60,8 +61,9 @@ export function ProInterestForm({
 	onBusyChange,
 	onSubmitted,
 }: ProInterestFormProps) {
+	const flags = useFeatures();
 	const [draft, setDraft] = useState<ProInterestDraft>(() =>
-		emptyDraft(accountEmail ?? "", SOURCE_NEED[source]),
+		emptyDraft(accountEmail ?? "", sourceNeedFor(source, flags)),
 	);
 	const [errors, setErrors] = useState<ProInterestErrors>({});
 	const [config, setConfig] = useState<ConfigState>(

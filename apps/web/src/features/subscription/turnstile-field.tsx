@@ -1,3 +1,7 @@
+import {
+	TURNSTILE_ACTIONS,
+	type TurnstileAction,
+} from "@localman/shared/constants";
 import { useEffect, useRef, useState } from "react";
 import { loadTurnstile } from "../../platform/turnstile";
 
@@ -7,6 +11,10 @@ export interface TurnstileFieldProps {
 	onTokenChange: (token: string | null) => void;
 	error?: string;
 	errorId: string;
+	/** Form the token is for; the API refuses it on another form. */
+	action?: TurnstileAction;
+	/** `data-id` of the widget block. */
+	dataId?: string;
 }
 
 /**
@@ -19,6 +27,8 @@ export function TurnstileField({
 	onTokenChange,
 	error,
 	errorId,
+	action = TURNSTILE_ACTIONS.proInterest,
+	dataId = "pro-interest-turnstile",
 }: TurnstileFieldProps) {
 	const container = useRef<HTMLDivElement>(null);
 	const onChange = useRef(onTokenChange);
@@ -36,6 +46,7 @@ export function TurnstileField({
 				const id = client.render(element, siteKey, {
 					onToken: (token) => onChange.current(token),
 					onReset: () => onChange.current(null),
+					action,
 				});
 				remove = () => client.remove(id);
 			},
@@ -48,10 +59,10 @@ export function TurnstileField({
 			remove?.();
 			onChange.current(null);
 		};
-	}, [siteKey]);
+	}, [siteKey, action]);
 
 	return (
-		<div data-id="pro-interest-turnstile" className="grid gap-1.5">
+		<div data-id={dataId} className="grid gap-1.5">
 			<div ref={container} aria-describedby={error ? errorId : undefined} />
 			{failed ? (
 				<p className="text-[0.8125rem] text-error">

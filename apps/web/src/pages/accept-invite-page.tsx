@@ -7,6 +7,7 @@ import { AuthStatus } from "../features/auth/auth-status";
 import { LoginLink } from "../features/auth/login-link";
 import { useCurrentUser } from "../features/auth/use-current-user";
 import { InviteDetails } from "../features/collaborators/invite-details";
+import { useAppTitle } from "../lib/use-document-title";
 
 /**
  * Anonymous visitor: sign in or sign up, then come back here. The invite is
@@ -60,6 +61,7 @@ function InviteSignIn({ returnTo }: { returnTo: string }) {
  * (outside the signed-in shell, whose guard would skip "Đăng ký").
  */
 export function AcceptInvitePage() {
+	useAppTitle("Lời mời tham gia project");
 	const { token = "" } = useParams();
 	const session = useCurrentUser();
 	if (session.status === "loading") return <AuthStatus kind="loading" />;

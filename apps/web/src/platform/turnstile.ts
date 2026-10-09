@@ -1,3 +1,5 @@
+import type { TurnstileAction } from "@localman/shared/constants";
+
 /**
  * Cloudflare Turnstile in the browser. The script is only fetched when a
  * widget is rendered, so pages without the form never contact Cloudflare.
@@ -35,18 +37,23 @@ export interface TurnstileCallbacks {
 	onReset: () => void;
 }
 
+export interface TurnstileWidgetOptions extends TurnstileCallbacks {
+	/**
+	 * Form the token is for (`TURNSTILE_ACTIONS`). The API checks it, so a
+	 * token solved on one form cannot be used on another or elsewhere.
+	 */
+	action: TurnstileAction;
+}
+
 /** Widget operations once the script is ready; `render` returns the widget id. */
 export interface TurnstileClient {
 	render: (
 		container: HTMLElement,
 		siteKey: string,
-		callbacks: TurnstileCallbacks,
+		options: TurnstileWidgetOptions,
 	) => string;
 	remove: (widgetId: string) => void;
 }
-
-/** Server-side verification checks this value, so tokens cannot be reused elsewhere. */
-export const TURNSTILE_ACTION = "pro_interest";
 
 let loading: Promise<TurnstileApi> | null = null;
 
@@ -78,10 +85,10 @@ function loadScript(): Promise<TurnstileApi> {
 export async function loadTurnstile(): Promise<TurnstileClient> {
 	const api = await loadScript();
 	return {
-		render: (container, siteKey, { onToken, onReset }) =>
+		render: (container, siteKey, { onToken, onReset, action }) =>
 			api.render(container, {
 				sitekey: siteKey,
-				action: TURNSTILE_ACTION,
+				action,
 				language: "vi",
 				size: "flexible",
 				callback: onToken,

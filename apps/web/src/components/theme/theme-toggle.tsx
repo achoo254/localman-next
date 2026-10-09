@@ -1,10 +1,11 @@
 import { IconDeviceDesktop, IconMoon, IconSun } from "@tabler/icons-react";
-import { useState } from "react";
+import { useSyncExternalStore } from "react";
 import { cn } from "../../lib/cn";
 import {
 	type ThemePreference,
 	applyThemePreference,
 	readThemePreference,
+	subscribeThemePreference,
 } from "../../lib/theme";
 
 const OPTIONS: ReadonlyArray<{
@@ -17,15 +18,19 @@ const OPTIONS: ReadonlyArray<{
 	{ value: "system", label: "Theo hệ thống", Icon: IconDeviceDesktop },
 ];
 
-/** Light / dark / system switch that sets `data-theme` on <html>. */
-export function ThemeToggle({ "data-id": dataId }: { "data-id"?: string }) {
-	const [preference, setPreference] =
-		useState<ThemePreference>(readThemePreference);
+/** The prerendered page cannot read storage; it shows "system" first. */
+const serverPreference = (): ThemePreference => "system";
 
-	function choose(value: ThemePreference) {
-		setPreference(value);
-		applyThemePreference(value);
-	}
+/**
+ * Light / dark / system switch that sets `data-theme` on <html>. Every
+ * switch on the page (top bar, footer) shows the same saved preference.
+ */
+export function ThemeToggle({ "data-id": dataId }: { "data-id"?: string }) {
+	const preference = useSyncExternalStore(
+		subscribeThemePreference,
+		readThemePreference,
+		serverPreference,
+	);
 
 	return (
 		<fieldset
@@ -40,7 +45,7 @@ export function ThemeToggle({ "data-id": dataId }: { "data-id"?: string }) {
 					aria-label={label}
 					aria-pressed={preference === value}
 					title={label}
-					onClick={() => choose(value)}
+					onClick={() => applyThemePreference(value)}
 					className={cn(
 						"inline-flex size-8 cursor-pointer items-center justify-center rounded-sm transition-colors",
 						preference === value

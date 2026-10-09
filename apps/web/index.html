@@ -6,9 +6,32 @@
 		<meta name="color-scheme" content="light dark" />
 		<!-- /invite/:token pages: never send the token to other sites. -->
 		<meta name="referrer" content="strict-origin" />
-		<title>Localman</title>
+		<!-- Landing SEO. Crawlers and link previews do not run JS, so this copy is
+		     static. It follows the landing hero while the API client flag is off;
+		     switch it to the "localhost" wording in the same change that turns
+		     the flag on. The project count must match FREE_LIMITS (tested).
+		     No canonical/og:url here: this file serves every SPA route, and a
+		     fixed "/" would tell crawlers that /docs pages are the landing. -->
+		<title>Localman · Mock REST API có trạng thái, quan hệ và Faker</title>
+		<meta
+			name="description"
+			content="Dựng mock REST API có trạng thái trong vài phút: khai báo resource, sinh dữ liệu bằng Faker.js, lồng quan hệ và có ngay endpoint CRUD. Gói Free 3 project."
+		/>
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="Localman" />
+		<meta property="og:locale" content="vi_VN" />
+		<meta
+			property="og:title"
+			content="Localman · Mock REST API có trạng thái, quan hệ và Faker"
+		/>
+		<meta
+			property="og:description"
+			content="Dựng mock REST API có trạng thái trong vài phút: khai báo resource, sinh dữ liệu bằng Faker.js, lồng quan hệ và có ngay endpoint CRUD. Gói Free 3 project."
+		/>
+		<meta name="twitter:card" content="summary" />
 		<script>
 			// Apply the saved theme before first paint (key: THEME_STORAGE_KEY in src/lib/theme.ts).
+			// Phase 09: allow this script by CSP hash, like the #app script below.
 			try {
 				var theme = localStorage.getItem("localman-theme");
 				if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
@@ -17,6 +40,13 @@
 	</head>
 	<body>
 		<div id="app"></div>
+		<script>
+			// The build prerenders the landing into #app, and every SPA path gets
+			// this file: drop that markup anywhere but "/" so other pages do not
+			// flash the landing (main.tsx then renders instead of hydrating).
+			// Phase 09: allow this script and the theme script above by CSP hash.
+			if (location.pathname !== "/") document.getElementById("app").replaceChildren();
+		</script>
 		<script type="module" src="/src/main.tsx"></script>
 	</body>
 </html>

@@ -45,7 +45,7 @@ describe("member limit of the invite dialog", () => {
 		const plans = await screen.findByRole("dialog", { name: "Quản lý gói" });
 		expect(plans).toHaveTextContent("3 thành viên mỗi project");
 		await userEvent.click(
-			within(plans).getByRole("button", { name: "Liên hệ nâng cấp" }),
+			within(plans).getByRole("button", { name: "Liên hệ" }),
 		);
 		await expectProInterestSource("plan_limit_members");
 	});

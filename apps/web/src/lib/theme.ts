@@ -17,6 +17,16 @@ export function readThemePreference(): ThemePreference {
 	}
 }
 
+const listeners = new Set<() => void>();
+
+/** Notifies `listener` when the preference changes (every theme switch). */
+export function subscribeThemePreference(listener: () => void): () => void {
+	listeners.add(listener);
+	return () => {
+		listeners.delete(listener);
+	};
+}
+
 /**
  * Applies the preference to <html data-theme>. "system" removes the
  * attribute so tokens.css follows `prefers-color-scheme`.
@@ -35,4 +45,5 @@ export function applyThemePreference(
 	} catch {
 		// Storage unavailable: the choice still applies for this page view.
 	}
+	for (const listener of listeners) listener();
 }

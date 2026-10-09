@@ -11,6 +11,7 @@ import {
 	type ProInterestSource,
 	type ProInterestTeamSize,
 } from "@localman/shared";
+import type { FeatureFlags, FeatureName } from "../../config/features";
 
 export interface Choice<T extends string = string> {
 	id: T;
@@ -33,8 +34,35 @@ const TEAM_LABELS: Readonly<Record<ProInterestTeamSize, string>> = {
 	">20": "Trên 20",
 };
 
+/** Every need, for the admin page (stored answers may use any of them). */
 export const PRO_NEEDS: readonly Choice<ProInterestNeed>[] =
 	PRO_INTEREST_NEEDS.map((id) => ({ id, label: NEED_LABELS[id] }));
+
+/**
+ * Feature a need is about; the form offers it only once that feature is in
+ * production (`false`: no flag yet, never offered). Needs not listed are
+ * about what already runs (mock, project members).
+ */
+const NEED_FEATURE: Readonly<
+	Partial<Record<ProInterestNeed, FeatureName | false>>
+> = {
+	api_client: "apiClient",
+	tunelo: "apiClient",
+	mcp: "mockMcp",
+	devops_ci: false,
+};
+
+function offered(need: ProInterestNeed, flags: FeatureFlags): boolean {
+	const feature = NEED_FEATURE[need];
+	return feature === undefined || (feature !== false && flags[feature]);
+}
+
+/** Needs the form offers with these flags (no promise of unreleased work). */
+export function proNeedsFor(
+	flags: FeatureFlags,
+): readonly Choice<ProInterestNeed>[] {
+	return PRO_NEEDS.filter((choice) => offered(choice.id, flags));
+}
 
 export const TEAM_SIZES: readonly Choice<ProInterestTeamSize>[] =
 	PRO_INTEREST_TEAM_SIZES.map((id) => ({ id, label: TEAM_LABELS[id] }));
@@ -68,7 +96,7 @@ export const PRO_SOURCES: readonly Choice<ProInterestSource>[] =
 	PRO_INTEREST_SOURCES.map((id) => ({ id, label: SOURCE_LABELS[id] }));
 
 /** The need that most likely brought the user here is pre-ticked. */
-export const SOURCE_NEED: Readonly<
+const SOURCE_NEED: Readonly<
 	Partial<Record<ProInterestSource, ProInterestNeed>>
 > = {
 	plan_limit_projects: "mock",
@@ -77,6 +105,15 @@ export const SOURCE_NEED: Readonly<
 	plan_limit_proxy: "api_client",
 	devops: "devops_ci",
 };
+
+/** Need to pre-tick for `source`, unless the form does not offer it. */
+export function sourceNeedFor(
+	source: ProInterestSource,
+	flags: FeatureFlags,
+): ProInterestNeed | undefined {
+	const need = SOURCE_NEED[source];
+	return need !== undefined && offered(need, flags) ? need : undefined;
+}
 
 /** Label for a stored id; unknown ids (older or newer values) show as-is. */
 export function choiceLabel(list: readonly Choice[], id: string): string {

@@ -1,59 +1,83 @@
-import { IconArrowRight } from "@tabler/icons-react";
-import { Wordmark } from "../../components/brand/wordmark";
-import { buttonClassName } from "../../components/ui/button";
-import { LoginLink } from "../../features/auth/login-link";
+import { Suspense, lazy } from "react";
+import { cardClassName } from "../../components/ui/card";
+import { useFeatures } from "../../config/features";
 import { cn } from "../../lib/cn";
-import { AuthErrorAlert } from "./auth-error-alert";
-import { LandingPricing } from "./landing-pricing";
+import { useDocumentTitle } from "../../lib/use-document-title";
+import { ComparisonSection } from "./comparison-section";
+import { DataModelingDemo } from "./data-modeling-demo";
+import { HeroSection, SignUpCta } from "./hero-section";
+import { MoreFeaturesSection } from "./more-features-section";
+import { PricingSection } from "./pricing-section";
+import { RelationsDemo } from "./relations-demo";
 
-/** Minimal public landing: sign in, or create an account at the IdP. */
+// Flagged blocks load on demand, so an unreleased feature adds nothing to
+// the landing bundle until its flag is on.
+const LiveMockSyncSection = lazy(async () => ({
+	default: (await import("./live-mock-sync-section")).LiveMockSyncSection,
+}));
+
+/**
+ * Tab titles of the landing, one per hero message. `index.html` carries the
+ * same text statically for crawlers (checked by the landing test).
+ */
+export const LANDING_TITLES = {
+	mock: "Localman · Mock REST API có trạng thái, quan hệ và Faker",
+	localhost: "Localman · Test API localhost ngay trên trình duyệt",
+} as const;
+
+/**
+ * Public landing, in the order of the phase: hero, flagged feature blocks,
+ * comparison, pricing, schema, relations, "Và nhiều hơn" and the closing
+ * call to action. The footer comes from `AppLayout`.
+ */
 export function LandingPage() {
+	const flags = useFeatures();
+	useDocumentTitle(
+		flags.apiClient ? LANDING_TITLES.localhost : LANDING_TITLES.mock,
+	);
 	return (
-		<div className="grid gap-8">
-			<LandingHero />
-			<LandingPricing />
-		</div>
+		<>
+			<HeroSection
+				howItWorksHref={flags.liveMockSync ? "#live-sync" : "#relations"}
+			/>
+			{flags.liveMockSync ? (
+				<Suspense fallback={null}>
+					<LiveMockSyncSection />
+				</Suspense>
+			) : null}
+			<ComparisonSection />
+			<PricingSection />
+			<DataModelingDemo />
+			<RelationsDemo />
+			<MoreFeaturesSection />
+			<CtaBand />
+		</>
 	);
 }
 
-function LandingHero() {
+function CtaBand() {
 	return (
 		<section
-			data-id="landing-hero"
-			className="mx-auto grid max-w-160 justify-items-center gap-6 py-16 text-center"
+			data-id="landing-cta"
+			aria-labelledby="landing-cta-title"
+			className={cn(
+				cardClassName,
+				"my-16 flex flex-wrap items-center justify-between gap-6 p-8",
+			)}
 		>
-			<h1 className="m-0 font-bold text-4xl tracking-[-0.02em]">
-				<Wordmark className="text-4xl" />
-			</h1>
-			<AuthErrorAlert />
-			<p className="m-0 text-lg text-muted">
-				Dựng mock API trong vài phút, dùng chung một tài khoản hoandat với
-				Tunelo.
-			</p>
-			<div className="flex flex-wrap justify-center gap-3">
-				<LoginLink
-					returnTo="/projects"
-					data-id="landing-hero-login"
-					className={cn(
-						buttonClassName({ variant: "secondary" }),
-						"no-underline",
-					)}
+			<div className="grid gap-2">
+				<h2
+					id="landing-cta-title"
+					className="m-0 font-bold text-[clamp(1.375rem,3vw,1.75rem)] tracking-[-0.02em]"
 				>
-					Đăng nhập
-				</LoginLink>
-				<LoginLink
-					returnTo="/projects"
-					prompt="create"
-					data-id="landing-hero-cta"
-					className={cn(
-						buttonClassName({ variant: "primary" }),
-						"no-underline",
-					)}
-				>
-					Bắt đầu miễn phí
-					<IconArrowRight size={20} aria-hidden="true" />
-				</LoginLink>
+					Dựng mock API đầu tiên trong vài phút
+				</h2>
+				<p className="m-0 text-muted">
+					Tạo tài khoản, thêm resource, bấm thanh sinh dữ liệu là có endpoint
+					chạy được.
+				</p>
 			</div>
+			<SignUpCta data-id="landing-cta-button" />
 		</section>
 	);
 }

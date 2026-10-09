@@ -5,6 +5,7 @@ import { Link } from "react-router";
 import { Alert } from "../../components/ui/alert";
 import { Button, buttonClassName } from "../../components/ui/button";
 import { cardClassName } from "../../components/ui/card";
+import { useFeatures } from "../../config/features";
 import { useCurrentUser } from "../../features/auth/use-current-user";
 import { NOTIFICATION_SETTINGS_PATH } from "../../features/notifications/notification-bell";
 import {
@@ -16,6 +17,7 @@ import { useSubscriptionDialogs } from "../../features/subscription/use-subscrip
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
 import { formatDate, nextPeriodStart } from "../../lib/format";
+import { useAppTitle } from "../../lib/use-document-title";
 
 type UsageState =
 	| { status: "loading" }
@@ -26,6 +28,7 @@ const PLAN_NAME = { free: "Free", pro: "Pro" } as const;
 
 /** `/account`: current plan and this month's quota meters. */
 export function AccountPage() {
+	useAppTitle("Tài khoản");
 	const session = useCurrentUser();
 	const user = session.status === "authenticated" ? session.user : null;
 	const [state, setState] = useState<UsageState>({ status: "loading" });
@@ -72,7 +75,7 @@ export function AccountPage() {
 					<p className="m-0 text-muted text-sm">
 						{user?.email ? `${user.email} · ` : ""}
 						{limits.projects} project, {limits.resources} resource mỗi project,
-						tối đa {limits.membersPerWorkspace} thành viên.
+						tối đa {limits.membersPerWorkspace} thành viên mỗi project.
 					</p>
 				</div>
 				<div className="flex flex-wrap gap-2">
@@ -82,7 +85,7 @@ export function AccountPage() {
 						className={cn(buttonClassName(), "no-underline")}
 					>
 						<IconBell size={16} aria-hidden="true" />
-						Cài đặt thông báo
+						Kênh thông báo
 					</Link>
 					<Button
 						variant="primary"
@@ -115,8 +118,16 @@ export function AccountPage() {
 	);
 }
 
+/**
+ * Quota meters. The proxy meter and the "MCP counts too" note wait for the
+ * API client and Mock MCP to reach production.
+ */
 function AccountMeters({ usage }: { usage: AccountUsage }) {
+	const flags = useFeatures();
 	const reset = nextPeriodStart(usage.period);
+	const mockNote = flags.mockMcp
+		? `REST và MCP đều tính. Đặt lại ngày ${reset}.`
+		: `Tính mọi request REST tới mock. Đặt lại ngày ${reset}.`;
 	return (
 		<div data-id="account-meters" className="grid gap-4 md:grid-cols-2">
 			<UsageMeter
@@ -129,14 +140,16 @@ function AccountMeters({ usage }: { usage: AccountUsage }) {
 				data-id="account-meter-mock-requests"
 				label="Request tới mock tháng này"
 				counter={usage.mockRequests}
-				note={`REST và MCP đều tính. Đặt lại ngày ${reset}.`}
+				note={mockNote}
 			/>
-			<UsageMeter
-				data-id="account-meter-proxy-requests"
-				label="Request proxy tháng này"
-				counter={usage.proxyRequests}
-				note={`Request gửi từ API client, kể cả qua Tunelo. Đặt lại ngày ${reset}.`}
-			/>
+			{flags.apiClient ? (
+				<UsageMeter
+					data-id="account-meter-proxy-requests"
+					label="Request qua proxy tháng này"
+					counter={usage.proxyRequests}
+					note={`Request gửi từ API client, kể cả qua Tunelo. Đặt lại ngày ${reset}.`}
+				/>
+			) : null}
 		</div>
 	);
 }

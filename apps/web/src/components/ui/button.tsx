@@ -2,7 +2,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { cn } from "../../lib/cn";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
-export type ButtonSize = "sm" | "md";
+export type ButtonSize = "sm" | "md" | "lg";
 
 export interface ButtonStyleOptions {
 	variant?: ButtonVariant;
@@ -33,12 +33,15 @@ const VARIANTS: Record<ButtonVariant, string> = {
 const SIZES: Record<ButtonSize, string> = {
 	sm: "rounded-sm text-[0.8125rem]",
 	md: "rounded-md text-sm",
+	lg: "rounded-md text-base",
 };
 
 /** Height and padding of text buttons; icon-only buttons size themselves. */
 const BOX: Record<ButtonSize, string> = {
 	sm: "min-h-8 px-3 pointer-coarse:min-h-10",
 	md: "min-h-10 px-4 pointer-coarse:min-h-11",
+	/** Page-level calls to action (landing hero and closing band). */
+	lg: "min-h-12 px-6 pointer-coarse:min-h-12",
 };
 
 /** Class list shared by Button, IconButton and link-styled buttons. */

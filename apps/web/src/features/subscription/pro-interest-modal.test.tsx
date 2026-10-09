@@ -44,7 +44,7 @@ async function fillRequired({ email }: { email?: string } = {}) {
 		await userEvent.type(screen.getByLabelText(/^Email/), email);
 	}
 	await userEvent.type(screen.getByLabelText(/^Tên/), "Lan");
-	await userEvent.click(screen.getByRole("checkbox", { name: "API Client" }));
+	await userEvent.click(screen.getByRole("checkbox", { name: "Team" }));
 	await userEvent.click(screen.getByRole("radio", { name: "2–5" }));
 }
 
@@ -89,7 +89,7 @@ describe("ProInterestModal", () => {
 		expect(calls.find((c) => c.method === "POST")?.body).toEqual({
 			email: "lan@example.com",
 			name: "Lan",
-			needs: ["api_client"],
+			needs: ["team"],
 			teamSize: "2-5",
 			source: "landing",
 			consent: true,
@@ -127,7 +127,7 @@ describe("ProInterestModal", () => {
 		).toBe(false);
 		expect(calls.find((c) => c.method === "POST")?.body).toMatchObject({
 			email: "work@example.com",
-			needs: ["mock", "api_client"],
+			needs: ["mock", "team"],
 			source: "plan_limit_projects",
 		});
 	});

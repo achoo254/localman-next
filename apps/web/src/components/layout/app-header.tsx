@@ -1,48 +1,15 @@
-import {
-	IconBell,
-	IconBox,
-	IconChartBar,
-	IconChevronDown,
-	IconGauge,
-	IconLogout,
-	IconUser,
-} from "@tabler/icons-react";
-import { Link, useNavigate } from "react-router";
-import {
-	type CurrentUser,
-	displayName,
-} from "../../features/auth/current-user";
-import { useLogout } from "../../features/auth/use-logout";
-import {
-	NOTIFICATION_SETTINGS_PATH,
-	NotificationBell,
-} from "../../features/notifications/notification-bell";
-import { useSubscriptionDialogs } from "../../features/subscription/use-subscription-dialogs";
-import { idpAccountUrl } from "../../lib/app-config";
+import { Link } from "react-router";
+import type { CurrentUser } from "../../features/auth/current-user";
+import { NotificationBell } from "../../features/notifications/notification-bell";
 import { cn } from "../../lib/cn";
-import { openExternal } from "../../platform/navigation";
 import { Wordmark } from "../brand/wordmark";
 import { Badge } from "../ui/badge";
 import { buttonClassName } from "../ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { UserAvatar } from "./user-avatar";
+import { AccountControls } from "./account-controls";
+import { PLAN_LABEL } from "./account-menu";
 
-const PLAN_LABEL = { free: "Gói Free", pro: "Gói Pro" } as const;
-
-/** Signed-in top bar: wordmark, notification bell, plan and account menu. */
+/** Signed-in top bar: wordmark, Docs, notification bell, plan and account menu. */
 export function AppHeader({ user }: { user: CurrentUser }) {
-	const navigate = useNavigate();
-	const session = useLogout("topbar-logout-form");
-	const subscription = useSubscriptionDialogs(user.plan);
-	const name = displayName(user);
-
 	return (
 		<header
 			data-id="topbar"
@@ -52,12 +19,22 @@ export function AppHeader({ user }: { user: CurrentUser }) {
 				<Link
 					to="/projects"
 					data-id="topbar-home"
-					aria-label="Localman — trang chủ"
+					aria-label="Localman, về Projects"
 					className="rounded-sm no-underline"
 				>
 					<Wordmark />
 				</Link>
 				<div className="flex items-center gap-2">
+					<Link
+						to="/docs"
+						data-id="topbar-docs"
+						className={cn(
+							buttonClassName({ variant: "ghost", size: "sm" }),
+							"no-underline max-sm:hidden",
+						)}
+					>
+						Docs
+					</Link>
 					<NotificationBell />
 					<Badge
 						data-id="topbar-plan"
@@ -66,80 +43,7 @@ export function AppHeader({ user }: { user: CurrentUser }) {
 					>
 						{PLAN_LABEL[user.plan]}
 					</Badge>
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<button
-								type="button"
-								data-id="topbar-account"
-								aria-label={`Tài khoản ${name}`}
-								className={cn(buttonClassName({ variant: "ghost" }), "px-2")}
-							>
-								<UserAvatar user={user} />
-								<span className="max-w-48 truncate font-mono text-[0.8125rem] text-muted max-sm:hidden">
-									{name}
-								</span>
-								<IconChevronDown size={16} aria-hidden="true" />
-							</button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent data-id="account-menu">
-							<DropdownMenuLabel className="grid gap-0.5">
-								<span className="truncate font-semibold text-fg">{name}</span>
-								{user.email ? (
-									<span className="truncate">{user.email}</span>
-								) : null}
-								<span>{PLAN_LABEL[user.plan]}</span>
-							</DropdownMenuLabel>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem
-								data-id="account-menu-account"
-								icon={<IconGauge size={16} aria-hidden="true" />}
-								onSelect={() => navigate("/account")}
-							>
-								Tài khoản và hạn mức
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								data-id="account-menu-plan"
-								icon={<IconBox size={16} aria-hidden="true" />}
-								onSelect={() => subscription.openPlans()}
-							>
-								Quản lý gói
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								data-id="account-menu-notifications"
-								icon={<IconBell size={16} aria-hidden="true" />}
-								onSelect={() => navigate(NOTIFICATION_SETTINGS_PATH)}
-							>
-								Thông báo
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								data-id="account-menu-idp"
-								icon={<IconUser size={16} aria-hidden="true" />}
-								onSelect={() => openExternal(idpAccountUrl)}
-							>
-								Quản lý tài khoản
-							</DropdownMenuItem>
-							{user.isOwner ? (
-								<DropdownMenuItem
-									data-id="account-menu-admin-pro"
-									icon={<IconChartBar size={16} aria-hidden="true" />}
-									onSelect={() => navigate("/admin/pro-interest")}
-								>
-									Quản trị · Quan tâm gói Pro
-								</DropdownMenuItem>
-							) : null}
-							<DropdownMenuSeparator />
-							<DropdownMenuItem
-								data-id="topbar-logout"
-								icon={<IconLogout size={16} aria-hidden="true" />}
-								disabled={session.busy}
-								onSelect={() => void session.logout()}
-							>
-								Đăng xuất
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
-					{session.form}
-					{subscription.element}
+					<AccountControls user={user} />
 				</div>
 			</div>
 		</header>

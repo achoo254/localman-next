@@ -44,7 +44,7 @@ describe("AppHeader", () => {
 	it("shows the wordmark, bell, plan and account trigger", () => {
 		const { container } = renderHeader(makeUser({ plan: "pro" }));
 		expect(
-			screen.getByRole("link", { name: "Localman — trang chủ" }),
+			screen.getByRole("link", { name: "Localman, về Projects" }),
 		).toHaveAttribute("href", "/projects");
 		expect(screen.getByRole("button", { name: "Thông báo" })).toBeVisible();
 		expect(
@@ -52,18 +52,51 @@ describe("AppHeader", () => {
 		).toHaveTextContent("Gói Pro");
 	});
 
-	it("opens the IdP account page from 'Quản lý tài khoản'", async () => {
+	it.each([
+		["Email", "account-email"],
+		["Mã khôi phục", "account-recovery"],
+		["Mật khẩu và đăng nhập", "account-password"],
+	])("opens the IdP section of '%s' in a new tab", async (label, hash) => {
 		const open = vi.spyOn(window, "open").mockReturnValue(null);
 		renderHeader();
 		await openAccountMenu("Minh Anh");
 		await userEvent.click(
-			await screen.findByRole("menuitem", { name: "Quản lý tài khoản" }),
+			await screen.findByRole("menuitem", {
+				// jsdom puts a space before the sr-only suffix; browsers do not.
+				name: new RegExp(`^${label} ?, mở trang tài khoản hoandat ở tab mới$`),
+			}),
 		);
 		expect(open).toHaveBeenCalledWith(
-			"https://auth.hoandat.com/account",
+			`https://auth.hoandat.com/account#${hash}`,
 			"_blank",
 			"noopener,noreferrer",
 		);
+	});
+
+	it("lists the in-app entries in order and links Docs", async () => {
+		const { router } = renderHeader();
+		expect(screen.getByRole("link", { name: "Docs" })).toHaveAttribute(
+			"href",
+			"/docs",
+		);
+		await openAccountMenu("Minh Anh");
+		const items = (await screen.findAllByRole("menuitem")).map(
+			(item) => item.getAttribute("data-id") ?? "",
+		);
+		expect(items).toEqual([
+			"account-menu-account",
+			"account-menu-plan",
+			"account-menu-notifications",
+			"account-menu-docs",
+			"account-menu-email",
+			"account-menu-recovery",
+			"account-menu-idp",
+			"topbar-logout",
+		]);
+		await userEvent.click(
+			screen.getByRole("menuitem", { name: "Kênh thông báo" }),
+		);
+		expect(router.state.location.pathname).toBe("/account/notifications");
 	});
 
 	it("logs out with a form POST to /auth/logout", async () => {
@@ -136,15 +169,14 @@ describe("AppHeader", () => {
 		expect(menu).toHaveTextContent("minhanh@example.com");
 	});
 
-	it("shows the admin entry to the owner only", async () => {
+	it.each([
+		["Quản trị · Quan tâm gói Pro", "/admin/pro-interest"],
+		["Quản trị · Hộp thư góp ý", "/admin/feedback"],
+	])("shows '%s' to the owner only", async (label, path) => {
 		const { router } = renderHeader(makeUser({ isOwner: true }));
 		await openAccountMenu("Minh Anh");
-		await userEvent.click(
-			await screen.findByRole("menuitem", {
-				name: "Quản trị · Quan tâm gói Pro",
-			}),
-		);
-		expect(router.state.location.pathname).toBe("/admin/pro-interest");
+		await userEvent.click(await screen.findByRole("menuitem", { name: label }));
+		expect(router.state.location.pathname).toBe(path);
 	});
 
 	it("hides the admin entry from other users and opens the plans modal", async () => {
@@ -153,9 +185,7 @@ describe("AppHeader", () => {
 		expect(
 			await screen.findByRole("menuitem", { name: "Tài khoản và hạn mức" }),
 		).toBeVisible();
-		expect(
-			screen.queryByRole("menuitem", { name: "Quản trị · Quan tâm gói Pro" }),
-		).toBeNull();
+		expect(screen.queryByRole("menuitem", { name: /^Quản trị/ })).toBeNull();
 		await userEvent.click(
 			screen.getByRole("menuitem", { name: "Quản lý gói" }),
 		);

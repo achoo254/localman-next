@@ -15,6 +15,7 @@ import type { Resource } from "../../features/resources/resource-model";
 import { useResources } from "../../features/resources/use-resources";
 import { useSubscriptionDialogs } from "../../features/subscription/use-subscription-dialogs";
 import { errorMessage } from "../../lib/api-client";
+import { useAppTitle } from "../../lib/use-document-title";
 import type { Project } from "../projects/projects-api";
 import { RotateSecretModal } from "../projects/rotate-secret-modal";
 import { ApiEndpointCard } from "./api-endpoint-card";
@@ -35,6 +36,7 @@ export const EMPTY_PROMPT_DELAY_MS = 500;
 export function ProjectDetailPage() {
 	const { projectId = "" } = useParams();
 	const project = useProject(projectId);
+	useAppTitle(project.data?.name ?? "Project");
 	if (project.isPending) {
 		return (
 			<output

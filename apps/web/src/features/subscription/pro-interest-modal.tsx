@@ -1,8 +1,9 @@
-import { IconCircleCheck, IconSend } from "@tabler/icons-react";
+import { IconSend } from "@tabler/icons-react";
 import { Suspense, lazy, useId, useRef, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Modal, ModalClose } from "../../components/ui/modal";
 import { ModalFooter } from "../../components/ui/modal-footer";
+import { SuccessPanel } from "../../components/ui/success-panel";
 import { useCurrentUser } from "../auth/use-current-user";
 import type { ProInterestSource } from "./pro-interest-options";
 
@@ -79,17 +80,10 @@ export function ProInterestModal({
 			footer={footer}
 		>
 			{sentTo ? (
-				<output
-					data-id="pro-interest-success"
-					className="grid justify-items-center gap-3 py-4 text-center"
-				>
-					<span className="grid size-14 place-items-center rounded-full bg-[color-mix(in_srgb,var(--c-success)_12%,var(--c-surface))] text-success">
-						<IconCircleCheck size={32} aria-hidden="true" />
-					</span>
-					<strong className="text-lg">Đã ghi nhận</strong>
-					<span>
+				<output className="block">
+					<SuccessPanel title="Đã ghi nhận" data-id="pro-interest-success">
 						Chúng tôi sẽ liên hệ qua email bạn để lại: <b>{sentTo}</b>.
-					</span>
+					</SuccessPanel>
 				</output>
 			) : session.status === "loading" ? (
 				LOADING

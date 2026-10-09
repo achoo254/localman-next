@@ -1,5 +1,5 @@
 import { type ComponentType, Suspense, lazy } from "react";
-import type { RouteObject } from "react-router";
+import { Navigate, type RouteObject } from "react-router";
 import { AppLayout } from "./components/layout/app-layout";
 import { AppShell } from "./components/layout/app-shell";
 import { PageLoading } from "./components/layout/page-loading";
@@ -57,6 +57,38 @@ export const routes: RouteObject[] = [
 					"PrimitivesPage",
 				),
 			},
+			// Public docs; slugs and reading order live in pages/docs/docs-pages.ts.
+			{
+				path: "docs",
+				element: lazyPage(
+					() => import("./pages/docs/docs-layout"),
+					"DocsLayout",
+				),
+				children: [
+					{ index: true, element: <Navigate to="quick-start" replace /> },
+					{
+						path: "quick-start",
+						element: lazyPage(
+							() => import("./pages/docs/quick-start-page"),
+							"QuickStartPage",
+						),
+					},
+					{
+						path: "code-examples",
+						element: lazyPage(
+							() => import("./pages/docs/code-examples-page"),
+							"CodeExamplesPage",
+						),
+					},
+					{
+						path: "custom-responses",
+						element: lazyPage(
+							() => import("./pages/docs/custom-responses-page"),
+							"CustomResponsesPage",
+						),
+					},
+				],
+			},
 		],
 	},
 	{
@@ -95,6 +127,13 @@ export const routes: RouteObject[] = [
 				element: lazyPage(
 					() => import("./pages/admin/pro-interest-page"),
 					"ProInterestPage",
+				),
+			},
+			{
+				path: "admin/feedback",
+				element: lazyPage(
+					() => import("./pages/admin/feedback-inbox-page"),
+					"FeedbackInboxPage",
 				),
 			},
 		],

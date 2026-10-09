@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetCurrentUserCache } from "../features/auth/use-current-user";
@@ -34,11 +34,18 @@ describe("/invite/:token", () => {
 		});
 		expect(heading).toHaveFocus();
 		const back = encodeURIComponent(`/invite/${TOKEN}`);
-		expect(screen.getByRole("link", { name: "Đăng nhập" })).toHaveAttribute(
+		// The public top bar signs in back to this invite as well.
+		expect(
+			within(screen.getByRole("banner")).getByRole("link", {
+				name: "Đăng nhập",
+			}),
+		).toHaveAttribute("href", `/auth/login?returnTo=${back}`);
+		const page = within(screen.getByRole("main"));
+		expect(page.getByRole("link", { name: "Đăng nhập" })).toHaveAttribute(
 			"href",
 			`/auth/login?returnTo=${back}`,
 		);
-		expect(screen.getByRole("link", { name: "Đăng ký" })).toHaveAttribute(
+		expect(page.getByRole("link", { name: "Đăng ký" })).toHaveAttribute(
 			"href",
 			`/auth/login?returnTo=${back}&prompt=create`,
 		);

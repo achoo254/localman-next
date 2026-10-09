@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RouterProvider, createMemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
@@ -40,18 +40,21 @@ describe("PrimitivesPage", () => {
 			expect(container.querySelector(`[data-id="${id}"]`)).not.toBeNull();
 		}
 		expect(
-			screen.getByRole("link", { name: "Localman — trang chủ" }),
+			screen.getByRole("link", { name: "Localman, về trang chủ" }),
 		).toHaveTextContent("Localman");
 	});
 
 	it("switches the theme attribute on <html>", async () => {
-		renderPage();
+		const { container } = renderPage();
+		// The footer repeats the switch for narrow screens; use the top bar's.
+		const toggle = container.querySelector('[data-id="topbar-theme"]');
+		if (!(toggle instanceof HTMLElement)) throw new Error("no topbar-theme");
 		await userEvent.click(
-			screen.getByRole("button", { name: "Giao diện tối" }),
+			within(toggle).getByRole("button", { name: "Giao diện tối" }),
 		);
 		expect(document.documentElement.dataset.theme).toBe("dark");
 		await userEvent.click(
-			screen.getByRole("button", { name: "Theo hệ thống" }),
+			within(toggle).getByRole("button", { name: "Theo hệ thống" }),
 		);
 		expect(document.documentElement.dataset.theme).toBeUndefined();
 	});

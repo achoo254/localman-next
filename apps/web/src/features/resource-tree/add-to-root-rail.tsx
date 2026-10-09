@@ -6,6 +6,7 @@ export interface AddToRootRailProps {
 	/** The selected resource is nested and may move to the root. */
 	active: boolean;
 	onClick: () => void;
+	"data-id"?: string;
 }
 
 /** Vertical "Thêm vào root" bar at the left edge of the canvas. */
@@ -14,11 +15,12 @@ export function AddToRootRail({
 	height,
 	active,
 	onClick,
+	"data-id": dataId = "resource-tree-root",
 }: AddToRootRailProps) {
 	return (
 		<button
 			type="button"
-			data-id="resource-tree-root"
+			data-id={dataId}
 			data-active={active ? "true" : undefined}
 			style={{ width, height }}
 			className={cn(

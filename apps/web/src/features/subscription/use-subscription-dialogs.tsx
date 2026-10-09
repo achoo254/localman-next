@@ -16,7 +16,7 @@ export interface SubscriptionDialogs {
 }
 
 /**
- * Plans modal and Pro interest form wired together: "Liên hệ nâng cấp"
+ * Plans modal and Pro interest form wired together: "Liên hệ"
  * closes the plans modal and opens the form with the matching source.
  */
 export function useSubscriptionDialogs(

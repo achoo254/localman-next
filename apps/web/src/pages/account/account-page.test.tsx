@@ -1,11 +1,13 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { FeaturesContext, NO_FEATURES } from "../../config/features";
 import { resetCurrentUserCache } from "../../features/auth/use-current-user";
 import { makeUser } from "../../test/fixtures";
 import { mockFetch } from "../../test/mock-fetch";
 import { expectProInterestSource } from "../../test/pro-interest";
 import { renderRoutes } from "../../test/render-app";
+import { unreleasedMentions } from "../../test/unreleased-copy";
 import { AccountPage } from "./account-page";
 
 function usage(overrides: Record<string, unknown> = {}) {
@@ -59,6 +61,47 @@ describe("AccountPage quota meters", () => {
 		expect(meter("account-meter-projects")).toHaveTextContent("1/3");
 	});
 
+	it("hides the proxy meter and the MCP note until those features ship", async () => {
+		renderAccount(usage());
+		await screen.findByRole("meter", { name: "Request tới mock tháng này" });
+		expect(
+			document.querySelector('[data-id="account-meter-proxy-requests"]'),
+		).toBeNull();
+		expect(meter("account-meter-mock-requests")).toHaveTextContent(
+			"Tính mọi request REST tới mock. Đặt lại ngày 01/01/2027.",
+		);
+		expect(unreleasedMentions(document.body)).toEqual([]);
+		expect(screen.getByText(/tối đa 3 thành viên mỗi project\./)).toBeVisible();
+	});
+
+	it("shows the proxy meter and the MCP note once the flags are on", async () => {
+		mockFetch({
+			"GET /api/v1/users/me": { body: makeUser() },
+			"GET /api/v1/account/usage": { body: usage() },
+		});
+		renderRoutes(
+			[
+				{
+					path: "*",
+					element: (
+						<FeaturesContext
+							value={{ ...NO_FEATURES, apiClient: true, mockMcp: true }}
+						>
+							<AccountPage />
+						</FeaturesContext>
+					),
+				},
+			],
+			"/account",
+		);
+		expect(
+			await screen.findByRole("meter", { name: "Request qua proxy tháng này" }),
+		).toHaveAttribute("aria-valuenow", "120");
+		expect(meter("account-meter-mock-requests")).toHaveTextContent(
+			"REST và MCP đều tính.",
+		);
+	});
+
 	it("says when the quota is used up", async () => {
 		renderAccount(usage({ projects: { used: 3, max: 3 } }));
 		await screen.findByRole("meter", { name: "Projects" });
@@ -91,13 +134,13 @@ describe("AccountPage quota meters", () => {
 	it("links to notification settings and opens the plans modal", async () => {
 		renderAccount(usage());
 		expect(
-			await screen.findByRole("link", { name: "Cài đặt thông báo" }),
+			await screen.findByRole("link", { name: "Kênh thông báo" }),
 		).toHaveAttribute("href", "/account/notifications");
 		await userEvent.click(screen.getByRole("button", { name: "Quản lý gói" }));
 		const dialog = screen.getByRole("dialog", { name: "Quản lý gói" });
 		expect(within(dialog).queryByRole("alert")).toBeNull();
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Liên hệ nâng cấp" }),
+			within(dialog).getByRole("button", { name: "Liên hệ" }),
 		);
 		await expectProInterestSource("account");
 	});

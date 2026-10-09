@@ -53,12 +53,24 @@ describe("route guards", () => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		renderRoutes(routes, "/");
 		const login = await screen.findByRole("link", { name: "Đăng nhập" });
-		const signUp = screen.getByRole("link", { name: "Bắt đầu miễn phí" });
+		const signUps = screen.getAllByRole("link", { name: "Bắt đầu miễn phí" });
+		// Top bar, hero, Free plan card and closing band all sign up the same way.
+		expect(login).toHaveAttribute("data-id", "topbar-login");
+		expect(signUps.map((link) => link.getAttribute("data-id"))).toEqual([
+			"topbar-signup",
+			"landing-hero-cta",
+			"pricing-card-free-cta",
+			"landing-cta-button",
+		]);
+		for (const link of signUps) {
+			expect(link).toHaveAttribute(
+				"href",
+				"/auth/login?returnTo=%2Fprojects&prompt=create",
+			);
+		}
+		const [signUp] = signUps;
+		if (!signUp) throw new Error("no sign-up link");
 		expect(login).toHaveAttribute("href", "/auth/login?returnTo=%2Fprojects");
-		expect(signUp).toHaveAttribute(
-			"href",
-			"/auth/login?returnTo=%2Fprojects&prompt=create",
-		);
 		await userEvent.click(signUp);
 		expect(navigateToLogin).toHaveBeenCalledWith({
 			returnTo: "/projects",

@@ -60,12 +60,16 @@ export function RequireAuth({
 	}
 }
 
-/** Signed-in users skip the landing page and land on their projects. */
+/**
+ * Signed-in users skip the landing page and land on their projects. The
+ * page shows at once while the session is still loading (it is the same
+ * for everyone, and prerendered), so first paint never waits on
+ * `/users/me`; a signed-in visitor is moved once the answer arrives.
+ */
 export function RedirectIfAuthenticated({ children }: { children: ReactNode }) {
 	const session = useCurrentUser();
 	if (session.status === "authenticated") {
 		return <Navigate to="/projects" replace />;
 	}
-	if (session.status === "loading") return <AuthStatus kind="loading" />;
 	return children;
 }

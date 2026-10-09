@@ -1,13 +1,20 @@
 import { useMemo } from "react";
 import { useToast } from "../../components/ui/toast";
 import type { Resource } from "../resources/resource-model";
-import { AddToRootRail } from "./add-to-root-rail";
+import { DemoNode } from "./demo-node";
 import type { NodeAction } from "./node-actions";
 import { ResourceNode } from "./resource-node";
-import { TREE_GEOMETRY, layoutTree } from "./tree-layout";
+import { TreeCanvasFrame } from "./tree-canvas-frame";
+import {
+	DEMO_TREE_GEOMETRY,
+	TREE_GEOMETRY,
+	type TreeItem,
+} from "./tree-layout";
 import { useTreeConnect } from "./use-tree-connect";
 
-export interface ResourceTreeCanvasProps {
+/** Project page: real resources with generator, actions and mock links. */
+export interface AppTreeCanvasProps {
+	mode?: "app";
 	resources: readonly Resource[];
 	/** Project mock base URL, prefix included. */
 	mockBaseUrl: string;
@@ -16,25 +23,75 @@ export interface ResourceTreeCanvasProps {
 	onMove: (resource: Resource, target: Resource | null) => void;
 }
 
+/**
+ * Landing demo: names only, smaller geometry, and moves stay in the
+ * caller's client state (no API call).
+ */
+export interface DemoTreeCanvasProps {
+	mode: "demo";
+	resources: readonly TreeItem[];
+	onMove: (moving: TreeItem, target: TreeItem | null) => void;
+}
+
+export type ResourceTreeCanvasProps = AppTreeCanvasProps | DemoTreeCanvasProps;
+
 export function mockUrlOf(mockBaseUrl: string, name: string): string {
 	return `${mockBaseUrl.replace(/\/+$/, "")}/${encodeURIComponent(name)}`;
 }
 
 /**
- * Resource tree: SVG elbow links under absolutely placed node cards, the
- * root rail on the left, and the hint line that explains nesting. Wide
- * trees scroll inside the card, never the page.
+ * Resource tree: nest a resource by clicking its left connector, then the
+ * right connector of the target (or the "Thêm vào root" rail). Refused
+ * moves (cycle, name clash, too deep) are explained in a toast.
  */
-export function ResourceTreeCanvas({
+export function ResourceTreeCanvas(props: ResourceTreeCanvasProps) {
+	return props.mode === "demo" ? (
+		<DemoTreeCanvas {...props} />
+	) : (
+		<AppTreeCanvas {...props} />
+	);
+}
+
+function DemoTreeCanvas({ resources, onMove }: DemoTreeCanvasProps) {
+	const toast = useToast();
+	const connect = useTreeConnect(resources, {
+		onMove,
+		onRefuse: (title, tone) => toast.show({ title, tone }),
+	});
+	const { selected } = connect;
+	return (
+		<TreeCanvasFrame
+			items={resources}
+			geometry={DEMO_TREE_GEOMETRY}
+			connect={connect}
+			data-id="demo-tree"
+			railDataId="demo-node-root"
+			renderNode={({ item, x, y }) => (
+				<DemoNode
+					key={item.id}
+					item={item}
+					x={x}
+					y={y}
+					geometry={DEMO_TREE_GEOMETRY}
+					selected={selected?.id === item.id}
+					selectionName={selected?.name ?? null}
+					targetState={connect.targetState(item.id)}
+					onSelect={() => connect.toggle(item.id)}
+					onNest={() => connect.connect(item.id)}
+				/>
+			)}
+		/>
+	);
+}
+
+function AppTreeCanvas({
 	resources,
 	mockBaseUrl,
 	onGenerate,
 	onAction,
 	onMove,
-}: ResourceTreeCanvasProps) {
+}: AppTreeCanvasProps) {
 	const toast = useToast();
-	const g = TREE_GEOMETRY;
-	const layout = useMemo(() => layoutTree(resources), [resources]);
 	const byId = useMemo(
 		() => new Map(resources.map((resource) => [resource.id, resource])),
 		[resources],
@@ -43,97 +100,52 @@ export function ResourceTreeCanvas({
 		onMove,
 		onRefuse: (title, tone) => toast.show({ title, tone }),
 	});
-	const selected = connect.selected;
+	const { selected } = connect;
+
+	function parentOf(resource: Resource): Resource | undefined {
+		return resource.parentId ? byId.get(resource.parentId) : undefined;
+	}
 
 	function blockedReason(resource: Resource): string | null {
-		const parent = resource.parentId ? byId.get(resource.parentId) : undefined;
+		const parent = parentOf(resource);
 		return parent && parent.count === 0
 			? `Sinh dữ liệu cho ${parent.name} trước.`
 			: null;
 	}
 
 	function blocked(resource: Resource) {
-		const parent = resource.parentId ? byId.get(resource.parentId) : undefined;
 		toast.show({
 			tone: "error",
-			title: `Cần sinh dữ liệu cho ${parent?.name ?? "resource cha"} trước khi sinh cho ${resource.name}.`,
+			title: `Cần sinh dữ liệu cho ${parentOf(resource)?.name ?? "resource cha"} trước khi sinh cho ${resource.name}.`,
 		});
 	}
 
 	return (
-		<div
+		<TreeCanvasFrame
+			items={resources}
+			geometry={TREE_GEOMETRY}
+			connect={connect}
 			data-id="resource-tree"
-			className="grid min-w-0 grid-cols-[minmax(0,1fr)]"
-		>
-			<p
-				aria-live="polite"
-				data-id="resource-tree-hint"
-				className="m-0 px-6 pt-3 text-[0.8125rem] text-muted leading-[1.55]"
-			>
-				{selected ? (
-					<>
-						Đang chọn <b className="font-mono text-primary">{selected.name}</b>.
-						Bấm chấm tròn bên phải resource đích để lồng vào, hoặc bấm thanh
-						“Thêm vào root”. Nhấn Esc để huỷ.
-					</>
-				) : (
-					"Bấm chấm tròn bên trái một resource để chọn, sau đó bấm chấm tròn bên phải của resource khác để lồng vào."
-				)}
-			</p>
-			<div
-				className="overflow-x-auto px-6 pt-4 pb-6"
-				onKeyDown={(event) => {
-					if (event.key === "Escape" && selected) connect.clear();
-				}}
-			>
-				<div
-					className="relative"
-					style={{ width: layout.width, height: layout.height }}
-				>
-					<svg
-						width={layout.width}
-						height={layout.height}
-						aria-hidden="true"
-						focusable="false"
-						className="pointer-events-none absolute inset-0 overflow-visible text-icon-muted"
-					>
-						{layout.links.map((link) => (
-							<path
-								key={link.childId}
-								d={link.path}
-								fill="none"
-								stroke="currentColor"
-								strokeWidth={1.5}
-							/>
-						))}
-					</svg>
-					<AddToRootRail
-						width={g.railWidth}
-						height={layout.height}
-						active={connect.rootActive}
-						onClick={() => connect.connect(null)}
-					/>
-					{layout.nodes.map(({ item, x, y }) => (
-						<ResourceNode
-							key={item.id}
-							resource={item}
-							x={x}
-							y={y}
-							geometry={g}
-							href={mockUrlOf(mockBaseUrl, item.name)}
-							selected={selected?.id === item.id}
-							selectionName={selected?.name ?? null}
-							targetState={connect.targetState(item.id)}
-							blockedReason={blockedReason(item)}
-							onSelect={() => connect.toggle(item.id)}
-							onNest={() => connect.connect(item.id)}
-							onGenerate={(count) => onGenerate(item, count)}
-							onBlocked={() => blocked(item)}
-							onAction={(action) => onAction(action, item)}
-						/>
-					))}
-				</div>
-			</div>
-		</div>
+			railDataId="resource-tree-root"
+			renderNode={({ item, x, y }) => (
+				<ResourceNode
+					key={item.id}
+					resource={item}
+					x={x}
+					y={y}
+					geometry={TREE_GEOMETRY}
+					href={mockUrlOf(mockBaseUrl, item.name)}
+					selected={selected?.id === item.id}
+					selectionName={selected?.name ?? null}
+					targetState={connect.targetState(item.id)}
+					blockedReason={blockedReason(item)}
+					onSelect={() => connect.toggle(item.id)}
+					onNest={() => connect.connect(item.id)}
+					onGenerate={(count) => onGenerate(item, count)}
+					onBlocked={() => blocked(item)}
+					onAction={(action) => onAction(action, item)}
+				/>
+			)}
+		/>
 	);
 }

@@ -4,12 +4,13 @@ import { FormField } from "../../components/ui/form-field";
 import { Input } from "../../components/ui/input";
 import { Select } from "../../components/ui/select";
 import { Textarea } from "../../components/ui/textarea";
+import { useFeatures } from "../../config/features";
 import { ChoiceChips } from "./choice-chips";
 import {
 	type Choice,
 	PRICE_HINTS,
-	PRO_NEEDS,
 	TEAM_SIZES,
+	proNeedsFor,
 } from "./pro-interest-options";
 import type {
 	ProInterestDraft,
@@ -46,6 +47,7 @@ export function ProInterestFields({
 	onChange,
 }: ProInterestFieldsProps) {
 	const consentErrorId = `${useId()}-consent-error`;
+	const needs = proNeedsFor(useFeatures());
 	return (
 		<>
 			<div className="grid items-start gap-4 sm:grid-cols-2">
@@ -90,11 +92,11 @@ export function ProInterestFields({
 				required
 				legend="Bạn cần gói Pro cho việc gì?"
 				hint="Chọn một hoặc nhiều"
-				choices={PRO_NEEDS}
+				choices={needs}
 				selected={draft.needs}
 				error={errors.needs}
 				onToggle={(id) => {
-					const need = pick(PRO_NEEDS, id);
+					const need = pick(needs, id);
 					onChange({
 						needs: draft.needs.includes(need)
 							? draft.needs.filter((item) => item !== need)

@@ -5,6 +5,7 @@ import { cardClassName } from "../../components/ui/card";
 import { useToast } from "../../components/ui/toast";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
+import { useAppTitle } from "../../lib/use-document-title";
 import { useCurrentUser } from "../auth/use-current-user";
 import { ChannelRow } from "./channel-row";
 import { EventPreferencesTable } from "./event-preferences-table";
@@ -24,6 +25,7 @@ type PreferencesState =
 
 /** `/account/notifications`: delivery channels and per-event choices. */
 export function NotificationSettingsPage() {
+	useAppTitle("Kênh thông báo");
 	const session = useCurrentUser();
 	const toast = useToast();
 	const [state, setState] = useState<PreferencesState>({ status: "loading" });
@@ -65,7 +67,9 @@ export function NotificationSettingsPage() {
 	return (
 		<article data-id="notify-settings" className="grid max-w-3xl gap-6">
 			<header className="grid gap-2">
-				<h1 className="m-0 font-bold text-2xl tracking-[-0.02em]">Thông báo</h1>
+				<h1 className="m-0 font-bold text-2xl tracking-[-0.02em]">
+					Kênh thông báo
+				</h1>
 				<p className="m-0 text-muted">
 					Chọn nơi nhận thông báo cho từng loại sự kiện: chuông trong app, Web
 					Push hoặc Telegram.

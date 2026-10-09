@@ -106,7 +106,7 @@ export function ManageSubscriptionModal({
 					featured
 					limits={limitsFor("pro")}
 					badge={plan === "pro" ? current : null}
-					lead="Hạn mức lớn hơn cho team và dự án thật."
+					lead="Hạn mức lớn hơn cho các project chạy thật, nhiều thành viên hơn."
 					action={
 						plan === "free" ? (
 							<Button
@@ -115,15 +115,15 @@ export function ManageSubscriptionModal({
 								data-id="modal-subscription-pro-contact"
 								onClick={() => onContact(source)}
 							>
-								Liên hệ nâng cấp
+								Liên hệ
 							</Button>
 						) : null
 					}
 				/>
 			</div>
 			<p className="m-0 text-muted text-[0.8125rem]">
-				Gói Pro chưa mở thanh toán. Bấm Liên hệ nâng cấp để để lại nhu cầu,
-				chúng tôi sẽ liên hệ khi gói Pro sẵn sàng.
+				Gói Pro chưa mở thanh toán. Bấm Liên hệ để cho chúng tôi biết bạn cần
+				gì.
 			</p>
 		</Modal>
 	);

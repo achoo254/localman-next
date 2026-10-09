@@ -47,6 +47,23 @@ export const TREE_GEOMETRY: TreeGeometry = Object.freeze({
 	trailing: 24,
 });
 
+/**
+ * Geometry of the landing demo (`TREE_GEOMETRY.demo` of the prototype): a
+ * 156×44 card holds only the name, so rows and columns are tighter. A tree
+ * two levels deep needs 644px.
+ */
+export const DEMO_TREE_GEOMETRY: TreeGeometry = Object.freeze({
+	nodeWidth: 156,
+	nodeHeight: 44,
+	column: 200,
+	row: 60,
+	originX: 64,
+	originY: 12,
+	handleY: 22,
+	railWidth: 32,
+	trailing: 24,
+});
+
 export interface Point {
 	readonly x: number;
 	readonly y: number;
