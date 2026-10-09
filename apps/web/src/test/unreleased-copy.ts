@@ -1,11 +1,15 @@
+import { en } from "../i18n/messages/en/dictionary";
+
 /**
- * Words that advertise features not in production yet. With every flag
+ * Words that advertise features not in production yet, in English and in
+ * Vietnamese (pages not moved to the dictionaries yet). With every flag
  * off, no user-facing copy may contain them (docs/ux-writing.md §3).
  * "Webhook" is the one exception: it may appear on a card announced with
- * the "Sắp có" badge.
+ * the "Coming soon" badge.
  */
 export const UNRELEASED_WORDS: readonly RegExp[] = [
 	/localhost ngay trên trình duyệt/i,
+	/right in your browser/i,
 	/live mock sync/i,
 	/\bmcp\b/i,
 	/proxy/i,
@@ -16,16 +20,18 @@ export const UNRELEASED_WORDS: readonly RegExp[] = [
 	/collection/i,
 	/environment/i,
 	/secret không rời/i,
+	/secrets? never leave/i,
 	/mock lai/i,
+	/hybrid mock/i,
 	/webhook/i,
 ];
 
-const COMING_SOON = "Sắp có";
+const COMING_SOON = en.landing.features.comingSoon;
 const NAMED_ATTRIBUTES = ["aria-label", "title", "alt", "href", "placeholder"];
 
 /**
  * Unreleased words found in `root`: its text plus accessible names, titles
- * and links. Cards carrying a "Sắp có" badge are left out.
+ * and links. Cards carrying a "Coming soon" badge are left out.
  */
 export function unreleasedMentions(root: Element): string[] {
 	const copy = root.cloneNode(true);

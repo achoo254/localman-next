@@ -89,11 +89,11 @@ describe("PricingTable", () => {
 		const { container, onContactPro } = renderTable();
 		expect(
 			container.querySelector('[data-id="pricing-card-free-price"]'),
-		).toHaveTextContent("Miễn phí");
+		).toHaveTextContent("Free");
 		const pro = container.querySelector('[data-id="pricing-card-pro"]');
-		expect(pro?.textContent).not.toMatch(/₫|đ\/|\$|chưa chốt/);
-		expect(pro).toHaveTextContent("Nhận đăng ký quan tâm");
-		await userEvent.click(screen.getByRole("button", { name: "Liên hệ" }));
+		expect(pro?.textContent).not.toMatch(/₫|đ\/|\$|chưa chốt|not decided/i);
+		expect(pro).toHaveTextContent("Interest list open");
+		await userEvent.click(screen.getByRole("button", { name: "Contact" }));
 		expect(onContactPro).toHaveBeenCalledTimes(1);
 	});
 });

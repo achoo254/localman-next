@@ -2,13 +2,19 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router";
 import { feedbackSourceFor } from "../../features/feedback/feedback-draft";
 import { FeedbackForm } from "../../features/feedback/feedback-form";
+import { useT } from "../../i18n/i18n-context";
+import { LanguageSwitcher } from "../../i18n/language-switcher";
 import { ThemeToggle } from "../theme/theme-toggle";
 
 const FOOTER_LINK =
 	"inline-flex min-h-11 cursor-pointer items-center rounded-sm font-mono font-semibold text-primary underline-offset-4 hover:underline";
 
-/** Page footer with the "Góp ý / Liên hệ" form (in place of a contact email). */
+/**
+ * Page footer: Docs, the "Feedback / Contact" form (in place of a contact
+ * email) and the language switcher.
+ */
 export function AppFooter() {
+	const t = useT();
 	const { pathname } = useLocation();
 	const [open, setOpen] = useState(false);
 	return (
@@ -20,11 +26,13 @@ export function AppFooter() {
 				{/* The prerendered landing carries its build year; a new year only
 				    differs until the next deploy, so the mismatch is expected. */}
 				<span suppressHydrationWarning>
-					© {new Date().getFullYear()} Localman
+					{t("layout.footer.copyright", {
+						year: String(new Date().getFullYear()),
+					})}
 				</span>
 				<div className="flex flex-wrap items-center gap-4">
 					<Link to="/docs" data-id="app-footer-docs" className={FOOTER_LINK}>
-						Docs
+						{t("layout.docs")}
 					</Link>
 					<button
 						type="button"
@@ -32,8 +40,9 @@ export function AppFooter() {
 						onClick={() => setOpen(true)}
 						className={FOOTER_LINK}
 					>
-						Góp ý / Liên hệ
+						{t("layout.footer.feedback")}
 					</button>
+					<LanguageSwitcher data-id="app-footer-language" />
 					{/* The top bar hides its theme switch below 640px. */}
 					<div className="sm:hidden">
 						<ThemeToggle data-id="app-footer-theme" />

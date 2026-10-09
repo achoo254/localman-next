@@ -12,7 +12,7 @@ import { renderRoutes } from "../../test/render-app";
 import { AccountMenu } from "./account-menu";
 
 const APPS_NAME =
-	/^Ứng dụng đã cấp quyền ?, mở trang tài khoản hoandat ở tab mới$/;
+	/^Authorized apps ?, opens your hoandat account in a new tab$/;
 
 async function openMenu(flags: FeatureFlags) {
 	renderRoutes(
@@ -33,12 +33,12 @@ async function openMenu(flags: FeatureFlags) {
 		],
 		"/projects",
 	);
-	screen.getByRole("button", { name: "Tài khoản Minh Anh" }).focus();
+	screen.getByRole("button", { name: "Account Minh Anh" }).focus();
 	await userEvent.keyboard("{Enter}");
 	await screen.findByRole("menu");
 }
 
-describe("account menu entry 'Ứng dụng đã cấp quyền'", () => {
+describe("account menu entry 'Authorized apps'", () => {
 	afterEach(() => vi.restoreAllMocks());
 
 	it("is hidden while Mock MCP is unreleased", async () => {

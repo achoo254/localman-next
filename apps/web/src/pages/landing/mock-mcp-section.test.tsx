@@ -9,10 +9,10 @@ const ORDER = new Set([
 	"landing-hero",
 	"landing-live-sync",
 	"landing-mock-mcp",
-	"landing-compare",
+	"landing-pricing",
 ]);
 
-describe("landing block 'Mock MCP tức thì'", () => {
+describe("landing block 'Instant Mock MCP'", () => {
 	beforeEach(() => {
 		vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
 	});
@@ -26,7 +26,7 @@ describe("landing block 'Mock MCP tức thì'", () => {
 		const { container } = renderWithFeatures(<LandingPage />, ALL_FEATURES);
 		expect(
 			await screen.findByRole("heading", {
-				name: "Mock của bạn thành tool cho AI agent",
+				name: "Your mock becomes a tool for AI agents",
 			}),
 		).toBeInTheDocument();
 		const order = [...container.querySelectorAll("[data-id]")]
@@ -36,7 +36,7 @@ describe("landing block 'Mock MCP tức thì'", () => {
 			"landing-hero",
 			"landing-live-sync",
 			"landing-mock-mcp",
-			"landing-compare",
+			"landing-pricing",
 		]);
 		expect(
 			container.querySelector('[data-id="landing-mock-mcp-snippet"] code'),
@@ -56,7 +56,6 @@ describe("landing block 'Mock MCP tức thì'", () => {
 		);
 		const block = container.querySelector('[data-id="landing-mock-mcp"]');
 		if (!block) throw new Error("no landing-mock-mcp");
-		expect(block).not.toHaveTextContent(/postman|mockapi/i);
 		expect(await seriousViolations(block)).toEqual([]);
 	});
 });

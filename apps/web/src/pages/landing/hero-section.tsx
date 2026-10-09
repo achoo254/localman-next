@@ -4,8 +4,9 @@ import { Badge } from "../../components/ui/badge";
 import { buttonClassName } from "../../components/ui/button";
 import { useFeatures } from "../../config/features";
 import { LoginLink } from "../../features/auth/login-link";
+import { useT } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
 import { cn } from "../../lib/cn";
-import { formatNumber } from "../../lib/format";
 import { AuthErrorAlert } from "./auth-error-alert";
 import { HeroPreview } from "./hero-preview";
 
@@ -13,6 +14,7 @@ const CODE_WORD = "font-mono text-primary";
 
 /** Sign-up link styled as a large primary button (hero and closing band). */
 export function SignUpCta({ "data-id": dataId }: { "data-id": string }) {
+	const t = useT();
 	return (
 		<LoginLink
 			returnTo="/projects"
@@ -23,20 +25,24 @@ export function SignUpCta({ "data-id": dataId }: { "data-id": string }) {
 				"no-underline max-sm:w-full",
 			)}
 		>
-			Bắt đầu miễn phí
+			{t("common.cta.startFree")}
 			<IconArrowRight size={20} aria-hidden="true" />
 		</LoginLink>
 	);
 }
 
+const codeWord = (chunk: string) => <span className={CODE_WORD}>{chunk}</span>;
+
 /**
  * Hero with two messages: the mock pitch until the API client is in
- * production, then "Localhost ngay trên trình duyệt".
+ * production, then "Localhost right in your browser".
  */
 export function HeroSection({ howItWorksHref }: { howItWorksHref: string }) {
 	const { apiClient } = useFeatures();
+	const t = useT();
 	const free = limitsFor("free");
 	const proxy = free.proxyRequestsPerMonth;
+	const limits = { projects: free.projects, resources: free.resources };
 	return (
 		<section
 			data-id="landing-hero"
@@ -46,40 +52,29 @@ export function HeroSection({ howItWorksHref }: { howItWorksHref: string }) {
 			<div data-id="landing-hero-copy" className="grid min-w-0 gap-6">
 				<AuthErrorAlert />
 				<Badge tone="primary" className="justify-self-start">
-					{apiClient
-						? "Localhost ngay trên trình duyệt"
-						: "Mock REST API cho developer"}
+					{t(
+						apiClient
+							? "landing.hero.badgeLocalhost"
+							: "landing.hero.badgeMock",
+					)}
 				</Badge>
 				<h1
 					id="landing-hero-title"
 					className="m-0 font-bold text-[clamp(1.875rem,4.4vw,2.875rem)] leading-tight tracking-[-0.02em]"
 				>
-					{apiClient ? (
-						<>
-							Test API <span className={CODE_WORD}>localhost</span> ngay trên
-							trình duyệt
-						</>
-					) : (
-						<>
-							<span className={CODE_WORD}>Mock</span> REST API có trạng thái,
-							quan hệ và Faker, gói Free {free.projects} project
-						</>
+					{renderRich(
+						apiClient
+							? t("landing.hero.titleLocalhost")
+							: t("landing.hero.titleMock", { count: free.projects }),
+						{ code: codeWord },
 					)}
 				</h1>
 				<p data-id="landing-hero-sub" className="m-0 text-lg text-muted">
-					{apiClient ? (
-						<>
-							<b className="text-fg">
-								Không cần cài app hay extension, chỉ một lệnh Tunelo.
-							</b>{" "}
-							Chạy <code>tunelo http 3000</code>, Localman tự nhận tunnel theo
-							port và gửi request tới <code>localhost</code> hay máy trong mạng
-							LAN. Kèm mock REST API có trạng thái để frontend không phải chờ
-							backend.
-						</>
-					) : (
-						"Khai báo resource, sinh dữ liệu giả bằng một click và có ngay endpoint CRUD đầy đủ. Frontend không phải chờ backend nữa."
-					)}
+					{apiClient
+						? renderRich(t("landing.hero.subLocalhost"), {
+								b: (chunk) => <b className="text-fg">{chunk}</b>,
+							})
+						: t("landing.hero.subMock")}
 				</p>
 				<div className="flex flex-wrap gap-3">
 					<SignUpCta data-id="landing-hero-cta" />
@@ -91,14 +86,13 @@ export function HeroSection({ howItWorksHref }: { howItWorksHref: string }) {
 							"no-underline max-sm:w-full",
 						)}
 					>
-						Xem cách hoạt động
+						{t("landing.hero.howItWorks")}
 					</a>
 				</div>
 				<p className="m-0 text-[0.8125rem] text-muted">
-					Không cần thẻ thanh toán. Gói Free gồm{" "}
 					{apiClient && proxy !== null
-						? `${free.projects} project mock, ${free.resources} resource mỗi project, ${formatNumber(proxy)} request qua proxy mỗi tháng.`
-						: `${free.projects} project, ${free.resources} resource mỗi project, custom response miễn phí.`}
+						? t("landing.hero.noteLocalhost", { ...limits, proxy })
+						: t("landing.hero.noteMock", limits)}
 				</p>
 			</div>
 			<HeroPreview localhost={apiClient} />

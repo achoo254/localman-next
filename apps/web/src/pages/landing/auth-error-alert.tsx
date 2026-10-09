@@ -1,35 +1,14 @@
 import { useSearchParams } from "react-router";
 import { Alert } from "../../components/ui/alert";
+import { useT } from "../../i18n/i18n-context";
+import { en } from "../../i18n/messages/en/dictionary";
 import { useHydrated } from "../../lib/use-hydrated";
 
 /** Reasons `/auth/callback` may send back in `?authError=`. */
-const AUTH_ERRORS = {
-	access_denied: {
-		title: "Bạn đã huỷ đăng nhập",
-		text: "Localman chưa được phép truy cập tài khoản hoandat của bạn. Đăng nhập lại khi bạn sẵn sàng.",
-	},
-	login_expired: {
-		title: "Phiên đăng nhập đã hết hạn",
-		text: "Bước đăng nhập mất quá lâu nên không hoàn tất được. Hãy đăng nhập lại.",
-	},
-	login_failed: {
-		title: "Đăng nhập không thành công",
-		text: "Có lỗi khi hoàn tất đăng nhập. Hãy thử lại.",
-	},
-	rate_limited: {
-		title: "Thử đăng nhập quá nhiều lần",
-		text: "Bạn thử đăng nhập quá nhiều lần, vui lòng đợi một phút rồi thử lại.",
-	},
-	idp_unavailable: {
-		title: "Không kết nối được tài khoản hoandat",
-		text: "Máy chủ đăng nhập đang không phản hồi. Hãy thử lại sau ít phút.",
-	},
-} as const;
-
-type AuthErrorCode = keyof typeof AUTH_ERRORS;
+type AuthErrorCode = keyof typeof en.auth.callbackError;
 
 function isAuthErrorCode(value: string | null): value is AuthErrorCode {
-	return value !== null && Object.hasOwn(AUTH_ERRORS, value);
+	return value !== null && Object.hasOwn(en.auth.callbackError, value);
 }
 
 /**
@@ -39,17 +18,17 @@ function isAuthErrorCode(value: string | null): value is AuthErrorCode {
 export function AuthErrorAlert() {
 	const [params] = useSearchParams();
 	const hydrated = useHydrated();
+	const t = useT();
 	const code = params.get("authError");
 	if (!hydrated || !isAuthErrorCode(code)) return null;
-	const { title, text } = AUTH_ERRORS[code];
 	return (
 		<Alert
 			tone="danger"
-			title={title}
+			title={t(`auth.callbackError.${code}.title`)}
 			data-id="landing-auth-error"
 			className="w-full text-left"
 		>
-			{text}
+			{t(`auth.callbackError.${code}.text`)}
 		</Alert>
 	);
 }

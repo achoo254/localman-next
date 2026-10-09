@@ -5,6 +5,7 @@ import {
 	IconPlug,
 	IconUser,
 } from "@tabler/icons-react";
+import { useT } from "../../i18n/i18n-context";
 import { idpAccountUrl } from "../../lib/app-config";
 import { openExternal } from "../../platform/navigation";
 import { DropdownMenuItem, DropdownMenuLabel } from "../ui/dropdown-menu";
@@ -16,16 +17,16 @@ import { DropdownMenuItem, DropdownMenuLabel } from "../ui/dropdown-menu";
  * opens the section that shows it.
  */
 const IDP_ENTRIES = [
-	{ id: "email", label: "Email", hash: "account-email", Icon: IconMail },
+	{ id: "email", labelKey: "email", hash: "account-email", Icon: IconMail },
 	{
 		id: "recovery",
-		label: "Mã khôi phục",
+		labelKey: "recovery",
 		hash: "account-recovery",
 		Icon: IconKey,
 	},
 	{
 		id: "idp",
-		label: "Mật khẩu và đăng nhập",
+		labelKey: "password",
 		hash: "account-password",
 		Icon: IconUser,
 	},
@@ -37,7 +38,7 @@ const IDP_ENTRIES = [
  */
 const IDP_APPS_ENTRY = {
 	id: "apps",
-	label: "Ứng dụng đã cấp quyền",
+	labelKey: "apps",
 	hash: "account-apps",
 	Icon: IconPlug,
 } as const;
@@ -49,21 +50,20 @@ export interface IdpAccountItemsProps {
 
 /** The account menu's links to the IdP account pages, each in a new tab. */
 export function IdpAccountItems({ withApps }: IdpAccountItemsProps) {
+	const t = useT();
 	const entries = withApps ? [...IDP_ENTRIES, IDP_APPS_ENTRY] : IDP_ENTRIES;
 	return (
 		<>
-			<DropdownMenuLabel>Tài khoản hoandat · mở tab mới</DropdownMenuLabel>
-			{entries.map(({ id, label, hash, Icon }) => (
+			<DropdownMenuLabel>{t("layout.idpMenu.heading")}</DropdownMenuLabel>
+			{entries.map(({ id, labelKey, hash, Icon }) => (
 				<DropdownMenuItem
 					key={id}
 					data-id={`account-menu-${id}`}
 					icon={<Icon size={16} aria-hidden={true} />}
 					onSelect={() => openExternal(`${idpAccountUrl}#${hash}`)}
 				>
-					{label}
-					<span className="sr-only">
-						, mở trang tài khoản hoandat ở tab mới
-					</span>
+					{t(`layout.idpMenu.${labelKey}`)}
+					<span className="sr-only">{t("layout.idpMenu.opensIdp")}</span>
 					<IconExternalLink size={14} aria-hidden="true" className="ml-auto" />
 				</DropdownMenuItem>
 			))}

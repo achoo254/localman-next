@@ -29,18 +29,17 @@ describe("public top bar and skip link", () => {
 		renderRoutes(routes, "/");
 		await screen.findByRole("heading", { level: 1 });
 		const nav = within(topbar()).getByRole("navigation", {
-			name: "Điều hướng chính",
+			name: "Main navigation",
 		});
 		expect(
 			within(nav)
 				.getAllByRole("link")
 				.map((link) => [link.textContent, link.getAttribute("href")]),
 		).toEqual([
-			["Tính năng", "#features"],
-			["So sánh", "#compare"],
-			["Bảng giá", "#pricing"],
+			["Features", "#features"],
+			["Pricing", "#pricing"],
 		]);
-		for (const anchor of ["features", "compare", "pricing"]) {
+		for (const anchor of ["features", "pricing"]) {
 			expect(document.getElementById(anchor)).not.toBeNull();
 		}
 		const bar = within(topbar());
@@ -48,11 +47,11 @@ describe("public top bar and skip link", () => {
 			"href",
 			"/docs",
 		);
-		expect(bar.getByRole("link", { name: "Đăng nhập" })).toHaveAttribute(
+		expect(bar.getByRole("link", { name: "Sign in" })).toHaveAttribute(
 			"href",
 			"/auth/login?returnTo=%2Fprojects",
 		);
-		expect(bar.getByRole("link", { name: "Bắt đầu miễn phí" })).toHaveAttribute(
+		expect(bar.getByRole("link", { name: "Get started free" })).toHaveAttribute(
 			"href",
 			"/auth/login?returnTo=%2Fprojects&prompt=create",
 		);
@@ -63,10 +62,10 @@ describe("public top bar and skip link", () => {
 		renderRoutes(routes, "/docs/quick-start");
 		await screen.findByRole("heading", { level: 1 });
 		expect(
-			within(topbar()).queryByRole("navigation", { name: "Điều hướng chính" }),
+			within(topbar()).queryByRole("navigation", { name: "Main navigation" }),
 		).toBeNull();
 		expect(
-			within(topbar()).getByRole("link", { name: "Đăng nhập" }),
+			within(topbar()).getByRole("link", { name: "Sign in" }),
 		).toHaveAttribute("href", "/auth/login?returnTo=%2Fdocs%2Fquick-start");
 	});
 
@@ -78,13 +77,13 @@ describe("public top bar and skip link", () => {
 			"href",
 			"/projects",
 		);
-		expect(bar.queryByRole("link", { name: "Đăng nhập" })).toBeNull();
-		expect(bar.queryByRole("link", { name: /^Bắt đầu/ })).toBeNull();
+		expect(bar.queryByRole("link", { name: "Sign in" })).toBeNull();
+		expect(bar.queryByRole("link", { name: /^Get started/ })).toBeNull();
 		await userEvent.click(
-			bar.getByRole("button", { name: "Tài khoản Minh Anh" }),
+			bar.getByRole("button", { name: "Account Minh Anh" }),
 		);
 		expect(
-			await screen.findByRole("menuitem", { name: "Tài khoản và hạn mức" }),
+			await screen.findByRole("menuitem", { name: "Account and limits" }),
 		).toBeVisible();
 	});
 
@@ -105,7 +104,7 @@ describe("public top bar and skip link", () => {
 		renderRoutes(routes, path);
 		await screen.findByRole("heading", { level: 1 });
 		await userEvent.tab();
-		const skip = screen.getByRole("link", { name: "Bỏ qua tới nội dung" });
+		const skip = screen.getByRole("link", { name: "Skip to content" });
 		expect(skip).toHaveFocus();
 		expect(skip).toHaveAttribute("href", "#main");
 		expect(screen.getByRole("main")).toHaveAttribute("id", "main");

@@ -17,11 +17,11 @@ describe("no unreleased feature in the copy while every flag is off", () => {
 		vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
 	});
 
-	it("landing, Webhook only on its 'Sắp có' card", () => {
+	it("landing, Webhook only on its 'Coming soon' card", () => {
 		const { container } = renderWithFeatures(<LandingPage />, NO_FEATURES);
 		expect(unreleasedMentions(container)).toEqual([]);
 		const webhook = container.querySelector('[data-id="feature-webhooks"]');
-		expect(webhook).toHaveTextContent("Sắp có");
+		expect(webhook).toHaveTextContent("Coming soon");
 	});
 
 	it("Pro interest form opened from the landing", async () => {
@@ -32,7 +32,7 @@ describe("no unreleased feature in the copy while every flag is off", () => {
 			},
 		});
 		renderWithFeatures(<LandingPage />, NO_FEATURES);
-		await userEvent.click(screen.getByRole("button", { name: "Liên hệ" }));
+		await userEvent.click(screen.getByRole("button", { name: "Contact" }));
 		const dialog = await screen.findByRole("dialog");
 		await within(dialog).findByRole("checkbox", { name: "Mock API" });
 		expect(unreleasedMentions(dialog)).toEqual([]);

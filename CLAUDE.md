@@ -14,12 +14,13 @@ scripts/                 # check-mcp-coverage.ts, check-tokens.ts
 e2e/                     # Playwright: whole stack on fixed ports 46xx (support/stack.ts)
 ```
 
-Commands: `pnpm dev`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm e2e`, `pnpm check:mcp-coverage`, `pnpm check:tokens`. Mỗi phase phải chạy sạch `pnpm lint && pnpm typecheck && pnpm test && pnpm check:mcp-coverage`.
+Commands: `pnpm dev`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm e2e`, `pnpm check:mcp-coverage`, `pnpm check:tokens`, `pnpm check:i18n` (chạy kèm `pnpm lint`). Mỗi phase phải chạy sạch `pnpm lint && pnpm typecheck && pnpm test && pnpm check:mcp-coverage`.
 
 Quy tắc:
 - **API nghiệp vụ chỉ khai báo qua `defineOperation`** rồi thêm vào `apps/api/src/operations/registry.ts`; không viết route Express tay. Mọi operation có MCP tool, hoặc `mcp: { exempt: "<lý do>" }`. Xem `docs/operation-registry.md`.
 - **Hạn mức gói** chỉ đọc qua `limitsFor(plan)` từ `@localman/shared`. `Infinity` thành `null` khi `JSON.stringify`, nên map tường minh trước khi trả cho client.
 - **UI** chỉ dùng token và utility Tailwind đã map (`bg-surface`, `text-fg`, `text-muted`…), không hex/rgb/px khoảng cách. Dùng primitive trong `apps/web/src/components/ui/` trước khi tạo mới. Xem `docs/design-system.md`.
+- **Chữ người dùng thấy** đi qua `t()` (`apps/web/src/i18n/`): English là nguồn và mặc định, kèm `zh-CN` và `vi`; không hard-code chuỗi, không nêu tên đối thủ. Xem `docs/i18n.md`.
 - Lỗi API theo dạng `{ error: { code, message } }`; không lộ stack ra client, không log secret.
 - Internal package `@localman/*` là source-only TS (`exports` trỏ vào `src/index.ts`); import tương đối dùng đuôi `.js` (NodeNext), trừ `apps/web` (Bundler).
 - TypeScript strict, không `any` (dùng `unknown` + type guard), không non-null assertion `!`, named exports, file kebab-case, ≤ 200 dòng.

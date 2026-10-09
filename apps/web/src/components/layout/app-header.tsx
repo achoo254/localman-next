@@ -1,15 +1,20 @@
 import { Link } from "react-router";
 import type { CurrentUser } from "../../features/auth/current-user";
 import { NotificationBell } from "../../features/notifications/notification-bell";
+import { useT } from "../../i18n/i18n-context";
+import { LanguageSwitcher } from "../../i18n/language-switcher";
 import { cn } from "../../lib/cn";
 import { Wordmark } from "../brand/wordmark";
 import { Badge } from "../ui/badge";
 import { buttonClassName } from "../ui/button";
 import { AccountControls } from "./account-controls";
-import { PLAN_LABEL } from "./account-menu";
 
-/** Signed-in top bar: wordmark, Docs, notification bell, plan and account menu. */
+/**
+ * Signed-in top bar: wordmark, Docs, language, notification bell, plan
+ * and account menu.
+ */
 export function AppHeader({ user }: { user: CurrentUser }) {
+	const t = useT();
 	return (
 		<header
 			data-id="topbar"
@@ -19,7 +24,7 @@ export function AppHeader({ user }: { user: CurrentUser }) {
 				<Link
 					to="/projects"
 					data-id="topbar-home"
-					aria-label="Localman, về Projects"
+					aria-label={t("layout.appHeader.home")}
 					className="rounded-sm no-underline"
 				>
 					<Wordmark />
@@ -33,15 +38,18 @@ export function AppHeader({ user }: { user: CurrentUser }) {
 							"no-underline max-sm:hidden",
 						)}
 					>
-						Docs
+						{t("layout.docs")}
 					</Link>
+					<div className="max-sm:hidden">
+						<LanguageSwitcher data-id="topbar-language" compact />
+					</div>
 					<NotificationBell />
 					<Badge
 						data-id="topbar-plan"
 						tone={user.plan === "pro" ? "accent" : "neutral"}
 						className="max-sm:hidden"
 					>
-						{PLAN_LABEL[user.plan]}
+						{t(`layout.plan.${user.plan}`)}
 					</Badge>
 					<AccountControls user={user} />
 				</div>

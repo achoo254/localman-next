@@ -46,6 +46,7 @@ Kiểm tra nhanh: `curl localhost:4000/healthz` và `curl localhost:4100/healthz
 | `pnpm e2e` | Playwright trên cả stack (MongoDB trong bộ nhớ, IdP giả); lần đầu cần `pnpm exec playwright install chromium` |
 | `pnpm check:mcp-coverage` | Fail khi có operation thiếu MCP tool mà không ghi lý do miễn trừ |
 | `pnpm check:tokens` | Fail khi có màu hoặc khoảng cách hardcode ngoài `tokens.css`, hoặc tương phản không đạt |
+| `pnpm check:i18n` | Fail khi có chữ tiếng Việt ngoài dictionary `vi` (trừ danh sách file chưa chuyển) hoặc tên đối thủ trong web app; chạy kèm `pnpm lint` |
 
 Các bước CI chạy: [`.github/workflows/ci.yml`](.github/workflows/ci.yml). Lệnh riêng của Tunelo nằm trong [`CLAUDE.md`](CLAUDE.md#tunelo).
 
@@ -57,5 +58,6 @@ Các bước CI chạy: [`.github/workflows/ci.yml`](.github/workflows/ci.yml). 
 - [Deploy production](docs/deployment-guide.md)
 - [Design system](docs/design-system.md)
 - [UX writing](docs/ux-writing.md)
+- [Đa ngôn ngữ (i18n)](docs/i18n.md)
 - Quyết định kiến trúc: [`docs/decisions/`](docs/decisions/)
 - Tunelo: [`docs/tunelo/`](docs/tunelo/), ADR ở [`docs/decisions/tunelo/`](docs/decisions/tunelo/)

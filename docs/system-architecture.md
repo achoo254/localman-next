@@ -6,7 +6,7 @@ Monorepo `localman-next` là pnpm workspace gồm `apps/*` và `packages/*`, ch�
 
 | Thư mục | Package | Vai trò |
 |---|---|---|
-| `apps/web` | `@localman/web` | Dashboard React 19, Vite 7, Tailwind 4 và React Router 7. Dev server ở cổng 5173. `vite build` prerender landing `/` (khách, cờ của bản build) vào `dist/index.html` qua `src/prerender.tsx`; trình duyệt hydrate markup đó, còn mọi path khác xoá nó bằng script inline rồi render bình thường. Trên `/` app JS chỉ tải sau lần vẽ đầu. Xem `vite.config.ts` |
+| `apps/web` | `@localman/web` | Dashboard React 19, Vite 7, Tailwind 4 và React Router 7. Dev server ở cổng 5173. `vite build` prerender landing `/` (khách, cờ của bản build) vào `dist/index.html` qua `src/prerender.tsx`; trình duyệt hydrate markup đó, còn mọi path khác xoá nó bằng script inline rồi render bình thường. Trên `/` app JS chỉ tải sau lần vẽ đầu. Xem `vite.config.ts`. Giao diện ba ngôn ngữ (en mặc định, zh-CN, vi), landing prerender bằng en; xem [i18n.md](i18n.md) |
 | `apps/api` | `@localman/api` | Hai server Express 5 trong một process: dashboard API ở cổng 4000 và mock runtime công khai ở cổng 4100 |
 | `packages/operations` | `@localman/operations` | Operation registry: một khai báo sinh route REST, MCP tool descriptor và OpenAPI 3.1. Xem [operation-registry.md](operation-registry.md) |
 | `packages/shared` | `@localman/shared` | Code dùng chung cho web và api. `plan-limits.ts` là nguồn duy nhất của mọi hạn mức gói. Ngoài entry gốc có subpath nhẹ: `@localman/shared/constants` (hạn mức, giới hạn resource, `FIELD_TYPES`, `ENDPOINT_*`, `parentKeyOf`; không zod, không catalog Faker), `@localman/shared/faker-catalog` (danh sách id Faker, không Faker) và `@localman/shared/faker-methods` (hàm chạy Faker, chỉ api) |

@@ -1,6 +1,7 @@
 import { Badge } from "../../components/ui/badge";
 import { cardClassName } from "../../components/ui/card";
 import { DEMO_MOCK_BASE_URL, DEMO_USERS } from "../../content/landing-samples";
+import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 
 const LOCALHOST_ORDERS = [
@@ -49,13 +50,14 @@ function PreviewCard({ url, body, chip, footer }: PreviewProps) {
  * measured here.
  */
 export function HeroPreview({ localhost }: { localhost: boolean }) {
+	const t = useT();
 	if (localhost) {
 		return (
 			<PreviewCard
 				url="http://localhost:3000/api/orders?limit=2"
 				body={JSON.stringify(LOCALHOST_ORDERS, null, 2)}
-				chip="qua Tunelo"
-				footer="Tự nhận tunnel port 3000"
+				chip={t("landing.preview.viaTunelo")}
+				footer={t("landing.preview.tunnelFound")}
 			/>
 		);
 	}
@@ -68,7 +70,7 @@ export function HeroPreview({ localhost }: { localhost: boolean }) {
 		<PreviewCard
 			url={`${DEMO_MOCK_BASE_URL}/users?page=1&limit=2`}
 			body={JSON.stringify(users, null, 2)}
-			footer={`${users.length} bản ghi`}
+			footer={t("landing.preview.records", { count: users.length })}
 		/>
 	);
 }

@@ -37,7 +37,7 @@ describe("/invite/:token", () => {
 		// The public top bar signs in back to this invite as well.
 		expect(
 			within(screen.getByRole("banner")).getByRole("link", {
-				name: "Đăng nhập",
+				name: "Sign in",
 			}),
 		).toHaveAttribute("href", `/auth/login?returnTo=${back}`);
 		const page = within(screen.getByRole("main"));

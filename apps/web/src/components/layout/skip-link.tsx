@@ -1,3 +1,5 @@
+import { useT } from "../../i18n/i18n-context";
+
 /** Id of the `<main>` element of both layouts, target of the skip link. */
 export const MAIN_ID = "main";
 
@@ -6,13 +8,14 @@ export const MAIN_ID = "main";
  * users past the top bar. Hidden until it receives focus.
  */
 export function SkipLink() {
+	const t = useT();
 	return (
 		<a
 			href={`#${MAIN_ID}`}
 			data-id="skip-to-main"
 			className="sr-only z-90 rounded-md bg-surface px-4 py-2 font-mono font-semibold text-sm shadow-lg focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
 		>
-			Bỏ qua tới nội dung
+			{t("layout.skipLink")}
 		</a>
 	);
 }

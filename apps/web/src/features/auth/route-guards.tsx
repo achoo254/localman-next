@@ -1,17 +1,10 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Navigate, useLocation } from "react-router";
-import { ApiError } from "../../lib/api-client";
 import { allowAutoLoginRedirect } from "../../lib/login-redirect-guard";
 import { navigateToLogin } from "../../platform/navigation";
 import { AuthStatus } from "./auth-status";
 import type { CurrentUser } from "./current-user";
 import { useCurrentUser } from "./use-current-user";
-
-const LOGIN_LOOP_ERROR = new ApiError(
-	401,
-	"LOGIN_LOOP",
-	"Đã chuyển tới trang đăng nhập nhiều lần mà phiên vẫn chưa được giữ lại. Kiểm tra trình duyệt có chặn cookie của Localman không rồi thử lại.",
-);
 
 /**
  * Renders `children(user)` for a signed-in user. Anyone else is sent to the
@@ -49,7 +42,7 @@ export function RequireAuth({
 			return children(session.user);
 		case "anonymous":
 			return blocked ? (
-				<AuthStatus kind="error" error={LOGIN_LOOP_ERROR} />
+				<AuthStatus kind="loginLoop" />
 			) : (
 				<AuthStatus kind="redirecting" />
 			);

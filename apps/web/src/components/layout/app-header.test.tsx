@@ -31,7 +31,7 @@ function spyOnSubmit() {
 }
 
 async function openAccountMenu(name: string) {
-	screen.getByRole("button", { name: `Tài khoản ${name}` }).focus();
+	screen.getByRole("button", { name: `Account ${name}` }).focus();
 	await userEvent.keyboard("{Enter}");
 }
 
@@ -44,18 +44,18 @@ describe("AppHeader", () => {
 	it("shows the wordmark, bell, plan and account trigger", () => {
 		const { container } = renderHeader(makeUser({ plan: "pro" }));
 		expect(
-			screen.getByRole("link", { name: "Localman, về Projects" }),
+			screen.getByRole("link", { name: "Localman, go to Projects" }),
 		).toHaveAttribute("href", "/projects");
 		expect(screen.getByRole("button", { name: "Thông báo" })).toBeVisible();
 		expect(
 			container.querySelector('[data-id="topbar-plan"]'),
-		).toHaveTextContent("Gói Pro");
+		).toHaveTextContent("Pro plan");
 	});
 
 	it.each([
 		["Email", "account-email"],
-		["Mã khôi phục", "account-recovery"],
-		["Mật khẩu và đăng nhập", "account-password"],
+		["Recovery codes", "account-recovery"],
+		["Password and sign-in", "account-password"],
 	])("opens the IdP section of '%s' in a new tab", async (label, hash) => {
 		const open = vi.spyOn(window, "open").mockReturnValue(null);
 		renderHeader();
@@ -63,7 +63,9 @@ describe("AppHeader", () => {
 		await userEvent.click(
 			await screen.findByRole("menuitem", {
 				// jsdom puts a space before the sr-only suffix; browsers do not.
-				name: new RegExp(`^${label} ?, mở trang tài khoản hoandat ở tab mới$`),
+				name: new RegExp(
+					`^${label} ?, opens your hoandat account in a new tab$`,
+				),
 			}),
 		);
 		expect(open).toHaveBeenCalledWith(
@@ -94,7 +96,7 @@ describe("AppHeader", () => {
 			"topbar-logout",
 		]);
 		await userEvent.click(
-			screen.getByRole("menuitem", { name: "Kênh thông báo" }),
+			screen.getByRole("menuitem", { name: "Notification channels" }),
 		);
 		expect(router.state.location.pathname).toBe("/account/notifications");
 	});
@@ -107,7 +109,7 @@ describe("AppHeader", () => {
 		expect(form).toHaveAttribute("action", "/auth/logout");
 		await openAccountMenu("Minh Anh");
 		await userEvent.click(
-			await screen.findByRole("menuitem", { name: "Đăng xuất" }),
+			await screen.findByRole("menuitem", { name: "Sign out" }),
 		);
 		await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
 		expect(calls.some((c) => c.method === "DELETE")).toBe(false);
@@ -126,7 +128,7 @@ describe("AppHeader", () => {
 		});
 		await openAccountMenu("Minh Anh");
 		await userEvent.click(
-			await screen.findByRole("menuitem", { name: "Đăng xuất" }),
+			await screen.findByRole("menuitem", { name: "Sign out" }),
 		);
 		await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
 		const del = calls.find((c) => c.method === "DELETE");
@@ -152,7 +154,7 @@ describe("AppHeader", () => {
 		});
 		await openAccountMenu("Minh Anh");
 		await userEvent.click(
-			await screen.findByRole("menuitem", { name: "Đăng xuất" }),
+			await screen.findByRole("menuitem", { name: "Sign out" }),
 		);
 		await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
 		expect(unsubscribe).toHaveBeenCalled();
@@ -165,13 +167,13 @@ describe("AppHeader", () => {
 		renderHeader(makeUser({ name: null }));
 		await openAccountMenu("minhanh");
 		const menu = await screen.findByRole("menu");
-		expect(menu).toHaveTextContent("Gói Free");
+		expect(menu).toHaveTextContent("Free plan");
 		expect(menu).toHaveTextContent("minhanh@example.com");
 	});
 
 	it.each([
-		["Quản trị · Quan tâm gói Pro", "/admin/pro-interest"],
-		["Quản trị · Hộp thư góp ý", "/admin/feedback"],
+		["Admin · Pro interest", "/admin/pro-interest"],
+		["Admin · Feedback inbox", "/admin/feedback"],
 	])("shows '%s' to the owner only", async (label, path) => {
 		const { router } = renderHeader(makeUser({ isOwner: true }));
 		await openAccountMenu("Minh Anh");
@@ -183,11 +185,11 @@ describe("AppHeader", () => {
 		renderHeader();
 		await openAccountMenu("Minh Anh");
 		expect(
-			await screen.findByRole("menuitem", { name: "Tài khoản và hạn mức" }),
+			await screen.findByRole("menuitem", { name: "Account and limits" }),
 		).toBeVisible();
-		expect(screen.queryByRole("menuitem", { name: /^Quản trị/ })).toBeNull();
+		expect(screen.queryByRole("menuitem", { name: /^Admin/ })).toBeNull();
 		await userEvent.click(
-			screen.getByRole("menuitem", { name: "Quản lý gói" }),
+			screen.getByRole("menuitem", { name: "Manage plan" }),
 		);
 		expect(
 			await screen.findByRole("dialog", { name: "Quản lý gói" }),

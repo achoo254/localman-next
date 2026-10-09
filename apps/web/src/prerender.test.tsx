@@ -51,6 +51,8 @@ describe("landing prerender", () => {
 		act(() => root?.unmount());
 		root = null;
 		document.body.replaceChildren();
+		window.localStorage.clear();
+		document.documentElement.lang = "en";
 		vi.unstubAllGlobals();
 		vi.restoreAllMocks();
 	});
@@ -60,7 +62,6 @@ describe("landing prerender", () => {
 		for (const id of [
 			"topbar-signup",
 			"landing-hero",
-			"landing-compare",
 			"landing-pricing",
 			"landing-relations",
 			"landing-cta",
@@ -69,7 +70,7 @@ describe("landing prerender", () => {
 			expect(html).toContain(`data-id="${id}"`);
 		}
 		expect(html).not.toContain('data-id="landing-live-sync"');
-		expect(html).not.toContain("Đang tải");
+		expect(html).not.toContain("Loading");
 	});
 
 	it("hydrates without a mismatch or console error", async () => {
@@ -89,13 +90,38 @@ describe("landing prerender", () => {
 		expect(errors).toEqual([]);
 	});
 
+	it("is written in English", async () => {
+		const html = await renderLandingHtml();
+		expect(html).toContain("REST APIs with relations and Faker");
+		expect(html).toContain("Get started free");
+		expect(html).not.toMatch(/Bắt đầu miễn phí|免费开始/);
+	});
+
+	it("hydrates in English, then switches to the saved language without a mismatch", async () => {
+		window.localStorage.setItem("localman-locale", "vi");
+		const consoleError = vi.spyOn(console, "error");
+		const { html, recoverable } = await hydrateLanding(UNAUTHENTICATED);
+		expect(html).toContain("REST APIs with relations and Faker");
+		await waitFor(() =>
+			expect(
+				screen.getByRole("heading", { level: 1, name: /có trạng thái/ }),
+			).toBeInTheDocument(),
+		);
+		expect(document.documentElement.lang).toBe("vi");
+		expect(recoverable).toEqual([]);
+		const errors = consoleError.mock.calls
+			.map((args) => args.map(String).join(" "))
+			.filter((text) => !text.includes("multiple renderers concurrently"));
+		expect(errors).toEqual([]);
+	});
+
 	it("shows an auth error from the query string once hydrated", async () => {
 		const { recoverable } = await hydrateLanding(
 			UNAUTHENTICATED,
 			"/?authError=login_expired",
 		);
 		expect(await screen.findByRole("alert")).toHaveTextContent(
-			"Phiên đăng nhập đã hết hạn",
+			"Your sign-in expired",
 		);
 		expect(recoverable).toEqual([]);
 	});

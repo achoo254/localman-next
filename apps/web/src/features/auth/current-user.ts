@@ -53,7 +53,10 @@ export async function fetchCurrentUser(): Promise<CurrentUser> {
 	return parseCurrentUser(data);
 }
 
-/** Name shown in the header: display name, then username, then email. */
-export function displayName(user: CurrentUser): string {
-	return user.name || user.username || user.email || "Tài khoản";
+/**
+ * Name shown in the header: display name, then username, then email, then
+ * `fallback` (the translated "Account").
+ */
+export function displayName(user: CurrentUser, fallback: string): string {
+	return user.name || user.username || user.email || fallback;
 }

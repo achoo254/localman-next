@@ -95,3 +95,9 @@ export {
 	TURNSTILE_ACTIONS,
 	type TurnstileAction,
 } from "./feedback-constants.js";
+export {
+	DEFAULT_LOCALE,
+	isLocale,
+	type Locale,
+	SUPPORTED_LOCALES,
+} from "./locales.js";

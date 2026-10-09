@@ -1,32 +1,36 @@
 <!doctype html>
-<html lang="vi">
+<html lang="en">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="color-scheme" content="light dark" />
 		<!-- /invite/:token pages: never send the token to other sites. -->
 		<meta name="referrer" content="strict-origin" />
-		<!-- Landing SEO. Crawlers and link previews do not run JS, so this copy is
-		     static. It follows the landing hero while the API client flag is off;
-		     switch it to the "localhost" wording in the same change that turns
-		     the flag on. The project count must match FREE_LIMITS (tested).
+		<!-- Landing SEO, in English (the default language; the landing is
+		     prerendered in English too). Crawlers and link previews do not run
+		     JS, so this copy is static: it is `landing.meta` of
+		     src/i18n/messages/en/landing.ts (checked by the landing test). It
+		     follows the landing hero while the API client flag is off; switch it
+		     to the "localhost" wording in the same change that turns the flag on.
 		     No canonical/og:url here: this file serves every SPA route, and a
 		     fixed "/" would tell crawlers that /docs pages are the landing. -->
-		<title>Localman · Mock REST API có trạng thái, quan hệ và Faker</title>
+		<title>Localman · Stateful mock REST APIs with relations and Faker</title>
 		<meta
 			name="description"
-			content="Dựng mock REST API có trạng thái trong vài phút: khai báo resource, sinh dữ liệu bằng Faker.js, lồng quan hệ và có ngay endpoint CRUD. Gói Free 3 project."
+			content="Spin up a stateful mock REST API in minutes: declare resources, generate data with Faker.js, nest relations and get CRUD endpoints right away. Free plan with 3 projects."
 		/>
 		<meta property="og:type" content="website" />
 		<meta property="og:site_name" content="Localman" />
-		<meta property="og:locale" content="vi_VN" />
+		<meta property="og:locale" content="en_US" />
+		<meta property="og:locale:alternate" content="zh_CN" />
+		<meta property="og:locale:alternate" content="vi_VN" />
 		<meta
 			property="og:title"
-			content="Localman · Mock REST API có trạng thái, quan hệ và Faker"
+			content="Localman · Stateful mock REST APIs with relations and Faker"
 		/>
 		<meta
 			property="og:description"
-			content="Dựng mock REST API có trạng thái trong vài phút: khai báo resource, sinh dữ liệu bằng Faker.js, lồng quan hệ và có ngay endpoint CRUD. Gói Free 3 project."
+			content="Spin up a stateful mock REST API in minutes: declare resources, generate data with Faker.js, nest relations and get CRUD endpoints right away. Free plan with 3 projects."
 		/>
 		<meta name="twitter:card" content="summary" />
 		<script>

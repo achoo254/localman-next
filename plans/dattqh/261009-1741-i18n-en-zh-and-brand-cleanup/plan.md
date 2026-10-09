@@ -26,6 +26,12 @@ tier: L
 | 3 | API: `locale` trên user (operation đổi ngôn ngữ), mẫu thông báo trong app/Web Push/Telegram theo `locale`, mặc định `en` | M | 1 |
 | 4 | Rà bản dịch theo `docs/ux-writing.md` (thêm mục en/zh), axe, Lighthouse landing, review, deploy | M | 2, 3 |
 
+## Tiến độ
+- [x] 1. Nền i18n web và bỏ khối So sánh, tên đối thủ (2026-10-09). Cách dùng `t()`, quy ước key và script kiểm: `docs/i18n.md`. Chuỗi tiếng Việt còn lại (117 file, 1025 chuỗi) nằm trong `scripts/check-i18n/pending-files.ts`, chia theo nhóm của bước 2; nhóm cuối (primitive UI, `lib/api-client`, trang `_primitives`) chưa có chủ.
+- [ ] 2. Chuyển chuỗi theo khu vực (a, b, c).
+- [ ] 3. API `locale` trên user và thông báo theo ngôn ngữ.
+- [ ] 4. Rà bản dịch, axe, Lighthouse, review, deploy.
+
 ## Nghiệm thu
 - Mở app lần đầu: toàn bộ giao diện tiếng Anh; đổi sang 中文/Tiếng Việt thì mọi chuỗi người dùng thấy đổi theo, tải lại vẫn giữ.
 - Không còn chuỗi tiếng Việt hard-code trong `apps/web/src` ngoài từ điển `vi` (script kiểm trong CI).

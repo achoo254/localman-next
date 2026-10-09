@@ -3,18 +3,21 @@ import { Badge } from "../../components/ui/badge";
 import { Button, buttonClassName } from "../../components/ui/button";
 import { LoginLink } from "../../features/auth/login-link";
 import { PlanCard } from "../../features/subscription/plan-card";
+import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 
 export interface PricingTableProps {
-	/** "Liên hệ" on the Pro card: opens the Pro interest form. */
+	/** "Contact" on the Pro card: opens the Pro interest form. */
 	onContactPro: () => void;
 }
 
 /**
  * Free and Pro cards rendered from `limitsFor`. Pro has no price and no
- * "chưa chốt": its only action is "Liên hệ", so interest can be counted.
+ * "not decided yet": its only action is "Contact", so interest can be
+ * counted.
  */
 export function PricingTable({ onContactPro }: PricingTableProps) {
+	const t = useT();
 	return (
 		<div className="grid max-w-220 gap-4 md:grid-cols-2">
 			<PlanCard
@@ -22,7 +25,7 @@ export function PricingTable({ onContactPro }: PricingTableProps) {
 				name="Free"
 				size="md"
 				limits={limitsFor("free")}
-				price="Miễn phí"
+				price={t("landing.pricing.freePrice")}
 				action={
 					<LoginLink
 						returnTo="/projects"
@@ -33,7 +36,7 @@ export function PricingTable({ onContactPro }: PricingTableProps) {
 							"no-underline",
 						)}
 					>
-						Bắt đầu miễn phí
+						{t("common.cta.startFree")}
 					</LoginLink>
 				}
 			/>
@@ -43,8 +46,8 @@ export function PricingTable({ onContactPro }: PricingTableProps) {
 				size="md"
 				featured
 				limits={limitsFor("pro")}
-				badge={<Badge tone="primary">Nhận đăng ký quan tâm</Badge>}
-				lead="Hạn mức lớn hơn cho các project chạy thật, nhiều thành viên hơn. Để lại nhu cầu, chúng tôi liên hệ khi gói Pro mở."
+				badge={<Badge tone="primary">{t("landing.pricing.proBadge")}</Badge>}
+				lead={t("landing.pricing.proLead")}
 				action={
 					<Button
 						variant="primary"
@@ -52,7 +55,7 @@ export function PricingTable({ onContactPro }: PricingTableProps) {
 						data-id="pricing-card-pro-cta"
 						onClick={onContactPro}
 					>
-						Liên hệ
+						{t("common.cta.contact")}
 					</Button>
 				}
 			/>

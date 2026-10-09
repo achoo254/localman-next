@@ -27,7 +27,7 @@ describe("route guards", () => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		renderRoutes(routes, "/projects/demo?tab=log");
 		expect(
-			await screen.findByText("Đang chuyển tới trang đăng nhập…"),
+			await screen.findByText("Redirecting to sign-in…"),
 		).toBeInTheDocument();
 		expect(navigateToLogin).toHaveBeenCalledWith({
 			returnTo: "/projects/demo?tab=log",
@@ -52,8 +52,8 @@ describe("route guards", () => {
 	it("shows the landing with login and sign-up links to anonymous visitors", async () => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		renderRoutes(routes, "/");
-		const login = await screen.findByRole("link", { name: "Đăng nhập" });
-		const signUps = screen.getAllByRole("link", { name: "Bắt đầu miễn phí" });
+		const login = await screen.findByRole("link", { name: "Sign in" });
+		const signUps = screen.getAllByRole("link", { name: "Get started free" });
 		// Top bar, hero, Free plan card and closing band all sign up the same way.
 		expect(login).toHaveAttribute("data-id", "topbar-login");
 		expect(signUps.map((link) => link.getAttribute("data-id"))).toEqual([
@@ -86,12 +86,12 @@ describe("route guards", () => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		const { container } = renderRoutes(routes, "/projects");
 		expect(
-			await screen.findByText(/nhiều lần mà phiên vẫn chưa được giữ lại/),
+			await screen.findByText(/sent to sign-in several times/),
 		).toBeInTheDocument();
 		expect(container.querySelector('[data-id="auth-error"]')).not.toBeNull();
 		expect(navigateToLogin).not.toHaveBeenCalled();
 
-		await userEvent.click(screen.getByRole("button", { name: "Thử lại" }));
+		await userEvent.click(screen.getByRole("button", { name: "Try again" }));
 		await waitFor(() =>
 			expect(navigateToLogin).toHaveBeenCalledWith({ returnTo: "/projects" }),
 		);
@@ -103,13 +103,13 @@ describe("route guards", () => {
 	});
 
 	it.each([
-		["access_denied", "Bạn đã huỷ đăng nhập"],
-		["login_expired", "Phiên đăng nhập đã hết hạn"],
-		["login_failed", "Đăng nhập không thành công"],
-		["idp_unavailable", "Không kết nối được tài khoản hoandat"],
+		["access_denied", "You cancelled sign-in"],
+		["login_expired", "Your sign-in expired"],
+		["login_failed", "Sign-in failed"],
+		["idp_unavailable", "Can't reach your hoandat account"],
 		[
 			"rate_limited",
-			"Bạn thử đăng nhập quá nhiều lần, vui lòng đợi một phút rồi thử lại.",
+			"You tried to sign in too many times. Please wait a minute and try again.",
 		],
 	])("explains ?authError=%s on the landing", async (code, title) => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
@@ -120,7 +120,7 @@ describe("route guards", () => {
 	it("ignores unknown authError values", async () => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		renderRoutes(routes, "/?authError=<script>");
-		await screen.findByRole("link", { name: "Đăng nhập" });
+		await screen.findByRole("link", { name: "Sign in" });
 		expect(screen.queryByRole("alert")).toBeNull();
 	});
 
@@ -133,7 +133,7 @@ describe("route guards", () => {
 		});
 		renderRoutes(routes, "/projects");
 		expect(await screen.findByText("Lỗi máy chủ.")).toBeInTheDocument();
-		await userEvent.click(screen.getByRole("button", { name: "Thử lại" }));
+		await userEvent.click(screen.getByRole("button", { name: "Try again" }));
 		await waitFor(() => expect(calls).toHaveLength(2));
 		expect(navigateToLogin).not.toHaveBeenCalled();
 	});
@@ -143,7 +143,7 @@ describe("route guards", () => {
 		async (path) => {
 			mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 			renderRoutes(routes, path);
-			await screen.findByText("Đang chuyển tới trang đăng nhập…");
+			await screen.findByText("Redirecting to sign-in…");
 			expect(navigateToLogin).toHaveBeenCalledWith({ returnTo: path });
 		},
 	);
@@ -157,7 +157,7 @@ describe("route guards", () => {
 		});
 		renderRoutes(routes, "/");
 		await userEvent.click(
-			await screen.findByRole("button", { name: "Liên hệ" }),
+			await screen.findByRole("button", { name: "Contact" }),
 		);
 		await expectProInterestSource("landing");
 		expect(navigateToLogin).not.toHaveBeenCalled();

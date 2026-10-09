@@ -6,19 +6,20 @@ import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NO_FEATURES } from "../../config/features";
 import { DEMO_USERS, DEMO_USER_SCHEMA } from "../../content/landing-samples";
+import { en } from "../../i18n/messages/en/dictionary";
+import { createTranslator } from "../../i18n/translate";
 import { seriousViolations } from "../../test/axe";
 import {
 	UNRELEASED_WORDS,
 	unreleasedMentions,
 } from "../../test/unreleased-copy";
-import { LANDING_TITLES, LandingPage } from "./landing-page";
+import { LandingPage } from "./landing-page";
 import { ALL_FEATURES, renderWithFeatures } from "./landing-test-helpers";
 
 /** Top-level landing blocks of the spec, in the order they appear. */
 const BLOCKS = new Set([
 	"landing-hero",
 	"landing-live-sync",
-	"landing-compare",
 	"landing-pricing",
 	"landing-modeling",
 	"landing-relations",
@@ -44,11 +45,10 @@ describe("LandingPage", () => {
 		expect(container.querySelector('[data-id="landing-live-sync"]')).toBeNull();
 	});
 
-	it("follows the phase order with one h1 and points 'Xem cách hoạt động' at the relations demo", () => {
+	it("follows the phase order with one h1 and points 'See how it works' at the relations demo", () => {
 		const { container } = renderWithFeatures(<LandingPage />);
 		expect(sectionOrder(container)).toEqual([
 			"landing-hero",
-			"landing-compare",
 			"landing-pricing",
 			"landing-modeling",
 			"landing-relations",
@@ -57,10 +57,13 @@ describe("LandingPage", () => {
 		]);
 		expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
 		expect(
-			screen.getByRole("heading", { level: 1, name: /REST API có trạng thái/ }),
-		).toHaveTextContent(`gói Free ${FREE_LIMITS.projects} project`);
+			screen.getByRole("heading", {
+				level: 1,
+				name: /Stateful mock REST APIs/,
+			}),
+		).toHaveTextContent(`${FREE_LIMITS.projects} projects on the Free plan`);
 		expect(
-			screen.getByRole("link", { name: "Xem cách hoạt động" }),
+			screen.getByRole("link", { name: "See how it works" }),
 		).toHaveAttribute("href", "#relations");
 	});
 
@@ -68,24 +71,34 @@ describe("LandingPage", () => {
 		const { container } = renderWithFeatures(<LandingPage />, ALL_FEATURES);
 		expect(
 			await screen.findByRole("heading", {
-				name: "Đổi mock, collection tự cập nhật",
+				name: "Change the mock, the collection follows",
 			}),
 		).toBeInTheDocument();
-		expect(container).toHaveTextContent("Localhost ngay trên trình duyệt");
+		expect(container).toHaveTextContent("Localhost right in your browser");
 		expect(
-			screen.getByRole("link", { name: "Xem cách hoạt động" }),
+			screen.getByRole("link", { name: "See how it works" }),
 		).toHaveAttribute("href", "#live-sync");
 		expect(
 			container.querySelector('[data-id="landing-hero-preview-tunnel"]'),
-		).toHaveTextContent("qua Tunelo");
+		).toHaveTextContent("via Tunelo");
 	});
 
 	it("names the tab after the hero message of the current flags", () => {
 		const off = renderWithFeatures(<LandingPage />);
-		expect(document.title).toBe(LANDING_TITLES.mock);
+		expect(document.title).toBe(en.landing.meta.titleMock);
 		off.unmount();
 		renderWithFeatures(<LandingPage />, ALL_FEATURES);
-		expect(document.title).toBe(LANDING_TITLES.localhost);
+		expect(document.title).toBe(en.landing.meta.titleLocalhost);
+	});
+
+	it("names no competitor, whatever the flags", async () => {
+		for (const flags of [NO_FEATURES, ALL_FEATURES]) {
+			const { container, unmount } = renderWithFeatures(<LandingPage />, flags);
+			await screen.findByRole("heading", { level: 1 });
+			expect(container.textContent).not.toMatch(/mockapi|postman/i);
+			expect(container.querySelector('[data-id="landing-compare"]')).toBeNull();
+			unmount();
+		}
 	});
 
 	it("has no serious axe violations", async () => {
@@ -105,14 +118,20 @@ describe("index.html SEO", () => {
 	const here = dirname(fileURLToPath(import.meta.url));
 	const html = readFileSync(resolve(here, "../../../index.html"), "utf8");
 
-	it("describes the Free plan with the project count from plan-limits", () => {
-		const description = /<meta\s+name="description"\s+content="([^"]+)"/.exec(
-			html,
-		)?.[1];
-		expect(description).toContain(`${FREE_LIMITS.projects} project`);
-		expect(html).toMatch(/property="og:description"\s+content="[^"]+"/);
-		expect(html).toContain(`<title>${LANDING_TITLES.mock}</title>`);
-		expect(html).toContain(`content="${LANDING_TITLES.mock}"`);
+	it("carries the English landing copy with the project count from plan-limits", () => {
+		const { t } = createTranslator("en", en);
+		const description = t("landing.meta.description", {
+			projects: FREE_LIMITS.projects,
+		});
+		const title = en.landing.meta.titleMock;
+		const flat = html.replace(/\s+/g, " ");
+		expect(flat).toContain('<html lang="en">');
+		expect(flat).toContain(`<title>${title}</title>`);
+		expect(flat).toContain(`name="description" content="${description}"`);
+		expect(flat).toContain(
+			`property="og:description" content="${description}"`,
+		);
+		expect(flat).toContain(`property="og:title" content="${title}"`);
 	});
 
 	it("keeps the strict referrer policy and advertises no unreleased feature", () => {

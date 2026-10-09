@@ -1,9 +1,11 @@
 import * as RadixMenu from "@radix-ui/react-dropdown-menu";
+import { IconCheck } from "@tabler/icons-react";
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "../../lib/cn";
 
 export const DropdownMenu = RadixMenu.Root;
 export const DropdownMenuTrigger = RadixMenu.Trigger;
+export const DropdownMenuRadioGroup = RadixMenu.RadioGroup;
 
 export interface DropdownMenuContentProps
 	extends ComponentProps<typeof RadixMenu.Content> {}
@@ -31,6 +33,11 @@ export function DropdownMenuContent({
 	);
 }
 
+const ITEM_CLASS = cn(
+	"flex min-h-10 w-full cursor-pointer select-none items-center gap-2 rounded-sm px-3 font-mono text-[0.8125rem] outline-none",
+	"data-disabled:cursor-not-allowed data-highlighted:bg-fg/6 data-disabled:opacity-45",
+);
+
 export interface DropdownMenuItemProps
 	extends ComponentProps<typeof RadixMenu.Item> {
 	/** Tabler icon element shown before the label. */
@@ -49,8 +56,7 @@ export function DropdownMenuItem({
 	return (
 		<RadixMenu.Item
 			className={cn(
-				"flex min-h-10 w-full cursor-pointer select-none items-center gap-2 rounded-sm px-3 font-mono text-[0.8125rem] outline-none",
-				"data-disabled:cursor-not-allowed data-highlighted:bg-fg/6 data-disabled:opacity-45",
+				ITEM_CLASS,
 				danger ? "text-error" : "text-fg [&_svg]:text-icon-muted",
 				className,
 			)}
@@ -59,6 +65,30 @@ export function DropdownMenuItem({
 			{icon}
 			{children}
 		</RadixMenu.Item>
+	);
+}
+
+/**
+ * One choice of a `DropdownMenuRadioGroup` (`role="menuitemradio"` with
+ * `aria-checked`); the chosen item shows a check mark.
+ */
+export function DropdownMenuRadioItem({
+	className,
+	children,
+	...rest
+}: ComponentProps<typeof RadixMenu.RadioItem>) {
+	return (
+		<RadixMenu.RadioItem
+			className={cn(ITEM_CLASS, "text-fg [&_svg]:text-primary", className)}
+			{...rest}
+		>
+			<span className="inline-flex size-4 shrink-0" aria-hidden="true">
+				<RadixMenu.ItemIndicator>
+					<IconCheck size={16} />
+				</RadixMenu.ItemIndicator>
+			</span>
+			{children}
+		</RadixMenu.RadioItem>
 	);
 }
 

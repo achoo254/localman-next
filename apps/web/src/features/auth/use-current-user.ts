@@ -58,6 +58,15 @@ function subscribe(listener: () => void): () => void {
 
 const getSnapshot = (): CurrentUserState => state;
 
+/**
+ * The session as known right now, without subscribing or asking the
+ * server: for event handlers of components that must not start the
+ * session probe themselves (the footer's language switcher).
+ */
+export function peekCurrentUser(): CurrentUserState {
+	return state;
+}
+
 /** The prerendered page and its hydration never know the session. */
 const LOADING: CurrentUserState = { status: "loading" };
 const getServerSnapshot = (): CurrentUserState => LOADING;

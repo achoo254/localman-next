@@ -1,6 +1,6 @@
-# Văn phong copy tiếng Việt của Localman
+# Văn phong copy của Localman
 
-Checklist cho mọi chữ người dùng thấy: landing, nút, lỗi, toast, modal, `aria-label`. Rút từ copy hiện có trong `apps/web` và `prototype/index.html`. Rà theo thứ tự dưới đây trước khi merge.
+Checklist cho mọi chữ người dùng thấy: landing, nút, lỗi, toast, modal, `aria-label`. Giao diện có ba ngôn ngữ (`docs/i18n.md`): English là nguồn và mặc định, rồi 中文 giản thể và Tiếng Việt. Mục 1–7 là quy tắc chung, viết với ví dụ tiếng Việt rút từ copy hiện có; mục 8 và 9 là phần riêng cho English và 中文. Rà theo thứ tự trước khi merge.
 
 ## 1. Rõ và ngắn
 
@@ -21,8 +21,8 @@ Checklist cho mọi chữ người dùng thấy: landing, nút, lỗi, toast, mo
 
 ## 3. Không hứa tính năng chưa có
 
-- [ ] Chỉ mô tả cái đã chạy trên production. Mục gắn cờ trong `apps/web/src/config/features.ts` phải ẩn khi cờ tắt, kể cả mục trong thẻ giá, hàng so sánh, meter và ghi chú ("REST và MCP đều tính" chỉ đúng khi Mock MCP đã bật).
-- [ ] "Sắp có" chỉ là badge trong khối "Và nhiều hơn". Không đặt "Sắp có" vào bảng so sánh hay thẻ giá, và không hứa thời điểm ra mắt.
+- [ ] Chỉ mô tả cái đã chạy trên production. Mục gắn cờ trong `apps/web/src/config/features.ts` phải ẩn khi cờ tắt, kể cả mục trong thẻ giá, meter và ghi chú ("REST và MCP đều tính" chỉ đúng khi Mock MCP đã bật).
+- [ ] "Sắp có" chỉ là badge trong khối "Và nhiều hơn". Không đặt "Sắp có" vào thẻ giá, và không hứa thời điểm ra mắt.
 - [ ] Không cam kết số đo chưa đo được ("chỉ mất một phút", "41 ms"); dùng "vài phút" hoặc bỏ đi.
 - [ ] Hộp thoại và trang xác nhận chỉ hứa điều hệ thống thật sự làm. Chưa có chức năng trả lời qua chuông thì không viết "phản hồi sẽ hiện trong chuông".
 - [ ] Gói Pro không ghi giá và không ghi "chưa chốt"; CTA là "Liên hệ".
@@ -30,9 +30,8 @@ Checklist cho mọi chữ người dùng thấy: landing, nút, lỗi, toast, mo
 ## 4. Số liệu
 
 - [ ] Hạn mức đọc từ `limitsFor()` trong `@localman/shared`, không gõ tay. `null` viết thành "Không giới hạn … mỗi tháng"; nếu có rate-limit theo giây thì nói rõ ở ghi chú.
-- [ ] Số định dạng vi-VN ("10.000"), ngày `dd/mm/yyyy` qua `formatDate`, chu kỳ viết "mỗi tháng".
-- [ ] Số của đối thủ chỉ lấy từ nguồn công khai, nằm trong `apps/web/src/content/competitor-facts.ts`, kèm "Cập nhật dd/mm/yyyy" và link nguồn. Chỉ ghi tên, không dùng logo, không dùng tính từ chê bai.
-- [ ] Đối thủ có điểm mạnh thì ghi đúng (ví dụ Postman có code mock giữ trạng thái), không cắt cho lợi mình.
+- [ ] Số và ngày định dạng qua `formatNumber` / `formatDate` của `useI18n()` (theo ngôn ngữ đang chọn): vi là "10.000" và `dd/mm/yyyy`, en "10,000" và "Oct 9, 2026", zh-CN "10,000" và "2026年10月9日". Số trong `t()` tự định dạng. Chu kỳ viết "mỗi tháng" / "per month" / "每月".
+- [ ] Không nêu tên sản phẩm khác (đối thủ) ở bất kỳ chữ nào người dùng thấy, kể cả title và meta của `index.html`; `pnpm check:i18n` chặn các tên đã biết.
 
 ## 5. CTA và nút
 
@@ -52,6 +51,30 @@ Checklist cho mọi chữ người dùng thấy: landing, nút, lỗi, toast, mo
 
 ## 7. A11y trong chữ
 
-- [ ] `aria-label` viết tiếng Việt, gồm hành động và đối tượng: "Chọn users để di chuyển", "Tài khoản {tên}".
+- [ ] `aria-label` lấy từ `t()` như mọi chữ khác (theo ngôn ngữ đang chọn), gồm hành động và đối tượng: "Chọn users để di chuyển", "Tài khoản {tên}".
 - [ ] Link lặp chữ ("Xem ví dụ") phải có phần sr-only để tên không trùng nhau.
 - [ ] Dấu tiếng Việt hiển thị đủ với Inter và JetBrains Mono (subset vietnamese).
+
+## 8. English (nguồn, mặc định)
+
+- [ ] Giọng dev tool: thẳng, ngắn, chủ động, nói với "you". "Declare resources, generate fake data in one click and get full CRUD endpoints right away."
+- [ ] Sentence case cho tiêu đề, nút, menu: "Get started free", "Manage plan". Không viết hoa từng chữ.
+- [ ] Viết rút gọn tự nhiên khi thân mật (can't, isn't, we'll) trong lỗi và hướng dẫn; tiêu đề và nút không cần.
+- [ ] Số nhiều đúng ngữ pháp qua plural (`{ one, other }`): "1 endpoint", "25 endpoints", "3 projects". Không viết "project(s)".
+- [ ] Thuật ngữ như mục 2, viết thường trong câu (a mock, the resource, an endpoint), số nhiều thêm "s" bình thường.
+- [ ] CTA giữ chung nghĩa với bản Việt: đăng ký luôn là "Get started free" (header hẹp: "Get started"), "See how it works", "Contact", "Sign in", "Sign out", "Try again", "Reset".
+- [ ] Trạng thái đang chạy kết thúc bằng "…" ("Loading page…"); toast thành công ở thì quá khứ ("Nested comments into posts.").
+- [ ] Lỗi: chuyện gì xảy ra + làm gì tiếp, không xin lỗi dài dòng: "You tried to sign in too many times. Please wait a minute and try again."
+- [ ] `aria-label` gồm hành động và đối tượng: "Account {name}", "Language: English".
+
+## 9. 中文（简体）
+
+- [ ] 简体中文，称呼用户为“你”（不用“您”），语气简洁、专业。
+- [ ] 中文与英文、数字之间加一个半角空格：“3 个 project”“Free 套餐”“{count} 个 endpoint”。
+- [ ] 标点用全角（，。：；？！“”），但代码、路径、命令、占位符保持原样（`<code>`、`{name}`、`?page=1`）。
+- [ ] 第 2 节的术语保持英文：mock、resource、endpoint、project、schema、field、request、response、collection、environment、token、secret、CRUD、MCP、Faker.js；套餐名 Free / Pro 不翻译。
+- [ ] 数量用量词：“3 个 project”“10 条记录”“每个 resource 5 个工具”；中文没有复数，plural 只需 `{ other }`。
+- [ ] 按钮用动词短语，2–6 个字：“免费开始”“联系我们”“重试”“重置”“退出登录”。
+- [ ] 进行中状态以“…”结尾（“正在加载页面…”），成功提示用“已…”（“已将 comments 嵌套到 posts。”）。
+- [ ] 错误说明发生了什么、下一步怎么做：“你尝试登录的次数过多，请等待一分钟后重试。”
+

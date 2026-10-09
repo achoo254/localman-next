@@ -5,6 +5,8 @@ import { cardClassName } from "../../components/ui/card";
 import { useToast } from "../../components/ui/toast";
 import { ResourceTreeCanvas } from "../../features/resource-tree/resource-tree-canvas";
 import type { TreeItem } from "../../features/resource-tree/tree-layout";
+import { useT } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
 import { cn } from "../../lib/cn";
 import { GeneratedEndpointsList } from "./generated-endpoints-list";
 import { LandingSection } from "./landing-section";
@@ -29,12 +31,13 @@ function moveItem(
 }
 
 /**
- * "Quan hệ giữa resources": the tree canvas in demo mode next to the
+ * "Relations between resources": the tree canvas in demo mode next to the
  * endpoints it generates. State lives in this component only; nothing is
  * sent to the API.
  */
 export function RelationsDemo() {
 	const toast = useToast();
+	const t = useT();
 	const [items, setItems] = useState<readonly TreeItem[]>(RELATIONS_SEED);
 	const groups = useMemo(() => endpointGroups(items), [items]);
 	const count = endpointCount(groups);
@@ -43,15 +46,9 @@ export function RelationsDemo() {
 		<LandingSection
 			id="relations"
 			data-id="landing-relations"
-			eyebrow="Quan hệ"
-			title="Quan hệ giữa các resource"
-			lead={
-				<>
-					Lồng resource vào nhau để có endpoint dạng{" "}
-					<code>/users/:userId/posts</code>. Thử lồng <b>comments</b> vào{" "}
-					<b>posts</b> bên dưới.
-				</>
-			}
+			eyebrow={t("landing.relations.eyebrow")}
+			title={t("landing.relations.title")}
+			lead={renderRich(t("landing.relations.lead"))}
 		>
 			<div className="grid gap-4 lg:grid-cols-8">
 				<section
@@ -64,7 +61,7 @@ export function RelationsDemo() {
 							id="landing-relations-tree-title"
 							className="m-0 font-bold font-mono text-sm"
 						>
-							Cây resource
+							{t("landing.relations.tree")}
 						</h3>
 						<Button
 							variant="ghost"
@@ -72,7 +69,7 @@ export function RelationsDemo() {
 							data-id="landing-relations-reset"
 							onClick={() => setItems(RELATIONS_SEED)}
 						>
-							Đặt lại
+							{t("common.cta.reset")}
 						</Button>
 					</div>
 					<ResourceTreeCanvas
@@ -82,8 +79,11 @@ export function RelationsDemo() {
 							setItems((current) => moveItem(current, moving, target));
 							toast.show({
 								title: target
-									? `Đã lồng ${moving.name} vào ${target.name}.`
-									: `Đã đưa ${moving.name} về root.`,
+									? t("landing.relations.nested", {
+											child: moving.name,
+											parent: target.name,
+										})
+									: t("landing.relations.movedToRoot", { child: moving.name }),
 							});
 						}}
 					/>
@@ -101,16 +101,16 @@ export function RelationsDemo() {
 							id="landing-relations-endpoints-title"
 							className="m-0 font-bold font-mono text-sm"
 						>
-							Endpoint được sinh
+							{t("landing.relations.endpoints")}
 						</h3>
 						<span aria-live="polite">
 							<Badge tone="primary" data-id="landing-relations-count">
-								{count} endpoint
+								{t("landing.relations.endpointCount", { count })}
 							</Badge>
 						</span>
 					</div>
 					<section
-						aria-label="Danh sách endpoint, cuộn dọc"
+						aria-label={t("landing.relations.listLabel")}
 						// biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be reachable by keyboard (WCAG 2.1.1).
 						tabIndex={0}
 						className="min-h-0 flex-1 overflow-y-auto px-6 py-4"

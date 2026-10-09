@@ -3,6 +3,7 @@ import { UserAvatar } from "../../components/layout/user-avatar";
 import { Alert } from "../../components/ui/alert";
 import { Button, buttonClassName } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
+import { useT } from "../../i18n/i18n-context";
 import { formatDate } from "../../lib/format";
 import { ProjectAvatar } from "../../pages/projects/project-avatar";
 import { type CurrentUser, displayName } from "../auth/current-user";
@@ -57,6 +58,7 @@ export function InvitePreviewCard({
 	const inviterName = inviter.name
 		? `${inviter.name} (@${inviter.username})`
 		: `@${inviter.username}`;
+	const t = useT();
 	const ineligible =
 		reason === "NOT_INVITEE" || reason === "EMAIL_NOT_VERIFIED";
 	return (
@@ -85,7 +87,8 @@ export function InvitePreviewCard({
 			>
 				<UserAvatar user={user} />
 				<span className="min-w-0 break-words">
-					Bạn đang đăng nhập bằng <b>{user.email ?? displayName(user)}</b>
+					Bạn đang đăng nhập bằng{" "}
+					<b>{user.email ?? displayName(user, t("auth.accountFallback"))}</b>
 				</span>
 			</div>
 			{reason === "ALREADY_MEMBER" ? (

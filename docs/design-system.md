@@ -44,6 +44,7 @@ Localman dùng design system riêng, không lấy từ bên thứ ba. Prototype 
 - Modal bo 16px, 4 size `sm`/`md`/`lg`/`xl`, fade và trượt từ -20px trong 200ms easing decelerate, footer dính đáy 2 cột.
 - Badge chữ mono uppercase. Icon Tabler, nét 1.5 áp chung bằng CSS.
 - Modal, dropdown, tooltip, toast và tabs dựng trên Radix primitives để có a11y; select dùng `<select>` native.
+- `DropdownMenuRadioGroup` / `DropdownMenuRadioItem` (trong `dropdown-menu`) cho menu chọn một trong vài giá trị: `role="menuitemradio"` với `aria-checked`, mục đang chọn có dấu check màu primary. Dùng cho `LanguageSwitcher` (`src/i18n/language-switcher.tsx`, menu ngôn ngữ ở hai header và footer; xem `docs/i18n.md`).
 - `DropdownMenuLabel` (trong `dropdown-menu`) là tiêu đề hoặc ghi chú không bấm được bên trong menu, ví dụ tên tài khoản hay "Chưa có thông báo nào". Không dùng `<p>` thường trong menu vì `role="menu"` chỉ nên chứa menuitem, label và separator.
 - `ExternalLink` mở trang của site khác (IdP, `t.me`) qua `openExternal` trong `src/platform/navigation.ts`: trên web là tab mới với `noopener,noreferrer`; click có phím bổ trợ giữ hành vi mặc định của trình duyệt. Muốn trông như nút thì truyền `className={buttonClassName(…)}`.
 - Thẻ: `cardClassName` / `Card` (`card.tsx`) là bề mặt chung, bo 24px (`rounded-xl`), viền `--c-border`, nền `--c-surface`, `shadow-sm`. Dùng class trên phần tử ngữ nghĩa (`li`, `article`, `section`); padding thẻ là `p-6`. `EmptyState` (`empty-state.tsx`) là thẻ rỗng có ô icon, tiêu đề, mô tả và một hành động.

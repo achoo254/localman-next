@@ -40,7 +40,7 @@ describe("PrimitivesPage", () => {
 			expect(container.querySelector(`[data-id="${id}"]`)).not.toBeNull();
 		}
 		expect(
-			screen.getByRole("link", { name: "Localman, về trang chủ" }),
+			screen.getByRole("link", { name: "Localman, home" }),
 		).toHaveTextContent("Localman");
 	});
 
@@ -50,11 +50,11 @@ describe("PrimitivesPage", () => {
 		const toggle = container.querySelector('[data-id="topbar-theme"]');
 		if (!(toggle instanceof HTMLElement)) throw new Error("no topbar-theme");
 		await userEvent.click(
-			within(toggle).getByRole("button", { name: "Giao diện tối" }),
+			within(toggle).getByRole("button", { name: "Dark theme" }),
 		);
 		expect(document.documentElement.dataset.theme).toBe("dark");
 		await userEvent.click(
-			within(toggle).getByRole("button", { name: "Theo hệ thống" }),
+			within(toggle).getByRole("button", { name: "Match system" }),
 		);
 		expect(document.documentElement.dataset.theme).toBeUndefined();
 	});

@@ -33,7 +33,7 @@ export async function openForm(routes: Record<string, MockRoute>, path = "/") {
 	renderRoutes([{ path: "*", element: <AppFooter /> }], path);
 	expect(api.calls).toHaveLength(0);
 	await userEvent.click(
-		screen.getByRole("button", { name: "Góp ý / Liên hệ" }),
+		screen.getByRole("button", { name: "Feedback / Contact" }),
 	);
 	const dialog = await screen.findByRole("dialog", { name: "Góp ý / Liên hệ" });
 	await within(dialog).findByLabelText(/^Nội dung/);

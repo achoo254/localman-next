@@ -27,17 +27,36 @@ export async function nestUnder(
 	await nodeOf(page, parent).locator('[data-id$="-nest"]').click();
 }
 
-/** Generates data for every resource ("Sinh tất cả"), confirming if asked. */
+/**
+ * Generates data for every resource, confirming if asked, and waits for
+ * the real (not dry-run) `generate_all` answer. Selectors are `data-id`
+ * and the API response, so the flow works in every interface language.
+ */
 export async function generateAll(page: Page): Promise<void> {
+	const generated = page.waitForResponse(
+		(response) =>
+			response.request().method() === "POST" &&
+			/\/generate_all$/.test(new URL(response.url()).pathname) &&
+			!new URL(response.url()).searchParams.has("dryRun"),
+	);
 	await page.getByTestId("project-detail-generate-all").click();
 	const confirm = page.getByTestId("modal-generate-all");
-	await expect(
-		confirm.or(page.getByText("Đã sinh dữ liệu")).first(),
-	).toBeVisible();
-	if (await confirm.isVisible()) {
-		await confirm.getByRole("button", { name: "Sinh dữ liệu" }).click();
+	const answer = await Promise.race([
+		generated,
+		// Never shown when no resource has data yet: the race then ends with
+		// the answer, and this wait's eventual timeout must not surface.
+		confirm
+			.waitFor({ state: "visible" })
+			.then(
+				() => null,
+				() => undefined,
+			),
+	]);
+	if (answer === null || answer === undefined) {
+		await page.getByTestId("modal-generate-all-confirm").click();
 	}
-	await expect(page.getByText("Đã sinh dữ liệu").first()).toBeVisible();
+	expect((answer ?? (await generated)).ok()).toBe(true);
+	await expect(confirm).toBeHidden();
 }
 
 /** Mock URL of a resource's collection, as the name link of its card shows it. */

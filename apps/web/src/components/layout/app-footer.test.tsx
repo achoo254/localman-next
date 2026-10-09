@@ -26,7 +26,7 @@ const CASES: [string, Record<string, MockRoute>, () => Promise<unknown>][] = [
 	[
 		"/",
 		{ "GET /api/v1/users/me": UNAUTHENTICATED },
-		() => screen.findAllByRole("link", { name: "Bắt đầu miễn phí" }),
+		() => screen.findAllByRole("link", { name: "Get started free" }),
 	],
 	[
 		"/docs/quick-start",
@@ -66,7 +66,7 @@ describe("AppFooter placement", () => {
 			const [footer] = footers;
 			if (!(footer instanceof HTMLElement)) throw new Error("no footer");
 			expect(
-				within(footer).getByRole("button", { name: "Góp ý / Liên hệ" }),
+				within(footer).getByRole("button", { name: "Feedback / Contact" }),
 			).toBeVisible();
 		},
 	);

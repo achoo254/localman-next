@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { cardClassName } from "../../components/ui/card";
+import { useT } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
 import { cn } from "../../lib/cn";
 import { LandingSection } from "./landing-section";
 
@@ -33,6 +35,7 @@ const CARD_TITLE = "m-0 font-bold font-mono text-sm";
  */
 export function LiveMockSyncSection() {
 	const [renamed, setRenamed] = useState(false);
+	const t = useT();
 	const names = renamed ? AFTER : BEFORE;
 	const requests = requestsOf(names);
 	return (
@@ -40,8 +43,8 @@ export function LiveMockSyncSection() {
 			id="live-sync"
 			data-id="landing-live-sync"
 			eyebrow="Live Mock Sync"
-			title="Đổi mock, collection tự cập nhật"
-			lead="Mock có trạng thái tự sinh một collection kèm environment chạy được ngay, và giữ chúng đồng bộ. Đổi tên resource thì path của request đổi theo; header hay body bạn đã sửa vẫn được giữ."
+			title={t("landing.liveSync.title")}
+			lead={t("landing.liveSync.lead")}
 		>
 			<div className="flex flex-wrap items-center gap-3">
 				<Button
@@ -49,18 +52,20 @@ export function LiveMockSyncSection() {
 					data-id="landing-live-sync-play"
 					onClick={() => setRenamed(true)}
 				>
-					Đổi tên users → members
+					{t("landing.liveSync.play")}
 				</Button>
 				<Button
 					variant="ghost"
 					data-id="landing-live-sync-reset"
 					onClick={() => setRenamed(false)}
 				>
-					Đặt lại
+					{t("common.cta.reset")}
 				</Button>
 				<span aria-live="polite">
 					<Badge tone={renamed ? "primary" : "success"}>
-						{renamed ? "5 request đã cập nhật" : "Đã đồng bộ"}
+						{renamed
+							? t("landing.liveSync.updated", { count: requests.length })
+							: t("landing.liveSync.synced")}
 					</Badge>
 				</span>
 			</div>
@@ -73,7 +78,8 @@ export function LiveMockSyncSection() {
 					<h3 className={CARD_TITLE}>Mock · resource</h3>
 					<code className="font-semibold text-primary">/{names.plural}</code>
 					<p className="m-0 text-muted text-sm">
-						Field: <code>id</code>, <code>name</code>, <code>email</code>
+						{t("landing.liveSync.fields")} <code>id</code>, <code>name</code>,{" "}
+						<code>email</code>
 					</p>
 				</section>
 				<section
@@ -81,7 +87,9 @@ export function LiveMockSyncSection() {
 					aria-label="Collection"
 					className={CARD}
 				>
-					<h3 className={CARD_TITLE}>Collection · {requests.length} request</h3>
+					<h3 className={CARD_TITLE}>
+						{t("landing.liveSync.collection", { count: requests.length })}
+					</h3>
 					<ul className="m-0 grid list-none gap-2 p-0 text-sm">
 						{requests.map((request) => (
 							<li key={request.method + request.path} className="flex gap-2">
@@ -98,8 +106,9 @@ export function LiveMockSyncSection() {
 						))}
 					</ul>
 					<p className="m-0 text-[0.8125rem] text-muted">
-						Header <code>X-Debug</code> bạn đã thêm vào “List {names.plural}”
-						được giữ nguyên.
+						{renderRich(
+							t("landing.liveSync.headerKept", { name: names.plural }),
+						)}
 					</p>
 				</section>
 			</div>
