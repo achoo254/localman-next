@@ -112,6 +112,6 @@ Làm keyword thứ ba **"Mock MCP tức thì"** (Jev 0.67) cùng phần mock c�
 - [x] Verification: unit `mock-tool-factory` và parse TypeScript/OpenAPI (input xấu bị từ chối) pass
 - [x] Verification: integration `list_users`, `create_posts` với `parentId`, 401 khi bật token, `MONTHLY_QUOTA_EXCEEDED` pass
 - [x] Verification: E2E OAuth (discovery, consent, token, `create_project`, thu hồi) pass
-- [ ] Verification: kiểm thủ công agent tạo mock users 20 bản ghi, thấy trên UI
+- [ ] Verification: kiểm thủ công agent tạo mock users 20 bản ghi, thấy trên UI (2026-10-09: IdP đã nhận DCR của Claude Code sau commit `52e8c13` của `hoandat-auth`; user đang chạy Claude Code trên máy remote nên trình duyệt không mở được callback `localhost`. Làm tiếp từ máy chạy Claude Code, hoặc chuyển tiếp cổng callback bằng `ssh -L`)
 - [x] `pnpm lint && pnpm typecheck && pnpm test` sạch
 - [x] `pnpm check:mcp-coverage` pass và in được bảng theo toolset
