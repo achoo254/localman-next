@@ -73,9 +73,9 @@ Repo riêng: `achoo254/hoandat-auth` (private; tạo bằng `gh repo create` khi
 - [x] T5 Rate-limit và trust proxy theo Cloudflare đã bật
 - [x] T6 ADR `0001-own-oidc-idp.md` đã viết
 - [x] T7 Test 4 luồng pass
-- [ ] T8 Image build được, healthcheck xanh khi chạy compose local (Dockerfile và compose đã viết; máy dev không có Docker nên chưa build)
-- [ ] T9 `auth.hoandat.com` phân giải qua Cloudflare và có TLS hợp lệ
-- [ ] T10 Staging và production chạy, key ký nằm ngoài repo
+- [x] T8 Đóng gói: trên .65 chạy bằng pm2 theo quy ước của server thay cho Docker Compose (Jev 1.00, xem Validation Log); healthcheck `/healthz` xanh. Dockerfile và compose vẫn giữ cho môi trường khác, chưa build vì máy dev không có Docker
+- [x] T9 `auth.hoandat.com` phân giải qua Cloudflare và có TLS hợp lệ
+- [x] T10 Production chạy trên .65 (user chỉ định .65 cho cả app và DB; không có môi trường staging riêng), key ký sinh trên server và nằm ngoài repo
 - [ ] T11 Conformance Basic OP và Config OP pass trên staging
 - [x] T12 Review không còn finding mức high
 - [ ] Verification: Code + PKCE, device flow, refresh xoay vòng và từ chối `aud` sai đều pass bằng `openid-client`; conformance suite pass trên staging

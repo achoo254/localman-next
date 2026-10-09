@@ -62,7 +62,7 @@ Nối 4 client vào IdP và mô tả rõ phần việc mỗi repo phải làm. C
 - [x] T3 `scripts/seed-clients.ts` chạy hai lần liên tiếp không sinh thay đổi
 - [x] T4 `docs/integration-guide.md` đủ mục cho Localman, Tunelo và client MCP
 - [x] T5 Test token exchange và bộ test cũ pass
-- [ ] T6 Staging và production đã seed client sau khi user xác nhận
+- [x] T6 Production đã chạy `dist/seed-clients.mjs` (chỉ đọc, client tĩnh nằm trong code): 4 client hợp lệ, 0 client DCR, discovery khớp
 - [ ] T7 E2E 3 dịch vụ pass (theo dõi mở cho tới khi Localman phase 02 và Tunelo phase 02 lên staging)
 - [x] T8 Review không còn finding mức high
 - [ ] Verification: token exchange bị từ chối đúng 2 trường hợp; E2E đăng nhập một lần, tự nhận tunnel và back-channel logout pass trên staging

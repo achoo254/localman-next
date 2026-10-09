@@ -87,5 +87,12 @@ Lúc chuyển: Localman chưa có user thật nên đổi thẳng. Tunelo giữ 
 - Audit có thêm `grant.created` khi duyệt thiết bị Tunelo và khi consent client MCP bên thứ ba (0.96).
 - Review bảo mật 4 vòng; quy tắc cuối: mọi token một lần gắn tài khoản mang `securityVersion` và kênh cấp, ghi có điều kiện theo version (ADR 0002 mục 10 trong repo `hoandat-auth`).
 
+### Vòng 2: hạ tầng đợt 0 (2026-10-09)
+- User chỉ định server `.65` cho cả IdP và DB. Jev chọn chạy theo quy ước sẵn có của server (1.00): pm2 ở `/var/www/hoandat-auth`, nginx một file cho mỗi hostname, mongod native dùng chung với database `auth` và user `auth` chỉ có `readWrite`. Không dựng replica set Docker mới; chuyển mongod sang replica set để ở phase Localman đầu tiên cần transaction.
+- Mật khẩu user `root` cũ của Mongo không còn lưu ở đâu. Theo yêu cầu của user, tạo admin mới `hoandat_admin` (role root) bằng cách restart mongod tạm tắt auth, chỉ nghe 127.0.0.1, gián đoạn khoảng 5 giây; trước đó backup `admin.system.users`. User `root` cũ giữ nguyên. Thông tin admin lưu ở file server ngoài repo.
+- DNS `auth.hoandat.com` tạo qua MCP Cloudflare (proxied; zone SSL "full", origin dùng chứng chỉ tự ký chung của server). API token Cloudflare trong file token đã hết hiệu lực.
+- Bot Telegram `@auth_hoandat_bot` do user tạo; đã bật webhook có secret. Google/GitHub chờ user tạo OAuth app.
+- Backup database `auth` hằng ngày 02:30, giữ 14 ngày.
+
 ## Câu hỏi mở
 - Nếu sau này muốn có xác minh email hoặc reset mật khẩu qua email, có thể cắm một dịch vụ gửi mail miễn phí (ví dụ Brevo, Resend) vào IdP mà không đổi app nào. Jev nghiêng về có (0.71), nhưng plan giữ quy tắc "không gửi mail" cho tới khi user đồng ý.
