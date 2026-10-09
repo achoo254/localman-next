@@ -1,0 +1,67 @@
+import { useEffect, useSyncExternalStore } from "react";
+import { ApiError } from "../../lib/api-client";
+import { type CurrentUser, fetchCurrentUser } from "./current-user";
+
+export type CurrentUserState =
+	| { status: "loading" }
+	| { status: "authenticated"; user: CurrentUser }
+	| { status: "anonymous" }
+	| { status: "error"; error: unknown };
+
+/**
+ * One `/users/me` request per page load, shared by every component. The
+ * session only changes through full-page redirects (login, logout), so the
+ * cached answer stays valid until `reloadCurrentUser()`.
+ */
+let state: CurrentUserState = { status: "loading" };
+let request: Promise<void> | null = null;
+const listeners = new Set<() => void>();
+
+function setState(next: CurrentUserState): void {
+	state = next;
+	for (const listener of listeners) listener();
+}
+
+function load(): Promise<void> {
+	request ??= fetchCurrentUser().then(
+		// The redirect-loop counter is deliberately left alone here: a loop can
+		// pass through a successful /users/me (another API keeps answering 401),
+		// so only its 60-second window or a manual retry clears it.
+		(user) => setState({ status: "authenticated", user }),
+		(error: unknown) =>
+			setState(
+				error instanceof ApiError && error.status === 401
+					? { status: "anonymous" }
+					: { status: "error", error },
+			),
+	);
+	return request;
+}
+
+/** Drops the cached answer and asks the server again. */
+export function reloadCurrentUser(): Promise<void> {
+	request = null;
+	setState({ status: "loading" });
+	return load();
+}
+
+/** Forgets the cached answer without fetching (test isolation). */
+export function resetCurrentUserCache(): void {
+	request = null;
+	state = { status: "loading" };
+}
+
+function subscribe(listener: () => void): () => void {
+	listeners.add(listener);
+	return () => listeners.delete(listener);
+}
+
+const getSnapshot = (): CurrentUserState => state;
+
+export function useCurrentUser(): CurrentUserState {
+	const snapshot = useSyncExternalStore(subscribe, getSnapshot);
+	useEffect(() => {
+		void load();
+	}, []);
+	return snapshot;
+}

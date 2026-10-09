@@ -1,11 +1,4 @@
 import { createBrowserRouter } from "react-router";
-import { AppLayout } from "./components/layout/app-layout";
-import { PrimitivesPage } from "./pages/primitives/primitives-page";
+import { routes } from "./routes";
 
-export const router = createBrowserRouter([
-	{
-		path: "/",
-		element: <AppLayout />,
-		children: [{ index: true, element: <PrimitivesPage /> }],
-	},
-]);
+export const router = createBrowserRouter(routes);
