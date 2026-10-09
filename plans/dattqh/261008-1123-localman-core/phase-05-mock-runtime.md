@@ -58,17 +58,17 @@ Viết `mock-server.ts` phục vụ REST API công khai đúng hợp đồng c�
 | T8 | Review cuối phase, ưu tiên NoSQL injection, prototype pollution và rate-limit | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 Phân giải project và route xong
-- [ ] T2 Query engine chặn toán tử `$` xong
-- [ ] T3 CRUD và render response xong
-- [ ] T4 Rate-limit, hạn mức tháng và trần bản ghi xong
-- [ ] T5 `mock-server.ts` đã nối đầy đủ
-- [ ] T6 Contract test pass
-- [ ] T7 Test bảo mật, load và curl thủ công pass
-- [ ] T8 Review không còn finding chặn
-- [ ] Verification: mọi ví dụ trong wiki nguồn khớp status và shape
-- [ ] Verification: `?title[$ne]=x`, `?$where=1`, `sortBy=__proto__`, `$constructor.constructor` bị từ chối hoặc trả rỗng an toàn
-- [ ] Verification: `autocannon` 30 giây có 429 khi vượt ngưỡng, p95 dưới 50 ms khi dưới ngưỡng
-- [ ] Verification: `curl` qua `{secret}.localtest.me:4100` và `localhost:4100/m/{secret}` đều trả dữ liệu
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
-- [ ] `pnpm check:mcp-coverage` pass
+- [x] T1 Phân giải project và route xong
+- [x] T2 Query engine chặn toán tử `$` xong
+- [x] T3 CRUD và render response xong
+- [x] T4 Rate-limit, hạn mức tháng và trần bản ghi xong
+- [x] T5 `mock-server.ts` đã nối đầy đủ
+- [x] T6 Contract test pass
+- [x] T7 Test bảo mật, load và curl thủ công pass
+- [x] T8 Review không còn finding chặn
+- [x] Verification: mọi ví dụ trong wiki nguồn khớp status và shape
+- [x] Verification: `?title[$ne]=x`, `?$where=1`, `sortBy=__proto__`, `$constructor.constructor` bị từ chối hoặc trả rỗng an toàn
+- [x] Verification: `autocannon` 30 giây có 429 khi vượt ngưỡng, p95 dưới 50 ms khi dưới ngưỡng
+- [x] Verification: `curl` qua `{secret}.localtest.me:4100` và `localhost:4100/m/{secret}` đều trả dữ liệu
+- [x] `pnpm lint && pnpm typecheck && pnpm test` sạch
+- [x] `pnpm check:mcp-coverage` pass
