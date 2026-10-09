@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { describe, expect, it } from "vitest";
 import { useDashboardTestDb } from "../../test-support/dashboard-test-app.js";
 import { captureLogs } from "../../test-support/log-capture.js";
@@ -25,10 +26,25 @@ const LATER = new Date(Date.now() + 200 * DAY_MS);
 
 useDashboardTestDb();
 
+const daysBeforeLater = (days: number) =>
+	new Date(LATER.getTime() - days * DAY_MS);
+
 async function lastRequestDaysAgo(projectId: string, days: number) {
 	await ProjectModel.updateOne(
 		{ _id: projectId },
-		{ $set: { lastRequestAt: new Date(LATER.getTime() - days * DAY_MS) } },
+		{ $set: { lastRequestAt: daysBeforeLater(days) } },
+	);
+}
+
+/** Moves `updatedAt` through the driver: mongoose would stamp the real now. */
+async function editedDaysAgo(
+	collection: typeof ProjectModel.collection,
+	id: string,
+	days: number,
+) {
+	await collection.updateOne(
+		{ _id: new Types.ObjectId(id) },
+		{ $set: { updatedAt: daysBeforeLater(days) } },
 	);
 }
 
@@ -69,6 +85,12 @@ describe("abandoned project cleanup", () => {
 			lastRequestAt: null,
 			resources: 1,
 		});
+		expect(listed.find((entry) => entry.projectId === ids.stale)).toMatchObject(
+			{
+				lastActivityAt: daysBeforeLater(DEFAULT_IDLE_DAYS + 30).toISOString(),
+				lastActivitySource: "mockRequest",
+			},
+		);
 		expect(await ProjectModel.countDocuments()).toBe(5);
 		expect(await RecordModel.countDocuments()).toBe(3);
 	});
@@ -89,6 +111,43 @@ describe("abandoned project cleanup", () => {
 		);
 		expect(await ResourceModel.countDocuments()).toBe(0);
 		expect(await RecordModel.countDocuments()).toBe(0);
+	});
+});
+
+describe("abandoned project activity", () => {
+	it("counts project and resource edits, not only mock requests", async () => {
+		await UserModel.create({ sub: FREE, username: "free" });
+		const resourceEdited = await createProject(FREE, "Resource edited");
+		const users = await createResource(FREE, resourceEdited, { name: "a" });
+		await editedDaysAgo(ResourceModel.collection, users.id, 1);
+		const renamed = await createProject(FREE, "Renamed");
+		await editedDaysAgo(ProjectModel.collection, renamed, 1);
+		const oldEdit = await createProject(FREE, "Old edit");
+		const posts = await createResource(FREE, oldEdit, { name: "b" });
+		await lastRequestDaysAgo(oldEdit, DEFAULT_IDLE_DAYS + 60);
+		await editedDaysAgo(
+			ResourceModel.collection,
+			posts.id,
+			DEFAULT_IDLE_DAYS + 10,
+		);
+		const logs = captureLogs();
+		const summary = await runAbandonedCleanup(
+			{ idleDays: DEFAULT_IDLE_DAYS, apply: true },
+			logs.logger,
+			LATER,
+		);
+		expect(summary).toEqual({ found: 1, deleted: 1, skipped: 0, failed: 0 });
+		expect(logs.entries("Deleted abandoned project")).toMatchObject([
+			{
+				projectId: oldEdit,
+				lastActivityAt: daysBeforeLater(DEFAULT_IDLE_DAYS + 10).toISOString(),
+				lastActivitySource: "resourceEdit",
+			},
+		]);
+		const left = await ProjectModel.find().select("_id").lean();
+		expect(left.map((p) => p._id.toHexString()).sort()).toEqual(
+			[resourceEdited, renamed].sort(),
+		);
 	});
 });
 

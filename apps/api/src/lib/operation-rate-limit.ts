@@ -5,11 +5,21 @@ import {
 } from "../config/runtime-settings.js";
 import { takeRateLimitSlot } from "./rate-limit-windows.js";
 
+function rateLimited(): OperationError {
+	return new OperationError(
+		429,
+		"RATE_LIMITED",
+		"Too many of these operations; wait a minute and try again",
+	);
+}
+
 /**
- * Counts one run of a heavy dashboard operation for the account and for
- * the project, and throws 429 `RATE_LIMITED` past either window of
- * `heavyOperationRateLimit`. Call it after the access check, so someone
- * without access cannot spend a project's budget.
+ * Counts one run of a heavy dashboard operation for the account and then
+ * for the project, and throws 429 `RATE_LIMITED` past either window of
+ * `heavyOperationRateLimit`. An account over its own window stops before
+ * the project count, so it cannot spend the project's budget and lock
+ * out the other members. Call it after the access check, so someone
+ * without access cannot spend a project's budget either.
  */
 export async function takeOperationSlot(
 	operation: HeavyOperation,
@@ -22,16 +32,11 @@ export async function takeOperationSlot(
 		sub,
 		limits.perUser,
 	);
+	if (!userOk) throw rateLimited();
 	const projectOk = await takeRateLimitSlot(
 		`operation:${operation}:project`,
 		projectId,
 		limits.perProject,
 	);
-	if (!userOk || !projectOk) {
-		throw new OperationError(
-			429,
-			"RATE_LIMITED",
-			"Too many of these operations; wait a minute and try again",
-		);
-	}
+	if (!projectOk) throw rateLimited();
 }

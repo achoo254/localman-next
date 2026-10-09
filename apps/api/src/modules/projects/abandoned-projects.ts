@@ -3,6 +3,7 @@ import type { PlanId } from "@localman/shared";
 import type { Logger } from "../../logger.js";
 import { effectivePlan } from "../billing/plan-guard.js";
 import { UserModel } from "../users/user-model.js";
+import { type ActivitySource, projectActivities } from "./project-activity.js";
 import {
 	LIVE_PROJECT,
 	ProjectModel,
@@ -37,18 +38,17 @@ export function parseCleanupArgs(argv: readonly string[]): CleanupArgs {
 	return { idleDays, apply: values.apply === true };
 }
 
-/** A live project of a Free owner without mock requests in the window. */
+/** A live project of a Free owner without activity in the window. */
 export interface AbandonedProject {
 	readonly projectId: string;
 	readonly owner: string;
-	/** `null`: no mock request recorded (idle since `createdAt`). */
+	/** Latest of mock request, project edit and resource edit (`project-activity`). */
+	readonly lastActivityAt: Date;
+	readonly lastActivitySource: ActivitySource;
+	/** `null`: no mock request recorded. */
 	readonly lastRequestAt: Date | null;
 	readonly createdAt: Date;
 	readonly resources: number;
-}
-
-function lastActivityOf(project: StoredProject): Date {
-	return project.lastRequestAt ?? project.createdAt;
 }
 
 /** Owners whose effective plan is Free (expired Pro and unknown users too). */
@@ -74,8 +74,10 @@ async function freeOwners(
 }
 
 /**
- * Live projects of Free owners whose last mock request (or creation,
- * when none was recorded) is older than `idleDays`, oldest first.
+ * Live projects of Free owners whose last activity (mock request, edit of
+ * the project or of one of its resources, else creation) is older than
+ * `idleDays`, oldest first. Mongo narrows on the project's own dates; the
+ * resource edits are checked on that shortlist.
  */
 export async function findAbandonedProjects(
 	idleDays: number,
@@ -84,20 +86,32 @@ export async function findAbandonedProjects(
 	const cutoff = new Date(now.getTime() - idleDays * DAY_MS);
 	const idle = await ProjectModel.find({
 		...LIVE_PROJECT,
-		$or: [
-			{ lastRequestAt: { $lt: cutoff } },
-			{ lastRequestAt: null, createdAt: { $lt: cutoff } },
+		$and: [
+			{ $or: [{ lastRequestAt: null }, { lastRequestAt: { $lt: cutoff } }] },
+			{
+				$or: [
+					{ updatedAt: { $lt: cutoff } },
+					{ updatedAt: null, createdAt: { $lt: cutoff } },
+				],
+			},
 		],
 	})
 		.sort({ createdAt: 1 })
 		.lean<StoredProject[]>();
 	const free = await freeOwners([...new Set(idle.map((p) => p.owner))], now);
+	const ofFree = idle.filter((p) => free.has(p.owner));
+	const activities = await projectActivities(ofFree);
 	const found: AbandonedProject[] = [];
-	for (const project of idle.filter((p) => free.has(p.owner))) {
+	for (const project of ofFree) {
+		const projectId = project._id.toHexString();
+		const activity = activities.get(projectId);
+		if (!activity || activity.at >= cutoff) continue;
 		const counts = await countDependents(project);
 		found.push({
-			projectId: project._id.toHexString(),
+			projectId,
 			owner: project.owner,
+			lastActivityAt: activity.at,
+			lastActivitySource: activity.source,
 			lastRequestAt: project.lastRequestAt ?? null,
 			createdAt: project.createdAt,
 			resources: counts.find((c) => c.kind === "resources")?.count ?? 0,
@@ -117,8 +131,10 @@ async function deleteIfStillAbandoned(
 	now: Date,
 ): Promise<boolean> {
 	const project = await findProjectById(projectId);
+	if (!project) return false;
+	const activity = (await projectActivities([project])).get(projectId);
 	const cutoff = now.getTime() - idleDays * DAY_MS;
-	if (!project || lastActivityOf(project).getTime() >= cutoff) return false;
+	if (!activity || activity.at.getTime() >= cutoff) return false;
 	if (!(await freeOwners([project.owner], now)).has(project.owner)) {
 		return false;
 	}

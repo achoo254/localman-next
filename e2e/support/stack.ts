@@ -8,10 +8,10 @@ import {
 	type Service,
 	assertPortFree,
 	killGroupsNow,
-	runCommand,
 	startService,
 	stopService,
 	waitForHttp,
+	waitForSuccess,
 } from "./processes.js";
 
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
@@ -103,12 +103,15 @@ export async function startStack(): Promise<void> {
 	process.once("exit", () => killGroupsNow(services));
 
 	try {
-		await runCommand(
+		// Tracked like the servers: a setup cancelled mid-build stops it too.
+		const build = startService(
 			"web build",
 			process.execPath,
 			[VITE, "build", "--outDir", relative(WEB_DIR, WEB_OUT), "--emptyOutDir"],
 			{ cwd: WEB_DIR, env: webBuildEnv() },
 		);
+		services.push(build);
+		await waitForSuccess(build);
 		const mongoUri = mongo.getUri("localman_e2e");
 		const api = startService("api", TSX, [API_ENTRY], {
 			cwd: REPO,

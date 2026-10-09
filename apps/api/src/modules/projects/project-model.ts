@@ -20,8 +20,10 @@ const projectSchema = new Schema(
 		 * cleaned up. A project with it is gone for every read and write
 		 * except a repeated DELETE, which resumes the cleanup; the document
 		 * (and its quota slot) goes last. Groundwork for a 30-day trash.
+		 * No default: live projects leave it out (`LIVE_PROJECT` matches an
+		 * absent field), so the partial index below holds only tombstones.
 		 */
-		deletingAt: { type: Date, default: null },
+		deletingAt: { type: Date },
 		/**
 		 * Mock runtime activity, added in batches by `recordProjectRequests`
 		 * (every few seconds, never per request). `null`: no request yet.
@@ -33,6 +35,11 @@ const projectSchema = new Schema(
 );
 projectSchema.index({ owner: 1, quotaSlot: 1 }, { unique: true });
 projectSchema.index({ owner: 1, createdAt: 1 });
+/** Tombstone sweeper (`deletingAt < before`, oldest first). */
+projectSchema.index(
+	{ deletingAt: 1 },
+	{ partialFilterExpression: { deletingAt: { $exists: true } } },
+);
 
 export const ProjectModel = mongoose.model("Project", projectSchema);
 
@@ -47,6 +54,8 @@ export interface StoredProject {
 	readonly lastRequestAt?: Date | null;
 	readonly mockRequests?: number;
 	readonly createdAt: Date;
+	/** Last edit of the project document (traffic does not count). */
+	readonly updatedAt?: Date;
 }
 
 /** Matches projects that are not being deleted (absent field included). */

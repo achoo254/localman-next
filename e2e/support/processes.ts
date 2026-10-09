@@ -71,20 +71,22 @@ function tail(service: Service): string {
 	return service.output.slice(-40).join("\n");
 }
 
-/** Runs a command to its end; a non-zero exit fails with the output. */
-export function runCommand(
-	name: string,
-	command: string,
-	args: readonly string[],
-	options: SpawnOptions,
-): Promise<void> {
-	const service = startService(name, command, args, options);
+/**
+ * Resolves when a one-shot service (a build) exits 0; any other exit fails
+ * with its output. The caller tracks the service, so a cancelled setup
+ * can stop it like the long-running ones.
+ */
+export function waitForSuccess(service: Service): Promise<void> {
 	return new Promise((resolve, reject) => {
-		service.child.once("exit", (code) => {
+		const settle = (code: number | null): void => {
 			if (code === 0) resolve();
 			else
-				reject(new Error(`${name} failed (exit ${code}):\n${tail(service)}`));
-		});
+				reject(
+					new Error(`${service.name} failed (exit ${code}):\n${tail(service)}`),
+				);
+		};
+		if (!isRunning(service)) settle(service.child.exitCode);
+		else service.child.once("exit", settle);
 	});
 }
 

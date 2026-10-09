@@ -76,6 +76,19 @@ describe("heavy dashboard operations", () => {
 		expect((await generate(BOB)).status).toBe(429);
 	});
 
+	it("do not let a member over the account limit spend the project's budget", async () => {
+		const { projectId, usersId } = await projectWithUsers();
+		await addMember(OWNER, projectId, BOB, "bob");
+		const generate = (sub: string) =>
+			as(sub).send("post", resourcesPath(projectId, `/${usersId}/generate`), {
+				count: 1,
+			});
+		expect(await statuses(() => generate(BOB), 5)).toEqual([
+			200, 200, 429, 429, 429,
+		]);
+		expect((await generate(OWNER)).status).toBe(200);
+	});
+
 	it("limit replacing data, resetting and cloning", async () => {
 		const { projectId, usersId } = await projectWithUsers();
 		const put = () =>
