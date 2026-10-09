@@ -44,7 +44,11 @@ mkdir -p "$OUT/api" "$OUT/nginx"
 echo "== build api + web ($RELEASE)"
 export VITE_API_BASE_URL=""
 export VITE_IDP_ORIGIN="${VITE_IDP_ORIGIN:-https://auth.hoandat.com}"
-export VITE_FEATURES="${VITE_FEATURES:-}"
+if [ -z "${VITE_FEATURES+x}" ]; then
+	VITE_FEATURES="$(grep -v '^#' "$(dirname "$0")/released-features" | tr -d ' \t' | sed '/^$/d' | paste -sd, -)"
+fi
+export VITE_FEATURES
+echo "   features: ${VITE_FEATURES:-none}"
 pnpm --filter @localman/api --filter @localman/web build
 
 echo "== runtime manifest and lockfile (versions from the workspace lockfile)"

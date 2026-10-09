@@ -364,6 +364,7 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Localman MCP qua OAuth chỉ mở toolset có scope ở IdP (`mock`, `client`); scope `credentials:write` không cấp mặc định, consent có cảnh báo đỏ.
 - Tên resource `mcp` bị cấm vì trùng route `/mcp` của Hosted Mock MCP.
 - OpenAPI nhập từ JSON; YAML cân nhắc ở phase 19.
+- Bật cờ `mockMcp` ngay sau khi Hosted Mock MCP qua kiểm thật trên production, không chờ user thử OAuth bằng Claude Code (Jev 0.52); cờ production ghi trong `infra/localman/released-features`.
 
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.

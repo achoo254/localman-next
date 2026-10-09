@@ -107,7 +107,7 @@ Làm keyword thứ ba **"Mock MCP tức thì"** (Jev 0.67) cùng phần mock c�
 - [x] T8 Integration bằng SDK pass (phần Hosted Mock MCP đã xong: `mock-mcp-server.test.ts`, `mock-mcp-token.test.ts` qua HTTP thật; dry-run/`confirm_token` nằm ở test của T2)
 - [x] T9 E2E OAuth pass trên stack E2E (`e2e/specs/localman-mcp-oauth.spec.ts`: discovery, DCR, consent, token có `resource`, `create_project`, project hiện trên UI, thu hồi refresh token; fake IdP có thêm DCR, resource `/mcp`, revocation). SDK client MCP 2.3.1 đăng ký kèm `offline_access`; IdP thật bỏ qua scope đó cho client DCR từ commit `2ff6bad` của `hoandat-auth` (đã deploy 2026-10-09), fake IdP khớp hành vi này
 - [ ] T10 Trang docs "MCP tools" đã đăng (làm cùng đợt đa ngôn ngữ, viết tiếng Anh: `plans/dattqh/261009-1741-i18n-en-zh-and-brand-cleanup/`)
-- [ ] T11 Staging deploy, kiểm thủ công bằng Claude Code, cờ `features.mockMcp` bật sau khi user xác nhận
+- [x] T11 Deploy production 2026-10-09; Hosted Mock MCP kiểm bằng MCP client SDK thật trên production (10 tool, tạo bản ghi, route lồng, `mock://schema`, `mock://openapi`); Localman MCP trả metadata RFC 9728 và 401 đúng; cờ `mockMcp` bật theo Jev 0.52 (`infra/localman/released-features`). Còn lại: user tự thử `claude mcp add` + consent OAuth thật
 - [x] T12 Review không còn finding mức high (H1 batch JSON-RPC bị chặn 400 và mỗi tool call tính hạn mức riêng; H2 `allOf` OpenAPI có trần bước; M1 thao tác thành viên sang toolset `collab`; M2 giới hạn theo `sub`)
 - [x] Verification: unit `mock-tool-factory` và parse TypeScript/OpenAPI (input xấu bị từ chối) pass
 - [x] Verification: integration `list_users`, `create_posts` với `parentId`, 401 khi bật token, `MONTHLY_QUOTA_EXCEEDED` pass
