@@ -1,16 +1,20 @@
 #!/bin/bash
-# Prepares server .65 for Localman. Run as root; idempotent, so deploy.sh
-# runs it on every deploy (it then only refreshes the Node runtime copy).
+# Prepares server .65 for Localman. Run as root; idempotent, so
+# activate-release.sh runs it on every deploy (it then only refreshes the
+# Node runtime copy).
 #   bash /opt/localman/infra/setup-server.sh
 #
 # - system user `localman`: pm2 (running as root, shared with the other
 #   apps) starts the API under this user through `uid`/`gid`;
-# - /opt/localman/{api,web,infra,runtime,backups} and /var/log/localman;
+# - /opt/localman/{releases,infra,runtime,backups} and /var/log/localman
+#   (releases/<id> + the `current` symlink: activate-release.sh);
 # - a copy of root's nvm Node in /opt/localman/runtime: /root is not
 #   traversable by other users, so `localman` cannot run the nvm binary;
 # - /opt/localman/.env seeded from .env.production.example with a fresh
 #   SESSION_ENCRYPTION_KEY when missing (never overwritten);
-# - logrotate for the pm2 logs, the daily backup cron (02:45), pm2 startup.
+# - the daily backup cron (02:45) and logrotate for its log; the pm2 logs
+#   are rotated by the pm2-logrotate module only (checked below);
+# - pm2 startup; a report of internal ports reachable from outside.
 set -euo pipefail
 
 APP_DIR=/opt/localman
@@ -35,7 +39,7 @@ if ! id "$APP_USER" >/dev/null 2>&1; then
 	echo "created system user $APP_USER"
 fi
 
-install -d -m 755 -o root -g root "$APP_DIR" "$APP_DIR/api" "$APP_DIR/web" \
+install -d -m 755 -o root -g root "$APP_DIR" "$APP_DIR/releases" \
 	"$APP_DIR/infra" "$APP_DIR/runtime"
 install -d -m 700 -o root -g root "$APP_DIR/backups"
 install -d -m 750 -o root -g "$APP_USER" "$LOG_DIR"
@@ -72,11 +76,14 @@ fi
 chown root:"$APP_USER" "$ENV_FILE"
 chmod 640 "$ENV_FILE"
 
+# Only the backup log: api.out.log/api.err.log belong to pm2-logrotate, and
+# rotating them here too would rotate them twice.
 cat >/etc/logrotate.d/localman <<ROTATE
 # Managed by infra/localman/setup-server.sh (localman-next).
-$LOG_DIR/*.log {
-    daily
-    rotate 14
+$LOG_DIR/backup.log {
+    weekly
+    rotate 8
+    maxsize 500M
     compress
     delaycompress
     missingok
@@ -84,6 +91,9 @@ $LOG_DIR/*.log {
     copytruncate
 }
 ROTATE
+if [ ! -d /root/.pm2/modules/pm2-logrotate ]; then
+	echo "warning: pm2-logrotate is not installed; $LOG_DIR/api.*.log will grow unbounded (pm2 install pm2-logrotate)" >&2
+fi
 
 # 02:45 server time, 15 minutes after the IdP's 02:30 backup.
 cat >/etc/cron.d/localman-backup <<CRON
@@ -98,14 +108,16 @@ if ! systemctl is-enabled --quiet pm2-root.service 2>/dev/null; then
 	pm2 startup systemd -u root --hp /root
 fi
 
-# SELinux: nginx must read the static web app under /opt.
+# SELinux: nginx must read the static web app of every release under /opt
+# (activate-release.sh runs restorecon on each new release).
+WEB_CONTEXT="$APP_DIR/releases/[^/]+/web(/.*)?"
 if command -v getenforce >/dev/null && [ "$(getenforce)" = Enforcing ]; then
 	if command -v semanage >/dev/null; then
-		semanage fcontext -a -t httpd_sys_content_t "$APP_DIR/web(/.*)?" 2>/dev/null ||
-			semanage fcontext -m -t httpd_sys_content_t "$APP_DIR/web(/.*)?"
-		restorecon -R "$APP_DIR/web"
+		semanage fcontext -a -t httpd_sys_content_t "$WEB_CONTEXT" 2>/dev/null ||
+			semanage fcontext -m -t httpd_sys_content_t "$WEB_CONTEXT"
+		restorecon -R "$APP_DIR/releases"
 	else
-		echo "warning: SELinux is enforcing but semanage is missing; label $APP_DIR/web httpd_sys_content_t" >&2
+		echo "warning: SELinux is enforcing but semanage is missing; label $WEB_CONTEXT httpd_sys_content_t" >&2
 	fi
 	if [ "$(getsebool httpd_can_network_connect 2>/dev/null | awk '{print $NF}')" != on ]; then
 		echo "warning: httpd_can_network_connect is off; nginx may not reach 127.0.0.1:4000/4100" >&2

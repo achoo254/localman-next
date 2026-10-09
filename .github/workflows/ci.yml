@@ -33,7 +33,7 @@ jobs:
 
       - run: pnpm lint
       - run: pnpm typecheck
-      - run: pnpm test -- --maxWorkers=2
+      - run: pnpm test --maxWorkers=2
       - run: pnpm check:mcp-coverage
       - run: pnpm check:tokens
       - run: pnpm build

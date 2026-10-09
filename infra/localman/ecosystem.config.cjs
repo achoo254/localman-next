@@ -1,6 +1,8 @@
 // PM2 process for Localman on server .65 (pm2 runs as root, shared with the
-// other apps). Usage on the server (deploy.sh does this):
-//   cd /opt/localman && pm2 startOrReload infra/ecosystem.config.cjs --update-env && pm2 save
+// other apps). infra/localman/switch-release.sh starts or reloads it after
+// pointing /opt/localman/current at a release; the paths below go through
+// that symlink, so a reload runs the new release. pm2 reload keeps the old
+// script/args: switch-release.sh recreates the process when this file changes.
 //
 // One process serves both the dashboard API (127.0.0.1:4000) and the mock
 // runtime (127.0.0.1:4100). Rate limits, the monthly quota counters and the
@@ -21,9 +23,9 @@ module.exports = {
 			args: [
 				"--env-file=/opt/localman/.env",
 				"--enable-source-maps",
-				"/opt/localman/api/main.mjs",
+				"/opt/localman/current/api/main.mjs",
 			],
-			cwd: "/opt/localman/api",
+			cwd: "/opt/localman/current/api",
 			uid: "localman",
 			gid: "localman",
 			exec_mode: "fork",

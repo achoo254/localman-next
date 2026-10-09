@@ -355,6 +355,7 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Bot Telegram riêng cho Localman do user tạo qua @BotFather rồi gửi token.
 - Owner xoá một collaborator thì giữ dấu "đã bị gỡ" cho người đó: magic link từ chối họ với lời giải thích rõ; lời mời trực tiếp của owner xoá dấu. Không tự thu hồi magic link khi xoá thành viên (Jev 0.92).
 - Lời mời theo email vẫn gắn vào tài khoản có email chưa xác minh như đã chốt ở phase 07; audit phase 09 không đưa thêm bằng chứng mới nên giữ nguyên.
+- Backup Mongo của Localman tạm giữ trên chính .65 (hằng ngày, 14 bản, báo Telegram khi lỗi); bản sao ngoài server làm khi đã có người dùng thật (Jev 0.44, phương án `defer`). User chốt hướng chung: ưu tiên có người dùng trước, không làm hạ tầng quá kỹ.
 
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.

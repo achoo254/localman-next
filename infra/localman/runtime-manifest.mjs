@@ -1,15 +1,21 @@
-// Writes the package.json installed next to the API bundle on the server:
-// the npm dependencies left external by apps/api/scripts/build-api.ts,
-// pinned to the exact versions this workspace resolved (and tested), so the
-// server does not drift to newer releases inside the semver ranges.
-// Workspace packages (@localman/*) are bundled and therefore omitted.
-//   node infra/localman/runtime-manifest.mjs <output-file>
+// Writes the package.json installed next to the API bundle on the server,
+// from the output of `pnpm --filter @localman/api deploy --prod`:
+// - drops the workspace packages (@localman/*), which build-api.ts bundles
+//   into dist/*.mjs, and the scripts and devDependencies;
+// - keeps the exact versions pnpm deploy pinned from the workspace lockfile,
+//   minus the peer suffix it leaves in some specifiers
+//   ("8.7.1(express@5.2.1)" is a lockfile key, not a valid specifier).
+// deploy.sh then prunes the lockfile written by pnpm deploy to these
+// dependencies (`pnpm install --lockfile-only`, resolutions unchanged), and
+// the server installs it with --frozen-lockfile.
+//   node infra/localman/runtime-manifest.mjs <deploy-package.json> <output-file>
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const apiRoot = join(repoRoot, "apps/api");
+const PEER_SUFFIX = /\(.*$/;
+const EXACT_VERSION = /^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/;
 
 function fail(message) {
 	process.stderr.write(`runtime-manifest: ${message}\n`);
@@ -25,22 +31,22 @@ function readJson(file) {
 	}
 }
 
-const output = process.argv[2];
-if (!output) fail("usage: runtime-manifest.mjs <output-file>");
-
-const api = readJson(join(apiRoot, "package.json"));
-const dependencies = {};
-for (const name of Object.keys(api.dependencies ?? {}).sort()) {
-	if (name.startsWith("@localman/")) continue;
-	// pnpm links every direct dependency under apps/api/node_modules.
-	const installed = readJson(
-		join(apiRoot, "node_modules", name, "package.json"),
-	);
-	if (typeof installed.version !== "string") {
-		fail(`${name} has no version in node_modules (run pnpm install)`);
-	}
-	dependencies[name] = installed.version;
+const [input, output] = process.argv.slice(2);
+if (!input || !output) {
+	fail("usage: runtime-manifest.mjs <deploy-package.json> <output-file>");
 }
+
+const deployed = readJson(input);
+const dependencies = {};
+for (const [name, specifier] of Object.entries(deployed.dependencies ?? {})) {
+	if (name.startsWith("@localman/")) continue;
+	const version = String(specifier).replace(PEER_SUFFIX, "");
+	if (!EXACT_VERSION.test(version)) {
+		fail(`${name}: expected an exact version from pnpm deploy`);
+	}
+	dependencies[name] = version;
+}
+if (Object.keys(dependencies).length === 0) fail("no runtime dependencies");
 
 const root = readJson(join(repoRoot, "package.json"));
 const manifest = {

@@ -6,6 +6,8 @@
 #
 #   MONGO_ADMIN_PASSWORD=... MONGO_APP_PASSWORD=... bash setup-mongo-localman.sh
 #   bash setup-mongo-localman.sh < passwords   # line 1: admin, line 2: app
+#   bash setup-mongo-localman.sh --config-only # config/unit/logrotate only
+#     (restarts mongod when they changed; no passwords, users untouched)
 #
 # Passwords come from the environment or stdin, never argv, and are never
 # printed. The app password goes into MONGO_URI, so it is limited to
@@ -54,11 +56,20 @@ read_secret() { # <variable> <prompt>
 	fi
 	printf -v "$1" '%s' "$value"
 }
-read_secret MONGO_ADMIN_PASSWORD "Mongo admin password ($ADMIN_USER)"
-read_secret MONGO_APP_PASSWORD "Mongo app password ($APP_USER)"
-[ "${#MONGO_ADMIN_PASSWORD}" -ge 16 ] || die "admin password must be at least 16 characters"
-[[ "$MONGO_APP_PASSWORD" =~ ^[A-Za-z0-9._~-]{24,}$ ]] ||
-	die "app password must be 24+ URL-safe characters [A-Za-z0-9._~-]"
+CONFIG_ONLY=0
+case "${1:-}" in
+"") ;;
+--config-only) CONFIG_ONLY=1 ;;
+*) die "usage: setup-mongo-localman.sh [--config-only]" ;;
+esac
+
+if [ "$CONFIG_ONLY" -eq 0 ]; then
+	read_secret MONGO_ADMIN_PASSWORD "Mongo admin password ($ADMIN_USER)"
+	read_secret MONGO_APP_PASSWORD "Mongo app password ($APP_USER)"
+	[ "${#MONGO_ADMIN_PASSWORD}" -ge 16 ] || die "admin password must be at least 16 characters"
+	[[ "$MONGO_APP_PASSWORD" =~ ^[A-Za-z0-9._~-]{24,}$ ]] ||
+		die "app password must be 24+ URL-safe characters [A-Za-z0-9._~-]"
+fi
 
 changed=0
 install_if_changed() { # <temp-file> <destination> <mode>
@@ -123,8 +134,20 @@ RestartSec=5
 TimeoutStopSec=60
 LimitNOFILE=64000
 LimitNPROC=64000
+# Sandbox: /usr, /boot and /etc read-only (dbPath and the log live under
+# /var, which stays writable; the keyFile in /etc is only read), no access to
+# /home, /root or devices beyond null/zero/urandom, read-only /proc/sys and
+# cgroups (mongod only reads them), new files private to the service user.
 PrivateTmp=true
 NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+UMask=0077
 
 [Install]
 WantedBy=multi-user.target
@@ -138,6 +161,7 @@ cat >"$tmp" <<ROTATE
 $LOGDIR/mongod.log {
     weekly
     rotate 8
+    maxsize 500M
     compress
     delaycompress
     missingok
@@ -179,6 +203,11 @@ for _ in $(seq 1 30); do
 done
 mongosh --quiet --norc "$URI" --eval 'db.adminCommand({ ping: 1 }).ok' >/dev/null 2>&1 ||
 	die "mongod-localman does not answer on $MEMBER (journalctl -u mongod-localman, $LOGDIR/mongod.log)"
+
+if [ "$CONFIG_ONLY" -eq 1 ]; then
+	echo "mongod-localman config reconciled and answering on $MEMBER (users untouched)"
+	exit 0
+fi
 
 # Replica set, admin user (localhost exception on the first run), app user.
 read -r -d '' INIT_JS <<'JS' || true

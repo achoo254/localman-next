@@ -72,15 +72,15 @@ dependencies: [5, 6, 7, 8]
 - [x] T1 Playwright và 4 spec E2E xong
 - [x] T2 Script cleanup dry-run và observability xong
 - [x] T3 Hạ tầng deploy, backup và env production xong. Đã đổi theo Vòng 24: pm2 + nginx trên .65 thay cho Dockerfile/compose, mongod riêng `rs-localman` ở 127.0.0.1:27018; file ở `infra/localman/` (setup mongod/server, cert wildcard, nginx, ecosystem, deploy, backup, `.env.production.example`) và `docs/deployment-guide.md`; bundle API có thêm `dist/cleanup-abandoned-projects.mjs`
-- [ ] T4 Đã chạy `/ak:security` và có danh sách finding
+- [x] T4 Đã chạy `/ak:security` và có danh sách finding (`plans/dattqh/reports/security-phase-09-audit.md`: 0 Critical, 2 High, 3 Medium, 8 Low)
 - [x] T5 Finding high/critical đã sửa. Theo `plans/dattqh/reports/security-phase-09-audit.md`: H1 (một field quan hệ mỗi nguồn khi lưu; runtime mỗi nguồn một truy vấn, kiểm `dataBytes` trước khi nạp, đọc theo ngân sách rồi 422), H2 (dấu `member_removals`, mã `REMOVED_BY_OWNER`), M1 (`heavyOperationRateLimit`), M3 (`HOST`, production `127.0.0.1`), Low thuộc app (L1 quét tính vào ngân sách byte, L2 `AMBIGUOUS_USERNAME`, L4 rate limit callback và route server-to-server, L5 `query-coercion`). M2 chờ user quyết; Low hạ tầng/CI để review infra
-- [ ] T6 README và docs vận hành xong
-- [ ] T7 DNS, TLS wildcard, bot Telegram, VAPID và secret đã đặt sau khi user xác nhận
-- [ ] T8 Staging đã deploy và webhook Telegram đã đăng ký sau khi user xác nhận
-- [ ] T9 CI và kiểm staging pass
-- [ ] T10 Review không còn finding chặn
-- [ ] Verification: `pnpm test && pnpm e2e` pass trên CI với `--workers=2`
-- [ ] Verification: `/ak:security` không còn finding high hoặc critical
-- [ ] Verification: `curl https://{secret}.localman.hoandat.com/users` trên staging trả dữ liệu; vượt rate-limit trả 429
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
-- [ ] `pnpm check:mcp-coverage` pass
+- [x] T6 README và docs vận hành xong (`README.md`, `docs/api-contract.md`, `docs/deployment-guide.md`, `docs/system-architecture.md`)
+- [x] T7 DNS (`localman` proxied, `*.localman` DNS only), chứng chỉ LE wildcard (gia hạn qua dns-cloudflare, token chỉ IP .65), bot `@localman_hoandat_bot`, VAPID, Turnstile và secret đã đặt; secret lưu iCloud `auth-hoandat/localman.json`
+- [x] T8 Production đã deploy lên .65 bằng `infra/localman/deploy.sh` (pm2 user `localman`, mongod riêng 27018, release + symlink có rollback); không có webhook Telegram (bot chỉ gửi); backup 02:45 hằng ngày
+- [x] T9 CI xanh (lint, typecheck, 1091+ test, MCP, tokens, build, E2E); production: subdomain mock trả dữ liệu qua TLS hợp lệ, 300 request dồn → 211 lần 429
+- [x] T10 Review cuối: H1 (gia hạn chứng chỉ) và H2 (deploy nguyên tử) đã sửa, M1–M5 và Low đã sửa; backup ngoài server hoãn tới khi có người dùng (Jev, Vòng 24)
+- [x] Verification: `pnpm test && pnpm e2e` pass trên CI với `--workers=2`
+- [x] Verification: `/ak:security` không còn finding high hoặc critical
+- [x] Verification: `curl https://{secret}.localman.hoandat.com/users` trên staging trả dữ liệu; vượt rate-limit trả 429
+- [x] `pnpm lint && pnpm typecheck && pnpm test` sạch
+- [x] `pnpm check:mcp-coverage` pass
