@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
-import { relative, resolve } from "node:path";
+import { createRequire } from "node:module";
+import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { MongoMemoryReplSet } from "mongodb-memory-server";
 import { IDP_ORIGIN, MOCK_BASE_DOMAIN, PORTS, WEB_ORIGIN } from "./ports.js";
@@ -21,6 +22,16 @@ const API_ENTRY = resolve(REPO, "apps/api/src/main.ts");
 const IDP_ENTRY = resolve(REPO, "e2e/support/idp-server.ts");
 const PREVIEW_CONFIG = resolve(REPO, "e2e/support/vite-preview.config.ts");
 const API_ORIGIN = `http://127.0.0.1:${PORTS.api}`;
+// Vite runs through Node, not `pnpm exec`: with the trimmed env below pnpm
+// would not find the store it installed into and try to reinstall (CI).
+const VITE = resolve(
+	dirname(
+		createRequire(resolve(WEB_DIR, "package.json")).resolve(
+			"vite/package.json",
+		),
+	),
+	"bin/vite.js",
+);
 
 interface RunningStack {
 	readonly mongo: MongoMemoryReplSet;
@@ -94,18 +105,9 @@ export async function startStack(): Promise<void> {
 	try {
 		await runCommand(
 			"web build",
-			"pnpm",
-			[
-				"--filter",
-				"@localman/web",
-				"exec",
-				"vite",
-				"build",
-				"--outDir",
-				relative(WEB_DIR, WEB_OUT),
-				"--emptyOutDir",
-			],
-			{ cwd: REPO, env: webBuildEnv() },
+			process.execPath,
+			[VITE, "build", "--outDir", relative(WEB_DIR, WEB_OUT), "--emptyOutDir"],
+			{ cwd: WEB_DIR, env: webBuildEnv() },
 		);
 		const mongoUri = mongo.getUri("localman_e2e");
 		const api = startService("api", TSX, [API_ENTRY], {
@@ -123,16 +125,8 @@ export async function startStack(): Promise<void> {
 
 		const web = startService(
 			"web-preview",
-			"pnpm",
-			[
-				"--filter",
-				"@localman/web",
-				"exec",
-				"vite",
-				"preview",
-				"--config",
-				PREVIEW_CONFIG,
-			],
+			process.execPath,
+			[VITE, "preview", "--config", PREVIEW_CONFIG],
 			{ cwd: REPO, env: baseEnv() },
 		);
 		services.push(web);
