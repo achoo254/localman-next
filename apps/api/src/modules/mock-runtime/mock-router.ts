@@ -6,6 +6,7 @@ import type { Logger } from "../../logger.js";
 import { effectivePlan } from "../billing/plan-guard.js";
 import type { StoredResource } from "../resources/resource-model.js";
 import { loadResources, parentKeyIn } from "../resources/resource-store.js";
+import { answeredByBehavior } from "./mock-behavior-rest.js";
 import { runEndpoint } from "./mock-endpoints.js";
 import { addressOf, maskSecret } from "./mock-http.js";
 import type { MockTarget } from "./mock-records.js";
@@ -121,6 +122,10 @@ async function serve(
 					: [{ resource: step.node.resource, recordId: step.recordId }],
 			),
 	};
+	const call = { endpoint, kind, target, recordId: last.recordId };
+	const charge = (bytes: number) =>
+		limiters.chargeResponse(address.secret, bytes);
+	if (await answeredByBehavior(req, res, call, charge)) return;
 	const result = await runEndpoint(
 		kind,
 		target,

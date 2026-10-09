@@ -70,6 +70,8 @@ export const resources: Messages["resources"] = {
 		remove: "删除 field {label}",
 		addField: "添加 field",
 		noMatch: "没有匹配的方法。",
+		suggested: "推荐",
+		suggestedHint: "根据 field 名称<sr>。你随时可以选择其他方法。</sr>",
 	},
 	template: {
 		hint: '用于替代上方 schema 的 JSON template，适合复杂的嵌套结构。<code>"$category.method"</code> 形式的值会调用 Faker（例如 <code>"$internet.email"</code>）。留空则使用 schema。',

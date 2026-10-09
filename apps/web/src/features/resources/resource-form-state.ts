@@ -4,6 +4,12 @@ import {
 	type FieldType,
 	RESOURCE_ENDPOINTS,
 } from "@localman/shared/constants";
+import {
+	type ChaosDraft,
+	type RuleDraft,
+	chaosDraftOf,
+	ruleDraft,
+} from "./endpoint-behavior-draft";
 import type {
 	EndpointMethod,
 	EndpointPath,
@@ -15,6 +21,12 @@ import type {
 /** Default method of a new Faker.js field, as in the prototype. */
 export const DEFAULT_FAKER_METHOD = "lorem.word";
 
+/**
+ * Who picked the Faker method: the saved schema (or a default field), the
+ * name matcher, the user, or nobody yet (a new field). Client-only.
+ */
+export type MethodSource = "saved" | "suggested" | "user" | "default";
+
 export interface FieldDraft {
 	/** Stable React key; not sent. */
 	key: string;
@@ -22,7 +34,13 @@ export interface FieldDraft {
 	type: FieldType;
 	fakerMethod: string;
 	childId: string;
+	methodSource: MethodSource;
+	/** Name the field was loaded with; renaming it allows a new suggestion. */
+	savedName: string | null;
 }
+
+/** Disclosure of an endpoint card: its rules, its chaos, or neither. */
+export type EndpointPanel = "rules" | "chaos" | null;
 
 export interface EndpointDraft {
 	method: EndpointMethod;
@@ -30,6 +48,9 @@ export interface EndpointDraft {
 	enabled: boolean;
 	/** Response template as JSON text. */
 	response: string;
+	chaos: ChaosDraft;
+	rules: RuleDraft[];
+	panel: EndpointPanel;
 }
 
 export interface ResourceDraft {
@@ -57,6 +78,23 @@ export interface DraftErrors {
 	template?: string;
 	/** By `endpointKey`. */
 	endpoints: Record<string, string>;
+	/** Chaos and rule errors by `endpointKey`. */
+	behavior: Record<string, BehaviorErrors>;
+}
+
+export type ChaosPart =
+	| "min"
+	| "max"
+	| "errorRate"
+	| "timeoutRate"
+	| "rateLimitRate"
+	| "rates";
+export type RulePart = "target" | "value" | "status" | "headers" | "body";
+
+export interface BehaviorErrors {
+	chaos: Partial<Record<ChaosPart, string>>;
+	/** By `RuleDraft.key`. */
+	rules: Record<string, Partial<Record<RulePart, string>>>;
 }
 
 let lastKey = 0;
@@ -75,6 +113,8 @@ export function fieldDraft(field?: SchemaField): FieldDraft {
 		type: field?.type ?? "Faker.js",
 		fakerMethod: field?.fakerMethod ?? DEFAULT_FAKER_METHOD,
 		childId: field?.childId ?? "",
+		methodSource: field ? "saved" : "default",
+		savedName: field?.name ?? null,
 	};
 }
 
@@ -98,6 +138,9 @@ export function draftOf(resource: Resource | null): ResourceDraft {
 			path: endpoint.path,
 			enabled: endpoint.enabled,
 			response: jsonText(endpoint.response),
+			chaos: chaosDraftOf(endpoint.chaos),
+			rules: (endpoint.rules ?? []).map((rule) => ruleDraft(rule)),
+			panel: null,
 		})),
 	};
 }

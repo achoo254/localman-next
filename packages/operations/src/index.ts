@@ -61,5 +61,6 @@ export {
 	type OperationSpec,
 	type SuccessStatus,
 	TOOLSETS,
+	scopeAreaOf,
 	type Toolset,
 } from "./types.js";

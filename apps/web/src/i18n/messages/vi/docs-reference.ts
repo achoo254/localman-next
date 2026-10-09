@@ -52,6 +52,12 @@ export const docsReference: Messages["docs"]["reference"] = {
 		monthlyQuota: "Chủ project đã dùng hết hạn mức request tháng.",
 		monthlyQuotaFree:
 			"Chủ project đã dùng hết hạn mức request tháng (gói Free: {requests} request tới mock mỗi tháng, tính chung cho mọi project của họ).",
+		chaosError:
+			"Lỗi do cài đặt chaos của endpoint tạo ra (theo tỉ lệ lỗi). Mã trạng thái là mã đã chọn ở đó.",
+		chaosTimeout:
+			"Timeout do cài đặt chaos của endpoint tạo ra: request chờ tới mốc delay tối đa (10 giây nếu để 0) rồi nhận phản hồi này.",
+		requestCancelled:
+			"Chỉ có ở Mock MCP: client đóng tool call khi nó đang chờ độ trễ chaos của endpoint. Tool trả lỗi này và không có gì bị thay đổi.",
 		internal:
 			"Lỗi phía máy chủ. Gửi kèm <code>X-Localman-Request-Id</code> khi báo lỗi.",
 	},

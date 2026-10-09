@@ -31,6 +31,15 @@ export const projectDetail = {
 	planLimit: "This project has reached the resource limit on its owner's plan.",
 	toast: {
 		created: "Created resource <code>{name}</code>.",
+		imported: {
+			one: "Imported <code>{name}</code> with <b>{count}</b> record.",
+			other: "Imported <code>{name}</code> with <b>{count}</b> records.",
+		},
+		importedEmpty: "Imported <code>{name}</code>.",
+		importedRelated: {
+			one: "Imported <code>{name}</code> and {count} related resource.",
+			other: "Imported <code>{name}</code> and {count} related resources.",
+		},
 		createdHint: "Click the gray bar to generate data.",
 		updated: "Updated resource <code>{name}</code>.",
 		deleted: "Deleted resource <code>{name}</code>.",

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { ExternalLink } from "../../components/ui/external-link";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
@@ -26,6 +27,8 @@ export interface ResourceNodeProps {
 	onGenerate: (count: number) => void;
 	onBlocked: () => void;
 	onAction: (action: NodeAction) => void;
+	/** Extra control at the end of the action row. */
+	trailingAction?: ReactNode;
 }
 
 /**
@@ -48,6 +51,7 @@ export function ResourceNode({
 	onGenerate,
 	onBlocked,
 	onAction,
+	trailingAction,
 }: ResourceNodeProps) {
 	const t = useT();
 	const { name } = resource;
@@ -104,7 +108,12 @@ export function ResourceNode({
 					{resource.count}
 				</span>
 			</div>
-			<NodeActions name={name} onAction={onAction} dataIdBase={base} />
+			<NodeActions
+				name={name}
+				onAction={onAction}
+				dataIdBase={base}
+				trailing={trailingAction}
+			/>
 			<NestConnector
 				name={name}
 				selectionName={selectionName}

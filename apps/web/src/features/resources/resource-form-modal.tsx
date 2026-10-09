@@ -1,21 +1,19 @@
-import { type FormEvent, useId, useMemo, useRef, useState } from "react";
+import { useId, useRef } from "react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
 import { FormField } from "../../components/ui/form-field";
 import { Input } from "../../components/ui/input";
 import { Modal, ModalClose } from "../../components/ui/modal";
 import { ModalFooter } from "../../components/ui/modal-footer";
+import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
-import { isPlanLimitError } from "../../pages/projects/projects-api";
 import { EndpointsEditor } from "./endpoints-editor";
+import { ExportTypesMenu } from "./export-types-menu";
 import { ObjectTemplateEditor } from "./object-template-editor";
-import { resourceErrorMessage } from "./resource-errors";
-import { type DraftErrors, draftOf, placeOf } from "./resource-form-state";
-import { validateDraft } from "./resource-form-validation";
 import type { Resource } from "./resource-model";
-import { createResource, updateResource } from "./resources-api";
 import { SchemaEditor } from "./schema-editor";
+import { useResourceForm } from "./use-resource-form";
 
 export interface ResourceFormModalProps {
 	projectId: string;
@@ -29,8 +27,6 @@ export interface ResourceFormModalProps {
 	onPlanLimit: () => void;
 }
 
-const NO_ERRORS: DraftErrors = { fields: {}, endpoints: {} };
-
 /** "New resource" / "Edit resource": name, schema, template, endpoints. */
 export function ResourceFormModal({
 	projectId,
@@ -41,47 +37,29 @@ export function ResourceFormModal({
 	onPlanLimit,
 }: ResourceFormModalProps) {
 	const t = useT();
+	const { mockPowerUps } = useFeatures();
 	const formId = useId();
 	const nameInput = useRef<HTMLInputElement>(null);
-	const place = useMemo(
-		() => placeOf(resource, resources),
-		[resource, resources],
-	);
-	const [draft, setDraft] = useState(() => draftOf(resource));
-	const [errors, setErrors] = useState<DraftErrors>(NO_ERRORS);
-	const [submitError, setSubmitError] = useState<string | null>(null);
-	const [busy, setBusy] = useState(false);
+	const form = useRef<HTMLFormElement>(null);
+	const {
+		place,
+		draft,
+		setDraft,
+		errors,
+		invalid,
+		submitError,
+		busy,
+		dirty,
+		submit,
+	} = useResourceForm({
+		projectId,
+		resource,
+		resources,
+		form,
+		onSaved,
+		onPlanLimit,
+	});
 	const editing = resource !== null;
-
-	async function submit(event: FormEvent) {
-		event.preventDefault();
-		if (busy) return;
-		const result = validateDraft(draft, place, t);
-		setErrors(result.errors);
-		if (!result.input) {
-			if (result.errors.name) nameInput.current?.focus();
-			return;
-		}
-		setBusy(true);
-		setSubmitError(null);
-		try {
-			const saved = resource
-				? await updateResource(projectId, resource.id, result.input)
-				: await createResource(projectId, { ...result.input, parentId: null });
-			onSaved(saved, !editing);
-		} catch (error) {
-			if (isPlanLimitError(error)) onPlanLimit();
-			else setSubmitError(resourceErrorMessage(error, t));
-		} finally {
-			setBusy(false);
-		}
-	}
-
-	const invalidParts =
-		Object.keys(errors.fields).length > 0 ||
-		Object.keys(errors.endpoints).length > 0 ||
-		errors.template !== undefined ||
-		errors.schema !== undefined;
 
 	return (
 		<Modal
@@ -119,6 +97,7 @@ export function ResourceFormModal({
 			}
 		>
 			<form
+				ref={form}
 				id={formId}
 				noValidate
 				onSubmit={submit}
@@ -161,6 +140,17 @@ export function ResourceFormModal({
 						<span className="text-[0.8125rem] text-muted">
 							{t("resources.form.schemaHint")}
 						</span>
+						{mockPowerUps && resource ? (
+							<span className="ml-auto">
+								<ExportTypesMenu
+									resource={resource}
+									resources={resources}
+									variant="form"
+									unsaved={dirty}
+									data-id="resource-form-export-types"
+								/>
+							</span>
+						) : null}
 					</div>
 					<SchemaEditor
 						fields={draft.fields}
@@ -182,8 +172,9 @@ export function ResourceFormModal({
 					onChange={(endpoints) => setDraft({ ...draft, endpoints })}
 					resourceName={draft.name}
 					errors={errors.endpoints}
+					behaviorErrors={errors.behavior}
 				/>
-				{invalidParts ? (
+				{invalid ? (
 					<Alert tone="danger">{t("resources.form.checkMarked")}</Alert>
 				) : null}
 				{submitError ? <Alert tone="danger">{submitError}</Alert> : null}

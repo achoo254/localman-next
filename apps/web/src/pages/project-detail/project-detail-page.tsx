@@ -112,6 +112,8 @@ function ProjectDetail({ project }: { project: Project }) {
 		setDialog({ kind: "confirm", confirm }),
 	);
 	const openNew = () => setDialog({ kind: "form", resource: null });
+	const openImport = () => setDialog({ kind: "import" });
+	const isOwner = project.role === "owner";
 
 	useFirstResourcePrompt(
 		query.isSuccess && query.data.length === 0,
@@ -139,17 +141,17 @@ function ProjectDetail({ project }: { project: Project }) {
 				resources={resources}
 				busy={actions.busy}
 				onNewResource={openNew}
+				onImport={openImport}
 				onGenerateAll={() => void actions.generateAll()}
 				onResetAll={() => void actions.resetAll()}
-				onRotateSecret={
-					project.role === "owner" ? () => setRotating(true) : undefined
-				}
+				onRotateSecret={isOwner ? () => setRotating(true) : undefined}
 			/>
 			<ResourcesCard
 				state={state}
 				mockBaseUrl={project.mockBaseUrl}
 				onRetry={() => void query.refetch()}
 				onNewResource={openNew}
+				onImport={openImport}
 				onGenerate={(resource, count) => void actions.generate(resource, count)}
 				onAction={(action, resource: Resource) =>
 					setDialog({ kind: action === "edit" ? "form" : action, resource })
@@ -161,16 +163,13 @@ function ProjectDetail({ project }: { project: Project }) {
 				dialog={dialog}
 				resources={resources}
 				onClose={() => setDialog(NO_DIALOG)}
+				isOwner={isOwner}
 				onPlanLimit={() => {
 					setDialog(NO_DIALOG);
 					// The owner's plan applies; a collaborator cannot upgrade it.
-					if (project.role === "owner") subscription.openPlans("resources");
-					else {
-						toast.show({
-							tone: "info",
-							title: t("projectDetail.planLimit"),
-						});
-					}
+					if (isOwner) subscription.openPlans("resources");
+					else
+						toast.show({ tone: "info", title: t("projectDetail.planLimit") });
 				}}
 			/>
 			{rotating ? (

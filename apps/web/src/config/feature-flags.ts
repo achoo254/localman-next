@@ -2,7 +2,9 @@
  * Feature flags for copy that must not advertise unreleased features. A
  * flag turns on only when its feature runs in production: `apiClient`
  * (API client, proxy and Tunelo), `liveMockSync`, `mockMcp`, `directMode`
- * (requests sent straight from the browser) and `hybridMock`.
+ * (requests sent straight from the browser), `hybridMock` and
+ * `mockPowerUps` (resource import, type export, chaos, conditional rules
+ * and Faker suggestions).
  *
  * Set at build time in `VITE_FEATURES`, a comma-separated list such as
  * `apiClient,mockMcp`. Everything is off by default. No React here:
@@ -14,6 +16,7 @@ export interface FeatureFlags {
 	readonly mockMcp: boolean;
 	readonly directMode: boolean;
 	readonly hybridMock: boolean;
+	readonly mockPowerUps: boolean;
 }
 
 export type FeatureName = keyof FeatureFlags;
@@ -24,6 +27,7 @@ export const NO_FEATURES: FeatureFlags = Object.freeze({
 	mockMcp: false,
 	directMode: false,
 	hybridMock: false,
+	mockPowerUps: false,
 });
 
 function isFeatureName(value: string): value is FeatureName {

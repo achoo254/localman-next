@@ -24,7 +24,7 @@ describe("validateDraft", () => {
 	it("builds the API body of a valid draft", () => {
 		const draft = { ...draftOf(null), name: " orders " };
 		const { input, errors } = validateDraft(draft, ROOT, t);
-		expect(errors).toEqual({ fields: {}, endpoints: {} });
+		expect(errors).toEqual({ fields: {}, endpoints: {}, behavior: {} });
 		expect(input?.name).toBe("orders");
 		expect(input?.template).toBeNull();
 		expect(input?.endpoints[0]).toEqual({

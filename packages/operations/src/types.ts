@@ -41,6 +41,20 @@ export const TOOLSETS = [
 export type Toolset = (typeof TOOLSETS)[number];
 
 /**
+ * Toolsets whose MCP tools use another toolset's OAuth scopes: the
+ * `mock-advanced` tools work on the same projects as `mock`, so a token
+ * with `mock:read` / `mock:write` opens them without a new IdP scope.
+ */
+const SCOPE_AREAS: Readonly<Partial<Record<Toolset, Toolset>>> = {
+	"mock-advanced": "mock",
+};
+
+/** Prefix of the `<area>:read|write` MCP scopes of a toolset's tools. */
+export function scopeAreaOf(toolset: Toolset): Toolset {
+	return SCOPE_AREAS[toolset] ?? toolset;
+}
+
+/**
  * Toolsets an MCP client gets when it does not choose (`?toolsets=`).
  * A toolset without any tool yet simply contributes nothing.
  */

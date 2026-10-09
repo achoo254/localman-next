@@ -184,6 +184,7 @@ export async function updateResource(
 						? { endpoints: completeEndpoints(input.endpoints) }
 						: {}),
 				},
+				$inc: { revision: 1 },
 			},
 			{ session },
 		);

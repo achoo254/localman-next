@@ -11,6 +11,8 @@ export interface FakerMethodSelectProps {
 	/** Accessible name, e.g. "Faker method of email". */
 	label: string;
 	invalid?: boolean;
+	/** Id of a note about the value (the "suggested" line). */
+	describedBy?: string;
 	"data-id"?: string;
 }
 
@@ -39,6 +41,7 @@ export function FakerMethodSelect({
 	onChange,
 	label,
 	invalid,
+	describedBy,
 	"data-id": dataId,
 }: FakerMethodSelectProps) {
 	const t = useT();
@@ -108,6 +111,7 @@ export function FakerMethodSelect({
 					open && options.length > 0 ? optionId(active) : undefined
 				}
 				aria-invalid={invalid || undefined}
+				aria-describedby={describedBy}
 				data-id={dataId}
 				autoComplete="off"
 				spellCheck={false}

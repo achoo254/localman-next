@@ -1,9 +1,13 @@
 import { z } from "zod";
-import { isFakerMethodId } from "./faker-method-catalog.js";
-import { RESPONSE_VARIABLES, checkTemplate } from "./json-template.js";
 import {
-	type JsonCheck,
-	type JsonLimits,
+	type EndpointChaos,
+	type EndpointRule,
+	endpointChaosSchema,
+	endpointRulesSchema,
+} from "./endpoint-behavior.js";
+import { isFakerMethodId } from "./faker-method-catalog.js";
+import { checkTemplate } from "./json-template.js";
+import {
 	type JsonObject,
 	type JsonValue,
 	isJsonObject,
@@ -15,43 +19,29 @@ import {
 	ENDPOINT_PATHS,
 	RESOURCE_ENDPOINTS,
 } from "./resource-constants.js";
+import {
+	TEMPLATE_LIMITS,
+	jsonInput,
+	responseTemplateSchema,
+} from "./response-template-schema.js";
 
-/** Bounds of an object template and of each custom response. */
-export const TEMPLATE_LIMITS: JsonLimits = Object.freeze({
-	maxDepth: 10,
-	maxNodes: 2_000,
-});
-
-// Defined in the zod-free module; re-exported for older imports.
+// Defined in modules without this file's imports; re-exported for older imports.
 export {
 	DEFAULT_RESPONSE,
 	ENDPOINT_METHODS,
 	ENDPOINT_PATHS,
 	RESOURCE_ENDPOINTS,
 } from "./resource-constants.js";
+export {
+	TEMPLATE_LIMITS,
+	responseTemplateSchema,
+} from "./response-template-schema.js";
 
 const endpointKey = (endpoint: { method: string; path: string }): string =>
 	`${endpoint.method} ${endpoint.path}`;
 const KNOWN_ENDPOINTS: ReadonlySet<string> = new Set(
 	RESOURCE_ENDPOINTS.map(endpointKey),
 );
-
-/** A zod input that accepts JSON passing `check` and yields its copy. */
-function jsonInput(check: (value: unknown) => JsonCheck) {
-	return z.unknown().transform((value, ctx): JsonValue => {
-		const result = check(value);
-		if (result.ok) return result.value;
-		for (const problem of result.problems) {
-			ctx.addIssue({
-				code: "custom",
-				message: problem.path
-					? `${problem.path}: ${problem.message}`
-					: problem.message,
-			});
-		}
-		return z.NEVER;
-	});
-}
 
 /**
  * Object template: a JSON object used instead of the schema to generate
@@ -78,22 +68,15 @@ export const objectTemplateSchema = jsonInput((value) => {
 		'JSON object rendered once per generated record, or null to use the schema. Whole-string values "$category.method" call a whitelisted Faker method (see list_faker_methods).',
 	);
 
-/** Custom response: any JSON with `$mockData`, `$count` and Faker refs. */
-export const responseTemplateSchema = jsonInput((value) =>
-	checkTemplate(value, {
-		variables: RESPONSE_VARIABLES,
-		isMethod: isFakerMethodId,
-		limits: TEMPLATE_LIMITS,
-	}),
-).describe(
-	'Response body template (JSON). Whole-string values "$mockData" (the records), "$count" (their number) and "$category.method" (Faker) are replaced per request.',
-);
-
 export const endpointInputSchema = z.object({
 	method: z.enum(ENDPOINT_METHODS),
 	path: z.enum(ENDPOINT_PATHS),
 	enabled: z.boolean().default(true),
 	response: responseTemplateSchema.optional(),
+	/** Absent: no chaos (old endpoints never had it). */
+	chaos: endpointChaosSchema.optional(),
+	/** Absent or empty: the endpoint always runs its CRUD. */
+	rules: endpointRulesSchema.optional(),
 });
 export type EndpointInput = z.output<typeof endpointInputSchema>;
 
@@ -122,6 +105,10 @@ export interface ResourceEndpoint {
 	readonly path: (typeof ENDPOINT_PATHS)[number];
 	readonly enabled: boolean;
 	readonly response: JsonValue;
+	/** Absent on endpoints stored without chaos. */
+	readonly chaos?: EndpointChaos;
+	/** Absent on endpoints stored without conditional rules. */
+	readonly rules?: readonly EndpointRule[];
 }
 
 /**
@@ -143,6 +130,8 @@ export function completeEndpoints(
 			// `null` is a valid response body; only a missing one gets the default.
 			response:
 				endpoint?.response === undefined ? DEFAULT_RESPONSE : endpoint.response,
+			...(endpoint?.chaos ? { chaos: endpoint.chaos } : {}),
+			...(endpoint?.rules?.length ? { rules: endpoint.rules } : {}),
 		};
 	});
 }

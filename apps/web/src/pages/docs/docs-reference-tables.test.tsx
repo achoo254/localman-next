@@ -4,6 +4,8 @@ import {
 } from "@localman/shared/constants";
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { FeaturesContext, NO_FEATURES } from "../../config/features";
+import { ALL_FEATURES } from "../landing/landing-test-helpers";
 import { ReservedParamsNote } from "./query-params";
 import { StatusCodesTable } from "./status-codes";
 
@@ -34,6 +36,26 @@ describe("docs reference tables", () => {
 		expect(table).toHaveTextContent("Wrong secret (well-formed)");
 		// Empty code cells read "None", not a dash.
 		expect(within(table).getAllByText("None")).toHaveLength(2);
+	});
+
+	it("lists the chaos errors only once chaos is released", () => {
+		const { unmount } = render(
+			<FeaturesContext value={NO_FEATURES}>
+				<StatusCodesTable />
+			</FeaturesContext>,
+		);
+		expect(screen.queryByText("MOCK_CHAOS_ERROR")).toBeNull();
+		unmount();
+		render(
+			<FeaturesContext value={ALL_FEATURES}>
+				<StatusCodesTable />
+			</FeaturesContext>,
+		);
+		expect(screen.getByText("MOCK_CHAOS_ERROR")).toBeInTheDocument();
+		const timeout = screen.getByText("MOCK_TIMEOUT").closest("tr");
+		expect(timeout).toHaveTextContent(/^504/);
+		const cancelled = screen.getByText("REQUEST_CANCELLED").closest("tr");
+		expect(cancelled).toHaveTextContent(/^499.*Mock MCP only/);
 	});
 
 	it("names every reserved query parameter", () => {

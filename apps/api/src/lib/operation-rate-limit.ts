@@ -19,12 +19,13 @@ function rateLimited(): OperationError {
  * `heavyOperationRateLimit`. An account over its own window stops before
  * the project count, so it cannot spend the project's budget and lock
  * out the other members. Call it after the access check, so someone
- * without access cannot spend a project's budget either.
+ * without access cannot spend a project's budget either. `projectId` is
+ * `null` for an operation outside any project: only the account counts.
  */
 export async function takeOperationSlot(
 	operation: HeavyOperation,
 	sub: string,
-	projectId: string,
+	projectId: string | null,
 ): Promise<void> {
 	const limits = runtimeSettings().heavyOperationRateLimit[operation];
 	const userOk = await takeRateLimitSlot(
@@ -33,6 +34,7 @@ export async function takeOperationSlot(
 		limits.perUser,
 	);
 	if (!userOk) throw rateLimited();
+	if (projectId === null || limits.perProject === undefined) return;
 	const projectOk = await takeRateLimitSlot(
 		`operation:${operation}:project`,
 		projectId,

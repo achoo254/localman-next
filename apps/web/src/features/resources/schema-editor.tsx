@@ -1,6 +1,7 @@
 import { IconPlus } from "@tabler/icons-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
+import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import {
@@ -71,6 +72,7 @@ export function SchemaEditor({
 	errors,
 }: SchemaEditorProps) {
 	const t = useT();
+	const { mockPowerUps } = useFeatures();
 	return (
 		<div className="grid gap-2" data-id="resource-form-schema-fields">
 			<div
@@ -96,6 +98,7 @@ export function SchemaEditor({
 					position={index + 1}
 					place={place}
 					error={errors[field.key]}
+					suggest={mockPowerUps}
 					onChange={(patch) =>
 						onChange(
 							fields.map((f) => (f.key === field.key ? { ...f, ...patch } : f)),

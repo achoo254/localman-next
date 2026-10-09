@@ -6,6 +6,7 @@
 	"exports": {
 		".": "./src/index.ts",
 		"./constants": "./src/constants.ts",
+		"./endpoint-behavior": "./src/endpoint-behavior.ts",
 		"./faker-catalog": "./src/faker-method-catalog.ts",
 		"./faker-methods": "./src/faker-methods.ts"
 	},

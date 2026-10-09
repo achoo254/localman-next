@@ -14,6 +14,10 @@ import { notifications } from "./notifications";
 import { primitives } from "./primitives";
 import { projectDetail } from "./project-detail";
 import { projects } from "./projects";
+import { resourceChaos } from "./resource-chaos";
+import { resourceExport } from "./resource-export";
+import { resourceImport } from "./resource-import";
+import { resourceRules } from "./resource-rules";
 import { resourceTree } from "./resource-tree";
 import { resources } from "./resources";
 import { subscription } from "./subscription";
@@ -30,6 +34,10 @@ export const zhCN: Messages = {
 	projectDetail,
 	resources,
 	resourceTree,
+	resourceImport,
+	resourceExport,
+	resourceChaos,
+	resourceRules,
 	account,
 	collaborators,
 	invite,

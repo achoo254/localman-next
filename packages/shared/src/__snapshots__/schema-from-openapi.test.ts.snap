@@ -50,11 +50,20 @@ exports[`schemaFromOpenApi > imports a component with references to other compon
 exports[`schemaFromOpenApi > imports a component with references to other components 2`] = `
 [
   {
+    "code": "SKIPPED",
     "message": ""id" is generated; skipped",
+    "params": {
+      "path": "id",
+    },
     "path": "id",
   },
   {
+    "code": "ENUM_VALUES",
     "message": "Allowed values are not kept: available, pending, sold",
+    "params": {
+      "field": "status",
+      "values": "available, pending, sold",
+    },
     "path": "status",
   },
 ]

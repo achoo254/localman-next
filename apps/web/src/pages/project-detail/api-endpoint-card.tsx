@@ -1,5 +1,11 @@
 import type { MockToolNode } from "@localman/shared/constants";
-import { IconBolt, IconKey, IconPlus, IconRefresh } from "@tabler/icons-react";
+import {
+	IconBolt,
+	IconFileImport,
+	IconKey,
+	IconPlus,
+	IconRefresh,
+} from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { Button } from "../../components/ui/button";
 import { cardClassName } from "../../components/ui/card";
@@ -17,6 +23,8 @@ export interface ApiEndpointCardProps {
 	resources: readonly MockToolNode[];
 	busy: boolean;
 	onNewResource: () => void;
+	/** Opens "Import resource" (released with `mockPowerUps`). */
+	onImport: () => void;
 	onGenerateAll: () => void;
 	onResetAll: () => void;
 	/** Owner only: "Change mock URL" (new secret); absent for collaborators. */
@@ -62,6 +70,7 @@ export function ApiEndpointCard({
 	resources,
 	busy,
 	onNewResource,
+	onImport,
 	onGenerateAll,
 	onResetAll,
 	onRotateSecret,
@@ -133,6 +142,15 @@ export function ApiEndpointCard({
 				>
 					{t("projectDetail.addResource")}
 				</Button>
+				{flags.mockPowerUps ? (
+					<Button
+						data-id="project-detail-import-resource"
+						leadingIcon={<IconFileImport size={20} aria-hidden="true" />}
+						onClick={onImport}
+					>
+						{t("resourceImport.entry")}
+					</Button>
+				) : null}
 				<Button
 					data-id="project-detail-generate-all"
 					disabled={busy}

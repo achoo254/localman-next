@@ -3,7 +3,7 @@
  * matching, skipping and error helpers the parser builds on. Errors are
  * `SchemaImportFailure`s naming the line of the offending token.
  */
-import { SchemaImportFailure } from "./schema-import-fields.js";
+import { SchemaImportFailure } from "./schema-import-errors.js";
 import { type TsToken, syntaxError } from "./typescript-tokenizer.js";
 
 /** Nested types (objects, parentheses, generics) a declaration may hold. */
@@ -79,6 +79,7 @@ export class TokenCursor {
 		throw new SchemaImportFailure(
 			"TOO_DEEP",
 			`Types are nested deeper than ${MAX_TYPE_DEPTH} levels`,
+			{ max: MAX_TYPE_DEPTH },
 		);
 	}
 }

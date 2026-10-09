@@ -27,6 +27,7 @@ import {
 } from "../modules/notifications/push-operations.js";
 import { projectOperations } from "../modules/projects/project-operations.js";
 import { rotateProjectSecret } from "../modules/projects/project-secret-operations.js";
+import { mockAdvancedOperations } from "../modules/resources/mock-advanced-operations.js";
 import { getMockUrls } from "../modules/resources/mock-url-operations.js";
 import { resourceDataOperations } from "../modules/resources/resource-data-operations.js";
 import { createResourceFromSchema } from "../modules/resources/resource-import-operations.js";
@@ -59,6 +60,7 @@ export const operations: readonly AnyOperation[] = [
 	...magicLinkOperations,
 	...resourceOperations,
 	createResourceFromSchema,
+	...mockAdvancedOperations,
 	...resourceTreeOperations,
 	...resourceDataOperations,
 	getMockUrls,

@@ -3,6 +3,7 @@ import { MAX_JSON_BODY_KB } from "@localman/shared";
 import { McpServer, createMcpHandler } from "@modelcontextprotocol/server";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { requestIdOf } from "../../http/request-log.js";
+import { closeSignal } from "../mock-runtime/mock-behavior-rest.js";
 import { addressOf, maskSecret } from "../mock-runtime/mock-http.js";
 import {
 	type MockAddress,
@@ -117,6 +118,7 @@ async function serve(
 		secret,
 		clientIp: req.ip ?? null,
 		project,
+		signal: closeSignal(res),
 		resources,
 		apiResources,
 		tools: mockToolsFor(secret, project.id.toHexString(), apiResources),

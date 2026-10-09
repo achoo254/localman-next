@@ -52,6 +52,12 @@ export const docsReference: Messages["docs"]["reference"] = {
 		monthlyQuota: "Project 所有者已用完本月的 request 额度。",
 		monthlyQuotaFree:
 			"Project 所有者已用完本月的 request 额度（Free 套餐：每月 {requests} 次 mock request，由其所有 project 共享）。",
+		chaosError:
+			"由 endpoint 的 chaos 设置（错误率）注入的错误，状态码为该设置中选择的状态码。",
+		chaosTimeout:
+			"由 endpoint 的 chaos 设置注入的超时：request 会等待到最大延迟（为 0 时为 10 秒），然后收到此响应。",
+		requestCancelled:
+			"仅限 Mock MCP：tool call 在等待 endpoint 的 chaos 延迟时被客户端关闭。tool 返回此错误，不会做任何更改。",
 		internal:
 			"服务器端错误。报告问题时请附上 <code>X-Localman-Request-Id</code>。",
 	},

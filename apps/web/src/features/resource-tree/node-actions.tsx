@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 
@@ -8,6 +9,8 @@ export interface NodeActionsProps {
 	onAction: (action: NodeAction) => void;
 	/** `data-id` of the node; buttons append `-edit`, `-data`, `-delete`. */
 	dataIdBase: string;
+	/** Pushed to the end of the row (the "Export types" menu). */
+	trailing?: ReactNode;
 }
 
 const ACTION_CLASS =
@@ -21,12 +24,17 @@ const ACTION_CLASS =
  * hovered or holds focus; always visible on touch screens, which have no
  * hover.
  */
-export function NodeActions({ name, onAction, dataIdBase }: NodeActionsProps) {
+export function NodeActions({
+	name,
+	onAction,
+	dataIdBase,
+	trailing,
+}: NodeActionsProps) {
 	const t = useT();
 	return (
 		<div
 			className={cn(
-				"-ml-1.5 mt-1.5 flex gap-0.5 opacity-0 transition-opacity",
+				"-ml-1.5 mt-1.5 flex items-center gap-0.5 opacity-0 transition-opacity",
 				"group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100",
 			)}
 		>
@@ -57,6 +65,7 @@ export function NodeActions({ name, onAction, dataIdBase }: NodeActionsProps) {
 			>
 				{t("resourceTree.node.delete")}
 			</button>
+			{trailing}
 		</div>
 	);
 }

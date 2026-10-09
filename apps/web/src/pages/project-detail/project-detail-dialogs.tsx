@@ -8,6 +8,7 @@ import { DeleteResourceModal } from "../../features/resources/delete-resource-mo
 import type { Resource } from "../../features/resources/resource-model";
 import { useResourceCache } from "../../features/resources/use-resources";
 import { useT } from "../../i18n/i18n-context";
+import { importedToast } from "./imported-toast";
 import { toastText } from "./toast-text";
 
 /*
@@ -18,6 +19,10 @@ const ResourceFormModal = lazy(async () => ({
 	default: (await import("../../features/resources/resource-form-modal"))
 		.ResourceFormModal,
 }));
+const ImportResourceDialog = lazy(async () => ({
+	default: (await import("../../features/resources/import-resource-dialog"))
+		.ImportResourceDialog,
+}));
 const ResourceDataModal = lazy(async () => ({
 	default: (await import("../../features/resources/resource-data-modal"))
 		.ResourceDataModal,
@@ -26,6 +31,7 @@ const ResourceDataModal = lazy(async () => ({
 export type ProjectDialog =
 	| { kind: "none" }
 	| { kind: "form"; resource: Resource | null }
+	| { kind: "import" }
 	| { kind: "data"; resource: Resource }
 	| { kind: "delete"; resource: Resource }
 	| { kind: "confirm"; confirm: DataConfirm };
@@ -39,7 +45,14 @@ export interface ProjectDetailDialogsProps {
 	onClose: () => void;
 	/** The owner's plan has no room for another resource. */
 	onPlanLimit: () => void;
+	/** Owners may open the plans from the import's "no room" warning. */
+	isOwner: boolean;
 }
+
+const importButton = () =>
+	document.querySelector<HTMLElement>(
+		'[data-id="project-detail-import-resource"]',
+	);
 
 export function ProjectDetailDialogs({
 	projectId,
@@ -47,6 +60,7 @@ export function ProjectDetailDialogs({
 	resources,
 	onClose,
 	onPlanLimit,
+	isOwner,
 }: ProjectDetailDialogsProps) {
 	const t = useT();
 	const toast = useToast();
@@ -78,6 +92,24 @@ export function ProjectDetailDialogs({
 									? t("projectDetail.toast.createdHint")
 									: undefined,
 							});
+						}}
+					/>
+				</Suspense>
+			);
+		case "import":
+			return (
+				<Suspense fallback={null}>
+					<ImportResourceDialog
+						projectId={projectId}
+						resources={resources}
+						onManagePlan={isOwner ? onPlanLimit : null}
+						onOpenChange={closeOnFalse}
+						onPlanLimit={onPlanLimit}
+						fallbackFocus={importButton}
+						onImported={(result) => {
+							onClose();
+							void cache.invalidate();
+							toast.show(importedToast(result, t));
 						}}
 					/>
 				</Suspense>

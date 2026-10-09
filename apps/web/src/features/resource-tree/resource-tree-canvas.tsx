@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { useToast } from "../../components/ui/toast";
+import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
+import { ExportTypesMenu } from "../resources/export-types-menu";
 import type { Resource } from "../resources/resource-model";
 import { DemoNode } from "./demo-node";
 import type { NodeAction } from "./node-actions";
@@ -94,6 +96,7 @@ function AppTreeCanvas({
 }: AppTreeCanvasProps) {
 	const t = useT();
 	const toast = useToast();
+	const { mockPowerUps } = useFeatures();
 	const byId = useMemo(
 		() => new Map(resources.map((resource) => [resource.id, resource])),
 		[resources],
@@ -151,6 +154,16 @@ function AppTreeCanvas({
 					onGenerate={(count) => onGenerate(item, count)}
 					onBlocked={() => blocked(item)}
 					onAction={(action) => onAction(action, item)}
+					trailingAction={
+						mockPowerUps ? (
+							<ExportTypesMenu
+								resource={item}
+								resources={resources}
+								variant="node"
+								data-id={`resource-node-${item.id}-types`}
+							/>
+						) : null
+					}
 				/>
 			)}
 		/>

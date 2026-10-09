@@ -1,11 +1,13 @@
 import { FIELD_TYPES, type FieldType } from "@localman/shared/constants";
 import { IconX } from "@tabler/icons-react";
+import { useEffect, useRef } from "react";
 import { IconButton } from "../../components/ui/icon-button";
 import { Input } from "../../components/ui/input";
 import { Select } from "../../components/ui/select";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import { FakerMethodSelect } from "./faker-method-select";
+import { suggestMethod } from "./faker-suggestion";
 import {
 	DEFAULT_FAKER_METHOD,
 	type FieldDraft,
@@ -19,6 +21,7 @@ import {
 	COMPACT_CONTROL,
 	SCHEMA_ROW,
 } from "./schema-grid";
+import { SuggestedMethodNote } from "./suggested-method-note";
 
 export interface SchemaFieldRowProps {
 	field: FieldDraft;
@@ -28,7 +31,12 @@ export interface SchemaFieldRowProps {
 	error: string | undefined;
 	onChange: (patch: Partial<FieldDraft>) => void;
 	onRemove: () => void;
+	/** Suggest a Faker method from the name (`mockPowerUps`). */
+	suggest: boolean;
 }
+
+/** Pause in typing after which the name is matched, as on blur. */
+const SUGGEST_DELAY_MS = 400;
 
 /** Types offered here: relation types only where the tree has a relation. */
 function typeOptions(place: FormPlace): FieldType[] {
@@ -46,24 +54,45 @@ export function SchemaFieldRow({
 	error,
 	onChange,
 	onRemove,
+	suggest,
 }: SchemaFieldRowProps) {
 	const t = useT();
 	const label = field.name || t("resources.schema.fieldFallback", { position });
 	const errorId = error ? `${field.key}-error` : undefined;
+	const suggestedId = `${field.key}-suggested`;
+	// The timer fires after later renders; it must see their field and callback.
+	const latest = useRef({ field, onChange });
+	latest.current = { field, onChange };
+
+	function applySuggestion() {
+		const patch = suggestMethod(latest.current.field);
+		if (patch) latest.current.onChange(patch);
+	}
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: re-armed by each change of the name; applySuggestion reads refs.
+	useEffect(() => {
+		if (!suggest) return;
+		const timer = window.setTimeout(applySuggestion, SUGGEST_DELAY_MS);
+		return () => window.clearTimeout(timer);
+	}, [field.name, suggest]);
 
 	function changeType(value: string) {
 		const type = FIELD_TYPES.find((candidate) => candidate === value);
 		if (!type) return;
-		onChange({
+		const patch = {
 			type,
 			fakerMethod: field.fakerMethod || DEFAULT_FAKER_METHOD,
 			childId:
 				type === "Child Resource"
 					? field.childId || place.children[0]?.id || ""
 					: field.childId,
-		});
+		};
+		const hint = suggest ? suggestMethod({ ...field, ...patch }) : null;
+		onChange({ ...patch, ...hint });
 	}
 
+	const suggested =
+		suggest && field.type === "Faker.js" && field.methodSource === "suggested";
 	let third = (
 		<Input
 			className={COMPACT_CONTROL}
@@ -77,9 +106,12 @@ export function SchemaFieldRow({
 		third = (
 			<FakerMethodSelect
 				value={field.fakerMethod}
-				onChange={(fakerMethod) => onChange({ fakerMethod })}
+				onChange={(fakerMethod) =>
+					onChange({ fakerMethod, methodSource: "user" })
+				}
 				label={t("resources.schema.fakerMethod", { label })}
 				invalid={Boolean(error)}
+				describedBy={suggested ? suggestedId : undefined}
 			/>
 		);
 	} else if (field.type === "Child Resource") {
@@ -115,6 +147,7 @@ export function SchemaFieldRow({
 					aria-describedby={errorId}
 					invalid={Boolean(error)}
 					onChange={(event) => onChange({ name: event.target.value })}
+					onBlur={suggest ? applySuggestion : undefined}
 				/>
 				<div className={CELL_TYPE}>
 					<Select
@@ -146,6 +179,9 @@ export function SchemaFieldRow({
 				<p id={errorId} className="m-0 text-error text-xs">
 					{error}
 				</p>
+			) : null}
+			{suggested ? (
+				<SuggestedMethodNote id={suggestedId} position={position} />
 			) : null}
 		</div>
 	);

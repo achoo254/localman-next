@@ -1,7 +1,8 @@
-import { IconDatabase, IconPlus } from "@tabler/icons-react";
+import { IconDatabase, IconFileImport, IconPlus } from "@tabler/icons-react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
 import { cardClassName } from "../../components/ui/card";
+import { useFeatures } from "../../config/features";
 import type { NodeAction } from "../../features/resource-tree/node-actions";
 import { ResourceTreeCanvas } from "../../features/resource-tree/resource-tree-canvas";
 import { resourceErrorMessage } from "../../features/resources/resource-errors";
@@ -19,6 +20,7 @@ export interface ResourcesCardProps {
 	mockBaseUrl: string;
 	onRetry: () => void;
 	onNewResource: () => void;
+	onImport: () => void;
 	onGenerate: (resource: Resource, count: number) => void;
 	onAction: (action: NodeAction, resource: Resource) => void;
 	onMove: (resource: Resource, target: Resource | null) => void;
@@ -30,9 +32,11 @@ export function ResourcesCard({
 	mockBaseUrl,
 	onRetry,
 	onNewResource,
+	onImport,
 	...canvas
 }: ResourcesCardProps) {
 	const t = useT();
+	const { mockPowerUps } = useFeatures();
 	let body = (
 		<output className="block px-6 py-8 font-mono text-muted text-sm">
 			{t("projectDetail.resources.loading")}
@@ -61,14 +65,25 @@ export function ResourcesCard({
 					className="text-icon-muted"
 				/>
 				<p className="m-0">{t("projectDetail.resources.empty")}</p>
-				<Button
-					variant="primary"
-					data-id="project-detail-tree-empty-create"
-					leadingIcon={<IconPlus size={20} aria-hidden="true" />}
-					onClick={onNewResource}
-				>
-					{t("projectDetail.addResource")}
-				</Button>
+				<div className="flex flex-wrap justify-center gap-2">
+					<Button
+						variant="primary"
+						data-id="project-detail-tree-empty-create"
+						leadingIcon={<IconPlus size={20} aria-hidden="true" />}
+						onClick={onNewResource}
+					>
+						{t("projectDetail.addResource")}
+					</Button>
+					{mockPowerUps ? (
+						<Button
+							data-id="project-detail-tree-empty-import"
+							leadingIcon={<IconFileImport size={20} aria-hidden="true" />}
+							onClick={onImport}
+						>
+							{t("resourceImport.entry")}
+						</Button>
+					) : null}
+				</div>
 			</div>
 		);
 	} else if (state.status === "ready") {

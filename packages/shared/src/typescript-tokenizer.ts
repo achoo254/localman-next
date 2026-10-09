@@ -3,7 +3,7 @@
  * Comments and whitespace are dropped; anything outside identifiers,
  * literals and type punctuation is a syntax error (`SchemaImportFailure`).
  */
-import { SchemaImportFailure } from "./schema-import-fields.js";
+import { SchemaImportFailure } from "./schema-import-errors.js";
 
 export type TsToken =
 	| {

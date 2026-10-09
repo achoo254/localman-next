@@ -32,6 +32,13 @@ export const projectDetail: Messages["projectDetail"] = {
 	planLimit: "Project đã đạt giới hạn resource theo gói của chủ project.",
 	toast: {
 		created: "Đã tạo resource <code>{name}</code>.",
+		imported: {
+			other: "Đã nhập <code>{name}</code> với <b>{count}</b> bản ghi.",
+		},
+		importedEmpty: "Đã nhập <code>{name}</code>.",
+		importedRelated: {
+			other: "Đã nhập <code>{name}</code> và {count} resource liên quan.",
+		},
 		createdHint: "Bấm vào thanh xám để sinh dữ liệu.",
 		updated: "Đã cập nhật resource <code>{name}</code>.",
 		deleted: "Đã xoá resource <code>{name}</code>.",

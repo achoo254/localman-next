@@ -6,10 +6,13 @@
  */
 import { utf8Length } from "./json-value.js";
 import {
-	FieldCollector,
 	SchemaImportFailure,
-	type SchemaImportResult,
 	importFailure,
+	paramText,
+} from "./schema-import-errors.js";
+import {
+	FieldCollector,
+	type SchemaImportResult,
 } from "./schema-import-fields.js";
 import type { TsDeclaration } from "./typescript-type-ast.js";
 import { parseTypeScriptDeclarations } from "./typescript-type-parser.js";
@@ -37,10 +40,13 @@ export function schemaFromTypeScript(
 			throw new SchemaImportFailure(
 				"INPUT_TOO_LARGE",
 				`TypeScript input is larger than ${MAX_TYPESCRIPT_SCHEMA_BYTES / 1024} KB`,
+				{ max: MAX_TYPESCRIPT_SCHEMA_BYTES },
 			);
 		}
 		const fields = new FieldCollector();
-		const warn = (path: string, message: string) => fields.warn(path, message);
+		// Every TypeScript warning is about a part that is left out.
+		const warn = (path: string, message: string) =>
+			fields.warn(path, "SKIPPED", message, { path: paramText(path) });
 		const declarations = new Map<string, TsDeclaration>();
 		for (const decl of parseTypeScriptDeclarations(source, warn)) {
 			if (declarations.has(decl.name)) {
@@ -61,6 +67,7 @@ export function schemaFromTypeScript(
 				options.name === undefined
 					? "No interface or object type found"
 					: `No declaration named "${options.name}"`,
+				options.name === undefined ? {} : { name: paramText(options.name) },
 			);
 		}
 		const members = resolver.membersOf(chosen);

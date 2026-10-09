@@ -21,6 +21,13 @@ export const MAX_SCHEMA_FIELDS = 50;
 export const RESOURCE_NAME_MAX = 64;
 export const FIELD_NAME_MAX = 64;
 export const RECORD_ID_MAX = 64;
+/**
+ * A record id usable as one URL path segment of the mock API, with at
+ * least one letter or digit (so never `.` or `..`).
+ */
+export const RECORD_ID_PATTERN = new RegExp(
+	`^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]{1,${RECORD_ID_MAX}}$`,
+);
 
 /** One URL path segment: letters, digits, `_` and `-`. */
 export const RESOURCE_NAME_PATTERN = /^[A-Za-z0-9][\w-]*$/;

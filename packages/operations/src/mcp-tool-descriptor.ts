@@ -7,6 +7,7 @@ import {
 	type AnyOperation,
 	CREDENTIALS_WRITE_SCOPE,
 	type Toolset,
+	scopeAreaOf,
 } from "./types.js";
 
 export interface McpToolDescriptor {
@@ -58,7 +59,7 @@ export function mcpScopesOf(
 	op: Pick<AnyOperation, "toolset" | "annotations" | "createsCredential">,
 ): string[] {
 	const access = op.annotations.readOnly ? "read" : "write";
-	const scopes = [`${op.toolset}:${access}`];
+	const scopes = [`${scopeAreaOf(op.toolset)}:${access}`];
 	if (op.createsCredential) scopes.push(CREDENTIALS_WRITE_SCOPE);
 	return scopes;
 }

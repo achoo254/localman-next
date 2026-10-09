@@ -4,6 +4,7 @@
  * error types, and the collector that turns shapes into Localman fields
  * within the schema rules (name pattern, forbidden names, `id`, duplicates,
  * `MAX_SCHEMA_FIELDS`). Zod-free so the light entry point can export it.
+ * Errors and warning codes live in `schema-import-errors.ts`.
  */
 import { FORBIDDEN_KEYS } from "./json-value.js";
 import {
@@ -14,6 +15,14 @@ import {
 	type ResourceFieldDefinition,
 } from "./resource-constants.js";
 import { fakerHintFor } from "./schema-field-hints.js";
+import {
+	type ImportParams,
+	type SchemaImportError,
+	SchemaImportFailure,
+	type SchemaImportWarning,
+	type SchemaImportWarningCode,
+	paramText,
+} from "./schema-import-errors.js";
 
 export type ImportedKind =
 	| "string"
@@ -36,28 +45,6 @@ export interface ImportedShape {
 	readonly values?: readonly EnumValue[];
 }
 
-export interface SchemaImportWarning {
-	/** Field or declaration the warning is about, `""` for the input. */
-	readonly path: string;
-	readonly message: string;
-}
-
-export type SchemaImportErrorCode =
-	| "INPUT_TOO_LARGE"
-	| "INVALID_INPUT"
-	| "UNSUPPORTED"
-	| "SCHEMA_NOT_FOUND"
-	| "TOO_DEEP"
-	| "TOO_COMPLEX"
-	| "REF_CYCLE"
-	| "EXTERNAL_REF"
-	| "NO_FIELDS";
-
-export interface SchemaImportError {
-	readonly code: SchemaImportErrorCode;
-	readonly message: string;
-}
-
 export interface SchemaImportSuccess {
 	readonly ok: true;
 	/** Name of the chosen declaration or schema, when the input has one. */
@@ -69,32 +56,6 @@ export interface SchemaImportSuccess {
 export type SchemaImportResult =
 	| SchemaImportSuccess
 	| { readonly ok: false; readonly error: SchemaImportError };
-
-/** Thrown inside an importer and turned into `{ ok: false }` at its boundary. */
-export class SchemaImportFailure extends Error {
-	constructor(
-		readonly code: SchemaImportErrorCode,
-		message: string,
-	) {
-		super(message);
-		this.name = "SchemaImportFailure";
-	}
-}
-
-/** Maps anything an importer threw onto a result; never rethrows. */
-export function importFailure(error: unknown): {
-	readonly ok: false;
-	readonly error: SchemaImportError;
-} {
-	if (error instanceof SchemaImportFailure) {
-		return { ok: false, error: { code: error.code, message: error.message } };
-	}
-	// Stack overflow or a bug: report a generic error, never the stack.
-	return {
-		ok: false,
-		error: { code: "INVALID_INPUT", message: "The schema could not be read" },
-	};
-}
 
 const PLAIN_TYPES: Readonly<Record<ImportedKind, FieldType>> = {
 	string: "String",
@@ -135,8 +96,13 @@ export class FieldCollector {
 	/** Set once a field was refused for `MAX_SCHEMA_FIELDS`. */
 	full = false;
 
-	warn(path: string, message: string): void {
-		this.warnings.push({ path, message });
+	warn(
+		path: string,
+		code: SchemaImportWarningCode,
+		message: string,
+		params: ImportParams = {},
+	): void {
+		this.warnings.push({ path, code, params, message });
 	}
 
 	/** Adds a field; returns its final name, or `null` when it was dropped. */
@@ -157,18 +123,34 @@ export class FieldCollector {
 		}
 		if (this.fields.length >= MAX_SCHEMA_FIELDS) {
 			this.full = true;
-			return this.drop(
+			this.warn(
 				"",
+				"TOO_MANY_FIELDS",
 				`Only the first ${MAX_SCHEMA_FIELDS} fields were kept`,
+				{ max: MAX_SCHEMA_FIELDS },
 			);
+			return null;
 		}
-		if (name !== rawName) this.warn(rawName, `Renamed to "${name}"`);
+		if (name !== rawName) {
+			this.warn(rawName, "RENAMED", `Renamed to "${name}"`, {
+				from: paramText(rawName),
+				to: name,
+			});
+		}
 		if (shape.kind === "enum") {
 			const values = (shape.values ?? []).map(String).join(", ");
-			this.warn(name, `Allowed values are not kept: ${values}`);
+			this.warn(name, "ENUM_VALUES", `Allowed values are not kept: ${values}`, {
+				field: name,
+				values: paramText(values),
+			});
 		}
 		if (shape.kind === "unknown") {
-			this.warn(name, "Type not recognised; imported as String");
+			this.warn(
+				name,
+				"UNSUPPORTED",
+				"Type not recognised; imported as String",
+				{ path: name, as: "String" },
+			);
 		}
 		this.names.add(name);
 		const fakerMethod = fakerHintFor(name, shape);
@@ -181,7 +163,7 @@ export class FieldCollector {
 	}
 
 	private drop(path: string, message: string): null {
-		this.warn(path, message);
+		this.warn(path, "SKIPPED", message, { path: paramText(path) });
 		return null;
 	}
 

@@ -14,6 +14,7 @@ import { isFakerMethodId } from "@localman/shared/faker-catalog";
 import type { Translate } from "../../i18n/translate";
 import { isRecord } from "../../lib/json-guards";
 import { parseJsonText } from "../../lib/json-text";
+import { checkBehavior } from "./endpoint-behavior-validation";
 import {
 	type DraftErrors,
 	type FieldDraft,
@@ -27,7 +28,7 @@ import type {
 	SchemaField,
 } from "./resource-model";
 
-function nameError(
+export function resourceNameError(
 	name: string,
 	place: FormPlace,
 	t: Translate,
@@ -132,9 +133,9 @@ export function validateDraft(
 	place: FormPlace,
 	t: Translate,
 ): { input: ResourceInput | null; errors: DraftErrors } {
-	const errors: DraftErrors = { fields: {}, endpoints: {} };
+	const errors: DraftErrors = { fields: {}, endpoints: {}, behavior: {} };
 	const name = draft.name.trim();
-	errors.name = nameError(name, place, t);
+	errors.name = resourceNameError(name, place, t);
 	if (draft.fields.length > MAX_SCHEMA_FIELDS) {
 		errors.schema = t("resources.validation.tooManyFields", {
 			max: MAX_SCHEMA_FIELDS,
@@ -159,21 +160,30 @@ export function validateDraft(
 	}
 	const endpoints: ResourceEndpoint[] = [];
 	for (const endpoint of draft.endpoints) {
+		const key = endpointKey(endpoint);
+		const { errors: behaviorErrors, ...behavior } = checkBehavior(endpoint, t);
+		if (behaviorErrors) errors.behavior[key] = behaviorErrors;
 		const parsed = parseJsonText(endpoint.response);
 		if (!parsed.ok) {
-			errors.endpoints[endpointKey(endpoint)] = t(
-				"resources.validation.responseInvalid",
-			);
+			errors.endpoints[key] = t("resources.validation.responseInvalid");
 			continue;
 		}
-		endpoints.push({ ...endpoint, response: parsed.value });
+		const { method, path, enabled } = endpoint;
+		endpoints.push({
+			method,
+			path,
+			enabled,
+			response: parsed.value,
+			...behavior,
+		});
 	}
 	const failed =
 		errors.name !== undefined ||
 		errors.schema !== undefined ||
 		errors.template !== undefined ||
 		Object.keys(errors.fields).length > 0 ||
-		Object.keys(errors.endpoints).length > 0;
+		Object.keys(errors.endpoints).length > 0 ||
+		Object.keys(errors.behavior).length > 0;
 	if (failed) return { input: null, errors };
 	return {
 		input: { name, schema: draft.fields.map(toField), template, endpoints },

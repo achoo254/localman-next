@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetCurrentUserCache } from "../../features/auth/use-current-user";
 import { seriousViolations } from "../../test/axe";
 import { makeProject } from "../../test/fixtures";
+import { ALL_FEATURES } from "../landing/landing-test-helpers";
 import {
 	PROJECT_ID,
 	RESOURCES_PATH,
@@ -39,6 +40,40 @@ describe("project page accessibility and layout", () => {
 		await userEvent.click(screen.getByRole("button", { name: "Add resource" }));
 		const dialog = await screen.findByRole("dialog", { name: "New resource" });
 		expect(await seriousViolations(dialog)).toEqual([]);
+	});
+
+	it("keeps the power-ups free of serious axe violations", async () => {
+		const { container } = renderDetail(
+			{ [`GET ${RESOURCES_PATH}`]: { body: { items: [] } } },
+			undefined,
+			{ flags: ALL_FEATURES },
+		);
+		// Empty project: the empty state offers Import next to Add resource.
+		await userEvent.click(
+			await screen.findByRole("button", { name: "Import" }),
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Import resource",
+		});
+		expect(await seriousViolations(dialog)).toEqual([]);
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Cancel" }),
+		);
+		expect(await seriousViolations(container)).toEqual([]);
+		const [add] = screen.getAllByRole("button", { name: "Add resource" });
+		if (!add) throw new Error("no Add resource button");
+		await userEvent.click(add);
+		const form = await screen.findByRole("dialog", { name: "New resource" });
+		await userEvent.click(
+			within(form).getByRole("button", { name: "Rules for GET /resource" }),
+		);
+		await userEvent.click(
+			within(form).getByRole("button", { name: "Add rule" }),
+		);
+		await userEvent.click(
+			within(form).getByRole("button", { name: "Chaos for POST /resource" }),
+		);
+		expect(await seriousViolations(form)).toEqual([]);
 	});
 
 	it("scrolls wide trees inside the card, never the page", async () => {

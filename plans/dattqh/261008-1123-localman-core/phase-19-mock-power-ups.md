@@ -61,16 +61,16 @@ Thêm 5 tiện ích cho mock, đều không cần viết code, chạy trên web 
 | T10 | Review cuối phase, chú trọng parse input không tin cậy và giới hạn delay | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 Màn import, xuất type, chaos, rules, gợi ý Faker đã thêm vào prototype và user đã duyệt
-- [ ] T2 `faker-field-matcher` có test khoảng 60 tên field
-- [ ] T3 `schema-inference` cho JSON, OpenAPI (dùng parser phase 17), CSV
-- [ ] T4 `type-exporters` có snapshot, Zod parse được dữ liệu sinh ra
-- [ ] T5 Chaos và rule chạy trước CRUD, có giới hạn
-- [ ] T6 Operation `mock-advanced` qua registry
-- [ ] T7 UI bốn tiện ích và gợi ý Faker
-- [ ] T8 Integration và bảo mật pass
+- [x] T1 Màn import, xuất type, chaos, rules, gợi ý Faker: thay prototype bằng spec UI `../reports/ui-phase-19-mock-power-ups-spec.md` (chờ user duyệt)
+- [x] T2 `faker-field-matcher` có test khoảng 60 tên field
+- [x] T3 `schema-inference` cho JSON, OpenAPI (dùng parser phase 17), CSV
+- [x] T4 `type-exporters` có snapshot, Zod parse được dữ liệu sinh ra
+- [x] T5 Chaos và rule chạy trước CRUD, có giới hạn
+- [x] T6 Operation `mock-advanced` qua registry
+- [x] T7 UI bốn tiện ích và gợi ý Faker (sau cờ `mockPowerUps`)
+- [x] T8 Integration và bảo mật pass
 - [ ] T9 Staging đã deploy sau khi user xác nhận
-- [ ] T10 Review không còn finding mức high
+- [x] T10 Review không còn finding mức high
 - [ ] Verification: unit matcher, inference (JSON lồng, mảng rỗng, `$ref` vòng, CSV BOM), exporters, chaos, rules pass
 - [ ] Verification: integration JSON 3 bản ghi, petstore, `errorRate` 45–55%, rule `x-role: admin` 403 pass
 - [ ] Verification: OpenAPI/CSV tối đa 2 MB, không gọi `$ref` ra URL ngoài

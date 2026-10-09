@@ -65,11 +65,20 @@ exports[`schemaFromTypeScript > maps an interface to Localman fields with Faker 
 exports[`schemaFromTypeScript > maps an interface to Localman fields with Faker hints 2`] = `
 [
   {
+    "code": "SKIPPED",
     "message": ""id" is generated; skipped",
+    "params": {
+      "path": "id",
+    },
     "path": "id",
   },
   {
+    "code": "ENUM_VALUES",
     "message": "Allowed values are not kept: admin, member, guest",
+    "params": {
+      "field": "role",
+      "values": "admin, member, guest",
+    },
     "path": "role",
   },
 ]

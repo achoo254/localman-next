@@ -4,15 +4,21 @@ import {
 	TOOLSETS,
 	type Toolset,
 	mcpScopesOf,
+	scopeAreaOf,
 } from "@localman/operations";
 import type { AuthInfo } from "@modelcontextprotocol/server";
 
 /**
  * Toolsets an OAuth token of the IdP can open: the IdP grants the MCP
- * resource `mock:*` and `client:*` scopes only, so account, notification
- * and admin tools are never reachable through Localman MCP.
+ * resource `mock:*` and `client:*` scopes only (`mock-advanced` tools use
+ * the `mock:*` scopes, see `scopeAreaOf`), so account, notification and
+ * admin tools are never reachable through Localman MCP.
  */
-export const OAUTH_TOOLSETS: readonly Toolset[] = ["mock", "client"];
+export const OAUTH_TOOLSETS: readonly Toolset[] = [
+	"mock",
+	"mock-advanced",
+	"client",
+];
 
 /** Operations with an MCP tool in a toolset OAuth tokens can open. */
 export function oauthReachableOperations(
@@ -52,7 +58,8 @@ function isCallerContext(value: unknown): value is McpCallerContext {
 
 /**
  * Toolsets with tools that the token's scopes open (`mock:read` or
- * `mock:write` → `mock`); a scope of a toolset without tools opens nothing.
+ * `mock:write` → `mock` and `mock-advanced`); a scope of a toolset
+ * without tools opens nothing. Each tool still checks its own scope.
  */
 export function toolsetsOpenedBy(
 	scopes: readonly string[],
@@ -62,7 +69,7 @@ export function toolsetsOpenedBy(
 		operations
 			.map((op) => op.toolset)
 			.filter((toolset) =>
-				scopes.some((scope) => scope.startsWith(`${toolset}:`)),
+				scopes.some((scope) => scope.startsWith(`${scopeAreaOf(toolset)}:`)),
 			),
 	);
 }

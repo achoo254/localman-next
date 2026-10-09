@@ -3,10 +3,36 @@ import {
 	ENDPOINT_PATHS,
 	FIELD_TYPES,
 } from "@localman/shared";
+import { RULE_OPS, RULE_SOURCES } from "@localman/shared/endpoint-behavior";
 import { z } from "zod";
 import type { StoredResource } from "./resource-model.js";
 import { parentKeyIn, toTreeNodes } from "./resource-store.js";
 import { orderTree } from "./resource-tree.js";
+
+/** Stored chaos of an endpoint (validated on write by `endpointChaosSchema`). */
+const chaosView = z.object({
+	latencyMs: z.tuple([z.number(), z.number()]),
+	errorRate: z.number(),
+	errorStatus: z.number().int(),
+	timeoutRate: z.number(),
+	rateLimitRate: z.number(),
+});
+
+/** Stored conditional rule (validated on write by `endpointRuleSchema`). */
+const ruleView = z.object({
+	match: z.object({
+		source: z.enum(RULE_SOURCES),
+		key: z.string().optional(),
+		path: z.string().optional(),
+	}),
+	op: z.enum(RULE_OPS),
+	value: z.union([z.string(), z.number()]).optional(),
+	response: z.object({
+		status: z.number().int(),
+		body: z.unknown().optional(),
+		headers: z.array(z.object({ name: z.string(), value: z.string() })),
+	}),
+});
 
 export const resourceView = z.object({
 	id: z.string(),
@@ -30,10 +56,19 @@ export const resourceView = z.object({
 			path: z.enum(ENDPOINT_PATHS),
 			enabled: z.boolean(),
 			response: z.unknown(),
+			/** Absent: no chaos. */
+			chaos: chaosView.optional(),
+			/** Absent: no conditional rules. */
+			rules: z.array(ruleView).optional(),
 		}),
 	),
 	/** Number of records. */
 	count: z.number().int().min(0),
+	/**
+	 * Bumped by every update of the resource; the mock runtime counts the
+	 * `nth` request of a rule per revision, so saving starts again at 1.
+	 */
+	revision: z.number().int().min(0),
 	createdAt: z.string(),
 	updatedAt: z.string(),
 });
@@ -75,8 +110,11 @@ export function toResourceView(
 			path: endpoint.path,
 			enabled: endpoint.enabled,
 			response: endpoint.response,
+			...(endpoint.chaos ? { chaos: endpoint.chaos } : {}),
+			...(endpoint.rules?.length ? { rules: [...endpoint.rules] } : {}),
 		})),
 		count: resource.count,
+		revision: resource.revision ?? 0,
 		createdAt: resource.createdAt.toISOString(),
 		updatedAt: resource.updatedAt.toISOString(),
 	};

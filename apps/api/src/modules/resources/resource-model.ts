@@ -22,6 +22,13 @@ const endpointSchema = new Schema(
 		enabled: { type: Boolean, required: true },
 		/** Any JSON, `null` included, so no `required` (it rejects null). */
 		response: { type: Schema.Types.Mixed },
+		/**
+		 * `EndpointChaos` and `EndpointRule[]` (validated by
+		 * `endpointInputSchema`). Endpoints stored before they existed lack
+		 * them and run without chaos or rules.
+		 */
+		chaos: { type: Schema.Types.Mixed },
+		rules: { type: Schema.Types.Mixed },
 	},
 	{ _id: false },
 );
@@ -57,6 +64,8 @@ const resourceSchema = new Schema(
 		dataBytes: { type: Number, min: 0 },
 		ownerSub: { type: String, required: true },
 		quotaSlot: { type: Number, required: true, min: 0 },
+		/** Bumped by every update; restarts the `nth` count of rules. */
+		revision: { type: Number, default: 0, min: 0 },
 	},
 	{
 		collection: "resources",
@@ -84,6 +93,8 @@ export interface StoredResource {
 	readonly dataBytes?: number;
 	readonly ownerSub: string;
 	readonly quotaSlot: number;
+	/** Absent on resources stored before the field existed (revision 0). */
+	readonly revision?: number;
 	readonly createdAt: Date;
 	readonly updatedAt: Date;
 }

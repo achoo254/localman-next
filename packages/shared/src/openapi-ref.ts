@@ -5,7 +5,11 @@
  * own properties only, so `constructor` or `toString` never resolve.
  */
 import { type JsonObject, type JsonValue, isJsonObject } from "./json-value.js";
-import { SchemaImportFailure } from "./schema-import-fields.js";
+import {
+	type ImportParams,
+	SchemaImportFailure,
+	paramText,
+} from "./schema-import-errors.js";
 
 /** Longest chain of `$ref` pointing at `$ref`. */
 export const MAX_REF_CHAIN = 32;
@@ -14,7 +18,8 @@ const SCHEMA_REF = "#/components/schemas/";
 export const failure = (
 	code: SchemaImportFailure["code"],
 	message: string,
-): SchemaImportFailure => new SchemaImportFailure(code, message);
+	params: ImportParams = {},
+): SchemaImportFailure => new SchemaImportFailure(code, message, params);
 /** User text in an error message: quoted and cut to 200 characters. */
 export const quote = (text: string): string =>
 	JSON.stringify(text.slice(0, 200));
@@ -25,6 +30,7 @@ export function resolvePointer(root: JsonObject, ref: string): JsonValue {
 		throw failure(
 			"EXTERNAL_REF",
 			`Only local $ref is supported: ${quote(ref)}`,
+			{ ref: paramText(ref) },
 		);
 	}
 	if (ref !== "#" && !ref.startsWith("#/")) {
@@ -47,7 +53,9 @@ export function resolvePointer(root: JsonObject, ref: string): JsonValue {
 				? node[key]
 				: undefined;
 		if (next === undefined) {
-			throw failure("SCHEMA_NOT_FOUND", `$ref ${quote(ref)} does not resolve`);
+			throw failure("SCHEMA_NOT_FOUND", `$ref ${quote(ref)} does not resolve`, {
+				name: paramText(ref),
+			});
 		}
 		node = next;
 	}
@@ -64,15 +72,28 @@ export function deref(
 	while (isJsonObject(value) && typeof value.$ref === "string") {
 		const ref = value.$ref;
 		if (seen.includes(ref)) {
-			throw failure("REF_CYCLE", `$ref cycle through ${quote(ref)}`);
+			throw failure("REF_CYCLE", `$ref cycle through ${quote(ref)}`, {
+				cycle: refCycle(seen, ref),
+			});
 		}
 		if (seen.length >= MAX_REF_CHAIN) {
-			throw failure("TOO_DEEP", `More than ${MAX_REF_CHAIN} chained $ref`);
+			throw failure("TOO_DEEP", `More than ${MAX_REF_CHAIN} chained $ref`, {
+				max: MAX_REF_CHAIN,
+			});
 		}
 		seen.push(ref);
 		value = resolvePointer(root, ref);
 	}
 	return { value, ref: seen[0] ?? null };
+}
+
+/**
+ * The loop `ref` closes in the `$ref` path `seen`, as schema names:
+ * `Node → Leaf → Node`. For an error param, cut to 200 characters.
+ */
+export function refCycle(seen: readonly string[], ref: string): string {
+	const loop = [...seen.slice(Math.max(0, seen.indexOf(ref))), ref];
+	return paramText(loop.map((item) => componentName(item) ?? item).join(" → "));
 }
 
 /** `User` for `#/components/schemas/User`, else `null`. */

@@ -47,7 +47,7 @@ Path được tách theo cây resource thành `/{res}[/{id}]/{childRes}[/{id}]�
 - **PUT/PATCH:** merge body vào bản ghi, key cũ giữ thứ tự, không đổi `id` hay `{parent}Id`.
 - **DELETE:** xoá dây chuyền bản ghi con ở mọi tầng (`modules/mock-runtime/record-cascade.ts`).
 - **Body ghi:** object JSON; thiếu body là `{}`. `id`, `{parent}Id` và tên field quan hệ bị bỏ khỏi dữ liệu lưu (`readRecordBody` trong `modules/mock-runtime/record-body.ts`). Route lồng lấy `{parent}Id` từ path; route phẳng của resource con cần `{parent}Id` trong body trỏ tới bản ghi cha có thật (`modules/mock-runtime/new-record.ts`).
-- Status thành công do endpoint quyết định; custom response chỉ đổi body.
+- Status thành công do endpoint quyết định; custom response chỉ đổi body. Rule khớp và chaos có thể đổi status, xem [Rules và chaos](#rules-và-chaos).
 
 ## Header
 
@@ -75,6 +75,26 @@ Mỗi endpoint có một `response`. Giá trị mặc định `DEFAULT_RESPONSE`
 - `$count`: với list là số bản ghi sau lọc, trước phân trang; với endpoint khác là số bản ghi của collection theo route. Runtime chỉ đếm khi template có `"$count"` (`usesCount`).
 - Giới hạn template lúc lưu là `TEMPLATE_LIMITS` (`packages/shared/src/resource-templates.ts`); lúc render, đầu ra bị chặn ở trần response.
 
+## Rules và chaos
+
+Mỗi endpoint có thể có `rules` (response theo điều kiện) và `chaos` (độ trễ, lỗi giả lập), đặt qua `endpoints[]` của `update_resource` (`PUT /api/v1/projects/:projectId/resources/:resourceId`; sai thì 400 `VALIDATION_ERROR` với path như `endpoints.0.chaos.latencyMs`). Schema và giới hạn ở [`packages/shared/src/endpoint-behavior.ts`](../packages/shared/src/endpoint-behavior.ts) (import qua `@localman/shared/endpoint-behavior`), lưu cùng endpoint của resource; endpoint cũ không có hai field này chạy như trước. Runtime: `modules/mock-runtime/mock-behavior.ts` (dùng chung REST và MCP), `conditional-rules.ts`, `chaos.ts`, `chaos-delay.ts`.
+
+**Thứ tự mỗi request:** đếm `nth` → rule → chaos → CRUD bình thường. Không có rule nào khớp và chaos không sinh lỗi thì endpoint chạy như không có hai tính năng này.
+
+- **Rule** `{ match: { source, key | path }, op, value, response: { status, body?, headers } }`, tối đa `MAX_RULES_PER_ENDPOINT` (20) rule và `MAX_RULES_BYTES` mỗi endpoint. Rule thử theo thứ tự, **rule đầu tiên khớp thì dừng**, response của nó thay cho CRUD (không ghi gì vào store).
+  - `source`: `header` (tên không phân biệt hoa thường), `query`, `body` (JSONPath con: `$`, `.key`, `['key']`, `[0]`; không wildcard/filter, không bao giờ eval; `parseJsonPath` trong `packages/shared/src/json-path.ts`), `nth` (thứ tự request của endpoint, từ 1).
+  - `op`: `eq`, `neq`, `contains` (chuỗi con, hoặc phần tử của mảng), `regex`, `exists`, `gt`, `lt`. So sánh theo số khi một bên là số (`"10"` eq `10`), còn lại theo chuỗi. Giá trị thiếu chỉ khớp `neq`. `nth` chỉ nhận `eq`, `neq`, `gt`, `lt` với số nguyên ≥ 1.
+  - `nth` đếm trong bộ nhớ process, theo endpoint; khoá đếm gồm `revision` của resource (tăng mỗi lần `PUT /api/v1/projects/:projectId/resources/:resourceId`), nên **mỗi lần lưu resource** là đếm lại từ 1, và process khởi động lại cũng vậy. Bộ đếm (`RequestCounter`) giữ tối đa 500 khoá mỗi project và 10 000 khoá tổng, bỏ khoá ít dùng nhất trước, nên một project không đẩy được bộ đếm của project khác ra.
+  - `response.body` là template như custom response (thiếu thì `$mockData`): với `GET` thì `$mockData`/`$count` là dữ liệu endpoint sẽ trả (chỉ đọc khi template dùng tới), với endpoint ghi là `null`. Kích thước và ngân sách byte như response thường.
+  - `response.headers` `[{ name, value }]`, tối đa 20, tên là token RFC 9110, giá trị ASCII in được (không CR/LF). **Allowlist** (`isRuleHeaderName`, `ruleHeaderIssue` trong `packages/shared/src/rule-headers.ts`, web dùng chung qua `@localman/shared/endpoint-behavior`): mọi `x-*` trừ `x-localman-*`, `x-forwarded-*`, `x-request-id`, `x-frame-options`, `x-content-type-options`; cùng `retry-after`, `cache-control`, `etag`, `last-modified`, `expires`, `content-language`, `content-type` (chỉ kiểu JSON `application/json`, `application/…+json` hoặc `text/plain`, vì body luôn là JSON) và `location` (chỉ khi status 3xx). Header ngoài danh sách (hop-by-hop, `set-cookie`, CORS, CSP/HSTS, `nel`, `report-to`, `clear-site-data`, `www-authenticate`, `alt-svc`, `link`, `content-disposition`…) bị từ chối khi lưu. Rule lưu từ trước khi có allowlist vẫn chạy: runtime chỉ bỏ qua header không còn hợp lệ, không báo lỗi.
+- **Regex chống ReDoS** (`unsafeRegexReason` trong `packages/shared/src/safe-regex.ts`, kiểm khi lưu và kiểm lại khi chạy): pattern ≤ 200 ký tự, hợp lệ với cờ `u`; cấm backreference, lookahead/lookbehind và quantifier trên group (`(a+)+`, `(a|aa)*`); mọi `{` ngoài class/escape phải mở một quantifier `{n}`, `{n,}`, `{n,m}` (đọc mọi số chữ số, không thì từ chối); tích số lựa chọn của các quantifier (`max − min + 1`, chặn ở `MAX_REGEX_INPUT` như quantifier không chặn trên; mỗi `|` tính 2) nhân số vị trí bắt đầu không vượt `MAX_REGEX_COST` (2^20), thực tế là một `+`/`*`, hoặc hai khi pattern bắt đầu bằng `^`. Chuỗi dài hơn `MAX_REGEX_INPUT` (1 024) không bao giờ khớp regex. Nhờ vậy số bước backtrack của mọi pattern được lưu có chặn trên, không cần timeout.
+- **Chaos** `{ latencyMs: [min, max], errorRate, errorStatus, timeoutRate, rateLimitRate }`: delay 0–`MAX_CHAOS_DELAY_MS` (30 000 ms), tỉ lệ 0–1 với tổng ba tỉ lệ ≤ 1, `errorStatus` 400–599 (mặc định 500).
+  - Mỗi request rút một độ trễ đều trong `[min, max]`, rồi **một** lần rút chia thành các dải timeout → 429 → lỗi, nên mỗi loại xảy ra đúng theo tỉ lệ cấu hình.
+  - Lỗi: sau độ trễ trả `errorStatus` với `MOCK_CHAOS_ERROR`. 429: sau độ trễ trả `RATE_LIMITED` kèm `Retry-After: 1`. Timeout: giữ kết nối tới `latencyMs` max (không có max thì 10 s, luôn ≤ 30 s) rồi trả 504 `MOCK_TIMEOUT`.
+  - **Rule khớp thì chỉ áp độ trễ**; lỗi, 429 và timeout của chaos không áp cho response của rule.
+  - Chờ bằng timer (không chặn event loop); client ngắt kết nối thì timer bị huỷ và không gửi gì. Mỗi project có tối đa `MAX_DELAYED_PER_PROJECT` (50) request đang chờ; vượt thì trả ngay 429 `RATE_LIMITED` kèm `Retry-After: 1` thay vì giữ thêm kết nối.
+- **Hosted Mock MCP** chạy cùng code: rule `query` đọc tham số query của `list_`, rule `body` đọc `data` của `create_`/`update_`, `nth` dùng chung bộ đếm với REST; rule `header` **không bao giờ khớp** qua MCP (tool call không có header riêng). Response của rule là kết quả tool nguyên dạng (status ≥ 400 thành tool error mang body của rule; header của rule không gửi). Chaos áp như REST: độ trễ, rồi lỗi/429/timeout thành tool error với cùng mã (`details.retryAfterSeconds` thay cho `Retry-After`).
+
 ## Giới hạn
 
 | Lớp | Giới hạn và nguồn | Vượt thì |
@@ -101,7 +121,7 @@ Hosted Mock MCP (`modules/mcp/mock-mcp-server.ts`, mount trước router REST tr
 
 - **Tool:** `list_`, `get_`, `create_`, `update_`, `delete_<res>` cho mọi resource (kể cả lồng), chỉ khi endpoint REST tương ứng đang bật (`buildMockTools` trong `modules/mcp/mock-tool-factory.ts`, tên từ `packages/shared/src/mock-tool-names.ts`). Danh sách tool cache theo secret và revision của cây resource (`mock-mcp-tools-cache.ts`), đổi cây là có hiệu lực ở request kế tiếp.
 - **Ngữ nghĩa:** tool chạy đúng code CRUD/query của REST trên cùng store, nên ghi qua MCP thì REST thấy ngay. Resource lồng nhận `parentId` (id bản ghi cha trực tiếp); runtime đi ngược `parentRecordId` để dựng route lồng, có `parentId` thì như route lồng (cha sai hoặc thiếu là `NOT_FOUND`), không có thì như route phẳng; `create_` của resource lồng bắt buộc `parentId`. `list_` nhận tham số query như REST (tên chính trong `MOCK_QUERY_PARAMS`) và filter theo field.
-- **Kết quả:** JSON thuần trong `structuredContent` (kèm bản text): `list_` trả `{ items, total }` (`total` là số bản ghi sau lọc, trước phân trang), tool khác trả bản ghi. Custom response **không** áp cho MCP. Lỗi là tool error (`isError`) mang đúng body `{ error: { code, message, details? } }` của REST; 404 là `NOT_FOUND` thay cho chuỗi `"Not found"`.
+- **Kết quả:** JSON thuần trong `structuredContent` (kèm bản text): `list_` trả `{ items, total }` (`total` là số bản ghi sau lọc, trước phân trang), tool khác trả bản ghi. Custom response **không** áp cho MCP; rules và chaos thì có, xem [Rules và chaos](#rules-và-chaos). Lỗi là tool error (`isError`) mang đúng body `{ error: { code, message, details? } }` của REST; 404 là `NOT_FOUND` thay cho chuỗi `"Not found"`.
 - **Resources:** `mock://schema` (cây resource, route lồng, schema hoặc template, endpoint, tool của từng resource) và `mock://openapi` (OpenAPI 3.1 sinh từ resource và endpoint đang bật, `modules/mcp/mock-openapi.ts`).
 - **Giới hạn:** request tới `…/mcp` qua cùng rate limit như REST nhưng tính như lượt đọc; ngoài ra **mỗi tool call** được xét lại theo IP, theo secret và ngân sách byte của secret (tool ghi `create_`, `update_`, `delete_` lấy thêm một lượt ghi), nên một tool call tính hai lượt vào hạn mức mỗi giây. Mỗi tool call tính **1 request** vào `mockRequestsPerMonth` của chủ project và cập nhật `lastRequestAt` như REST (`initialize`, `tools/list`, đọc resource không tính). Body JSON-RPC theo `MAX_JSON_BODY_KB`; byte kết quả trừ vào ngân sách byte của secret, trần response như REST. Vượt thì tool error `RATE_LIMITED` (`details.retryAfterSeconds`) hoặc `MONTHLY_QUOTA_EXCEEDED`.
 - **Một message mỗi request:** body là mảng (JSON-RPC batch, MCP bỏ từ 2025-06-18) bị từ chối 400 với lỗi JSON-RPC `-32600` trước khi tới SDK. `subscriptions/listen` bị từ chối (HTTP 200, lỗi JSON-RPC `-32601`): danh sách tool chỉ đổi khi cây resource đổi, server khai `listChanged: false`; client gọi lại `tools/list`.
@@ -126,8 +146,12 @@ Lỗi theo dạng `{ "error": { "code", "message", "details"? } }`, trừ 404 `"
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | `Content-Encoding` hoặc charset không đọc được; POST tới MCP endpoint không phải JSON | `http/error-handler.ts`, `modules/mcp/mcp-express-bridge.ts` |
 | 422 | `RESPONSE_TOO_LARGE` | Response sẽ vượt trần; `details` có `maxBytes`, `actualBytes` | `render-response.ts`, `relation-budget.ts` |
 | 422 | `TEMPLATE_TOO_DEEP` | Template đã lưu vượt `TEMPLATE_LIMITS` hiện hành (chỉ xảy ra nếu giới hạn bị hạ sau khi lưu, vì lúc lưu đã kiểm cùng giới hạn) | `render-response.ts` |
-| 429 | `RATE_LIMITED` | Vượt một mức rate limit; kèm `Retry-After` | `modules/mock-runtime/rate-limit.ts` |
+| 429 | `RATE_LIMITED` | Vượt một mức rate limit; chaos `rateLimitRate`; vượt `MAX_DELAYED_PER_PROJECT` request đang chờ chaos; kèm `Retry-After` | `modules/mock-runtime/rate-limit.ts`, `mock-behavior.ts` |
 | 429 | `MONTHLY_QUOTA_EXCEEDED` | Chủ project hết hạn mức tháng | `mock-router.ts` |
+| 400–599 | `MOCK_CHAOS_ERROR` | Chaos `errorRate` của endpoint, status theo `errorStatus` | `modules/mock-runtime/mock-behavior.ts` |
+| 504 | `MOCK_TIMEOUT` | Chaos `timeoutRate`: giữ kết nối tới `latencyMs` max (hoặc 10 s) rồi trả | `modules/mock-runtime/mock-behavior.ts` |
+| 499 | `REQUEST_CANCELLED` | Chỉ qua Mock MCP: client đóng tool call khi đang chờ độ trễ chaos; tool error, không có gì thay đổi | `modules/mcp/mock-tool-behavior.ts` |
+| tuỳ rule | body của rule | Rule khớp: status, header và body theo cấu hình endpoint | `modules/mock-runtime/mock-behavior.ts` |
 | 500 | `INTERNAL_ERROR` | Lỗi không lường trước; không có chi tiết hay stack | `mock-router.ts`, `http/error-handler.ts` |
 
 Bảng mã lỗi cho người dùng cuối: `apps/web/src/pages/docs/status-codes.tsx` (đọc hằng từ `@localman/shared/constants`). Thêm hoặc bỏ mã thì sửa cả hai.

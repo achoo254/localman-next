@@ -4,19 +4,13 @@ import {
 	type JsonValue,
 	OBJECT_ID_FIELD,
 	RECORD_ID_MAX,
+	RECORD_ID_PATTERN,
 	checkJson,
 	isJsonObject,
 } from "@localman/shared";
 import { type GeneratedRecord, parentHasNoData } from "./data-generator.js";
 import { ByteMeter, type ResourceRef } from "./data-size.js";
 
-/**
- * Ids must be usable as one URL path segment of the mock API, with at
- * least one letter or digit (so never `.` or `..`).
- */
-const RECORD_ID_PATTERN = new RegExp(
-	`^(?=.*[A-Za-z0-9])[A-Za-z0-9_.~-]{1,${RECORD_ID_MAX}}$`,
-);
 const NUMERIC_ID = /^\d+$/;
 /**
  * Numeric ids above this do not move `nextId`: a pasted `9007199254740991`

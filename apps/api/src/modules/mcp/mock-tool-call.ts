@@ -19,6 +19,7 @@ import { RecordModel } from "../resources/record-model.js";
 import type { StoredResource } from "../resources/resource-model.js";
 import { parentKeyIn } from "../resources/resource-store.js";
 import { readToolArgs } from "./mock-tool-args.js";
+import { toolBehaviorResult } from "./mock-tool-behavior.js";
 import type {
 	MockToolDefinition,
 	MockToolTarget,
@@ -39,6 +40,8 @@ export interface MockToolScope {
 	readonly clientIp: string | null;
 	readonly project: MockProject;
 	readonly resources: readonly StoredResource[];
+	/** Aborts when the HTTP request closes (ends chaos waits early). */
+	readonly signal?: AbortSignal;
 }
 
 const KIND_OF: Readonly<Record<MockToolAction, EndpointKind>> = {
@@ -127,6 +130,16 @@ async function run(
 	const call = readToolArgs(tool, args);
 	const target = await targetOf(scope, tool.target, call.parentId);
 	if (!target) throw notFound();
+	const charge = (bytes: number) =>
+		limiters.chargeResponse(scope.secret, bytes);
+	const answer = await toolBehaviorResult(
+		KIND_OF[action],
+		target,
+		call,
+		scope.signal,
+		charge,
+	);
+	if (answer) return answer;
 	const result = await runEndpoint(
 		KIND_OF[action],
 		target,
@@ -138,10 +151,7 @@ async function run(
 	// Custom responses shape REST bodies only: MCP gets the data as is,
 	// within the same size cap and byte budget.
 	const rendered = renderResponse(DEFAULT_RESPONSE, result.data, null);
-	limiters.chargeResponse(
-		scope.secret,
-		Math.max(rendered.bytes, result.readBytes),
-	);
+	charge(Math.max(rendered.bytes, result.readBytes));
 	return toolSuccess(
 		action === "list"
 			? { items: result.data, total: result.count }

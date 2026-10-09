@@ -77,6 +77,9 @@ export const resources: Messages["resources"] = {
 		remove: "Xoá field {label}",
 		addField: "Thêm field",
 		noMatch: "Không có method nào khớp.",
+		suggested: "gợi ý",
+		suggestedHint:
+			"theo tên field<sr>. Bạn có thể chọn method khác bất cứ lúc nào.</sr>",
 	},
 	template: {
 		hint: 'Template JSON thay cho schema ở trên, dùng cho cấu trúc lồng phức tạp. Giá trị dạng <code>"$category.method"</code> gọi Faker (ví dụ <code>"$internet.email"</code>). Để trống để dùng schema.',

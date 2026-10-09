@@ -7,6 +7,7 @@ import {
 	limitsFor,
 } from "@localman/shared/constants";
 import type { ReactNode } from "react";
+import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
 import type { Translate } from "../../i18n/translate";
 import { DocsTable, InlineCode, docsRich } from "./docs-content";
@@ -30,8 +31,27 @@ function NoCode({ label }: { label: string }) {
 	);
 }
 
+type StatusRow = [string, string | null, ReactNode];
+
+/** Errors a mock answers only when its endpoint's chaos says so. */
+function chaosRows(t: Translate): StatusRow[] {
+	return [
+		[
+			"4xx, 5xx",
+			"MOCK_CHAOS_ERROR",
+			t("docs.reference.statusCodes.chaosError"),
+		],
+		["504", "MOCK_TIMEOUT", t("docs.reference.statusCodes.chaosTimeout")],
+		[
+			"499",
+			"REQUEST_CANCELLED",
+			t("docs.reference.statusCodes.requestCancelled"),
+		],
+	];
+}
+
 /** [HTTP status, error code (null: none), explanation] in table order. */
-function statusRows(t: Translate): [string, string | null, ReactNode][] {
+function statusRows(t: Translate, chaos: boolean): StatusRow[] {
 	return [
 		["200", null, t("docs.reference.statusCodes.ok")],
 		["201", null, t("docs.reference.statusCodes.created")],
@@ -129,14 +149,16 @@ function statusRows(t: Translate): [string, string | null, ReactNode][] {
 			"INTERNAL_ERROR",
 			docsRich(t("docs.reference.statusCodes.internal")),
 		],
+		...(chaos ? chaosRows(t) : []),
 	];
 }
 
 /** HTTP statuses and error codes of the mock runtime. */
 export function StatusCodesTable() {
 	const t = useT();
+	const { mockPowerUps } = useFeatures();
 	const none = t("docs.reference.statusCodes.none");
-	const rows = statusRows(t).map(([status, code, when]) => [
+	const rows = statusRows(t, mockPowerUps).map(([status, code, when]) => [
 		status,
 		code ? <Code key="c" code={code} /> : <NoCode key="c" label={none} />,
 		when,

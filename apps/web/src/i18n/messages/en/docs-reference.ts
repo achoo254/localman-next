@@ -51,6 +51,12 @@ export const docsReference = {
 		monthlyQuota: "The project owner has used up the monthly request quota.",
 		monthlyQuotaFree:
 			"The project owner has used up the monthly request quota (Free plan: {requests} mock requests per month, shared across all their projects).",
+		chaosError:
+			"Error injected by the endpoint's chaos settings (its error rate). The status is the one picked there.",
+		chaosTimeout:
+			"Timeout injected by the endpoint's chaos settings: the request waited until the max delay (10 s when it's 0), then got this answer.",
+		requestCancelled:
+			"Mock MCP only: the client closed a tool call while it waited for the endpoint's chaos delay. The tool returns this error and nothing is changed.",
 		internal:
 			"Server-side error. Include <code>X-Localman-Request-Id</code> when you report it.",
 	},

@@ -2,10 +2,16 @@ import { useId, useState } from "react";
 import { Badge, type BadgeTone } from "../../components/ui/badge";
 import { JsonEditor } from "../../components/ui/json-editor";
 import { Switch } from "../../components/ui/switch";
+import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
 import { cn } from "../../lib/cn";
-import { type EndpointDraft, endpointKey } from "./resource-form-state";
+import { EndpointBehaviorSection } from "./endpoint-behavior-section";
+import {
+	type BehaviorErrors,
+	type EndpointDraft,
+	endpointKey,
+} from "./resource-form-state";
 import type { EndpointMethod } from "./resource-model";
 
 export interface EndpointsEditorProps {
@@ -15,6 +21,8 @@ export interface EndpointsEditorProps {
 	resourceName: string;
 	/** Errors by `endpointKey`. */
 	errors: Record<string, string>;
+	/** Chaos and rule errors by `endpointKey`. */
+	behaviorErrors: Record<string, BehaviorErrors>;
 }
 
 const METHOD_TONES: Readonly<Record<EndpointMethod, BadgeTone>> = {
@@ -39,15 +47,18 @@ function isLabelled(key: string): key is keyof typeof LABEL_KEYS {
 
 /**
  * The five generated endpoints: each can be switched off (the mock then
- * answers 404) and has a response template. Open on every plan.
+ * answers 404) and has a response template, then (released with the
+ * `mockPowerUps` flag) conditional rules and chaos. Open on every plan.
  */
 export function EndpointsEditor({
 	endpoints,
 	onChange,
 	resourceName,
 	errors,
+	behaviorErrors,
 }: EndpointsEditorProps) {
 	const t = useT();
+	const { mockPowerUps } = useFeatures();
 	const ids = useId();
 	const [blurErrors, setBlurErrors] = useState<Record<string, string | null>>(
 		{},
@@ -115,6 +126,15 @@ export function EndpointsEditor({
 							<p id={`${ids}-${slug}-error`} className="m-0 text-error text-xs">
 								{error}
 							</p>
+						) : null}
+						{mockPowerUps ? (
+							<EndpointBehaviorSection
+								endpoint={endpoint}
+								title={title}
+								slug={slug}
+								errors={behaviorErrors[key]}
+								onChange={(patch) => update(key, patch)}
+							/>
 						) : null}
 					</div>
 				);

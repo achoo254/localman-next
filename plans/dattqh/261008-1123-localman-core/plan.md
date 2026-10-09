@@ -366,6 +366,17 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - OpenAPI nhập từ JSON; YAML cân nhắc ở phase 19.
 - Bật cờ `mockMcp` ngay sau khi Hosted Mock MCP qua kiểm thật trên production, không chờ user thử OAuth bằng Claude Code (Jev 0.52); cờ production ghi trong `infra/localman/released-features`.
 
+### Vòng 26: khi cook phase 19 (2026-10-09)
+- User vắng và ưu tiên có người dùng trước: T1 của phase 19 làm bằng bản đặc tả giao diện (`plans/dattqh/reports/ui-phase-19-mock-power-ups-spec.md`) thay cho sửa prototype rồi chờ user duyệt; user xem trên bản đã deploy.
+- Mọi chữ mới của phase 19 đi qua i18n (English mặc định, 中文, Tiếng Việt) và không nêu tên đối thủ.
+- Tool của toolset `mock-advanced` dùng chung scope OAuth `mock:read`/`mock:write` để Claude Code và agent khác gọi được qua Localman MCP mà không cần thêm scope ở IdP.
+
+### Vòng 27: chuyển sang API client (2026-10-09, user chốt)
+- User yêu cầu: hoàn thiện mock API rồi làm phần gọi API giống Postman. Phase 10 làm trước đợt 4 (Tunelo theo tài khoản); phần T8 tự nhận tunnel qua `GET /api/tunnels` hoãn tới khi xong plan Tunelo, phase 10 vẫn có phát hiện host local, thử gửi thẳng localhost, panel Tunelo và dán URL tunnel thủ công.
+- Phase 20 (mock lai localhost, log có replay, webhook inbox, mock callback) làm sau phase 10 vì cần API client và tunnel theo tài khoản.
+- Câu hỏi mở của bước xia phase 10 (`plans/dattqh/reports/xia-phase-10-api-client-port.md`), chốt theo khuyến nghị: hộp thoại "hỏi trước khi secret đi qua proxy" kiểm bằng unit với dữ liệu giả, E2E dời sang phase 13 (biến `type=secret`); script dùng `lm.*`, không alias `pm.*`; nhãn import/export ghi "Collection v2.1" (không nêu tên đối thủ); thêm tab Tests ở response, chỉ hiện khi request có script; OpenAPI chỉ nhận JSON, YAML báo lỗi rõ.
+- Bước xia phát hiện CSP `connect-src 'self'` sẽ chặn mọi request gửi thẳng từ trình duyệt và thiếu `'wasm-unsafe-eval'` cho QuickJS; T3 phải sửa CSP và thêm `location` riêng cho proxy (body 10 MB, timeout 120 s).
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 

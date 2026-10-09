@@ -6,12 +6,9 @@
  * a `$ref` met again on its own path is a cycle.
  */
 import { type JsonObject, type JsonValue, isJsonObject } from "./json-value.js";
-import { deref } from "./openapi-ref.js";
-import {
-	type EnumValue,
-	type ImportedShape,
-	SchemaImportFailure,
-} from "./schema-import-fields.js";
+import { deref, refCycle } from "./openapi-ref.js";
+import { SchemaImportFailure } from "./schema-import-errors.js";
+import type { EnumValue, ImportedShape } from "./schema-import-fields.js";
 
 /** Nesting of `allOf`/`oneOf`/`anyOf` and `$ref` hops walked at most. */
 export const MAX_OPENAPI_DEPTH = 32;
@@ -20,6 +17,11 @@ export const MAX_OPENAPI_DEPTH = 32;
  * fan-out bombs (many `$ref` to one schema with many properties).
  */
 export const MAX_OPENAPI_STEPS = 20_000;
+/**
+ * Steps of a whole resource import, which walks many components of one
+ * document with one walker (`schema-inference-openapi.ts`).
+ */
+export const MAX_OPENAPI_IMPORT_STEPS = 100_000;
 
 export interface WalkedShape {
 	readonly shape: ImportedShape;
@@ -49,12 +51,15 @@ export class SchemaWalker {
 		{ props: Properties; depth: number }
 	>();
 
-	constructor(private readonly root: JsonObject) {}
+	constructor(
+		private readonly root: JsonObject,
+		private readonly maxSteps = MAX_OPENAPI_STEPS,
+	) {}
 
-	/** Counts `amount` units of work; past `MAX_OPENAPI_STEPS` the import fails. */
+	/** Counts `amount` units of work; past `maxSteps` the import fails. */
 	private charge(amount: number): void {
 		this.steps += amount;
-		if (this.steps > MAX_OPENAPI_STEPS) {
+		if (this.steps > this.maxSteps) {
 			throw new SchemaImportFailure("TOO_COMPLEX", "The schema is too complex");
 		}
 	}
@@ -66,11 +71,14 @@ export class SchemaWalker {
 			throw new SchemaImportFailure(
 				"TOO_DEEP",
 				`Schemas are nested deeper than ${MAX_OPENAPI_DEPTH} levels`,
+				{ max: MAX_OPENAPI_DEPTH },
 			);
 		}
 		const { value, ref } = deref(this.root, node);
 		if (ref !== null && stack.includes(ref)) {
-			throw new SchemaImportFailure("REF_CYCLE", `${ref} includes itself`);
+			throw new SchemaImportFailure("REF_CYCLE", `${ref} includes itself`, {
+				cycle: refCycle(stack, ref),
+			});
 		}
 		return { value, ref, stack: ref === null ? stack : [...stack, ref] };
 	}

@@ -19,6 +19,8 @@ const limits: RuntimeSettings["heavyOperationRateLimit"] = {
 	replaceData: { perUser: window(2), perProject: window(10) },
 	clone: { perUser: window(2), perProject: window(10) },
 	reset: { perUser: window(2), perProject: window(10) },
+	import: { perUser: window(2), perProject: window(10) },
+	suggestFaker: { perUser: window(2) },
 };
 
 useCollaboratorTestDb(() => ({
@@ -103,5 +105,22 @@ describe("heavy dashboard operations", () => {
 		const cloned = await statuses(clone);
 		expect(cloned.at(-1)).toBe(429);
 		expect(cloned.slice(0, 2).every((status) => status !== 429)).toBe(true);
+	});
+
+	it("limit imports, previews included, and Faker suggestions", async () => {
+		const { projectId } = await projectWithUsers();
+		const preview = () =>
+			as(OWNER).send("post", resourcesPath(projectId, "/import?dryRun=true"), {
+				format: "json",
+				input: '[{"name":"Ada"}]',
+				name: "people",
+			});
+		expect(await statuses(preview)).toEqual([200, 200, 429]);
+		const suggest = () =>
+			as(BOB).send("post", "/faker-methods/suggestions", {
+				fields: [{ name: "email" }],
+			});
+		const suggested = await statuses(suggest);
+		expect(suggested).toEqual([200, 200, 429]);
 	});
 });

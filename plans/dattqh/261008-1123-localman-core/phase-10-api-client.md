@@ -46,12 +46,52 @@ Phase này gồm:
 - Import/export cURL, Postman v2.1, OpenAPI 3.0. Code snippet cho 16 ngôn ngữ.
 - Tích hợp mock: nút "Mở trong API Client" trên node của cây resource, và "Tạo collection từ project mock" (collection được tạo theo model của phase 12).
 
-## Files to Create / Modify (dự kiến, chốt lại ở bước xia)
-- Create `apps/web/src/pages/api-client/` (layout 3 cột: sidebar, request, response) và `apps/web/src/features/api-client/{request,response,tabs,history,import-export,snippets,scripts}/`
-- Create `apps/api/src/modules/api-client/`: `history-model.ts`, `draft-model.ts`, routes và service
-- Create `apps/api/src/modules/api-client/proxy-routes.ts`, `ssrf-guard.ts`
-- Modify `apps/web/src/features/resource-tree/node-actions.tsx` để thêm action "Mở trong API Client"
-- Modify `apps/web/src/components/layout/app-header.tsx` để thêm nav "API Client"
+## Files to Create / Modify (đã chốt ở bước xia, 2026-10-09)
+Chi tiết, lý do và rủi ro: `plans/dattqh/reports/xia-phase-10-api-client-port.md`. Mọi file kebab-case, ≤ 200 dòng, test co-located. Logic thuần ở `packages/shared/src/api-client/`, xuất qua subpath `@localman/shared/api-client`.
+
+**T2a, nền** (`packages/shared/src/api-client/`):
+- Create `index.ts`, `limits.ts`, `request-model.ts`, `request-schema.ts`, `response-model.ts`, `proxy-envelope.ts`, `variable-interpolation.ts`, `dynamic-variables.ts`, `extract-variables.ts`, `url-params.ts`, `auth-headers.ts`, `request-preparer.ts`, `multipart-encoder.ts`, `local-host.ts`, `tunnel-url.ts`, kèm test
+- Modify `packages/shared/package.json` (export `./api-client`, `quickjs-emscripten-core`, devDependency `@jitl/quickjs-wasmfile-release-sync`)
+
+**T2b, import/export/snippet** (`packages/shared/src/api-client/`):
+- Create `import/{detect-format,curl-tokenizer,curl-parser,collection-v21-types,collection-v21-import,collection-v21-items,environment-v21-import,openapi-import,openapi-example,imported-collection}.ts`, `export/{collection-v21-export,openapi-export}.ts`, `snippets/{snippet-registry,snippet-escape}.ts` và 16 `snippets/generator-*.ts`, kèm test (golden + chuỗi đối kháng)
+
+**T2c, sandbox:** Create `packages/shared/src/api-client/script-sandbox/{script-types,script-prelude,run-script}.ts` kèm test chạy QuickJS thật
+
+**T3, proxy** (`apps/api/src/modules/api-client/`):
+- Create `proxy-operation.ts` (`client.sendRequest`, `POST /api/v1/proxy`, tool MCP `send_request`), `proxy-forwarder.ts`, `proxy-headers.ts`, `ssrf-guard.ts`, `proxy-timings.ts`, `proxy-response-body.ts`, `proxy-quota.ts`, kèm test
+- Modify `apps/api/package.json` (`undici@^7.30`), `apps/api/src/config/runtime-settings.ts`, `apps/api/src/config/feature-env.ts`, `.env.example`, `docs/system-architecture.md`
+- Modify `infra/localman/nginx/localman.hoandat.com.conf`: `location = /api/v1/proxy` (body 15m, read timeout 130s); CSP `connect-src` mở cho mọi origin http(s) (gửi thẳng) và `script-src` thêm `'wasm-unsafe-eval'` (QuickJS)
+
+**T4, history/draft/settings** (`apps/api/src/modules/api-client/`):
+- Create `history-{model,service,operations}.ts`, `draft-{model,operations}.ts`, `client-settings-{model,operations}.ts`, kèm test
+- Create `api-client-operations.ts` và Modify `apps/api/src/operations/registry.ts` ở bước cuối, sau khi T3 xong
+
+**T5, UI request** (`apps/web/src/`):
+- Create `pages/api-client/api-client-page.tsx`; `features/api-client/workbench/{workbench-types,workbench-reducer,use-draft-sync}.ts`, `workbench/{workbench-context,sidebar-rail,status-bar,empty-editor}.tsx`; `features/api-client/api/draft-api.ts`; `features/api-client/tabs/{tab-bar,tab-item,close-tab-modal}.tsx`; `features/api-client/request/{request-editor,url-bar,method-select,variable-input,key-value-table,params-tab,headers-tab,auth-tab,body-tab,body-form-table,body-binary-picker,request-settings-tab}.tsx`, `request/auto-headers.ts`; `features/api-client/scripts/{scripts-tab.tsx,script-snippets.ts}`; `components/ui/code-editor.tsx`; `lib/method-tone.ts`; `platform/file-read.ts`; `i18n/messages/{en,vi,zh-CN}/api-client.ts`
+- Modify `routes.tsx` (`/api-client`), `components/layout/app-shell.tsx` (biến thể workbench), `apps/web/package.json` (`@codemirror/lang-javascript`, `lang-xml`, `lang-html`), `i18n/messages/{en,vi,zh-CN}/dictionary.ts` (đăng ký trước 4 namespace `apiClient`, `apiClientTools`, `apiClientRouting`, `apiClientTunelo`), `docs/design-system.md`
+
+**T6, UI response và tiện ích** (`apps/web/src/features/api-client/`):
+- Create `response/{response-panel,response-meta,timings-popover,response-body,html-preview,json-table-preview,response-headers-table,response-cookies-table,script-results}.tsx`, `response/{body-search,set-cookie-parser}.ts`; `history/{history-sidebar,history-item}.tsx`, `history/history-groups.ts`, `api/history-api.ts`; `import-export/{import-modal,collection-open-picker,export-menu}.tsx`; `snippets/code-snippet-modal.tsx`; `apps/web/src/i18n/messages/{en,vi,zh-CN}/api-client-tools.ts`
+
+**T7, định tuyến:**
+- Create `apps/web/src/features/api-client/routing/{forbidden-headers,route-plan,send-pipeline,use-send-request,route-why}.ts`, `routing/{secret-consent-modal,route-select,route-badge,route-note}.tsx`; `api/{proxy-api,client-settings-api}.ts`; `scripts/script-worker.ts`; `apps/web/src/platform/{direct-fetch,script-host}.ts`; `apps/web/src/pages/settings/routing-settings.tsx`; `i18n/messages/{en,vi,zh-CN}/api-client-routing.ts`
+- Modify `apps/web/vite.config.ts` (worker ES, wasm QuickJS)
+
+**T8a, Tunelo thủ công (làm ngay):**
+- Create `apps/web/src/features/api-client/tunelo/{tunelo-panel,tunelo-steps,cors-hint,tunnel-warning,tunnel-paste-form,tunnel-badge}.tsx`, `tunelo/cors-snippets.ts`; `apps/web/src/pages/settings/{settings-page,tunelo-settings}.tsx`; `i18n/messages/{en,vi,zh-CN}/api-client-tunelo.ts`
+- Modify `apps/web/src/routes.tsx` (`/settings`)
+
+**T8b, tự nhận tunnel theo tài khoản: HOÃN** tới khi xong plan Tunelo (đợt 4, `GET /api/tunnels`, link-code, `tunelo-v1.7.0`). Khi đó: Create `apps/api/src/modules/tunelo/*` (dùng `TunnelTokenExchange` sẵn có), `features/api-client/tunelo/{choose-tunnel-modal,tunelo-connect-modal}.tsx`; Modify `tunelo-settings.tsx` (bảng máy đã liên kết).
+
+**T9, tích hợp mock:**
+- Create `packages/shared/src/api-client/mock-to-collection.ts` (ID ổn định `mock:<resourceId>:<method>:<scope>` để phase 16 mở rộng) kèm test, `apps/web/src/features/api-client/import-export/from-mock-modal.tsx`
+- Modify `apps/web/src/features/resource-tree/{node-actions,resource-node}.tsx` (action "Mở trong API Client"), `apps/web/src/pages/project-detail/project-detail-dialogs.tsx`, `apps/web/src/components/layout/app-header.tsx` (nav "Mock API" / "API Client" theo cờ `apiClient`), `i18n/messages/{en,vi,zh-CN}/{layout,resource-tree}.ts`
+
+**T10, test liên tầng:**
+- Create `apps/api/src/modules/api-client/{proxy-echo-server,ssrf-matrix}.test.ts`, `e2e/specs/api-client-{routing,tunelo,mock}.spec.ts`
+
+Không thêm Zustand, Dexie, Firebase, `react-resizable-panels`, meta-package `quickjs-emscripten` hay `codemirror`. Các file đang sửa dở của phase 19 (`registry.ts`, `dictionary.ts`, `node-actions.tsx`, `resource-node.tsx`) chỉ được đụng sau khi phase 19 commit.
 
 ## Tasks & Steps
 1. Chạy xia port từ localman: lập dependency matrix chi tiết (Zustand và Dexie của localman sang TanStack Query và API Mongo của Localman web), rồi chốt danh sách file.
@@ -157,7 +197,7 @@ Phase này gồm:
 | T12 | Review cuối phase, ưu tiên SSRF, rò rỉ `lm_session`, giả `X-Forwarded-For`, lưu token Tunelo và hỏi trước khi secret đi qua proxy | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 Xia xong, danh sách file đã chốt và khớp prototype
+- [x] T1 Xia xong, danh sách file đã chốt và khớp prototype (`plans/dattqh/reports/xia-phase-10-api-client-port.md`)
 - [ ] T2 Logic thuần đã port kèm test gốc pass
 - [ ] T3 Proxy và `ssrf-guard` xong
 - [ ] T4 History và draft phía server xong

@@ -15,6 +15,12 @@ import {
 	isRecord,
 	optionalString,
 } from "../../lib/json-guards";
+import {
+	type EndpointChaos,
+	type EndpointRule,
+	parseChaos,
+	parseRule,
+} from "./endpoint-behavior-model";
 
 /** Resources of a mock project as the dashboard API returns them. */
 
@@ -34,6 +40,10 @@ export interface ResourceEndpoint {
 	enabled: boolean;
 	/** JSON response template (`"$mockData"` by default). */
 	response: unknown;
+	/** Absent: no chaos. */
+	chaos?: EndpointChaos;
+	/** Absent or empty: the endpoint always runs its CRUD. */
+	rules?: EndpointRule[];
 }
 
 export interface Resource {
@@ -94,6 +104,10 @@ function parseEndpoint(value: unknown): ResourceEndpoint {
 		path: oneOf(ENDPOINT_PATHS, expectString(data, "path"), "path"),
 		enabled: expectBoolean(data, "enabled"),
 		response: data.response,
+		...(data.chaos == null ? {} : { chaos: parseChaos(data.chaos) }),
+		...(Array.isArray(data.rules) && data.rules.length > 0
+			? { rules: data.rules.map(parseRule) }
+			: {}),
 	};
 }
 

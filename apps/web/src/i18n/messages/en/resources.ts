@@ -80,6 +80,8 @@ export const resources = {
 		remove: "Remove field {label}",
 		addField: "Add field",
 		noMatch: "No method matches.",
+		suggested: "suggested",
+		suggestedHint: "from the field name<sr>. Pick another method anytime.</sr>",
 	},
 	template: {
 		hint: 'JSON template used instead of the schema above, for complex nested shapes. Values like <code>"$category.method"</code> call Faker (for example <code>"$internet.email"</code>). Leave it empty to use the schema.',

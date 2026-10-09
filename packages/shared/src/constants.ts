@@ -33,6 +33,7 @@ export {
 	parentKeyOf,
 	MOCK_MCP_SEGMENT,
 	RECORD_ID_MAX,
+	RECORD_ID_PATTERN,
 	RELATION_FIELD_TYPES,
 	relationSourceOf,
 	RESOURCE_ENDPOINTS,
@@ -73,13 +74,40 @@ export {
 	schemaFromTypeScript,
 	type TypeScriptImportOptions,
 } from "./schema-from-typescript.js";
+export {
+	DEFAULT_INFERRED_NAME,
+	type InferenceFormat,
+	type InferredResource,
+	inferSchema,
+	MAX_INFERENCE_BYTES,
+	MAX_INFERRED_RESOURCES,
+	normalizeResourceName,
+	type SchemaInferenceOptions,
+	type SchemaInferenceResult,
+} from "./schema-inference.js";
+export {
+	FAKER_MATCH_CONFIDENCE,
+	type FakerFieldMatch,
+	type FakerValueKind,
+	fakerValueKindOf,
+	matchFakerField,
+} from "./faker-field-matcher.js";
+export {
+	exportTypeScript,
+	exportZodSchemas,
+	type TypeExportResource,
+} from "./type-exporters.js";
 export type {
-	SchemaImportError,
-	SchemaImportErrorCode,
 	SchemaImportResult,
 	SchemaImportSuccess,
-	SchemaImportWarning,
 } from "./schema-import-fields.js";
+export type {
+	ImportParams,
+	SchemaImportError,
+	SchemaImportErrorCode,
+	SchemaImportWarning,
+	SchemaImportWarningCode,
+} from "./schema-import-errors.js";
 export {
 	CONTACT_CATEGORIES,
 	CONTACT_EMAIL_PATTERN,

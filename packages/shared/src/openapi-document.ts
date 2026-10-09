@@ -20,6 +20,7 @@ import {
 	objectAt,
 	quote,
 } from "./openapi-ref.js";
+import { paramText } from "./schema-import-errors.js";
 
 export const MAX_OPENAPI_BYTES = 2 * 1024 * 1024;
 const DOCUMENT_LIMITS: JsonLimits = { maxDepth: 64, maxNodes: 200_000 };
@@ -42,7 +43,9 @@ export function readOpenApiInput(input: unknown): JsonObject {
 	let value = input;
 	if (typeof input === "string") {
 		if (utf8Length(input) > MAX_OPENAPI_BYTES) {
-			throw failure("INPUT_TOO_LARGE", "OpenAPI input is larger than 2 MB");
+			throw failure("INPUT_TOO_LARGE", "OpenAPI input is larger than 2 MB", {
+				max: MAX_OPENAPI_BYTES,
+			});
 		}
 		if (!/^\s*\{/.test(input)) {
 			throw failure(
@@ -66,7 +69,9 @@ export function readOpenApiInput(input: unknown): JsonObject {
 		throw failure("INVALID_INPUT", "Expected an OpenAPI document or schema");
 	}
 	if (jsonSize(checked.value).bytes > MAX_OPENAPI_BYTES) {
-		throw failure("INPUT_TOO_LARGE", "OpenAPI input is larger than 2 MB");
+		throw failure("INPUT_TOO_LARGE", "OpenAPI input is larger than 2 MB", {
+			max: MAX_OPENAPI_BYTES,
+		});
 	}
 	return checked.value;
 }
@@ -154,7 +159,9 @@ export function chooseSchema(
 				? schemas[wanted]
 				: undefined;
 		if (schema !== undefined) return { name: wanted, schema };
-		throw failure("SCHEMA_NOT_FOUND", `No schema named ${quote(wanted)}`);
+		throw failure("SCHEMA_NOT_FOUND", `No schema named ${quote(wanted)}`, {
+			name: paramText(wanted),
+		});
 	}
 	const paths =
 		options.path === undefined

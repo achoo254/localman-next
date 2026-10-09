@@ -30,6 +30,13 @@ export const projectDetail: Messages["projectDetail"] = {
 	planLimit: "此 project 已达到其所有者套餐的 resource 上限。",
 	toast: {
 		created: "已创建 resource <code>{name}</code>。",
+		imported: {
+			other: "已导入 <code>{name}</code>，共 <b>{count}</b> 条记录。",
+		},
+		importedEmpty: "已导入 <code>{name}</code>。",
+		importedRelated: {
+			other: "已导入 <code>{name}</code> 及 {count} 个相关 resource。",
+		},
 		createdHint: "点击灰色条即可生成数据。",
 		updated: "已更新 resource <code>{name}</code>。",
 		deleted: "已删除 resource <code>{name}</code>。",

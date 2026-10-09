@@ -12,6 +12,7 @@ export const ALL_FEATURES: FeatureFlags = Object.freeze({
 	mockMcp: true,
 	directMode: true,
 	hybridMock: true,
+	mockPowerUps: true,
 });
 
 /** Renders `element` at `/` under the app providers and the given flags. */

@@ -14,7 +14,13 @@ export interface RateLimitWindow {
 }
 
 /** Dashboard operations that load the shared process (see `heavyOperationRateLimit`). */
-export type HeavyOperation = "generate" | "replaceData" | "reset" | "clone";
+export type HeavyOperation =
+	| "generate"
+	| "replaceData"
+	| "reset"
+	| "clone"
+	| "import"
+	| "suggestFaker";
 
 /** Settings that operations read at request time (they are declared statically). */
 export interface RuntimeSettings {
@@ -66,7 +72,8 @@ export interface RuntimeSettings {
 			HeavyOperation,
 			{
 				readonly perUser: RateLimitWindow;
-				readonly perProject: RateLimitWindow;
+				/** Absent for an operation outside any project. */
+				readonly perProject?: RateLimitWindow;
 			}
 		>
 	>;
@@ -95,6 +102,9 @@ export const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = Object.freeze({
 		replaceData: { perUser: perMinute(60), perProject: perMinute(120) },
 		reset: { perUser: perMinute(30), perProject: perMinute(60) },
 		clone: { perUser: perMinute(10), perProject: perMinute(20) },
+		// Previews too: each one parses up to 2 MB of source.
+		import: { perUser: perMinute(60), perProject: perMinute(120) },
+		suggestFaker: { perUser: perMinute(120) },
 	},
 });
 
