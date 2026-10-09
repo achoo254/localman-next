@@ -1,4 +1,10 @@
 import type { AnyOperation } from "@localman/operations";
+import { getAccountUsage } from "../modules/billing/usage-operations.js";
+import { proInterestAdminOperations } from "../modules/feedback/pro-interest-admin-operations.js";
+import {
+	getProInterestFormConfig,
+	submitProInterest,
+} from "../modules/feedback/pro-interest-operations.js";
 import {
 	listNotifications,
 	markAllNotificationsRead,
@@ -13,6 +19,7 @@ import {
 	deletePushSubscription,
 	getVapidPublicKey,
 } from "../modules/notifications/push-operations.js";
+import { projectOperations } from "../modules/projects/project-operations.js";
 import { getMe } from "../modules/users/user-operations.js";
 
 /**
@@ -31,4 +38,9 @@ export const operations: readonly AnyOperation[] = [
 	getVapidPublicKey,
 	createPushSubscription,
 	deletePushSubscription,
+	...projectOperations,
+	getAccountUsage,
+	submitProInterest,
+	getProInterestFormConfig,
+	...proInterestAdminOperations,
 ];

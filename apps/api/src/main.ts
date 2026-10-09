@@ -1,8 +1,16 @@
 import type { Server } from "node:http";
 import type { Express } from "express";
 import { type Env, parseEnv } from "./config/env.js";
+import {
+	configureRuntime,
+	runtimeSettingsFromEnv,
+} from "./config/runtime-settings.js";
 import { createDashboardApp } from "./dashboard-server.js";
-import { connectMongo, disconnectMongo } from "./db/connect-mongo.js";
+import {
+	connectMongo,
+	disconnectMongo,
+	initModels,
+} from "./db/connect-mongo.js";
 import { type Logger, createLogger } from "./logger.js";
 import { createMockApp } from "./mock-server.js";
 import {
@@ -62,7 +70,8 @@ async function shutdown(reason: string, exitCode: number): Promise<void> {
 	forceExit.unref();
 	try {
 		await Promise.all(servers.map(closeServer));
-		// Let background Web Push / Telegram deliveries finish their writes.
+		// Let background Web Push / Telegram deliveries (owner alerts
+		// included) finish their writes.
 		await notifications?.drain();
 		await disconnectMongo();
 		logger.info("Shutdown complete");
@@ -88,6 +97,9 @@ process.on("uncaughtException", (error) => {
 // supervisor (PM2, Compose) restarts the process once the database is back.
 try {
 	await connectMongo(env.MONGO_URI, logger);
+	// Fail fast when an index (unique invariants) cannot be built.
+	await initModels();
+	configureRuntime(runtimeSettingsFromEnv(env));
 	notifications = createNotificationService(env, logger);
 	setNotificationService(notifications);
 	const dashboard = createDashboardApp({

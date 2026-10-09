@@ -30,6 +30,7 @@ export const TOOLSETS = [
 	"users",
 	"notifications",
 	"admin",
+	"feedback",
 ] as const;
 export type Toolset = (typeof TOOLSETS)[number];
 
@@ -50,7 +51,16 @@ export interface OperationContext {
 	readonly auth: AuthContext | null;
 	/** True when the caller asked for a preview; handler must not mutate. */
 	readonly dryRun: boolean;
+	/**
+	 * Network address of the caller as the transport resolved it (over HTTP,
+	 * Express `req.ip`, which honours `trust proxy`); `null` when unknown.
+	 * For per-client limits only, never for authorization.
+	 */
+	readonly clientIp: string | null;
 }
+
+/** What a `guard` can see: the caller, not the request's input or flags. */
+export type OperationGuardContext = Pick<OperationContext, "auth" | "clientIp">;
 
 export interface OperationAnnotations {
 	readonly readOnly: boolean;
@@ -87,6 +97,12 @@ export interface OperationSpec<
 	readonly output: O;
 	/** Every listed scope is required; an empty list makes the route public. */
 	readonly scopes: readonly string[];
+	/**
+	 * Caller check that needs no input (e.g. "owners only"). Runs right
+	 * after the scope check, before the input is parsed, so a refused
+	 * caller always gets 403 and learns nothing from validation errors.
+	 */
+	guard?(ctx: OperationGuardContext): boolean | Promise<boolean>;
 	policy?(
 		ctx: OperationContext,
 		input: z.output<I>,

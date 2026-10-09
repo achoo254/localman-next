@@ -103,6 +103,14 @@ function assertAuthorized(op: AnyOperation, auth: AuthContext | null): void {
 	}
 }
 
+function forbidden(): OperationError {
+	return new OperationError(
+		403,
+		"FORBIDDEN",
+		"You are not allowed to perform this operation",
+	);
+}
+
 function createRouteHandler(
 	op: AnyOperation,
 	options: OperationRouterOptions,
@@ -112,19 +120,21 @@ function createRouteHandler(
 	return async (req, res) => {
 		const auth = await options.resolveAuth(req);
 		assertAuthorized(op, auth);
+		const clientIp = req.ip ?? null;
+		if (op.guard && !(await op.guard({ auth, clientIp }))) throw forbidden();
 
-		const ctx: OperationContext = { auth, dryRun: readDryRun(req, op) };
+		const ctx: OperationContext = {
+			auth,
+			dryRun: readDryRun(req, op),
+			clientIp,
+		};
 		const parsedInput = await op.input.safeParseAsync(
 			collectRawInput(req, op, coerce),
 		);
 		if (!parsedInput.success) throw validationError(parsedInput.error);
 
 		if (op.policy && !(await op.policy(ctx, parsedInput.data))) {
-			throw new OperationError(
-				403,
-				"FORBIDDEN",
-				"You are not allowed to perform this operation",
-			);
+			throw forbidden();
 		}
 
 		const result = await op.handler(ctx, parsedInput.data);

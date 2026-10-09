@@ -69,15 +69,25 @@ const ERROR_SCHEMA: JsonSchema = {
 				code: { type: "string" },
 				message: { type: "string" },
 				details: {
-					type: "array",
-					items: {
-						type: "object",
-						required: ["path", "message"],
-						properties: {
-							path: { type: "string" },
-							message: { type: "string" },
+					oneOf: [
+						{
+							description: "Validation issues",
+							type: "array",
+							items: {
+								type: "object",
+								required: ["path", "message"],
+								properties: {
+									path: { type: "string" },
+									message: { type: "string" },
+								},
+							},
 						},
-					},
+						{
+							description:
+								"Structured facts of a domain error, e.g. the plan limit reached",
+							type: "object",
+						},
+					],
 				},
 			},
 		},

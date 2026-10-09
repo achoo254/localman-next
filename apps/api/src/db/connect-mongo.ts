@@ -65,3 +65,15 @@ export async function connectMongo(
 export async function disconnectMongo(): Promise<void> {
 	await mongoose.disconnect();
 }
+
+/**
+ * Waits until every registered model has built its indexes. Unique
+ * indexes carry invariants (project quota slots, secrets, merged emails),
+ * so a failed build must stop the startup instead of running without them.
+ * Call after every model module was imported (the registry imports them).
+ */
+export async function initModels(): Promise<void> {
+	await Promise.all(
+		mongoose.modelNames().map((name) => mongoose.model(name).init()),
+	);
+}

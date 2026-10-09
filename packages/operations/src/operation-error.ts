@@ -5,11 +5,19 @@ export interface ErrorIssue {
 	readonly message: string;
 }
 
+/**
+ * Extra, client-safe facts about an error: validation issues, or a flat
+ * record describing a domain error (e.g. `{ limit, max, used }`).
+ */
+export type ErrorDetails =
+	| readonly ErrorIssue[]
+	| Readonly<Record<string, string | number | boolean | null>>;
+
 export interface ErrorBody {
 	readonly error: {
 		readonly code: string;
 		readonly message: string;
-		readonly details?: readonly ErrorIssue[];
+		readonly details?: ErrorDetails;
 	};
 }
 
@@ -19,7 +27,7 @@ export class OperationError extends Error {
 		public readonly status: number,
 		public readonly code: string,
 		message: string,
-		public readonly details?: readonly ErrorIssue[],
+		public readonly details?: ErrorDetails,
 	) {
 		super(message);
 		this.name = "OperationError";

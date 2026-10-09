@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { parseKeyring } from "../modules/auth/token-cipher.js";
+import { checkFeatureEnv, featureEnvShape } from "./feature-env.js";
 import { type TrustProxy, parseTrustProxy } from "./trust-proxy.js";
 
 const port = z.coerce.number().int().min(1).max(65_535);
@@ -78,8 +79,10 @@ const envSchema = z
 			.string()
 			.regex(/^[A-Za-z0-9_]{5,32}$/, "must be a bot username without @")
 			.optional(),
+		...featureEnvShape,
 	})
 	.superRefine((env, ctx) => {
+		checkFeatureEnv(env, ctx);
 		if (env.DASHBOARD_PORT === env.MOCK_PORT) {
 			ctx.addIssue({
 				code: "custom",

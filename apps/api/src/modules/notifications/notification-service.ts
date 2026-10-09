@@ -40,6 +40,8 @@ export interface NotificationServiceOptions {
 	/** Absent when TELEGRAM_BOT_TOKEN is not configured. */
 	readonly telegram?: TelegramChannel;
 	readonly telegramBotUsername?: string;
+	/** Chat of the deployment owner (`OWNER_TELEGRAM_CHAT_ID`) for alerts. */
+	readonly ownerChatId?: string;
 }
 
 /** Which optional channels this deployment can use at all. */
@@ -101,6 +103,17 @@ export class NotificationService {
 		return item;
 	}
 
+	/**
+	 * Sends a short text to the owner's Telegram chat in the background.
+	 * Returns false when the bot or the owner chat is not configured.
+	 */
+	alertOwner(text: string, type: string): boolean {
+		const { telegram, ownerChatId } = this.options;
+		if (!telegram || !ownerChatId) return false;
+		this.inBackground(telegram.sendToChat(ownerChatId, text), type);
+		return true;
+	}
+
 	/** Waits for background deliveries (graceful shutdown, tests). */
 	async drain(): Promise<void> {
 		while (this.inFlight.size > 0) {
@@ -154,5 +167,6 @@ export function createNotificationService(
 		webPush,
 		telegram,
 		telegramBotUsername: env.TELEGRAM_BOT_USERNAME,
+		ownerChatId: env.OWNER_TELEGRAM_CHAT_ID,
 	});
 }

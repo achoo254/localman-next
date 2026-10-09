@@ -11,6 +11,11 @@ const REQUIRED = {
 	SESSION_ENCRYPTION_KEY: SESSION_KEY,
 };
 
+const TURNSTILE = {
+	TURNSTILE_SITE_KEY: "0x4AAA-site",
+	TURNSTILE_SECRET_KEY: "0x4AAA-secret-hunter5",
+};
+
 function errorOf(source: NodeJS.ProcessEnv): string {
 	try {
 		parseEnv(source);
@@ -35,6 +40,10 @@ describe("parseEnv", () => {
 			OIDC_CLIENT_SECRET: "client-secret-value",
 			SESSION_ENCRYPTION_KEY: SESSION_KEY,
 			TRUST_PROXY: "loopback",
+			MOCK_BASE_DOMAIN: "localman.hoandat.com",
+			OWNER_SUBS: [],
+			TURNSTILE_VERIFY_URL:
+				"https://challenges.cloudflare.com/turnstile/v0/siteverify",
 		});
 	});
 
@@ -113,6 +122,7 @@ describe("parseEnv", () => {
 			OIDC_ISSUER: "https://auth.hoandat.com",
 			PUBLIC_URL: "https://localman.hoandat.com/",
 			WEB_ORIGIN: "https://localman.hoandat.com",
+			...TURNSTILE,
 		});
 		expect(env.PUBLIC_URL).toBe("https://localman.hoandat.com");
 	});
@@ -150,6 +160,7 @@ describe("parseEnv", () => {
 			OIDC_ISSUER: "https://auth.hoandat.com",
 			PUBLIC_URL: "https://localman.hoandat.com",
 			WEB_ORIGIN: "https://localman.hoandat.com",
+			...TURNSTILE,
 		};
 		expect(errorOf({ ...REQUIRED, ...production, TRUST_PROXY: "1" })).toContain(
 			"TRUST_PROXY: must name the proxy addresses in production",

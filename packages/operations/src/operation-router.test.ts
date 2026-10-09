@@ -246,6 +246,67 @@ describe("createOperationRouter", () => {
 		expect(bad.status).toBe(400);
 	});
 
+	it("runs the guard before parsing input or the dryRun flag", async () => {
+		const ownersOnly = defineOperation({
+			id: "admin.deleteThing",
+			method: "DELETE",
+			path: "/things/:thingId",
+			summary: "Delete a thing (owners only)",
+			input: z.object({ thingId: z.string().regex(/^\d+$/) }),
+			output: z.object({ ok: z.boolean() }),
+			scopes: ["user"],
+			guard: (ctx) => ctx.auth?.subjectId === "owner",
+			annotations: { readOnly: false, destructive: true, idempotent: true },
+			toolset: "admin",
+			mcp: true,
+			dryRun: true,
+			handler: () => ({ ok: true }),
+		});
+		const guarded = createApp([ownersOnly]);
+		for (const path of ["/things/abc", "/things/1?dryRun=maybe", "/things/1"]) {
+			const res = await request(guarded)
+				.delete(path)
+				.set("x-test-scopes", "user")
+				.set("x-test-subject", "intruder");
+			expect(res.status).toBe(403);
+			expect(res.body.error.code).toBe("FORBIDDEN");
+		}
+		const owner = await request(guarded)
+			.delete("/things/abc")
+			.set("x-test-scopes", "user")
+			.set("x-test-subject", "owner");
+		expect(owner.status).toBe(400);
+	});
+
+	it("passes the client address resolved by trust proxy to the context", async () => {
+		const whoAmI = defineOperation({
+			id: "client.getCallerAddress",
+			method: "GET",
+			path: "/caller",
+			summary: "Echo the caller address",
+			input: z.object({}),
+			output: z.object({ clientIp: z.string().nullable() }),
+			scopes: [],
+			annotations: { readOnly: true, destructive: false, idempotent: true },
+			toolset: "client",
+			mcp: true,
+			handler: (ctx) => ({ clientIp: ctx.clientIp }),
+		});
+		const direct = createApp([whoAmI]);
+		const untrusted = await request(direct)
+			.get("/caller")
+			.set("x-forwarded-for", "203.0.113.9");
+		// No trusted proxy: a forged header must not change the address.
+		expect(untrusted.body.clientIp).toMatch(/127\.0\.0\.1|::1/);
+
+		const proxied = createApp([whoAmI]);
+		proxied.set("trust proxy", "loopback");
+		const forwarded = await request(proxied)
+			.get("/caller")
+			.set("x-forwarded-for", "203.0.113.9");
+		expect(forwarded.body.clientIp).toBe("203.0.113.9");
+	});
+
 	it("refuses to build a router with duplicate routes", () => {
 		const twin = { ...getResource, id: "client.getResource" };
 		expect(() =>

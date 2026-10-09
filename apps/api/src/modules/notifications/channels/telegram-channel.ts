@@ -56,6 +56,11 @@ export class TelegramChannel {
 		return result;
 	}
 
+	/** Plain text to a fixed chat (the owner's alerts); no user lookup. */
+	sendToChat(chatId: string, text: string): Promise<TelegramSendResult> {
+		return this.bot.sendMessage(chatId, text);
+	}
+
 	private format(message: NotificationMessage): string {
 		const lines = [message.title, "", message.body];
 		if (message.link)

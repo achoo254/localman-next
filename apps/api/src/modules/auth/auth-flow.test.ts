@@ -85,6 +85,7 @@ describe("sign-in through the IdP", () => {
 			name: "Hoan Dat",
 			picture: null,
 			plan: "free",
+			isOwner: false,
 			telegram: { linked: true, username: "dat_tg" },
 		});
 		const user = await UserModel.findOne({ sub: "acc_test_1" }).lean();

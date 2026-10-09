@@ -91,6 +91,9 @@ function structuralProblems(
 	if (typeof spec.handler !== "function") {
 		problems.push("`handler` must be a function");
 	}
+	if (spec.guard !== undefined && typeof spec.guard !== "function") {
+		problems.push("`guard` must be a function");
+	}
 	if (spec.policy !== undefined && typeof spec.policy !== "function") {
 		problems.push("`policy` must be a function");
 	}

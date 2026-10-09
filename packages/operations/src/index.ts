@@ -24,6 +24,7 @@ export {
 } from "./operation-conflicts.js";
 export {
 	type ErrorBody,
+	type ErrorDetails,
 	type ErrorIssue,
 	OperationError,
 	validationError,
@@ -42,6 +43,7 @@ export {
 	type OperationAnnotations,
 	type OperationContext,
 	type OperationDefinition,
+	type OperationGuardContext,
 	type OperationSpec,
 	type SuccessStatus,
 	TOOLSETS,
