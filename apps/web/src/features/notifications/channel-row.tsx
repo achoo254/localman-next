@@ -11,7 +11,7 @@ export interface ChannelRowProps {
 	statusId: string;
 }
 
-/** One delivery channel in the "Kênh nhận thông báo" card. */
+/** One delivery channel in the "Delivery channels" card. */
 export function ChannelRow({
 	title,
 	description,

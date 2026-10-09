@@ -1,8 +1,9 @@
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { useId } from "react";
 import { cardClassName } from "../../components/ui/card";
+import { useI18n } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
 import { cn } from "../../lib/cn";
-import { formatNumber } from "../../lib/format";
 import type { UsageCounter } from "./account-usage-api";
 
 /** From this share of the quota the meter turns to the warning colour. */
@@ -22,6 +23,7 @@ export function UsageMeter({
 	note,
 	"data-id": dataId,
 }: UsageMeterProps) {
+	const { t, formatNumber } = useI18n();
 	const labelId = useId();
 	const { used, max } = counter;
 	const percent =
@@ -53,8 +55,9 @@ export function UsageMeter({
 			</div>
 			{max === null ? (
 				<p className="m-0 text-[0.8125rem] text-muted">
-					<b className="text-fg">Không giới hạn</b> trong tháng, chỉ có
-					rate-limit theo giây.
+					{renderRich(t("subscription.usage.unlimited"), {
+						b: (chunk) => <b className="text-fg">{chunk}</b>,
+					})}
 				</p>
 			) : (
 				<>
@@ -64,7 +67,7 @@ export function UsageMeter({
 						aria-valuemin={0}
 						aria-valuemax={max}
 						aria-valuenow={Math.min(used, max)}
-						aria-valuetext={`${formatNumber(used)} trên ${formatNumber(max)}`}
+						aria-valuetext={t("subscription.usage.valueText", { used, max })}
 						className="h-2 overflow-hidden rounded-full bg-bar-track"
 					>
 						<span
@@ -85,9 +88,11 @@ export function UsageMeter({
 						) : null}
 						<span>
 							{warn
-								? percent >= 100
-									? "Đã đạt hạn mức. "
-									: `Đã dùng ${percent}%. `
+								? `${
+										percent >= 100
+											? t("subscription.usage.reached")
+											: t("subscription.usage.usedPercent", { percent })
+									} `
 								: null}
 							{note}
 						</span>

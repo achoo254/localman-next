@@ -4,6 +4,7 @@ import {
 	type ProInterestTeamSize,
 	proInterestSubmissionSchema,
 } from "@localman/shared";
+import type { SourceMessages } from "../../i18n/message-types";
 import type { ProInterestSource } from "./pro-interest-options";
 
 export interface ProInterestDraft {
@@ -27,15 +28,23 @@ export type ProInterestField =
 	| "consent"
 	| "turnstile";
 
-export type ProInterestErrors = Partial<Record<ProInterestField, string>>;
+/** Message key of a field problem; the form translates it when rendering. */
+export type ProInterestErrorKey =
+	`subscription.proInterest.errors.${keyof SourceMessages["subscription"]["proInterest"]["errors"]}`;
 
-const MESSAGES: Readonly<Record<Exclude<ProInterestField, "email">, string>> = {
-	name: "Nhập tên để chúng tôi biết cách xưng hô.",
-	needs: "Chọn ít nhất một nhu cầu.",
-	teamSize: "Chọn quy mô team.",
-	note: "Ghi chú quá dài, rút gọn bớt.",
-	consent: "Cần bạn đồng ý để Localman lưu email và liên hệ.",
-	turnstile: "Hoàn tất xác minh trước khi gửi.",
+export type ProInterestErrors = Partial<
+	Record<ProInterestField, ProInterestErrorKey>
+>;
+
+const MESSAGES: Readonly<
+	Record<Exclude<ProInterestField, "email">, ProInterestErrorKey>
+> = {
+	name: "subscription.proInterest.errors.name",
+	needs: "subscription.proInterest.errors.needs",
+	teamSize: "subscription.proInterest.errors.teamSize",
+	note: "subscription.proInterest.errors.note",
+	consent: "subscription.proInterest.errors.consent",
+	turnstile: "subscription.proInterest.errors.turnstile",
 };
 
 function isField(key: unknown): key is Exclude<ProInterestField, "email"> {
@@ -65,8 +74,8 @@ export function toSubmission(
 }
 
 /**
- * Checks the body with the API's own schema and maps problems to Vietnamese
- * field messages. Returns the body when it can be sent.
+ * Checks the body with the API's own schema and maps problems to field
+ * message keys. Returns the body when it can be sent.
  */
 export function validateProInterest(
 	body: Record<string, unknown>,
@@ -80,8 +89,8 @@ export function validateProInterest(
 			if (field === "email") {
 				errors.email =
 					body.email === ""
-						? "Nhập email để chúng tôi liên hệ."
-						: "Email chưa đúng định dạng.";
+						? "subscription.proInterest.errors.emailEmpty"
+						: "subscription.proInterest.errors.emailInvalid";
 			} else if (isField(field)) {
 				errors[field] = MESSAGES[field];
 			}

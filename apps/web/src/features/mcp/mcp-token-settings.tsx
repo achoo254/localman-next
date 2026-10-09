@@ -7,11 +7,10 @@ import { Button } from "../../components/ui/button";
 import type { CopyFieldHandle } from "../../components/ui/copy-field";
 import { Switch } from "../../components/ui/switch";
 import { useToast } from "../../components/ui/toast";
+import { useI18n } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
 import { errorMessage } from "../../lib/api-client";
-import { formatDate } from "../../lib/format";
 import type { Project } from "../../pages/projects/projects-api";
-import { CodeSpans } from "./code-spans";
-import { MCP_COPY, MCP_TOKEN_DIALOG_COPY } from "./mcp-copy";
 import {
 	type McpTokenChange,
 	type McpTokenStatus,
@@ -31,7 +30,7 @@ export interface McpTokenSettingsProps {
 	tokenEnv: string;
 }
 
-/** "Yêu cầu token cho MCP": switch, token hint, one-time token, rotation. */
+/** "Require a token for MCP": switch, token hint, one-time token, rotation. */
 export function McpTokenSettings({
 	project,
 	query,
@@ -40,6 +39,7 @@ export function McpTokenSettings({
 	const ids = useId();
 	const queryClient = useQueryClient();
 	const toast = useToast();
+	const { t, formatDate } = useI18n();
 	const [dialog, setDialog] = useState<McpTokenDialog | null>(null);
 	const [revealed, setRevealed] = useState<string | null>(null);
 	const copyRef = useRef<CopyFieldHandle>(null);
@@ -59,9 +59,9 @@ export function McpTokenSettings({
 		return (
 			<section data-id="project-detail-mcp-token" className="grid gap-2">
 				<h3 className="m-0 font-mono font-semibold text-sm">
-					{MCP_COPY.tokenTitle}
+					{t("mcp.token.title")}
 				</h3>
-				<p className={HELP}>{MCP_COPY.collaboratorNote}</p>
+				<p className={HELP}>{t("mcp.token.collaboratorNote")}</p>
 			</section>
 		);
 	}
@@ -75,7 +75,7 @@ export function McpTokenSettings({
 		}
 		focusAfter.current = "switch";
 		if (kind !== "rotate") {
-			toast.show({ title: MCP_TOKEN_DIALOG_COPY[kind].toast });
+			toast.show({ title: t(`mcp.dialogs.${kind}.toast`) });
 		}
 	};
 
@@ -90,7 +90,7 @@ export function McpTokenSettings({
 		>
 			<div className="flex items-center justify-between gap-3">
 				<h3 id={titleId} className="m-0 font-mono font-semibold text-sm">
-					{MCP_COPY.tokenTitle}
+					{t("mcp.token.title")}
 				</h3>
 				{status ? (
 					<Switch
@@ -106,15 +106,15 @@ export function McpTokenSettings({
 				) : null}
 			</div>
 			{query.isPending ? (
-				<output className={HELP}>{MCP_COPY.tokenLoading}</output>
+				<output className={HELP}>{t("mcp.token.loading")}</output>
 			) : null}
 			{query.isError ? (
 				<div className="grid justify-items-start gap-2">
-					<Alert tone="danger" title={MCP_COPY.tokenLoadFailed}>
+					<Alert tone="danger" title={t("mcp.token.loadFailed")}>
 						{errorMessage(query.error)}
 					</Alert>
 					<Button size="sm" onClick={() => void query.refetch()}>
-						{MCP_COPY.retry}
+						{t("common.cta.retry")}
 					</Button>
 				</div>
 			) : null}
@@ -136,10 +136,10 @@ export function McpTokenSettings({
 						data-id="project-detail-mcp-token-hint"
 						className="m-0 font-mono text-[0.8125rem]"
 					>
-						{MCP_COPY.tokenHint(
-							status.token.last4,
-							formatDate(status.token.createdAt),
-						)}
+						{t("mcp.token.hint", {
+							last4: status.token.last4,
+							created: formatDate(status.token.createdAt),
+						})}
 					</p>
 					<Button
 						ref={rotateRef}
@@ -148,17 +148,15 @@ export function McpTokenSettings({
 						leadingIcon={<IconRefresh size={16} aria-hidden="true" />}
 						onClick={() => setDialog("rotate")}
 					>
-						{MCP_COPY.rotate}
+						{t("mcp.token.rotate")}
 					</Button>
 				</div>
 			) : null}
 			{status ? (
 				<p id={helpId} className={HELP}>
-					<CodeSpans
-						text={
-							status.required ? MCP_COPY.tokenHelpOn : MCP_COPY.tokenHelpOff
-						}
-					/>
+					{renderRich(
+						t(status.required ? "mcp.token.helpOn" : "mcp.token.helpOff"),
+					)}
 				</p>
 			) : null}
 			{status ? (

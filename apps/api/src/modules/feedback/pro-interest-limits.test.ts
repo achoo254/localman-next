@@ -78,16 +78,16 @@ describe("Pro interest limits", () => {
 	it("adds the count of skipped alerts to the first alert of the next window", async () => {
 		const start = new Date("2026-10-09T03:00:00Z");
 		for (let i = 0; i < 5; i += 1)
-			await alertOwnerThrottled("test.kind", `a${i}`, start);
+			await alertOwnerThrottled("test.kind", () => `a${i}`, start);
 		const next = new Date(start.getTime() + 60_000);
-		await alertOwnerThrottled("test.kind", "later", next);
-		await alertOwnerThrottled("test.kind", "again", next);
+		await alertOwnerThrottled("test.kind", () => "later", next);
+		await alertOwnerThrottled("test.kind", () => "again", next);
 		// Background sends may reach the fake Bot API in any order.
 		expect((await fx.alerts()).sort()).toEqual(
 			[
 				"a0",
 				"a1",
-				"later\n\n(và 3 lượt khác chưa báo vì vượt giới hạn tin báo)",
+				"later\n\n(and 3 more not sent because of the alert limit)",
 				"again",
 			].sort(),
 		);

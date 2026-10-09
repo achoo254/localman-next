@@ -11,22 +11,23 @@ import {
 } from "../../features/resources/resource-errors";
 import type { Resource } from "../../features/resources/resource-model";
 import { useGenerateResource } from "../../features/resources/use-resources";
+import { useT } from "../../i18n/i18n-context";
+import type { Translate } from "../../i18n/translate";
+import { toastText } from "./toast-text";
 
 /** Toast after a generator write: bold count, resource name in mono. */
-function generatedToast(resource: Resource, count: number) {
-	const name = <b className="font-mono">{resource.name}</b>;
+function generatedToast(resource: Resource, count: number, t: Translate) {
+	const { name } = resource;
 	return count > 0
 		? {
-				title: "Đã sinh dữ liệu",
-				description: (
-					<>
-						<b>{count}</b> bản ghi cho {name}.
-					</>
+				title: t("projectDetail.toast.generated"),
+				description: toastText(
+					t("projectDetail.toast.recordsFor", { count, name }),
 				),
 			}
 		: {
-				title: "Đã reset dữ liệu",
-				description: <>{name} không còn bản ghi nào.</>,
+				title: t("projectDetail.toast.reset"),
+				description: toastText(t("projectDetail.toast.noRecords", { name })),
 			};
 }
 
@@ -40,16 +41,17 @@ export function useGenerateAction(
 	resources: readonly Resource[],
 	askConfirm: (confirm: DataConfirm) => void,
 ) {
+	const t = useT();
 	const toast = useToast();
 	const generation = useGenerateResource(projectId);
 	const fail = (error: unknown) =>
-		toast.show({ tone: "error", title: resourceErrorMessage(error) });
+		toast.show({ tone: "error", title: resourceErrorMessage(error, t) });
 
 	function run(resource: Resource, count: number) {
 		generation.mutate(
 			{ resource, count },
 			{
-				onSuccess: () => toast.show(generatedToast(resource, count)),
+				onSuccess: () => toast.show(generatedToast(resource, count, t)),
 				onError: fail,
 			},
 		);
@@ -74,19 +76,23 @@ export function useGenerateAction(
 			run(resource, count);
 			return;
 		}
+		const action =
+			count > 0
+				? t("projectDetail.generate.title")
+				: t("projectDetail.generate.clearTitle");
 		askConfirm({
-			title: count > 0 ? "Sinh dữ liệu" : "Xoá dữ liệu",
+			title: action,
 			question:
 				count > 0
-					? `Sinh ${count} bản ghi cho “${resource.name}”?`
-					: `Xoá mọi bản ghi của “${resource.name}”?`,
-			lead: "Các resource con sau sẽ mất dữ liệu:",
-			confirmLabel: count > 0 ? "Sinh dữ liệu" : "Xoá dữ liệu",
+					? t("projectDetail.generate.question", { count, name: resource.name })
+					: t("projectDetail.generate.clearQuestion", { name: resource.name }),
+			lead: t("resources.lostLead"),
+			confirmLabel: action,
 			changes: lost,
 			"data-id": "modal-generate-resource",
 			run: async () => {
-				await localized(generation.mutateAsync({ resource, count }));
-				toast.show(generatedToast(resource, count));
+				await localized(generation.mutateAsync({ resource, count }), t);
+				toast.show(generatedToast(resource, count, t));
 			},
 		});
 	}

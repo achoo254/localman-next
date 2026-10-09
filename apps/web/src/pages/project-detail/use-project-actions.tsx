@@ -15,13 +15,13 @@ import type {
 } from "../../features/resources/resource-model";
 import { moveResource } from "../../features/resources/resources-api";
 import { useResourceCache } from "../../features/resources/use-resources";
+import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
+import { toastText } from "./toast-text";
 import { useGenerateAction } from "./use-generate-action";
 
 const withData = (changes: readonly DataChange[]) =>
 	changes.filter((change) => change.countBefore > 0);
-
-const mono = (name: string) => <b className="font-mono">{name}</b>;
 
 /**
  * Data writes of the project page. Bulk writes and moves are previewed
@@ -35,6 +35,7 @@ export function useProjectActions(
 	resources: readonly Resource[],
 	askConfirm: (confirm: DataConfirm) => void,
 ) {
+	const t = useT();
 	const toast = useToast();
 	const cache = useResourceCache(projectId);
 	const generate = useGenerateAction(projectId, resources, askConfirm);
@@ -53,7 +54,7 @@ export function useProjectActions(
 		try {
 			return await load();
 		} catch (error) {
-			toast.show({ tone: "error", title: resourceErrorMessage(error) });
+			toast.show({ tone: "error", title: resourceErrorMessage(error, t) });
 			return null;
 		}
 	}
@@ -64,7 +65,7 @@ export function useProjectActions(
 			askConfirm(confirm);
 			return;
 		}
-		// `run` already rejects with the Vietnamese message.
+		// `run` already rejects with the translated message.
 		await confirm.run().catch((error: unknown) => {
 			toast.show({ tone: "error", title: errorMessage(error) });
 		});
@@ -73,28 +74,29 @@ export function useProjectActions(
 	const generateAll = () =>
 		whileBusy(async () => {
 			if (resources.length === 0) {
-				toast.show({ tone: "info", title: "Project chưa có resource nào." });
+				toast.show({
+					tone: "info",
+					title: t("projectDetail.generateAll.empty"),
+				});
 				return;
 			}
 			const changes = await preview(() => generateAllData(projectId, true));
 			if (!changes) return;
 			await confirmOrRun({
-				title: "Sinh tất cả",
-				question: "Thay dữ liệu đang có?",
-				lead: "Các resource sau đã có dữ liệu và sẽ được sinh lại:",
-				confirmLabel: "Sinh dữ liệu",
+				title: t("projectDetail.endpoint.generateAll"),
+				question: t("projectDetail.generateAll.question"),
+				lead: t("projectDetail.generateAll.lead"),
+				confirmLabel: t("projectDetail.generate.title"),
 				changes: withData(changes),
 				"data-id": "modal-generate-all",
 				run: () =>
 					whileBusy(async () => {
-						const done = await localized(generateAllData(projectId, false));
+						const done = await localized(generateAllData(projectId, false), t);
 						cache.applyChanges(done);
 						toast.show({
-							title: "Đã sinh dữ liệu",
-							description: (
-								<>
-									<b>{done.length}</b> resource có dữ liệu mới.
-								</>
+							title: t("projectDetail.toast.generated"),
+							description: toastText(
+								t("projectDetail.toast.generatedAll", { count: done.length }),
 							),
 						});
 					}),
@@ -106,20 +108,25 @@ export function useProjectActions(
 			const changes = await preview(() => resetAllData(projectId, true));
 			if (!changes) return;
 			if (withData(changes).length === 0) {
-				toast.show({ tone: "info", title: "Chưa có dữ liệu nào để reset." });
+				toast.show({
+					tone: "info",
+					title: t("projectDetail.resetAll.nothing"),
+				});
 				return;
 			}
 			askConfirm({
-				title: "Reset tất cả",
-				question: "Xoá toàn bộ bản ghi?",
-				lead: "Mọi resource về 0 bản ghi, schema và endpoint được giữ nguyên:",
-				confirmLabel: "Reset dữ liệu",
+				title: t("projectDetail.endpoint.resetAll"),
+				question: t("projectDetail.resetAll.question"),
+				lead: t("projectDetail.resetAll.lead"),
+				confirmLabel: t("projectDetail.resetAll.confirm"),
 				changes: withData(changes),
 				"data-id": "modal-reset-all",
 				run: () =>
 					whileBusy(async () => {
-						cache.applyChanges(await localized(resetAllData(projectId, false)));
-						toast.show({ title: "Đã reset dữ liệu" });
+						cache.applyChanges(
+							await localized(resetAllData(projectId, false), t),
+						);
+						toast.show({ title: t("projectDetail.toast.reset") });
 					}),
 			});
 		});
@@ -132,27 +139,36 @@ export function useProjectActions(
 		if (!changes) return;
 		const reset = withData(changes);
 		await confirmOrRun({
-			title: "Di chuyển resource",
+			title: t("projectDetail.move.title"),
 			question: target
-				? `Lồng “${resource.name}” vào “${target.name}”?`
-				: `Đưa “${resource.name}” về root?`,
-			lead: "Dữ liệu sau thuộc về resource cha cũ nên sẽ bị reset:",
-			confirmLabel: "Di chuyển",
+				? t("projectDetail.move.nestQuestion", {
+						name: resource.name,
+						target: target.name,
+					})
+				: t("projectDetail.move.rootQuestion", { name: resource.name }),
+			lead: t("projectDetail.move.lead"),
+			confirmLabel: t("projectDetail.move.confirm"),
 			changes: reset,
 			"data-id": "modal-move-resource",
 			run: async () => {
-				await localized(moveResource(projectId, resource.id, parentId, false));
+				await localized(
+					moveResource(projectId, resource.id, parentId, false),
+					t,
+				);
 				await cache.invalidate();
 				toast.show({
-					title: target ? (
-						<>
-							Đã lồng {mono(resource.name)} vào {mono(target.name)}.
-						</>
-					) : (
-						<>Đã đưa {mono(resource.name)} về root.</>
+					title: toastText(
+						target
+							? t("projectDetail.toast.nested", {
+									name: resource.name,
+									target: target.name,
+								})
+							: t("projectDetail.toast.movedToRoot", { name: resource.name }),
 					),
 					description:
-						reset.length > 0 ? "Dữ liệu cũ đã được reset." : undefined,
+						reset.length > 0
+							? t("projectDetail.toast.oldDataReset")
+							: undefined,
 				});
 			},
 		});

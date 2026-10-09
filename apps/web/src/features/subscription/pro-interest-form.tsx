@@ -7,6 +7,7 @@ import {
 } from "react";
 import { Alert } from "../../components/ui/alert";
 import { useFeatures } from "../../config/features";
+import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import {
 	type ProInterestConfig,
@@ -34,7 +35,7 @@ export interface ProInterestFormProps {
 	/** Lets a submit button outside the form (modal footer) target it. */
 	formId: string;
 	/**
-	 * Receives the first field to fill: Email for visitors, Tên for signed-in
+	 * Receives the first field to fill: Email for visitors, Name for signed-in
 	 * users whose email is prefilled. Focused on mount.
 	 */
 	firstFieldRef: RefObject<HTMLInputElement | null>;
@@ -62,6 +63,7 @@ export function ProInterestForm({
 	onSubmitted,
 }: ProInterestFormProps) {
 	const flags = useFeatures();
+	const t = useT();
 	const [draft, setDraft] = useState<ProInterestDraft>(() =>
 		emptyDraft(accountEmail ?? "", sourceNeedFor(source, flags)),
 	);
@@ -124,7 +126,7 @@ export function ProInterestForm({
 			await submitProInterest(result.submission);
 			onSubmitted(draft.email.trim());
 		} catch (error) {
-			setSubmitError(submitErrorMessage(error));
+			setSubmitError(submitErrorMessage(error, t));
 			// Turnstile tokens are single use: get a fresh one for the retry.
 			if (siteKey) {
 				setToken(null);
@@ -138,7 +140,7 @@ export function ProInterestForm({
 
 	if (config.status === "error") {
 		return (
-			<Alert tone="danger" title="Không mở được form">
+			<Alert tone="danger" title={t("subscription.proInterest.formFailed")}>
 				{errorMessage(config.error)}
 			</Alert>
 		);
@@ -155,8 +157,7 @@ export function ProInterestForm({
 			className="grid gap-4"
 		>
 			<p className="m-0 text-muted text-sm">
-				Gói Pro chưa mở thanh toán. Cho chúng tôi biết bạn cần gì, chúng tôi sẽ
-				liên hệ khi gói Pro sẵn sàng.
+				{t("subscription.proInterest.intro")}
 			</p>
 			<ProInterestFields
 				draft={draft}
@@ -171,13 +172,13 @@ export function ProInterestForm({
 					key={widgetKey}
 					siteKey={siteKey}
 					onTokenChange={setToken}
-					error={errors.turnstile}
+					error={errors.turnstile && t(errors.turnstile)}
 					errorId={`${formId}-turnstile-error`}
 				/>
 			) : null}
 			{config.status === "loading" ? (
 				<output className="block font-mono text-muted text-sm">
-					Đang chuẩn bị bước xác minh…
+					{t("subscription.proInterest.preparingCheck")}
 				</output>
 			) : null}
 			{submitError ? (

@@ -7,6 +7,7 @@ import { AuthStatus } from "../features/auth/auth-status";
 import { LoginLink } from "../features/auth/login-link";
 import { useCurrentUser } from "../features/auth/use-current-user";
 import { InviteDetails } from "../features/collaborators/invite-details";
+import { useT } from "../i18n/i18n-context";
 import { useAppTitle } from "../lib/use-document-title";
 
 /**
@@ -14,6 +15,7 @@ import { useAppTitle } from "../lib/use-document-title";
  * not previewed yet, so the project name stays private until sign-in.
  */
 function InviteSignIn({ returnTo }: { returnTo: string }) {
+	const t = useT();
 	const heading = useRef<HTMLHeadingElement>(null);
 	useEffect(() => heading.current?.focus(), []);
 	return (
@@ -30,18 +32,15 @@ function InviteSignIn({ returnTo }: { returnTo: string }) {
 					tabIndex={-1}
 					className="m-0 font-bold font-mono text-xl"
 				>
-					Bạn được mời tham gia một project trên Localman
+					{t("invite.signIn.title")}
 				</h1>
-				<p className="m-0 text-muted text-sm">
-					Đăng nhập hoặc tạo tài khoản hoandat để xem lời mời. Xong bạn sẽ quay
-					lại trang này.
-				</p>
+				<p className="m-0 text-muted text-sm">{t("invite.signIn.text")}</p>
 				<LoginLink
 					returnTo={returnTo}
 					data-id="invite-page-login"
 					className={buttonClassName({ variant: "primary", block: true })}
 				>
-					Đăng nhập
+					{t("invite.signIn.signIn")}
 				</LoginLink>
 				<LoginLink
 					returnTo={returnTo}
@@ -49,7 +48,7 @@ function InviteSignIn({ returnTo }: { returnTo: string }) {
 					data-id="invite-page-signup"
 					className={buttonClassName({ variant: "secondary", block: true })}
 				>
-					Đăng ký
+					{t("invite.signIn.signUp")}
 				</LoginLink>
 			</Card>
 		</div>
@@ -58,10 +57,11 @@ function InviteSignIn({ returnTo }: { returnTo: string }) {
 
 /**
  * `/invite/:token`: one-time invitations and magic links. A public page
- * (outside the signed-in shell, whose guard would skip "Đăng ký").
+ * (outside the signed-in shell, whose guard would skip "Sign up").
  */
 export function AcceptInvitePage() {
-	useAppTitle("Lời mời tham gia project");
+	const t = useT();
+	useAppTitle(t("invite.pageTitle"));
 	const { token = "" } = useParams();
 	const session = useCurrentUser();
 	if (session.status === "loading") return <AuthStatus kind="loading" />;

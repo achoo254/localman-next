@@ -8,6 +8,8 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { useT } from "../../i18n/i18n-context";
+import type { Translate } from "../../i18n/translate";
 import { cn } from "../../lib/cn";
 import { copyText } from "../../platform/clipboard";
 import { buttonClassName } from "./button";
@@ -31,7 +33,7 @@ export interface CopyFieldProps {
 	hint?: ReactNode;
 	/** Copies once on mount, e.g. a link that was just created. */
 	autoCopy?: boolean;
-	/** What the value is, in the button name and notes ("Sao chép link"). */
+	/** What the value is, in the button name and notes ("Copy link"); default "link". */
 	itemLabel?: string;
 	"data-id": string;
 	copyDataId: string;
@@ -41,13 +43,13 @@ export interface CopyFieldProps {
 type CopyState = "idle" | "copied" | "auto-failed" | "failed";
 
 /** Announced in the live region; failures also join the hint. */
-function notesFor(item: string): Record<CopyState, string> {
+function notesFor(t: Translate, item: string): Record<CopyState, string> {
 	return {
 		idle: "",
-		copied: `Đã sao chép ${item}`,
+		copied: t("ui.copyField.copiedNote", { item }),
 		// The automatic copy after a request usually lost the click's permission.
-		"auto-failed": `Bấm nút sao chép để copy ${item}.`,
-		failed: `Không sao chép được, hãy chọn ${item} và sao chép thủ công.`,
+		"auto-failed": t("ui.copyField.autoFailedNote", { item }),
+		failed: t("ui.copyField.failedNote", { item }),
 	};
 }
 
@@ -64,11 +66,13 @@ export function CopyField({
 	value,
 	hint,
 	autoCopy = false,
-	itemLabel = "link",
+	itemLabel,
 	"data-id": dataId,
 	copyDataId,
 	ref,
 }: CopyFieldProps) {
+	const t = useT();
+	const item = itemLabel ?? t("ui.copyField.defaultItem");
 	const input = useRef<HTMLInputElement>(null);
 	const button = useRef<HTMLButtonElement>(null);
 	const [state, setState] = useState<CopyState>("idle");
@@ -106,7 +110,7 @@ export function CopyField({
 		void copyAs(true);
 	}, [copyAs]);
 
-	const notes = notesFor(itemLabel);
+	const notes = notesFor(t, item);
 	const copied = state === "copied";
 	// A refused clipboard is not an invalid value: a neutral hint, no error.
 	const failure = state === "failed" || state === "auto-failed";
@@ -136,7 +140,11 @@ export function CopyField({
 				<button
 					ref={button}
 					type="button"
-					aria-label={copied ? "Đã sao chép" : `Sao chép ${itemLabel}`}
+					aria-label={
+						copied
+							? t("common.actions.copied")
+							: t("ui.copyField.copy", { item })
+					}
 					data-id={copyDataId}
 					className={cn(
 						buttonClassName({ variant: "secondary", iconOnly: true }),

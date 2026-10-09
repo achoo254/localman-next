@@ -12,8 +12,10 @@ export const EXAMPLE_LANGUAGES: readonly {
 
 /** One task shown in every language. */
 export interface CodeExample {
-	/** Section anchor (`/docs/code-examples#pagination`). */
-	readonly id: string;
-	readonly title: string;
+	/**
+	 * Section anchor (`/docs/code-examples#pagination`), also the key of
+	 * its title under `docs.codeExamples.titles`.
+	 */
+	readonly id: "crud" | "nested" | "pagination" | "errors";
 	readonly code: Readonly<Record<ExampleLanguage, string>>;
 }

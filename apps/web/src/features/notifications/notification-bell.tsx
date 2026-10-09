@@ -10,6 +10,7 @@ import {
 	DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import { useToast } from "../../components/ui/toast";
+import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
 import { NotificationItem } from "./notification-item";
@@ -23,6 +24,7 @@ export function NotificationBell() {
 	const bell = useNotifications();
 	const navigate = useNavigate();
 	const toast = useToast();
+	const t = useT();
 	const { unreadCount } = bell;
 
 	function report(task: Promise<void>) {
@@ -45,7 +47,9 @@ export function NotificationBell() {
 					type="button"
 					data-id="topbar-bell"
 					aria-label={
-						unreadCount > 0 ? `Thông báo, ${unreadCount} chưa đọc` : "Thông báo"
+						unreadCount > 0
+							? t("notifications.bell.labelUnread", { unread: unreadCount })
+							: t("notifications.bell.label")
 					}
 					className={cn(
 						buttonClassName({ variant: "ghost", iconOnly: true }),
@@ -68,7 +72,7 @@ export function NotificationBell() {
 				data-id="notifications-menu"
 				className="w-80 max-w-[calc(100vw-2*var(--gutter))]"
 			>
-				<DropdownMenuLabel>Thông báo</DropdownMenuLabel>
+				<DropdownMenuLabel>{t("notifications.bell.heading")}</DropdownMenuLabel>
 				<DropdownMenuItem
 					data-id="notifications-read-all"
 					icon={<IconChecks size={16} aria-hidden="true" />}
@@ -78,7 +82,7 @@ export function NotificationBell() {
 						report(bell.markAllRead());
 					}}
 				>
-					Đánh dấu tất cả đã đọc
+					{t("notifications.bell.markAllRead")}
 				</DropdownMenuItem>
 				<DropdownMenuSeparator />
 				<div className="max-h-[60dvh] overflow-y-auto">
@@ -94,11 +98,13 @@ export function NotificationBell() {
 							data-id="notifications-empty"
 							className={bell.error ? "text-error" : undefined}
 						>
-							{bell.error
-								? "Không tải được thông báo."
-								: bell.loading
-									? "Đang tải…"
-									: "Chưa có thông báo nào."}
+							{t(
+								bell.error
+									? "notifications.bell.loadFailed"
+									: bell.loading
+										? "notifications.bell.loading"
+										: "notifications.bell.empty",
+							)}
 						</DropdownMenuLabel>
 					) : null}
 					{bell.nextCursor ? (
@@ -111,7 +117,7 @@ export function NotificationBell() {
 							}}
 							className="justify-center"
 						>
-							Xem thêm
+							{t("notifications.bell.loadMore")}
 						</DropdownMenuItem>
 					) : null}
 				</div>
@@ -121,7 +127,7 @@ export function NotificationBell() {
 					icon={<IconAdjustments size={16} aria-hidden="true" />}
 					onSelect={() => navigate(NOTIFICATION_SETTINGS_PATH)}
 				>
-					Cài đặt kênh thông báo
+					{t("notifications.bell.settings")}
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>

@@ -28,9 +28,14 @@ tier: L
 
 ## Tiến độ
 - [x] 1. Nền i18n web và bỏ khối So sánh, tên đối thủ (2026-10-09). Cách dùng `t()`, quy ước key và script kiểm: `docs/i18n.md`. Chuỗi tiếng Việt còn lại (117 file, 1025 chuỗi) nằm trong `scripts/check-i18n/pending-files.ts`, chia theo nhóm của bước 2; nhóm cuối (primitive UI, `lib/api-client`, trang `_primitives`) chưa có chủ.
-- [ ] 2. Chuyển chuỗi theo khu vực (a, b, c).
-- [ ] 3. API `locale` trên user và thông báo theo ngôn ngữ.
-- [ ] 4. Rà bản dịch, axe, Lighthouse, review, deploy.
+- [x] 2. Chuyển chuỗi theo khu vực (a, b, c), 2026-10-09: `check:i18n` báo 0 chuỗi tiếng Việt ngoài từ điển `vi`; thêm trang docs `/docs/mcp`; ngôn ngữ đồng bộ với tài khoản.
+- [x] 3. API `locale` trên user và thông báo theo ngôn ngữ (2026-10-09). `PUT /users/me/locale` (`users.setLocale`, MCP `set_locale`), `/users/me` có `locale` (`en` khi chưa chọn). Thông báo trong app lưu `type` + `params`, render theo `locale` lúc đọc; bản ghi cũ dạng chữ trả nguyên. Web Push, Telegram và tin báo owner theo ngôn ngữ người nhận. Chuỗi server ở `apps/api/src/i18n/`, xem `docs/i18n.md#server`.
+- [x] 4. Rà bản dịch (19 chỗ English, 121 chỗ 中文, `plans/dattqh/reports/i18n-review-phase-4.md`), Lighthouse landing mobile: en Perf 99 / A11y 100, zh-CN Perf 96 / A11y 100; deploy 2026-10-09.
+
+## Việc tiếp theo
+- CLS 0.107 khi landing mở bằng ngôn ngữ khác `en`: tiêu đề hero đổi chiều cao sau khi chuyển từ bản prerender tiếng Anh. Hướng sửa: tải từ điển trước khi render khi đã biết ngôn ngữ, hoặc prerender thêm `/zh-CN` và `/vi`.
+- Bản `vi` chỉ kiểm placeholder bằng test, chưa rà câu chữ.
+- Bản 中文 dùng "request" thay "请求" theo §9 của `docs/ux-writing.md`.
 
 ## Nghiệm thu
 - Mở app lần đầu: toàn bộ giao diện tiếng Anh; đổi sang 中文/Tiếng Việt thì mọi chuỗi người dùng thấy đổi theo, tải lại vẫn giữ.

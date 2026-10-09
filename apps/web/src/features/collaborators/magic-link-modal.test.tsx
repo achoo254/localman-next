@@ -48,22 +48,22 @@ describe("magic link dialog", () => {
 			[`GET ${MAGIC}`]: { body: NONE },
 			[`POST ${MAGIC}`]: { status: 201, body: CREATED.body },
 		});
-		expect(dialog).toHaveTextContent("Link dùng được nhiều lần");
+		expect(dialog).toHaveTextContent("The link can be used many times");
 		const create = await within(dialog).findByRole("button", {
-			name: "Tạo magic link",
+			name: "Create magic link",
 		});
-		expect(dialog).toHaveTextContent("Chưa có magic link đang hoạt động.");
+		expect(dialog).toHaveTextContent("No active magic link.");
 		await userEvent.click(create);
 		const input = await within(dialog).findByLabelText("Magic link");
 		expect(input).toHaveValue(LINK_URL);
-		expect(dialog).toHaveTextContent("Link chỉ hiện lần này");
+		expect(dialog).toHaveTextContent("The link is shown only this once");
 		expect(byId(dialog, "modal-magic-link-expiry")).toHaveTextContent(
-			"Hết hạn 16/10/2026.",
+			"Expires Oct 16, 2026.",
 		);
 		expect(byId(dialog, "modal-magic-link-copy")).toHaveFocus();
 		expect(await seriousViolations(dialog)).toEqual([]);
 		const footer = within(dialog).getAllByRole("button", {
-			name: "Sao chép link",
+			name: "Copy link",
 		});
 		await userEvent.click(footer[footer.length - 1] as HTMLElement);
 		expect(copyText).toHaveBeenCalledWith(LINK_URL);
@@ -79,16 +79,16 @@ describe("magic link dialog", () => {
 			if (!node) throw new Error("loading");
 			return node;
 		});
-		expect(status).toHaveTextContent("Đang hoạt động");
-		expect(status).toHaveTextContent("Tạo lúc 09/10/2026");
+		expect(status).toHaveTextContent("Active");
+		expect(status).toHaveTextContent("Created Oct 9, 2026");
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Tạo link mới" }),
+			within(dialog).getByRole("button", { name: "Create new link" }),
 		);
-		const confirm = screen.getByRole("dialog", { name: "Tạo link mới" });
-		expect(confirm).toHaveTextContent("Link cũ ngừng hoạt động ngay.");
+		const confirm = screen.getByRole("dialog", { name: "Create new link" });
+		expect(confirm).toHaveTextContent("The old link stops working right away.");
 		expect(calls.some((c) => c.method === "POST")).toBe(false);
 		await userEvent.click(
-			within(confirm).getByRole("button", { name: "Tạo link mới" }),
+			within(confirm).getByRole("button", { name: "Create new link" }),
 		);
 		expect(await within(dialog).findByLabelText("Magic link")).toHaveValue(
 			LINK_URL,
@@ -101,15 +101,15 @@ describe("magic link dialog", () => {
 			[`DELETE ${MAGIC}`]: { body: { ...ACTIVE, status: "revoked" } },
 		});
 		await userEvent.click(
-			await within(dialog).findByRole("button", { name: "Thu hồi" }),
+			await within(dialog).findByRole("button", { name: "Revoke" }),
 		);
-		const confirm = screen.getByRole("dialog", { name: "Thu hồi magic link" });
+		const confirm = screen.getByRole("dialog", { name: "Revoke magic link" });
 		await userEvent.click(
-			within(confirm).getByRole("button", { name: "Thu hồi" }),
+			within(confirm).getByRole("button", { name: "Revoke" }),
 		);
-		expect(await findToast("Đã thu hồi magic link")).toBeInTheDocument();
+		expect(await findToast("Revoked the magic link")).toBeInTheDocument();
 		const create = within(dialog).getByRole("button", {
-			name: "Tạo magic link",
+			name: "Create magic link",
 		});
 		await waitFor(() => expect(create).toHaveFocus());
 	});
@@ -119,9 +119,9 @@ describe("magic link dialog", () => {
 			[`GET ${MAGIC}`]: { body: { ...ACTIVE, status: "expired" } },
 			[`POST ${MAGIC}`]: { status: 201, body: CREATED.body },
 		});
-		await within(dialog).findByText("Đã hết hạn");
+		await within(dialog).findByText("Expired");
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Tạo link mới" }),
+			within(dialog).getByRole("button", { name: "Create new link" }),
 		);
 		expect(await within(dialog).findByLabelText("Magic link")).toHaveValue(
 			LINK_URL,
@@ -138,13 +138,13 @@ describe("magic link dialog", () => {
 			if (!node) throw new Error("not yet");
 			return node;
 		});
-		expect(full).toHaveTextContent("Project đã đủ 3/3 thành viên.");
+		expect(full).toHaveTextContent("The project already has 3/3 members.");
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Xem gói" }),
+			within(dialog).getByRole("button", { name: "See plans" }),
 		);
 		expect(
-			await screen.findByRole("dialog", { name: "Quản lý gói" }),
-		).toHaveTextContent("3 thành viên mỗi project");
+			await screen.findByRole("dialog", { name: "Manage plan" }),
+		).toHaveTextContent("3 members per project");
 	});
 
 	it("shows load errors with a retry", async () => {
@@ -154,7 +154,7 @@ describe("magic link dialog", () => {
 				fail ? apiError(500, "INTERNAL") : { body: NONE },
 		});
 		const retry = await within(dialog).findByRole("button", {
-			name: "Thử lại",
+			name: "Try again",
 		});
 		expect(byId(dialog, "modal-magic-link-error")).toHaveTextContent(
 			"INTERNAL",
@@ -162,7 +162,7 @@ describe("magic link dialog", () => {
 		fail = false;
 		await userEvent.click(retry);
 		expect(
-			await within(dialog).findByRole("button", { name: "Tạo magic link" }),
+			await within(dialog).findByRole("button", { name: "Create magic link" }),
 		).toBeInTheDocument();
 	});
 });

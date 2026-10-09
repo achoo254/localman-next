@@ -1,30 +1,26 @@
 /**
- * Display formatting for numbers and dates. Dates are shown in the product's
- * timezone (Asia/Saigon) whatever the browser's own zone is.
+ * Number and date formatting in the language on screen, for code that has
+ * no `useI18n()` at hand. Components should prefer `useI18n().formatNumber`
+ * / `formatDate`; these delegate to the same translator (dates in
+ * Asia/Saigon whatever the browser's own zone is).
  */
+import { activeTranslator } from "../i18n/active-translator";
 
-export const APP_TIME_ZONE = "Asia/Saigon";
-
-const NUMBER_FORMAT = new Intl.NumberFormat("vi-VN");
-
-const DATE_FORMAT = new Intl.DateTimeFormat("vi-VN", {
-	day: "2-digit",
-	month: "2-digit",
-	year: "numeric",
-	timeZone: APP_TIME_ZONE,
-});
+export { APP_TIME_ZONE } from "../i18n/translate";
 
 export function formatNumber(value: number): string {
-	return NUMBER_FORMAT.format(value);
+	return activeTranslator().formatNumber(value);
 }
 
-/** `dd/mm/yyyy` in Asia/Saigon, or "" for an unparsable value. */
+/** Date in Asia/Saigon in the current language, or "" when unparsable. */
 export function formatDate(iso: string): string {
-	const date = new Date(iso);
-	return Number.isNaN(date.getTime()) ? "" : DATE_FORMAT.format(date);
+	return activeTranslator().formatDate(iso);
 }
 
-/** First day of the month after a `YYYY-MM` period, as `01/mm/yyyy`. */
+/**
+ * First day of the month after a `YYYY-MM` period, formatted like
+ * `formatDate`, or "" for a malformed period.
+ */
 export function nextPeriodStart(period: string): string {
 	const match = /^(\d{4})-(\d{2})$/.exec(period);
 	if (!match) return "";
@@ -32,5 +28,7 @@ export function nextPeriodStart(period: string): string {
 	const month = Number(match[2]);
 	const nextYear = month === 12 ? year + 1 : year;
 	const nextMonth = month === 12 ? 1 : month + 1;
-	return `01/${String(nextMonth).padStart(2, "0")}/${nextYear}`;
+	// Midnight in Asia/Saigon (UTC+7, no daylight saving).
+	const iso = `${nextYear}-${String(nextMonth).padStart(2, "0")}-01T00:00:00+07:00`;
+	return formatDate(iso);
 }

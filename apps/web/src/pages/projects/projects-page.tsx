@@ -6,6 +6,7 @@ import { useToast } from "../../components/ui/toast";
 import { useCurrentUser } from "../../features/auth/use-current-user";
 import { ProjectMemberDialogs } from "../../features/collaborators/project-member-dialogs";
 import { useSubscriptionDialogs } from "../../features/subscription/use-subscription-dialogs";
+import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { useAppTitle } from "../../lib/use-document-title";
 import { DeleteProjectModal } from "./delete-project-modal";
@@ -37,7 +38,8 @@ const CLOSED: Dialog = { kind: "none" };
 
 /** `/projects`: owned and shared projects with create, edit, clone, delete. */
 export function ProjectsPage() {
-	useAppTitle("Projects");
+	const t = useT();
+	useAppTitle(t("projects.title"));
 	const session = useCurrentUser();
 	const plan = session.status === "authenticated" ? session.user.plan : "free";
 	const toast = useToast();
@@ -89,15 +91,13 @@ export function ProjectsPage() {
 	}
 
 	async function save(editing: Project | null, input: ProjectInput) {
-		if (editing) {
-			const saved = await updateProject(editing.id, input);
-			replaceProject(saved);
-			toast.show({ title: `Đã cập nhật project ${saved.name}.` });
-		} else {
-			const created = await createProject(input);
-			setProjects((list) => [...list, created]);
-			toast.show({ title: `Đã tạo project ${created.name}.` });
-		}
+		const saved = editing
+			? await updateProject(editing.id, input)
+			: await createProject(input);
+		if (editing) replaceProject(saved);
+		else setProjects((list) => [...list, saved]);
+		const done = editing ? "projects.toast.updated" : "projects.toast.created";
+		toast.show({ title: t(done, { name: saved.name }) });
 		setDialog(CLOSED);
 	}
 
@@ -108,7 +108,7 @@ export function ProjectsPage() {
 				const index = list.findIndex((p) => p.id === source.id);
 				return [...list.slice(0, index + 1), copy, ...list.slice(index + 1)];
 			});
-			toast.show({ title: `Đã nhân bản thành ${copy.name}.` });
+			toast.show({ title: t("projects.toast.cloned", { name: copy.name }) });
 		} catch (error) {
 			if (isPlanLimitError(error)) hitLimit();
 			else toast.show({ tone: "error", title: errorMessage(error) });
@@ -133,7 +133,7 @@ export function ProjectsPage() {
 						aria-current="page"
 						className="m-0 font-bold font-mono text-xl tracking-[-0.01em]"
 					>
-						Projects
+						{t("projects.title")}
 					</h1>
 					<span
 						aria-hidden="true"
@@ -144,7 +144,7 @@ export function ProjectsPage() {
 				</nav>
 				<IconButton
 					variant="primary"
-					label="Tạo project mới"
+					label={t("projects.add")}
 					data-id="projects-add"
 					icon={<IconPlus size={20} aria-hidden="true" />}
 					onClick={openNew}
@@ -171,7 +171,9 @@ export function ProjectsPage() {
 					onOpenChange={(open) => !open && setDialog(CLOSED)}
 					onDeleted={(gone) => {
 						setProjects((list) => list.filter((p) => p.id !== gone.id));
-						toast.show({ title: `Đã xoá project ${gone.name}.` });
+						toast.show({
+							title: t("projects.toast.deleted", { name: gone.name }),
+						});
 					}}
 				/>
 			) : null}

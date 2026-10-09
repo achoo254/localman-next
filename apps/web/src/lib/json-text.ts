@@ -1,3 +1,5 @@
+import { activeTranslator } from "../i18n/active-translator";
+
 /** Parsing of JSON typed by the user (templates, records). */
 
 export type JsonParseResult = { ok: true; value: unknown } | { ok: false };
@@ -10,11 +12,15 @@ export function parseJsonText(text: string): JsonParseResult {
 	}
 }
 
-/** Message for unparsable JSON, with the place when it is known. */
+/**
+ * Message for unparsable JSON, with the place when it is known, in the
+ * language on screen.
+ */
 export function invalidJsonMessage(
 	at: { line: number; column: number } | null = null,
 ): string {
+	const { t } = activeTranslator();
 	return at
-		? `JSON không hợp lệ ở dòng ${at.line}, cột ${at.column}.`
-		: "JSON không hợp lệ.";
+		? t("common.errors.invalidJsonAt", { line: at.line, column: at.column })
+		: t("common.errors.invalidJson");
 }

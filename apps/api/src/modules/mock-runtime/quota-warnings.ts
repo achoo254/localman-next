@@ -32,29 +32,23 @@ export function crossedThresholds(
 	});
 }
 
-const formatCount = (value: number): string =>
-	value.toLocaleString("vi-VN", { maximumFractionDigits: 0 });
-
-/** In-app notification text of a warning (UI copy is Vietnamese). */
+/**
+ * Notification of a warning; its texts are rendered in the owner's
+ * language (`src/i18n/messages/*`, `quota`).
+ */
 export function quotaWarningMessage(warning: QuotaWarning): {
 	type: "usage.quota";
-	title: string;
-	body: string;
+	params: { threshold: number; limit: number; used: number; month: string };
 	link: string;
 } {
-	const used = thresholdCount(warning.limit, warning.threshold);
-	const month = `${warning.month.slice(4)}/${warning.month.slice(0, 4)}`;
-	const limit = formatCount(warning.limit);
 	return {
 		type: "usage.quota",
-		title:
-			warning.threshold >= 100
-				? "Đã hết lượt gọi mock API tháng này"
-				: `Đã dùng ${warning.threshold}% lượt gọi mock API tháng này`,
-		body:
-			warning.threshold >= 100
-				? `Các project của bạn đã dùng hết ${limit} lượt gọi mock API của tháng ${month}. Mock API trả 429 cho tới đầu tháng sau hoặc khi bạn nâng cấp Pro.`
-				: `Các project của bạn đã dùng ${formatCount(used)}/${limit} lượt gọi mock API của tháng ${month}.`,
+		params: {
+			threshold: warning.threshold,
+			limit: warning.limit,
+			used: thresholdCount(warning.limit, warning.threshold),
+			month: warning.month,
+		},
 		link: "/account",
 	};
 }

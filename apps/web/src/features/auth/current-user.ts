@@ -1,3 +1,8 @@
+import {
+	DEFAULT_LOCALE,
+	type Locale,
+	isLocale,
+} from "@localman/shared/constants";
 import { apiRequest } from "../../lib/api-client";
 import {
 	InvalidResponseError,
@@ -20,6 +25,8 @@ export interface CurrentUser {
 	/** Localman operator: may open the admin pages. */
 	isOwner: boolean;
 	telegram: { linked: boolean; username: string | null };
+	/** Language saved on the account (notifications use it); "en" if never chosen. */
+	locale: Locale;
 }
 
 export function parseCurrentUser(data: unknown): CurrentUser {
@@ -42,6 +49,7 @@ export function parseCurrentUser(data: unknown): CurrentUser {
 			linked: expectBoolean(telegram, "linked"),
 			username: optionalString(telegram, "username"),
 		},
+		locale: isLocale(user.locale) ? user.locale : DEFAULT_LOCALE,
 	};
 }
 

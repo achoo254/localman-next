@@ -1,4 +1,6 @@
 import type { ProInterestSubmission } from "@localman/shared";
+import type { SourceMessages } from "../../i18n/message-types";
+import type { Translate } from "../../i18n/translate";
 import { ApiError, apiRequest, errorMessage } from "../../lib/api-client";
 import { expectRecord, optionalString } from "../../lib/json-guards";
 
@@ -28,18 +30,22 @@ export async function submitProInterest(
 	});
 }
 
-const SUBMIT_MESSAGES: Readonly<Record<string, string>> = {
-	VALIDATION_ERROR: "Thông tin chưa hợp lệ, kiểm tra lại các ô rồi gửi lại.",
-	TURNSTILE_FAILED: "Xác minh không thành công, làm lại bước xác minh.",
+type SubmitErrorKey =
+	`subscription.proInterest.submitErrors.${keyof SourceMessages["subscription"]["proInterest"]["submitErrors"]}`;
+
+const SUBMIT_KEYS: Readonly<Record<string, SubmitErrorKey>> = {
+	VALIDATION_ERROR: "subscription.proInterest.submitErrors.validation",
+	TURNSTILE_FAILED: "subscription.proInterest.submitErrors.turnstileFailed",
 	TURNSTILE_UNAVAILABLE:
-		"Chưa kiểm tra được bước xác minh lúc này, thử lại sau ít phút.",
-	RATE_LIMITED: "Bạn gửi quá nhiều lần, đợi một lát rồi thử lại.",
+		"subscription.proInterest.submitErrors.turnstileUnavailable",
+	RATE_LIMITED: "subscription.proInterest.submitErrors.rateLimited",
 };
 
-/** Vietnamese explanation of a failed submission. */
-export function submitErrorMessage(error: unknown): string {
-	if (error instanceof ApiError && Object.hasOwn(SUBMIT_MESSAGES, error.code)) {
-		return SUBMIT_MESSAGES[error.code] ?? errorMessage(error);
-	}
-	return errorMessage(error);
+/** Explanation of a failed submission in the current language. */
+export function submitErrorMessage(error: unknown, t: Translate): string {
+	const key =
+		error instanceof ApiError && Object.hasOwn(SUBMIT_KEYS, error.code)
+			? SUBMIT_KEYS[error.code]
+			: undefined;
+	return key ? t(key) : errorMessage(error);
 }

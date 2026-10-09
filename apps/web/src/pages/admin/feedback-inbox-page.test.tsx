@@ -12,7 +12,7 @@ describe("FeedbackInboxPage", () => {
 		const { calls } = renderInbox(false);
 		expect(
 			await screen.findByRole("heading", {
-				name: "403 · Chỉ owner xem được trang này",
+				name: "403 · Only the owner can see this page",
 			}),
 		).toBeInTheDocument();
 		expect(calls.some((c) => c.path.startsWith("/api/v1/admin"))).toBe(false);
@@ -26,40 +26,40 @@ describe("FeedbackInboxPage", () => {
 			},
 		});
 		expect(
-			await screen.findByText("403 · Chỉ owner xem được trang này"),
+			await screen.findByText("403 · Only the owner can see this page"),
 		).toBeInTheDocument();
 	});
 
 	it("lists messages with their sender, reply address and status", async () => {
 		renderInbox(true);
 		expect(
-			await screen.findByRole("heading", { name: "Báo lỗi · Lan" }),
+			await screen.findByRole("heading", { name: "Bug report · Lan" }),
 		).toBeInTheDocument();
 		expect(
-			screen.getByRole("heading", { name: "Góp ý · Khách" }),
+			screen.getByRole("heading", { name: "Feedback · Visitor" }),
 		).toBeVisible();
 		expect(screen.getAllByText(/Nút Lưu không chạy/)[0]).toHaveTextContent(
 			"Nút Lưu không chạy khi có 20 field",
 		);
 		expect(screen.getByText("Email: lan@example.com")).toBeInTheDocument();
-		expect(screen.getByText("Không để lại liên hệ")).toBeInTheDocument();
+		expect(screen.getByText("No contact left")).toBeInTheDocument();
 		expect(
 			document.querySelector('[data-id="admin-feedback-item-m1-status"]'),
-		).toHaveTextContent("Mới");
+		).toHaveTextContent("New");
 		expect(
-			screen.getByRole("link", { name: "Quan tâm gói Pro" }),
+			screen.getByRole("link", { name: "Pro plan interest" }),
 		).toBeVisible();
 	});
 
 	it("filters by status and category through query parameters", async () => {
 		const { calls } = renderInbox(true);
-		await screen.findByRole("heading", { name: "Báo lỗi · Lan" });
+		await screen.findByRole("heading", { name: "Bug report · Lan" });
 		await userEvent.selectOptions(
-			screen.getByRole("combobox", { name: "Trạng thái" }),
+			screen.getByRole("combobox", { name: "Status" }),
 			"resolved",
 		);
 		await userEvent.selectOptions(
-			screen.getByRole("combobox", { name: "Loại" }),
+			screen.getByRole("combobox", { name: "Type" }),
 			"plan_question",
 		);
 		await waitFor(() => {
@@ -80,20 +80,20 @@ describe("FeedbackInboxPage", () => {
 			},
 		});
 		const [markRead] = await screen.findAllByRole("button", {
-			name: "Đánh dấu đã đọc",
+			name: "Mark as read",
 		});
 		if (!markRead) throw new Error("no mark-read button");
 		await userEvent.click(markRead);
 		await waitFor(() =>
 			expect(
 				document.querySelector('[data-id="admin-feedback-item-m1-status"]'),
-			).toHaveTextContent("Đã đọc"),
+			).toHaveTextContent("Read"),
 		);
 		expect(calls.find((c) => c.method === "PUT")?.body).toEqual({
 			status: "read",
 		});
 		expect(
 			document.querySelector('[data-id="admin-feedback-item-m1-new"]'),
-		).toHaveTextContent("Đánh dấu chưa đọc");
+		).toHaveTextContent("Mark as unread");
 	});
 });

@@ -10,6 +10,7 @@ import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { useToast } from "../../components/ui/toast";
+import { useT } from "../../i18n/i18n-context";
 import { ApiError } from "../../lib/api-client";
 import type { CurrentUser } from "../auth/current-user";
 import { invitePageErrorMessage } from "./invite-errors";
@@ -54,6 +55,7 @@ export function InviteDetails({
 }) {
 	const navigate = useNavigate();
 	const toast = useToast();
+	const t = useT();
 	const [view, setView] = useState<View>({ status: "loading" });
 	const [accepting, setAccepting] = useState(false);
 	const [acceptError, setAcceptError] = useState<unknown>(null);
@@ -79,9 +81,12 @@ export function InviteDetails({
 		try {
 			const done = await acceptInvite(token);
 			toast.show({
-				title: done.alreadyMember
-					? `Bạn đã là thành viên của ${preview.project.name}`
-					: `Đã tham gia ${preview.project.name}`,
+				title: t(
+					done.alreadyMember
+						? "invite.toast.alreadyMember"
+						: "invite.toast.joined",
+					{ project: preview.project.name },
+				),
 			});
 			navigate(`/projects/${encodeURIComponent(done.projectId)}`, {
 				replace: true,
@@ -113,7 +118,7 @@ export function InviteDetails({
 				data-id="invite-page-loading"
 				className="block py-16 text-center font-mono text-muted text-sm"
 			>
-				Đang kiểm tra lời mời…
+				{t("invite.loading")}
 			</output>
 		);
 	} else if (view.status === "ready") {
@@ -134,13 +139,13 @@ export function InviteDetails({
 		) : (
 			<Card className="mx-auto grid w-full max-w-md gap-4 p-6">
 				<h1 className="m-0 font-bold font-mono text-xl">
-					Không mở được lời mời
+					{t("invite.failedTitle")}
 				</h1>
 				<Alert tone="danger" data-id="invite-page-error">
-					{invitePageErrorMessage(view.error)}
+					{invitePageErrorMessage(view.error, t)}
 				</Alert>
 				<Button data-id="invite-page-retry" onClick={() => void load()}>
-					Thử lại
+					{t("common.cta.retry")}
 				</Button>
 			</Card>
 		);

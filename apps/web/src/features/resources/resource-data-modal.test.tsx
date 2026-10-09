@@ -1,6 +1,8 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { en } from "../../i18n/messages/en/dictionary";
+import { createTranslator } from "../../i18n/translate";
 import {
 	RESOURCES_PATH,
 	apiError,
@@ -29,15 +31,15 @@ async function openData(routes: Parameters<typeof renderDetail>[0] = {}) {
 	});
 	const node = await findNode("users");
 	await userEvent.click(
-		within(node).getByRole("button", { name: "Dữ liệu users" }),
+		within(node).getByRole("button", { name: "Data of users" }),
 	);
-	const dialog = await screen.findByRole("dialog", { name: "Dữ liệu · users" });
+	const dialog = await screen.findByRole("dialog", { name: "Data · users" });
 	const editor = await within(dialog).findByRole("textbox", {
-		name: "Dữ liệu JSON của users",
+		name: "JSON data of users",
 	});
 	const frame = editor.closest('[data-id="modal-resource-data-json"]');
 	if (!frame) throw new Error("no data editor");
-	const update = within(dialog).getByRole("button", { name: "Cập nhật" });
+	const update = within(dialog).getByRole("button", { name: "Update" });
 	return { ...api, dialog, frame, update };
 }
 
@@ -53,12 +55,12 @@ describe("Resource data modal", () => {
 		expect(update).toBeDisabled();
 		blurEditor(frame);
 		expect(
-			await within(dialog).findByText(/JSON không hợp lệ ở dòng 1/),
+			await within(dialog).findByText(/Invalid JSON at line 1/),
 		).toBeInTheDocument();
 		setEditorText(frame, '{"id": "1"}');
 		blurEditor(frame);
 		expect(
-			await within(dialog).findByText("Dữ liệu phải là một mảng JSON."),
+			await within(dialog).findByText("The data must be a JSON array."),
 		).toBeInTheDocument();
 		expect(update).toBeDisabled();
 		setEditorText(frame, JSON.stringify(RECORDS, null, 2));
@@ -81,7 +83,7 @@ describe("Resource data modal", () => {
 		setEditorText(frame, '[{"name": "Chi"}]');
 		await waitFor(() => expect(update).toBeEnabled());
 		await userEvent.click(update);
-		expect(await screen.findByText("Đã cập nhật dữ liệu")).toBeInTheDocument();
+		expect(await screen.findByText("Data updated")).toBeInTheDocument();
 		expect(calls.find((c) => c.method === "PUT")?.body).toEqual({
 			data: [{ name: "Chi" }],
 		});
@@ -101,7 +103,7 @@ describe("Resource data modal", () => {
 		await userEvent.click(update);
 		expect(
 			await within(dialog).findByText(
-				"Dữ liệu của users có bản ghi vượt 32 KB. Hãy rút gọn bản ghi hoặc template.",
+				"The data of users has a record over 32 KB. Shorten the records or the template.",
 			),
 		).toBeInTheDocument();
 	});
@@ -128,35 +130,37 @@ describe("Resource data modal and child data", () => {
 		await waitFor(() => expect(update).toBeEnabled());
 		await userEvent.click(update);
 		const confirm = await screen.findByRole("dialog", {
-			name: "Cập nhật dữ liệu",
+			name: "Update data",
 		});
 		expect(within(confirm).getByRole("list")).toHaveTextContent(
-			"posts: 40 → 0 bản ghi",
+			"posts: 40 → 0 records",
 		);
 		const puts = () => calls.filter((c) => c.method === "PUT");
 		expect(puts().map((c) => c.query.get("dryRun"))).toEqual(["true"]);
 		await userEvent.click(
-			within(confirm).getByRole("button", { name: "Cập nhật" }),
+			within(confirm).getByRole("button", { name: "Update" }),
 		);
-		expect(await screen.findByText("Đã cập nhật dữ liệu")).toBeInTheDocument();
+		expect(await screen.findByText("Data updated")).toBeInTheDocument();
 		expect(puts().map((c) => c.query.get("dryRun"))).toEqual(["true", null]);
 		expect(puts()[1]?.body).toEqual({ data: [] });
 	});
 });
 
 describe("checkRecords", () => {
+	const { t } = createTranslator("en", en);
+
 	it("accepts up to 1000 objects and refuses anything else", () => {
-		expect(checkRecords("[]")).toEqual({ records: [], error: null });
-		expect(checkRecords("[1]").error).toBe(
-			"Mỗi phần tử phải là một object JSON.",
+		expect(checkRecords("[]", t)).toEqual({ records: [], error: null });
+		expect(checkRecords("[1]", t).error).toBe(
+			"Each item must be a JSON object.",
 		);
-		expect(checkRecords("[[]]").error).toBe(
-			"Mỗi phần tử phải là một object JSON.",
+		expect(checkRecords("[[]]", t).error).toBe(
+			"Each item must be a JSON object.",
 		);
 		const many = JSON.stringify(Array.from({ length: 1001 }, () => ({})));
-		expect(checkRecords(many).error).toBe(
-			"Tối đa 1000 bản ghi (đang có 1001).",
+		expect(checkRecords(many, t).error).toBe(
+			"Up to 1,000 records (1,001 now).",
 		);
-		expect(checkRecords("nope").error).toBe("JSON không hợp lệ.");
+		expect(checkRecords("nope", t).error).toBe("Invalid JSON.");
 	});
 });

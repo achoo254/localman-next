@@ -26,9 +26,13 @@ export const VAPID = {
 };
 export const EVENT = {
 	type: "project.invitation",
-	title: "Lời mời cộng tác",
-	body: "An mời bạn vào project Demo",
+	params: { inviter: "An", project: "Demo", days: 7 },
 	link: "/projects/demo",
+} as const;
+/** `EVENT` rendered for a user who never chose a language. */
+export const EVENT_EN = {
+	title: "Project collaboration invitation",
+	body: 'An invited you to collaborate on the project "Demo". The invitation expires in 7 days.',
 } as const;
 
 export interface NotificationTestKit {

@@ -154,7 +154,7 @@ describe("interface language", () => {
 		);
 		expect(
 			await screen.findByText(
-				"未能将语言保存到账户。当前浏览器仍会使用所选语言。",
+				"未能将语言保存到账号。当前浏览器仍会使用所选语言。",
 			),
 		).toBeInTheDocument();
 		expect(window.localStorage.getItem(LOCALE_STORAGE_KEY)).toBe("zh-CN");

@@ -2,6 +2,7 @@ import { IconLink, IconUsers } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { Button } from "../../components/ui/button";
 import type { MemberDialogKind } from "../../features/collaborators/project-member-dialogs";
+import { useT } from "../../i18n/i18n-context";
 import type { Project } from "../projects/projects-api";
 
 export interface ProjectDetailHeaderProps {
@@ -10,13 +11,14 @@ export interface ProjectDetailHeaderProps {
 }
 
 /**
- * Breadcrumb "Projects / {name}" and the member entries: "Cộng tác viên"
+ * Breadcrumb "Projects / {name}" and the member entries: "Collaborators"
  * for everyone (a collaborator may leave there), "Magic link" for the owner.
  */
 export function ProjectDetailHeader({
 	project,
 	onOpen,
 }: ProjectDetailHeaderProps) {
+	const t = useT();
 	const members = project.memberCount - 1;
 	return (
 		<div className="flex min-h-11 flex-wrap items-center justify-between gap-3">
@@ -26,7 +28,7 @@ export function ProjectDetailHeader({
 					data-id="project-detail-back"
 					className="font-bold font-mono text-muted text-xl no-underline hover:text-primary"
 				>
-					Projects
+					{t("projects.title")}
 				</Link>
 				<span aria-hidden="true" className="font-mono text-icon-muted text-xl">
 					/
@@ -45,7 +47,9 @@ export function ProjectDetailHeader({
 					leadingIcon={<IconUsers size={16} aria-hidden="true" />}
 					onClick={() => onOpen("collaborators")}
 				>
-					Cộng tác viên{members > 0 ? ` · ${members}` : ""}
+					{members > 0
+						? t("projectDetail.header.collaboratorsCount", { count: members })
+						: t("projectDetail.header.collaborators")}
 				</Button>
 				{project.role === "owner" ? (
 					<Button

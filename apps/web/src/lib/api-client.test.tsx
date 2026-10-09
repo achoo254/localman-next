@@ -1,7 +1,14 @@
+import { render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { setActiveTranslator } from "../i18n/active-translator";
+import { I18nProvider } from "../i18n/i18n-provider";
+import { en } from "../i18n/messages/en/dictionary";
+import { vi as viMessages } from "../i18n/messages/vi/dictionary";
+import { createTranslator } from "../i18n/translate";
 import { navigateToLogin } from "../platform/navigation";
 import { UNAUTHENTICATED, mockFetch } from "../test/mock-fetch";
 import { ApiError, apiRequest, errorMessage } from "./api-client";
+import { invalidJsonMessage } from "./json-text";
 
 vi.mock("../platform/navigation", async (importOriginal) => ({
 	...(await importOriginal<typeof import("../platform/navigation")>()),
@@ -96,10 +103,30 @@ describe("apiRequest", () => {
 });
 
 describe("errorMessage", () => {
-	it("explains a rate limit in Vietnamese instead of the API's English", () => {
+	it("explains a rate limit in its own words instead of the API's", () => {
+		expect(
+			errorMessage(new ApiError(429, "RATE_LIMITED", "Too many requests")),
+		).toBe("You're going too fast. Wait about a minute and try again.");
+		expect(errorMessage(new ApiError(400, "X", "As sent"))).toBe("As sent");
+		expect(errorMessage(new Error("boom"))).toBe(
+			"Something went wrong on the server. Try again later.",
+		);
+	});
+
+	it("speaks the language the provider shows", () => {
+		const { unmount } = render(
+			<I18nProvider initial={{ locale: "vi", messages: viMessages }}>
+				<span />
+			</I18nProvider>,
+		);
 		expect(
 			errorMessage(new ApiError(429, "RATE_LIMITED", "Too many requests")),
 		).toBe("Bạn thao tác quá nhanh. Hãy đợi khoảng một phút rồi thử lại.");
-		expect(errorMessage(new ApiError(400, "X", "As sent"))).toBe("As sent");
+		expect(errorMessage(null)).toBe("Máy chủ gặp lỗi, thử lại sau.");
+		expect(invalidJsonMessage({ line: 2, column: 5 })).toBe(
+			"JSON không hợp lệ ở dòng 2, cột 5.",
+		);
+		unmount();
+		setActiveTranslator(createTranslator("en", en));
 	});
 });

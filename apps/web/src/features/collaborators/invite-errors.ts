@@ -1,58 +1,59 @@
+import type { SourceMessages } from "../../i18n/message-types";
+import type { Translate } from "../../i18n/translate";
 import { ApiError, errorMessage } from "../../lib/api-client";
 
-export const NOT_FOUND_MESSAGE =
-	"Không tìm thấy tài khoản với username hoặc email này.";
+/** Keys of the error texts (none takes a parameter). */
+type ErrorKey =
+	| `collaborators.errors.${keyof SourceMessages["collaborators"]["errors"]}`
+	| `invite.errors.${keyof SourceMessages["invite"]["errors"]}`;
 
-type Messages = Readonly<Record<string, string>>;
+type ErrorKeys = Readonly<Record<string, ErrorKey>>;
 
-/** Messages of the invite dialog's lookup and invitation errors. */
-const DIALOG_MESSAGES: Messages = {
-	INVITEE_NOT_FOUND: NOT_FOUND_MESSAGE,
-	ALREADY_MEMBER: "Người này đã có trong project.",
-	CANNOT_INVITE_SELF: "Người này đã có trong project.",
-	AMBIGUOUS_USERNAME:
-		"Có nhiều tài khoản dùng username này. Hãy mời bằng email.",
-	VALIDATION_ERROR: "Nhập username hoặc email hợp lệ.",
-	RATE_LIMITED:
-		"Bạn đã tra cứu hoặc mời quá nhiều lần. Hãy thử lại sau ít phút.",
-	CONFLICT: "Danh sách thành viên vừa thay đổi. Hãy thử lại.",
+/** Message keys of the invite dialog's lookup and invitation errors. */
+const DIALOG_KEYS: ErrorKeys = {
+	INVITEE_NOT_FOUND: "collaborators.errors.notFound",
+	ALREADY_MEMBER: "collaborators.errors.alreadyMember",
+	CANNOT_INVITE_SELF: "collaborators.errors.alreadyMember",
+	AMBIGUOUS_USERNAME: "collaborators.errors.ambiguousUsername",
+	VALIDATION_ERROR: "collaborators.errors.invalid",
+	RATE_LIMITED: "collaborators.errors.rateLimited",
+	CONFLICT: "collaborators.errors.conflict",
 };
 
-/** Messages of `/invite/:token` errors that are not a state of their own. */
-const PAGE_MESSAGES: Messages = {
-	RATE_LIMITED: "Bạn đã mở quá nhiều link mời. Hãy thử lại sau ít phút.",
-	CONFLICT: "Lời mời vừa thay đổi. Hãy thử lại.",
+/** Message keys of `/invite/:token` errors that are not a state of their own. */
+const PAGE_KEYS: ErrorKeys = {
+	RATE_LIMITED: "invite.errors.rateLimited",
+	CONFLICT: "invite.errors.conflict",
 };
-
-const PAGE_FALLBACK = "Không mở được lời mời. Hãy thử lại sau.";
 
 /**
- * Vietnamese message for `error`: the mapped code, else the client's own
- * messages (network, bad response), which are Vietnamese already. API
- * messages are English, so an unmapped API code gets `fallback`.
+ * Translated message for `error`: the mapped code, else the client's own
+ * messages (network, bad response). API messages are English only, so an
+ * unmapped API code gets `fallback`.
  */
-function messageFor(error: unknown, messages: Messages, fallback: string) {
+function messageFor(
+	error: unknown,
+	keys: ErrorKeys,
+	fallback: ErrorKey,
+	t: Translate,
+): string {
 	if (!(error instanceof ApiError)) return errorMessage(error);
-	const mapped = messages[error.code];
-	if (mapped) return mapped;
+	const mapped = Object.hasOwn(keys, error.code) ? keys[error.code] : undefined;
+	if (mapped) return t(mapped);
 	// Status 0 (no connection) and non-JSON answers come from the client.
 	return error.status === 0 ||
 		error.code.startsWith("HTTP_") ||
 		error.code === "INVALID_JSON"
 		? errorMessage(error)
-		: fallback;
+		: t(fallback);
 }
 
-export function inviteErrorMessage(error: unknown): string {
-	return messageFor(
-		error,
-		DIALOG_MESSAGES,
-		"Không mời được lúc này. Hãy thử lại sau.",
-	);
+export function inviteErrorMessage(error: unknown, t: Translate): string {
+	return messageFor(error, DIALOG_KEYS, "collaborators.errors.fallback", t);
 }
 
-export function invitePageErrorMessage(error: unknown): string {
-	return messageFor(error, PAGE_MESSAGES, PAGE_FALLBACK);
+export function invitePageErrorMessage(error: unknown, t: Translate): string {
+	return messageFor(error, PAGE_KEYS, "invite.errors.fallback", t);
 }
 
 /** Loose shape check for the "no account yet, invite this email" path. */

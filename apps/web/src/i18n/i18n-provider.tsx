@@ -7,6 +7,8 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { useAccountLocaleSync } from "./account-locale-sync";
+import { setActiveTranslator } from "./active-translator";
 import { I18nContext, type I18nValue } from "./i18n-context";
 import { loadMessages } from "./load-messages";
 import { resolvePreferredLocale, storeLocale } from "./locale-preference";
@@ -75,6 +77,8 @@ export function I18nProvider({
 		[switchTo],
 	);
 
+	useAccountLocaleSync(setLocale);
+
 	// After hydration (or a first render that did not preload), follow
 	// `?lang=` or the saved choice. Failing to load keeps English on screen.
 	useEffect(() => {
@@ -90,12 +94,12 @@ export function I18nProvider({
 		document.documentElement.lang = current.locale;
 	}, [current.locale]);
 
-	const value = useMemo<I18nValue>(
-		() => ({
-			...createTranslator(current.locale, current.messages),
-			setLocale,
-		}),
-		[current, setLocale],
-	);
+	const value = useMemo<I18nValue>(() => {
+		const translator = createTranslator(current.locale, current.messages);
+		// Set while rendering, so plain functions called during this render
+		// (validation messages) already speak the new language.
+		setActiveTranslator(translator);
+		return { ...translator, setLocale };
+	}, [current, setLocale]);
 	return <I18nContext value={value}>{children}</I18nContext>;
 }

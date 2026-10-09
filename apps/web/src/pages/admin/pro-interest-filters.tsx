@@ -5,15 +5,11 @@ import { Input } from "../../components/ui/input";
 import { Select } from "../../components/ui/select";
 import {
 	type Choice,
-	PRO_NEEDS,
-	PRO_SOURCES,
+	proNeeds,
+	proSources,
 } from "../../features/subscription/pro-interest-options";
+import { useT } from "../../i18n/i18n-context";
 import type { ProInterestFilter } from "./pro-interest-admin-api";
-
-const STATUSES: readonly Choice[] = [
-	{ id: "false", label: "Chưa liên hệ" },
-	{ id: "true", label: "Đã liên hệ" },
-];
 
 export interface ProInterestFiltersProps {
 	filter: ProInterestFilter;
@@ -36,6 +32,7 @@ function FilterSelect({
 	choices: readonly Choice[];
 	onChange: (value: string) => void;
 }) {
+	const t = useT();
 	return (
 		<FormField
 			label={label}
@@ -43,7 +40,7 @@ function FilterSelect({
 			className="min-w-0 flex-[1_1_9rem]"
 		>
 			<Select value={value} onChange={(event) => onChange(event.target.value)}>
-				<option value="">Tất cả</option>
+				<option value="">{t("common.all")}</option>
 				{choices.map((choice) => (
 					<option key={choice.id} value={choice.id}>
 						{choice.label}
@@ -62,10 +59,15 @@ export function ProInterestFilters({
 	exporting,
 	onExport,
 }: ProInterestFiltersProps) {
+	const t = useT();
+	const statuses: readonly Choice[] = [
+		{ id: "false", label: t("admin.pro.notContacted") },
+		{ id: "true", label: t("admin.pro.contacted") },
+	];
 	return (
 		<div className="flex flex-wrap items-end gap-3 border-border-subtle border-b px-5 py-4">
 			<FormField
-				label="Tìm email hoặc tên"
+				label={t("admin.pro.search")}
 				data-id="admin-pro-filter-q"
 				className="min-w-0 flex-[2_1_12rem]"
 			>
@@ -77,23 +79,23 @@ export function ProInterestFilters({
 			</FormField>
 			<FilterSelect
 				id="source"
-				label="Nguồn"
+				label={t("admin.pro.source")}
 				value={filter.source}
-				choices={PRO_SOURCES}
+				choices={proSources(t)}
 				onChange={(source) => onChange({ source })}
 			/>
 			<FilterSelect
 				id="need"
-				label="Nhu cầu"
+				label={t("admin.pro.need")}
 				value={filter.need}
-				choices={PRO_NEEDS}
+				choices={proNeeds(t)}
 				onChange={(need) => onChange({ need })}
 			/>
 			<FilterSelect
 				id="status"
-				label="Trạng thái"
+				label={t("admin.status")}
 				value={filter.contacted}
-				choices={STATUSES}
+				choices={statuses}
 				onChange={(value) =>
 					onChange({
 						contacted: value === "true" || value === "false" ? value : "",
@@ -112,7 +114,7 @@ export function ProInterestFilters({
 				leadingIcon={<IconDownload size={16} aria-hidden="true" />}
 				onClick={onExport}
 			>
-				Xuất CSV
+				{t("admin.pro.exportCsv")}
 			</Button>
 		</div>
 	);

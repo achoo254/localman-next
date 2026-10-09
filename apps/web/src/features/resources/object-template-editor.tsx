@@ -1,5 +1,7 @@
 import { useId, useState } from "react";
 import { JsonEditor } from "../../components/ui/json-editor";
+import { useT } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
 import { isRecord } from "../../lib/json-guards";
 
 export interface ObjectTemplateEditorProps {
@@ -14,9 +16,6 @@ const PLACEHOLDER = `{
   "address": { "city": "$address.city" }
 }`;
 
-const mustBeObject = (value: unknown): string | null =>
-	isRecord(value) ? null : "Object template phải là một object JSON.";
-
 /**
  * Optional JSON object rendered once per generated record instead of the
  * schema. Open on every plan (Localman's Free plan includes it).
@@ -26,7 +25,10 @@ export function ObjectTemplateEditor({
 	onChange,
 	error,
 }: ObjectTemplateEditorProps) {
+	const t = useT();
 	const ids = useId();
+	const mustBeObject = (parsed: unknown): string | null =>
+		isRecord(parsed) ? null : t("resources.validation.templateNotObject");
 	const [blurError, setBlurError] = useState<string | null>(null);
 	const shown = blurError ?? error;
 	return (
@@ -52,9 +54,7 @@ export function ObjectTemplateEditor({
 				data-id="resource-form-template-json"
 			/>
 			<p id={`${ids}-hint`} className="m-0 text-[0.8125rem] text-muted">
-				Template JSON thay cho schema ở trên, dùng cho cấu trúc lồng phức tạp.
-				Giá trị dạng <code>"$category.method"</code> gọi Faker (ví dụ{" "}
-				<code>"$internet.email"</code>). Để trống để dùng schema.
+				{renderRich(t("resources.template.hint"))}
 			</p>
 			{shown ? (
 				<p id={`${ids}-error`} className="m-0 text-[0.8125rem] text-error">

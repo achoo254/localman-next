@@ -1,3 +1,4 @@
+import { activeTranslator } from "../i18n/active-translator";
 import { currentPath, navigateToLogin } from "../platform/navigation";
 import { apiUrl } from "./api-url";
 import { isRecord } from "./json-guards";
@@ -32,7 +33,10 @@ export interface ApiRequestOptions {
 	signal?: AbortSignal;
 }
 
-const FALLBACK_MESSAGE = "Máy chủ gặp lỗi, thử lại sau.";
+/** Generic server failure, in the language on screen. */
+function fallbackMessage(): string {
+	return activeTranslator().t("common.errors.server");
+}
 
 async function readJson(response: Response): Promise<unknown> {
 	const text = await response.text();
@@ -48,10 +52,10 @@ function toApiError(status: number, payload: unknown): ApiError {
 	const error = isRecord(payload) ? payload.error : undefined;
 	if (isRecord(error) && typeof error.code === "string") {
 		const message =
-			typeof error.message === "string" ? error.message : FALLBACK_MESSAGE;
+			typeof error.message === "string" ? error.message : fallbackMessage();
 		return new ApiError(status, error.code, message, error.details);
 	}
-	return new ApiError(status, `HTTP_${status}`, FALLBACK_MESSAGE);
+	return new ApiError(status, `HTTP_${status}`, fallbackMessage());
 }
 
 /**
@@ -83,13 +87,17 @@ export async function apiRequest(
 		if (cause instanceof DOMException && cause.name === "AbortError") {
 			throw cause;
 		}
-		throw new ApiError(0, "NETWORK_ERROR", "Không kết nối được máy chủ.");
+		throw new ApiError(
+			0,
+			"NETWORK_ERROR",
+			activeTranslator().t("common.errors.network"),
+		);
 	}
 
 	const payload = await readJson(response);
 	if (response.ok) {
 		if (payload === undefined) {
-			throw new ApiError(response.status, "INVALID_JSON", FALLBACK_MESSAGE);
+			throw new ApiError(response.status, "INVALID_JSON", fallbackMessage());
 		}
 		return payload;
 	}
@@ -107,15 +115,15 @@ export async function apiRequest(
 export const withDryRun = (path: string, dryRun: boolean): string =>
 	dryRun ? `${path}?dryRun=true` : path;
 
-const RATE_LIMITED_MESSAGE =
-	"Bạn thao tác quá nhanh. Hãy đợi khoảng một phút rồi thử lại.";
-
 /**
- * Message safe to show the user for any thrown value. A rate limit (429
- * `RATE_LIMITED`, e.g. on generate, data replace or clone) gets its own
- * sentence; flows with a more specific one map it before calling this.
+ * Message safe to show the user for any thrown value, in the language on
+ * screen. A rate limit (429 `RATE_LIMITED`, e.g. on generate, data replace
+ * or clone) gets its own sentence; flows with a more specific one map it
+ * before calling this. Other API messages are shown as the API wrote them.
  */
 export function errorMessage(error: unknown): string {
-	if (!(error instanceof ApiError)) return FALLBACK_MESSAGE;
-	return error.code === "RATE_LIMITED" ? RATE_LIMITED_MESSAGE : error.message;
+	if (!(error instanceof ApiError)) return fallbackMessage();
+	return error.code === "RATE_LIMITED"
+		? activeTranslator().t("common.errors.rateLimited")
+		: error.message;
 }

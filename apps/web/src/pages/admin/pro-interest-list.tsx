@@ -4,9 +4,9 @@ import { Button } from "../../components/ui/button";
 import { cardClassName } from "../../components/ui/card";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
 import { useToast } from "../../components/ui/toast";
+import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
-import { formatNumber } from "../../lib/format";
 import { downloadText } from "../../platform/download";
 import { Pagination } from "./pagination";
 import {
@@ -44,6 +44,7 @@ export function ProInterestList({
 	onChanged,
 	onForbidden,
 }: ProInterestListProps) {
+	const t = useT();
 	const toast = useToast();
 	const [filter, setFilter] = useState<ProInterestFilter>(EMPTY_FILTER);
 	const [page, setPage] = useState(1);
@@ -105,11 +106,9 @@ export function ProInterestList({
 		try {
 			const updated = await setContacted(item.id, item.contactedAt === null);
 			replaceItem(updated);
-			toast.show({
-				title: updated.contactedAt
-					? `Đã đánh dấu đã liên hệ ${maskEmail(item.email)}.`
-					: `Đã bỏ đánh dấu ${maskEmail(item.email)}.`,
-			});
+			const email = maskEmail(item.email);
+			const key = updated.contactedAt ? "markedContacted" : "unmarked";
+			toast.show({ title: t(`admin.pro.${key}`, { email }) });
 		} catch (error) {
 			toast.show({ tone: "error", title: errorMessage(error) });
 		} finally {
@@ -122,7 +121,7 @@ export function ProInterestList({
 		try {
 			const { filename, csv } = await exportCsv(filter);
 			downloadText(filename, csv);
-			toast.show({ title: `Đã xuất ${filename}.` });
+			toast.show({ title: t("admin.pro.exported", { file: filename }) });
 		} catch (error) {
 			toast.show({ tone: "error", title: errorMessage(error) });
 		} finally {
@@ -141,19 +140,21 @@ export function ProInterestList({
 			<ProInterestFilters
 				filter={filter}
 				onChange={changeFilter}
-				countLabel={`${formatNumber(total)} người`}
+				countLabel={t("admin.pro.count", { count: total })}
 				exporting={exporting}
 				onExport={() => void exportFile()}
 			/>
 			{state.status === "loading" ? (
 				<output className="block px-5 py-6 font-mono text-muted text-sm">
-					Đang tải danh sách…
+					{t("admin.pro.loading")}
 				</output>
 			) : null}
 			{state.status === "error" ? (
 				<div className="grid justify-items-start gap-3 px-5 py-6">
 					<Alert tone="danger">{errorMessage(state.error)}</Alert>
-					<Button onClick={() => setReload((n) => n + 1)}>Thử lại</Button>
+					<Button onClick={() => setReload((n) => n + 1)}>
+						{t("common.cta.retry")}
+					</Button>
 				</div>
 			) : null}
 			{state.status === "ready" && state.page.items.length === 0 ? (
@@ -161,7 +162,7 @@ export function ProInterestList({
 					data-id="admin-pro-empty"
 					className="m-0 px-5 py-7 text-center text-muted"
 				>
-					Không có đăng ký nào khớp bộ lọc.
+					{t("admin.pro.empty")}
 				</p>
 			) : null}
 			{state.status === "ready" && state.page.items.length > 0 ? (
@@ -177,22 +178,21 @@ export function ProInterestList({
 				<ConfirmModal
 					open
 					onOpenChange={(open) => !open && setDeleting(null)}
-					title="Xoá theo yêu cầu"
+					title={t("admin.pro.deleteTitle")}
 					data-id="modal-pro-interest-delete"
-					question={`Xoá đăng ký của ${maskEmail(deleting.email)}?`}
-					confirmLabel="Xoá vĩnh viễn"
+					question={t("admin.pro.deleteQuestion", {
+						email: maskEmail(deleting.email),
+					})}
+					confirmLabel={t("admin.deletePermanently")}
 					onConfirm={async () => {
 						await deleteInterest(deleting.id, { preview: true });
 						await deleteInterest(deleting.id);
-						toast.show({ title: "Đã xoá đăng ký theo yêu cầu." });
+						toast.show({ title: t("admin.pro.deleted") });
 						setReload((n) => n + 1);
 						onChanged();
 					}}
 				>
-					<span>
-						Email, tên, nhu cầu và ghi chú bị xoá hẳn theo yêu cầu của người
-						đăng ký. Không hoàn tác được.
-					</span>
+					<span>{t("admin.pro.deleteBody")}</span>
 				</ConfirmModal>
 			) : null}
 		</section>

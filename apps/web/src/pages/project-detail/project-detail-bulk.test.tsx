@@ -41,15 +41,15 @@ describe("Generate all and Reset all", () => {
 			),
 		});
 		await findNode("likes");
-		await userEvent.click(screen.getByRole("button", { name: "Sinh tất cả" }));
-		const dialog = await screen.findByRole("dialog", { name: "Sinh tất cả" });
+		await userEvent.click(screen.getByRole("button", { name: "Generate all" }));
+		const dialog = await screen.findByRole("dialog", { name: "Generate all" });
 		expect(within(dialog).getByRole("list")).toHaveTextContent(
-			"users: 10 → 10 bản ghi",
+			"users: 10 → 10 records",
 		);
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Sinh dữ liệu" }),
+			within(dialog).getByRole("button", { name: "Generate data" }),
 		);
-		expect(await screen.findByText("Đã sinh dữ liệu")).toBeInTheDocument();
+		expect(await screen.findByText("Data generated")).toBeInTheDocument();
 		expect(bar(await findNode("likes"))).toHaveAttribute("aria-valuenow", "10");
 		const posts = calls.filter((c) => c.path.endsWith("/generate_all"));
 		expect(posts.map((c) => c.query.get("dryRun"))).toEqual(["true", null]);
@@ -63,8 +63,8 @@ describe("Generate all and Reset all", () => {
 			[`POST ${RESOURCES_PATH}/generate_all`]: dryRunAware(fresh, fresh),
 		});
 		await findNode("users");
-		await userEvent.click(screen.getByRole("button", { name: "Sinh tất cả" }));
-		expect(await screen.findByText("Đã sinh dữ liệu")).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Generate all" }));
+		expect(await screen.findByText("Data generated")).toBeInTheDocument();
 		expect(screen.queryByRole("dialog")).toBeNull();
 		expect(bar(await findNode("users"))).toHaveAttribute("aria-valuenow", "10");
 	});
@@ -78,15 +78,15 @@ describe("Generate all and Reset all", () => {
 			),
 		});
 		await findNode("users");
-		await userEvent.click(screen.getByRole("button", { name: "Reset tất cả" }));
-		const dialog = await screen.findByRole("dialog", { name: "Reset tất cả" });
+		await userEvent.click(screen.getByRole("button", { name: "Reset all" }));
+		const dialog = await screen.findByRole("dialog", { name: "Reset all" });
 		const list = within(dialog).getByRole("list");
-		expect(list).toHaveTextContent("users: 10 → 0 bản ghi");
+		expect(list).toHaveTextContent("users: 10 → 0 records");
 		expect(list).not.toHaveTextContent("likes");
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Reset dữ liệu" }),
+			within(dialog).getByRole("button", { name: "Reset data" }),
 		);
-		expect(await screen.findByText("Đã reset dữ liệu")).toBeInTheDocument();
+		expect(await screen.findByText("Data reset")).toBeInTheDocument();
 		expect(bar(await findNode("users"))).toHaveAttribute("aria-valuenow", "0");
 	});
 
@@ -95,14 +95,14 @@ describe("Generate all and Reset all", () => {
 			[`GET ${RESOURCES_PATH}`]: { body: { items: [] } },
 			[`POST ${RESOURCES_PATH}/reset_all`]: dryRunAware([], []),
 		});
-		await screen.findByText(/Chưa có resource nào/);
-		await userEvent.click(screen.getByRole("button", { name: "Reset tất cả" }));
+		await screen.findByText(/No resources yet/);
+		await userEvent.click(screen.getByRole("button", { name: "Reset all" }));
 		expect(
-			await screen.findByText("Chưa có dữ liệu nào để reset."),
+			await screen.findByText("There's no data to reset yet."),
 		).toBeInTheDocument();
-		await userEvent.click(screen.getByRole("button", { name: "Sinh tất cả" }));
+		await userEvent.click(screen.getByRole("button", { name: "Generate all" }));
 		expect(
-			await screen.findByText("Project chưa có resource nào."),
+			await screen.findByText("This project has no resources yet."),
 		).toBeInTheDocument();
 	});
 });
@@ -125,22 +125,26 @@ describe("Delete resource", () => {
 		});
 		const users = await findNode("users");
 		await userEvent.click(
-			within(users).getByRole("button", { name: "Xoá users" }),
+			within(users).getByRole("button", { name: "Delete users" }),
 		);
-		const dialog = await screen.findByRole("dialog", { name: "Xoá resource" });
+		const dialog = await screen.findByRole("dialog", {
+			name: "Delete resource",
+		});
 		expect(
-			within(dialog).getByText(/Schema, endpoint và 10 bản ghi/),
+			within(dialog).getByText(/The schema, endpoints and 10 records/),
 		).toBeInTheDocument();
 		const cascade = await within(dialog).findByText(
-			/Sẽ xoá kèm 2 resource con/,
+			/This also deletes 2 child resources/,
 		);
-		expect(cascade).toHaveTextContent("posts (4 bản ghi)");
-		expect(cascade).toHaveTextContent("comments (0 bản ghi)");
-		expect(within(dialog).getByRole("button", { name: "Huỷ" })).toHaveFocus();
+		expect(cascade).toHaveTextContent("posts (4 records)");
+		expect(cascade).toHaveTextContent("comments (0 records)");
+		expect(
+			within(dialog).getByRole("button", { name: "Cancel" }),
+		).toHaveFocus();
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Xoá resource" }),
+			within(dialog).getByRole("button", { name: "Delete resource" }),
 		);
-		expect(await findToast("Đã xoá resource users.")).toBeInTheDocument();
+		expect(await findToast("Deleted resource users.")).toBeInTheDocument();
 		const deletes = calls.filter((c) => c.method === "DELETE");
 		expect(deletes.map((c) => c.query.get("dryRun"))).toEqual(["true", null]);
 	});

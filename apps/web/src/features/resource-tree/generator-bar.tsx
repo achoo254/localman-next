@@ -6,6 +6,7 @@ import {
 	useId,
 	useState,
 } from "react";
+import { useT } from "../../i18n/i18n-context";
 import {
 	GENERATOR_HEIGHT,
 	GENERATOR_WIDTH,
@@ -19,7 +20,7 @@ export const GENERATOR_KEY_STEP = 10;
 export interface GeneratorBarProps {
 	/** Records the resource holds now. */
 	value: number;
-	/** Accessible name, e.g. "Số bản ghi của users". */
+	/** Accessible name, e.g. "Records of users". */
 	label: string;
 	/** Why the bar cannot generate now (parent without data…); null if it can. */
 	blockedReason: string | null;
@@ -57,6 +58,7 @@ export function GeneratorBar({
 	"data-id": dataId,
 }: GeneratorBarProps) {
 	// SVG `url(#…)` references need a plain id; React's contains « » or :.
+	const t = useT();
 	const ids = `generator${useId().replace(/[^\w-]/g, "")}`;
 	const [hover, setHover] = useState<number | null>(null);
 	const [pending, setPending] = useState<number | null>(null);
@@ -110,7 +112,12 @@ export function GeneratorBar({
 				aria-valuemax={MAX_GENERATE_COUNT}
 				aria-valuenow={shown}
 				aria-valuetext={
-					blocked ? `${shown} bản ghi. ${blockedReason}` : `${shown} bản ghi`
+					blockedReason === null
+						? t("resourceTree.generator.value", { count: shown })
+						: t("resourceTree.generator.valueBlocked", {
+								count: shown,
+								reason: blockedReason,
+							})
 				}
 				aria-orientation="horizontal"
 				aria-disabled={blocked || undefined}

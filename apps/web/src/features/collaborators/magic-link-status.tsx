@@ -1,6 +1,6 @@
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
-import { formatDate } from "../../lib/format";
+import { useI18n } from "../../i18n/i18n-context";
 import { DANGER_GHOST } from "./collaborators-footer";
 import type { MagicLinkState } from "./magic-link-api";
 
@@ -12,12 +12,13 @@ export interface MagicLinkStatusProps {
 }
 
 /**
- * State of a link that is no longer shown: active (with "Thu hồi") or
- * expired; "Chưa có" for none and revoked.
+ * State of a link that is no longer shown: active (with "Revoke") or
+ * expired; "No active magic link" for none and revoked.
  */
 export function MagicLinkStatus({ link, onRevoke }: MagicLinkStatusProps) {
+	const { t, formatDate } = useI18n();
 	if (link.status === "none" || link.status === "revoked") {
-		return <p className={HELP}>Chưa có magic link đang hoạt động.</p>;
+		return <p className={HELP}>{t("collaborators.magic.none")}</p>;
 	}
 	const active = link.status === "active";
 	const expires = link.expiresAt ? formatDate(link.expiresAt) : "";
@@ -28,23 +29,22 @@ export function MagicLinkStatus({ link, onRevoke }: MagicLinkStatusProps) {
 		>
 			<div className="flex flex-wrap items-center gap-2 font-mono text-[0.8125rem]">
 				{active ? (
-					<Badge tone="success">Đang hoạt động</Badge>
+					<Badge tone="success">{t("collaborators.magic.active")}</Badge>
 				) : (
-					<Badge tone="neutral">Đã hết hạn</Badge>
+					<Badge tone="neutral">{t("collaborators.magic.expired")}</Badge>
 				)}
-				<span>Hết hạn {expires}</span>
+				<span>{t("collaborators.magic.expiresOn", { date: expires })}</span>
 				{link.createdAt ? (
 					<span className="text-muted">
-						· Tạo lúc {formatDate(link.createdAt)}
+						{t("collaborators.magic.createdOn", {
+							date: formatDate(link.createdAt),
+						})}
 					</span>
 				) : null}
 			</div>
 			{active ? (
 				<>
-					<p className={HELP}>
-						Vì lý do bảo mật, link không hiển thị lại. Tạo link mới nếu cần gửi
-						lại.
-					</p>
+					<p className={HELP}>{t("collaborators.magic.hiddenNote")}</p>
 					<Button
 						variant="ghost"
 						size="sm"
@@ -52,7 +52,7 @@ export function MagicLinkStatus({ link, onRevoke }: MagicLinkStatusProps) {
 						className={`justify-self-start ${DANGER_GHOST}`}
 						onClick={onRevoke}
 					>
-						Thu hồi
+						{t("collaborators.magic.revoke")}
 					</Button>
 				</>
 			) : null}

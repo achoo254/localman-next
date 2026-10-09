@@ -8,7 +8,7 @@ import { ProInterestModal } from "./pro-interest-modal";
 import type { ProInterestSource } from "./pro-interest-options";
 
 export interface SubscriptionDialogs {
-	/** Opens "Quản lý gói"; pass the quota that was hit, if any. */
+	/** Opens "Manage plan"; pass the quota that was hit, if any. */
 	openPlans: (reason?: LimitReason) => void;
 	openProInterest: (source: ProInterestSource) => void;
 	/** Render once in the page that uses the dialogs. */
@@ -16,7 +16,7 @@ export interface SubscriptionDialogs {
 }
 
 /**
- * Plans modal and Pro interest form wired together: "Liên hệ"
+ * Plans modal and Pro interest form wired together: "Contact"
  * closes the plans modal and opens the form with the matching source.
  */
 export function useSubscriptionDialogs(

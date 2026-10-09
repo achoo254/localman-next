@@ -20,7 +20,7 @@ describe("project ⋮ menu by role", () => {
 		});
 		await openMenu("Demo");
 		const items = screen.getAllByRole("menuitem").map((i) => i.textContent);
-		expect(items).toEqual(["Cộng tác viên", "Nhân bản"]);
+		expect(items).toEqual(["Collaborators", "Duplicate"]);
 	});
 
 	it("gives the owner every entry", async () => {
@@ -28,11 +28,11 @@ describe("project ⋮ menu by role", () => {
 		await openMenu("Demo");
 		const items = screen.getAllByRole("menuitem").map((i) => i.textContent);
 		expect(items).toEqual([
-			"Cộng tác viên",
+			"Collaborators",
 			"Magic link",
-			"Nhân bản",
-			"Sửa",
-			"Xoá",
+			"Duplicate",
+			"Edit",
+			"Delete",
 		]);
 	});
 });

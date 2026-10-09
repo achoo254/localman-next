@@ -2,7 +2,7 @@ import { IconCheck, IconHistory, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
-import { formatDate } from "../../lib/format";
+import { useI18n } from "../../i18n/i18n-context";
 import { EmailMatchBadge } from "./email-match-badge";
 import type { ProInterestItem } from "./pro-interest-item";
 import {
@@ -30,6 +30,7 @@ export function ProInterestRow({
 	onToggleContacted,
 	onDelete,
 }: ProInterestRowProps) {
+	const { t, formatDate } = useI18n();
 	const [open, setOpen] = useState(false);
 	const rowId = `admin-pro-row-${item.id}`;
 	const emailId = `${rowId}-email`;
@@ -45,11 +46,11 @@ export function ProInterestRow({
 						<EmailMatchBadge matches={item.emailMatchesAccount} />
 					</span>
 				</td>
-				<td className={CELL}>{needsLabel(item.needs)}</td>
+				<td className={CELL}>{needsLabel(t, item.needs)}</td>
 				<td className={`${CELL} whitespace-nowrap`}>
-					{teamLabel(item.teamSize)}
+					{teamLabel(t, item.teamSize)}
 				</td>
-				<td className={CELL}>{sourceLabel(item.source)}</td>
+				<td className={CELL}>{sourceLabel(t, item.source)}</td>
 				<td className={`${CELL} whitespace-nowrap font-mono text-[0.8125rem]`}>
 					{formatDate(item.createdAt)}
 				</td>
@@ -58,7 +59,7 @@ export function ProInterestRow({
 						tone={contacted ? "success" : "accent"}
 						data-id={`${rowId}-status`}
 					>
-						{contacted ? "Đã liên hệ" : "Chưa liên hệ"}
+						{contacted ? t("admin.pro.contacted") : t("admin.pro.notContacted")}
 					</Badge>
 				</td>
 				<td className={CELL}>
@@ -74,7 +75,7 @@ export function ProInterestRow({
 							}
 							onClick={() => onToggleContacted(item)}
 						>
-							{contacted ? "Bỏ đánh dấu" : "Đánh dấu đã liên hệ"}
+							{contacted ? t("admin.pro.unmark") : t("admin.pro.markContacted")}
 						</Button>
 						<Button
 							size="sm"
@@ -86,7 +87,7 @@ export function ProInterestRow({
 							leadingIcon={<IconHistory size={16} aria-hidden="true" />}
 							onClick={() => setOpen((value) => !value)}
 						>
-							Lịch sử ({item.submissions.length})
+							{t("admin.pro.history", { count: item.submissions.length })}
 						</Button>
 						<Button
 							size="sm"
@@ -96,7 +97,7 @@ export function ProInterestRow({
 							leadingIcon={<IconTrash size={16} aria-hidden="true" />}
 							onClick={() => onDelete(item)}
 						>
-							Xoá theo yêu cầu
+							{t("admin.pro.deleteTitle")}
 						</Button>
 					</span>
 				</td>

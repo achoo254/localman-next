@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
-import { formatNumber } from "../../lib/format";
+import { useT } from "../../i18n/i18n-context";
 import type { DataChange } from "./resource-model";
 
 /** A write previewed with a dry run, waiting for the user's go-ahead. */
@@ -25,6 +25,7 @@ export function DataChangesConfirmModal({
 	confirm,
 	onOpenChange,
 }: DataChangesConfirmModalProps) {
+	const t = useT();
 	const dataId = confirm["data-id"];
 	return (
 		<ConfirmModal
@@ -42,8 +43,10 @@ export function DataChangesConfirmModal({
 					{confirm.changes.map((change) => (
 						<li key={change.resourceId}>
 							<span className="font-mono">{change.name}</span>:{" "}
-							{formatNumber(change.countBefore)} →{" "}
-							{formatNumber(change.countAfter)} bản ghi
+							{t("resources.changeLine", {
+								before: change.countBefore,
+								count: change.countAfter,
+							})}
 						</li>
 					))}
 				</ul>

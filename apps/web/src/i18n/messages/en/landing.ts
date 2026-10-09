@@ -71,7 +71,7 @@ export const landing = {
 		freePrice: "Free",
 		proBadge: "Interest list open",
 		proLead:
-			"Higher limits for projects that run for real, and more members. Tell us what you need and we'll contact you when Pro opens.",
+			"Higher limits and more members for projects in real use. Tell us what you need and we'll contact you when Pro opens.",
 	},
 	modeling: {
 		title: "Simple data modeling",

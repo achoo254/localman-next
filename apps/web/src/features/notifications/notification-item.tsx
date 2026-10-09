@@ -1,15 +1,24 @@
+import type { Locale } from "@localman/shared/constants";
+import { useMemo } from "react";
 import { DropdownMenuItem } from "../../components/ui/dropdown-menu";
+import { useI18n } from "../../i18n/i18n-context";
+import { APP_TIME_ZONE } from "../../i18n/translate";
 import { cn } from "../../lib/cn";
 import type { AppNotification } from "./notifications-api";
 
-const TIME_FORMAT = new Intl.DateTimeFormat("vi-VN", {
-	dateStyle: "short",
-	timeStyle: "short",
-});
-
-function formatTime(iso: string): string {
-	const date = new Date(iso);
-	return Number.isNaN(date.getTime()) ? "" : TIME_FORMAT.format(date);
+/** Short date and time in the language on screen, in Asia/Saigon. */
+function useTimeFormat(locale: Locale): (iso: string) => string {
+	return useMemo(() => {
+		const format = new Intl.DateTimeFormat(locale, {
+			dateStyle: "short",
+			timeStyle: "short",
+			timeZone: APP_TIME_ZONE,
+		});
+		return (iso: string) => {
+			const date = new Date(iso);
+			return Number.isNaN(date.getTime()) ? "" : format.format(date);
+		};
+	}, [locale]);
 }
 
 export interface NotificationItemProps {
@@ -22,6 +31,8 @@ export function NotificationItem({
 	notification,
 	onSelect,
 }: NotificationItemProps) {
+	const { t, locale } = useI18n();
+	const formatTime = useTimeFormat(locale);
 	const unread = notification.readAt === null;
 	return (
 		<DropdownMenuItem
@@ -39,7 +50,9 @@ export function NotificationItem({
 			/>
 			<span className="grid min-w-0 gap-0.5 font-sans">
 				<span className={cn("truncate", unread && "font-semibold")}>
-					{unread ? <span className="sr-only">Chưa đọc: </span> : null}
+					{unread ? (
+						<span className="sr-only">{`${t("notifications.bell.unread")} `}</span>
+					) : null}
 					{notification.title}
 				</span>
 				{notification.body ? (

@@ -67,7 +67,7 @@ describe("no unreleased feature in the copy while every flag is off", () => {
 			},
 		});
 		const { container } = renderWithFeatures(<AccountPage />, NO_FEATURES);
-		await screen.findByRole("meter", { name: "Request tới mock tháng này" });
+		await screen.findByRole("meter", { name: "Mock requests this month" });
 		expect(unreleasedMentions(container)).toEqual([]);
 	});
 });

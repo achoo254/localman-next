@@ -98,7 +98,11 @@ describe("invitation notifications", () => {
 			type: "project.invitation",
 			link: res.body.inviteLink,
 		});
-		expect(stored[0]?.body).toContain("Demo");
+		expect(stored[0]?.params).toEqual({
+			inviter: "Owner",
+			project: "Demo",
+			days: 7,
+		});
 		expect(pushSender).toHaveBeenCalledTimes(1);
 		expect(bot?.requests).toHaveLength(1);
 		expect(String(bot?.requests[0]?.text)).toContain(

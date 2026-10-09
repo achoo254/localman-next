@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
-import { formatNumber } from "../../lib/format";
+import { useI18n } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
+import type { Translator } from "../../i18n/translate";
 import {
 	type DeleteDependent,
 	type Project,
@@ -8,11 +10,8 @@ import {
 	previewDeleteProject,
 } from "./projects-api";
 
-const KIND_LABELS: Readonly<Record<string, string>> = {
-	resources: "resource",
-	records: "bản ghi dữ liệu",
-	collaborators: "cộng tác viên",
-	mcpTokens: "token MCP",
+const MONO = {
+	code: (chunk: string) => <span className="font-mono">{chunk}</span>,
 };
 
 type Preview =
@@ -20,15 +19,38 @@ type Preview =
 	| { status: "ready"; dependents: DeleteDependent[] }
 	| { status: "unavailable" };
 
+/** "3 resources", or the raw kind for one the dictionary does not know. */
+function dependentText(
+	{ kind, count }: DeleteDependent,
+	{ t, formatNumber }: Translator,
+): string {
+	switch (kind) {
+		case "resources":
+			return t("projects.delete.kinds.resources", { count });
+		case "records":
+			return t("projects.delete.kinds.records", { count });
+		case "collaborators":
+			return t("projects.delete.kinds.collaborators", { count });
+		case "mcpTokens":
+			return t("projects.delete.kinds.mcpTokens", { count });
+		default:
+			return `${formatNumber(count)} ${kind}`;
+	}
+}
+
 /** Sentence listing what goes with the project, or null when nothing does. */
-function summary(dependents: DeleteDependent[]): string | null {
+function summary(
+	dependents: DeleteDependent[],
+	i18n: Translator,
+): string | null {
+	const { t } = i18n;
 	const parts = dependents
 		.filter((item) => item.count > 0)
-		.map(
-			(item) =>
-				`${formatNumber(item.count)} ${KIND_LABELS[item.kind] ?? item.kind}`,
-		);
-	return parts.length > 0 ? `Sẽ xoá kèm ${parts.join(", ")}.` : null;
+		.map((item) => dependentText(item, i18n));
+	if (parts.length === 0) return null;
+	return t("projects.delete.summary", {
+		items: parts.join(t("projects.delete.separator")),
+	});
 }
 
 export interface DeleteProjectModalProps {
@@ -46,6 +68,8 @@ export function DeleteProjectModal({
 	onOpenChange,
 	onDeleted,
 }: DeleteProjectModalProps) {
+	const i18n = useI18n();
+	const { t } = i18n;
 	const [preview, setPreview] = useState<Preview>({ status: "loading" });
 
 	useEffect(() => {
@@ -63,30 +87,29 @@ export function DeleteProjectModal({
 
 	const note =
 		preview.status === "loading"
-			? "Đang kiểm tra dữ liệu liên quan…"
+			? t("projects.delete.checking")
 			: preview.status === "ready"
-				? summary(preview.dependents)
+				? summary(preview.dependents, i18n)
 				: null;
 
 	return (
 		<ConfirmModal
 			open
 			onOpenChange={onOpenChange}
-			title="Xoá project"
+			title={t("projects.delete.title")}
 			data-id="modal-delete-project"
-			question={
-				<>
-					Xoá “<span className="font-mono">{project.name}</span>”?
-				</>
-			}
-			confirmLabel="Xoá project"
+			question={renderRich(
+				t("projects.delete.question", { name: project.name }),
+				MONO,
+			)}
+			confirmLabel={t("projects.delete.confirm")}
 			onConfirm={async () => {
 				await deleteProject(project.id);
 				onDeleted(project);
 			}}
 		>
 			{note ? <span data-id="modal-delete-project-summary">{note}</span> : null}
-			<span>Toàn bộ dữ liệu sẽ bị xoá. Hành động này không thể hoàn tác.</span>
+			<span>{t("projects.delete.irreversible")}</span>
 		</ConfirmModal>
 	);
 }

@@ -13,47 +13,53 @@ import { Input } from "../../components/ui/input";
 import { Modal, ModalClose, type ModalSize } from "../../components/ui/modal";
 import { ModalFooter } from "../../components/ui/modal-footer";
 import { Tooltip } from "../../components/ui/tooltip";
+import { useT } from "../../i18n/i18n-context";
 import { ShowcaseSection } from "./showcase-section";
 
 const MODAL_SIZES: readonly ModalSize[] = ["sm", "md", "lg", "xl"];
 
 export function OverlayShowcase() {
+	const t = useT();
 	return (
 		<ShowcaseSection
 			dataId="primitives-overlays"
-			title="Lớp phủ"
-			description="Modal 4 cỡ trượt vào từ -20px trong 200ms; menu và tooltip dùng Radix."
+			title={t("primitives.overlays.title")}
+			description={t("primitives.overlays.description")}
 		>
 			<div className="flex flex-wrap items-center gap-3">
 				{MODAL_SIZES.map((size) => (
 					<Modal
 						key={size}
 						size={size}
-						title={`Modal cỡ ${size.toUpperCase()}`}
-						description="Footer dính đáy, hai cột: huỷ và xác nhận."
+						title={t("primitives.overlays.modalTitle", {
+							size: size.toUpperCase(),
+						})}
+						description={t("primitives.overlays.modalDescription")}
 						data-id={`primitives-overlays-modal-${size}`}
 						trigger={<Button size="sm">Modal {size.toUpperCase()}</Button>}
 						footer={
 							<ModalFooter>
 								<ModalClose asChild>
-									<Button>Huỷ</Button>
+									<Button>{t("common.actions.cancel")}</Button>
 								</ModalClose>
 								<ModalClose asChild>
-									<Button variant="primary">Lưu</Button>
+									<Button variant="primary">{t("common.actions.save")}</Button>
 								</ModalClose>
 							</ModalFooter>
 						}
 					>
-						<FormField label="Tên resource">
-							<Input placeholder="vd: users" />
+						<FormField label={t("primitives.overlays.resourceName")}>
+							<Input
+								placeholder={t("primitives.overlays.resourceNamePlaceholder")}
+							/>
 						</FormField>
 					</Modal>
 				))}
 				<DropdownMenu>
-					<Tooltip content="Thao tác project">
+					<Tooltip content={t("primitives.overlays.projectActions")}>
 						<DropdownMenuTrigger asChild>
 							<IconButton
-								label="Thao tác project"
+								label={t("primitives.overlays.projectActions")}
 								icon={<IconDots size={18} aria-hidden="true" />}
 								data-id="primitives-overlays-menu"
 							/>
@@ -63,17 +69,17 @@ export function OverlayShowcase() {
 						<DropdownMenuItem
 							icon={<IconPencil size={16} aria-hidden="true" />}
 						>
-							Đổi tên
+							{t("primitives.overlays.rename")}
 						</DropdownMenuItem>
 						<DropdownMenuItem icon={<IconCopy size={16} aria-hidden="true" />}>
-							Nhân bản
+							{t("primitives.overlays.duplicate")}
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
 							danger
 							icon={<IconTrash size={16} aria-hidden="true" />}
 						>
-							Xoá project
+							{t("primitives.overlays.deleteProject")}
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>

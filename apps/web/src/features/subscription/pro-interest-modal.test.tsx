@@ -43,13 +43,15 @@ async function fillRequired({ email }: { email?: string } = {}) {
 	if (email !== undefined) {
 		await userEvent.type(screen.getByLabelText(/^Email/), email);
 	}
-	await userEvent.type(screen.getByLabelText(/^Tên/), "Lan");
+	await userEvent.type(screen.getByLabelText(/^Name/), "Lan");
 	await userEvent.click(screen.getByRole("checkbox", { name: "Team" }));
 	await userEvent.click(screen.getByRole("radio", { name: "2–5" }));
 }
 
 const consent = () =>
-	screen.getByRole("checkbox", { name: /Tôi đồng ý cho Localman lưu email/ });
+	screen.getByRole("checkbox", {
+		name: /I agree that Localman may store my email/,
+	});
 
 describe("ProInterestModal", () => {
 	beforeEach(() => resetCurrentUserCache());
@@ -83,8 +85,8 @@ describe("ProInterestModal", () => {
 		expect(honeypot).toHaveAttribute("tabindex", "-1");
 		await fillRequired({ email: "lan@example.com" });
 		await userEvent.click(consent());
-		await userEvent.click(screen.getByRole("button", { name: "Gửi đăng ký" }));
-		expect(await screen.findByText("Đã ghi nhận")).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Send request" }));
+		expect(await screen.findByText("Got it")).toBeInTheDocument();
 		expect(screen.getByText("lan@example.com")).toBeInTheDocument();
 		expect(calls.find((c) => c.method === "POST")?.body).toEqual({
 			email: "lan@example.com",
@@ -109,18 +111,18 @@ describe("ProInterestModal", () => {
 		const email = await screen.findByLabelText(/^Email/);
 		await waitFor(() => expect(email).toHaveValue("minhanh@example.com"));
 		expect(email).toHaveAccessibleDescription(
-			"Lấy từ tài khoản của bạn, sửa được.",
+			"Taken from your account. You can change it.",
 		);
 		// The email is already there, so the name comes first.
-		await waitFor(() => expect(screen.getByLabelText(/^Tên/)).toHaveFocus());
+		await waitFor(() => expect(screen.getByLabelText(/^Name/)).toHaveFocus());
 		// The need behind the project limit is pre-ticked.
 		expect(screen.getByRole("checkbox", { name: "Mock API" })).toBeChecked();
 		await userEvent.clear(email);
 		await userEvent.type(email, "work@example.com");
 		await fillRequired();
 		await userEvent.click(consent());
-		await userEvent.click(screen.getByRole("button", { name: "Gửi đăng ký" }));
-		await screen.findByText("Đã ghi nhận");
+		await userEvent.click(screen.getByRole("button", { name: "Send request" }));
+		await screen.findByText("Got it");
 		expect(fakeTurnstile.render).not.toHaveBeenCalled();
 		expect(
 			calls.some((c) => c.path === "/api/v1/feedback/pro-interest/config"),
@@ -138,9 +140,11 @@ describe("ProInterestModal", () => {
 		});
 		await screen.findByLabelText(/^Email/);
 		await fillRequired();
-		await userEvent.click(screen.getByRole("button", { name: "Gửi đăng ký" }));
+		await userEvent.click(screen.getByRole("button", { name: "Send request" }));
 		expect(
-			screen.getByText("Cần bạn đồng ý để Localman lưu email và liên hệ."),
+			screen.getByText(
+				"We need your consent to store your email and contact you.",
+			),
 		).toBeInTheDocument();
 		expect(consent()).toHaveAttribute("aria-invalid", "true");
 		expect(calls.some((c) => c.method === "POST")).toBe(false);
@@ -157,12 +161,12 @@ describe("ProInterestModal", () => {
 		await screen.findByLabelText(/^Email/);
 		await fillRequired();
 		await userEvent.click(consent());
-		await userEvent.click(screen.getByRole("button", { name: "Gửi đăng ký" }));
+		await userEvent.click(screen.getByRole("button", { name: "Send request" }));
 		expect(
 			await screen.findByText(
-				"Bạn gửi quá nhiều lần, đợi một lát rồi thử lại.",
+				"You've sent this too many times. Wait a moment and try again.",
 			),
 		).toBeInTheDocument();
-		expect(screen.queryByText("Đã ghi nhận")).toBeNull();
+		expect(screen.queryByText("Got it")).toBeNull();
 	});
 });

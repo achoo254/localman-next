@@ -7,7 +7,7 @@ import { expect } from "vitest";
  */
 export async function expectProInterestSource(source: string): Promise<void> {
 	const dialog = await screen.findByRole("dialog", {
-		name: "Liên hệ về gói Pro",
+		name: "Contact us about Pro",
 	});
 	await waitFor(() =>
 		expect(

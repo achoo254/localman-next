@@ -41,7 +41,7 @@ describe("members of a project", () => {
 		});
 		await within(dialog).findByText("Lan · @lan");
 		expect(row(dialog, "collaborator-lan")).toHaveTextContent(
-			"email chưa xác minh",
+			"email not verified",
 		);
 		// 200ms fold in/out from the motion token, off with reduced motion.
 		expect(row(dialog, "collaborator-lan")).toHaveClass(
@@ -49,26 +49,32 @@ describe("members of a project", () => {
 			"motion-reduce:transition-none",
 		);
 		expect(row(dialog, "collaborator-link-x9")).toHaveTextContent(
-			"Link mời · old@example.com · đã hết hạn 01/10/2026",
+			"Invite link · old@example.com · expired Oct 1, 2026",
 		);
-		expect(row(dialog, "collaborator-link-x9")).toHaveTextContent("Hết hạn");
+		expect(row(dialog, "collaborator-link-x9")).toHaveTextContent("Expired");
 		expect(
 			within(dialog).getByRole("button", {
-				name: /^Xoá lời mời Link mời · old@example.com/,
+				name: /^Delete the invitation to Invite link · old@example.com/,
 			}),
 		).toBeInTheDocument();
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Huỷ lời mời Lan · @lan" }),
+			within(dialog).getByRole("button", {
+				name: "Cancel the invitation to Lan · @lan",
+			}),
 		);
-		expect(await findToast("Đã huỷ lời mời Lan · @lan")).toBeInTheDocument();
+		expect(
+			await findToast("Cancelled the invitation to Lan · @lan"),
+		).toBeInTheDocument();
 		expect(row(dialog, "modal-collaborators-status")).toHaveTextContent(
-			"Đã huỷ lời mời Lan · @lan",
+			"Cancelled the invitation to Lan · @lan",
 		);
 		expect(calls.some((c) => c.method === "DELETE")).toBe(true);
 		await waitFor(() => expect(row(dialog, "collaborator-lan")).toBeNull());
 		// Focus moved to the next row's X button, not to <body>.
 		expect(
-			within(dialog).getByRole("button", { name: /^Xoá lời mời Link mời/ }),
+			within(dialog).getByRole("button", {
+				name: /^Delete the invitation to Invite link/,
+			}),
 		).toHaveFocus();
 	});
 
@@ -88,42 +94,46 @@ describe("members of a project", () => {
 		});
 		await within(dialog).findByText("An · @an");
 		const list = document.querySelector('[data-id="project-row-p1"]');
-		await waitFor(() => expect(list).toHaveTextContent("2 cộng tác viên"));
+		await waitFor(() => expect(list).toHaveTextContent("2 collaborators"));
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Xoá An · @an khỏi project" }),
+			within(dialog).getByRole("button", {
+				name: "Remove An · @an from the project",
+			}),
 		);
-		const confirm = screen.getByRole("dialog", { name: "Xoá cộng tác viên" });
-		expect(confirm).toHaveTextContent("Xoá An khỏi Demo?");
+		const confirm = screen.getByRole("dialog", { name: "Remove collaborator" });
+		expect(confirm).toHaveTextContent("Remove An from Demo?");
 		expect(confirm).toHaveTextContent(
-			"Họ sẽ mất quyền truy cập project ngay và không tham gia lại được bằng magic link. Muốn họ quay lại, hãy gửi lời mời mới.",
+			"They lose access to the project right away and can't rejoin with the magic link. To bring them back, send a new invitation.",
 		);
-		expect(within(confirm).getByRole("button", { name: "Huỷ" })).toHaveFocus();
+		expect(
+			within(confirm).getByRole("button", { name: "Cancel" }),
+		).toHaveFocus();
 		await userEvent.click(
-			within(confirm).getByRole("button", { name: "Xoá khỏi project" }),
+			within(confirm).getByRole("button", { name: "Remove from project" }),
 		);
-		expect(await findToast("Đã xoá An khỏi project")).toBeInTheDocument();
+		expect(await findToast("Removed An from the project")).toBeInTheDocument();
 		// Focus moved on to the next row's X button once the confirmation closed.
 		await waitFor(() =>
 			expect(
 				within(dialog).getByRole("button", {
-					name: "Xoá Binh · @binh khỏi project",
+					name: "Remove Binh · @binh from the project",
 				}),
 			).toHaveFocus(),
 		);
 		await waitFor(() => expect(row(dialog, "collaborator-an")).toBeNull());
-		await waitFor(() => expect(list).toHaveTextContent("1 cộng tác viên"));
+		await waitFor(() => expect(list).toHaveTextContent("1 collaborator"));
 
 		const hint = row(dialog, "modal-collaborators-rotate-hint");
-		expect(hint).toHaveTextContent("Người này vẫn biết URL mock");
+		expect(hint).toHaveTextContent("This person still knows the mock URL");
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Đổi URL mock" }),
+			within(dialog).getByRole("button", { name: "Change mock URL" }),
 		);
-		const rotate = screen.getByRole("dialog", { name: "Đổi URL mock" });
-		await within(rotate).findByText(/1 cộng tác viên sẽ nhận thông báo/);
+		const rotate = screen.getByRole("dialog", { name: "Change mock URL" });
+		await within(rotate).findByText(/1 collaborator will get a notification/);
 		await userEvent.click(
-			within(rotate).getByRole("button", { name: "Đổi URL" }),
+			within(rotate).getByRole("button", { name: "Change URL" }),
 		);
-		await within(dialog).findByText(/Đã đổi URL mock/);
+		await within(dialog).findByText(/Changed the mock URL/);
 		expect(list).toHaveTextContent("https://new42.mock.localman.test");
 	});
 
@@ -152,19 +162,21 @@ describe("members of a project", () => {
 		);
 		queryClient.setQueryData(["project", "p1"], shared);
 		await within(dialog).findByText("Lan · @lan");
-		expect(row(dialog, "collaborator-lan")).toHaveTextContent("Bạn");
-		expect(within(dialog).queryByLabelText("Username hoặc email")).toBeNull();
-		expect(within(dialog).queryByRole("button", { name: /^Xoá/ })).toBeNull();
+		expect(row(dialog, "collaborator-lan")).toHaveTextContent("You");
+		expect(within(dialog).queryByLabelText("Username or email")).toBeNull();
+		expect(
+			within(dialog).queryByRole("button", { name: /^Remove/ }),
+		).toBeNull();
 		expect(row(dialog, "modal-collaborators-close")).toHaveFocus();
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Rời project" }),
+			within(dialog).getByRole("button", { name: "Leave project" }),
 		);
-		const confirm = screen.getByRole("dialog", { name: "Rời project" });
-		expect(confirm).toHaveTextContent("Rời Demo?");
+		const confirm = screen.getByRole("dialog", { name: "Leave project" });
+		expect(confirm).toHaveTextContent("Leave Demo?");
 		await userEvent.click(
-			within(confirm).getByRole("button", { name: "Rời project" }),
+			within(confirm).getByRole("button", { name: "Leave project" }),
 		);
-		expect(await findToast("Đã rời Demo")).toBeInTheDocument();
+		expect(await findToast("Left Demo")).toBeInTheDocument();
 		await waitFor(() =>
 			expect(document.querySelector('[data-id="project-row-p1"]')).toBeNull(),
 		);

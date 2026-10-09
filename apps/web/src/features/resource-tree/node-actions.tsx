@@ -1,3 +1,4 @@
+import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 
 export type NodeAction = "edit" | "data" | "delete";
@@ -21,6 +22,7 @@ const ACTION_CLASS =
  * hover.
  */
 export function NodeActions({ name, onAction, dataIdBase }: NodeActionsProps) {
+	const t = useT();
 	return (
 		<div
 			className={cn(
@@ -30,30 +32,30 @@ export function NodeActions({ name, onAction, dataIdBase }: NodeActionsProps) {
 		>
 			<button
 				type="button"
-				aria-label={`Sửa ${name}`}
+				aria-label={t("resourceTree.node.editLabel", { name })}
 				data-id={`${dataIdBase}-edit`}
 				className={cn(ACTION_CLASS, "text-muted hover:text-fg")}
 				onClick={() => onAction("edit")}
 			>
-				Sửa
+				{t("resourceTree.node.edit")}
 			</button>
 			<button
 				type="button"
-				aria-label={`Dữ liệu ${name}`}
+				aria-label={t("resourceTree.node.dataLabel", { name })}
 				data-id={`${dataIdBase}-data`}
 				className={cn(ACTION_CLASS, "text-muted hover:text-fg")}
 				onClick={() => onAction("data")}
 			>
-				Dữ liệu
+				{t("resourceTree.node.data")}
 			</button>
 			<button
 				type="button"
-				aria-label={`Xoá ${name}`}
+				aria-label={t("resourceTree.node.deleteLabel", { name })}
 				data-id={`${dataIdBase}-delete`}
 				className={cn(ACTION_CLASS, "text-error")}
 				onClick={() => onAction("delete")}
 			>
-				Xoá
+				{t("resourceTree.node.delete")}
 			</button>
 		</div>
 	);

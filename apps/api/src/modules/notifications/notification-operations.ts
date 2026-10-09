@@ -1,6 +1,7 @@
 import { OperationError, defineOperation } from "@localman/operations";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import { readUserLocale } from "../users/user-locale.js";
 import {
 	listNotifications as listInbox,
 	markAllNotificationsRead as markAllInboxRead,
@@ -25,7 +26,7 @@ export const listNotifications = defineOperation({
 	path: "/notifications",
 	summary: "List the signed-in user's notifications, newest first",
 	description:
-		"Paginated with `cursor` (the `nextCursor` of the previous page). Also returns the number of unread notifications.",
+		"Paginated with `cursor` (the `nextCursor` of the previous page). Also returns the number of unread notifications. Titles and bodies are in the user's language (`users.setLocale`), older ones included.",
 	input: z.object({
 		cursor: z
 			.string()
@@ -42,7 +43,10 @@ export const listNotifications = defineOperation({
 	annotations: { readOnly: true, destructive: false, idempotent: true },
 	toolset: "notifications",
 	mcp: true,
-	handler: (ctx, input) => listInbox(requireSubject(ctx), input),
+	handler: async (ctx, input) => {
+		const sub = requireSubject(ctx);
+		return listInbox(sub, input, await readUserLocale(sub));
+	},
 });
 
 export const markNotificationRead = defineOperation({
@@ -57,7 +61,12 @@ export const markNotificationRead = defineOperation({
 	toolset: "notifications",
 	mcp: true,
 	handler: async (ctx, input) => {
-		const item = await markInboxRead(requireSubject(ctx), input.notificationId);
+		const sub = requireSubject(ctx);
+		const item = await markInboxRead(
+			sub,
+			input.notificationId,
+			await readUserLocale(sub),
+		);
 		if (!item) {
 			throw new OperationError(404, "NOT_FOUND", "Notification not found");
 		}

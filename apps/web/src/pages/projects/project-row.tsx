@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { Badge } from "../../components/ui/badge";
 import { cardClassName } from "../../components/ui/card";
+import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import { type ProjectAction, ProjectActionsMenu } from "./project-actions-menu";
 import { ProjectAvatar } from "./project-avatar";
@@ -19,9 +20,12 @@ export interface ProjectRowProps {
 
 /** List card: avatar, name, prefix and mock URL, then the ⋮ menu. */
 export function ProjectRow({ project, onAction }: ProjectRowProps) {
+	const t = useT();
 	const shared = project.role === "collaborator";
 	const ownerName =
-		project.owner.name || project.owner.username || "người khác";
+		project.owner.name ||
+		project.owner.username ||
+		t("projects.row.ownerFallback");
 	const collaborators = project.memberCount - 1;
 	return (
 		<li
@@ -42,15 +46,20 @@ export function ProjectRow({ project, onAction }: ProjectRowProps) {
 					<span className="flex min-w-0 items-center gap-2">
 						<span className="truncate font-bold font-mono">{project.name}</span>
 						{shared ? (
-							<Badge tone="info" title={`Project của ${ownerName}`}>
-								Được mời
+							<Badge
+								tone="info"
+								title={t("projects.row.ownedBy", { owner: ownerName })}
+							>
+								{t("projects.row.invited")}
 							</Badge>
 						) : null}
 					</span>
 					<span className="truncate font-mono text-muted text-xs">
 						{project.prefix || "/"} ·{" "}
 						{/* Before the long URL, so truncation never hides it. */}
-						{collaborators > 0 ? `${collaborators} cộng tác viên · ` : null}
+						{collaborators > 0
+							? `${t("projects.row.collaborators", { count: collaborators })} · `
+							: null}
 						{project.mockBaseUrl}
 					</span>
 				</div>

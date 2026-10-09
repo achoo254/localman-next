@@ -1,4 +1,6 @@
+import type { Locale } from "@localman/shared";
 import { runtimeSettings } from "../../config/runtime-settings.js";
+import { messagesFor } from "../../i18n/server-messages.js";
 import {
 	RateLimitWindowModel,
 	takeRateLimitSlot,
@@ -35,12 +37,13 @@ async function takePending(kind: string): Promise<number> {
  * Sends an owner alert unless this kind already used its quota for the
  * window (`ownerAlertLimit`, e.g. 10 per hour), so a spam burst cannot
  * flood the owner's Telegram. Suppressed alerts are counted and summarized
- * as "và X lượt khác" in the next alert that goes through; the entries
- * themselves are all on the admin page.
+ * ("and X more") in the next alert that goes through; the entries
+ * themselves are all on the admin page. `text` writes the alert in the
+ * owner's language.
  */
 export async function alertOwnerThrottled(
 	kind: string,
-	text: string,
+	text: (locale: Locale) => string,
 	now: Date = new Date(),
 ): Promise<void> {
 	const allowed = await takeRateLimitSlot(
@@ -54,9 +57,9 @@ export async function alertOwnerThrottled(
 		return;
 	}
 	const pending = await takePending(kind);
-	const summary =
-		pending > 0
-			? `\n\n(và ${pending} lượt khác chưa báo vì vượt giới hạn tin báo)`
-			: "";
-	getNotificationService().alertOwner(`${text}${summary}`, kind);
+	getNotificationService().alertOwner((locale) => {
+		const alert = text(locale);
+		if (pending === 0) return alert;
+		return `${alert}\n\n${messagesFor(locale).ownerAlerts.suppressed(pending)}`;
+	}, kind);
 }

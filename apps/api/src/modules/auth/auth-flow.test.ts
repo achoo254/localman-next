@@ -87,6 +87,7 @@ describe("sign-in through the IdP", () => {
 			plan: "free",
 			isOwner: false,
 			telegram: { linked: true, username: "dat_tg" },
+			locale: "en",
 		});
 		const user = await UserModel.findOne({ sub: "acc_test_1" }).lean();
 		expect(user?.telegram?.chatId).toBe("424242");

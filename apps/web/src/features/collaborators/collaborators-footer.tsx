@@ -2,6 +2,7 @@ import type { RefObject } from "react";
 import { Button } from "../../components/ui/button";
 import { ModalClose } from "../../components/ui/modal";
 import { ModalFooter } from "../../components/ui/modal-footer";
+import { useT } from "../../i18n/i18n-context";
 
 /** Ghost button in the error colour (`!` wins over the ghost's muted text). */
 export const DANGER_GHOST = "text-error! enabled:hover:text-error!";
@@ -9,20 +10,21 @@ export const DANGER_GHOST = "text-error! enabled:hover:text-error!";
 export interface CollaboratorsFooterProps {
 	canManage: boolean;
 	closeRef: RefObject<HTMLButtonElement | null>;
-	/** Collaborator view: "Rời project", when their own row is known. */
+	/** Collaborator view: "Leave project", when their own row is known. */
 	onLeave: (() => void) | null;
 }
 
-/** Owner: Đóng | Xong. Collaborator: Rời project | Đóng. */
+/** Owner: Close | Done. Collaborator: Leave project | Close. */
 export function CollaboratorsFooter({
 	canManage,
 	closeRef,
 	onLeave,
 }: CollaboratorsFooterProps) {
+	const t = useT();
 	const close = (
 		<ModalClose asChild>
 			<Button ref={closeRef} data-id="modal-collaborators-close">
-				Đóng
+				{t("common.actions.close")}
 			</Button>
 		</ModalClose>
 	);
@@ -32,7 +34,7 @@ export function CollaboratorsFooter({
 				{close}
 				<ModalClose asChild>
 					<Button variant="primary" data-id="modal-collaborators-done">
-						Xong
+						{t("collaborators.modal.done")}
 					</Button>
 				</ModalClose>
 			</ModalFooter>
@@ -47,7 +49,7 @@ export function CollaboratorsFooter({
 					className={DANGER_GHOST}
 					onClick={onLeave}
 				>
-					Rời project
+					{t("collaborators.modal.leave")}
 				</Button>
 			) : null}
 			{close}

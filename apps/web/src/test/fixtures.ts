@@ -13,6 +13,7 @@ export function makeUser(overrides: Partial<CurrentUser> = {}): CurrentUser {
 		plan: "free",
 		isOwner: false,
 		telegram: { linked: false, username: null },
+		locale: "en",
 		...overrides,
 	};
 }

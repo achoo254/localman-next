@@ -1,3 +1,4 @@
+import type { Locale } from "@localman/shared";
 import {
 	afterAll,
 	beforeAll,
@@ -13,6 +14,7 @@ import {
 	connectTestMongo,
 } from "../../test-support/test-mongo.js";
 import { readUsage } from "../billing/usage-counter-model.js";
+import { renderNotification } from "../notifications/notification-texts.js";
 import { quotaWarningMessage } from "./quota-warnings.js";
 import { UsageMeter } from "./usage-meter.js";
 
@@ -107,8 +109,18 @@ describe("UsageMeter", () => {
 			limit: 10_000,
 			month: "202610",
 		});
-		expect(warning).toMatchObject({ type: "usage.quota", link: "/account" });
-		expect(warning.body).toContain("8.000/10.000");
-		expect(warning.body).toContain("10/2026");
+		expect(warning).toEqual({
+			type: "usage.quota",
+			params: { threshold: 80, limit: 10_000, used: 8_000, month: "202610" },
+			link: "/account",
+		});
+		const render = (locale: Locale) =>
+			renderNotification(warning.type, warning.params, locale)?.body;
+		expect(render("vi")).toContain("8.000/10.000");
+		expect(render("vi")).toContain("tháng 10/2026");
+		expect(render("en")).toContain(
+			"8,000/10,000 mock API requests of October 2026",
+		);
+		expect(render("zh-CN")).toContain("2026年10月的 8,000/10,000");
 	});
 });

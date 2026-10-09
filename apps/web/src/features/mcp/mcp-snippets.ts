@@ -62,7 +62,7 @@ export function mcpEndpointUrl(mockBaseUrl: string): string {
 /**
  * Shell header flag. `$VAR` is bash/zsh syntax, expanded by the shell at
  * run time; PowerShell reads `$env:VAR` and cmd `%VAR%`, so the UI says
- * so next to every command that carries it (`MCP_COPY.shellHint`).
+ * so next to every command that carries it (`mcp.config.shellHint`).
  */
 function shellHeader(tokenEnv: string | null): string {
 	return tokenEnv ? ` --header "Authorization: Bearer $${tokenEnv}"` : "";

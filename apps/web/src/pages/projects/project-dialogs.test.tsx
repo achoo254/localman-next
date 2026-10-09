@@ -5,7 +5,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetCurrentUserCache } from "../../features/auth/use-current-user";
 import { makeProject } from "../../test/fixtures";
 import { expectProInterestSource } from "../../test/pro-interest";
-import { PLAN_LIMIT, openMenu, renderPage } from "./projects-test-helpers";
+import {
+	PLAN_LIMIT,
+	findPlansDialog,
+	openMenu,
+	plansPart,
+	renderPage,
+} from "./projects-test-helpers";
 
 describe("project dialogs", () => {
 	beforeEach(() => resetCurrentUserCache());
@@ -30,15 +36,15 @@ describe("project dialogs", () => {
 			},
 		});
 		await openMenu("Project p1");
-		await userEvent.click(screen.getByRole("menuitem", { name: "Xoá" }));
-		const dialog = screen.getByRole("dialog", { name: "Xoá project" });
+		await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+		const dialog = screen.getByRole("dialog", { name: "Delete project" });
 		expect(
 			await within(dialog).findByText(
-				"Sẽ xoá kèm 3 resource, 1 cộng tác viên.",
+				"This also deletes 3 resources, 1 collaborator.",
 			),
 		).toBeInTheDocument();
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Xoá project" }),
+			within(dialog).getByRole("button", { name: "Delete project" }),
 		);
 		await waitFor(() => expect(screen.queryByText("Project p1")).toBeNull());
 		const deletes = calls.filter((c) => c.method === "DELETE");
@@ -56,7 +62,7 @@ describe("project dialogs", () => {
 			},
 		});
 		await openMenu("Project p1");
-		await userEvent.click(screen.getByRole("menuitem", { name: "Nhân bản" }));
+		await userEvent.click(screen.getByRole("menuitem", { name: "Duplicate" }));
 		await screen.findByText("Project p1 (copy)");
 		const names = screen
 			.getAllByRole("listitem")
@@ -70,14 +76,12 @@ describe("project dialogs", () => {
 			"POST /api/v1/projects/p1/clone": PLAN_LIMIT,
 		});
 		await openMenu("Project p1");
-		await userEvent.click(screen.getByRole("menuitem", { name: "Nhân bản" }));
-		const dialog = await screen.findByRole("dialog", { name: "Quản lý gói" });
+		await userEvent.click(screen.getByRole("menuitem", { name: "Duplicate" }));
+		const dialog = await findPlansDialog();
 		expect(within(dialog).getByRole("alert")).toHaveTextContent(
-			`Bạn đã đạt giới hạn gói Free: ${limitsFor("free").projects} project`,
+			String(limitsFor("free").projects),
 		);
-		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Liên hệ" }),
-		);
+		await userEvent.click(plansPart(dialog, "modal-subscription-pro-contact"));
 		await expectProInterestSource("plan_limit_projects");
 	});
 
@@ -87,15 +91,13 @@ describe("project dialogs", () => {
 		);
 		renderPage({ "GET /api/v1/projects": { body: { items: full } } });
 		await userEvent.click(
-			await screen.findByRole("button", { name: "Tạo project mới" }),
+			await screen.findByRole("button", { name: "Create a new project" }),
 		);
-		expect(
-			await screen.findByRole("dialog", { name: "Quản lý gói" }),
-		).toBeInTheDocument();
-		expect(screen.queryByRole("dialog", { name: "Project mới" })).toBeNull();
+		expect(await findPlansDialog()).toBeInTheDocument();
+		expect(screen.queryByRole("dialog", { name: "New project" })).toBeNull();
 	});
 
-	it("opens the delete dialog on Huỷ and skips the summary when nothing else goes", async () => {
+	it("opens the delete dialog on Cancel and skips the summary when nothing else goes", async () => {
 		renderPage({
 			"GET /api/v1/projects": { body: { items: [makeProject("p1")] } },
 			"DELETE /api/v1/projects/p1": {
@@ -103,17 +105,19 @@ describe("project dialogs", () => {
 			},
 		});
 		await openMenu("Project p1");
-		await userEvent.click(screen.getByRole("menuitem", { name: "Xoá" }));
-		const dialog = screen.getByRole("dialog", { name: "Xoá project" });
+		await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+		const dialog = screen.getByRole("dialog", { name: "Delete project" });
 		await waitFor(() =>
-			expect(within(dialog).getByRole("button", { name: "Huỷ" })).toHaveFocus(),
+			expect(
+				within(dialog).getByRole("button", { name: "Cancel" }),
+			).toHaveFocus(),
 		);
 		await waitFor(() =>
 			expect(
 				dialog.querySelector('[data-id="modal-delete-project-summary"]'),
 			).toBeNull(),
 		);
-		expect(dialog).toHaveTextContent("không thể hoàn tác.");
+		expect(dialog).toHaveTextContent("can't be undone.");
 	});
 
 	it("focuses the plans dialog itself", async () => {
@@ -122,11 +126,9 @@ describe("project dialogs", () => {
 			"POST /api/v1/projects/p1/clone": PLAN_LIMIT,
 		});
 		await openMenu("Project p1");
-		await userEvent.click(screen.getByRole("menuitem", { name: "Nhân bản" }));
-		const dialog = await screen.findByRole("dialog", { name: "Quản lý gói" });
+		await userEvent.click(screen.getByRole("menuitem", { name: "Duplicate" }));
+		const dialog = await findPlansDialog();
 		await waitFor(() => expect(dialog).toHaveFocus());
-		expect(dialog).toHaveTextContent(
-			"Không giới hạn request tới mock mỗi tháng",
-		);
+		expect(plansPart(dialog, "modal-subscription-pro")).toBeVisible();
 	});
 });

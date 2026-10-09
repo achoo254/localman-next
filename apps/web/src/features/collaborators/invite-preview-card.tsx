@@ -3,8 +3,9 @@ import { UserAvatar } from "../../components/layout/user-avatar";
 import { Alert } from "../../components/ui/alert";
 import { Button, buttonClassName } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
-import { useT } from "../../i18n/i18n-context";
-import { formatDate } from "../../lib/format";
+import { useI18n } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
+import type { Translate } from "../../i18n/translate";
 import { ProjectAvatar } from "../../pages/projects/project-avatar";
 import { type CurrentUser, displayName } from "../auth/current-user";
 import { invitePageErrorMessage } from "./invite-errors";
@@ -24,25 +25,17 @@ export interface InvitePreviewCardProps {
 
 const HELP = "m-0 text-muted text-[0.8125rem]";
 
-function ineligibleText(reason: IneligibleReason | null, email: string | null) {
-	if (!email) {
-		return "Lời mời này gửi cho một tài khoản khác. Hãy đăng nhập bằng tài khoản được mời.";
-	}
+function ineligibleText(
+	reason: IneligibleReason | null,
+	email: string | null,
+	t: Translate,
+): string {
+	if (!email) return t("invite.preview.ineligibleOther");
 	if (reason === "EMAIL_NOT_VERIFIED") {
-		return `Lời mời gửi cho ${email}. Email của tài khoản này chưa được xác minh: hãy đăng nhập bằng Google/GitHub có email đã xác minh trùng với email này.`;
+		return t("invite.preview.ineligibleUnverified", { email });
 	}
-	return `Lời mời gửi cho ${email}. Hãy đăng nhập bằng tài khoản được mời, hoặc liên kết Google/GitHub có email đã xác minh trùng với email này.`;
+	return t("invite.preview.ineligibleWrongAccount", { email });
 }
-
-const backLink = (
-	<Link
-		to="/projects"
-		data-id="invite-page-back"
-		className={buttonClassName({ variant: "ghost", block: true })}
-	>
-		Về Projects
-	</Link>
-);
 
 /** A usable invite or magic link: who invites, to what, and what you can do. */
 export function InvitePreviewCard({
@@ -53,12 +46,12 @@ export function InvitePreviewCard({
 	acceptError,
 	onAccept,
 }: InvitePreviewCardProps) {
+	const { t, formatDate } = useI18n();
 	const { project, inviter } = preview;
 	const expires = preview.expiresAt ? formatDate(preview.expiresAt) : "";
 	const inviterName = inviter.name
 		? `${inviter.name} (@${inviter.username})`
 		: `@${inviter.username}`;
-	const t = useT();
 	const ineligible =
 		reason === "NOT_INVITEE" || reason === "EMAIL_NOT_VERIFIED";
 	return (
@@ -69,16 +62,20 @@ export function InvitePreviewCard({
 			<div className="flex items-center gap-3" data-id="invite-page-project">
 				<ProjectAvatar name={project.name} />
 				<h1 className="m-0 min-w-0 break-words font-bold font-mono text-xl">
-					Tham gia {project.name}
+					{t("invite.preview.title", { project: project.name })}
 				</h1>
 			</div>
 			<p className="m-0 text-sm" data-id="invite-page-inviter">
-				{inviterName} mời bạn cộng tác.
+				{t("invite.preview.inviter", { inviter: inviterName })}
 			</p>
 			{expires ? (
 				<p className={HELP} data-id="invite-page-expiry">
-					{preview.kind === "magic" ? "Link dùng chung · hết hạn" : "Hết hạn"}{" "}
-					{expires}
+					{t(
+						preview.kind === "magic"
+							? "invite.preview.expiresShared"
+							: "invite.preview.expires",
+						{ date: expires },
+					)}
 				</p>
 			) : null}
 			<div
@@ -87,44 +84,48 @@ export function InvitePreviewCard({
 			>
 				<UserAvatar user={user} />
 				<span className="min-w-0 break-words">
-					Bạn đang đăng nhập bằng{" "}
-					<b>{user.email ?? displayName(user, t("auth.accountFallback"))}</b>
+					{/* The account goes in through the renderer, never parsed as tags. */}
+					{renderRich(t("invite.preview.signedInAs", { account: "" }), {
+						b: () => (
+							<b>
+								{user.email ?? displayName(user, t("auth.accountFallback"))}
+							</b>
+						),
+					})}
 				</span>
 			</div>
 			{reason === "ALREADY_MEMBER" ? (
 				<>
 					<Alert tone="info" data-id="invite-page-member">
-						Bạn đã là thành viên của {project.name}.
+						{t("invite.preview.alreadyMember", { project: project.name })}
 					</Alert>
 					<Link
 						to={`/projects/${encodeURIComponent(project.id)}`}
 						data-id="invite-page-open-project"
 						className={buttonClassName({ variant: "primary", block: true })}
 					>
-						Mở project
+						{t("invite.preview.openProject")}
 					</Link>
 				</>
 			) : null}
 			{reason === "MEMBER_LIMIT" ? (
 				<Alert tone="warning" data-id="invite-page-full">
-					Project đã đủ thành viên theo gói của chủ project. Nhờ chủ project xoá
-					bớt thành viên.
+					{t("invite.preview.full")}
 				</Alert>
 			) : null}
 			{reason === "REMOVED_BY_OWNER" ? (
 				<Alert tone="warning" data-id="invite-page-removed">
-					Chủ project đã gỡ bạn khỏi project này. Liên hệ chủ project nếu cần
-					tham gia lại.
+					{t("invite.preview.removed")}
 				</Alert>
 			) : null}
 			{ineligible ? (
 				<>
 					<Alert
 						tone="warning"
-						title="Tài khoản này không nhận được lời mời"
+						title={t("invite.preview.ineligibleTitle")}
 						data-id="invite-page-ineligible"
 					>
-						{ineligibleText(reason, preview.inviteeEmail)}
+						{ineligibleText(reason, preview.inviteeEmail, t)}
 					</Alert>
 					<SwitchAccountButton variant="primary" />
 				</>
@@ -133,7 +134,7 @@ export function InvitePreviewCard({
 				<>
 					{acceptError ? (
 						<Alert tone="danger" data-id="invite-page-error">
-							{invitePageErrorMessage(acceptError)}
+							{invitePageErrorMessage(acceptError, t)}
 						</Alert>
 					) : null}
 					<Button
@@ -143,12 +144,20 @@ export function InvitePreviewCard({
 						disabled={accepting}
 						onClick={onAccept}
 					>
-						{accepting ? "Đang tham gia…" : "Tham gia"}
+						{t(
+							accepting ? "invite.preview.accepting" : "invite.preview.accept",
+						)}
 					</Button>
 					<SwitchAccountButton variant="ghost" />
 				</>
 			) : null}
-			{backLink}
+			<Link
+				to="/projects"
+				data-id="invite-page-back"
+				className={buttonClassName({ variant: "ghost", block: true })}
+			>
+				{t("invite.backToProjects")}
+			</Link>
 		</Card>
 	);
 }

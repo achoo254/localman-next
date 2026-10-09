@@ -7,8 +7,8 @@ import {
 	TabsList,
 	TabsTrigger,
 } from "../../components/ui/tabs";
-import { MCP_COPY } from "../../features/mcp/mcp-copy";
 import { McpTab } from "../../features/mcp/mcp-tab";
+import { useT } from "../../i18n/i18n-context";
 import type { Project } from "../projects/projects-api";
 
 /** Query parameter holding the open tab, so docs can link to it. */
@@ -52,15 +52,16 @@ export interface EndpointTabsProps {
  * hidden, so a token shown once survives a look at the REST tab.
  */
 export function EndpointTabs({ project, resources, rest }: EndpointTabsProps) {
+	const t = useT();
 	const [tab, setTab] = useEndpointTab();
 	return (
 		<Tabs value={tab} onValueChange={setTab}>
-			<TabsList aria-label={MCP_COPY.tabListLabel}>
+			<TabsList aria-label={t("mcp.tabs.label")}>
 				<TabsTrigger value="rest" data-id="project-detail-endpoint-tab-rest">
-					{MCP_COPY.tabRest}
+					{t("mcp.tabs.rest")}
 				</TabsTrigger>
 				<TabsTrigger value="mcp" data-id="project-detail-endpoint-tab-mcp">
-					{MCP_COPY.tabMcp}
+					{t("mcp.tabs.mcp")}
 				</TabsTrigger>
 			</TabsList>
 			<TabsContent value="rest">{rest}</TabsContent>

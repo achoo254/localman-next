@@ -7,6 +7,8 @@ import {
 import { DeleteResourceModal } from "../../features/resources/delete-resource-modal";
 import type { Resource } from "../../features/resources/resource-model";
 import { useResourceCache } from "../../features/resources/use-resources";
+import { useT } from "../../i18n/i18n-context";
+import { toastText } from "./toast-text";
 
 /*
  * The resource and data modals carry CodeMirror and the Faker catalog;
@@ -46,6 +48,7 @@ export function ProjectDetailDialogs({
 	onClose,
 	onPlanLimit,
 }: ProjectDetailDialogsProps) {
+	const t = useT();
 	const toast = useToast();
 	const cache = useResourceCache(projectId);
 	const closeOnFalse = (open: boolean) => {
@@ -66,14 +69,13 @@ export function ProjectDetailDialogs({
 							onClose();
 							void cache.invalidate();
 							toast.show({
-								title: (
-									<>
-										{created ? "Đã tạo resource" : "Đã cập nhật resource"}{" "}
-										<b className="font-mono">{saved.name}</b>.
-									</>
+								title: toastText(
+									created
+										? t("projectDetail.toast.created", { name: saved.name })
+										: t("projectDetail.toast.updated", { name: saved.name }),
 								),
 								description: created
-									? "Bấm vào thanh xám để sinh dữ liệu."
+									? t("projectDetail.toast.createdHint")
 									: undefined,
 							});
 						}}
@@ -95,17 +97,20 @@ export function ProjectDetailDialogs({
 								(change) => change.resourceId === resource.id,
 							)?.countAfter;
 							toast.show({
-								title: "Đã cập nhật dữ liệu",
-								description: (
-									<>
-										{count === undefined ? null : (
-											<>
-												<b>{count}</b> bản ghi cho{" "}
-											</>
-										)}
-										<b className="font-mono">{resource.name}</b>.
-									</>
-								),
+								title: t("projectDetail.toast.dataUpdated"),
+								description:
+									count === undefined ? (
+										<>
+											<b className="font-mono">{resource.name}</b>.
+										</>
+									) : (
+										toastText(
+											t("projectDetail.toast.recordsFor", {
+												count,
+												name: resource.name,
+											}),
+										)
+									),
 							});
 						}}
 					/>
@@ -120,10 +125,8 @@ export function ProjectDetailDialogs({
 					onDeleted={(gone) => {
 						void cache.invalidate();
 						toast.show({
-							title: (
-								<>
-									Đã xoá resource <b className="font-mono">{gone.name}</b>.
-								</>
+							title: toastText(
+								t("projectDetail.toast.deleted", { name: gone.name }),
 							),
 						});
 					}}

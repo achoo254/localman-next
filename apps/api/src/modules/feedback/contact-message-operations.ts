@@ -27,15 +27,15 @@ async function recordContactMessage(
 		...(contact ?? {}),
 		...(userSub ? { userSub } : {}),
 	});
-	await alertOwnerThrottled(
-		"feedback.contact",
-		contactAlertText({
-			category: input.category,
-			message: input.message,
-			contact,
-			signedIn: userSub !== null,
-			source: input.source,
-		}),
+	const entry = {
+		category: input.category,
+		message: input.message,
+		contact,
+		signedIn: userSub !== null,
+		source: input.source,
+	};
+	await alertOwnerThrottled("feedback.contact", (locale) =>
+		contactAlertText(entry, locale),
 	);
 }
 

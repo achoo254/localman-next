@@ -2,8 +2,9 @@ import { IconLinkOff } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { buttonClassName } from "../../components/ui/button";
 import { EmptyState } from "../../components/ui/empty-state";
+import { useI18n } from "../../i18n/i18n-context";
+import type { Translator } from "../../i18n/translate";
 import { ApiError } from "../../lib/api-client";
-import { formatDate } from "../../lib/format";
 import { isRecord } from "../../lib/json-guards";
 
 const TOKEN_ERRORS = [
@@ -24,29 +25,36 @@ export function tokenErrorOf(error: unknown): TokenErrorCode | null {
 	return TOKEN_ERRORS.find((code) => code === error.code) ?? null;
 }
 
-function expiredOn(error: unknown): string {
-	if (!(error instanceof ApiError) || !isRecord(error.details)) return "";
+function expiredOn(error: unknown): string | null {
+	if (!(error instanceof ApiError) || !isRecord(error.details)) return null;
 	const at = error.details.expiresAt;
-	return typeof at === "string" ? formatDate(at) : "";
+	return typeof at === "string" ? at : null;
 }
 
-function copyOf(code: TokenErrorCode, error: unknown) {
+function copyOf(
+	code: TokenErrorCode,
+	error: unknown,
+	{ t, formatDate }: Translator,
+) {
 	if (code === "INVITE_EXPIRED") {
-		const date = expiredOn(error);
+		const at = expiredOn(error);
+		const date = at ? formatDate(at) : "";
 		return {
-			title: "Link mời đã hết hạn",
-			text: `${date ? `Link hết hạn ngày ${date}. ` : ""}Nhờ người mời gửi link mới.`,
+			title: t("invite.invalid.expiredTitle"),
+			text: date
+				? t("invite.invalid.expiredText", { date })
+				: t("invite.invalid.expiredTextNoDate"),
 		};
 	}
 	if (code === "INVITE_USED") {
 		return {
-			title: "Link mời đã được dùng",
-			text: "Mỗi link mời chỉ dùng được một lần. Nhờ người mời gửi link mới.",
+			title: t("invite.invalid.usedTitle"),
+			text: t("invite.invalid.usedText"),
 		};
 	}
 	return {
-		title: "Link mời không còn hiệu lực",
-		text: "Chủ project đã thu hồi link này hoặc link không đúng.",
+		title: t("invite.invalid.revokedTitle"),
+		text: t("invite.invalid.revokedText"),
 	};
 }
 
@@ -58,7 +66,8 @@ export function InviteInvalid({
 	code: TokenErrorCode;
 	error: unknown;
 }) {
-	const { title, text } = copyOf(code, error);
+	const i18n = useI18n();
+	const { title, text } = copyOf(code, error, i18n);
 	return (
 		<EmptyState
 			data-id="invite-page-invalid"
@@ -71,7 +80,7 @@ export function InviteInvalid({
 					data-id="invite-page-back"
 					className={buttonClassName({ variant: "primary" })}
 				>
-					Về Projects
+					{i18n.t("invite.backToProjects")}
 				</Link>
 			}
 		>

@@ -41,7 +41,7 @@ const CASES: [string, Record<string, MockRoute>, () => Promise<unknown>][] = [
 	[
 		"/admin/feedback",
 		SIGNED_IN,
-		() => screen.findByRole("heading", { name: "Quản trị · Hộp thư góp ý" }),
+		() => screen.findByRole("heading", { name: "Admin · Feedback inbox" }),
 	],
 ];
 

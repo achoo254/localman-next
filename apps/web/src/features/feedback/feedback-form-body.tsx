@@ -11,6 +11,7 @@ import {
 } from "react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
+import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { TurnstileField } from "../subscription/turnstile-field";
 import {
@@ -29,7 +30,7 @@ import {
 	toFeedbackBody,
 	validateFeedback,
 } from "./feedback-draft";
-import { FeedbackFields } from "./feedback-fields";
+import { FeedbackFields, feedbackErrorText } from "./feedback-fields";
 import { useTurnstileConfig } from "./use-turnstile-config";
 
 export interface FeedbackAccount {
@@ -64,6 +65,7 @@ export function FeedbackFormBody({
 	onSubmitted,
 	onSessionLost,
 }: FeedbackFormBodyProps) {
+	const t = useT();
 	const signedIn = account !== null;
 	const [draft, setDraft] = useState<FeedbackDraft>(() => emptyDraft(account));
 	const [errors, setErrors] = useState<FeedbackErrors>({});
@@ -127,11 +129,11 @@ export function FeedbackFormBody({
 	if (config.status === "error") {
 		return (
 			<div className="grid justify-items-start gap-3">
-				<Alert tone="danger" title="Không mở được form">
+				<Alert tone="danger" title={t("feedback.openFailed")}>
 					{errorMessage(config.error)}
 				</Alert>
 				<Button data-id="modal-feedback-retry" onClick={retryConfig}>
-					Thử lại
+					{t("common.cta.retry")}
 				</Button>
 			</div>
 		);
@@ -168,23 +170,21 @@ export function FeedbackFormBody({
 					onTokenChange={setToken}
 					action={TURNSTILE_ACTIONS.contact}
 					dataId="modal-feedback-turnstile"
-					error={errors.turnstile}
+					error={feedbackErrorText(t, errors.turnstile)}
 					errorId={`${formId}-turnstile-error`}
 				/>
 			) : null}
 			{config.status === "loading" ? (
 				<output className="block font-mono text-muted text-sm">
-					Đang chuẩn bị bước xác minh…
+					{t("feedback.preparing")}
 				</output>
 			) : null}
 			<p className="m-0 text-[0.8125rem] text-muted">
-				{signedIn
-					? "Góp ý gửi kèm tài khoản của bạn và khu vực bạn đang mở (ví dụ Projects), không kèm đường dẫn."
-					: "Góp ý gửi kèm khu vực bạn đang mở (ví dụ trang chủ), không kèm đường dẫn."}
+				{signedIn ? t("feedback.noteSignedIn") : t("feedback.noteVisitor")}
 			</p>
 			{problem ? (
 				<Alert tone={problem.tone} data-id="modal-feedback-error">
-					{problem.text}
+					{t(`feedback.submit.${problem.key}`)}
 				</Alert>
 			) : null}
 		</form>

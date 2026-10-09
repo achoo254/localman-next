@@ -1,18 +1,12 @@
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { useEffect, useId, useRef, useState } from "react";
+import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import { copyText } from "../../platform/clipboard";
 import { COPIED_RESET_MS } from "./copy-field";
 import { IconButton } from "./icon-button";
 
 type CopyState = "idle" | "copied" | "failed";
-
-/** Announced in the block's own live region. */
-const NOTES: Record<CopyState, string> = {
-	idle: "",
-	copied: "Đã sao chép mã",
-	failed: "Không sao chép được, mã đã được chọn để bạn sao chép thủ công.",
-};
 
 export interface CodeBlockProps {
 	/** Shown above the code: language or what the snippet does. */
@@ -45,6 +39,7 @@ export function CodeBlock({
 	wrap = false,
 	"data-id": dataId,
 }: CodeBlockProps) {
+	const t = useT();
 	const captionId = useId();
 	const pre = useRef<HTMLPreElement>(null);
 	const [state, setState] = useState<CopyState>("idle");
@@ -65,6 +60,13 @@ export function CodeBlock({
 	};
 
 	const copied = state === "copied";
+	// Announced in the block's own live region (nothing while idle).
+	const note =
+		state === "copied"
+			? t("ui.codeBlock.copiedNote")
+			: state === "failed"
+				? t("ui.codeBlock.failedNote")
+				: "";
 	return (
 		<figure
 			data-id={dataId}
@@ -80,7 +82,11 @@ export function CodeBlock({
 				</figcaption>
 				<IconButton
 					size="sm"
-					label={copied ? "Đã sao chép" : `Sao chép mã ${caption}`}
+					label={
+						copied
+							? t("common.actions.copied")
+							: t("ui.codeBlock.copy", { caption })
+					}
 					data-id={`${dataId}-copy`}
 					icon={
 						copied ? (
@@ -105,11 +111,11 @@ export function CodeBlock({
 			</pre>
 			{state === "failed" ? (
 				<p className="m-0 border-border-subtle border-t px-3 py-2 text-muted text-xs">
-					{NOTES.failed}
+					{note}
 				</p>
 			) : null}
 			<output aria-live="polite" className="sr-only">
-				{NOTES[state]}
+				{note}
 			</output>
 		</figure>
 	);

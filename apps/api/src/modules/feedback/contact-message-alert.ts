@@ -1,15 +1,10 @@
-import type { ContactCategory } from "@localman/shared";
+import type { ContactCategory, Locale } from "@localman/shared";
+import { messagesFor } from "../../i18n/server-messages.js";
 import { maskEmail } from "../../lib/mask-email.js";
 import type { ParsedContact } from "./contact-message-schema.js";
 
 /** Longest excerpt of the message sent to Telegram, in characters. */
 export const ALERT_EXCERPT_MAX = 300;
-
-const CATEGORY_LABELS: Readonly<Record<ContactCategory, string>> = {
-	feedback: "Góp ý",
-	bug: "Báo lỗi",
-	plan_question: "Hỏi về gói",
-};
 
 /**
  * Control characters (newlines included), zero-width, word-joiner, bidi
@@ -56,8 +51,9 @@ export function alertExcerpt(message: string): string {
 		.trimEnd()}…`;
 }
 
-function contactLine(contact: ParsedContact | null): string {
-	if (contact === null) return "không để lại";
+/** Masked reply address; `null` when none was left. */
+function maskedContact(contact: ParsedContact | null): string | null {
+	if (contact === null) return null;
 	if (contact.contactKind === "email") {
 		return `email ${maskEmail(contact.contact)}`;
 	}
@@ -65,22 +61,26 @@ function contactLine(contact: ParsedContact | null): string {
 }
 
 /**
- * Short Telegram alert for the owner: category, an excerpt of the message,
- * the masked reply address and the source. No name; the full message and
- * address are on the admin inbox.
+ * Short Telegram alert for the owner, in `locale`: category, an excerpt of
+ * the message, the masked reply address and the source. No name; the full
+ * message and address are on the admin inbox.
  */
-export function contactAlertText(entry: {
-	readonly category: ContactCategory;
-	readonly message: string;
-	readonly contact: ParsedContact | null;
-	readonly signedIn: boolean;
-	readonly source: string;
-}): string {
-	return [
-		`Góp ý / Liên hệ mới: ${CATEGORY_LABELS[entry.category]}`,
-		`Nội dung: ${alertExcerpt(entry.message)}`,
-		`Liên hệ: ${contactLine(entry.contact)}`,
-		`Người gửi: ${entry.signedIn ? "đã đăng nhập" : "khách"}`,
-		`Nguồn: ${entry.source}`,
-	].join("\n");
+export function contactAlertText(
+	entry: {
+		readonly category: ContactCategory;
+		readonly message: string;
+		readonly contact: ParsedContact | null;
+		readonly signedIn: boolean;
+		readonly source: string;
+	},
+	locale: Locale,
+): string {
+	const { ownerAlerts } = messagesFor(locale);
+	return ownerAlerts.contact({
+		category: ownerAlerts.contactCategories[entry.category],
+		excerpt: alertExcerpt(entry.message),
+		contact: maskedContact(entry.contact),
+		signedIn: entry.signedIn,
+		source: entry.source,
+	});
 }

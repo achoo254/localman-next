@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
 import { useToast } from "../../components/ui/toast";
 import { useFeatures } from "../../config/features";
+import { useT } from "../../i18n/i18n-context";
+import type { Translate } from "../../i18n/translate";
 import { errorMessage } from "../../lib/api-client";
 import {
 	type Project,
@@ -24,15 +26,15 @@ type Preview =
 	| { status: "ready"; collaborators: number }
 	| { status: "error"; error: unknown };
 
-function collaboratorsText(preview: Preview): string {
-	if (preview.status === "loading") return "Đang kiểm tra cộng tác viên…";
+function collaboratorsText(preview: Preview, t: Translate): string {
+	if (preview.status === "loading") return t("projects.rotate.checking");
 	if (preview.status === "error") return errorMessage(preview.error);
-	if (preview.collaborators === 0) return "Project chưa có cộng tác viên nào.";
-	return `${preview.collaborators} cộng tác viên sẽ nhận thông báo kèm URL mới.`;
+	if (preview.collaborators === 0) return t("projects.rotate.noCollaborators");
+	return t("projects.rotate.notify", { count: preview.collaborators });
 }
 
 /**
- * "Đổi URL mock": a new secret, so the old URL stops answering at once.
+ * "Change mock URL": a new secret, so the old URL stops answering at once.
  * The dry run says how many collaborators share the project. Updates the
  * cached project, so the detail page shows the new URL.
  */
@@ -42,6 +44,7 @@ export function RotateSecretModal({
 	onRotated,
 	onCloseAutoFocus,
 }: RotateSecretModalProps) {
+	const t = useT();
 	const toast = useToast();
 	const flags = useFeatures();
 	const queryClient = useQueryClient();
@@ -63,9 +66,9 @@ export function RotateSecretModal({
 		<ConfirmModal
 			open
 			onOpenChange={onOpenChange}
-			title="Đổi URL mock"
-			question={`Đổi URL mock của ${project.name}?`}
-			confirmLabel="Đổi URL"
+			title={t("projects.rotate.title")}
+			question={t("projects.rotate.question", { name: project.name })}
+			confirmLabel={t("projects.rotate.confirm")}
 			confirmDisabled={preview.status !== "ready"}
 			onCloseAutoFocus={onCloseAutoFocus}
 			data-id="modal-rotate-secret"
@@ -74,22 +77,19 @@ export function RotateSecretModal({
 				queryClient.setQueryData(["project", saved.id], saved);
 				onRotated?.(saved);
 				toast.show({
-					title: "Đã đổi URL mock",
-					description: "Cập nhật URL mới ở frontend và tool đang dùng.",
+					title: t("projects.rotate.done"),
+					description: t("projects.rotate.doneHint"),
 				});
 			}}
 		>
-			<p className="m-0">
-				URL cũ ngừng hoạt động ngay. Frontend hoặc tool đang gọi URL cũ phải cập
-				nhật sang URL mới.
-			</p>
+			<p className="m-0">{t("projects.rotate.oldStops")}</p>
 			{flags.mockMcp ? (
 				<p className="m-0" data-id="modal-rotate-secret-mcp">
-					URL MCP cũng đổi theo; agent đã thêm URL cũ phải thêm lại.
+					{t("projects.rotate.mcp")}
 				</p>
 			) : null}
 			<p className="m-0" data-id="modal-rotate-secret-collaborators">
-				{collaboratorsText(preview)}
+				{collaboratorsText(preview, t)}
 			</p>
 		</ConfirmModal>
 	);

@@ -1,5 +1,5 @@
-import { CodeSpans } from "./code-spans";
-import { MCP_COPY } from "./mcp-copy";
+import { useT } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
 
 export interface ShellHintProps {
 	/** Variable the command reads the token from. */
@@ -10,9 +10,10 @@ export interface ShellHintProps {
 
 /** How other shells than bash/zsh read the token variable of a command. */
 export function ShellHint({ tokenEnv, id }: ShellHintProps) {
+	const t = useT();
 	return (
 		<p data-id={id} className="m-0 text-[0.8125rem] text-muted">
-			<CodeSpans text={MCP_COPY.shellHint(tokenEnv)} />
+			{renderRich(t("mcp.config.shellHint", { env: tokenEnv }))}
 		</p>
 	);
 }

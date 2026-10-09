@@ -32,7 +32,7 @@ import { resourceDataOperations } from "../modules/resources/resource-data-opera
 import { createResourceFromSchema } from "../modules/resources/resource-import-operations.js";
 import { resourceOperations } from "../modules/resources/resource-operations.js";
 import { resourceTreeOperations } from "../modules/resources/resource-tree-operations.js";
-import { getMe } from "../modules/users/user-operations.js";
+import { getMe, setLocale } from "../modules/users/user-operations.js";
 
 /**
  * Every dashboard API operation. REST routes, MCP tools and the OpenAPI
@@ -42,6 +42,7 @@ import { getMe } from "../modules/users/user-operations.js";
  */
 export const operations: readonly AnyOperation[] = [
 	getMe,
+	setLocale,
 	listNotifications,
 	markNotificationRead,
 	markAllNotificationsRead,

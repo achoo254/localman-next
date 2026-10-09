@@ -9,6 +9,7 @@ import { NotificationService } from "./notification-service.js";
 import { PushSubscriptionModel } from "./push-subscription-model.js";
 import {
 	EVENT,
+	EVENT_EN,
 	USER,
 	VAPID,
 	useNotificationTestKit,
@@ -44,15 +45,15 @@ describe("NotificationService channel routing", () => {
 		expect(JSON.parse(payload ?? "{}")).toEqual({
 			id: item?.id,
 			type: EVENT.type,
-			title: EVENT.title,
-			body: EVENT.body,
+			title: EVENT_EN.title,
+			body: EVENT_EN.body,
 			link: "/projects/demo",
 		});
 		expect(options?.vapidDetails).toEqual(VAPID);
 		expect(kit.bot.requests).toEqual([
 			{
 				chat_id: "777",
-				text: `${EVENT.title}\n\n${EVENT.body}\n\nhttps://localman.test/projects/demo`,
+				text: `${EVENT_EN.title}\n\n${EVENT_EN.body}\n\nhttps://localman.test/projects/demo`,
 			},
 		]);
 	});

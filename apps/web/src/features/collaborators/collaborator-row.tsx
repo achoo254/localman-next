@@ -2,49 +2,20 @@ import { IconLink, IconX } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { Badge } from "../../components/ui/badge";
 import { IconButton } from "../../components/ui/icon-button";
-import { formatDate } from "../../lib/format";
+import { useI18n, useT } from "../../i18n/i18n-context";
+import {
+	collaboratorLabel,
+	personLabel,
+	removeLabel,
+	rowDataId,
+} from "./collaborator-labels";
 import type { Collaborator, MemberProfile } from "./collaborators-api";
 import { PersonAvatar } from "./person-avatar";
 
-/** `Minh Anh · @minhanh`, or `@minhanh` without a display name. */
-export function personLabel(person: {
-	name: string | null;
-	username: string;
-}): string {
-	return person.name
-		? `${person.name} · @${person.username}`
-		: `@${person.username}`;
-}
-
-export function collaboratorLabel(item: Collaborator): string {
-	const date = item.expiresAt ? formatDate(item.expiresAt) : "";
-	const expired = item.status === "expired";
-	if (item.user) {
-		const base = personLabel(item.user);
-		return expired ? `${base} · đã hết hạn ${date}` : base;
-	}
-	const email = item.inviteeEmail ?? "email đã ẩn";
-	return `Link mời · ${email} · ${expired ? "đã hết hạn" : "hết hạn"} ${date}`;
-}
-
-/** Accessible name of the X button: what pressing it does, and to whom. */
-export function removeLabel(item: Collaborator): string {
-	const label = collaboratorLabel(item);
-	if (item.status === "accepted") return `Xoá ${label} khỏi project`;
-	if (item.status === "pending") return `Huỷ lời mời ${label}`;
-	return `Xoá lời mời ${label}`;
-}
-
-export function rowDataId(item: Collaborator): string {
-	return item.user
-		? `collaborator-${item.user.username}`
-		: `collaborator-link-${item.id}`;
-}
-
-const STATUS_BADGE = {
-	accepted: <Badge tone="success">Đã tham gia</Badge>,
-	pending: <Badge tone="warning">Đang chờ</Badge>,
-	expired: <Badge tone="neutral">Hết hạn</Badge>,
+const STATUS_TONE = {
+	accepted: "success",
+	pending: "warning",
+	expired: "neutral",
 } as const;
 
 /**
@@ -105,6 +76,7 @@ function Badges({ children }: { children: ReactNode }) {
 
 /** The owner: always first, never removable. */
 export function OwnerRow({ owner }: { owner: MemberProfile }) {
+	const t = useT();
 	return (
 		<AnimatedItem
 			dataId="collaborator-owner"
@@ -118,7 +90,7 @@ export function OwnerRow({ owner }: { owner: MemberProfile }) {
 			/>
 			<Label>{personLabel(owner)}</Label>
 			<Badges>
-				<Badge tone="primary">Owner</Badge>
+				<Badge tone="primary">{t("collaborators.row.owner")}</Badge>
 			</Badges>
 		</AnimatedItem>
 	);
@@ -126,7 +98,7 @@ export function OwnerRow({ owner }: { owner: MemberProfile }) {
 
 export interface CollaboratorRowProps {
 	item: Collaborator;
-	/** The row of the signed-in collaborator ("Bạn"). */
+	/** The row of the signed-in collaborator ("You"). */
 	self: boolean;
 	/** Owner view: the row has an X button. */
 	canManage: boolean;
@@ -146,6 +118,8 @@ export function CollaboratorRow({
 	onRemove,
 	onGone,
 }: CollaboratorRowProps) {
+	const i18n = useI18n();
+	const { t } = i18n;
 	const locked = leaving || busy;
 	const dataId = rowDataId(item);
 	const user = item.user;
@@ -169,18 +143,22 @@ export function CollaboratorRow({
 					<IconLink size={16} />
 				</span>
 			)}
-			<Label>{collaboratorLabel(item)}</Label>
+			<Label>{collaboratorLabel(item, i18n)}</Label>
 			<Badges>
 				{user && !user.emailVerified && item.status !== "accepted" ? (
-					<Badge tone="warning">email chưa xác minh</Badge>
+					<Badge tone="warning">{t("collaborators.row.emailUnverified")}</Badge>
 				) : null}
-				{STATUS_BADGE[item.status]}
-				{self ? <Badge tone="neutral">Bạn</Badge> : null}
+				<Badge tone={STATUS_TONE[item.status]}>
+					{t(`collaborators.row.status.${item.status}`)}
+				</Badge>
+				{self ? (
+					<Badge tone="neutral">{t("collaborators.row.you")}</Badge>
+				) : null}
 			</Badges>
 			{canManage ? (
 				<IconButton
 					size="sm"
-					label={removeLabel(item)}
+					label={removeLabel(item, i18n)}
 					data-id={`${dataId}-remove`}
 					data-remove-button=""
 					aria-disabled={locked || undefined}

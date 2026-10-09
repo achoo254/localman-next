@@ -1,5 +1,6 @@
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { type ReactNode, useRef, useState } from "react";
+import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { Alert } from "./alert";
 import { Button } from "./button";
@@ -10,9 +11,9 @@ export interface ConfirmModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	title: ReactNode;
-	/** Bold first line of the warning, e.g. `Xoá “Demo”?`. */
+	/** Bold first line of the warning, e.g. `Delete “Demo”?`. */
 	question: ReactNode;
-	/** Consequences under the question (summary, "không hoàn tác được"…). */
+	/** Consequences under the question (summary, "can't be undone"…). */
 	children?: ReactNode;
 	confirmLabel: string;
 	/** Runs the action; the modal closes when it resolves, shows the error if it throws. */
@@ -25,7 +26,7 @@ export interface ConfirmModalProps {
 }
 
 /**
- * Destructive confirmation: danger warning, Huỷ / confirm footer. Keeps the
+ * Destructive confirmation: danger warning, Cancel / confirm footer. Keeps the
  * modal open with the error message when the action fails.
  */
 export function ConfirmModal({
@@ -40,6 +41,7 @@ export function ConfirmModal({
 	onCloseAutoFocus,
 	"data-id": dataId,
 }: ConfirmModalProps) {
+	const t = useT();
 	const [busy, setBusy] = useState(false);
 	// Destructive dialogs open on the safe choice.
 	const cancel = useRef<HTMLButtonElement>(null);
@@ -77,7 +79,7 @@ export function ConfirmModal({
 				<ModalFooter>
 					<ModalClose asChild>
 						<Button ref={cancel} variant="ghost" disabled={busy}>
-							Huỷ
+							{t("common.actions.cancel")}
 						</Button>
 					</ModalClose>
 					<Button
@@ -86,7 +88,7 @@ export function ConfirmModal({
 						onClick={() => void confirm()}
 						data-id={dataId ? `${dataId}-confirm` : undefined}
 					>
-						{busy ? "Đang xử lý…" : confirmLabel}
+						{busy ? t("common.actions.processing") : confirmLabel}
 					</Button>
 				</ModalFooter>
 			}

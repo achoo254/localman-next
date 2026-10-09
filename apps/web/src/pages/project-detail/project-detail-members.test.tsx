@@ -27,13 +27,13 @@ describe("members from the project page", () => {
 			[`GET ${RESOURCES_PATH}`]: { body: { items: [] } },
 			[`GET ${MEMBERS}`]: listBody([]),
 		});
-		await screen.findByText(/Chưa có resource nào/);
+		await screen.findByText(/No resources yet/);
 		await userEvent.click(
-			screen.getByRole("button", { name: /^Cộng tác viên/ }),
+			screen.getByRole("button", { name: /^Collaborators/ }),
 		);
-		await screen.findByRole("dialog", { name: "Cộng tác viên · Demo shop" });
+		await screen.findByRole("dialog", { name: "Collaborators · Demo shop" });
 		await new Promise((resolve) => setTimeout(resolve, 800));
-		expect(screen.queryByRole("dialog", { name: "Resource mới" })).toBeNull();
+		expect(screen.queryByRole("dialog", { name: "New resource" })).toBeNull();
 	});
 
 	it("gives the owner the collaborators and magic link dialogs", async () => {
@@ -45,16 +45,16 @@ describe("members from the project page", () => {
 			},
 		});
 		await userEvent.click(
-			await screen.findByRole("button", { name: /^Cộng tác viên/ }),
+			await screen.findByRole("button", { name: /^Collaborators/ }),
 		);
 		const dialog = await screen.findByRole("dialog", {
-			name: "Cộng tác viên · Demo shop",
+			name: "Collaborators · Demo shop",
 		});
 		await within(dialog).findByText("An · @an");
-		await userEvent.click(within(dialog).getByRole("button", { name: "Xong" }));
+		await userEvent.click(within(dialog).getByRole("button", { name: "Done" }));
 		// The page learnt the member count from the dialog.
 		expect(
-			await screen.findByRole("button", { name: "Cộng tác viên · 1" }),
+			await screen.findByRole("button", { name: "Collaborators · 1" }),
 		).toBeInTheDocument();
 		await userEvent.click(screen.getByRole("button", { name: "Magic link" }));
 		expect(
@@ -80,18 +80,18 @@ describe("members from the project page", () => {
 			shared,
 		);
 		await userEvent.click(
-			await screen.findByRole("button", { name: "Cộng tác viên · 1" }),
+			await screen.findByRole("button", { name: "Collaborators · 1" }),
 		);
 		expect(screen.queryByRole("button", { name: "Magic link" })).toBeNull();
 		const dialog = await screen.findByRole("dialog", {
-			name: "Cộng tác viên · Demo shop",
+			name: "Collaborators · Demo shop",
 		});
 		await userEvent.click(
-			await within(dialog).findByRole("button", { name: "Rời project" }),
+			await within(dialog).findByRole("button", { name: "Leave project" }),
 		);
-		const confirm = screen.getByRole("dialog", { name: "Rời project" });
+		const confirm = screen.getByRole("dialog", { name: "Leave project" });
 		await userEvent.click(
-			within(confirm).getByRole("button", { name: "Rời project" }),
+			within(confirm).getByRole("button", { name: "Leave project" }),
 		);
 		await waitFor(() =>
 			expect(router.state.location.pathname).toBe("/projects"),

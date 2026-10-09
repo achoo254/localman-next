@@ -72,8 +72,8 @@ describe("merging Pro interest by email", () => {
 		expect(updated?.createdAt).toEqual(first?.createdAt);
 		expect(await FeedbackModel.countDocuments()).toBe(1);
 		expect(await headlines()).toEqual([
-			"Quan tâm gói Pro: cập nhật",
-			"Quan tâm gói Pro: đăng ký mới",
+			"Pro plan interest: new sign-up",
+			"Pro plan interest: updated",
 		]);
 	});
 
@@ -100,9 +100,9 @@ describe("merging Pro interest by email", () => {
 			["Người lạ", false, STRANGER],
 		]);
 		expect(await headlines()).toEqual([
-			"Quan tâm gói Pro: gửi lại từ người khác (chỉ lưu lịch sử)",
-			"Quan tâm gói Pro: gửi lại từ người khác (chỉ lưu lịch sử)",
-			"Quan tâm gói Pro: đăng ký mới",
+			"Pro plan interest: new sign-up",
+			"Pro plan interest: sent again by someone else (history only)",
+			"Pro plan interest: sent again by someone else (history only)",
 		]);
 	});
 

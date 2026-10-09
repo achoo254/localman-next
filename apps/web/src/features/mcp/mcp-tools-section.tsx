@@ -3,8 +3,8 @@ import { IconPlayerPlay } from "@tabler/icons-react";
 import { useId, useState } from "react";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
-import { CodeSpans } from "./code-spans";
-import { MCP_COPY } from "./mcp-copy";
+import { useT } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
 import type { McpTarget } from "./mcp-snippets";
 import { McpToolList } from "./mcp-tool-list";
 import { McpTryPanel } from "./mcp-try-panel";
@@ -17,10 +17,11 @@ export interface McpToolsSectionProps {
 }
 
 /**
- * "Tool tự sinh": the tools of the enabled endpoints, read from the
- * project's resources (no extra request), and the "Thử" disclosure.
+ * "Generated tools": the tools of the enabled endpoints, read from the
+ * project's resources (no extra request), and the "Try" disclosure.
  */
 export function McpToolsSection({ resources, target }: McpToolsSectionProps) {
+	const t = useT();
 	const titleId = useId();
 	const [tryOpen, setTryOpen] = useState(false);
 	const entries = mockToolEntries(resources);
@@ -32,11 +33,13 @@ export function McpToolsSection({ resources, target }: McpToolsSectionProps) {
 		>
 			<div className="flex flex-wrap items-center gap-2">
 				<h3 id={titleId} className="m-0 font-mono font-semibold text-sm">
-					{MCP_COPY.toolsTitle}
+					{t("mcp.tools.title")}
 				</h3>
 				<Badge tone="primary">
 					{entries.length}
-					<span className="sr-only">{MCP_COPY.toolsCountUnit}</span>
+					<span className="sr-only">
+						{` ${t("mcp.tools.countUnit", { count: entries.length })}`}
+					</span>
 				</Badge>
 				<Button
 					size="sm"
@@ -47,7 +50,7 @@ export function McpToolsSection({ resources, target }: McpToolsSectionProps) {
 					leadingIcon={<IconPlayerPlay size={16} aria-hidden="true" />}
 					onClick={() => setTryOpen((open) => !open)}
 				>
-					{MCP_COPY.tryButton}
+					{t("mcp.try.button")}
 				</Button>
 			</div>
 			<McpTryPanel id={TRY_PANEL_ID} hidden={!tryOpen} target={target} />
@@ -62,15 +65,13 @@ export function McpToolsSection({ resources, target }: McpToolsSectionProps) {
 					data-id="project-detail-mcp-tools-empty"
 					className="m-0 text-muted text-sm"
 				>
-					<CodeSpans
-						text={
-							resources.length > 0 ? MCP_COPY.toolsAllOff : MCP_COPY.toolsEmpty
-						}
-					/>
+					{renderRich(
+						t(resources.length > 0 ? "mcp.tools.allOff" : "mcp.tools.empty"),
+					)}
 				</p>
 			)}
 			<p className="m-0 text-[0.8125rem] text-muted">
-				<CodeSpans text={MCP_COPY.toolsFootnote} />
+				{renderRich(t("mcp.tools.footnote"))}
 			</p>
 		</section>
 	);

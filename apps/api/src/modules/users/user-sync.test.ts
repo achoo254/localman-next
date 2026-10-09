@@ -72,15 +72,16 @@ describe("syncUserFromUserInfo", () => {
 		expect(user?.telegram?.username).toBeUndefined();
 	});
 
-	it("keeps the plan and drops malformed optional claims", async () => {
+	it("keeps the plan and the chosen locale, and drops malformed optional claims", async () => {
 		await syncUserFromUserInfo(claims, SUB);
-		await UserModel.updateOne({ sub: SUB }, { plan: "pro" });
+		await UserModel.updateOne({ sub: SUB }, { plan: "pro", locale: "vi" });
 		await syncUserFromUserInfo(
 			{ ...claims, picture: "javascript:alert(1)", email: 42 },
 			SUB,
 		);
 		const user = await UserModel.findOne({ sub: SUB }).lean();
 		expect(user?.plan).toBe("pro");
+		expect(user?.locale).toBe("vi");
 		expect(user?.picture).toBeUndefined();
 		expect(user?.email).toBeUndefined();
 	});

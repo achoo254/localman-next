@@ -9,8 +9,7 @@ export async function recordProInterest(
 	userSub: string | null,
 ): Promise<void> {
 	const outcome = await saveProInterest(entry, userSub);
-	await alertOwnerThrottled(
-		"feedback.pro_interest",
-		proInterestAlertText(entry, outcome),
+	await alertOwnerThrottled("feedback.pro_interest", (locale) =>
+		proInterestAlertText(entry, outcome, locale),
 	);
 }

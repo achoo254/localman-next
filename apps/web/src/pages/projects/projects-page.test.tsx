@@ -12,11 +12,13 @@ describe("ProjectsPage", () => {
 	it("shows the empty state with a create button", async () => {
 		renderPage({ "GET /api/v1/projects": { body: { items: [] } } });
 		expect(
-			await screen.findByRole("heading", { name: "Chưa có project nào" }),
+			await screen.findByRole("heading", { name: "No projects yet" }),
 		).toBeInTheDocument();
-		await userEvent.click(screen.getByRole("button", { name: "Tạo project" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Create project" }),
+		);
 		expect(
-			screen.getByRole("dialog", { name: "Project mới" }),
+			screen.getByRole("dialog", { name: "New project" }),
 		).toBeInTheDocument();
 	});
 
@@ -33,11 +35,11 @@ describe("ProjectsPage", () => {
 		});
 		const row = await screen.findByText("Đơn hàng");
 		expect(row.closest("li")).toHaveTextContent("/api");
-		expect(screen.getByText("Được mời")).toBeInTheDocument();
+		expect(screen.getByText("Invited")).toBeInTheDocument();
 		await openMenu("Shop");
-		expect(screen.getByRole("menuitem", { name: "Nhân bản" })).toBeVisible();
-		expect(screen.queryByRole("menuitem", { name: "Sửa" })).toBeNull();
-		expect(screen.queryByRole("menuitem", { name: "Xoá" })).toBeNull();
+		expect(screen.getByRole("menuitem", { name: "Duplicate" })).toBeVisible();
+		expect(screen.queryByRole("menuitem", { name: "Edit" })).toBeNull();
+		expect(screen.queryByRole("menuitem", { name: "Delete" })).toBeNull();
 	});
 
 	it("shows an error with retry when the list fails", async () => {
@@ -48,7 +50,7 @@ describe("ProjectsPage", () => {
 			},
 		});
 		expect(await screen.findByText("Lỗi máy chủ.")).toBeInTheDocument();
-		await userEvent.click(screen.getByRole("button", { name: "Thử lại" }));
+		await userEvent.click(screen.getByRole("button", { name: "Try again" }));
 		await waitFor(() =>
 			expect(calls.filter((c) => c.path === "/api/v1/projects")).toHaveLength(
 				2,
@@ -68,19 +70,21 @@ describe("ProjectsPage", () => {
 			}),
 		});
 		await userEvent.click(
-			await screen.findByRole("button", { name: "Tạo project mới" }),
+			await screen.findByRole("button", { name: "Create a new project" }),
 		);
 		// The modal opens on the name field.
 		await waitFor(() =>
-			expect(screen.getByLabelText(/Tên project/)).toHaveFocus(),
+			expect(screen.getByLabelText(/Project name/)).toHaveFocus(),
 		);
-		await userEvent.type(screen.getByLabelText(/Tên project/), "Demo shop");
+		await userEvent.type(screen.getByLabelText(/Project name/), "Demo shop");
 		const prefix = screen.getByLabelText("API Prefix");
 		await userEvent.type(prefix, "api/v1/");
 		await userEvent.tab();
 		expect(prefix).toHaveValue("/api/v1");
 		expect(screen.getByText(/\/api\/v1\/:endpoint$/)).toBeInTheDocument();
-		await userEvent.click(screen.getByRole("button", { name: "Tạo project" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Create project" }),
+		);
 		expect(await screen.findByText("Demo shop")).toBeInTheDocument();
 		expect(calls.find((c) => c.method === "POST")?.body).toEqual({
 			name: "Demo shop",
@@ -93,13 +97,15 @@ describe("ProjectsPage", () => {
 			"GET /api/v1/projects": { body: { items: [] } },
 		});
 		await userEvent.click(
-			await screen.findByRole("button", { name: "Tạo project mới" }),
+			await screen.findByRole("button", { name: "Create a new project" }),
 		);
-		await userEvent.type(screen.getByLabelText(/Tên project/), "a/b");
+		await userEvent.type(screen.getByLabelText(/Project name/), "a/b");
 		await userEvent.type(screen.getByLabelText("API Prefix"), "/xin chào");
-		await userEvent.click(screen.getByRole("button", { name: "Tạo project" }));
-		expect(screen.getByLabelText(/Tên project/)).toHaveAccessibleDescription(
-			/Tên chỉ gồm/,
+		await userEvent.click(
+			screen.getByRole("button", { name: "Create project" }),
+		);
+		expect(screen.getByLabelText(/Project name/)).toHaveAccessibleDescription(
+			/Names can only contain/,
 		);
 		expect(screen.getByLabelText("API Prefix")).toHaveAttribute(
 			"aria-invalid",
@@ -116,11 +122,11 @@ describe("ProjectsPage", () => {
 			},
 		});
 		await openMenu("Project p1");
-		await userEvent.click(screen.getByRole("menuitem", { name: "Sửa" }));
-		const name = screen.getByLabelText(/Tên project/);
+		await userEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
+		const name = screen.getByLabelText(/Project name/);
 		await userEvent.clear(name);
 		await userEvent.type(name, "Đổi tên");
-		await userEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+		await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
 		expect(await screen.findByText("Đổi tên")).toBeInTheDocument();
 		expect(calls.find((c) => c.method === "PUT")?.body).toEqual({
 			name: "Đổi tên",
@@ -131,12 +137,14 @@ describe("ProjectsPage", () => {
 	it("asks for a name that starts with a letter or digit", async () => {
 		renderPage({ "GET /api/v1/projects": { body: { items: [] } } });
 		await userEvent.click(
-			await screen.findByRole("button", { name: "Tạo project mới" }),
+			await screen.findByRole("button", { name: "Create a new project" }),
 		);
-		await userEvent.type(screen.getByLabelText(/Tên project/), "-shop");
-		await userEvent.click(screen.getByRole("button", { name: "Tạo project" }));
+		await userEvent.type(screen.getByLabelText(/Project name/), "-shop");
+		await userEvent.click(
+			screen.getByRole("button", { name: "Create project" }),
+		);
 		expect(
-			screen.getByText("Tên phải bắt đầu bằng chữ hoặc số."),
+			screen.getByText("Names must start with a letter or number."),
 		).toBeInTheDocument();
 	});
 });

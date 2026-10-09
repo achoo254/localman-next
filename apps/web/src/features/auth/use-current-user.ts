@@ -67,6 +67,15 @@ export function peekCurrentUser(): CurrentUserState {
 	return state;
 }
 
+/**
+ * The session as it becomes known, without starting the probe: for code
+ * present on every page (the language provider) that must not add a
+ * `/users/me` request where no component asked for the session.
+ */
+export function useKnownCurrentUser(): CurrentUserState {
+	return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
 /** The prerendered page and its hydration never know the session. */
 const LOADING: CurrentUserState = { status: "loading" };
 const getServerSnapshot = (): CurrentUserState => LOADING;

@@ -1,15 +1,17 @@
 import { NavLink } from "react-router";
+import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 
 const PAGES = [
-	{ to: "/admin/pro-interest", label: "Quan tâm gói Pro", id: "pro-interest" },
-	{ to: "/admin/feedback", label: "Hộp thư góp ý", id: "feedback" },
+	{ to: "/admin/pro-interest", key: "proInterest", id: "pro-interest" },
+	{ to: "/admin/feedback", key: "feedback", id: "feedback" },
 ] as const;
 
 /** Links between the owner's admin pages. */
 export function AdminNav() {
+	const t = useT();
 	return (
-		<nav aria-label="Trang quản trị" data-id="admin-nav">
+		<nav aria-label={t("admin.nav.label")} data-id="admin-nav">
 			<ul className="m-0 flex list-none flex-wrap gap-2 p-0">
 				{PAGES.map((page) => (
 					<li key={page.id}>
@@ -26,7 +28,7 @@ export function AdminNav() {
 								)
 							}
 						>
-							{page.label}
+							{t(`admin.nav.${page.key}`)}
 						</NavLink>
 					</li>
 				))}

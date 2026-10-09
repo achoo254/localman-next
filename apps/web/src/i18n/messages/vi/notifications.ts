@@ -1,0 +1,73 @@
+import type { Messages } from "../../message-types";
+
+export const notifications: Messages["notifications"] = {
+	bell: {
+		label: "Thông báo",
+		labelUnread: "Thông báo, {unread} chưa đọc",
+		heading: "Thông báo",
+		markAllRead: "Đánh dấu tất cả đã đọc",
+		loadFailed: "Không tải được thông báo.",
+		loading: "Đang tải…",
+		empty: "Chưa có thông báo nào.",
+		loadMore: "Xem thêm",
+		settings: "Cài đặt kênh thông báo",
+		unread: "Chưa đọc:",
+	},
+	settings: {
+		title: "Kênh thông báo",
+		lead: "Chọn nơi nhận thông báo cho từng loại sự kiện: chuông trong app, Web Push hoặc Telegram.",
+		loading: "Đang tải cài đặt…",
+		loadFailed: "Không tải được cài đặt thông báo",
+		saved: "Đã lưu tuỳ chọn thông báo.",
+		channelsTitle: "Kênh nhận thông báo",
+		inAppText: "Chuông trên Localman, chọn theo từng loại sự kiện ở bảng dưới.",
+	},
+	channels: {
+		inApp: "Trong app",
+		webPush: "Web Push",
+		telegram: "Telegram",
+	},
+	events: {
+		title: "Nhận thông báo theo loại sự kiện",
+		empty: "Chưa có loại sự kiện nào.",
+		event: "Sự kiện",
+		cell: "{event}: {channel}",
+		note: "Ô bị khoá khi kênh chưa sẵn sàng. Không có kênh email: hoandat không gửi email.",
+		save: "Lưu tuỳ chọn",
+		types: {
+			projectInvitation: "Lời mời cộng tác project",
+			projectMockUrlChanged: "URL mock của project được chia sẻ đã đổi",
+			usageQuota: "Cảnh báo hạn mức lượt gọi mock tháng",
+		},
+	},
+	webPush: {
+		checking: "Đang kiểm tra trình duyệt…",
+		unsupported: "Trình duyệt không hỗ trợ Web Push.",
+		unavailable: "Máy chủ chưa bật Web Push.",
+		denied: "Trình duyệt đang chặn. Mở cài đặt trang để cho phép.",
+		on: "Đã bật trên trình duyệt này.",
+		elsewhere: "Đang bật trên thiết bị khác, chưa bật trên trình duyệt này.",
+		off: "Chưa bật.",
+		blocked: "Trình duyệt đang chặn thông báo của Localman.",
+		notAllowed: "Bạn chưa cho phép thông báo.",
+		turnedOff: "Đã tắt Web Push trên trình duyệt này.",
+		turnedOn: "Đã bật Web Push trên trình duyệt này.",
+		disable: "Tắt Web Push",
+		enable: "Bật Web Push",
+	},
+	telegram: {
+		unavailable: "Máy chủ chưa bật Telegram.",
+		notLinked:
+			"Chưa liên kết. Liên kết ở tài khoản hoandat, dùng chung cho Localman và Tunelo.",
+		linked: "Đã liên kết.",
+		linkedAs: "Đã liên kết @{username}.",
+		linkedInactive: "Đã liên kết, chưa kích hoạt bot.",
+		linkedAsInactive: "Đã liên kết @{username}, chưa kích hoạt bot.",
+		manage: "Quản lý",
+		link: "Liên kết Telegram",
+		startTitle: "Kích hoạt bot Telegram",
+		startWithBot:
+			"Mở <bot></bot> và bấm Start để Localman gửi được thông báo cho bạn.",
+		startNoBot: "Mở bot Telegram của Localman và bấm Start để nhận thông báo.",
+	},
+};

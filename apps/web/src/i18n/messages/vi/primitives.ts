@@ -1,0 +1,73 @@
+import type { Messages } from "../../message-types";
+
+export const primitives: Messages["primitives"] = {
+	eyebrow: "Design system",
+	title: "Primitive của <brand>Localman</brand>",
+	lead: "Trang đối chiếu các thành phần giao diện dùng chung với prototype. Đổi chế độ sáng/tối ở góc phải để kiểm tra cả hai theme.",
+	buttons: {
+		title: "Nút",
+		description:
+			"Bo 12px, phóng 1.03 khi rê chuột và 0.97 khi nhấn, viền focus 2px.",
+		createProject: "Tạo project",
+		seeMore: "Xem thêm",
+		locked: "Đang khoá",
+		small: "Nút nhỏ",
+		smallSecondary: "Nút nhỏ phụ",
+		moreActions: "Thêm thao tác",
+	},
+	forms: {
+		title: "Biểu mẫu",
+		description:
+			"Nhãn liên kết với ô nhập; lỗi được đọc bởi trình đọc màn hình.",
+		projectName: "Tên project",
+		projectNameHint: "Chữ thường, số và dấu gạch ngang.",
+		projectNamePlaceholder: "vd: cua-hang-demo",
+		endpointError: "Endpoint đã tồn tại trong project.",
+		method: "Phương thức",
+		disabled: "Ô bị khoá",
+		disabledValue: "Không chỉnh được",
+		note: "Ghi chú",
+		notePlaceholder: "Mô tả ngắn cho resource này",
+	},
+	feedback: {
+		title: "Phản hồi",
+		description:
+			"Badge chữ mono in hoa, alert và toast dùng nền tint theo tông.",
+		badges: {
+			draft: "Nháp",
+			pro: "Pro",
+			fresh: "Mới",
+			beta: "Beta",
+			running: "Đang chạy",
+			expiring: "Sắp hết hạn",
+			failed: "Lỗi",
+		},
+		tipTitle: "Mẹo",
+		tipBody: "Mỗi resource tự sinh đủ 5 endpoint REST.",
+		connectedTitle: "Đã kết nối",
+		connectedBody: "Mock server đang phục vụ project này.",
+		limitTitle: "Sắp chạm hạn mức",
+		limitBody: "Bạn đã dùng 9/10 resource của gói Free.",
+		deleteFailedTitle: "Không xoá được",
+		deleteFailedBody: "Resource đang được endpoint khác tham chiếu.",
+		toastSuccess: "Toast thành công",
+		toastSuccessTitle: "Đã lưu project.",
+		toastError: "Toast lỗi",
+		toastErrorTitle: "Không lưu được, thử lại.",
+		toastInfo: "Toast thông tin",
+		toastInfoTitle: "Đã sao chép URL.",
+	},
+	overlays: {
+		title: "Lớp phủ",
+		description:
+			"Modal 4 cỡ trượt vào từ -20px trong 200ms; menu và tooltip dùng Radix.",
+		modalTitle: "Modal cỡ {size}",
+		modalDescription: "Footer dính đáy, hai cột: huỷ và xác nhận.",
+		resourceName: "Tên resource",
+		resourceNamePlaceholder: "vd: users",
+		projectActions: "Thao tác project",
+		rename: "Đổi tên",
+		duplicate: "Nhân bản",
+		deleteProject: "Xoá project",
+	},
+};

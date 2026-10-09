@@ -4,15 +4,19 @@ import type {
 	MockToolNode,
 } from "@localman/shared/constants";
 import { Badge, type BadgeTone } from "../../components/ui/badge";
+import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
-import { MCP_COPY, MCP_PARENT_PARAM, MCP_TOOL_PARAMS } from "./mcp-copy";
+import { MCP_PARENT_PARAM, MCP_TOOL_PARAMS } from "./mcp-copy";
 
 const BADGES: Partial<
-	Record<MockToolAction, { label: string; tone: BadgeTone }>
+	Record<
+		MockToolAction,
+		{ label: "mcp.tools.readOnly" | "mcp.tools.destructive"; tone: BadgeTone }
+	>
 > = {
-	list: { label: MCP_COPY.readOnly, tone: "neutral" },
-	get: { label: MCP_COPY.readOnly, tone: "neutral" },
-	delete: { label: MCP_COPY.destructive, tone: "danger" },
+	list: { label: "mcp.tools.readOnly", tone: "neutral" },
+	get: { label: "mcp.tools.readOnly", tone: "neutral" },
+	delete: { label: "mcp.tools.destructive", tone: "danger" },
 };
 
 export interface McpToolListProps {
@@ -30,13 +34,16 @@ export function McpToolList({
 	itemDataIdPrefix,
 	className,
 }: McpToolListProps) {
+	const t = useT();
 	return (
 		<ul className={cn("m-0 grid list-none gap-2 p-0", className)}>
 			{entries.map((entry) => {
 				const badge = BADGES[entry.action];
 				const params =
 					(entry.ancestors.length > 0 ? MCP_PARENT_PARAM : "") +
-					MCP_TOOL_PARAMS[entry.action];
+					(entry.action === "create"
+						? t("mcp.tools.createParams")
+						: MCP_TOOL_PARAMS[entry.action]);
 				return (
 					<li
 						key={entry.name}
@@ -47,7 +54,7 @@ export function McpToolList({
 						<span className="text-muted text-xs">{params}</span>
 						{badge ? (
 							<Badge tone={badge.tone} className="ml-auto">
-								{badge.label}
+								{t(badge.label)}
 							</Badge>
 						) : null}
 					</li>

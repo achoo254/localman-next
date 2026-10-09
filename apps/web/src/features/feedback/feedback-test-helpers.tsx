@@ -35,12 +35,14 @@ export async function openForm(routes: Record<string, MockRoute>, path = "/") {
 	await userEvent.click(
 		screen.getByRole("button", { name: "Feedback / Contact" }),
 	);
-	const dialog = await screen.findByRole("dialog", { name: "Góp ý / Liên hệ" });
-	await within(dialog).findByLabelText(/^Nội dung/);
+	const dialog = await screen.findByRole("dialog", {
+		name: "Feedback / Contact",
+	});
+	await within(dialog).findByLabelText(/^Message/);
 	return { ...api, dialog };
 }
 
 export const send = () =>
-	userEvent.click(screen.getByRole("button", { name: "Gửi" }));
+	userEvent.click(screen.getByRole("button", { name: "Send" }));
 
-export const messageBox = () => screen.getByLabelText(/^Nội dung/);
+export const messageBox = () => screen.getByLabelText(/^Message/);

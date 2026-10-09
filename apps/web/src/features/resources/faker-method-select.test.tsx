@@ -20,7 +20,7 @@ describe("Faker method picker", () => {
 		});
 		const dialog = await openNewResource();
 		const picker = within(dialog).getByRole("combobox", {
-			name: "Faker method của avatar",
+			name: "Faker method of avatar",
 		});
 		expect(picker).toHaveValue("image.avatar");
 		// Closed: no listbox in the DOM and nothing to point at.
@@ -30,7 +30,7 @@ describe("Faker method picker", () => {
 		expect(picker).toHaveAttribute("aria-expanded", "true");
 		await userEvent.type(picker, "email");
 		const listbox = within(dialog).getByRole("listbox", {
-			name: "Faker method của avatar",
+			name: "Faker method of avatar",
 		});
 		const ids = within(listbox)
 			.getAllByRole("option")
@@ -44,7 +44,7 @@ describe("Faker method picker", () => {
 		await userEvent.keyboard("{Escape}");
 		expect(picker).toHaveAttribute("aria-expanded", "false");
 		expect(
-			screen.getByRole("dialog", { name: "Resource mới" }),
+			screen.getByRole("dialog", { name: "New resource" }),
 		).toBeInTheDocument();
 	});
 });

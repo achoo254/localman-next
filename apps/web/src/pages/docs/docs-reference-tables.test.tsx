@@ -7,13 +7,13 @@ import { describe, expect, it } from "vitest";
 import { ReservedParamsNote } from "./query-params";
 import { StatusCodesTable } from "./status-codes";
 
-const number = new Intl.NumberFormat("vi-VN");
+const number = new Intl.NumberFormat("en");
 
 describe("docs reference tables", () => {
 	it("lists every error code the mock runtime answers with", () => {
 		render(<StatusCodesTable />);
 		const table = screen.getByRole("table", {
-			name: "Mã trạng thái và mã lỗi",
+			name: "Status codes and error codes",
 		});
 		for (const code of [
 			"INVALID_QUERY",
@@ -29,11 +29,11 @@ describe("docs reference tables", () => {
 			expect(within(table).getAllByText(code).length).toBeGreaterThan(0);
 		}
 		expect(table).toHaveTextContent(
-			`sâu hơn ${DEFAULT_JSON_LIMITS.maxDepth} tầng hoặc có hơn ${number.format(DEFAULT_JSON_LIMITS.maxNodes)} giá trị`,
+			`deeper than ${DEFAULT_JSON_LIMITS.maxDepth} levels or holding more than ${number.format(DEFAULT_JSON_LIMITS.maxNodes)} values`,
 		);
-		expect(table).toHaveTextContent("Sai secret (đúng định dạng)");
-		// Empty code cells read "Không có", not a dash.
-		expect(within(table).getAllByText("Không có")).toHaveLength(2);
+		expect(table).toHaveTextContent("Wrong secret (well-formed)");
+		// Empty code cells read "None", not a dash.
+		expect(within(table).getAllByText("None")).toHaveLength(2);
 	});
 
 	it("names every reserved query parameter", () => {

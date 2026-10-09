@@ -26,7 +26,7 @@ describe("Delete resource while the dry run is pending or fails", () => {
 	beforeEach(() => resetCurrentUserCache());
 	afterEach(() => vi.unstubAllGlobals());
 
-	it("keeps Xoá resource off until the dry run answers", async () => {
+	it("keeps Delete resource off until the dry run answers", async () => {
 		const preview = held();
 		renderDetail({
 			[`GET ${RESOURCES_PATH}`]: { body: { items: sampleTree() } },
@@ -34,11 +34,13 @@ describe("Delete resource while the dry run is pending or fails", () => {
 		});
 		const users = await findNode("users");
 		await userEvent.click(
-			within(users).getByRole("button", { name: "Xoá users" }),
+			within(users).getByRole("button", { name: "Delete users" }),
 		);
-		const dialog = await screen.findByRole("dialog", { name: "Xoá resource" });
+		const dialog = await screen.findByRole("dialog", {
+			name: "Delete resource",
+		});
 		const confirm = within(dialog).getByRole("button", {
-			name: "Xoá resource",
+			name: "Delete resource",
 		});
 		expect(confirm).toBeDisabled();
 		preview.release({
@@ -57,16 +59,18 @@ describe("Delete resource while the dry run is pending or fails", () => {
 		});
 		const users = await findNode("users");
 		await userEvent.click(
-			within(users).getByRole("button", { name: "Xoá users" }),
+			within(users).getByRole("button", { name: "Delete users" }),
 		);
-		const dialog = await screen.findByRole("dialog", { name: "Xoá resource" });
+		const dialog = await screen.findByRole("dialog", {
+			name: "Delete resource",
+		});
 		expect(
 			await within(dialog).findByText(
-				"Mọi resource con và dữ liệu của chúng cũng bị xoá.",
+				"Every child resource and its data will be deleted too.",
 			),
 		).toBeInTheDocument();
 		expect(
-			within(dialog).getByRole("button", { name: "Xoá resource" }),
+			within(dialog).getByRole("button", { name: "Delete resource" }),
 		).toBeEnabled();
 	});
 });
@@ -86,14 +90,14 @@ describe("bulk buttons stay busy", () => {
 					: real.route(),
 		});
 		await findNode("users");
-		const generateAll = screen.getByRole("button", { name: "Sinh tất cả" });
+		const generateAll = screen.getByRole("button", { name: "Generate all" });
 		await userEvent.click(generateAll);
 		await waitFor(() => expect(generateAll).toBeDisabled());
-		expect(screen.getByRole("button", { name: "Reset tất cả" })).toBeDisabled();
+		expect(screen.getByRole("button", { name: "Reset all" })).toBeDisabled();
 		real.release({
 			body: { dryRun: false, changes: [change("users", 0, 10)] },
 		});
-		expect(await findToast("1 resource có dữ liệu mới.")).toBeInTheDocument();
+		expect(await findToast("1 resource has new data.")).toBeInTheDocument();
 		expect(generateAll).toBeEnabled();
 	});
 });

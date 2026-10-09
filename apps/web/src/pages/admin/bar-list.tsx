@@ -1,4 +1,4 @@
-import { formatNumber } from "../../lib/format";
+import { useI18n } from "../../i18n/i18n-context";
 
 export interface Bar {
 	key: string;
@@ -8,8 +8,9 @@ export interface Bar {
 
 /** Horizontal bar chart drawn with token colours; counts are also text. */
 export function BarList({ bars, dataId }: { bars: Bar[]; dataId: string }) {
+	const { t, formatNumber } = useI18n();
 	if (bars.length === 0) {
-		return <p className="m-0 text-muted text-sm">Chưa có dữ liệu.</p>;
+		return <p className="m-0 text-muted text-sm">{t("admin.noData")}</p>;
 	}
 	const max = Math.max(1, ...bars.map((bar) => bar.count));
 	return (

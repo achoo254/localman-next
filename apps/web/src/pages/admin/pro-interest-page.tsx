@@ -7,6 +7,7 @@ import { Button, buttonClassName } from "../../components/ui/button";
 import { EmptyState } from "../../components/ui/empty-state";
 import { AuthStatus } from "../../features/auth/auth-status";
 import { useCurrentUser } from "../../features/auth/use-current-user";
+import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
 import { useAppTitle } from "../../lib/use-document-title";
@@ -26,12 +27,13 @@ type StatsState =
 
 /** Shown to signed-in users who are not the Localman owner. */
 export function AdminForbidden() {
+	const t = useT();
 	return (
 		<EmptyState
 			data-id="admin-pro-forbidden"
 			headingLevel={1}
 			icon={<IconLock size={32} aria-hidden="true" />}
-			title="403 · Chỉ owner xem được trang này"
+			title={t("admin.forbidden.title")}
 			action={
 				<Link
 					to="/projects"
@@ -41,18 +43,19 @@ export function AdminForbidden() {
 						"no-underline",
 					)}
 				>
-					Về Projects
+					{t("admin.forbidden.back")}
 				</Link>
 			}
 		>
-			Trang quản trị chỉ dành cho người vận hành Localman.
+			{t("admin.forbidden.body")}
 		</EmptyState>
 	);
 }
 
 /** `/admin/pro-interest`: who wants Pro, from where, and follow-up status. */
 export function ProInterestPage() {
-	useAppTitle("Quản trị · Quan tâm gói Pro");
+	const t = useT();
+	useAppTitle(t("admin.heading", { page: t("admin.nav.proInterest") }));
 	const session = useCurrentUser();
 	// The signed-in shell normally resolves the session first; never flash
 	// the 403 page while it is still loading.
@@ -62,6 +65,7 @@ export function ProInterestPage() {
 }
 
 function ProInterestDashboard() {
+	const t = useT();
 	const [stats, setStats] = useState<StatsState>({ status: "loading" });
 	const [forbidden, setForbidden] = useState(false);
 
@@ -84,22 +88,24 @@ function ProInterestDashboard() {
 		<section data-id="admin-pro" className="grid gap-4">
 			<div className="flex min-h-11 flex-wrap items-center gap-3">
 				<h1 className="m-0 font-bold font-mono text-xl">
-					Quản trị · Quan tâm gói Pro
+					{t("admin.heading", { page: t("admin.nav.proInterest") })}
 				</h1>
-				<Badge tone="accent">Chỉ chủ sở hữu</Badge>
+				<Badge tone="accent">{t("admin.ownerOnly")}</Badge>
 			</div>
 			<AdminNav />
 			{stats.status === "loading" ? (
 				<output className="block font-mono text-muted text-sm">
-					Đang tải thống kê…
+					{t("admin.pro.statsLoading")}
 				</output>
 			) : null}
 			{stats.status === "error" ? (
 				<div className="grid justify-items-start gap-3">
-					<Alert tone="danger" title="Không tải được thống kê">
+					<Alert tone="danger" title={t("admin.pro.statsFailed")}>
 						{errorMessage(stats.error)}
 					</Alert>
-					<Button onClick={() => void loadStats()}>Thử lại</Button>
+					<Button onClick={() => void loadStats()}>
+						{t("common.cta.retry")}
+					</Button>
 				</div>
 			) : null}
 			{stats.status === "ready" ? (
@@ -110,8 +116,7 @@ function ProInterestDashboard() {
 				onForbidden={() => setForbidden(true)}
 			/>
 			<p className="m-0 text-[0.8125rem] text-muted">
-				Email trong bảng được che một phần; file CSV có email đầy đủ để owner tự
-				liên hệ. Mỗi đăng ký mới, bot Telegram báo về chat của owner.
+				{t("admin.pro.footnote")}
 			</p>
 		</section>
 	);

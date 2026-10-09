@@ -1,6 +1,7 @@
 import { IconCopy, IconLink } from "@tabler/icons-react";
 import type { ReactNode, Ref } from "react";
 import { Button, type ButtonVariant } from "../../components/ui/button";
+import { useT } from "../../i18n/i18n-context";
 import type { MagicLinkStatus } from "./magic-link-api";
 
 export interface MagicLinkActionProps {
@@ -37,19 +38,21 @@ export function MagicLinkAction({
 	onCreate,
 	onRegenerate,
 }: MagicLinkActionProps) {
+	const t = useT();
 	if (status === null) return null;
-	const busyOr = (label: string) => (creating ? "Đang tạo…" : label);
+	const busyOr = (label: string) =>
+		creating ? t("collaborators.magic.creating") : label;
 	let spec: ActionSpec;
 	if (created) {
 		spec = {
-			label: "Sao chép link",
+			label: t("collaborators.magic.copy"),
 			variant: "primary",
 			icon: <IconCopy size={16} aria-hidden="true" />,
 			run: onCopy,
 		};
 	} else if (status === "none" || status === "revoked") {
 		spec = {
-			label: busyOr("Tạo magic link"),
+			label: busyOr(t("collaborators.magic.create")),
 			variant: "primary",
 			dataId: "modal-magic-link-create",
 			icon: <IconLink size={16} aria-hidden="true" />,
@@ -58,7 +61,7 @@ export function MagicLinkAction({
 	} else {
 		const active = status === "active";
 		spec = {
-			label: busyOr("Tạo link mới"),
+			label: busyOr(t("collaborators.magic.regenerate")),
 			variant: active ? "secondary" : "primary",
 			dataId: "modal-magic-link-regenerate",
 			run: active ? onRegenerate : onCreate,

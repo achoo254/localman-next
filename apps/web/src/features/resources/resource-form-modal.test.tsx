@@ -10,6 +10,10 @@ import {
 	resourceJson,
 	sampleTree,
 } from "../../pages/project-detail/project-detail-test-helpers";
+import {
+	findPlansDialog,
+	plansPart,
+} from "../../pages/projects/projects-test-helpers";
 import { blurEditor, setEditorText } from "../../test/code-mirror";
 import { findToast } from "../../test/toast";
 import { resetCurrentUserCache } from "../auth/use-current-user";
@@ -24,13 +28,13 @@ describe("Resource form", () => {
 			[`POST ${RESOURCES_PATH}`]: { status: 201, body: resourceJson("orders") },
 		});
 		const dialog = await openNewResource();
-		const name = within(dialog).getByLabelText(/Tên resource/);
+		const name = within(dialog).getByLabelText(/Resource name/);
 		await waitFor(() => expect(name).toHaveFocus());
 		await userEvent.type(name, "orders");
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Tạo resource" }),
+			within(dialog).getByRole("button", { name: "Create resource" }),
 		);
-		expect(await findToast("Đã tạo resource orders.")).toBeInTheDocument();
+		expect(await findToast("Created resource orders.")).toBeInTheDocument();
 		const body = calls.find((c) => c.method === "POST")?.body;
 		expect(body).toMatchObject({
 			name: "orders",
@@ -54,24 +58,26 @@ describe("Resource form", () => {
 		});
 		const dialog = await openNewResource();
 		await userEvent.type(
-			within(dialog).getByLabelText(/Tên resource/),
+			within(dialog).getByLabelText(/Resource name/),
 			"likes",
 		);
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Thêm field" }),
+			within(dialog).getByRole("button", { name: "Add field" }),
 		);
 		await userEvent.type(
-			within(dialog).getByRole("textbox", { name: "Tên field 4" }),
+			within(dialog).getByRole("textbox", { name: "Field name 4" }),
 			"id",
 		);
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Tạo resource" }),
+			within(dialog).getByRole("button", { name: "Create resource" }),
 		);
 		expect(
-			within(dialog).getByText("Đã có resource cùng tên ở vị trí này."),
+			within(dialog).getByText(
+				"There's already a resource with this name here.",
+			),
 		).toBeInTheDocument();
 		expect(
-			within(dialog).getByText("Field “id” được sinh tự động."),
+			within(dialog).getByText("Field “id” is generated automatically."),
 		).toBeInTheDocument();
 		expect(calls.some((c) => c.method === "POST")).toBe(false);
 	});
@@ -87,17 +93,17 @@ describe("Resource form", () => {
 		});
 		const dialog = await openNewResource();
 		await userEvent.type(
-			within(dialog).getByLabelText(/Tên resource/),
+			within(dialog).getByLabelText(/Resource name/),
 			"orders",
 		);
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Tạo resource" }),
+			within(dialog).getByRole("button", { name: "Create resource" }),
 		);
-		const plans = await screen.findByRole("dialog", { name: "Quản lý gói" });
-		expect(plans).toHaveTextContent(
-			"Bạn đã đạt giới hạn gói Free: 10 resource",
+		const plans = await findPlansDialog();
+		expect(plansPart(plans, "modal-subscription-reason")).toHaveTextContent(
+			"10",
 		);
-		expect(screen.queryByRole("dialog", { name: "Resource mới" })).toBeNull();
+		expect(screen.queryByRole("dialog", { name: "New resource" })).toBeNull();
 	});
 
 	it("explains API refusals in Vietnamese", async () => {
@@ -107,15 +113,15 @@ describe("Resource form", () => {
 		});
 		const dialog = await openNewResource();
 		await userEvent.type(
-			within(dialog).getByLabelText(/Tên resource/),
+			within(dialog).getByLabelText(/Resource name/),
 			"orders",
 		);
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Tạo resource" }),
+			within(dialog).getByRole("button", { name: "Create resource" }),
 		);
 		expect(
 			await within(dialog).findByText(
-				"Object template có thể sinh bản ghi lớn hơn 32 KB. Hãy rút gọn template.",
+				"The object template could produce records larger than 32 KB. Shorten the template.",
 			),
 		).toBeInTheDocument();
 	});
@@ -127,10 +133,10 @@ describe("Resource form", () => {
 		});
 		const node = await findNode("comments");
 		await userEvent.click(
-			within(node).getByRole("button", { name: "Sửa comments" }),
+			within(node).getByRole("button", { name: "Edit comments" }),
 		);
 		const dialog = await screen.findByRole("dialog", {
-			name: "Sửa resource · comments",
+			name: "Edit resource · comments",
 		});
 		expect(
 			within(dialog).getByRole("textbox", { name: "Field id" }),
@@ -139,7 +145,7 @@ describe("Resource form", () => {
 			within(dialog).getByRole("textbox", { name: "Field postId" }),
 		).toHaveValue("postId");
 		const type = within(dialog).getByRole("combobox", {
-			name: "Kiểu dữ liệu của name",
+			name: "Data type of name",
 		});
 		const options = within(type)
 			.getAllByRole("option")
@@ -149,15 +155,13 @@ describe("Resource form", () => {
 		await userEvent.selectOptions(type, "Parent Resource");
 		expect(
 			within(dialog).getByRole("textbox", {
-				name: "Kiểu này không cần method (name)",
+				name: "This type needs no method (name)",
 			}),
 		).toHaveValue("posts");
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Cập nhật" }),
+			within(dialog).getByRole("button", { name: "Update" }),
 		);
-		expect(
-			await findToast("Đã cập nhật resource comments."),
-		).toBeInTheDocument();
+		expect(await findToast("Updated resource comments.")).toBeInTheDocument();
 		const put = calls.find((c) => c.method === "PUT")?.body;
 		expect(put).not.toHaveProperty("parentId");
 		expect(put).toMatchObject({
@@ -178,7 +182,7 @@ describe("Resource form", () => {
 		blurEditor(template);
 		expect(
 			await within(dialog).findByText(
-				"Object template phải là một object JSON.",
+				"The object template must be a JSON object.",
 			),
 		).toBeInTheDocument();
 	});

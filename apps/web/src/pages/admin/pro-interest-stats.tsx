@@ -1,12 +1,12 @@
 import { cardClassName } from "../../components/ui/card";
 import {
 	type Choice,
-	PRO_NEEDS,
-	PRO_SOURCES,
 	choiceLabel,
+	proNeeds,
+	proSources,
 } from "../../features/subscription/pro-interest-options";
+import { useI18n } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
-import { formatNumber } from "../../lib/format";
 import { BarList } from "./bar-list";
 import type { CountBy, ProInterestStats } from "./pro-interest-admin-api";
 
@@ -21,6 +21,7 @@ function Kpi({
 	label,
 	value,
 }: { id: string; label: string; value: number }) {
+	const { formatNumber } = useI18n();
 	return (
 		<article
 			data-id={`admin-pro-kpi-${id}`}
@@ -36,15 +37,16 @@ function Kpi({
 
 /** Totals, new sign-ups and the two breakdown charts. */
 export function ProInterestStatsView({ stats }: { stats: ProInterestStats }) {
+	const { t } = useI18n();
 	return (
 		<>
 			<div
 				data-id="admin-pro-kpis"
 				className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-3"
 			>
-				<Kpi id="total" label="Tổng người quan tâm" value={stats.total} />
-				<Kpi id="7d" label="Mới trong 7 ngày" value={stats.new7d} />
-				<Kpi id="30d" label="Mới trong 30 ngày" value={stats.new30d} />
+				<Kpi id="total" label={t("admin.pro.kpiTotal")} value={stats.total} />
+				<Kpi id="7d" label={t("admin.pro.kpi7d")} value={stats.new7d} />
+				<Kpi id="30d" label={t("admin.pro.kpi30d")} value={stats.new30d} />
 			</div>
 			<div className="grid gap-4 md:grid-cols-2">
 				<section
@@ -56,11 +58,11 @@ export function ProInterestStatsView({ stats }: { stats: ProInterestStats }) {
 						id="admin-pro-by-source-title"
 						className="m-0 font-bold font-mono text-sm"
 					>
-						Theo nguồn mở form
+						{t("admin.pro.bySource")}
 					</h2>
 					<BarList
 						dataId="admin-pro-source"
-						bars={toBars(stats.bySource, PRO_SOURCES)}
+						bars={toBars(stats.bySource, proSources(t))}
 					/>
 				</section>
 				<section
@@ -72,11 +74,11 @@ export function ProInterestStatsView({ stats }: { stats: ProInterestStats }) {
 						id="admin-pro-by-need-title"
 						className="m-0 font-bold font-mono text-sm"
 					>
-						Theo nhu cầu
+						{t("admin.pro.byNeed")}
 					</h2>
 					<BarList
 						dataId="admin-pro-need"
-						bars={toBars(stats.byNeed, PRO_NEEDS)}
+						bars={toBars(stats.byNeed, proNeeds(t))}
 					/>
 				</section>
 			</div>

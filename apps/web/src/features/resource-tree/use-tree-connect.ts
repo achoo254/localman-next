@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useT } from "../../i18n/i18n-context";
 import {
 	canConnect,
 	connectProblem,
@@ -38,6 +39,7 @@ export function useTreeConnect<T extends TreeItem>(
 	items: readonly T[],
 	{ onMove, onRefuse }: TreeConnectHandlers<T>,
 ): TreeConnect<T> {
+	const t = useT();
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	// A selection whose resource disappeared (deleted, reloaded) is dropped.
 	const selected = items.find((item) => item.id === selectedId) ?? null;
@@ -49,10 +51,7 @@ export function useTreeConnect<T extends TreeItem>(
 
 	function connect(targetId: string | null) {
 		if (!selected) {
-			onRefuse(
-				"Chọn một resource trước: bấm chấm tròn bên trái resource đó.",
-				"info",
-			);
+			onRefuse(t("resourceTree.refuse.selectFirst"), "info");
 			return;
 		}
 		const problem = connectProblem(items, selected.id, targetId);
@@ -66,7 +65,7 @@ export function useTreeConnect<T extends TreeItem>(
 				: (items.find((item) => item.id === targetId) ?? null);
 		if (problem) {
 			onRefuse(
-				connectProblemMessage(problem, selected.name, target?.name ?? null),
+				connectProblemMessage(problem, selected.name, target?.name ?? null, t),
 				problem === "already-there" ? "info" : "error",
 			);
 			return;

@@ -2,8 +2,12 @@ import {
 	MAX_PAGE_LIMIT,
 	MOCK_QUERY_PARAMS as QUERY_PARAM_ALIASES,
 } from "@localman/shared/constants";
-import { Fragment, type ReactNode } from "react";
-import { DocsTable, InlineCode, Prose } from "./docs-content";
+import type { ReactNode } from "react";
+import { useT } from "../../i18n/i18n-context";
+import { DocsTable, InlineCode, Prose, docsRich } from "./docs-content";
+
+/** How the docs write the `{parent}Id` column of a nested resource. */
+export const PARENT_ID = "{parent}Id";
 
 function Names({ names }: { names: readonly string[] }) {
 	return (
@@ -15,63 +19,6 @@ function Names({ names }: { names: readonly string[] }) {
 	);
 }
 
-const ROWS: readonly (readonly ReactNode[])[] = [
-	[
-		<Names key="n" names={QUERY_PARAM_ALIASES.search} />,
-		<Fragment key="d">
-			Tìm chuỗi con, không phân biệt hoa thường, trong mọi giá trị chuỗi ở cấp
-			đầu của bản ghi (kể cả <InlineCode>id</InlineCode>). Gửi cả hai thì bản
-			ghi phải chứa cả hai chuỗi.
-		</Fragment>,
-		<InlineCode key="e">?search=lan</InlineCode>,
-	],
-	[
-		<Names key="n" names={["<field>"]} />,
-		<Fragment key="d">
-			Lọc theo một field của schema, theo <InlineCode>id</InlineCode> hoặc{" "}
-			<InlineCode>{"{parent}Id"}</InlineCode>. Field chuỗi khớp chuỗi con không
-			phân biệt hoa thường; số và boolean khớp đúng giá trị;{" "}
-			<InlineCode>null</InlineCode> khớp chữ <InlineCode>null</InlineCode>;{" "}
-			<InlineCode>id</InlineCode> và <InlineCode>{"{parent}Id"}</InlineCode>{" "}
-			khớp nguyên giá trị. Nhiều field thì bản ghi phải khớp tất cả. Tên không
-			phải field bị bỏ qua.
-		</Fragment>,
-		<InlineCode key="e">?paid=false</InlineCode>,
-	],
-	[
-		<Names key="n" names={QUERY_PARAM_ALIASES.page} />,
-		<Fragment key="d">
-			Số trang, đếm từ 1. Chỉ có tác dụng khi có <InlineCode>limit</InlineCode>.
-			Thiếu hoặc sai thì là trang 1.
-		</Fragment>,
-		<InlineCode key="e">?page=2&limit=10</InlineCode>,
-	],
-	[
-		<Names key="n" names={QUERY_PARAM_ALIASES.limit} />,
-		<Fragment key="d">
-			Số bản ghi mỗi trang, tối đa {MAX_PAGE_LIMIT} (số lớn hơn được hạ về{" "}
-			{MAX_PAGE_LIMIT}). Không gửi thì nhận mọi bản ghi.
-		</Fragment>,
-		<InlineCode key="e">?l=20</InlineCode>,
-	],
-	[
-		<Names key="n" names={QUERY_PARAM_ALIASES.sort} />,
-		<Fragment key="d">
-			Sắp xếp theo một field. Số và chuỗi chỉ chứa số được so như số, nên{" "}
-			<InlineCode>"2"</InlineCode> đứng trước <InlineCode>"10"</InlineCode>.
-			Field không tồn tại bị bỏ qua.
-		</Fragment>,
-		<InlineCode key="e">?sortBy=createdAt</InlineCode>,
-	],
-	[
-		<Names key="n" names={QUERY_PARAM_ALIASES.order} />,
-		<Fragment key="d">
-			<InlineCode>desc</InlineCode> để sắp giảm dần; mặc định tăng dần.
-		</Fragment>,
-		<InlineCode key="e">?order=desc</InlineCode>,
-	],
-];
-
 /** Every reserved name, in the order the table lists them. */
 const RESERVED_NAMES: readonly string[] =
 	Object.values(QUERY_PARAM_ALIASES).flat();
@@ -81,28 +28,60 @@ const RESERVED_NAMES: readonly string[] =
  * parameter, so it cannot be used as a filter.
  */
 export function ReservedParamsNote() {
+	const t = useT();
+	const names = RESERVED_NAMES.map((name) => `<code>${name}</code>`).join(", ");
 	return (
 		<Prose>
-			Field có tên trùng một tham số dành riêng không lọc được, vì mock đọc tên
-			đó như tham số:{" "}
-			{RESERVED_NAMES.map((name, index) => (
-				<Fragment key={name}>
-					{index > 0 ? ", " : null}
-					<InlineCode>{name}</InlineCode>
-				</Fragment>
-			))}
-			. Đặt tên field khác nếu cần lọc theo nó.
+			{docsRich(t("docs.reference.queryParams.reserved", { names }))}
 		</Prose>
 	);
 }
 
-/** Query parameters of `GET /:res`, rendered from the alias lists above. */
+/** Query parameters of `GET /:res`, rendered from the alias lists. */
 export function QueryParamsTable() {
+	const t = useT();
+	const example = (query: string) => <InlineCode key="e">{query}</InlineCode>;
+	const rows: readonly (readonly ReactNode[])[] = [
+		[
+			<Names key="n" names={QUERY_PARAM_ALIASES.search} />,
+			docsRich(t("docs.reference.queryParams.search")),
+			example("?search=lan"),
+		],
+		[
+			<Names key="n" names={["<field>"]} />,
+			docsRich(t("docs.reference.queryParams.field", { parentId: PARENT_ID })),
+			example("?paid=false"),
+		],
+		[
+			<Names key="n" names={QUERY_PARAM_ALIASES.page} />,
+			docsRich(t("docs.reference.queryParams.page")),
+			example("?page=2&limit=10"),
+		],
+		[
+			<Names key="n" names={QUERY_PARAM_ALIASES.limit} />,
+			t("docs.reference.queryParams.limit", { max: MAX_PAGE_LIMIT }),
+			example("?l=20"),
+		],
+		[
+			<Names key="n" names={QUERY_PARAM_ALIASES.sort} />,
+			docsRich(t("docs.reference.queryParams.sort")),
+			example("?sortBy=createdAt"),
+		],
+		[
+			<Names key="n" names={QUERY_PARAM_ALIASES.order} />,
+			docsRich(t("docs.reference.queryParams.order")),
+			example("?order=desc"),
+		],
+	];
 	return (
 		<DocsTable
-			caption="Tham số query của route danh sách"
-			headers={["Tham số", "Tác dụng", "Ví dụ"]}
-			rows={ROWS}
+			caption={t("docs.reference.queryParams.caption")}
+			headers={[
+				t("docs.reference.queryParams.headerParam"),
+				t("docs.reference.queryParams.headerEffect"),
+				t("docs.reference.queryParams.headerExample"),
+			]}
+			rows={rows}
 			data-id="docs-query-params"
 		/>
 	);

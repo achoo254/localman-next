@@ -18,7 +18,7 @@ describe("ProInterestPage", () => {
 		const { calls } = renderAdmin(false, {});
 		expect(
 			await screen.findByRole("heading", {
-				name: "403 · Chỉ owner xem được trang này",
+				name: "403 · Only the owner can see this page",
 			}),
 		).toBeInTheDocument();
 		expect(calls.some((c) => c.path.startsWith("/api/v1/admin"))).toBe(false);
@@ -32,30 +32,30 @@ describe("ProInterestPage", () => {
 			},
 		});
 		expect(
-			await screen.findByText("403 · Chỉ owner xem được trang này"),
+			await screen.findByText("403 · Only the owner can see this page"),
 		).toBeInTheDocument();
 	});
 
 	it("shows totals, charts and the masked list", async () => {
 		renderAdmin(true, {});
-		const total = await screen.findByText("Tổng người quan tâm");
+		const total = await screen.findByText("Total interested");
 		expect(total.parentElement).toHaveTextContent("12");
-		const bySource = screen.getByRole("region", { name: "Theo nguồn mở form" });
+		const bySource = screen.getByRole("region", { name: "By form source" });
 		const bars = within(bySource).getAllByRole("listitem");
-		expect(bars[0]).toHaveTextContent("Giới hạn project7");
+		expect(bars[0]).toHaveTextContent("Project limit7");
 		expect(await screen.findByText("a1***@example.com")).toBeInTheDocument();
-		expect(screen.getByText("Mock API, API Client")).toBeInTheDocument();
+		expect(screen.getByText("Mock API, API client")).toBeInTheDocument();
 	});
 
 	it("filters the list through query parameters", async () => {
 		const { calls } = renderAdmin(true, {});
 		await screen.findByText("a1***@example.com");
 		await userEvent.selectOptions(
-			screen.getByRole("combobox", { name: "Nguồn" }),
+			screen.getByRole("combobox", { name: "Source" }),
 			"plan_limit_projects",
 		);
 		await userEvent.selectOptions(
-			screen.getByRole("combobox", { name: "Trạng thái" }),
+			screen.getByRole("combobox", { name: "Status" }),
 			"false",
 		);
 		await waitFor(() => {
@@ -76,10 +76,10 @@ describe("ProInterestPage", () => {
 		});
 		await screen.findByText("a1***@example.com");
 		await userEvent.selectOptions(
-			screen.getByRole("combobox", { name: "Nhu cầu" }),
+			screen.getByRole("combobox", { name: "Need" }),
 			"mock",
 		);
-		await userEvent.click(screen.getByRole("button", { name: "Xuất CSV" }));
+		await userEvent.click(screen.getByRole("button", { name: "Export CSV" }));
 		await waitFor(() =>
 			expect(downloadText).toHaveBeenCalledWith(
 				"pro-interest.csv",
@@ -97,12 +97,12 @@ describe("ProInterestPage", () => {
 			},
 		});
 		await userEvent.click(
-			await screen.findByRole("button", { name: "Đánh dấu đã liên hệ" }),
+			await screen.findByRole("button", { name: "Mark as contacted" }),
 		);
 		await waitFor(() =>
 			expect(
 				document.querySelector('[data-id="admin-pro-row-a1-status"]'),
-			).toHaveTextContent("Đã liên hệ"),
+			).toHaveTextContent("Contacted"),
 		);
 		expect(calls.find((c) => c.method === "PUT")?.body).toEqual({
 			contacted: true,
@@ -120,12 +120,14 @@ describe("ProInterestPage", () => {
 			}),
 		});
 		await userEvent.click(
-			await screen.findByRole("button", { name: "Xoá theo yêu cầu" }),
+			await screen.findByRole("button", { name: "Delete on request" }),
 		);
-		const dialog = screen.getByRole("dialog", { name: "Xoá theo yêu cầu" });
-		expect(dialog).toHaveTextContent("Xoá đăng ký của a1***@example.com?");
+		const dialog = screen.getByRole("dialog", { name: "Delete on request" });
+		expect(dialog).toHaveTextContent(
+			"Delete the sign-up of a1***@example.com?",
+		);
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Xoá vĩnh viễn" }),
+			within(dialog).getByRole("button", { name: "Delete permanently" }),
 		);
 		await waitFor(() =>
 			expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),

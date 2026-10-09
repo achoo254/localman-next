@@ -14,9 +14,9 @@ import {
 } from "../../features/subscription/account-usage-api";
 import { UsageMeter } from "../../features/subscription/usage-meter";
 import { useSubscriptionDialogs } from "../../features/subscription/use-subscription-dialogs";
+import { useI18n } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
-import { formatDate, nextPeriodStart } from "../../lib/format";
 import { useAppTitle } from "../../lib/use-document-title";
 
 type UsageState =
@@ -26,9 +26,25 @@ type UsageState =
 
 const PLAN_NAME = { free: "Free", pro: "Pro" } as const;
 
+/**
+ * Noon (Asia/Saigon) of the first day after a `YYYY-MM` period, when the
+ * quotas reset; null for a malformed period. Noon keeps the day the same
+ * in any timezone the date is shown in.
+ */
+function nextPeriodStartIso(period: string): string | null {
+	const match = /^(\d{4})-(\d{2})$/.exec(period);
+	if (!match) return null;
+	const year = Number(match[1]);
+	const month = Number(match[2]);
+	const next =
+		month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 };
+	return `${next.year}-${String(next.month).padStart(2, "0")}-01T12:00:00+07:00`;
+}
+
 /** `/account`: current plan and this month's quota meters. */
 export function AccountPage() {
-	useAppTitle("Tài khoản");
+	const { t, formatDate } = useI18n();
+	useAppTitle(t("account.title"));
 	const session = useCurrentUser();
 	const user = session.status === "authenticated" ? session.user : null;
 	const [state, setState] = useState<UsageState>({ status: "loading" });
@@ -50,15 +66,23 @@ export function AccountPage() {
 		void load();
 	}, [load]);
 
-	const expires =
-		state.status === "ready" && state.usage.planExpiresAt
-			? ` · hết hạn ${formatDate(state.usage.planExpiresAt)}`
-			: "";
+	const expiresAt = state.status === "ready" ? state.usage.planExpiresAt : null;
+	const planName = expiresAt
+		? t("account.plan.nameExpires", {
+				plan: PLAN_NAME[plan],
+				date: formatDate(expiresAt),
+			})
+		: t("account.plan.name", { plan: PLAN_NAME[plan] });
+	const limitsText = t("account.plan.limits", {
+		projects: t("account.plan.projects", { count: limits.projects }),
+		resources: t("account.plan.resources", { count: limits.resources }),
+		members: t("account.plan.members", { count: limits.membersPerWorkspace }),
+	});
 
 	return (
 		<section data-id="account" className="grid gap-5">
 			<h1 className="m-0 flex min-h-11 items-center font-bold font-mono text-xl">
-				Tài khoản
+				{t("account.title")}
 			</h1>
 			<section
 				data-id="account-plan"
@@ -68,14 +92,10 @@ export function AccountPage() {
 				)}
 			>
 				<div className="grid gap-1">
-					<h2 className="m-0 font-bold font-mono text-base">
-						Gói {PLAN_NAME[plan]}
-						{expires}
-					</h2>
+					<h2 className="m-0 font-bold font-mono text-base">{planName}</h2>
 					<p className="m-0 text-muted text-sm">
 						{user?.email ? `${user.email} · ` : ""}
-						{limits.projects} project, {limits.resources} resource mỗi project,
-						tối đa {limits.membersPerWorkspace} thành viên mỗi project.
+						{limitsText}
 					</p>
 				</div>
 				<div className="flex flex-wrap gap-2">
@@ -85,20 +105,20 @@ export function AccountPage() {
 						className={cn(buttonClassName(), "no-underline")}
 					>
 						<IconBell size={16} aria-hidden="true" />
-						Kênh thông báo
+						{t("account.plan.notificationChannels")}
 					</Link>
 					<Button
 						variant="primary"
 						data-id="account-plan-manage"
 						onClick={() => subscription.openPlans()}
 					>
-						Quản lý gói
+						{t("account.plan.manage")}
 					</Button>
 				</div>
 			</section>
 			{state.status === "loading" ? (
 				<output className="block font-mono text-muted text-sm">
-					Đang tải hạn mức…
+					{t("account.usage.loading")}
 				</output>
 			) : null}
 			{state.status === "error" ? (
@@ -106,10 +126,10 @@ export function AccountPage() {
 					data-id="account-meters-error"
 					className="grid justify-items-start gap-3"
 				>
-					<Alert tone="danger" title="Không tải được hạn mức">
+					<Alert tone="danger" title={t("account.usage.loadFailed")}>
 						{errorMessage(state.error)}
 					</Alert>
-					<Button onClick={() => void load()}>Thử lại</Button>
+					<Button onClick={() => void load()}>{t("common.cta.retry")}</Button>
 				</div>
 			) : null}
 			{state.status === "ready" ? <AccountMeters usage={state.usage} /> : null}
@@ -124,30 +144,32 @@ export function AccountPage() {
  */
 function AccountMeters({ usage }: { usage: AccountUsage }) {
 	const flags = useFeatures();
-	const reset = nextPeriodStart(usage.period);
+	const { t, formatDate } = useI18n();
+	const resetAt = nextPeriodStartIso(usage.period);
+	const date = resetAt ? formatDate(resetAt) : "";
 	const mockNote = flags.mockMcp
-		? `REST và MCP đều tính. Đặt lại ngày ${reset}.`
-		: `Tính mọi request REST tới mock. Đặt lại ngày ${reset}.`;
+		? t("account.meters.mockNoteMcp", { date })
+		: t("account.meters.mockNote", { date });
 	return (
 		<div data-id="account-meters" className="grid gap-4 md:grid-cols-2">
 			<UsageMeter
 				data-id="account-meter-projects"
-				label="Projects"
+				label={t("account.meters.projects")}
 				counter={usage.projects}
-				note="Tính project bạn sở hữu, không tính project được mời."
+				note={t("account.meters.projectsNote")}
 			/>
 			<UsageMeter
 				data-id="account-meter-mock-requests"
-				label="Request tới mock tháng này"
+				label={t("account.meters.mockRequests")}
 				counter={usage.mockRequests}
 				note={mockNote}
 			/>
 			{flags.apiClient ? (
 				<UsageMeter
 					data-id="account-meter-proxy-requests"
-					label="Request qua proxy tháng này"
+					label={t("account.meters.proxyRequests")}
 					counter={usage.proxyRequests}
-					note={`Request gửi từ API client, kể cả qua Tunelo. Đặt lại ngày ${reset}.`}
+					note={t("account.meters.proxyNote", { date })}
 				/>
 			) : null}
 		</div>

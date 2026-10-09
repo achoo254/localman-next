@@ -3,6 +3,7 @@ import {
 	type TurnstileAction,
 } from "@localman/shared/constants";
 import { useEffect, useRef, useState } from "react";
+import { useT } from "../../i18n/i18n-context";
 import { loadTurnstile } from "../../platform/turnstile";
 
 export interface TurnstileFieldProps {
@@ -30,6 +31,7 @@ export function TurnstileField({
 	action = TURNSTILE_ACTIONS.proInterest,
 	dataId = "pro-interest-turnstile",
 }: TurnstileFieldProps) {
+	const t = useT();
 	const container = useRef<HTMLDivElement>(null);
 	const onChange = useRef(onTokenChange);
 	onChange.current = onTokenChange;
@@ -66,7 +68,7 @@ export function TurnstileField({
 			<div ref={container} aria-describedby={error ? errorId : undefined} />
 			{failed ? (
 				<p className="text-[0.8125rem] text-error">
-					Không tải được bước xác minh. Kiểm tra kết nối rồi mở lại form.
+					{t("subscription.proInterest.turnstileFailed")}
 				</p>
 			) : null}
 			{error ? (

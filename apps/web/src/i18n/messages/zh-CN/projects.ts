@@ -1,0 +1,78 @@
+import type { Messages } from "../../message-types";
+
+export const projects: Messages["projects"] = {
+	title: "Projects",
+	add: "新建 project",
+	list: {
+		loading: "正在加载 project 列表…",
+		loadFailed: "无法加载 project 列表",
+		emptyTitle: "还没有 project",
+		emptyBody:
+			"Project 包含你的 mock resource 和 endpoint。创建第一个 project 即可开始。",
+		create: "创建 project",
+	},
+	row: {
+		invited: "受邀",
+		ownedBy: "{owner} 的 project",
+		ownerFallback: "其他人",
+		collaborators: { other: "{count} 位协作者" },
+	},
+	menu: {
+		trigger: "{name} 的选项",
+		collaborators: "协作者",
+		clone: "复制",
+		edit: "编辑",
+		delete: "删除",
+	},
+	form: {
+		titleNew: "新建 project",
+		titleEdit: "编辑 project",
+		create: "创建 project",
+		save: "保存更改",
+		nameLabel: "Project 名称",
+		prefixHint:
+			"添加在所有 endpoint 之前，例如 <code>/api/v1</code>。不需要可留空。只能使用字母、数字、<code>-</code>、<code>_</code> 和 <code>/</code>。",
+		preview: "预览",
+	},
+	validation: {
+		nameRequired: "请输入 project 名称。",
+		nameTooLong: "名称最多 {max} 个字符。",
+		nameStart: "名称必须以字母或数字开头。",
+		namePattern: "名称只能包含字母、数字、空格、-、_ 和圆括号。",
+		prefixTooLong: "Prefix 最多 {max} 个字符。",
+		prefixPattern: "Prefix 只能包含不带声调的字母、数字、-、_ 和 /。",
+	},
+	toast: {
+		created: "已创建 project {name}。",
+		updated: "已更新 project {name}。",
+		cloned: "已复制为 {name}。",
+		deleted: "已删除 project {name}。",
+	},
+	delete: {
+		title: "删除 project",
+		question: "删除“<code>{name}</code>”？",
+		confirm: "删除 project",
+		checking: "正在检查相关数据…",
+		summary: "将同时删除 {items}。",
+		separator: "、",
+		irreversible: "所有数据都将被删除。此操作无法撤销。",
+		kinds: {
+			resources: { other: "{count} 个 resource" },
+			records: { other: "{count} 条数据记录" },
+			collaborators: { other: "{count} 位协作者" },
+			mcpTokens: { other: "{count} 个 MCP token" },
+		},
+	},
+	rotate: {
+		title: "更换 mock URL",
+		question: "更换 {name} 的 mock URL？",
+		confirm: "更换 URL",
+		checking: "正在检查协作者…",
+		noCollaborators: "此 project 还没有协作者。",
+		notify: { other: "{count} 位协作者将收到附带新 URL 的通知。" },
+		oldStops: "旧 URL 会立即失效。正在调用旧 URL 的前端或工具必须改用新 URL。",
+		mcp: "MCP URL 也会随之更改；已添加旧 URL 的 agent 需要重新添加。",
+		done: "已更换 mock URL",
+		doneHint: "请在正在使用的前端和工具中更新为新 URL。",
+	},
+};

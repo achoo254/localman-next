@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useToast } from "../../components/ui/toast";
+import { useT } from "../../i18n/i18n-context";
 import type { Resource } from "../resources/resource-model";
 import { DemoNode } from "./demo-node";
 import type { NodeAction } from "./node-actions";
@@ -41,7 +42,7 @@ export function mockUrlOf(mockBaseUrl: string, name: string): string {
 
 /**
  * Resource tree: nest a resource by clicking its left connector, then the
- * right connector of the target (or the "Thêm vào root" rail). Refused
+ * right connector of the target (or the "Add to root" rail). Refused
  * moves (cycle, name clash, too deep) are explained in a toast.
  */
 export function ResourceTreeCanvas(props: ResourceTreeCanvasProps) {
@@ -91,6 +92,7 @@ function AppTreeCanvas({
 	onAction,
 	onMove,
 }: AppTreeCanvasProps) {
+	const t = useT();
 	const toast = useToast();
 	const byId = useMemo(
 		() => new Map(resources.map((resource) => [resource.id, resource])),
@@ -109,14 +111,19 @@ function AppTreeCanvas({
 	function blockedReason(resource: Resource): string | null {
 		const parent = parentOf(resource);
 		return parent && parent.count === 0
-			? `Sinh dữ liệu cho ${parent.name} trước.`
+			? t("resourceTree.generator.blockedReason", { parent: parent.name })
 			: null;
 	}
 
 	function blocked(resource: Resource) {
 		toast.show({
 			tone: "error",
-			title: `Cần sinh dữ liệu cho ${parentOf(resource)?.name ?? "resource cha"} trước khi sinh cho ${resource.name}.`,
+			title: t("resourceTree.generator.blockedToast", {
+				parent:
+					parentOf(resource)?.name ??
+					t("resourceTree.generator.parentFallback"),
+				name: resource.name,
+			}),
 		});
 	}
 

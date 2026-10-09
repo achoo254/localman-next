@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
-import { formatNumber } from "../../lib/format";
+import { useT } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
 import { localizedError } from "./resource-errors";
 import type { Resource } from "./resource-model";
 import { type RemovedResource, deleteResource } from "./resources-api";
@@ -17,7 +18,9 @@ type Preview =
 	| { status: "ready"; removed: RemovedResource[] }
 	| { status: "unavailable" };
 
-const records = (count: number) => `${formatNumber(count)} bản ghi`;
+const MONO = {
+	code: (chunk: string) => <span className="font-mono">{chunk}</span>,
+};
 
 /**
  * Asks the API for a dry run first to list the child resources that go
@@ -29,6 +32,7 @@ export function DeleteResourceModal({
 	onOpenChange,
 	onDeleted,
 }: DeleteResourceModalProps) {
+	const t = useT();
 	const [preview, setPreview] = useState<Preview>({ status: "loading" });
 
 	useEffect(() => {
@@ -53,50 +57,51 @@ export function DeleteResourceModal({
 		<ConfirmModal
 			open
 			onOpenChange={onOpenChange}
-			title="Xoá resource"
+			title={t("resources.delete.title")}
 			data-id="modal-delete-resource"
-			question={
-				<>
-					Xoá “<span className="font-mono">{resource.name}</span>”?
-				</>
-			}
-			confirmLabel="Xoá resource"
+			question={renderRich(
+				t("resources.delete.question", { name: resource.name }),
+				MONO,
+			)}
+			confirmLabel={t("resources.delete.confirm")}
 			confirmDisabled={preview.status === "loading"}
 			onConfirm={async () => {
 				try {
 					await deleteResource(projectId, resource.id, false);
 				} catch (error) {
-					throw localizedError(error);
+					throw localizedError(error, t);
 				}
 				onDeleted(resource);
 			}}
 		>
 			<span>
-				Schema, endpoint và {records(resource.count)} của {resource.name} sẽ bị
-				xoá.
+				{t("resources.delete.body", {
+					count: resource.count,
+					name: resource.name,
+				})}
 			</span>
 			{preview.status === "loading" ? (
-				<span>Đang kiểm tra resource con…</span>
+				<span>{t("resources.delete.checking")}</span>
 			) : null}
 			{preview.status === "unavailable" ? (
 				<span data-id="modal-delete-resource-cascade">
-					Mọi resource con và dữ liệu của chúng cũng bị xoá.
+					{t("resources.delete.cascadeUnknown")}
 				</span>
 			) : null}
 			{children.length > 0 ? (
 				<div data-id="modal-delete-resource-cascade">
-					Sẽ xoá kèm {children.length} resource con:
+					{t("resources.delete.cascade", { count: children.length })}
 					<ul className="m-0 mt-1 list-disc pl-5">
 						{children.map((child) => (
 							<li key={child.resourceId}>
 								<span className="font-mono">{child.name}</span> (
-								{records(child.count)})
+								{t("resources.records", { count: child.count })})
 							</li>
 						))}
 					</ul>
 				</div>
 			) : null}
-			<span>Hành động này không thể hoàn tác.</span>
+			<span>{t("resources.delete.irreversible")}</span>
 		</ConfirmModal>
 	);
 }

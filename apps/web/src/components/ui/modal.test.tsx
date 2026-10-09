@@ -58,7 +58,7 @@ describe("Modal", () => {
 	it("closes via the close icon button", async () => {
 		const { onOpenChange } = renderModal();
 		await userEvent.click(screen.getByRole("button", { name: "Mở" }));
-		await userEvent.click(screen.getByRole("button", { name: "Đóng" }));
+		await userEvent.click(screen.getByRole("button", { name: "Close" }));
 		await waitFor(() =>
 			expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
 		);

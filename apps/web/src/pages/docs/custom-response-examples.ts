@@ -28,7 +28,7 @@ export const LIST_RESPONSE = {
 		{
 			id: "12",
 			createdAt: "2025-11-30T16:45:51.000Z",
-			name: "Minh Quân",
+			name: "Minh Quan",
 			avatar: "https://…",
 		},
 	],

@@ -14,6 +14,7 @@ import {
 import type { Resource } from "../../features/resources/resource-model";
 import { useResources } from "../../features/resources/use-resources";
 import { useSubscriptionDialogs } from "../../features/subscription/use-subscription-dialogs";
+import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { useAppTitle } from "../../lib/use-document-title";
 import type { Project } from "../projects/projects-api";
@@ -32,6 +33,7 @@ import { useProjectActions } from "./use-project-actions";
 
 /** `/projects/:projectId`: API endpoint card, resource tree and modals. */
 export function ProjectDetailPage() {
+	const t = useT();
 	const { projectId = "" } = useParams();
 	const project = useProject(projectId);
 	useAppTitle(project.data?.name ?? "Project");
@@ -41,7 +43,7 @@ export function ProjectDetailPage() {
 				data-id="project-detail-loading"
 				className="block py-8 font-mono text-muted text-sm"
 			>
-				Đang tải project…
+				{t("projectDetail.loading")}
 			</output>
 		);
 	}
@@ -51,10 +53,12 @@ export function ProjectDetailPage() {
 				data-id="project-detail-error"
 				className="grid justify-items-start gap-3"
 			>
-				<Alert tone="danger" title="Không tải được project">
+				<Alert tone="danger" title={t("projectDetail.loadFailed")}>
 					{errorMessage(project.error)}
 				</Alert>
-				<Button onClick={() => void project.refetch()}>Thử lại</Button>
+				<Button onClick={() => void project.refetch()}>
+					{t("common.cta.retry")}
+				</Button>
 			</div>
 		);
 	}
@@ -64,18 +68,18 @@ export function ProjectDetailPage() {
 				data-id="project-missing"
 				headingLevel={1}
 				icon={<IconBox size={32} aria-hidden="true" />}
-				title="Không tìm thấy project"
+				title={t("projectDetail.missing.title")}
 				action={
 					<Link
 						to="/projects"
 						className={buttonClassName({ variant: "primary" })}
 						data-id="project-missing-back"
 					>
-						Về danh sách projects
+						{t("projectDetail.missing.back")}
 					</Link>
 				}
 			>
-				Project có thể đã bị xoá hoặc bạn không có quyền truy cập.
+				{t("projectDetail.missing.body")}
 			</EmptyState>
 		);
 	}
@@ -83,6 +87,7 @@ export function ProjectDetailPage() {
 }
 
 function ProjectDetail({ project }: { project: Project }) {
+	const t = useT();
 	const session = useCurrentUser();
 	const plan = session.status === "authenticated" ? session.user.plan : "free";
 	const subscription = useSubscriptionDialogs(plan);
@@ -163,8 +168,7 @@ function ProjectDetail({ project }: { project: Project }) {
 					else {
 						toast.show({
 							tone: "info",
-							title:
-								"Project đã đạt giới hạn resource theo gói của chủ project.",
+							title: t("projectDetail.planLimit"),
 						});
 					}
 				}}

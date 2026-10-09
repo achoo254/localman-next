@@ -2,6 +2,7 @@ import type { PlanId } from "@localman/shared/constants";
 import { IconLock } from "@tabler/icons-react";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
+import { useT } from "../../i18n/i18n-context";
 
 export interface MemberSeatsGateProps {
 	/** null while the list loads. */
@@ -21,8 +22,8 @@ export function seatsFull(seats: {
 }
 
 /**
- * "n/cap thành viên" and, for the owner of a full project, why nobody else
- * can be invited (with "Xem gói" on Free). Sits above the invite fieldset
+ * "n/cap members" and, for the owner of a full project, why nobody else
+ * can be invited (with "See plans" on Free). Sits above the invite fieldset
  * so it is read before the disabled controls.
  */
 export function MemberSeatsGate({
@@ -31,6 +32,7 @@ export function MemberSeatsGate({
 	canManage,
 	onPlans,
 }: MemberSeatsGateProps) {
+	const t = useT();
 	const count = seats ? `${seats.used}/${seats.max ?? "∞"}` : "…";
 	// The cap that is reached, or null while there is room.
 	const reached = seats && seatsFull(seats) ? seats.max : null;
@@ -40,7 +42,7 @@ export function MemberSeatsGate({
 				data-id="modal-collaborators-count"
 				className="m-0 font-mono text-muted text-[0.8125rem]"
 			>
-				{count} thành viên (tính cả owner và lời mời đang chờ)
+				{t("collaborators.seats.count", { seats: count })}
 			</p>
 			{canManage && reached !== null ? (
 				<div
@@ -49,12 +51,12 @@ export function MemberSeatsGate({
 				>
 					<Badge tone="accent">
 						<IconLock size={14} aria-hidden="true" />
-						Đã đủ {reached} thành viên
+						{t("collaborators.seats.full", { count: reached })}
 					</Badge>
 					<span className="text-muted text-[0.8125rem]">
 						{plan === "free"
-							? `Thành viên thứ ${reached + 1} cần gói Pro.`
-							: "Xoá bớt thành viên hoặc lời mời để mời thêm."}
+							? t("collaborators.seats.nextNeedsPro", { count: reached + 1 })
+							: t("collaborators.seats.removeToInvite")}
 					</span>
 					{plan === "free" ? (
 						<Button
@@ -62,7 +64,7 @@ export function MemberSeatsGate({
 							data-id="modal-collaborators-plans"
 							onClick={onPlans}
 						>
-							Xem gói
+							{t("collaborators.modal.seePlans")}
 						</Button>
 					) : null}
 				</div>

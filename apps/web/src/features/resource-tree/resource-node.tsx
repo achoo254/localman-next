@@ -1,4 +1,5 @@
 import { ExternalLink } from "../../components/ui/external-link";
+import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import type { Resource } from "../resources/resource-model";
 import { GeneratorBar } from "./generator-bar";
@@ -48,6 +49,7 @@ export function ResourceNode({
 	onBlocked,
 	onAction,
 }: ResourceNodeProps) {
+	const t = useT();
 	const { name } = resource;
 	const base = `resource-node-${resource.id}`;
 	return (
@@ -79,7 +81,7 @@ export function ResourceNode({
 				<ExternalLink
 					href={href}
 					data-id={`${base}-link`}
-					title={`Mở ${href}`}
+					title={t("resourceTree.node.open", { url: href })}
 					className="truncate rounded-xs font-bold font-mono text-fg text-sm no-underline hover:text-primary hover:underline"
 				>
 					{name}
@@ -88,7 +90,7 @@ export function ResourceNode({
 			<div className="mt-2 flex items-center gap-2">
 				<GeneratorBar
 					value={resource.count}
-					label={`Số bản ghi của ${name}`}
+					label={t("resourceTree.generator.label", { name })}
 					blockedReason={blockedReason}
 					onCommit={onGenerate}
 					onBlocked={onBlocked}

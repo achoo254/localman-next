@@ -6,6 +6,7 @@ import type { NodeAction } from "../../features/resource-tree/node-actions";
 import { ResourceTreeCanvas } from "../../features/resource-tree/resource-tree-canvas";
 import { resourceErrorMessage } from "../../features/resources/resource-errors";
 import type { Resource } from "../../features/resources/resource-model";
+import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 
 export type ResourcesState =
@@ -31,19 +32,20 @@ export function ResourcesCard({
 	onNewResource,
 	...canvas
 }: ResourcesCardProps) {
+	const t = useT();
 	let body = (
 		<output className="block px-6 py-8 font-mono text-muted text-sm">
-			Đang tải resource…
+			{t("projectDetail.resources.loading")}
 		</output>
 	);
 	if (state.status === "error") {
 		body = (
 			<div className="grid justify-items-start gap-3 p-6">
-				<Alert tone="danger" title="Không tải được resource">
-					{resourceErrorMessage(state.error)}
+				<Alert tone="danger" title={t("projectDetail.resources.loadFailed")}>
+					{resourceErrorMessage(state.error, t)}
 				</Alert>
 				<Button data-id="project-detail-tree-retry" onClick={onRetry}>
-					Thử lại
+					{t("common.cta.retry")}
 				</Button>
 			</div>
 		);
@@ -58,17 +60,14 @@ export function ResourcesCard({
 					aria-hidden="true"
 					className="text-icon-muted"
 				/>
-				<p className="m-0">
-					Chưa có resource nào. Resource là một bảng dữ liệu có endpoint CRUD
-					riêng.
-				</p>
+				<p className="m-0">{t("projectDetail.resources.empty")}</p>
 				<Button
 					variant="primary"
 					data-id="project-detail-tree-empty-create"
 					leadingIcon={<IconPlus size={20} aria-hidden="true" />}
 					onClick={onNewResource}
 				>
-					Thêm resource
+					{t("projectDetail.addResource")}
 				</Button>
 			</div>
 		);
@@ -97,7 +96,7 @@ export function ResourcesCard({
 				</h2>
 				{count === null ? null : (
 					<span className="font-mono text-[0.8125rem] text-muted">
-						{count} resource
+						{t("projectDetail.resources.count", { count })}
 					</span>
 				)}
 			</div>

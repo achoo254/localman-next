@@ -87,6 +87,13 @@ export const routes: RouteObject[] = [
 							"CustomResponsesPage",
 						),
 					},
+					{
+						path: "mcp",
+						element: lazyPage(
+							() => import("./pages/docs/mcp-tools-page"),
+							"McpToolsPage",
+						),
+					},
 				],
 			},
 		],

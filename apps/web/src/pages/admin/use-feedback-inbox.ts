@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useToast } from "../../components/ui/toast";
+import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import {
 	type ContactMessage,
@@ -12,7 +13,7 @@ import {
 	fetchContactMessages,
 	setMessageStatus,
 } from "./feedback-inbox-api";
-import { STATUS_LABELS } from "./feedback-inbox-item";
+import { statusLabel } from "./feedback-inbox-item";
 import { isForbidden } from "./pro-interest-admin-api";
 
 export type InboxListState =
@@ -27,6 +28,7 @@ export type InboxListState =
  * moves back to the last page that has messages.
  */
 export function useFeedbackInbox() {
+	const t = useT();
 	const toast = useToast();
 	const [filter, setFilter] = useState<InboxFilter>(EMPTY_INBOX_FILTER);
 	const [page, setPage] = useState(1);
@@ -70,7 +72,11 @@ export function useFeedbackInbox() {
 		setPendingId(item.id);
 		try {
 			const updated = await setMessageStatus(item.id, status);
-			toast.show({ title: `Đã chuyển sang “${STATUS_LABELS[status].label}”.` });
+			toast.show({
+				title: t("admin.inbox.statusChanged", {
+					status: statusLabel(t, status),
+				}),
+			});
 			// The message may no longer match a status filter: reload the page.
 			if (filter.status && filter.status !== updated.status) {
 				refresh();
@@ -100,7 +106,7 @@ export function useFeedbackInbox() {
 	async function remove(item: ContactMessage): Promise<void> {
 		await deleteContactMessage(item.id, { preview: true });
 		await deleteContactMessage(item.id);
-		toast.show({ title: "Đã xoá tin." });
+		toast.show({ title: t("admin.inbox.deleted") });
 		refresh();
 	}
 

@@ -1,4 +1,5 @@
 import { MAX_RESOURCE_DEPTH } from "@localman/shared/constants";
+import type { Translate } from "../../i18n/translate";
 import type { TreeItem } from "./tree-layout";
 
 /**
@@ -92,21 +93,25 @@ export function connectProblemMessage(
 	problem: ConnectProblem,
 	moving: string,
 	target: string | null,
+	t: Translate,
 ): string {
 	switch (problem) {
 		case "missing":
-			return "Resource không còn tồn tại. Tải lại trang để cập nhật cây.";
+			return t("resourceTree.refuse.missing");
 		case "self":
-			return `Không thể lồng ${moving} vào chính nó.`;
+			return t("resourceTree.refuse.self", { moving });
 		case "already-there":
 			return target === null
-				? `${moving} đã ở root.`
-				: `${moving} đã nằm trong ${target}.`;
+				? t("resourceTree.refuse.alreadyRoot", { moving })
+				: t("resourceTree.refuse.alreadyIn", { moving, target });
 		case "cycle":
-			return `Không thể lồng ${moving} vào ${target ?? "root"} vì sẽ tạo vòng lặp.`;
+			return t("resourceTree.refuse.cycle", {
+				moving,
+				target: target ?? "root",
+			});
 		case "name-taken":
-			return `Đã có resource tên ${moving} ở vị trí này.`;
+			return t("resourceTree.refuse.nameTaken", { moving });
 		case "too-deep":
-			return `Cây resource chỉ lồng được tối đa ${MAX_RESOURCE_DEPTH} cấp.`;
+			return t("resourceTree.refuse.tooDeep", { max: MAX_RESOURCE_DEPTH });
 	}
 }

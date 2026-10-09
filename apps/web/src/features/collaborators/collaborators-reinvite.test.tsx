@@ -27,7 +27,7 @@ const byId = (root: HTMLElement, id: string) =>
 async function invite(dialog: HTMLElement, who: string) {
 	await typeAndLook(dialog, who);
 	await userEvent.click(
-		await within(dialog).findByRole("button", { name: "Xác nhận mời" }),
+		await within(dialog).findByRole("button", { name: "Confirm invite" }),
 	);
 }
 
@@ -58,7 +58,7 @@ describe("inviting again and racing the member limit", () => {
 			),
 		);
 		await invite(dialog, "@bob");
-		await within(dialog).findByLabelText("Link mời cho Bob");
+		await within(dialog).findByLabelText("Invite link for Bob");
 		await waitFor(() =>
 			expect(
 				dialog.querySelectorAll('[data-collaborator-id="b1"]'),
@@ -86,16 +86,16 @@ describe("inviting again and racing the member limit", () => {
 			if (!node) throw new Error("loading");
 			return node;
 		});
-		expect(row).toHaveTextContent("Hết hạn");
+		expect(row).toHaveTextContent("Expired");
 		expect(byId(dialog, "modal-collaborators-count")).toHaveTextContent("1/3");
 		await invite(dialog, "@bob");
 		await waitFor(() =>
-			expect(byId(dialog, "collaborator-bob")).toHaveTextContent("Đang chờ"),
+			expect(byId(dialog, "collaborator-bob")).toHaveTextContent("Pending"),
 		);
 		expect(dialog.querySelectorAll('[data-collaborator-id="e1"]')).toHaveLength(
 			1,
 		);
-		expect(byId(dialog, "collaborator-bob")).not.toHaveTextContent("Hết hạn");
+		expect(byId(dialog, "collaborator-bob")).not.toHaveTextContent("Expired");
 		expect(byId(dialog, "modal-collaborators-count")).toHaveTextContent("2/3");
 	});
 
@@ -115,18 +115,18 @@ describe("inviting again and racing the member limit", () => {
 		});
 		await within(dialog).findByText("An · @an");
 		await invite(dialog, "@bob");
-		const link = await within(dialog).findByLabelText("Link mời cho Bob");
+		const link = await within(dialog).findByLabelText("Invite link for Bob");
 		const gets = () =>
 			calls.filter((c) => c.method === "GET" && c.path === MEMBERS).length;
 		const before = gets();
 		await invite(dialog, "@bob");
 		expect(
-			await screen.findByRole("dialog", { name: "Quản lý gói" }),
+			await screen.findByRole("dialog", { name: "Manage plan" }),
 		).toBeInTheDocument();
 		await waitFor(() => expect(gets()).toBeGreaterThan(before));
 		expect(link).toBeInTheDocument();
 		expect(
-			within(dialog).getByLabelText("Username hoặc email"),
+			within(dialog).getByLabelText("Username or email"),
 		).toBeInTheDocument();
 		expect(byId(dialog, "modal-collaborators-loading")).toBeNull();
 	});
@@ -144,7 +144,7 @@ describe("inviting again and racing the member limit", () => {
 			},
 		});
 		const cancel = await within(dialog).findByRole("button", {
-			name: "Huỷ lời mời Bob · @bob",
+			name: "Cancel the invitation to Bob · @bob",
 		});
 		await userEvent.click(cancel);
 		await waitFor(() =>
@@ -172,11 +172,11 @@ describe("inviting again and racing the member limit", () => {
 		});
 		await within(dialog).findByText("Minh Anh · @minhanh");
 		await invite(dialog, "@bob");
-		const input = within(dialog).getByLabelText("Username hoặc email");
+		const input = within(dialog).getByLabelText("Username or email");
 		expect(input).toHaveAttribute("readonly");
 		expect(input).toHaveValue("@bob");
 		release();
-		await within(dialog).findByLabelText("Link mời cho Bob");
+		await within(dialog).findByLabelText("Invite link for Bob");
 		expect(input).not.toHaveAttribute("readonly");
 		expect(input).toHaveValue("");
 	});

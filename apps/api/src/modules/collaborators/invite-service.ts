@@ -128,26 +128,26 @@ async function storeInvite(
 	});
 }
 
-async function inviterName(ownerSub: string): Promise<string> {
+/** `null` lets the notification say "the project owner" in its language. */
+async function inviterName(ownerSub: string): Promise<string | null> {
 	const owner = await UserModel.findOne({ sub: ownerSub })
 		.select("username name")
 		.lean<{ username: string; name?: string | null }>();
-	return owner?.name || owner?.username || "Chủ project";
+	return owner?.name || owner?.username || null;
 }
 
 /** Never throws once the invitation is stored: its link is shown only now. */
 function notifyInvitee(
 	notifications: NotificationService,
 	project: StoredProject,
-	inviter: string,
+	inviter: string | null,
 	inviteeSub: string,
 	inviteLink: string,
 ): void {
 	const days = INVITE_TTL_MS / (24 * 60 * 60 * 1000);
 	notifications.notifyLater(inviteeSub, {
 		type: "project.invitation",
-		title: "Lời mời cộng tác project",
-		body: `${inviter} mời bạn cộng tác trong project "${project.name}". Lời mời hết hạn sau ${days} ngày.`,
+		params: { inviter, project: project.name, days },
 		link: inviteLink,
 	});
 }

@@ -14,9 +14,9 @@ import {
 } from "./project-detail-test-helpers";
 
 const selectButton = (name: string) =>
-	screen.getByRole("button", { name: `Chọn ${name} để di chuyển` });
+	screen.getByRole("button", { name: `Select ${name} to move` });
 const nestButton = (moving: string, target: string) =>
-	screen.getByRole("button", { name: `Lồng ${moving} vào ${target}` });
+	screen.getByRole("button", { name: `Nest ${moving} into ${target}` });
 
 describe("nesting resources with the connectors", () => {
 	beforeEach(() => resetCurrentUserCache());
@@ -29,7 +29,7 @@ describe("nesting resources with the connectors", () => {
 		await findNode("users");
 		await userEvent.click(selectButton("users"));
 		expect(selectButton("users")).toHaveAttribute("aria-pressed", "true");
-		expect(screen.getByText(/Đang chọn/)).toHaveTextContent("Đang chọn users.");
+		expect(screen.getByText(/Selected/)).toHaveTextContent("Selected users.");
 		// Its own descendants would make a cycle; likes is fine.
 		expect(nestButton("users", "posts")).toHaveAttribute(
 			"data-state",
@@ -45,7 +45,7 @@ describe("nesting resources with the connectors", () => {
 		);
 		// Already at the root: the rail is not a target.
 		expect(
-			screen.getByRole("button", { name: "Thêm vào root" }),
+			screen.getByRole("button", { name: "Add to root" }),
 		).not.toHaveAttribute("data-active");
 	});
 
@@ -57,12 +57,12 @@ describe("nesting resources with the connectors", () => {
 		await userEvent.click(selectButton("posts"));
 		await userEvent.click(nestButton("posts", "users"));
 		expect(
-			await screen.findByText("posts đã nằm trong users."),
+			await screen.findByText("posts is already in users."),
 		).toBeInTheDocument();
 		await userEvent.click(nestButton("posts", "comments"));
 		expect(
 			await screen.findByText(
-				"Không thể lồng posts vào comments vì sẽ tạo vòng lặp.",
+				"Can't nest posts into comments because it would create a loop.",
 			),
 		).toBeInTheDocument();
 		await userEvent.keyboard("{Escape}");
@@ -80,13 +80,13 @@ describe("nesting resources with the connectors", () => {
 		});
 		await findNode("likes");
 		const rootPosts = screen
-			.getAllByRole("button", { name: "Chọn posts để di chuyển" })
+			.getAllByRole("button", { name: "Select posts to move" })
 			.at(-1);
 		if (!rootPosts) throw new Error("missing root posts");
 		await userEvent.click(rootPosts);
 		await userEvent.click(nestButton("posts", "users"));
 		expect(
-			await screen.findByText("Đã có resource tên posts ở vị trí này."),
+			await screen.findByText("There's already a resource named posts here."),
 		).toBeInTheDocument();
 	});
 
@@ -103,24 +103,21 @@ describe("nesting resources with the connectors", () => {
 		});
 		await findNode("posts");
 		await userEvent.click(selectButton("posts"));
-		expect(
-			screen.getByRole("button", { name: "Thêm vào root" }),
-		).toHaveAttribute("data-active", "true");
-		await userEvent.click(
-			screen.getByRole("button", { name: "Thêm vào root" }),
+		expect(screen.getByRole("button", { name: "Add to root" })).toHaveAttribute(
+			"data-active",
+			"true",
 		);
+		await userEvent.click(screen.getByRole("button", { name: "Add to root" }));
 		const dialog = await screen.findByRole("dialog", {
-			name: "Di chuyển resource",
+			name: "Move resource",
 		});
-		expect(dialog).toHaveTextContent("Đưa “posts” về root?");
+		expect(dialog).toHaveTextContent("Move “posts” to the root?");
 		expect(within(dialog).getByRole("list")).toHaveTextContent(
-			"posts: 25 → 0 bản ghi",
+			"posts: 25 → 0 records",
 		);
 		expect(within(dialog).queryByText(/comments/)).toBeNull();
-		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Di chuyển" }),
-		);
-		expect(await findToast("Đã đưa posts về root.")).toBeInTheDocument();
+		await userEvent.click(within(dialog).getByRole("button", { name: "Move" }));
+		expect(await findToast("Moved posts to the root.")).toBeInTheDocument();
 		const puts = calls.filter((call) => call.method === "PUT");
 		expect(puts.map((call) => call.query.get("dryRun"))).toEqual([
 			"true",
@@ -146,7 +143,7 @@ describe("nesting resources with the connectors", () => {
 		await findNode("likes");
 		await userEvent.click(selectButton("likes"));
 		await userEvent.click(nestButton("likes", "users"));
-		expect(await findToast("Đã lồng likes vào users.")).toBeInTheDocument();
+		expect(await findToast("Nested likes into users.")).toBeInTheDocument();
 		expect(screen.queryByRole("dialog")).toBeNull();
 		await waitFor(() =>
 			expect(calls.filter((c) => c.method === "PUT")).toHaveLength(2),
@@ -155,7 +152,9 @@ describe("nesting resources with the connectors", () => {
 		await userEvent.click(selectButton("likes"));
 		await userEvent.click(nestButton("likes", "comments"));
 		expect(
-			await screen.findByText("Cây resource chỉ lồng được tối đa 10 cấp."),
+			await screen.findByText(
+				"The resource tree can be nested at most 10 levels deep.",
+			),
 		).toBeInTheDocument();
 	});
 });

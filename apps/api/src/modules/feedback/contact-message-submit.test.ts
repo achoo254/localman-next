@@ -60,12 +60,12 @@ describe("POST /feedback/contact", () => {
 		expect(alerts).toHaveLength(1);
 		expect(fx.bot.requests[0]?.chat_id).toBe(OWNER_CHAT);
 		const [text = ""] = alerts;
-		expect(text).toContain("Báo lỗi");
+		expect(text).toContain("New feedback / contact: Bug report");
 		expect(text).toContain(
-			"Nội dung: Nút Lưu không phản hồi khi schema có 20 field",
+			"Message: Nút Lưu không phản hồi khi schema có 20 field",
 		);
-		expect(text).toContain("la***@gm***.com");
-		expect(text).toContain("Nguồn: projects");
+		expect(text).toContain("Contact: email la***@gm***.com");
+		expect(text).toContain("Source: projects");
 		expect(text).not.toContain("lan.nguyen@gmail.com");
 		expect(text).not.toContain("Lan\n");
 	});
@@ -90,7 +90,7 @@ describe("POST /feedback/contact", () => {
 		expect(stored?.name).toBeUndefined();
 		const [text = ""] = await fx.alerts();
 		expect(text).toContain("Telegram @la***");
-		expect(text).toContain("đã đăng nhập");
+		expect(text).toContain("Sender: signed in");
 	});
 
 	it("rejects an empty or too long message and an unusable reply address", async () => {

@@ -1,6 +1,7 @@
 import { IconPlus } from "@tabler/icons-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
+import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import {
 	type FieldDraft,
@@ -31,6 +32,7 @@ function FixedRow({
 	type,
 	source,
 }: { name: string; type: string; source: string }) {
+	const t = useT();
 	return (
 		<div className={SCHEMA_ROW} data-fixed="true">
 			<Input
@@ -43,14 +45,14 @@ function FixedRow({
 				className={cn(COMPACT_CONTROL, CELL_TYPE)}
 				value={type}
 				disabled
-				aria-label={`Kiểu của ${name}`}
+				aria-label={t("resources.schema.typeOf", { name })}
 			/>
 			<Input
 				className={cn(COMPACT_CONTROL, CELL_THIRD)}
 				value={source}
 				placeholder="—"
 				disabled
-				aria-label={`Nguồn của ${name}`}
+				aria-label={t("resources.schema.sourceOf", { name })}
 			/>
 			<span className={CELL_REMOVE} />
 		</div>
@@ -68,6 +70,7 @@ export function SchemaEditor({
 	place,
 	errors,
 }: SchemaEditorProps) {
+	const t = useT();
 	return (
 		<div className="grid gap-2" data-id="resource-form-schema-fields">
 			<div
@@ -109,7 +112,7 @@ export function SchemaEditor({
 					leadingIcon={<IconPlus size={16} aria-hidden="true" />}
 					onClick={() => onChange([...fields, fieldDraft()])}
 				>
-					Thêm field
+					{t("resources.schema.addField")}
 				</Button>
 			</div>
 		</div>

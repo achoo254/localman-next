@@ -3,6 +3,7 @@ import type { RefObject } from "react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
 import { EmptyState } from "../../components/ui/empty-state";
+import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import type { ProjectAction } from "./project-actions-menu";
 import { ProjectRow } from "./project-row";
@@ -58,24 +59,25 @@ export function ProjectsList({
 	onCreate,
 	onAction,
 }: ProjectsListProps) {
+	const t = useT();
 	if (state.status === "loading") {
 		return (
 			<output
 				data-id="projects-loading"
 				className="block py-8 font-mono text-muted text-sm"
 			>
-				Đang tải danh sách project…
+				{t("projects.list.loading")}
 			</output>
 		);
 	}
 	if (state.status === "error") {
 		return (
 			<div data-id="projects-error" className="grid justify-items-start gap-3">
-				<Alert tone="danger" title="Không tải được danh sách project">
+				<Alert tone="danger" title={t("projects.list.loadFailed")}>
 					{errorMessage(state.error)}
 				</Alert>
 				<Button data-id="projects-error-retry" onClick={onRetry}>
-					Thử lại
+					{t("common.cta.retry")}
 				</Button>
 			</div>
 		);
@@ -85,7 +87,7 @@ export function ProjectsList({
 			<EmptyState
 				data-id="projects-empty"
 				icon={<IconBox size={32} aria-hidden="true" />}
-				title="Chưa có project nào"
+				title={t("projects.list.emptyTitle")}
 				action={
 					<Button
 						variant="primary"
@@ -93,12 +95,11 @@ export function ProjectsList({
 						leadingIcon={<IconPlus size={20} aria-hidden="true" />}
 						onClick={onCreate}
 					>
-						Tạo project
+						{t("projects.list.create")}
 					</Button>
 				}
 			>
-				Project chứa các resource và endpoint mock của bạn. Tạo project đầu tiên
-				để bắt đầu.
+				{t("projects.list.emptyBody")}
 			</EmptyState>
 		);
 	}

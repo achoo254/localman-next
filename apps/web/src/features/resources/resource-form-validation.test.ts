@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { en } from "../../i18n/messages/en/dictionary";
+import { createTranslator } from "../../i18n/translate";
 import { type FormPlace, draftOf, fieldDraft } from "./resource-form-state";
 import { validateDraft } from "./resource-form-validation";
+
+const { t } = createTranslator("en", en);
 
 const ROOT: FormPlace = {
 	parentKey: null,
@@ -19,7 +23,7 @@ const NESTED: FormPlace = {
 describe("validateDraft", () => {
 	it("builds the API body of a valid draft", () => {
 		const draft = { ...draftOf(null), name: " orders " };
-		const { input, errors } = validateDraft(draft, ROOT);
+		const { input, errors } = validateDraft(draft, ROOT, t);
 		expect(errors).toEqual({ fields: {}, endpoints: {} });
 		expect(input?.name).toBe("orders");
 		expect(input?.template).toBeNull();
@@ -33,18 +37,18 @@ describe("validateDraft", () => {
 
 	it("refuses bad, taken and missing names", () => {
 		const draft = draftOf(null);
-		expect(validateDraft({ ...draft, name: "" }, ROOT).errors.name).toBe(
-			"Nhập tên resource.",
+		expect(validateDraft({ ...draft, name: "" }, ROOT, t).errors.name).toBe(
+			"Enter a resource name.",
 		);
 		expect(
-			validateDraft({ ...draft, name: "đơn hàng" }, ROOT).errors.name,
-		).toMatch(/Chỉ dùng chữ không dấu/);
-		expect(validateDraft({ ...draft, name: "users" }, ROOT).errors.name).toBe(
-			"Đã có resource cùng tên ở vị trí này.",
-		);
-		expect(validateDraft({ ...draft, name: "mcp" }, ROOT).errors.name).toMatch(
-			/dành cho endpoint MCP/,
-		);
+			validateDraft({ ...draft, name: "đơn hàng" }, ROOT, t).errors.name,
+		).toMatch(/Use only unaccented letters/);
+		expect(
+			validateDraft({ ...draft, name: "users" }, ROOT, t).errors.name,
+		).toBe("There's already a resource with this name here.");
+		expect(
+			validateDraft({ ...draft, name: "mcp" }, ROOT, t).errors.name,
+		).toMatch(/reserved for the project's MCP endpoint/);
 	});
 
 	it("keeps generated, duplicate and unknown fields out", () => {
@@ -67,13 +71,13 @@ describe("validateDraft", () => {
 			name: "posts",
 			fields: [parentId, twice, again, unknown, child],
 		};
-		const { input, errors } = validateDraft(draft, NESTED);
+		const { input, errors } = validateDraft(draft, NESTED, t);
 		expect(input).toBeNull();
 		expect(errors.fields).toEqual({
-			[parentId.key]: "Field “userId” được sinh tự động.",
-			[again.key]: "Field “title” bị trùng.",
-			[unknown.key]: "Chọn một Faker method trong danh sách.",
-			[child.key]: "Chọn resource con.",
+			[parentId.key]: "Field “userId” is generated automatically.",
+			[again.key]: "Field “title” is a duplicate.",
+			[unknown.key]: "Pick a Faker method from the list.",
+			[child.key]: "Pick a child resource.",
 		});
 	});
 
@@ -92,6 +96,7 @@ describe("validateDraft", () => {
 		const { input } = validateDraft(
 			{ ...draftOf(null), name: "posts", fields: [parent, child] },
 			NESTED,
+			t,
 		);
 		expect(input?.schema).toEqual([
 			{ name: "owner", type: "Parent Resource" },
@@ -118,11 +123,13 @@ describe("validateDraft", () => {
 		const { input, errors } = validateDraft(
 			{ ...draftOf(null), name: "posts", fields },
 			NESTED,
+			t,
 		);
 		expect(input).toBeNull();
 		expect(errors.fields).toEqual({
-			[fields[2]?.key ?? ""]: "Đã có field “owner” lấy bản ghi cha.",
-			[fields[3]?.key ?? ""]: "Đã có field “comments” lấy resource con này.",
+			[fields[2]?.key ?? ""]: "Field “owner” already reads the parent record.",
+			[fields[3]?.key ?? ""]:
+				"Field “comments” already reads this child resource.",
 		});
 	});
 
@@ -136,14 +143,15 @@ describe("validateDraft", () => {
 			template: '["not", "an object"]',
 			endpoints: [{ ...first, response: "{" }, ...rest],
 		};
-		const { errors } = validateDraft(broken, ROOT);
-		expect(errors.template).toBe("Object template phải là một object JSON.");
+		const { errors } = validateDraft(broken, ROOT, t);
+		expect(errors.template).toBe("The object template must be a JSON object.");
 		expect(errors.endpoints).toEqual({
-			"GET /:res": "Response template không phải JSON hợp lệ.",
+			"GET /:res": "The response template isn't valid JSON.",
 		});
 		const parsed = validateDraft(
 			{ ...draft, name: "orders", template: '{"email": "$internet.email"}' },
 			ROOT,
+			t,
 		);
 		expect(parsed.input?.template).toEqual({ email: "$internet.email" });
 	});

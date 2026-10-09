@@ -4,6 +4,8 @@ import { Button } from "../../components/ui/button";
 import { Modal, ModalClose } from "../../components/ui/modal";
 import { ModalFooter } from "../../components/ui/modal-footer";
 import { SuccessPanel } from "../../components/ui/success-panel";
+import { useT } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
 import { useCurrentUser } from "../auth/use-current-user";
 import type { ProInterestSource } from "./pro-interest-options";
 
@@ -13,28 +15,31 @@ const ProInterestForm = lazy(async () => ({
 	default: (await import("./pro-interest-form")).ProInterestForm,
 }));
 
-const LOADING = (
-	<output className="block font-mono text-muted text-sm">Đang tải…</output>
-);
-
 export interface ProInterestModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	source: ProInterestSource;
 }
 
-/** "Liên hệ về gói Pro": the interest form, then a confirmation. */
+/** "Contact us about Pro": the interest form, then a confirmation. */
 export function ProInterestModal({
 	open,
 	onOpenChange,
 	source,
 }: ProInterestModalProps) {
 	const session = useCurrentUser();
+	const t = useT();
 	const formId = useId();
 	const [busy, setBusy] = useState(false);
 	const firstField = useRef<HTMLInputElement>(null);
 	const [sentTo, setSentTo] = useState<string | null>(null);
 	const user = session.status === "authenticated" ? session.user : null;
+
+	const loading = (
+		<output className="block font-mono text-muted text-sm">
+			{t("common.loading")}
+		</output>
+	);
 
 	function changeOpen(next: boolean) {
 		if (!next) setSentTo(null);
@@ -45,7 +50,7 @@ export function ProInterestModal({
 		<ModalFooter>
 			<ModalClose asChild>
 				<Button variant="primary" data-id="pro-interest-close" autoFocus>
-					Đóng
+					{t("common.actions.close")}
 				</Button>
 			</ModalClose>
 		</ModalFooter>
@@ -53,7 +58,7 @@ export function ProInterestModal({
 		<ModalFooter>
 			<ModalClose asChild>
 				<Button variant="ghost" data-id="pro-interest-cancel">
-					Huỷ
+					{t("common.actions.cancel")}
 				</Button>
 			</ModalClose>
 			<Button
@@ -64,7 +69,11 @@ export function ProInterestModal({
 				data-id="pro-interest-submit"
 				leadingIcon={<IconSend size={16} aria-hidden="true" />}
 			>
-				{busy ? "Đang gửi…" : "Gửi đăng ký"}
+				{t(
+					busy
+						? "subscription.proInterest.submitting"
+						: "subscription.proInterest.submit",
+				)}
 			</Button>
 		</ModalFooter>
 	);
@@ -73,7 +82,7 @@ export function ProInterestModal({
 		<Modal
 			open={open}
 			onOpenChange={changeOpen}
-			title="Liên hệ về gói Pro"
+			title={t("subscription.proInterest.title")}
 			size="md"
 			initialFocusRef={firstField}
 			data-id="modal-pro-interest"
@@ -81,14 +90,23 @@ export function ProInterestModal({
 		>
 			{sentTo ? (
 				<output className="block">
-					<SuccessPanel title="Đã ghi nhận" data-id="pro-interest-success">
-						Chúng tôi sẽ liên hệ qua email bạn để lại: <b>{sentTo}</b>.
+					<SuccessPanel
+						title={t("subscription.proInterest.successTitle")}
+						data-id="pro-interest-success"
+					>
+						{/* The email goes in through the renderer, never parsed as tags. */}
+						{renderRich(
+							t("subscription.proInterest.successText", { email: "" }),
+							{
+								b: () => <b>{sentTo}</b>,
+							},
+						)}
 					</SuccessPanel>
 				</output>
 			) : session.status === "loading" ? (
-				LOADING
+				loading
 			) : (
-				<Suspense fallback={LOADING}>
+				<Suspense fallback={loading}>
 					<ProInterestForm
 						key={user?.sub ?? "visitor"}
 						formId={formId}

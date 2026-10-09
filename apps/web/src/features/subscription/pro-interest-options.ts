@@ -1,7 +1,8 @@
 /**
  * Choices offered by the Pro interest form. The ids come from
- * `@localman/shared` (what the API accepts); the Vietnamese labels are shared
- * by the form and the admin page.
+ * `@localman/shared` (what the API accepts); the labels come from the
+ * `subscription.proInterest` messages and are shared by the form and the
+ * admin page.
  */
 import {
 	PRO_INTEREST_NEEDS,
@@ -12,31 +13,83 @@ import {
 	type ProInterestTeamSize,
 } from "@localman/shared";
 import type { FeatureFlags, FeatureName } from "../../config/features";
+import type { SourceMessages } from "../../i18n/message-types";
+import type { Translate } from "../../i18n/translate";
 
 export interface Choice<T extends string = string> {
 	id: T;
 	label: string;
 }
 
-const NEED_LABELS: Readonly<Record<ProInterestNeed, string>> = {
-	mock: "Mock API",
-	api_client: "API Client",
-	team: "Team",
-	devops_ci: "DevOps/CI",
-	mcp: "MCP",
-	tunelo: "Tunelo",
+type ProInterestCopy = SourceMessages["subscription"]["proInterest"];
+type NeedKey =
+	`subscription.proInterest.needs.${keyof ProInterestCopy["needs"]}`;
+type TeamKey =
+	`subscription.proInterest.teamSizes.${keyof ProInterestCopy["teamSizes"]}`;
+type PriceKey =
+	`subscription.proInterest.priceHints.${keyof ProInterestCopy["priceHints"]}`;
+type SourceKey =
+	`subscription.proInterest.sources.${keyof ProInterestCopy["sources"]}`;
+
+const NEED_KEYS: Readonly<Record<ProInterestNeed, NeedKey>> = {
+	mock: "subscription.proInterest.needs.mock",
+	api_client: "subscription.proInterest.needs.apiClient",
+	team: "subscription.proInterest.needs.team",
+	devops_ci: "subscription.proInterest.needs.devopsCi",
+	mcp: "subscription.proInterest.needs.mcp",
+	tunelo: "subscription.proInterest.needs.tunelo",
 };
 
-const TEAM_LABELS: Readonly<Record<ProInterestTeamSize, string>> = {
-	"1": "1 người",
-	"2-5": "2–5",
-	"6-20": "6–20",
-	">20": "Trên 20",
+const TEAM_KEYS: Readonly<Record<ProInterestTeamSize, TeamKey>> = {
+	"1": "subscription.proInterest.teamSizes.solo",
+	"2-5": "subscription.proInterest.teamSizes.small",
+	"6-20": "subscription.proInterest.teamSizes.medium",
+	">20": "subscription.proInterest.teamSizes.large",
+};
+
+/** Empty id means "not sure" and is not sent. */
+const PRICE_KEYS: ReadonlyArray<readonly [string, PriceKey]> = [
+	["", "subscription.proInterest.priceHints.unsure"],
+	["lt100", "subscription.proInterest.priceHints.lt100"],
+	["100-250", "subscription.proInterest.priceHints.from100to250"],
+	["250-500", "subscription.proInterest.priceHints.from250to500"],
+	["gt500", "subscription.proInterest.priceHints.gt500"],
+];
+
+const SOURCE_KEYS: Readonly<Record<ProInterestSource, SourceKey>> = {
+	landing: "subscription.proInterest.sources.landing",
+	pricing: "subscription.proInterest.sources.pricing",
+	subscription_modal: "subscription.proInterest.sources.subscriptionModal",
+	plan_limit_projects: "subscription.proInterest.sources.planLimitProjects",
+	plan_limit_resources: "subscription.proInterest.sources.planLimitResources",
+	plan_limit_members: "subscription.proInterest.sources.planLimitMembers",
+	plan_limit_proxy: "subscription.proInterest.sources.planLimitProxy",
+	devops: "subscription.proInterest.sources.devops",
+	account: "subscription.proInterest.sources.account",
+	other: "subscription.proInterest.sources.elsewhere",
 };
 
 /** Every need, for the admin page (stored answers may use any of them). */
-export const PRO_NEEDS: readonly Choice<ProInterestNeed>[] =
-	PRO_INTEREST_NEEDS.map((id) => ({ id, label: NEED_LABELS[id] }));
+export function proNeeds(t: Translate): readonly Choice<ProInterestNeed>[] {
+	return PRO_INTEREST_NEEDS.map((id) => ({ id, label: t(NEED_KEYS[id]) }));
+}
+
+export function teamSizes(
+	t: Translate,
+): readonly Choice<ProInterestTeamSize>[] {
+	return PRO_INTEREST_TEAM_SIZES.map((id) => ({
+		id,
+		label: t(TEAM_KEYS[id]),
+	}));
+}
+
+export function priceHints(t: Translate): readonly Choice[] {
+	return PRICE_KEYS.map(([id, key]) => ({ id, label: t(key) }));
+}
+
+export function proSources(t: Translate): readonly Choice<ProInterestSource>[] {
+	return PRO_INTEREST_SOURCES.map((id) => ({ id, label: t(SOURCE_KEYS[id]) }));
+}
 
 /**
  * Feature a need is about; the form offers it only once that feature is in
@@ -60,40 +113,13 @@ function offered(need: ProInterestNeed, flags: FeatureFlags): boolean {
 /** Needs the form offers with these flags (no promise of unreleased work). */
 export function proNeedsFor(
 	flags: FeatureFlags,
+	t: Translate,
 ): readonly Choice<ProInterestNeed>[] {
-	return PRO_NEEDS.filter((choice) => offered(choice.id, flags));
+	return proNeeds(t).filter((choice) => offered(choice.id, flags));
 }
-
-export const TEAM_SIZES: readonly Choice<ProInterestTeamSize>[] =
-	PRO_INTEREST_TEAM_SIZES.map((id) => ({ id, label: TEAM_LABELS[id] }));
-
-/** Empty id means "not sure" and is not sent. */
-export const PRICE_HINTS: readonly Choice[] = [
-	{ id: "", label: "Chưa rõ" },
-	{ id: "lt100", label: "Dưới 100.000đ mỗi tháng" },
-	{ id: "100-250", label: "100.000–250.000đ mỗi tháng" },
-	{ id: "250-500", label: "250.000–500.000đ mỗi tháng" },
-	{ id: "gt500", label: "Trên 500.000đ mỗi tháng" },
-];
 
 /** Where the form was opened from; the API keeps only whitelisted values. */
 export type { ProInterestSource };
-
-const SOURCE_LABELS: Readonly<Record<ProInterestSource, string>> = {
-	landing: "Landing · thẻ Pro",
-	pricing: "Bảng giá",
-	subscription_modal: "Quản lý gói",
-	plan_limit_projects: "Giới hạn project",
-	plan_limit_resources: "Giới hạn resource",
-	plan_limit_members: "Giới hạn thành viên",
-	plan_limit_proxy: "Hết quota proxy",
-	devops: "DevOps",
-	account: "Tài khoản",
-	other: "Khác",
-};
-
-export const PRO_SOURCES: readonly Choice<ProInterestSource>[] =
-	PRO_INTEREST_SOURCES.map((id) => ({ id, label: SOURCE_LABELS[id] }));
 
 /** The need that most likely brought the user here is pre-ticked. */
 const SOURCE_NEED: Readonly<

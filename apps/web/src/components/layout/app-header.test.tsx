@@ -46,7 +46,7 @@ describe("AppHeader", () => {
 		expect(
 			screen.getByRole("link", { name: "Localman, go to Projects" }),
 		).toHaveAttribute("href", "/projects");
-		expect(screen.getByRole("button", { name: "Thông báo" })).toBeVisible();
+		expect(screen.getByRole("button", { name: "Notifications" })).toBeVisible();
 		expect(
 			container.querySelector('[data-id="topbar-plan"]'),
 		).toHaveTextContent("Pro plan");
@@ -192,7 +192,7 @@ describe("AppHeader", () => {
 			screen.getByRole("menuitem", { name: "Manage plan" }),
 		);
 		expect(
-			await screen.findByRole("dialog", { name: "Quản lý gói" }),
+			await screen.findByRole("dialog", { name: "Manage plan" }),
 		).toBeInTheDocument();
 	});
 });

@@ -25,29 +25,32 @@ describe("CodeBlock", () => {
 		vi.mocked(copyText).mockResolvedValue(true);
 		renderBlock();
 		await userEvent.click(
-			screen.getByRole("button", { name: "Sao chép mã curl" }),
+			screen.getByRole("button", { name: "Copy curl code" }),
 		);
 		expect(copyText).toHaveBeenCalledWith(CODE);
 		expect(
-			await screen.findByRole("button", { name: "Đã sao chép" }),
+			await screen.findByRole("button", { name: "Copied" }),
 		).toBeInTheDocument();
-		expect(screen.getByRole("status")).toHaveTextContent("Đã sao chép mã");
+		expect(screen.getByRole("status")).toHaveTextContent("Code copied");
 	});
 
 	it("selects the code for a manual copy when the clipboard refuses", async () => {
 		vi.mocked(copyText).mockResolvedValue(false);
 		renderBlock();
 		await userEvent.click(
-			screen.getByRole("button", { name: "Sao chép mã curl" }),
+			screen.getByRole("button", { name: "Copy curl code" }),
 		);
 		expect(
-			await screen.findByText(/mã đã được chọn để bạn sao chép thủ công/, {
-				selector: "p",
-			}),
+			await screen.findByText(
+				/The code is selected so you can copy it yourself/,
+				{
+					selector: "p",
+				},
+			),
 		).toBeInTheDocument();
 		expect(window.getSelection()?.toString()).toBe(CODE);
 		expect(
-			screen.getByRole("button", { name: "Sao chép mã curl" }),
+			screen.getByRole("button", { name: "Copy curl code" }),
 		).toBeInTheDocument();
 	});
 

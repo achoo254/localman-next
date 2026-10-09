@@ -7,7 +7,7 @@ import {
 } from "../../components/ui/copy-field";
 import { FormField } from "../../components/ui/form-field";
 import { Input } from "../../components/ui/input";
-import { formatDate } from "../../lib/format";
+import { useI18n } from "../../i18n/i18n-context";
 import type { InviteResult } from "./collaborators-api";
 import { InviteeCard } from "./invitee-card";
 import { useInviteFlow } from "./use-invite-flow";
@@ -22,7 +22,7 @@ export interface InviteFormProps {
 }
 
 /**
- * Invite by username or email in two steps: "Mời" looks the account up,
+ * Invite by username or email in two steps: "Invite" looks the account up,
  * then the owner confirms the card. The one-time link appears once below.
  */
 export function InviteForm({
@@ -32,6 +32,7 @@ export function InviteForm({
 	onInvited,
 	onPlanLimit,
 }: InviteFormProps) {
+	const { t, formatDate } = useI18n();
 	const flow = useInviteFlow({ projectId, onInvited, onPlanLimit });
 	const { candidate, created } = flow;
 	const copyField = useRef<CopyFieldHandle>(null);
@@ -53,7 +54,7 @@ export function InviteForm({
 				disabled={disabled}
 				className="m-0 grid min-w-0 gap-3 border-0 p-0"
 			>
-				<legend className="sr-only">Mời cộng tác viên</legend>
+				<legend className="sr-only">{t("collaborators.form.legend")}</legend>
 				<form
 					className="grid gap-3"
 					noValidate
@@ -63,8 +64,8 @@ export function InviteForm({
 					}}
 				>
 					<FormField
-						label="Username hoặc email"
-						hint="Người chưa có tài khoản hoandat: nhập email để tạo link mời dùng 1 lần (7 ngày)."
+						label={t("collaborators.form.label")}
+						hint={t("collaborators.form.hint")}
 						error={flow.error ?? undefined}
 						announceError
 					>
@@ -72,7 +73,7 @@ export function InviteForm({
 							<Input
 								ref={inputRef}
 								value={flow.value}
-								placeholder="@username hoặc ten@example.com"
+								placeholder={t("collaborators.form.placeholder")}
 								autoComplete="off"
 								data-id="modal-collaborators-email"
 								// Locked while the invitation is sent, so the card matches.
@@ -88,7 +89,11 @@ export function InviteForm({
 								className="min-h-11"
 								leadingIcon={<IconPlus size={16} aria-hidden="true" />}
 							>
-								{flow.checking ? "Đang tìm…" : "Mời"}
+								{t(
+									flow.checking
+										? "collaborators.form.searching"
+										: "collaborators.form.submit",
+								)}
 							</Button>
 						</div>
 					</FormField>
@@ -111,9 +116,15 @@ export function InviteForm({
 				<CopyField
 					key={created.url}
 					ref={copyField}
-					label={`Link mời cho ${created.who}`}
+					label={t("collaborators.form.linkLabel", { who: created.who })}
 					value={created.url}
-					hint={`${created.expiresAt ? `Hết hạn ${formatDate(created.expiresAt)}. ` : ""}Link chỉ hiện lần này.`}
+					hint={
+						created.expiresAt
+							? t("collaborators.form.linkHint", {
+									date: formatDate(created.expiresAt),
+								})
+							: t("collaborators.form.linkHintNoDate")
+					}
 					autoCopy={created.copyNow}
 					data-id="modal-collaborators-link"
 					copyDataId="modal-collaborators-link-copy"

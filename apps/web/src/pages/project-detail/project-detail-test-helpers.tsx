@@ -114,7 +114,7 @@ export function renderDetail(
 					</FeaturesContext>
 				),
 			},
-			{ path: "/projects", element: <p>Danh sách projects</p> },
+			{ path: "/projects", element: <p>Projects list</p> },
 		],
 		path,
 	);
@@ -133,9 +133,9 @@ export function bar(node: HTMLElement): HTMLElement {
 	return within(node).getByRole("slider");
 }
 
-/** Opens "Resource mới" from the endpoint card once the tree is shown. */
+/** Opens "New resource" from the endpoint card once the tree is shown. */
 export async function openNewResource() {
 	await findNode("users");
-	await userEvent.click(screen.getByRole("button", { name: "Thêm resource" }));
-	return screen.findByRole("dialog", { name: "Resource mới" });
+	await userEvent.click(screen.getByRole("button", { name: "Add resource" }));
+	return screen.findByRole("dialog", { name: "New resource" });
 }

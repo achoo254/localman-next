@@ -18,13 +18,13 @@ describe("FeedbackInboxPage deletes and paging", () => {
 				},
 			}),
 		});
-		const [remove] = await screen.findAllByRole("button", { name: "Xoá" });
+		const [remove] = await screen.findAllByRole("button", { name: "Delete" });
 		if (!remove) throw new Error("no delete button");
 		await userEvent.click(remove);
-		const dialog = screen.getByRole("dialog", { name: "Xoá tin" });
-		expect(dialog).toHaveTextContent("Xoá tin của Lan?");
+		const dialog = screen.getByRole("dialog", { name: "Delete message" });
+		expect(dialog).toHaveTextContent("Delete the message from Lan?");
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Xoá vĩnh viễn" }),
+			within(dialog).getByRole("button", { name: "Delete permanently" }),
 		);
 		await waitFor(() =>
 			expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
@@ -59,9 +59,9 @@ describe("FeedbackInboxPage deletes and paging", () => {
 							},
 						},
 		});
-		await screen.findByRole("heading", { name: "Báo lỗi · Lan" });
-		await userEvent.click(screen.getByRole("button", { name: "Trang sau" }));
-		expect(await screen.findByText("Đang tải hộp thư…")).toBeInTheDocument();
+		await screen.findByRole("heading", { name: "Bug report · Lan" });
+		await userEvent.click(screen.getByRole("button", { name: "Next page" }));
+		expect(await screen.findByText("Loading the inbox…")).toBeInTheDocument();
 		await waitFor(() => {
 			const pages = calls
 				.filter((c) => c.path === LIST_PATH)
@@ -69,7 +69,7 @@ describe("FeedbackInboxPage deletes and paging", () => {
 			expect(pages).toEqual(["1", "2", "1"]);
 		});
 		expect(
-			await screen.findByRole("heading", { name: "Báo lỗi · Lan" }),
+			await screen.findByRole("heading", { name: "Bug report · Lan" }),
 		).toBeInTheDocument();
 	});
 });

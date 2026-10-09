@@ -30,7 +30,7 @@ describe("/invite/:token", () => {
 		const { calls } = mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		renderRoutes(routes, `/invite/${TOKEN}`);
 		const heading = await screen.findByRole("heading", {
-			name: "Bạn được mời tham gia một project trên Localman",
+			name: "You're invited to join a project on Localman",
 		});
 		expect(heading).toHaveFocus();
 		const back = encodeURIComponent(`/invite/${TOKEN}`);
@@ -41,11 +41,11 @@ describe("/invite/:token", () => {
 			}),
 		).toHaveAttribute("href", `/auth/login?returnTo=${back}`);
 		const page = within(screen.getByRole("main"));
-		expect(page.getByRole("link", { name: "Đăng nhập" })).toHaveAttribute(
+		expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute(
 			"href",
 			`/auth/login?returnTo=${back}`,
 		);
-		expect(page.getByRole("link", { name: "Đăng ký" })).toHaveAttribute(
+		expect(page.getByRole("link", { name: "Sign up" })).toHaveAttribute(
 			"href",
 			`/auth/login?returnTo=${back}&prompt=create`,
 		);
@@ -59,29 +59,29 @@ describe("/invite/:token", () => {
 			[ACCEPT]: { body: { projectId: "p1", alreadyMember: false } },
 		});
 		const heading = await screen.findByRole("heading", {
-			name: "Tham gia Demo shop",
+			name: "Join Demo shop",
 		});
 		await waitFor(() => expect(heading).toHaveFocus());
 		expect(
-			screen.getByText("Hoà (@hoa) mời bạn cộng tác."),
+			screen.getByText("Hoà (@hoa) invited you to collaborate."),
 		).toBeInTheDocument();
-		expect(screen.getByText("Hết hạn 16/10/2026")).toBeInTheDocument();
+		expect(screen.getByText("Expires Oct 16, 2026")).toBeInTheDocument();
 		expect(container).toHaveTextContent(
-			"Bạn đang đăng nhập bằng minhanh@example.com",
+			"You're signed in as minhanh@example.com",
 		);
 		expect(
 			calls.find((c) => c.path === "/api/v1/invites/preview")?.body,
 		).toEqual({ token: TOKEN });
 		expect(await seriousViolations(container)).toEqual([]);
-		await userEvent.click(screen.getByRole("button", { name: "Tham gia" }));
-		expect(await findToast("Đã tham gia Demo shop")).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Join" }));
+		expect(await findToast("Joined Demo shop")).toBeInTheDocument();
 		expect(router.state.location.pathname).toBe("/projects/p1");
 	});
 
 	it("labels a magic link as shared", async () => {
 		renderInvite({ [PREVIEW]: preview({ kind: "magic", inviteeEmail: null }) });
 		expect(
-			await screen.findByText("Link dùng chung · hết hạn 16/10/2026"),
+			await screen.findByText("Shared link · expires Oct 16, 2026"),
 		).toBeInTheDocument();
 	});
 
@@ -89,22 +89,27 @@ describe("/invite/:token", () => {
 		[
 			410,
 			"INVITE_EXPIRED",
-			"Link mời đã hết hạn",
-			"Link hết hạn ngày 01/10/2026.",
+			"This invite link has expired",
+			"The link expired on Oct 1, 2026.",
 		],
 		[
 			410,
 			"INVITE_USED",
-			"Link mời đã được dùng",
-			"Mỗi link mời chỉ dùng được một lần.",
+			"This invite link has already been used",
+			"Each invite link works only once.",
 		],
 		[
 			410,
 			"INVITE_REVOKED",
-			"Link mời không còn hiệu lực",
-			"Chủ project đã thu hồi",
+			"This invite link is no longer valid",
+			"The project owner revoked",
 		],
-		[404, "INVITE_NOT_FOUND", "Link mời không còn hiệu lực", "link không đúng"],
+		[
+			404,
+			"INVITE_NOT_FOUND",
+			"This invite link is no longer valid",
+			"the link is wrong",
+		],
 	])("shows %s %s as its own state", async (status, code, title, text) => {
 		renderInvite({
 			[PREVIEW]: tokenError(status, code, {
@@ -116,9 +121,8 @@ describe("/invite/:token", () => {
 		expect(
 			document.querySelector('[data-id="invite-page-invalid"]'),
 		).toHaveTextContent(text);
-		expect(screen.getByRole("link", { name: "Về Projects" })).toHaveAttribute(
-			"href",
-			"/projects",
-		);
+		expect(
+			screen.getByRole("link", { name: "Back to Projects" }),
+		).toHaveAttribute("href", "/projects");
 	});
 });

@@ -2,14 +2,16 @@ import { IconDots, IconPlus, IconTrash } from "@tabler/icons-react";
 import { Button } from "../../components/ui/button";
 import { IconButton } from "../../components/ui/icon-button";
 import { Tooltip } from "../../components/ui/tooltip";
+import { useT } from "../../i18n/i18n-context";
 import { ShowcaseSection } from "./showcase-section";
 
 export function ButtonShowcase() {
+	const t = useT();
 	return (
 		<ShowcaseSection
 			dataId="primitives-buttons"
-			title="Nút"
-			description="Bo 12px, phóng 1.03 khi rê chuột và 0.97 khi nhấn, viền focus 2px."
+			title={t("primitives.buttons.title")}
+			description={t("primitives.buttons.description")}
 		>
 			<div className="flex flex-wrap items-center gap-3">
 				<Button
@@ -17,37 +19,37 @@ export function ButtonShowcase() {
 					leadingIcon={<IconPlus size={16} aria-hidden="true" />}
 					data-id="primitives-buttons-primary"
 				>
-					Tạo project
+					{t("primitives.buttons.createProject")}
 				</Button>
 				<Button variant="secondary" data-id="primitives-buttons-secondary">
-					Huỷ
+					{t("common.actions.cancel")}
 				</Button>
 				<Button variant="ghost" data-id="primitives-buttons-ghost">
-					Xem thêm
+					{t("primitives.buttons.seeMore")}
 				</Button>
 				<Button
 					variant="danger"
 					leadingIcon={<IconTrash size={16} aria-hidden="true" />}
 					data-id="primitives-buttons-danger"
 				>
-					Xoá
+					{t("common.actions.delete")}
 				</Button>
 				<Button
 					variant="primary"
 					disabled
 					data-id="primitives-buttons-disabled"
 				>
-					Đang khoá
+					{t("primitives.buttons.locked")}
 				</Button>
 			</div>
 			<div className="flex flex-wrap items-center gap-3">
 				<Button size="sm" variant="primary" data-id="primitives-buttons-small">
-					Nút nhỏ
+					{t("primitives.buttons.small")}
 				</Button>
-				<Button size="sm">Nút nhỏ phụ</Button>
-				<Tooltip content="Thêm thao tác">
+				<Button size="sm">{t("primitives.buttons.smallSecondary")}</Button>
+				<Tooltip content={t("primitives.buttons.moreActions")}>
 					<IconButton
-						label="Thêm thao tác"
+						label={t("primitives.buttons.moreActions")}
 						icon={<IconDots size={18} aria-hidden="true" />}
 						data-id="primitives-buttons-icon"
 					/>

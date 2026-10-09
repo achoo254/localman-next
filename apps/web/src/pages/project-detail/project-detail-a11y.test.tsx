@@ -36,10 +36,8 @@ describe("project page accessibility and layout", () => {
 		});
 		await findNode("comments");
 		expect(await seriousViolations(container)).toEqual([]);
-		await userEvent.click(
-			screen.getByRole("button", { name: "Thêm resource" }),
-		);
-		const dialog = await screen.findByRole("dialog", { name: "Resource mới" });
+		await userEvent.click(screen.getByRole("button", { name: "Add resource" }));
+		const dialog = await screen.findByRole("dialog", { name: "New resource" });
 		expect(await seriousViolations(dialog)).toEqual([]);
 	});
 
@@ -73,12 +71,14 @@ describe("project page accessibility and layout", () => {
 		);
 		const users = await findNode("users");
 		expect(
-			screen.getByRole("button", { name: "Thêm resource" }),
+			screen.getByRole("button", { name: "Add resource" }),
 		).toBeInTheDocument();
 		expect(
-			within(users).getByRole("button", { name: "Sửa users" }),
+			within(users).getByRole("button", { name: "Edit users" }),
 		).toBeInTheDocument();
 		expect(bar(users)).not.toHaveAttribute("aria-disabled", "true");
-		expect(screen.queryByRole("button", { name: "Đổi URL mock" })).toBeNull();
+		expect(
+			screen.queryByRole("button", { name: "Change mock URL" }),
+		).toBeNull();
 	});
 });

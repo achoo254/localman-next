@@ -2,6 +2,7 @@ import { IconKey } from "@tabler/icons-react";
 import { useRef, useState } from "react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
+import { useT } from "../../i18n/i18n-context";
 import type { Project } from "../../pages/projects/projects-api";
 import { RotateSecretModal } from "../../pages/projects/rotate-secret-modal";
 
@@ -18,6 +19,7 @@ export function RotateSecretHint({
 	project,
 	onRotated,
 }: RotateSecretHintProps) {
+	const t = useT();
 	const [open, setOpen] = useState(false);
 	const [done, setDone] = useState(false);
 	const doneNote = useRef<HTMLDivElement>(null);
@@ -31,11 +33,11 @@ export function RotateSecretHint({
 					tone="success"
 					data-id="modal-collaborators-rotate-done"
 				>
-					Đã đổi URL mock. URL cũ không còn dùng được.
+					{t("collaborators.rotate.done")}
 				</Alert>
 			) : (
 				<Alert tone="info" data-id="modal-collaborators-rotate-hint">
-					Người này vẫn biết URL mock. Đổi URL để chặn hẳn.
+					{t("collaborators.rotate.hint")}
 					<Button
 						size="sm"
 						data-id="modal-collaborators-rotate-secret"
@@ -43,7 +45,7 @@ export function RotateSecretHint({
 						leadingIcon={<IconKey size={16} aria-hidden="true" />}
 						onClick={() => setOpen(true)}
 					>
-						Đổi URL mock
+						{t("collaborators.rotate.action")}
 					</Button>
 				</Alert>
 			)}

@@ -26,7 +26,7 @@ function prefs(
 		events: [
 			{
 				type: "member.joined",
-				label: "Thành viên tham gia",
+				label: "Member joined",
 				inApp: true,
 				webPush: false,
 				telegram: false,
@@ -34,6 +34,8 @@ function prefs(
 		],
 	};
 }
+
+const SAVE = { name: "Save preferences" };
 
 const SUBSCRIPTION = {
 	endpoint: "https://push.example/sub-1",
@@ -74,7 +76,7 @@ describe("NotificationSettingsPage", () => {
 	it("links Telegram through the IdP account page when not linked", async () => {
 		const open = vi.spyOn(window, "open").mockReturnValue(null);
 		renderPage(prefs());
-		const link = await screen.findByRole("link", { name: "Liên kết Telegram" });
+		const link = await screen.findByRole("link", { name: "Link Telegram" });
 		expect(link).toHaveAttribute("href", "https://auth.hoandat.com/account");
 		await userEvent.click(link);
 		expect(open).toHaveBeenCalledWith(
@@ -87,30 +89,30 @@ describe("NotificationSettingsPage", () => {
 	it("asks to press Start in the bot when linked but not activated", async () => {
 		renderPage(prefs({ linked: true }));
 		expect(
-			await screen.findByText("Đã liên kết @minhanh, chưa kích hoạt bot."),
+			await screen.findByText("Linked as @minhanh, bot not started yet."),
 		).toBeInTheDocument();
 		const bot = screen.getByRole("link", { name: "@localman_bot" });
 		expect(bot).toHaveAttribute("href", "https://t.me/localman_bot");
 		expect(bot.closest('[data-id="notify-telegram-start"]')).toHaveTextContent(
-			"Mở @localman_bot và bấm Start",
+			"Open @localman_bot and press Start",
 		);
 	});
 
 	it("hides the reminder once the bot is activated", async () => {
 		renderPage(prefs({ linked: true, activated: true }));
-		expect(
-			await screen.findByText("Đã liên kết @minhanh."),
-		).toBeInTheDocument();
-		expect(screen.queryByText(/bấm Start/)).toBeNull();
-		expect(screen.getByRole("link", { name: "Quản lý" })).toBeVisible();
+		expect(await screen.findByText("Linked as @minhanh.")).toBeInTheDocument();
+		expect(screen.queryByText(/press Start/)).toBeNull();
+		expect(screen.getByRole("link", { name: "Manage" })).toBeVisible();
 	});
 
 	it("disables Web Push in browsers without support", async () => {
 		renderPage(prefs());
 		expect(
-			await screen.findByText("Trình duyệt không hỗ trợ Web Push."),
+			await screen.findByText("This browser doesn't support Web Push."),
 		).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Bật Web Push" })).toBeDisabled();
+		expect(
+			screen.getByRole("button", { name: "Turn on Web Push" }),
+		).toBeDisabled();
 	});
 
 	it("subscribes this browser and sends the subscription", async () => {
@@ -123,11 +125,9 @@ describe("NotificationSettingsPage", () => {
 			"POST /api/v1/push-subscriptions": { status: 201, body: { ok: true } },
 		});
 		await userEvent.click(
-			await screen.findByRole("button", { name: "Bật Web Push" }),
+			await screen.findByRole("button", { name: "Turn on Web Push" }),
 		);
-		expect(
-			await screen.findByText("Đã bật trên trình duyệt này."),
-		).toBeInTheDocument();
+		expect(await screen.findByText("On in this browser.")).toBeInTheDocument();
 		expect(subscribe).toHaveBeenCalledWith("BPub");
 		const post = calls.find((c) => c.path === "/api/v1/push-subscriptions");
 		expect(post?.body).toEqual(SUBSCRIPTION);
@@ -142,9 +142,9 @@ describe("NotificationSettingsPage", () => {
 			"DELETE /api/v1/push-subscriptions": { status: 204 },
 		});
 		await userEvent.click(
-			await screen.findByRole("button", { name: "Tắt Web Push" }),
+			await screen.findByRole("button", { name: "Turn off Web Push" }),
 		);
-		await screen.findByText("Chưa bật.");
+		await screen.findByText("Off.");
 		expect(unsubscribe).toHaveBeenCalled();
 		const del = calls.find((c) => c.method === "DELETE");
 		expect(del?.body).toEqual({ endpoint: SUBSCRIPTION.endpoint });
@@ -155,11 +155,11 @@ describe("NotificationSettingsPage", () => {
 			"PUT /api/v1/notification-preferences": { body: prefs() },
 		});
 		const inApp = await screen.findByRole("checkbox", {
-			name: "Thành viên tham gia: Trong app",
+			name: "Member joined: In app",
 		});
 		expect(inApp).toBeEnabled();
 		await userEvent.click(inApp);
-		await userEvent.click(screen.getByRole("button", { name: "Lưu tuỳ chọn" }));
+		await userEvent.click(screen.getByRole("button", SAVE));
 		await waitFor(() =>
 			expect(calls.find((c) => c.method === "PUT")?.body).toEqual({
 				events: [
@@ -179,13 +179,13 @@ describe("NotificationSettingsPage", () => {
 		const { calls } = renderPage(prefs(), {
 			"PUT /api/v1/notification-preferences": { body: saved },
 		});
-		const save = await screen.findByRole("button", { name: "Lưu tuỳ chọn" });
+		const save = await screen.findByRole("button", SAVE);
 		expect(save).toBeDisabled();
 		expect(
-			screen.getByRole("checkbox", { name: "Thành viên tham gia: Telegram" }),
+			screen.getByRole("checkbox", { name: "Member joined: Telegram" }),
 		).toBeDisabled();
 		await userEvent.click(
-			screen.getByRole("checkbox", { name: "Thành viên tham gia: Web Push" }),
+			screen.getByRole("checkbox", { name: "Member joined: Web Push" }),
 		);
 		await userEvent.click(save);
 		await waitFor(() =>

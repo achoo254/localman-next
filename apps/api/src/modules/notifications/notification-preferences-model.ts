@@ -1,6 +1,5 @@
 import mongoose, { Schema } from "mongoose";
 import {
-	NOTIFICATION_EVENTS,
 	NOTIFICATION_EVENT_TYPES,
 	type NotificationEventType,
 } from "./notification-events.js";
@@ -15,7 +14,11 @@ const notificationPreferencesSchema = new Schema(
 		events: [
 			{
 				_id: false,
-				type: { type: String, enum: NOTIFICATION_EVENT_TYPES, required: true },
+				type: {
+					type: String,
+					enum: [...NOTIFICATION_EVENT_TYPES],
+					required: true,
+				},
 				inApp: { type: Boolean, required: true, default: true },
 				webPush: { type: Boolean, required: true, default: false },
 				telegram: { type: Boolean, required: true, default: false },
@@ -74,7 +77,7 @@ export async function readEventPreferences(
 		.select("events")
 		.lean<StoredPreferences>();
 	const byType = new Map((stored?.events ?? []).map((e) => [e.type, e]));
-	return NOTIFICATION_EVENTS.map(({ type }) => {
+	return NOTIFICATION_EVENT_TYPES.map((type) => {
 		const choice = byType.get(type);
 		return {
 			type,

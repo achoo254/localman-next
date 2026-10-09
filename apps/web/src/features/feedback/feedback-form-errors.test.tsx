@@ -27,9 +27,13 @@ describe("FeedbackForm errors", () => {
 		[
 			429,
 			"RATE_LIMITED",
-			"Bạn gửi nhiều lần liên tiếp. Đợi vài phút rồi thử lại. Nội dung vẫn còn đây.",
+			"You've sent too many messages in a row. Wait a few minutes and try again. Your message is still here.",
 		],
-		[503, "UNAVAILABLE", "Chưa gửi được. Nội dung vẫn còn đây, hãy thử lại."],
+		[
+			503,
+			"UNAVAILABLE",
+			"Couldn't send. Your message is still here, so you can try again.",
+		],
 	])(
 		"answers %i with a Vietnamese message and keeps what was typed",
 		async (status, code, text) => {
@@ -41,7 +45,7 @@ describe("FeedbackForm errors", () => {
 			await send();
 			expect(await screen.findByText(text)).toBeInTheDocument();
 			expect(messageBox()).toHaveValue("Lỗi gì đó");
-			expect(screen.queryByText("Đã gửi, cảm ơn bạn")).toBeNull();
+			expect(screen.queryByText("Sent. Thank you")).toBeNull();
 		},
 	);
 
@@ -61,14 +65,14 @@ describe("FeedbackForm errors", () => {
 		});
 		await userEvent.type(messageBox(), "Xin chào");
 		await send();
-		const contact = screen.getByLabelText(/^Email hoặc Telegram/);
+		const contact = screen.getByLabelText(/^Email or Telegram/);
 		await waitFor(() =>
 			expect(contact).toHaveAttribute("aria-invalid", "true"),
 		);
 		expect(contact).toHaveFocus();
 		expect(
 			screen.getByText(
-				"Nhập email hoặc username Telegram hợp lệ, hoặc để trống.",
+				"Enter a valid email or Telegram username, or leave it empty.",
 			),
 		).toBeInTheDocument();
 	});
@@ -90,7 +94,7 @@ describe("FeedbackForm errors", () => {
 		await userEvent.type(messageBox(), "Vẫn còn");
 		await send();
 		expect(
-			await screen.findByText(/Phiên đăng nhập đã hết hạn/),
+			await screen.findByText(/Your session has expired/),
 		).toBeInTheDocument();
 		await waitFor(() => expect(fakeTurnstile.render).toHaveBeenCalled());
 		expect(messageBox()).toHaveValue("Vẫn còn");

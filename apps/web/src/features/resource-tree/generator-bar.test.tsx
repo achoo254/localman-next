@@ -9,7 +9,7 @@ function renderBar(props: Partial<GeneratorBarProps> = {}) {
 	const view = render(
 		<GeneratorBar
 			value={0}
-			label="Số bản ghi của users"
+			label="Records of users"
 			blockedReason={null}
 			onCommit={onCommit}
 			onBlocked={onBlocked}
@@ -17,7 +17,7 @@ function renderBar(props: Partial<GeneratorBarProps> = {}) {
 			{...props}
 		/>,
 	);
-	const slider = screen.getByRole("slider", { name: "Số bản ghi của users" });
+	const slider = screen.getByRole("slider", { name: "Records of users" });
 	// jsdom has no layout: give the bar its real 106px box at x = 100.
 	slider.getBoundingClientRect = () => new DOMRect(100, 0, 106, 25);
 	const tip = () => view.container.querySelector('[data-part="tip"]');
@@ -65,7 +65,7 @@ describe("GeneratorBar with the keyboard", () => {
 		expect(slider).toHaveFocus();
 		await user.keyboard("{ArrowRight}{ArrowRight}{ArrowUp}");
 		expect(slider).toHaveAttribute("aria-valuenow", "50");
-		expect(slider).toHaveAttribute("aria-valuetext", "50 bản ghi");
+		expect(slider).toHaveAttribute("aria-valuetext", "50 records");
 		expect(onCommit).not.toHaveBeenCalled();
 		await user.keyboard("{ArrowLeft}{Enter}");
 		expect(onCommit).toHaveBeenCalledWith(40);
@@ -111,12 +111,12 @@ describe("GeneratorBar when blocked", () => {
 	it("explains why and reports clicks and Enter instead of generating", async () => {
 		const user = userEvent.setup();
 		const { slider, onCommit, onBlocked, tip } = renderBar({
-			blockedReason: "Sinh dữ liệu cho users trước.",
+			blockedReason: "Generate data for users first.",
 		});
 		expect(slider).toHaveAttribute("aria-disabled", "true");
 		expect(slider).toHaveAttribute(
 			"aria-valuetext",
-			"0 bản ghi. Sinh dữ liệu cho users trước.",
+			"0 records. Generate data for users first.",
 		);
 		fireEvent.pointerMove(slider, { clientX: 150 });
 		expect(tip()).toBeNull();

@@ -1,6 +1,7 @@
 import type { RefObject } from "react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
+import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { CollaboratorRow, OwnerRow } from "./collaborator-row";
 import type { Collaborator } from "./collaborators-api";
@@ -32,18 +33,19 @@ export function CollaboratorList({
 	onRemove,
 	onGone,
 }: CollaboratorListProps) {
+	const t = useT();
 	if (state.status === "error") {
 		return (
 			<div className="grid justify-items-start gap-3">
 				<Alert
 					tone="danger"
-					title="Không tải được danh sách thành viên"
+					title={t("collaborators.list.loadFailed")}
 					data-id="modal-collaborators-error"
 				>
 					{errorMessage(state.error)}
 				</Alert>
 				<Button data-id="modal-collaborators-retry" onClick={onRetry}>
-					Thử lại
+					{t("common.cta.retry")}
 				</Button>
 			</div>
 		);
@@ -52,7 +54,7 @@ export function CollaboratorList({
 	return (
 		<ul
 			ref={listRef}
-			aria-label="Danh sách cộng tác viên"
+			aria-label={t("collaborators.list.label")}
 			aria-busy={!ready || refreshing}
 			className="m-0 grid list-none grid-cols-[minmax(0,1fr)] gap-2 p-0"
 		>
@@ -78,7 +80,7 @@ export function CollaboratorList({
 						data-id="modal-collaborators-loading"
 						className="block font-mono text-muted text-sm"
 					>
-						Đang tải thành viên…
+						{t("collaborators.list.loading")}
 					</output>
 				</li>
 			)}

@@ -1,5 +1,8 @@
 import { MAX_RESOURCE_DEPTH } from "@localman/shared/constants";
 import { describe, expect, it } from "vitest";
+import { en } from "../../i18n/messages/en/dictionary";
+import { vi as viMessages } from "../../i18n/messages/vi/dictionary";
+import { createTranslator } from "../../i18n/translate";
 import {
 	canConnect,
 	connectProblem,
@@ -60,15 +63,27 @@ describe("canConnect on users → posts → comments, likes", () => {
 });
 
 describe("connectProblemMessage", () => {
-	it("explains each refusal in Vietnamese", () => {
-		expect(connectProblemMessage("cycle", "users", "posts")).toBe(
+	const { t } = createTranslator("en", en);
+
+	it("explains each refusal", () => {
+		expect(connectProblemMessage("cycle", "users", "posts", t)).toBe(
+			"Can't nest users into posts because it would create a loop.",
+		);
+		expect(connectProblemMessage("already-there", "users", null, t)).toBe(
+			"users is already at the root.",
+		);
+		expect(connectProblemMessage("name-taken", "posts", "users", t)).toBe(
+			"There's already a resource named posts here.",
+		);
+	});
+
+	it("follows the current language", () => {
+		const vi = createTranslator("vi", viMessages).t;
+		expect(connectProblemMessage("cycle", "users", "posts", vi)).toBe(
 			"Không thể lồng users vào posts vì sẽ tạo vòng lặp.",
 		);
-		expect(connectProblemMessage("already-there", "users", null)).toBe(
-			"users đã ở root.",
-		);
-		expect(connectProblemMessage("name-taken", "posts", "users")).toBe(
-			"Đã có resource tên posts ở vị trí này.",
+		expect(connectProblemMessage("too-deep", "users", "posts", vi)).toBe(
+			`Cây resource chỉ lồng được tối đa ${MAX_RESOURCE_DEPTH} cấp.`,
 		);
 	});
 });

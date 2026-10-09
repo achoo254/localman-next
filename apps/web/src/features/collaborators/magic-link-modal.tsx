@@ -2,7 +2,6 @@ import type { PlanId } from "@localman/shared/constants";
 import { useEffect, useRef, useState } from "react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
-import { ConfirmModal } from "../../components/ui/confirm-modal";
 import {
 	CopyField,
 	type CopyFieldHandle,
@@ -10,10 +9,15 @@ import {
 import { Modal, ModalClose } from "../../components/ui/modal";
 import { ModalFooter } from "../../components/ui/modal-footer";
 import { useToast } from "../../components/ui/toast";
+import { useI18n } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
 import { errorMessage } from "../../lib/api-client";
-import { formatDate } from "../../lib/format";
 import type { Project } from "../../pages/projects/projects-api";
 import { MagicLinkAction } from "./magic-link-action";
+import {
+	type MagicLinkConfirm,
+	MagicLinkConfirmModal,
+} from "./magic-link-confirm";
 import { MagicLinkStatus } from "./magic-link-status";
 import { seatsFull } from "./member-seats-gate";
 import { useMagicLink } from "./use-magic-link";
@@ -26,8 +30,6 @@ export interface MagicLinkModalProps {
 	onPlans: () => void;
 }
 
-type Confirm = "regenerate" | "revoke" | null;
-
 /**
  * The project's reusable invite link: create, replace or revoke it. The
  * link itself is shown only right after creating it.
@@ -39,13 +41,10 @@ export function MagicLinkModal({
 	onPlans,
 }: MagicLinkModalProps) {
 	const toast = useToast();
+	const { t, formatDate } = useI18n();
 	const magic = useMagicLink(project.id);
 	const { view, seats } = magic;
-	const [confirm, setConfirm] = useState<Confirm>(null);
-	// Keep the last confirmation's text while it animates out.
-	const lastConfirm = useRef<Confirm>(null);
-	if (confirm) lastConfirm.current = confirm;
-	const shown = confirm ?? lastConfirm.current;
+	const [confirm, setConfirm] = useState<MagicLinkConfirm | null>(null);
 	const primary = useRef<HTMLButtonElement>(null);
 	const copyField = useRef<CopyFieldHandle>(null);
 	const created = view.status === "ready" ? view.created : null;
@@ -68,13 +67,15 @@ export function MagicLinkModal({
 		<Modal
 			open
 			onOpenChange={onOpenChange}
-			title={`Magic link · ${project.name}`}
+			title={t("collaborators.magic.title", { project: project.name })}
 			initialFocusRef={primary}
 			data-id="modal-magic-link"
 			footer={
 				<ModalFooter>
 					<ModalClose asChild>
-						<Button data-id="modal-magic-link-close">Đóng</Button>
+						<Button data-id="modal-magic-link-close">
+							{t("common.actions.close")}
+						</Button>
 					</ModalClose>
 					<MagicLinkAction
 						ref={primary}
@@ -89,14 +90,17 @@ export function MagicLinkModal({
 			}
 		>
 			<p className="m-0 text-muted text-sm">
-				Ai đã đăng nhập và mở link này sẽ tham gia <b>{project.name}</b> với vai
-				trò cộng tác viên. Link dùng được nhiều lần, hết hạn sau 7 ngày. Bạn có
-				thể tạo link mới hoặc thu hồi bất cứ lúc nào.
+				{/* The project name goes in through the renderer, never parsed as tags. */}
+				{renderRich(t("collaborators.magic.lead", { project: "" }), {
+					b: () => <b>{project.name}</b>,
+				})}
 			</p>
 			{seats && seatsFull(seats) && view.status === "ready" ? (
 				<Alert tone="warning" data-id="modal-magic-link-full">
-					Project đã đủ {seats.used}/{seats.max} thành viên. Người mở link sẽ
-					không tham gia được cho tới khi bạn xoá bớt thành viên.
+					{t("collaborators.magic.full", {
+						used: seats.used,
+						max: seats.max ?? "∞",
+					})}
 					{plan === "free" ? (
 						<Button
 							size="sm"
@@ -104,7 +108,7 @@ export function MagicLinkModal({
 							className="mt-2 flex"
 							onClick={onPlans}
 						>
-							Xem gói
+							{t("collaborators.modal.seePlans")}
 						</Button>
 					) : null}
 				</Alert>
@@ -114,7 +118,7 @@ export function MagicLinkModal({
 					data-id="modal-magic-link-loading"
 					className="block font-mono text-muted text-sm"
 				>
-					Đang tải trạng thái link…
+					{t("collaborators.magic.loading")}
 				</output>
 			) : null}
 			{view.status === "error" ? (
@@ -126,7 +130,7 @@ export function MagicLinkModal({
 						data-id="modal-magic-link-retry"
 						onClick={() => void magic.load()}
 					>
-						Thử lại
+						{t("common.cta.retry")}
 					</Button>
 				</div>
 			) : null}
@@ -141,15 +145,14 @@ export function MagicLinkModal({
 						data-id="modal-magic-link-input"
 						copyDataId="modal-magic-link-copy"
 					/>
-					<Alert tone="warning">
-						Link chỉ hiện lần này. Hãy sao chép trước khi đóng.
-					</Alert>
+					<Alert tone="warning">{t("collaborators.magic.shownOnce")}</Alert>
 					<p
 						data-id="modal-magic-link-expiry"
 						className="m-0 text-muted text-[0.8125rem]"
 					>
-						Hết hạn {view.link.expiresAt ? formatDate(view.link.expiresAt) : ""}
-						.
+						{t("collaborators.magic.expires", {
+							date: view.link.expiresAt ? formatDate(view.link.expiresAt) : "",
+						})}
 					</p>
 				</div>
 			) : null}
@@ -159,36 +162,22 @@ export function MagicLinkModal({
 					onRevoke={() => setConfirm("revoke")}
 				/>
 			) : null}
-			<ConfirmModal
-				open={confirm !== null}
-				onOpenChange={(open) => !open && setConfirm(null)}
-				title={shown === "revoke" ? "Thu hồi magic link" : "Tạo link mới"}
-				question={
-					shown === "revoke" ? "Thu hồi magic link?" : "Tạo magic link mới?"
-				}
-				confirmLabel={shown === "revoke" ? "Thu hồi" : "Tạo link mới"}
-				data-id={
-					shown === "revoke"
-						? "modal-revoke-magic-link"
-						: "modal-regenerate-magic-link"
-				}
+			<MagicLinkConfirmModal
+				confirm={confirm}
+				onClose={() => setConfirm(null)}
 				onCloseAutoFocus={(event) => {
 					event.preventDefault();
 					primary.current?.focus();
 				}}
-				onConfirm={async () => {
-					if (confirm === "revoke") {
+				onConfirm={async (kind) => {
+					if (kind === "revoke") {
 						await magic.revoke();
-						toast.show({ title: "Đã thu hồi magic link" });
+						toast.show({ title: t("collaborators.magic.revoked") });
 					} else {
 						await magic.regenerate();
 					}
 				}}
-			>
-				{shown === "revoke"
-					? "Người mở link sẽ không tham gia được nữa. Người đã tham gia vẫn giữ quyền."
-					: "Link cũ ngừng hoạt động ngay. Người đã tham gia vẫn giữ quyền."}
-			</ConfirmModal>
+			/>
 		</Modal>
 	);
 }

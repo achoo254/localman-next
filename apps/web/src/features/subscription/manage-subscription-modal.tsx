@@ -4,7 +4,9 @@ import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Modal, ModalClose } from "../../components/ui/modal";
 import { ModalFooter } from "../../components/ui/modal-footer";
-import { formatNumber } from "../../lib/format";
+import { useT } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
+import type { Translate } from "../../i18n/translate";
 import { PlanCard } from "./plan-card";
 import type { ProInterestSource } from "./pro-interest-options";
 
@@ -18,23 +20,35 @@ export interface ManageSubscriptionModalProps {
 	reason: LimitReason;
 	/** Source recorded when opened without a limit (header menu, account page). */
 	manageSource?: ProInterestSource;
-	/** "Liên hệ nâng cấp": opens the Pro interest form from this source. */
+	/** "Contact": opens the Pro interest form from this source. */
 	onContact: (source: ProInterestSource) => void;
 }
 
 const PLAN_NAME = { free: "Free", pro: "Pro" } as const;
 
-function limitText(plan: PlanId, reason: Exclude<LimitReason, null>): string {
+function limitText(
+	plan: PlanId,
+	reason: Exclude<LimitReason, null>,
+	t: Translate,
+): string {
 	const limits = limitsFor(plan);
-	if (reason === "projects") return `${limits.projects} project`;
-	if (reason === "resources") return `${limits.resources} resource`;
+	if (reason === "projects") {
+		return t("subscription.manage.limit.projects", { count: limits.projects });
+	}
+	if (reason === "resources") {
+		return t("subscription.manage.limit.resources", {
+			count: limits.resources,
+		});
+	}
 	if (reason === "members") {
-		return `${limits.membersPerWorkspace} thành viên mỗi project`;
+		return t("subscription.manage.limit.members", {
+			count: limits.membersPerWorkspace,
+		});
 	}
 	const proxy = limits.proxyRequestsPerMonth;
 	return proxy === null
-		? "request qua proxy"
-		: `${formatNumber(proxy)} request qua proxy mỗi tháng`;
+		? t("subscription.manage.limit.proxyAny")
+		: t("subscription.manage.limit.proxy", { count: proxy });
 }
 
 const SOURCE: Record<Exclude<LimitReason, null>, ProInterestSource> = {
@@ -44,7 +58,7 @@ const SOURCE: Record<Exclude<LimitReason, null>, ProInterestSource> = {
 	proxy: "plan_limit_proxy",
 };
 
-/** "Quản lý gói": why the limit was hit and the Free/Pro comparison. */
+/** "Manage plan": why the limit was hit and the Free/Pro comparison. */
 export function ManageSubscriptionModal({
 	open,
 	onOpenChange,
@@ -53,22 +67,27 @@ export function ManageSubscriptionModal({
 	manageSource = "subscription_modal",
 	onContact,
 }: ManageSubscriptionModalProps) {
+	const t = useT();
 	const source = reason ? SOURCE[reason] : manageSource;
 	const current = (
-		<Badge data-id="modal-subscription-current">Gói hiện tại</Badge>
+		<Badge data-id="modal-subscription-current">
+			{t("subscription.manage.currentBadge")}
+		</Badge>
 	);
 	return (
 		<Modal
 			open={open}
 			onOpenChange={onOpenChange}
-			title="Quản lý gói"
+			title={t("subscription.manage.title")}
 			size="lg"
 			initialFocusRef="dialog"
 			data-id="modal-subscription"
 			footer={
 				<ModalFooter>
 					<ModalClose asChild>
-						<Button data-id="modal-subscription-close">Đóng</Button>
+						<Button data-id="modal-subscription-close">
+							{t("common.actions.close")}
+						</Button>
 					</ModalClose>
 				</ModalFooter>
 			}
@@ -77,17 +96,22 @@ export function ManageSubscriptionModal({
 				<Alert
 					tone="warning"
 					data-id="modal-subscription-reason"
-					title={`Bạn đã đạt giới hạn gói ${PLAN_NAME[plan]}: ${limitText(plan, reason)}`}
+					title={t("subscription.manage.reachedTitle", {
+						plan: PLAN_NAME[plan],
+						limit: limitText(plan, reason, t),
+					})}
 				>
-					So sánh hai gói bên dưới.
+					{t("subscription.manage.reachedText")}
 				</Alert>
 			) : (
 				<p
 					data-id="modal-subscription-reason"
 					className="m-0 text-[0.8125rem] text-muted"
 				>
-					Gói hiện tại: <b className="text-fg">{PLAN_NAME[plan]}</b>. Hạn mức
-					từng gói bên dưới.
+					{renderRich(
+						t("subscription.manage.current", { plan: PLAN_NAME[plan] }),
+						{ b: (chunk) => <b className="text-fg">{chunk}</b> },
+					)}
 				</p>
 			)}
 			<div
@@ -106,7 +130,7 @@ export function ManageSubscriptionModal({
 					featured
 					limits={limitsFor("pro")}
 					badge={plan === "pro" ? current : null}
-					lead="Hạn mức lớn hơn cho các project chạy thật, nhiều thành viên hơn."
+					lead={t("subscription.manage.proLead")}
 					action={
 						plan === "free" ? (
 							<Button
@@ -115,15 +139,14 @@ export function ManageSubscriptionModal({
 								data-id="modal-subscription-pro-contact"
 								onClick={() => onContact(source)}
 							>
-								Liên hệ
+								{t("common.cta.contact")}
 							</Button>
 						) : null
 					}
 				/>
 			</div>
 			<p className="m-0 text-muted text-[0.8125rem]">
-				Gói Pro chưa mở thanh toán. Bấm Liên hệ để cho chúng tôi biết bạn cần
-				gì.
+				{t("subscription.manage.paymentNote")}
 			</p>
 		</Modal>
 	);

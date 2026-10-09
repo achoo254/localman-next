@@ -1,5 +1,11 @@
 import { type ReactNode, useEffect, useId } from "react";
-import { useLocation } from "react-router";
+import { Link, useLocation } from "react-router";
+import { useT } from "../../i18n/i18n-context";
+import {
+	type TagRenderer,
+	type TagRenderers,
+	renderRich,
+} from "../../i18n/rich-text";
 import { cn } from "../../lib/cn";
 import { useDocumentTitle } from "../../lib/use-document-title";
 
@@ -30,7 +36,8 @@ export function DocsArticle({
 	"data-id": dataId,
 	children,
 }: DocsArticleProps) {
-	useDocumentTitle(`${title} · Tài liệu Localman`);
+	const t = useT();
+	useDocumentTitle(t("docs.documentTitle", { page: title }));
 	useScrollOnArrival();
 	return (
 		<article data-id={dataId} className="grid min-w-0 gap-10">
@@ -72,6 +79,27 @@ export function InlineCode({ children }: { children: ReactNode }) {
 			{children}
 		</code>
 	);
+}
+
+/**
+ * Tags of docs texts: `<code>` in the docs' inline code style, `<em>` for
+ * stress and `<angle>name</angle>` for a placeholder shown as `<name>`
+ * (a literal `<` would break the tag syntax).
+ */
+const DOCS_TAGS: TagRenderers = {
+	code: (chunk) => <InlineCode>{chunk}</InlineCode>,
+	em: (chunk) => <em>{chunk}</em>,
+	angle: (chunk) => <InlineCode>{`<${chunk}>`}</InlineCode>,
+};
+
+/** A translated docs text with its tags rendered; `tags` adds links. */
+export function docsRich(text: string, tags: TagRenderers = {}): ReactNode {
+	return renderRich(text, { ...DOCS_TAGS, ...tags });
+}
+
+/** Renders a tag's text as an in-app link to `to`. */
+export function linkTo(to: string): TagRenderer {
+	return (chunk) => <Link to={to}>{chunk}</Link>;
 }
 
 export interface DocsTableProps {

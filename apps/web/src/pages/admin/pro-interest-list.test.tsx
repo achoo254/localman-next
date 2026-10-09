@@ -17,9 +17,9 @@ describe("ProInterestPage list details", () => {
 
 	it("expands the submission history of a row", async () => {
 		renderAdmin(true, {});
-		const toggle = await screen.findByRole("button", { name: "Lịch sử (2)" });
+		const toggle = await screen.findByRole("button", { name: "History (2)" });
 		expect(toggle).toHaveAttribute("aria-expanded", "false");
-		expect(screen.getAllByText("Email khớp tài khoản")).toHaveLength(1);
+		expect(screen.getAllByText("Email matches account")).toHaveLength(1);
 		await userEvent.click(toggle);
 		expect(toggle).toHaveAttribute("aria-expanded", "true");
 		const history = document.querySelector(
@@ -28,17 +28,17 @@ describe("ProInterestPage list details", () => {
 		if (!(history instanceof HTMLElement)) throw new Error("no history");
 		const entries = within(history).getAllByRole("listitem");
 		expect(entries).toHaveLength(2);
-		expect(entries[0]).toHaveTextContent("Giới hạn project");
-		expect(entries[0]).toHaveTextContent("100.000–250.000đ mỗi tháng");
-		expect(entries[1]).toHaveTextContent("Chưa xác minh");
-		expect(entries[1]).toHaveTextContent("Không áp dụng");
+		expect(entries[0]).toHaveTextContent("Project limit");
+		expect(entries[0]).toHaveTextContent("100,000–250,000 VND per month");
+		expect(entries[1]).toHaveTextContent("Unverified");
+		expect(entries[1]).toHaveTextContent("Not applied");
 	});
 
 	it("offers only whitelisted sources in the filter", async () => {
 		renderAdmin(true, {});
 		await screen.findByText("a1***@example.com");
 		const options = within(
-			screen.getByRole("combobox", { name: "Nguồn" }),
+			screen.getByRole("combobox", { name: "Source" }),
 		).getAllByRole("option");
 		expect(options.map((option) => option.getAttribute("value"))).toEqual([
 			"",
@@ -55,7 +55,7 @@ describe("ProInterestPage list details", () => {
 		// `relative` keeps the sr-only caption inside the scroll box, so it
 		// cannot widen the page.
 		expect(scroller).toHaveClass("relative", "overflow-x-auto");
-		expect(scroller?.contains(screen.getByText(/email đã che một phần/))).toBe(
+		expect(scroller?.contains(screen.getByText(/emails partly hidden/))).toBe(
 			true,
 		);
 	});

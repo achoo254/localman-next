@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/button";
 import { cardClassName } from "../../components/ui/card";
 import { Tooltip } from "../../components/ui/tooltip";
 import { useFeatures } from "../../config/features";
+import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import type { Project } from "../projects/projects-api";
 import { EndpointTabs } from "./endpoint-tabs";
@@ -18,7 +19,7 @@ export interface ApiEndpointCardProps {
 	onNewResource: () => void;
 	onGenerateAll: () => void;
 	onResetAll: () => void;
-	/** Owner only: "Đổi URL mock" (new secret); absent for collaborators. */
+	/** Owner only: "Change mock URL" (new secret); absent for collaborators. */
 	onRotateSecret?: () => void;
 }
 
@@ -65,6 +66,7 @@ export function ApiEndpointCard({
 	onResetAll,
 	onRotateSecret,
 }: ApiEndpointCardProps) {
+	const t = useT();
 	const flags = useFeatures();
 	const url = splitMockBaseUrl(
 		project.mockBaseUrl,
@@ -84,7 +86,7 @@ export function ApiEndpointCard({
 				{url.secret ? (
 					<UrlChip
 						tone="[--tone:var(--c-text-muted)]"
-						tip="Mã bí mật của project. Ai có mã này đều gọi được API, đừng chia sẻ công khai."
+						tip={t("projectDetail.endpoint.secretTip")}
 						data-id="project-detail-endpoint-secret"
 					>
 						{url.secret}
@@ -94,7 +96,7 @@ export function ApiEndpointCard({
 				{url.prefix ? (
 					<UrlChip
 						tone="[--tone:var(--c-accent)]"
-						tip="API prefix. Đổi trong Sửa project."
+						tip={t("projectDetail.endpoint.prefixTip")}
 						data-id="project-detail-endpoint-prefix"
 					>
 						{url.prefix}
@@ -103,7 +105,7 @@ export function ApiEndpointCard({
 				/
 				<UrlChip
 					tone="[--tone:var(--c-primary)]"
-					tip="Tên resource, ví dụ users. Mỗi resource có đủ GET, POST, PUT, DELETE."
+					tip={t("projectDetail.endpoint.resourceTip")}
 					data-id="project-detail-endpoint-resource"
 				>
 					:endpoint
@@ -129,7 +131,7 @@ export function ApiEndpointCard({
 					leadingIcon={<IconPlus size={20} aria-hidden="true" />}
 					onClick={onNewResource}
 				>
-					Thêm resource
+					{t("projectDetail.addResource")}
 				</Button>
 				<Button
 					data-id="project-detail-generate-all"
@@ -137,7 +139,7 @@ export function ApiEndpointCard({
 					leadingIcon={<IconBolt size={20} aria-hidden="true" />}
 					onClick={onGenerateAll}
 				>
-					Sinh tất cả
+					{t("projectDetail.endpoint.generateAll")}
 				</Button>
 				<Button
 					variant="ghost"
@@ -146,7 +148,7 @@ export function ApiEndpointCard({
 					leadingIcon={<IconRefresh size={20} aria-hidden="true" />}
 					onClick={onResetAll}
 				>
-					Reset tất cả
+					{t("projectDetail.endpoint.resetAll")}
 				</Button>
 				{onRotateSecret ? (
 					<Button
@@ -155,7 +157,7 @@ export function ApiEndpointCard({
 						leadingIcon={<IconKey size={20} aria-hidden="true" />}
 						onClick={onRotateSecret}
 					>
-						Đổi URL mock
+						{t("projects.rotate.title")}
 					</Button>
 				) : null}
 			</div>

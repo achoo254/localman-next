@@ -1,10 +1,13 @@
+import type { FeatureFlags, FeatureName } from "../../config/features";
+
 /** One page of the public docs, in reading order. */
 export interface DocsPage {
 	/** Path segment under `/docs`. */
 	readonly slug: string;
-	readonly title: string;
-	/** One line under the title in the table of contents. */
-	readonly summary: string;
+	/** Key of the title and summary under `docs.pages`. */
+	readonly key: "quickStart" | "codeExamples" | "customResponses" | "mcp";
+	/** Shown only when this feature runs in production. */
+	readonly feature?: FeatureName;
 }
 
 /**
@@ -13,37 +16,34 @@ export interface DocsPage {
  * renders every one of them through the real route table.
  */
 export const DOCS_PAGES: readonly DocsPage[] = [
-	{
-		slug: "quick-start",
-		title: "Quick start",
-		summary: "Từ project trống tới API gọi được",
-	},
-	{
-		slug: "code-examples",
-		title: "Code examples",
-		summary: "fetch, axios và curl",
-	},
-	{
-		slug: "custom-responses",
-		title: "Custom responses",
-		summary: "Đổi hình dạng body trả về",
-	},
+	{ slug: "quick-start", key: "quickStart" },
+	{ slug: "code-examples", key: "codeExamples" },
+	{ slug: "custom-responses", key: "customResponses" },
+	{ slug: "mcp", key: "mcp", feature: "mockMcp" },
 ];
+
+/** The pages a reader can open with these feature flags. */
+export function docsPagesFor(flags: FeatureFlags): readonly DocsPage[] {
+	return DOCS_PAGES.filter((page) => !page.feature || flags[page.feature]);
+}
 
 export function docsPath(slug: string): string {
 	return `/docs/${slug}`;
 }
 
-/** Previous and next page of `slug` in reading order. */
-export function docsNeighbours(slug: string): {
+/** Previous and next page of `slug` among `pages`, in reading order. */
+export function docsNeighbours(
+	pages: readonly DocsPage[],
+	slug: string,
+): {
 	previous: DocsPage | null;
 	next: DocsPage | null;
 } {
-	const index = DOCS_PAGES.findIndex((page) => page.slug === slug);
+	const index = pages.findIndex((page) => page.slug === slug);
 	if (index === -1) return { previous: null, next: null };
 	return {
-		previous: DOCS_PAGES[index - 1] ?? null,
-		next: DOCS_PAGES[index + 1] ?? null,
+		previous: pages[index - 1] ?? null,
+		next: pages[index + 1] ?? null,
 	};
 }
 
@@ -55,3 +55,7 @@ export const MOCK_URL_PATTERN = `https://{secret}.${MOCK_DOMAIN}{prefix}`;
 export const MOCK_URL_FALLBACK = `https://${MOCK_DOMAIN}/m/{secret}{prefix}`;
 /** Base URL the code examples start from; readers paste their secret. */
 export const EXAMPLE_BASE_URL = `https://<secret>.${MOCK_DOMAIN}`;
+/** Localman MCP endpoint of the dashboard, OAuth-protected. */
+export const LOCALMAN_MCP_URL = `https://${MOCK_DOMAIN}/mcp`;
+/** Shared sign-in (OAuth authorization server) of Localman MCP. */
+export const IDP_HOST = "auth.hoandat.com";

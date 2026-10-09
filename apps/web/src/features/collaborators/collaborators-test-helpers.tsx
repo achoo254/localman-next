@@ -98,12 +98,12 @@ export function apiError(status: number, code: string, details?: unknown) {
 	return { status, body: { error: { code, message: code, details } } };
 }
 
-/** Projects page with `project`, then ⋮ → `item` (default "Cộng tác viên"). */
+/** Projects page with `project`, then ⋮ → `item` (default "Collaborators"). */
 export async function openFromMenu(
 	routes: Record<string, MockRoute>,
 	{
 		project = PROJECT,
-		item = "Cộng tác viên",
+		item = "Collaborators",
 		user = makeUser(),
 		others = [],
 	}: {
@@ -129,13 +129,15 @@ export async function openFromMenu(
 
 export const LOOKUP = `POST ${MEMBERS}/lookup`;
 
-/** Types into the invite input and presses "Mời" (one lookup). */
+/** Types into the invite input and presses "Invite" (one lookup). */
 export function typeAndLook(dialog: HTMLElement, text: string) {
 	return (async () => {
 		await userEvent.type(
-			within(dialog).getByLabelText("Username hoặc email"),
+			within(dialog).getByLabelText("Username or email"),
 			text,
 		);
-		await userEvent.click(within(dialog).getByRole("button", { name: "Mời" }));
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Invite" }),
+		);
 	})();
 }

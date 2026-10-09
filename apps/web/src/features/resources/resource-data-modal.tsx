@@ -6,6 +6,7 @@ import { Button } from "../../components/ui/button";
 import { JsonEditor } from "../../components/ui/json-editor";
 import { Modal, ModalClose } from "../../components/ui/modal";
 import { ModalFooter } from "../../components/ui/modal-footer";
+import { useT } from "../../i18n/i18n-context";
 import { useDebouncedValue } from "../../lib/use-debounced-value";
 import {
 	DataChangesConfirmModal,
@@ -32,7 +33,7 @@ export interface ResourceDataModalProps {
 }
 
 /**
- * "Dữ liệu · {name}": the stored records as editable JSON. Update is only
+ * "Data · {name}": the stored records as editable JSON. Update is only
  * enabled once the text changed and is a valid array of objects (checked
  * after a short pause, and on blur); it replaces the whole data. When the
  * new data would drop records of child resources, a dry run lists them
@@ -45,6 +46,7 @@ export function ResourceDataModal({
 	onOpenChange,
 	onUpdated,
 }: ResourceDataModalProps) {
+	const t = useT();
 	const ids = useId();
 	const data = useQuery({
 		queryKey: ["projects", projectId, "resources", resource.id, "data"],
@@ -63,12 +65,12 @@ export function ResourceDataModal({
 	const [busy, setBusy] = useState(false);
 	const current = text ?? original ?? "";
 	const settled = useDebouncedValue(current, DATA_CHECK_DELAY_MS);
-	const checked = useMemo(() => checkRecords(settled), [settled]);
+	const checked = useMemo(() => checkRecords(settled, t), [settled, t]);
 	const changed = original !== null && current !== original;
 	const ready = changed && settled === current && checked.error === null;
 
 	async function update() {
-		const fresh = checkRecords(current);
+		const fresh = checkRecords(current, t);
 		if (!fresh.records || busy) return;
 		const next = fresh.records;
 		const write = async () => {
@@ -85,16 +87,16 @@ export function ResourceDataModal({
 			);
 			if (lost.length === 0) return await write();
 			setConfirm({
-				title: "Cập nhật dữ liệu",
-				question: `Thay dữ liệu của “${resource.name}”?`,
-				lead: "Các resource con sau sẽ mất dữ liệu:",
-				confirmLabel: "Cập nhật",
+				title: t("resources.data.confirmTitle"),
+				question: t("resources.data.confirmQuestion", { name: resource.name }),
+				lead: t("resources.lostLead"),
+				confirmLabel: t("resources.data.update"),
 				changes: lost,
 				"data-id": "modal-resource-data-confirm",
-				run: () => localized(write()),
+				run: () => localized(write(), t),
 			});
 		} catch (error) {
-			setSubmitError(resourceErrorMessage(error));
+			setSubmitError(resourceErrorMessage(error, t));
 		} finally {
 			setBusy(false);
 		}
@@ -104,7 +106,7 @@ export function ResourceDataModal({
 		<Modal
 			open
 			onOpenChange={(open) => !busy && onOpenChange(open)}
-			title={`Dữ liệu · ${resource.name}`}
+			title={t("resources.data.title", { name: resource.name })}
 			size="lg"
 			initialFocusRef="dialog"
 			data-id="modal-resource-data"
@@ -112,7 +114,7 @@ export function ResourceDataModal({
 				<ModalFooter>
 					<ModalClose asChild>
 						<Button variant="ghost" disabled={busy}>
-							Huỷ
+							{t("common.actions.cancel")}
 						</Button>
 					</ModalClose>
 					<Button
@@ -121,22 +123,21 @@ export function ResourceDataModal({
 						onClick={() => void update()}
 						data-id="modal-resource-data-submit"
 					>
-						{busy ? "Đang cập nhật…" : "Cập nhật"}
+						{busy ? t("resources.data.updating") : t("resources.data.update")}
 					</Button>
 				</ModalFooter>
 			}
 		>
 			<p id={`${ids}-hint`} className="m-0 text-[0.8125rem] text-muted">
-				Sửa trực tiếp hoặc dán một mảng JSON mới để thay toàn bộ dữ liệu (tối đa{" "}
-				{MAX_RECORDS_PER_RESOURCE} bản ghi).
+				{t("resources.data.hint", { max: MAX_RECORDS_PER_RESOURCE })}
 			</p>
 			{data.isPending ? (
 				<output className="block py-6 font-mono text-muted text-sm">
-					Đang tải dữ liệu…
+					{t("resources.data.loading")}
 				</output>
 			) : data.isError ? (
-				<Alert tone="danger" title="Không tải được dữ liệu">
-					{resourceErrorMessage(data.error)}
+				<Alert tone="danger" title={t("resources.data.loadFailed")}>
+					{resourceErrorMessage(data.error, t)}
 				</Alert>
 			) : (
 				<JsonEditor
@@ -145,10 +146,10 @@ export function ResourceDataModal({
 						setText(next);
 						if (blurError) setBlurError(null);
 					}}
-					label={`Dữ liệu JSON của ${resource.name}`}
+					label={t("resources.data.jsonLabel", { name: resource.name })}
 					describedBy={`${ids}-hint${blurError ? ` ${ids}-error` : ""}`}
 					invalid={Boolean(blurError)}
-					validate={recordsProblem}
+					validate={(value) => recordsProblem(value, t)}
 					onValidate={setBlurError}
 					className="h-[min(60vh,28rem)]"
 					data-id="modal-resource-data-json"

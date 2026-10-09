@@ -4,13 +4,16 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { NO_FEATURES } from "../../config/features";
 import { planItems } from "../../features/subscription/plan-card";
-import { formatNumber } from "../../lib/format";
+import { en } from "../../i18n/messages/en/dictionary";
+import { createTranslator } from "../../i18n/translate";
 import {
 	ALL_FEATURES,
 	itemsOf,
 	renderWithFeatures,
 } from "./landing-test-helpers";
 import { PricingTable } from "./pricing-table";
+
+const english = createTranslator("en", en).t;
 
 function renderTable(flags = NO_FEATURES) {
 	const onContactPro = vi.fn();
@@ -26,25 +29,27 @@ describe("PricingTable", () => {
 		const { container } = renderTable();
 		expect(itemsOf(container, "pricing-card-free")).toMatchInlineSnapshot(`
 			[
-			  "3 project",
-			  "10 resource mỗi project",
-			  "Custom response và object template",
-			  "Tối đa 3 thành viên mỗi project, tính cả bạn",
-			  "10.000 request tới mock mỗi tháng",
+			  "3 projects",
+			  "10 resources per project",
+			  "Custom responses and object templates",
+			  "Up to 3 members per project, including you",
+			  "10,000 mock requests per month",
 			]
 		`);
 		expect(itemsOf(container, "pricing-card-pro")).toMatchInlineSnapshot(`
 			[
-			  "20 project",
-			  "50 resource mỗi project",
-			  "Custom response và object template",
-			  "Tối đa 10 thành viên mỗi project, tính cả bạn",
-			  "Không giới hạn request tới mock mỗi tháng",
+			  "20 projects",
+			  "50 resources per project",
+			  "Custom responses and object templates",
+			  "Up to 10 members per project, including you",
+			  "Unlimited mock requests per month",
 			]
 		`);
 		const free = limitsFor("free");
 		expect(itemsOf(container, "pricing-card-free")).toContain(
-			`${formatNumber(free.mockRequestsPerMonth ?? 0)} request tới mock mỗi tháng`,
+			english("subscription.plan.mockRequests", {
+				count: free.mockRequestsPerMonth ?? 0,
+			}),
 		);
 		expect(container.textContent).not.toMatch(/proxy/i);
 	});
@@ -53,22 +58,22 @@ describe("PricingTable", () => {
 		const { container } = renderTable(ALL_FEATURES);
 		expect(itemsOf(container, "pricing-card-free")).toMatchInlineSnapshot(`
 			[
-			  "3 project",
-			  "10 resource mỗi project",
-			  "Custom response và object template",
-			  "Tối đa 3 thành viên mỗi project, tính cả bạn",
-			  "10.000 request tới mock mỗi tháng",
-			  "5.000 request qua proxy mỗi tháng",
+			  "3 projects",
+			  "10 resources per project",
+			  "Custom responses and object templates",
+			  "Up to 3 members per project, including you",
+			  "10,000 mock requests per month",
+			  "5,000 proxy requests per month",
 			]
 		`);
 		expect(itemsOf(container, "pricing-card-pro")).toMatchInlineSnapshot(`
 			[
-			  "20 project",
-			  "50 resource mỗi project",
-			  "Custom response và object template",
-			  "Tối đa 10 thành viên mỗi project, tính cả bạn",
-			  "Không giới hạn request tới mock mỗi tháng",
-			  "Không giới hạn request qua proxy mỗi tháng",
+			  "20 projects",
+			  "50 resources per project",
+			  "Custom responses and object templates",
+			  "Up to 10 members per project, including you",
+			  "Unlimited mock requests per month",
+			  "Unlimited proxy requests per month",
 			]
 		`);
 	});
@@ -78,7 +83,7 @@ describe("PricingTable", () => {
 			const { container, unmount } = renderTable(flags);
 			for (const plan of ["free", "pro"] as const) {
 				expect(itemsOf(container, `pricing-card-${plan}`)).toEqual(
-					planItems(limitsFor(plan), flags).map(([, label]) => label),
+					planItems(limitsFor(plan), flags, english).map(([, label]) => label),
 				);
 			}
 			unmount();

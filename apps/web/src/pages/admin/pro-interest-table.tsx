@@ -1,3 +1,4 @@
+import { useT } from "../../i18n/i18n-context";
 import type { ProInterestItem } from "./pro-interest-item";
 import { ProInterestRow } from "./pro-interest-row";
 
@@ -18,37 +19,31 @@ export function ProInterestTable({
 	onToggleContacted,
 	onDelete,
 }: ProInterestTableProps) {
+	const t = useT();
+	const headers = [
+		"Email",
+		t("admin.pro.need"),
+		t("admin.pro.teamSize"),
+		t("admin.pro.source"),
+		t("admin.pro.date"),
+		t("admin.status"),
+	];
 	return (
 		<div className="relative overflow-x-auto" data-id="admin-pro-table-scroll">
 			<table
 				data-id="admin-pro-table"
 				className="w-full min-w-205 border-collapse text-sm"
 			>
-				<caption className="sr-only">
-					Người quan tâm gói Pro, email đã che một phần
-				</caption>
+				<caption className="sr-only">{t("admin.pro.tableCaption")}</caption>
 				<thead>
 					<tr>
+						{headers.map((header) => (
+							<th key={header} scope="col" className={HEAD}>
+								{header}
+							</th>
+						))}
 						<th scope="col" className={HEAD}>
-							Email
-						</th>
-						<th scope="col" className={HEAD}>
-							Nhu cầu
-						</th>
-						<th scope="col" className={HEAD}>
-							Quy mô
-						</th>
-						<th scope="col" className={HEAD}>
-							Nguồn
-						</th>
-						<th scope="col" className={HEAD}>
-							Ngày
-						</th>
-						<th scope="col" className={HEAD}>
-							Trạng thái
-						</th>
-						<th scope="col" className={HEAD}>
-							<span className="sr-only">Thao tác</span>
+							<span className="sr-only">{t("admin.pro.actions")}</span>
 						</th>
 					</tr>
 				</thead>

@@ -1,8 +1,10 @@
 import { OperationError, defineOperation } from "@localman/operations";
+import { SUPPORTED_LOCALES } from "@localman/shared";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
 import { effectivePlan } from "../billing/plan-guard.js";
 import { isOwnerSub } from "./owner-access.js";
+import { localeOrDefault } from "./user-locale.js";
 import { UserModel } from "./user-model.js";
 
 const currentUser = z.object({
@@ -20,7 +22,12 @@ const currentUser = z.object({
 		linked: z.boolean(),
 		username: z.string().nullable(),
 	}),
+	/** Interface language for notifications; `en` until the user picks one. */
+	locale: z.enum(SUPPORTED_LOCALES),
 });
+
+const signedOut = () =>
+	new OperationError(401, "UNAUTHENTICATED", "Authentication required");
 
 interface StoredUser {
 	sub: string;
@@ -32,6 +39,7 @@ interface StoredUser {
 	plan: "free" | "pro";
 	planExpiresAt?: Date | null;
 	telegram?: { chatId?: string | null; username?: string | null } | null;
+	locale?: string | null;
 }
 
 export const getMe = defineOperation({
@@ -40,7 +48,7 @@ export const getMe = defineOperation({
 	path: "/users/me",
 	summary: "Get the signed-in user",
 	description:
-		"Profile synced from auth.hoandat.com at sign-in, the Localman plan in force, whether the user owns this deployment (admin), and whether a Telegram chat is linked for notifications.",
+		"Profile synced from auth.hoandat.com at sign-in, the Localman plan in force, whether the user owns this deployment (admin), whether a Telegram chat is linked for notifications, and the interface language notifications use (`en` until chosen).",
 	input: z.object({}),
 	output: currentUser,
 	scopes: [USER_SCOPE],
@@ -50,17 +58,11 @@ export const getMe = defineOperation({
 	handler: async (ctx) => {
 		const user = await UserModel.findOne({ sub: requireSubject(ctx) })
 			.select(
-				"sub username email emailVerified name picture plan planExpiresAt telegram",
+				"sub username email emailVerified name picture plan planExpiresAt telegram locale",
 			)
 			.lean<StoredUser>();
 		// Signed in sessions always have a user (upserted at sign-in).
-		if (!user) {
-			throw new OperationError(
-				401,
-				"UNAUTHENTICATED",
-				"Authentication required",
-			);
-		}
+		if (!user) throw signedOut();
 		return {
 			sub: user.sub,
 			username: user.username,
@@ -77,6 +79,29 @@ export const getMe = defineOperation({
 				linked: Boolean(user.telegram?.chatId),
 				username: user.telegram?.username ?? null,
 			},
+			locale: localeOrDefault(user.locale),
 		};
+	},
+});
+
+export const setLocale = defineOperation({
+	id: "users.setLocale",
+	method: "PUT",
+	path: "/users/me/locale",
+	summary: "Set the signed-in user's interface language",
+	description: `Language of the user's notifications (in-app, Web Push, Telegram): one of ${SUPPORTED_LOCALES.join(", ")}. In-app notifications already received are shown in the new language too.`,
+	input: z.object({ locale: z.enum(SUPPORTED_LOCALES) }),
+	output: z.object({ locale: z.enum(SUPPORTED_LOCALES) }),
+	scopes: [USER_SCOPE],
+	annotations: { readOnly: false, destructive: false, idempotent: true },
+	toolset: "users",
+	mcp: true,
+	handler: async (ctx, input) => {
+		const { matchedCount } = await UserModel.updateOne(
+			{ sub: requireSubject(ctx) },
+			{ $set: { locale: input.locale } },
+		);
+		if (matchedCount === 0) throw signedOut();
+		return { locale: input.locale };
 	},
 });

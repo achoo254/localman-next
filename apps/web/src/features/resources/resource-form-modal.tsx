@@ -5,6 +5,8 @@ import { FormField } from "../../components/ui/form-field";
 import { Input } from "../../components/ui/input";
 import { Modal, ModalClose } from "../../components/ui/modal";
 import { ModalFooter } from "../../components/ui/modal-footer";
+import { useT } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
 import { isPlanLimitError } from "../../pages/projects/projects-api";
 import { EndpointsEditor } from "./endpoints-editor";
 import { ObjectTemplateEditor } from "./object-template-editor";
@@ -29,7 +31,7 @@ export interface ResourceFormModalProps {
 
 const NO_ERRORS: DraftErrors = { fields: {}, endpoints: {} };
 
-/** "Resource mới" / "Sửa resource": name, schema, template, endpoints. */
+/** "New resource" / "Edit resource": name, schema, template, endpoints. */
 export function ResourceFormModal({
 	projectId,
 	resource,
@@ -38,6 +40,7 @@ export function ResourceFormModal({
 	onSaved,
 	onPlanLimit,
 }: ResourceFormModalProps) {
+	const t = useT();
 	const formId = useId();
 	const nameInput = useRef<HTMLInputElement>(null);
 	const place = useMemo(
@@ -53,7 +56,7 @@ export function ResourceFormModal({
 	async function submit(event: FormEvent) {
 		event.preventDefault();
 		if (busy) return;
-		const result = validateDraft(draft, place);
+		const result = validateDraft(draft, place, t);
 		setErrors(result.errors);
 		if (!result.input) {
 			if (result.errors.name) nameInput.current?.focus();
@@ -68,7 +71,7 @@ export function ResourceFormModal({
 			onSaved(saved, !editing);
 		} catch (error) {
 			if (isPlanLimitError(error)) onPlanLimit();
-			else setSubmitError(resourceErrorMessage(error));
+			else setSubmitError(resourceErrorMessage(error, t));
 		} finally {
 			setBusy(false);
 		}
@@ -84,7 +87,11 @@ export function ResourceFormModal({
 		<Modal
 			open
 			onOpenChange={(open) => !busy && onOpenChange(open)}
-			title={editing ? `Sửa resource · ${resource.name}` : "Resource mới"}
+			title={
+				editing
+					? t("resources.form.titleEdit", { name: resource.name })
+					: t("resources.form.titleNew")
+			}
 			size="xl"
 			initialFocusRef={nameInput}
 			data-id={editing ? "modal-edit-resource" : "modal-new-resource"}
@@ -92,7 +99,7 @@ export function ResourceFormModal({
 				<ModalFooter>
 					<ModalClose asChild>
 						<Button variant="ghost" disabled={busy}>
-							Huỷ
+							{t("common.actions.cancel")}
 						</Button>
 					</ModalClose>
 					<Button
@@ -102,7 +109,11 @@ export function ResourceFormModal({
 						disabled={busy}
 						data-id="resource-form-submit"
 					>
-						{busy ? "Đang lưu…" : editing ? "Cập nhật" : "Tạo resource"}
+						{busy
+							? t("resources.form.saving")
+							: editing
+								? t("resources.form.update")
+								: t("resources.form.create")}
 					</Button>
 				</ModalFooter>
 			}
@@ -115,18 +126,19 @@ export function ResourceFormModal({
 				className="grid gap-6"
 			>
 				<FormField
-					label="Tên resource"
+					label={t("resources.form.nameLabel")}
 					required
 					error={errors.name}
 					data-id="resource-form-name"
 					hint={
 						<>
-							Dùng làm đường dẫn endpoint, ví dụ <code>/users</code>. Chỉ gồm
-							chữ không dấu, số, <code>-</code> và <code>_</code>.
+							{renderRich(t("resources.form.nameHint"))}
 							{place.parentName ? (
 								<>
 									{" "}
-									Resource con của <code>{place.parentName}</code>.
+									{renderRich(
+										t("resources.form.childOf", { parent: place.parentName }),
+									)}
 								</>
 							) : null}
 						</>
@@ -147,7 +159,7 @@ export function ResourceFormModal({
 					<div className="flex flex-wrap items-center justify-between gap-2">
 						<h3 className="m-0 font-bold font-mono text-sm">Schema</h3>
 						<span className="text-[0.8125rem] text-muted">
-							Cấu trúc mỗi bản ghi
+							{t("resources.form.schemaHint")}
 						</span>
 					</div>
 					<SchemaEditor
@@ -172,7 +184,7 @@ export function ResourceFormModal({
 					errors={errors.endpoints}
 				/>
 				{invalidParts ? (
-					<Alert tone="danger">Kiểm tra lại các ô được đánh dấu đỏ.</Alert>
+					<Alert tone="danger">{t("resources.form.checkMarked")}</Alert>
 				) : null}
 				{submitError ? <Alert tone="danger">{submitError}</Alert> : null}
 			</form>

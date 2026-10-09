@@ -43,7 +43,7 @@ describe("AccountPage quota meters", () => {
 	it("turns a meter to warning from 80% and explains it", async () => {
 		renderAccount(usage());
 		const mock = await screen.findByRole("meter", {
-			name: "Request tới mock tháng này",
+			name: "Mock requests this month",
 		});
 		expect(mock).toHaveAttribute("aria-valuenow", "8420");
 		expect(mock).toHaveAttribute("aria-valuemax", "10000");
@@ -51,11 +51,9 @@ describe("AccountPage quota meters", () => {
 			"data-state",
 			"warning",
 		);
+		expect(meter("account-meter-mock-requests")).toHaveTextContent("84% used.");
 		expect(meter("account-meter-mock-requests")).toHaveTextContent(
-			"Đã dùng 84%.",
-		);
-		expect(meter("account-meter-mock-requests")).toHaveTextContent(
-			"Đặt lại ngày 01/01/2027.",
+			"Resets on Jan 1, 2027.",
 		);
 		expect(meter("account-meter-projects")).toHaveAttribute("data-state", "ok");
 		expect(meter("account-meter-projects")).toHaveTextContent("1/3");
@@ -63,15 +61,15 @@ describe("AccountPage quota meters", () => {
 
 	it("hides the proxy meter and the MCP note until those features ship", async () => {
 		renderAccount(usage());
-		await screen.findByRole("meter", { name: "Request tới mock tháng này" });
+		await screen.findByRole("meter", { name: "Mock requests this month" });
 		expect(
 			document.querySelector('[data-id="account-meter-proxy-requests"]'),
 		).toBeNull();
 		expect(meter("account-meter-mock-requests")).toHaveTextContent(
-			"Tính mọi request REST tới mock. Đặt lại ngày 01/01/2027.",
+			"Counts every REST request to the mock. Resets on Jan 1, 2027.",
 		);
 		expect(unreleasedMentions(document.body)).toEqual([]);
-		expect(screen.getByText(/tối đa 3 thành viên mỗi project\./)).toBeVisible();
+		expect(screen.getByText(/up to 3 members per project\./)).toBeVisible();
 	});
 
 	it("shows the proxy meter and the MCP note once the flags are on", async () => {
@@ -95,22 +93,20 @@ describe("AccountPage quota meters", () => {
 			"/account",
 		);
 		expect(
-			await screen.findByRole("meter", { name: "Request qua proxy tháng này" }),
+			await screen.findByRole("meter", { name: "Proxy requests this month" }),
 		).toHaveAttribute("aria-valuenow", "120");
 		expect(meter("account-meter-mock-requests")).toHaveTextContent(
-			"REST và MCP đều tính.",
+			"REST and MCP both count.",
 		);
 	});
 
 	it("says when the quota is used up", async () => {
 		renderAccount(usage({ projects: { used: 3, max: 3 } }));
 		await screen.findByRole("meter", { name: "Projects" });
-		expect(meter("account-meter-projects")).toHaveTextContent(
-			"Đã đạt hạn mức.",
-		);
+		expect(meter("account-meter-projects")).toHaveTextContent("Limit reached.");
 	});
 
-	it("shows 'Không giới hạn' instead of a bar for uncapped counters", async () => {
+	it("shows 'Unlimited' instead of a bar for uncapped counters", async () => {
 		renderAccount(
 			usage({
 				plan: "pro",
@@ -123,24 +119,24 @@ describe("AccountPage quota meters", () => {
 		await screen.findByRole("meter", { name: "Projects" });
 		expect(screen.getAllByRole("meter")).toHaveLength(1);
 		const mock = meter("account-meter-mock-requests");
-		expect(mock).toHaveTextContent("Không giới hạn");
+		expect(mock).toHaveTextContent("Unlimited");
 		expect(mock).toHaveAttribute("data-state", "ok");
 		// Asia/Saigon: 17:30Z on the 31st is already 1 January.
 		expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
-			"Gói Pro · hết hạn 01/01/2027",
+			"Pro plan · expires Jan 1, 2027",
 		);
 	});
 
 	it("links to notification settings and opens the plans modal", async () => {
 		renderAccount(usage());
 		expect(
-			await screen.findByRole("link", { name: "Kênh thông báo" }),
+			await screen.findByRole("link", { name: "Notification channels" }),
 		).toHaveAttribute("href", "/account/notifications");
-		await userEvent.click(screen.getByRole("button", { name: "Quản lý gói" }));
-		const dialog = screen.getByRole("dialog", { name: "Quản lý gói" });
+		await userEvent.click(screen.getByRole("button", { name: "Manage plan" }));
+		const dialog = screen.getByRole("dialog", { name: "Manage plan" });
 		expect(within(dialog).queryByRole("alert")).toBeNull();
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Liên hệ" }),
+			within(dialog).getByRole("button", { name: "Contact" }),
 		);
 		await expectProInterestSource("account");
 	});

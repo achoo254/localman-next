@@ -32,17 +32,19 @@ describe("changing the mock URL of a project", () => {
 					: { body: { dryRun: false, collaborators: 2, project: ROTATED } },
 		});
 		await userEvent.click(
-			await screen.findByRole("button", { name: "Đổi URL mock" }),
+			await screen.findByRole("button", { name: "Change mock URL" }),
 		);
-		const dialog = screen.getByRole("dialog", { name: "Đổi URL mock" });
-		expect(dialog).toHaveTextContent("URL cũ ngừng hoạt động ngay");
+		const dialog = screen.getByRole("dialog", { name: "Change mock URL" });
+		expect(dialog).toHaveTextContent("The old URL stops working right away");
 		expect(
-			await within(dialog).findByText(/2 cộng tác viên sẽ nhận thông báo/),
+			await within(dialog).findByText(
+				/2 collaborators will get a notification/,
+			),
 		).toBeInTheDocument();
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Đổi URL" }),
+			within(dialog).getByRole("button", { name: "Change URL" }),
 		);
-		expect(await findToast("Đã đổi URL mock")).toBeInTheDocument();
+		expect(await findToast("Mock URL changed")).toBeInTheDocument();
 		expect(
 			screen.getByText("xyz789", { selector: "[data-id]" }),
 		).toBeInTheDocument();
@@ -65,12 +67,12 @@ describe("changing the mock URL of a project", () => {
 						},
 		});
 		await userEvent.click(
-			await screen.findByRole("button", { name: "Đổi URL mock" }),
+			await screen.findByRole("button", { name: "Change mock URL" }),
 		);
-		const dialog = screen.getByRole("dialog", { name: "Đổi URL mock" });
-		await within(dialog).findByText("Project chưa có cộng tác viên nào.");
+		const dialog = screen.getByRole("dialog", { name: "Change mock URL" });
+		await within(dialog).findByText("This project has no collaborators yet.");
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Đổi URL" }),
+			within(dialog).getByRole("button", { name: "Change URL" }),
 		);
 		expect(await within(dialog).findByText("Lỗi máy chủ.")).toBeInTheDocument();
 		expect(screen.getByText("abc123", { selector: "[data-id]" })).toBeVisible();

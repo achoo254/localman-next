@@ -1,22 +1,25 @@
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
+import { useFeatures } from "../../config/features";
+import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import {
-	DOCS_PAGES,
 	type DocsPage,
 	docsNeighbours,
+	docsPagesFor,
 	docsPath,
 } from "./docs-pages";
 
 /** Table of contents; the current page gets `aria-current="page"`. */
-function DocsToc() {
+function DocsToc({ pages }: { pages: readonly DocsPage[] }) {
+	const t = useT();
 	return (
-		<nav aria-label="Mục lục tài liệu" data-id="docs-toc">
+		<nav aria-label={t("docs.toc.label")} data-id="docs-toc">
 			<p className="m-0 mb-2 font-mono font-semibold text-muted text-xs uppercase tracking-wide">
-				Tài liệu
+				{t("docs.toc.heading")}
 			</p>
 			<ol className="m-0 flex list-none flex-wrap gap-2 p-0 md:flex-col md:gap-1">
-				{DOCS_PAGES.map((page) => (
+				{pages.map((page) => (
 					<li key={page.slug}>
 						<NavLink
 							to={docsPath(page.slug)}
@@ -30,9 +33,11 @@ function DocsToc() {
 								)
 							}
 						>
-							<span className="font-semibold text-sm">{page.title}</span>
+							<span className="font-semibold text-sm">
+								{t(`docs.pages.${page.key}.title`)}
+							</span>
 							<span className="hidden text-muted text-xs md:block">
-								{page.summary}
+								{t(`docs.pages.${page.key}.summary`)}
 							</span>
 						</NavLink>
 					</li>
@@ -49,6 +54,7 @@ function PagerLink({
 	page: DocsPage;
 	direction: "previous" | "next";
 }) {
+	const t = useT();
 	const next = direction === "next";
 	return (
 		<Link
@@ -67,21 +73,27 @@ function PagerLink({
 				)}
 			>
 				{next ? null : <IconArrowLeft size={14} aria-hidden="true" />}
-				{next ? "Trang sau" : "Trang trước"}
+				{next ? t("docs.pager.next") : t("docs.pager.previous")}
 				{next ? <IconArrowRight size={14} aria-hidden="true" /> : null}
 			</span>
-			<span className="font-semibold text-primary">{page.title}</span>
+			<span className="font-semibold text-primary">
+				{t(`docs.pages.${page.key}.title`)}
+			</span>
 		</Link>
 	);
 }
 
 /** Previous/next links in reading order, below every page. */
-function DocsPager({ slug }: { slug: string }) {
-	const { previous, next } = docsNeighbours(slug);
+function DocsPager({
+	pages,
+	slug,
+}: { pages: readonly DocsPage[]; slug: string }) {
+	const t = useT();
+	const { previous, next } = docsNeighbours(pages, slug);
 	if (!previous && !next) return null;
 	return (
 		<nav
-			aria-label="Trang trước và trang sau"
+			aria-label={t("docs.pager.label")}
 			data-id="docs-pager"
 			className="grid gap-3 border-border-subtle border-t pt-6 sm:grid-cols-2"
 		>
@@ -98,17 +110,18 @@ function DocsPager({ slug }: { slug: string }) {
 export function DocsLayout() {
 	const { pathname } = useLocation();
 	const slug = pathname.replace(/\/+$/, "").split("/").at(-1) ?? "";
+	const pages = docsPagesFor(useFeatures());
 	return (
 		<div
 			data-id="docs"
 			className="grid gap-8 md:grid-cols-[13rem_minmax(0,1fr)] lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12"
 		>
 			<aside className="md:sticky md:top-[calc(var(--topbar-h)+var(--space-6))] md:self-start">
-				<DocsToc />
+				<DocsToc pages={pages} />
 			</aside>
 			<div className="grid min-w-0 max-w-192 gap-12">
 				<Outlet />
-				<DocsPager slug={slug} />
+				<DocsPager pages={pages} slug={slug} />
 			</div>
 		</div>
 	);

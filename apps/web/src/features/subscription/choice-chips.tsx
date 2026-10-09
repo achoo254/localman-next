@@ -7,7 +7,7 @@ export interface ChoiceChipsProps {
 	legend: ReactNode;
 	/** Shows the same red `*` as FormField. */
 	required?: boolean;
-	/** Short muted note after the legend, e.g. "Chọn một hoặc nhiều". */
+	/** Short muted note after the legend, e.g. "Choose one or more". */
 	hint?: string;
 	choices: readonly Choice[];
 	selected: readonly string[];

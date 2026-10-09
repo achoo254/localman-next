@@ -2,8 +2,9 @@ import { CONTACT_STATUSES } from "@localman/shared/constants";
 import { FormField } from "../../components/ui/form-field";
 import { Select } from "../../components/ui/select";
 import { FEEDBACK_CATEGORIES } from "../../features/feedback/feedback-draft";
+import { useT } from "../../i18n/i18n-context";
 import { type InboxFilter, isMessageStatus } from "./feedback-inbox-api";
-import { STATUS_LABELS } from "./feedback-inbox-item";
+import { categoryLabel, statusLabel } from "./feedback-inbox-item";
 
 export interface FeedbackInboxFiltersProps {
 	filter: InboxFilter;
@@ -19,10 +20,11 @@ export function FeedbackInboxFilters({
 	onChange,
 	countLabel,
 }: FeedbackInboxFiltersProps) {
+	const t = useT();
 	return (
 		<div className="flex flex-wrap items-end gap-3 border-border-subtle border-b px-5 py-4">
 			<FormField
-				label="Trạng thái"
+				label={t("admin.status")}
 				data-id="admin-feedback-filter-status"
 				className={FIELD}
 			>
@@ -33,16 +35,16 @@ export function FeedbackInboxFilters({
 						onChange({ status: isMessageStatus(value) ? value : "" });
 					}}
 				>
-					<option value="">Tất cả</option>
+					<option value="">{t("common.all")}</option>
 					{CONTACT_STATUSES.map((status) => (
 						<option key={status} value={status}>
-							{STATUS_LABELS[status].label}
+							{statusLabel(t, status)}
 						</option>
 					))}
 				</Select>
 			</FormField>
 			<FormField
-				label="Loại"
+				label={t("admin.inbox.category")}
 				data-id="admin-feedback-filter-category"
 				className={FIELD}
 			>
@@ -50,10 +52,10 @@ export function FeedbackInboxFilters({
 					value={filter.category}
 					onChange={(event) => onChange({ category: event.target.value })}
 				>
-					<option value="">Tất cả</option>
+					<option value="">{t("common.all")}</option>
 					{FEEDBACK_CATEGORIES.map((choice) => (
 						<option key={choice.id} value={choice.id}>
-							{choice.label}
+							{categoryLabel(t, choice.id)}
 						</option>
 					))}
 				</Select>

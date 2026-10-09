@@ -2,6 +2,8 @@ import { useId, useState } from "react";
 import { Badge, type BadgeTone } from "../../components/ui/badge";
 import { JsonEditor } from "../../components/ui/json-editor";
 import { Switch } from "../../components/ui/switch";
+import { useT } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
 import { cn } from "../../lib/cn";
 import { type EndpointDraft, endpointKey } from "./resource-form-state";
 import type { EndpointMethod } from "./resource-model";
@@ -22,13 +24,18 @@ const METHOD_TONES: Readonly<Record<EndpointMethod, BadgeTone>> = {
 	DELETE: "danger",
 };
 
-const LABELS: Readonly<Record<string, string>> = {
-	"GET /:res": "Danh sách",
-	"GET /:res/:id": "Một bản ghi",
-	"POST /:res": "Tạo",
-	"PUT /:res/:id": "Cập nhật (PUT, PATCH)",
-	"DELETE /:res/:id": "Xoá",
-};
+/** Dictionary key of the short label of each endpoint, by `endpointKey`. */
+const LABEL_KEYS = {
+	"GET /:res": "resources.endpoints.list",
+	"GET /:res/:id": "resources.endpoints.one",
+	"POST /:res": "resources.endpoints.create",
+	"PUT /:res/:id": "resources.endpoints.update",
+	"DELETE /:res/:id": "resources.endpoints.delete",
+} as const;
+
+function isLabelled(key: string): key is keyof typeof LABEL_KEYS {
+	return key in LABEL_KEYS;
+}
 
 /**
  * The five generated endpoints: each can be switched off (the mock then
@@ -40,6 +47,7 @@ export function EndpointsEditor({
 	resourceName,
 	errors,
 }: EndpointsEditorProps) {
+	const t = useT();
 	const ids = useId();
 	const [blurErrors, setBlurErrors] = useState<Record<string, string | null>>(
 		{},
@@ -73,14 +81,18 @@ export function EndpointsEditor({
 						<div className="flex flex-wrap items-center gap-2 font-mono text-[0.8125rem]">
 							<Switch
 								checked={endpoint.enabled}
-								aria-label={`Bật ${title}`}
+								aria-label={t("resources.endpoints.enable", {
+									endpoint: title,
+								})}
 								onCheckedChange={(enabled) => update(key, { enabled })}
 							/>
 							<Badge tone={METHOD_TONES[endpoint.method]}>
 								{endpoint.method}
 							</Badge>
 							<code className="font-semibold">{path}</code>
-							<span className="ml-auto text-muted text-xs">{LABELS[key]}</span>
+							<span className="ml-auto text-muted text-xs">
+								{isLabelled(key) ? t(LABEL_KEYS[key]) : null}
+							</span>
 						</div>
 						<JsonEditor
 							value={endpoint.response}
@@ -108,9 +120,7 @@ export function EndpointsEditor({
 				);
 			})}
 			<p className="m-0 text-[0.8125rem] text-muted">
-				Biến trong template: <code>"$mockData"</code> dữ liệu đang lưu,{" "}
-				<code>"$count"</code> số bản ghi, <code>"$category.method"</code> giá
-				trị Faker sinh mỗi request (ví dụ <code>"$name.fullName"</code>).
+				{renderRich(t("resources.endpoints.variables"))}
 			</p>
 		</section>
 	);

@@ -1,8 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
+import { useT } from "../../i18n/i18n-context";
 import { ApiError } from "../../lib/api-client";
 import type { Project } from "../../pages/projects/projects-api";
-import { MCP_TOKEN_DIALOG_COPY } from "./mcp-copy";
 import {
 	type McpTokenChange,
 	type McpTokenStatus,
@@ -51,8 +51,8 @@ export function McpTokenDialogs({
 	onCloseAutoFocus,
 }: McpTokenDialogsProps) {
 	const queryClient = useQueryClient();
+	const t = useT();
 	if (!dialog) return null;
-	const copy = MCP_TOKEN_DIALOG_COPY[dialog];
 
 	async function confirm(kind: McpTokenDialog) {
 		try {
@@ -74,19 +74,23 @@ export function McpTokenDialogs({
 		<ConfirmModal
 			open
 			onOpenChange={(open) => !open && onClose()}
-			title={copy.title}
-			question={copy.question(project.name)}
-			confirmLabel={copy.confirm}
+			title={t(`mcp.dialogs.${dialog}.title`)}
+			question={
+				dialog === "disable"
+					? t("mcp.dialogs.disable.question")
+					: t(`mcp.dialogs.${dialog}.question`, { project: project.name })
+			}
+			confirmLabel={t(`mcp.dialogs.${dialog}.confirm`)}
 			onConfirm={() => confirm(dialog)}
 			onCloseAutoFocus={onCloseAutoFocus}
 			data-id={DATA_IDS[dialog]}
 		>
-			<p className="m-0">{copy.body}</p>
+			<p className="m-0">{t(`mcp.dialogs.${dialog}.body`)}</p>
 			{dialog === "enable" ? (
 				<p className="m-0">
 					{status.token
-						? MCP_TOKEN_DIALOG_COPY.enable.bodyKept(status.token.last4)
-						: MCP_TOKEN_DIALOG_COPY.enable.bodyNew}
+						? t("mcp.dialogs.enable.bodyKept", { last4: status.token.last4 })
+						: t("mcp.dialogs.enable.bodyNew")}
 				</p>
 			) : null}
 		</ConfirmModal>

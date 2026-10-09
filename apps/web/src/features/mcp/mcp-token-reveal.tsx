@@ -5,8 +5,8 @@ import {
 	CopyField,
 	type CopyFieldHandle,
 } from "../../components/ui/copy-field";
-import { CodeSpans } from "./code-spans";
-import { MCP_COPY } from "./mcp-copy";
+import { useT } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
 
 export interface McpTokenRevealProps {
 	token: string;
@@ -26,20 +26,21 @@ export function McpTokenReveal({
 	copyRef,
 	onDismiss,
 }: McpTokenRevealProps) {
+	const t = useT();
 	return (
 		<Alert
 			tone="warning"
-			title={MCP_COPY.revealTitle}
+			title={t("mcp.token.revealTitle")}
 			data-id="project-detail-mcp-token-reveal"
 		>
 			<div className="mt-2 grid justify-items-start gap-3">
 				<div className="w-full">
 					<CopyField
 						ref={copyRef}
-						label={MCP_COPY.revealLabel}
-						itemLabel={MCP_COPY.revealItem}
+						label={t("mcp.token.revealLabel")}
+						itemLabel={t("mcp.token.revealItem")}
 						value={token}
-						hint={<CodeSpans text={MCP_COPY.revealHint(tokenEnv)} />}
+						hint={renderRich(t("mcp.token.revealHint", { env: tokenEnv }))}
 						data-id="project-detail-mcp-token-value"
 						copyDataId="project-detail-mcp-token-copy"
 					/>
@@ -50,7 +51,7 @@ export function McpTokenReveal({
 					data-id="project-detail-mcp-token-dismiss"
 					onClick={onDismiss}
 				>
-					{MCP_COPY.revealDismiss}
+					{t("mcp.token.revealDismiss")}
 				</Button>
 			</div>
 		</Alert>

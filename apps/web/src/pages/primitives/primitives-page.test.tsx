@@ -61,18 +61,18 @@ describe("PrimitivesPage", () => {
 
 	it("opens the dropdown menu from the keyboard", async () => {
 		renderPage();
-		screen.getByRole("button", { name: "Thao tác project" }).focus();
+		screen.getByRole("button", { name: "Project actions" }).focus();
 		await userEvent.keyboard("{Enter}");
 		expect(
-			await screen.findByRole("menuitem", { name: "Xoá project" }),
+			await screen.findByRole("menuitem", { name: "Delete project" }),
 		).toHaveClass("text-error");
 	});
 
 	it("shows a toast", async () => {
 		renderPage();
-		await userEvent.click(screen.getByRole("button", { name: "Toast lỗi" }));
+		await userEvent.click(screen.getByRole("button", { name: "Error toast" }));
 		expect(
-			await screen.findByText("Không lưu được, thử lại."),
+			await screen.findByText("Couldn't save. Try again."),
 		).toBeInTheDocument();
 	});
 });

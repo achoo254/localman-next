@@ -85,7 +85,7 @@ describe("MCP tab of the endpoint card", () => {
 		expect(output()).not.toHaveTextContent("Authorization");
 		expect(
 			document.querySelector('[data-id="project-detail-mcp-config-hint"]'),
-		).toHaveTextContent("Không cần token");
+		).toHaveTextContent("No token needed");
 	});
 
 	it("lists the tools of enabled endpoints in the shared order", async () => {
@@ -113,10 +113,10 @@ describe("MCP tab of the endpoint card", () => {
 		expect(expected).toContain("mcp-tool-get_likes");
 		expect(expected).not.toContain("mcp-tool-delete_likes");
 		const posts = document.querySelector('[data-id="mcp-tool-create_posts"]');
-		expect(posts).toHaveTextContent("parentId, body theo schema");
+		expect(posts).toHaveTextContent("parentId, body matching the schema");
 		expect(
 			document.querySelector('[data-id="mcp-tool-delete_users"]'),
-		).toHaveTextContent("phá huỷ");
+		).toHaveTextContent("destructive");
 	});
 
 	it("explains why there are no tools", async () => {
@@ -124,20 +124,22 @@ describe("MCP tab of the endpoint card", () => {
 			endpoints: [{ method: "GET", path: "/:res", enabled: false }],
 		});
 		const view = renderMcp([off]);
-		const empty = await screen.findByText(/Mọi endpoint đang tắt/);
+		const empty = await screen.findByText(/Every endpoint is turned off/);
 		expect(empty).toHaveAttribute("data-id", "project-detail-mcp-tools-empty");
 		view.unmount();
 		renderMcp([]);
-		expect(await screen.findByText(/Chưa có tool/)).toBeInTheDocument();
+		expect(await screen.findByText(/No tools yet/)).toBeInTheDocument();
 	});
 
-	it("opens the Inspector commands under 'Thử' without calling anything", async () => {
+	it("opens the Inspector commands under 'Try' without calling anything", async () => {
 		const { calls, container } = renderMcp();
-		const button = await screen.findByRole("button", { name: "Thử" });
+		const button = await screen.findByRole("button", { name: "Try" });
 		expect(button).toHaveAttribute("aria-expanded", "false");
 		await userEvent.click(button);
 		expect(button).toHaveAttribute("aria-expanded", "true");
-		const panel = screen.getByText(/MCP Inspector là công cụ/).closest("div");
+		const panel = screen
+			.getByText(/MCP Inspector is an open-source tool/)
+			.closest("div");
 		expect(panel).toBeVisible();
 		expect(
 			container.querySelector('[data-id="project-detail-mcp-try-command"]'),
@@ -153,7 +155,7 @@ describe("MCP tab of the endpoint card", () => {
 			{ flags: ALL_FEATURES, path: `/projects/${PROJECT_ID}?endpoint=mcp` },
 		);
 		expect(
-			await screen.findByText(/Chủ project quản lý token MCP/),
+			await screen.findByText(/The project owner manages the MCP token/),
 		).toBeInTheDocument();
 		expect(screen.queryByRole("switch")).toBeNull();
 		expect(calls.some((call) => call.path === TOKEN_PATH)).toBe(false);
@@ -172,9 +174,9 @@ describe("MCP tab of the endpoint card", () => {
 			{ flags: ALL_FEATURES },
 		);
 		await userEvent.click(
-			await screen.findByRole("button", { name: "Đổi URL mock" }),
+			await screen.findByRole("button", { name: "Change mock URL" }),
 		);
-		const dialog = screen.getByRole("dialog", { name: "Đổi URL mock" });
-		expect(within(dialog).getByText(/URL MCP cũng đổi theo/)).toBeVisible();
+		const dialog = screen.getByRole("dialog", { name: "Change mock URL" });
+		expect(within(dialog).getByText(/The MCP URL changes too/)).toBeVisible();
 	});
 });

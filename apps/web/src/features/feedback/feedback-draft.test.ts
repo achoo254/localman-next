@@ -38,7 +38,7 @@ describe("fieldErrorsFromDetails", () => {
 				{ path: "source", message: "?" },
 				"junk",
 			]),
-		).toEqual({ message: "Nhập nội dung, tối đa 2.000 ký tự." });
+		).toEqual({ message: "messageTooLong" });
 		expect(fieldErrorsFromDetails(undefined)).toEqual({});
 	});
 });

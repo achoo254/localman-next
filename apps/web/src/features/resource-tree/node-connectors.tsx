@@ -1,3 +1,4 @@
+import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import type { ConnectorState } from "./use-tree-connect";
 
@@ -22,11 +23,12 @@ export function SelectConnector({
 	"data-id": dataId,
 	onSelect,
 }: SelectConnectorProps) {
+	const t = useT();
 	return (
 		<button
 			type="button"
 			aria-pressed={selected}
-			aria-label={`Chọn ${name} để di chuyển`}
+			aria-label={t("resourceTree.connector.select", { name })}
 			data-id={dataId}
 			style={{ top }}
 			className={cn(
@@ -60,10 +62,14 @@ export function NestConnector({
 	"data-id": dataId,
 	onNest,
 }: NestConnectorProps) {
+	const t = useT();
 	return (
 		<button
 			type="button"
-			aria-label={`Lồng ${selectionName ?? "resource đang chọn"} vào ${name}`}
+			aria-label={t("resourceTree.connector.nest", {
+				moving: selectionName ?? t("resourceTree.connector.selectedFallback"),
+				target: name,
+			})}
 			aria-disabled={state === "invalid" || undefined}
 			data-id={dataId}
 			data-state={state}

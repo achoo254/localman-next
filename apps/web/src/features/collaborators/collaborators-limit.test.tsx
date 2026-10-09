@@ -36,16 +36,16 @@ describe("member limit of the invite dialog", () => {
 			if (!node) throw new Error("not full yet");
 			return node;
 		});
-		expect(full).toHaveTextContent("Đã đủ 3 thành viên");
-		expect(full).toHaveTextContent("Thành viên thứ 4 cần gói Pro.");
-		expect(within(dialog).getByLabelText("Username hoặc email")).toBeDisabled();
+		expect(full).toHaveTextContent("Limit of 3 members reached");
+		expect(full).toHaveTextContent("Member #4 requires the Pro plan.");
+		expect(within(dialog).getByLabelText("Username or email")).toBeDisabled();
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Xem gói" }),
+			within(dialog).getByRole("button", { name: "See plans" }),
 		);
-		const plans = await screen.findByRole("dialog", { name: "Quản lý gói" });
-		expect(plans).toHaveTextContent("3 thành viên mỗi project");
+		const plans = await screen.findByRole("dialog", { name: "Manage plan" });
+		expect(plans).toHaveTextContent("3 members per project");
 		await userEvent.click(
-			within(plans).getByRole("button", { name: "Liên hệ" }),
+			within(plans).getByRole("button", { name: "Contact" }),
 		);
 		await expectProInterestSource("plan_limit_members");
 	});
@@ -73,11 +73,11 @@ describe("member limit of the invite dialog", () => {
 		await within(dialog).findByText("An · @an");
 		await typeAndLook(dialog, "chi");
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Xác nhận mời" }),
+			within(dialog).getByRole("button", { name: "Confirm invite" }),
 		);
 		expect(
-			await screen.findByRole("dialog", { name: "Quản lý gói" }),
-		).toHaveTextContent("3 thành viên mỗi project");
+			await screen.findByRole("dialog", { name: "Manage plan" }),
+		).toHaveTextContent("3 members per project");
 		expect(
 			calls.filter((c) => c.method === "GET" && c.path === MEMBERS),
 		).toHaveLength(2);

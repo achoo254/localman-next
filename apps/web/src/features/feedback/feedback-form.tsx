@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/button";
 import { Modal, ModalClose } from "../../components/ui/modal";
 import { ModalFooter } from "../../components/ui/modal-footer";
 import { SuccessPanel } from "../../components/ui/success-panel";
+import { useT } from "../../i18n/i18n-context";
 import { reloadCurrentUser, useCurrentUser } from "../auth/use-current-user";
 import { type FeedbackAccount, FeedbackFormBody } from "./feedback-form-body";
 
@@ -30,6 +31,7 @@ interface FeedbackContentProps {
  * what was typed and shows Turnstile.
  */
 function FeedbackContent(props: FeedbackContentProps) {
+	const t = useT();
 	const session = useCurrentUser();
 	// Once the form shows, a session re-read (expired session) keeps it
 	// mounted with the last known account, so nothing typed is lost.
@@ -39,7 +41,9 @@ function FeedbackContent(props: FeedbackContentProps) {
 	}
 	if (account.current === undefined) {
 		return (
-			<output className="block font-mono text-muted text-sm">Đang tải…</output>
+			<output className="block font-mono text-muted text-sm">
+				{t("common.loading")}
+			</output>
 		);
 	}
 	return (
@@ -52,7 +56,7 @@ function FeedbackContent(props: FeedbackContentProps) {
 }
 
 /**
- * "Góp ý / Liên hệ": the in-app form that replaces a contact email. The
+ * "Feedback / Contact": the in-app form that replaces a contact email. The
  * result region stays mounted so screen readers announce the confirmation
  * when it replaces the form.
  */
@@ -61,6 +65,7 @@ export function FeedbackForm({
 	onOpenChange,
 	source,
 }: FeedbackFormProps) {
+	const t = useT();
 	const formId = useId();
 	const [busy, setBusy] = useState(false);
 	/** Set once sent: the reply address left by the sender, if any. */
@@ -76,7 +81,7 @@ export function FeedbackForm({
 		<ModalFooter>
 			<ModalClose asChild>
 				<Button variant="primary" data-id="modal-feedback-close" autoFocus>
-					Đóng
+					{t("common.actions.close")}
 				</Button>
 			</ModalClose>
 		</ModalFooter>
@@ -84,7 +89,7 @@ export function FeedbackForm({
 		<ModalFooter>
 			<ModalClose asChild>
 				<Button variant="ghost" data-id="modal-feedback-cancel">
-					Huỷ
+					{t("common.actions.cancel")}
 				</Button>
 			</ModalClose>
 			<Button
@@ -95,7 +100,7 @@ export function FeedbackForm({
 				data-id="modal-feedback-submit"
 				leadingIcon={<IconSend size={16} aria-hidden="true" />}
 			>
-				{busy ? "Đang gửi…" : "Gửi"}
+				{busy ? t("common.actions.sending") : t("common.actions.send")}
 			</Button>
 		</ModalFooter>
 	);
@@ -104,7 +109,7 @@ export function FeedbackForm({
 		<Modal
 			open={open}
 			onOpenChange={changeOpen}
-			title="Góp ý / Liên hệ"
+			title={t("feedback.title")}
 			size="md"
 			initialFocusRef={firstField}
 			data-id="modal-feedback"
@@ -125,10 +130,10 @@ export function FeedbackForm({
 				data-id="modal-feedback-result"
 			>
 				{sent ? (
-					<SuccessPanel title="Đã gửi, cảm ơn bạn">
-						Chúng tôi đã nhận được tin của bạn.
+					<SuccessPanel title={t("feedback.sent.title")}>
+						{t("feedback.sent.body")}
 						{sent.contact
-							? ` Chúng tôi sẽ trả lời qua ${sent.contact} nếu cần.`
+							? ` ${t("feedback.sent.reply", { contact: sent.contact })}`
 							: null}
 					</SuccessPanel>
 				) : null}

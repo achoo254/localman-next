@@ -1,13 +1,8 @@
 import { useRef } from "react";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
-import { collaboratorLabel } from "./collaborator-row";
+import { useI18n } from "../../i18n/i18n-context";
+import { memberName } from "./collaborator-labels";
 import type { Collaborator } from "./collaborators-api";
-
-/** Short name for confirmations: display name, @username or the email. */
-export function memberName(item: Collaborator): string {
-	if (item.user) return item.user.name || `@${item.user.username}`;
-	return item.inviteeEmail ?? collaboratorLabel(item);
-}
 
 export interface MemberConfirm {
 	item: Collaborator;
@@ -24,7 +19,7 @@ export interface MemberConfirmModalProps {
 }
 
 /**
- * "Xoá {name} khỏi {project}?" for the owner, "Rời {project}?" for a
+ * "Remove {name} from {project}?" for the owner, "Leave {project}?" for a
  * collaborator. Keeps showing the last confirmation while it animates out.
  */
 export function MemberConfirmModal({
@@ -34,29 +29,46 @@ export function MemberConfirmModal({
 	onConfirm,
 	onCloseAutoFocus,
 }: MemberConfirmModalProps) {
+	const i18n = useI18n();
+	const { t } = i18n;
 	const last = useRef(confirm);
 	if (confirm) last.current = confirm;
 	const shown = confirm ?? last.current;
 	const leave = shown?.leave ?? false;
-	const name = shown ? memberName(shown.item) : "";
+	const name = shown ? memberName(shown.item, i18n) : "";
 	return (
 		<ConfirmModal
 			open={confirm !== null}
 			onOpenChange={(open) => !open && onClose()}
-			title={leave ? "Rời project" : "Xoá cộng tác viên"}
+			title={t(
+				leave
+					? "collaborators.confirm.leaveTitle"
+					: "collaborators.confirm.removeTitle",
+			)}
 			question={
-				leave ? `Rời ${projectName}?` : `Xoá ${name} khỏi ${projectName}?`
+				leave
+					? t("collaborators.confirm.leaveQuestion", { project: projectName })
+					: t("collaborators.confirm.removeQuestion", {
+							name,
+							project: projectName,
+						})
 			}
-			confirmLabel={leave ? "Rời project" : "Xoá khỏi project"}
+			confirmLabel={t(
+				leave
+					? "collaborators.confirm.leaveAction"
+					: "collaborators.confirm.removeAction",
+			)}
 			data-id={leave ? "modal-leave-project" : "modal-remove-collaborator"}
 			onCloseAutoFocus={onCloseAutoFocus}
 			onConfirm={async () => {
 				if (confirm) await onConfirm(confirm);
 			}}
 		>
-			{leave
-				? "Bạn sẽ mất quyền truy cập cho tới khi được mời lại."
-				: "Họ sẽ mất quyền truy cập project ngay và không tham gia lại được bằng magic link. Muốn họ quay lại, hãy gửi lời mời mới."}
+			{t(
+				leave
+					? "collaborators.confirm.leaveBody"
+					: "collaborators.confirm.removeBody",
+			)}
 		</ConfirmModal>
 	);
 }

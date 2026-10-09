@@ -6,9 +6,9 @@ import { cardClassName } from "../../components/ui/card";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
 import { AuthStatus } from "../../features/auth/auth-status";
 import { useCurrentUser } from "../../features/auth/use-current-user";
+import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
-import { formatNumber } from "../../lib/format";
 import { useAppTitle } from "../../lib/use-document-title";
 import { AdminNav } from "./admin-nav";
 import type { ContactMessage } from "./feedback-inbox-api";
@@ -18,9 +18,10 @@ import { Pagination } from "./pagination";
 import { AdminForbidden } from "./pro-interest-page";
 import { useFeedbackInbox } from "./use-feedback-inbox";
 
-/** `/admin/feedback`: messages from the "Góp ý / Liên hệ" form. */
+/** `/admin/feedback`: messages from the "Feedback / Contact" form. */
 export function FeedbackInboxPage() {
-	useAppTitle("Quản trị · Hộp thư góp ý");
+	const t = useT();
+	useAppTitle(t("admin.heading", { page: t("admin.nav.feedback") }));
 	const session = useCurrentUser();
 	if (session.status !== "authenticated") return <AuthStatus kind="loading" />;
 	if (!session.user.isOwner) return <AdminForbidden />;
@@ -28,6 +29,7 @@ export function FeedbackInboxPage() {
 }
 
 function FeedbackInbox() {
+	const t = useT();
 	const inbox = useFeedbackInbox();
 	const { state } = inbox;
 	const [deleting, setDeleting] = useState<ContactMessage | null>(null);
@@ -38,31 +40,31 @@ function FeedbackInbox() {
 		<section data-id="admin-feedback" className="grid gap-4">
 			<div className="flex min-h-11 flex-wrap items-center gap-3">
 				<h1 className="m-0 font-bold font-mono text-xl">
-					Quản trị · Hộp thư góp ý
+					{t("admin.heading", { page: t("admin.nav.feedback") })}
 				</h1>
-				<Badge tone="accent">Chỉ chủ sở hữu</Badge>
+				<Badge tone="accent">{t("admin.ownerOnly")}</Badge>
 			</div>
 			<AdminNav />
 			<section
 				data-id="admin-feedback-list"
-				aria-label="Hộp thư góp ý"
+				aria-label={t("admin.nav.feedback")}
 				aria-busy={state.status === "loading"}
 				className={cn(cardClassName, "overflow-hidden")}
 			>
 				<FeedbackInboxFilters
 					filter={inbox.filter}
 					onChange={inbox.changeFilter}
-					countLabel={`${formatNumber(inbox.total)} tin`}
+					countLabel={t("admin.inbox.count", { count: inbox.total })}
 				/>
 				{state.status === "loading" ? (
 					<output className="block px-5 py-6 font-mono text-muted text-sm">
-						Đang tải hộp thư…
+						{t("admin.inbox.loading")}
 					</output>
 				) : null}
 				{state.status === "error" ? (
 					<div className="grid justify-items-start gap-3 px-5 py-6">
 						<Alert tone="danger">{errorMessage(state.error)}</Alert>
-						<Button onClick={inbox.refresh}>Thử lại</Button>
+						<Button onClick={inbox.refresh}>{t("common.cta.retry")}</Button>
 					</div>
 				) : null}
 				{state.status === "ready" && state.page.items.length === 0 ? (
@@ -70,7 +72,7 @@ function FeedbackInbox() {
 						data-id="admin-feedback-empty"
 						className="m-0 px-5 py-7 text-center text-muted"
 					>
-						Không có tin nào khớp bộ lọc.
+						{t("admin.inbox.empty")}
 					</p>
 				) : null}
 				{state.status === "ready" && state.page.items.length > 0 ? (
@@ -96,16 +98,15 @@ function FeedbackInbox() {
 				<ConfirmModal
 					open
 					onOpenChange={(open) => !open && setDeleting(null)}
-					title="Xoá tin"
+					title={t("admin.inbox.deleteTitle")}
 					data-id="modal-feedback-delete"
-					question={`Xoá tin của ${senderLabel(deleting)}?`}
-					confirmLabel="Xoá vĩnh viễn"
+					question={t("admin.inbox.deleteQuestion", {
+						sender: senderLabel(t, deleting),
+					})}
+					confirmLabel={t("admin.deletePermanently")}
 					onConfirm={() => inbox.remove(deleting)}
 				>
-					<span>
-						Nội dung, tên và địa chỉ liên hệ của tin này bị xoá hẳn. Không hoàn
-						tác được.
-					</span>
+					<span>{t("admin.inbox.deleteBody")}</span>
 				</ConfirmModal>
 			) : null}
 		</section>

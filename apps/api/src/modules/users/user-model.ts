@@ -1,3 +1,4 @@
+import { SUPPORTED_LOCALES } from "@localman/shared";
 import mongoose, { Schema } from "mongoose";
 
 /**
@@ -20,6 +21,11 @@ const userSchema = new Schema(
 			default: "free",
 		},
 		planExpiresAt: { type: Date },
+		/**
+		 * Interface language chosen in the web app; notifications (in-app,
+		 * Web Push, Telegram) use it. Absent until chosen: read as `en`.
+		 */
+		locale: { type: String, enum: [...SUPPORTED_LOCALES] },
 		/** Linked chat from userinfo (`telegram` scope); absent when unlinked. */
 		telegram: {
 			chatId: { type: String },

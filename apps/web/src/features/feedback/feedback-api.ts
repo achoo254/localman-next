@@ -12,36 +12,30 @@ export async function submitFeedback(
 	});
 }
 
+/** Key under `feedback.submit` of a failed submission's explanation. */
+export type SubmitProblemKey =
+	| "rateLimited"
+	| "validation"
+	| "turnstileFailed"
+	| "turnstileUnavailable"
+	| "failed"
+	| "sessionLost";
+
 export interface SubmitProblem {
 	tone: AlertTone;
-	text: string;
+	key: SubmitProblemKey;
 }
 
 const KNOWN: Readonly<Record<string, SubmitProblem>> = {
-	RATE_LIMITED: {
-		tone: "warning",
-		text: "Bạn gửi nhiều lần liên tiếp. Đợi vài phút rồi thử lại. Nội dung vẫn còn đây.",
-	},
-	VALIDATION_ERROR: {
-		tone: "danger",
-		text: "Thông tin chưa hợp lệ, kiểm tra lại các ô rồi gửi lại. Nội dung vẫn còn đây.",
-	},
-	TURNSTILE_FAILED: {
-		tone: "danger",
-		text: "Xác minh không thành công, làm lại bước xác minh. Nội dung vẫn còn đây.",
-	},
-	TURNSTILE_UNAVAILABLE: {
-		tone: "danger",
-		text: "Chưa kiểm tra được bước xác minh lúc này, thử lại sau ít phút. Nội dung vẫn còn đây.",
-	},
+	RATE_LIMITED: { tone: "warning", key: "rateLimited" },
+	VALIDATION_ERROR: { tone: "danger", key: "validation" },
+	TURNSTILE_FAILED: { tone: "danger", key: "turnstileFailed" },
+	TURNSTILE_UNAVAILABLE: { tone: "danger", key: "turnstileUnavailable" },
 };
 
-const FALLBACK: SubmitProblem = {
-	tone: "danger",
-	text: "Chưa gửi được. Nội dung vẫn còn đây, hãy thử lại.",
-};
+const FALLBACK: SubmitProblem = { tone: "danger", key: "failed" };
 
-/** Vietnamese explanation of a failed submission (network and 5xx included). */
+/** Explanation of a failed submission (network and 5xx included). */
 export function submitProblem(error: unknown): SubmitProblem {
 	if (error instanceof ApiError && Object.hasOwn(KNOWN, error.code)) {
 		return KNOWN[error.code] ?? FALLBACK;
@@ -52,7 +46,7 @@ export function submitProblem(error: unknown): SubmitProblem {
 /** Shown when the API treated a signed-in sender as a visitor. */
 export const SESSION_LOST: SubmitProblem = {
 	tone: "warning",
-	text: "Phiên đăng nhập đã hết hạn. Hoàn tất bước xác minh rồi gửi lại. Nội dung vẫn còn đây.",
+	key: "sessionLost",
 };
 
 /** The API asked for Turnstile: it saw no session. */

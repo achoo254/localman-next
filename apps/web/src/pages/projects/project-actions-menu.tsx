@@ -14,6 +14,7 @@ import {
 	DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import { IconButton } from "../../components/ui/icon-button";
+import { useT } from "../../i18n/i18n-context";
 import type { Project } from "./projects-api";
 
 export type ProjectAction =
@@ -29,7 +30,7 @@ export interface ProjectActionsMenuProps {
 }
 
 /**
- * ⋮ menu of a project row. Everyone sees the members ("Cộng tác viên":
+ * ⋮ menu of a project row. Everyone sees the members ("Collaborators":
  * the owner manages them, a collaborator may leave) and can clone; the
  * magic link, edit and delete belong to the owner.
  */
@@ -37,13 +38,14 @@ export function ProjectActionsMenu({
 	project,
 	onAction,
 }: ProjectActionsMenuProps) {
+	const t = useT();
 	const owner = project.role === "owner";
 	const base = `project-row-${project.id}`;
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
 				<IconButton
-					label={`Tuỳ chọn cho ${project.name}`}
+					label={t("projects.menu.trigger", { name: project.name })}
 					icon={<IconDotsVertical size={20} aria-hidden="true" />}
 					data-id={`${base}-menu`}
 					className="data-[state=open]:bg-fg/6 data-[state=open]:text-fg"
@@ -55,7 +57,7 @@ export function ProjectActionsMenu({
 					icon={<IconUsers size={16} aria-hidden="true" />}
 					onSelect={() => onAction("collaborators", project)}
 				>
-					Cộng tác viên
+					{t("projects.menu.collaborators")}
 				</DropdownMenuItem>
 				{owner ? (
 					<DropdownMenuItem
@@ -71,7 +73,7 @@ export function ProjectActionsMenu({
 					icon={<IconCopy size={16} aria-hidden="true" />}
 					onSelect={() => onAction("clone", project)}
 				>
-					Nhân bản
+					{t("projects.menu.clone")}
 				</DropdownMenuItem>
 				{owner ? (
 					<>
@@ -80,7 +82,7 @@ export function ProjectActionsMenu({
 							icon={<IconPencil size={16} aria-hidden="true" />}
 							onSelect={() => onAction("edit", project)}
 						>
-							Sửa
+							{t("projects.menu.edit")}
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
@@ -89,7 +91,7 @@ export function ProjectActionsMenu({
 							icon={<IconTrash size={16} aria-hidden="true" />}
 							onSelect={() => onAction("delete", project)}
 						>
-							Xoá
+							{t("projects.menu.delete")}
 						</DropdownMenuItem>
 					</>
 				) : null}

@@ -93,8 +93,7 @@ export const rotateProjectSecret = defineOperation({
 		for (const collaborator of subs) {
 			notifications.notifyLater(collaborator, {
 				type: "project.mockUrlChanged",
-				title: "URL mock đã đổi",
-				body: `Chủ project đã đổi URL mock của project "${updated.name}". URL cũ không còn hoạt động; hãy dùng URL mới trong trang project.`,
+				params: { project: updated.name },
 				link: `/projects/${updated._id.toHexString()}`,
 			});
 		}

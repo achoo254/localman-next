@@ -1,3 +1,4 @@
+import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 
 export interface AddToRootRailProps {
@@ -9,7 +10,7 @@ export interface AddToRootRailProps {
 	"data-id"?: string;
 }
 
-/** Vertical "Thêm vào root" bar at the left edge of the canvas. */
+/** Vertical "Add to root" bar at the left edge of the canvas. */
 export function AddToRootRail({
 	width,
 	height,
@@ -17,6 +18,7 @@ export function AddToRootRail({
 	onClick,
 	"data-id": dataId = "resource-tree-root",
 }: AddToRootRailProps) {
+	const t = useT();
 	return (
 		<button
 			type="button"
@@ -34,7 +36,7 @@ export function AddToRootRail({
 			onClick={onClick}
 		>
 			<span className="rotate-180 whitespace-nowrap [writing-mode:vertical-rl]">
-				Thêm vào root
+				{t("resourceTree.rail.addToRoot")}
 			</span>
 		</button>
 	);

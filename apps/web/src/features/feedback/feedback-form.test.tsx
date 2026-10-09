@@ -39,33 +39,31 @@ describe("FeedbackForm", () => {
 			),
 		);
 		await waitFor(() =>
-			expect(screen.getByLabelText(/^Nội dung/)).toHaveFocus(),
+			expect(screen.getByLabelText(/^Message/)).toHaveFocus(),
 		);
 		expect(
 			screen.getByText(
-				"Góp ý gửi kèm khu vực bạn đang mở (ví dụ trang chủ), không kèm đường dẫn.",
+				"Feedback is sent with the area you have open (for example the home page), not the page address.",
 			),
 		).toBeVisible();
-		await userEvent.selectOptions(screen.getByLabelText("Loại"), "bug");
-		expect(screen.getByLabelText(/^Nội dung/)).toHaveAttribute(
+		await userEvent.selectOptions(screen.getByLabelText("Type"), "bug");
+		expect(screen.getByLabelText(/^Message/)).toHaveAttribute(
 			"placeholder",
-			"Bạn đang làm gì thì gặp lỗi, và lỗi hiện ra thế nào?",
+			"What were you doing when it went wrong, and what did you see?",
 		);
 		await userEvent.type(
-			screen.getByLabelText(/^Nội dung/),
+			screen.getByLabelText(/^Message/),
 			"  Nút Lưu không chạy  ",
 		);
 		await userEvent.type(
-			screen.getByLabelText(/^Email hoặc Telegram/),
+			screen.getByLabelText(/^Email or Telegram/),
 			"@lan_dev",
 		);
 		await send();
 		const result = dialog.querySelector('[data-id="modal-feedback-result"]');
 		expect(result).toHaveAttribute("aria-live", "polite");
-		await waitFor(() => expect(result).toHaveTextContent("Đã gửi, cảm ơn bạn"));
-		expect(result).toHaveTextContent(
-			"Chúng tôi sẽ trả lời qua @lan_dev nếu cần.",
-		);
+		await waitFor(() => expect(result).toHaveTextContent("Sent. Thank you"));
+		expect(result).toHaveTextContent("We'll reply via @lan_dev if needed.");
 		expect(calls.find((c) => c.method === "POST")?.body).toEqual({
 			category: "bug",
 			message: "Nút Lưu không chạy",
@@ -84,20 +82,20 @@ describe("FeedbackForm", () => {
 			},
 			"/projects/p-123",
 		);
-		expect(screen.getByLabelText(/^Tên/)).toHaveValue("Minh Anh");
-		const contact = screen.getByLabelText(/^Email hoặc Telegram/);
+		expect(screen.getByLabelText(/^Name/)).toHaveValue("Minh Anh");
+		const contact = screen.getByLabelText(/^Email or Telegram/);
 		expect(contact).toHaveValue("minhanh@example.com");
-		expect(contact).toHaveAccessibleDescription("Lấy từ tài khoản của bạn.");
+		expect(contact).toHaveAccessibleDescription("Taken from your account.");
 		expect(
 			screen.getByText(
-				"Góp ý gửi kèm tài khoản của bạn và khu vực bạn đang mở (ví dụ Projects), không kèm đường dẫn.",
+				"Feedback is sent with your account and the area you have open (for example Projects), not the page address.",
 			),
 		).toBeVisible();
 		await userEvent.clear(contact);
-		await userEvent.type(screen.getByLabelText(/^Nội dung/), "Hay lắm");
+		await userEvent.type(screen.getByLabelText(/^Message/), "Hay lắm");
 		await send();
-		const done = await screen.findByText(/Chúng tôi đã nhận được tin của bạn/);
-		expect(done).not.toHaveTextContent("trả lời qua");
+		const done = await screen.findByText(/We've received your message/);
+		expect(done).not.toHaveTextContent("reply via");
 		expect(fakeTurnstile.render).not.toHaveBeenCalled();
 		expect(calls.some((c) => c.path.endsWith("/config"))).toBe(false);
 		expect(calls.find((c) => c.method === "POST")?.body).toEqual({
@@ -113,17 +111,17 @@ describe("FeedbackForm", () => {
 		const { calls } = await openForm({
 			"GET /api/v1/users/me": { body: makeUser() },
 		});
-		const contact = screen.getByLabelText(/^Email hoặc Telegram/);
+		const contact = screen.getByLabelText(/^Email or Telegram/);
 		await userEvent.clear(contact);
 		await userEvent.type(contact, "không phải địa chỉ");
 		await send();
-		const message = screen.getByLabelText(/^Nội dung/);
+		const message = screen.getByLabelText(/^Message/);
 		expect(message).toHaveAttribute("aria-invalid", "true");
 		expect(message).toHaveFocus();
-		expect(screen.getByText("Nhập nội dung.")).toBeInTheDocument();
+		expect(screen.getByText("Enter a message.")).toBeInTheDocument();
 		expect(
 			screen.getByText(
-				"Nhập email hoặc username Telegram hợp lệ, hoặc để trống.",
+				"Enter a valid email or Telegram username, or leave it empty.",
 			),
 		).toBeInTheDocument();
 		expect(calls.some((c) => c.method === "POST")).toBe(false);
@@ -142,7 +140,7 @@ describe("FeedbackForm", () => {
 			honeypot?.parentElement?.closest('[aria-hidden="true"]'),
 		).toHaveClass("sr-only");
 		expect(
-			within(dialog).queryByRole("textbox", { name: /Không điền/ }),
+			within(dialog).queryByRole("textbox", { name: /Leave this field empty/ }),
 		).toBeNull();
 		expect(within(dialog).getAllByRole("textbox")).toHaveLength(3);
 		expect(await seriousViolations(dialog)).toEqual([]);

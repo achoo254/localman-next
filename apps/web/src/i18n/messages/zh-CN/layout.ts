@@ -20,8 +20,8 @@ export const layout: Messages["layout"] = {
 		pro: "Pro 套餐",
 	},
 	accountMenu: {
-		trigger: "账户 {name}",
-		account: "账户与额度",
+		trigger: "账号 {name}",
+		account: "账号与额度",
 		plan: "管理套餐",
 		notifications: "通知渠道",
 		adminProInterest: "管理 · Pro 意向",
@@ -29,12 +29,12 @@ export const layout: Messages["layout"] = {
 		signOut: "退出登录",
 	},
 	idpMenu: {
-		heading: "hoandat 账户 · 在新标签页中打开",
+		heading: "hoandat 账号 · 在新标签页中打开",
 		email: "邮箱",
 		recovery: "恢复码",
 		password: "密码与登录",
 		apps: "已授权的应用",
-		opensIdp: "，在新标签页中打开 hoandat 账户",
+		opensIdp: "，在新标签页中打开 hoandat 账号",
 	},
 	footer: {
 		copyright: "© {year} Localman",

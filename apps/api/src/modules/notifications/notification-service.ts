@@ -1,37 +1,20 @@
-import { z } from "zod";
+import { DEFAULT_LOCALE, type Locale } from "@localman/shared";
 import type { Env } from "../../config/env.js";
-import { normalizeInternalPath } from "../../http/internal-path.js";
 import type { Logger } from "../../logger.js";
+import { readOwnerLocale, readUserLocale } from "../users/user-locale.js";
 import {
 	type NotificationItem,
-	type NotificationMessage,
 	storeInAppNotification,
 } from "./channels/in-app-channel.js";
 import { TelegramBotClient } from "./channels/telegram-bot-client.js";
 import { TelegramChannel } from "./channels/telegram-channel.js";
 import { WebPushChannel } from "./channels/web-push-channel.js";
-import { NOTIFICATION_EVENT_TYPES } from "./notification-events.js";
 import {
-	NOTIFICATION_BODY_MAX,
-	NOTIFICATION_TITLE_MAX,
-} from "./notification-model.js";
+	type NotificationEvent,
+	validateEvent,
+} from "./notification-events.js";
 import { channelChoiceFor } from "./notification-preferences-model.js";
-
-const internalLink = z.string().transform((value, ctx) => {
-	const path = normalizeInternalPath(value);
-	if (path === null) {
-		ctx.addIssue({ code: "custom", message: "must be a path on this site" });
-		return z.NEVER;
-	}
-	return path;
-});
-
-const notificationMessage = z.object({
-	type: z.enum(NOTIFICATION_EVENT_TYPES),
-	title: z.string().trim().min(1).max(NOTIFICATION_TITLE_MAX),
-	body: z.string().trim().min(1).max(NOTIFICATION_BODY_MAX),
-	link: internalLink.optional(),
-});
+import { renderNotification } from "./notification-texts.js";
 
 export interface NotificationServiceOptions {
 	readonly logger: Logger;
@@ -54,7 +37,9 @@ export interface ChannelAvailability {
 
 /**
  * Sends a notification to every channel the user chose for its event
- * type. The in-app copy (the bell) is stored before `notify` returns;
+ * type, in the user's language. The in-app copy (the bell) keeps the
+ * event's params and is rendered again whenever it is read; it is stored
+ * before `notify` returns;
  * Web Push and Telegram run in the background so a slow push service or a
  * Telegram backoff never holds the caller's request. Background failures
  * are logged, never rejected.
@@ -77,14 +62,20 @@ export class NotificationService {
 	/** The stored in-app notification, or `null` when the user turned it off. */
 	async notify(
 		userSub: string,
-		event: NotificationMessage,
+		event: NotificationEvent,
 	): Promise<NotificationItem | null> {
-		const message = notificationMessage.parse(event);
-		const choice = await channelChoiceFor(userSub, message.type);
+		const valid = validateEvent(event);
+		const [choice, locale] = await Promise.all([
+			channelChoiceFor(userSub, valid.type),
+			readUserLocale(userSub),
+		]);
 		const item = choice.inApp
-			? await storeInAppNotification(userSub, message)
+			? await storeInAppNotification(userSub, valid, locale)
 			: null;
 		const { webPush, telegram } = this.options;
+		const text = renderNotification(valid.type, valid.params, locale);
+		if (!text) throw new Error(`No texts for notification ${valid.type}`);
+		const message = { ...valid, ...text };
 		if (choice.webPush && webPush) {
 			this.inBackground(
 				webPush.deliver(userSub, {
@@ -108,19 +99,31 @@ export class NotificationService {
 	 * committed (an invitation must not fail because the bell's store did).
 	 * Every failure, the in-app store included, is logged, never thrown.
 	 */
-	notifyLater(userSub: string, event: NotificationMessage): void {
+	notifyLater(userSub: string, event: NotificationEvent): void {
 		this.inBackground(this.notify(userSub, event), event.type);
 	}
 
 	/**
-	 * Sends a short text to the owner's Telegram chat in the background.
+	 * Sends a short text to the owner's Telegram chat in the background,
+	 * written by `text` in the owner's language (`readOwnerLocale`).
 	 * Returns false when the bot or the owner chat is not configured.
 	 */
-	alertOwner(text: string, type: string): boolean {
+	alertOwner(text: (locale: Locale) => string, type: string): boolean {
 		const { telegram, ownerChatId } = this.options;
 		if (!telegram || !ownerChatId) return false;
-		this.inBackground(telegram.sendToChat(ownerChatId, text), type);
+		const send = this.ownerLocale(ownerChatId).then((locale) =>
+			telegram.sendToChat(ownerChatId, text(locale)),
+		);
+		this.inBackground(send, type);
 		return true;
+	}
+
+	/** An alert is never lost to a failed language lookup: English then. */
+	private ownerLocale(ownerChatId: string): Promise<Locale> {
+		return readOwnerLocale(ownerChatId).catch((error: unknown) => {
+			this.options.logger.warn({ err: error }, "Owner locale lookup failed");
+			return DEFAULT_LOCALE;
+		});
 	}
 
 	/** Waits for background deliveries (graceful shutdown, tests). */

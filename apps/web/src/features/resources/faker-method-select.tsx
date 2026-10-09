@@ -2,12 +2,13 @@ import { FAKER_METHOD_GROUPS } from "@localman/shared/faker-catalog";
 import { IconChevronDown } from "@tabler/icons-react";
 import { type KeyboardEvent, useEffect, useId, useMemo, useState } from "react";
 import { controlClassName } from "../../components/ui/input";
+import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 
 export interface FakerMethodSelectProps {
 	value: string;
 	onChange: (methodId: string) => void;
-	/** Accessible name, e.g. "Faker method của email". */
+	/** Accessible name, e.g. "Faker method of email". */
 	label: string;
 	invalid?: boolean;
 	"data-id"?: string;
@@ -40,6 +41,7 @@ export function FakerMethodSelect({
 	invalid,
 	"data-id": dataId,
 }: FakerMethodSelectProps) {
+	const t = useT();
 	const listId = useId();
 	const [open, setOpen] = useState(false);
 	const [query, setQuery] = useState("");
@@ -129,7 +131,7 @@ export function FakerMethodSelect({
 			/>
 			{open && options.length === 0 ? (
 				<output className="absolute top-full right-0 left-0 z-10 mt-1 block rounded-md border border-border bg-surface px-3 py-2 text-muted text-sm shadow-lg">
-					Không có method nào khớp.
+					{t("resources.schema.noMatch")}
 				</output>
 			) : null}
 			{open && options.length > 0 ? (

@@ -8,10 +8,12 @@ import { FormField } from "../../components/ui/form-field";
 import { Input } from "../../components/ui/input";
 import { Select } from "../../components/ui/select";
 import { Textarea } from "../../components/ui/textarea";
-import { formatNumber } from "../../lib/format";
+import { useI18n } from "../../i18n/i18n-context";
+import type { Translate } from "../../i18n/translate";
 import {
 	FEEDBACK_CATEGORIES,
 	type FeedbackDraft,
+	type FeedbackError,
 	type FeedbackErrors,
 } from "./feedback-draft";
 
@@ -25,11 +27,32 @@ export interface FeedbackFieldsProps {
 	onChange: (patch: Partial<FeedbackDraft>) => void;
 }
 
-const OPTIONAL = (
-	<span className="font-normal font-sans text-muted text-xs"> (tuỳ chọn)</span>
-);
+/** Text of a field error, in the current language. */
+export function feedbackErrorText(
+	t: Translate,
+	error: FeedbackError | undefined,
+): string | undefined {
+	switch (error) {
+		case undefined:
+			return undefined;
+		case "messageTooLong":
+			return t("feedback.errors.messageTooLong", { max: CONTACT_MESSAGE_MAX });
+		case "nameTooLong":
+			return t("feedback.errors.nameTooLong", { max: CONTACT_NAME_MAX });
+		default:
+			return t(`feedback.errors.${error}`);
+	}
+}
 
-const FROM_ACCOUNT = "Lấy từ tài khoản của bạn.";
+function Optional() {
+	const { t } = useI18n();
+	return (
+		<span className="font-normal font-sans text-muted text-xs">
+			{" "}
+			{t("common.optional")}
+		</span>
+	);
+}
 
 function toCategory(value: string): FeedbackDraft["category"] {
 	return (
@@ -45,12 +68,17 @@ export function FeedbackFields({
 	prefilled,
 	onChange,
 }: FeedbackFieldsProps) {
+	const { t, formatNumber } = useI18n();
 	const category = FEEDBACK_CATEGORIES.find(
 		(choice) => choice.id === draft.category,
 	);
+	const fromAccount = t("feedback.fields.fromAccount");
 	return (
 		<>
-			<FormField label="Loại" data-id="modal-feedback-kind">
+			<FormField
+				label={t("feedback.fields.kind")}
+				data-id="modal-feedback-kind"
+			>
 				<Select
 					value={draft.category}
 					onChange={(event) =>
@@ -59,33 +87,45 @@ export function FeedbackFields({
 				>
 					{FEEDBACK_CATEGORIES.map((choice) => (
 						<option key={choice.id} value={choice.id}>
-							{choice.label}
+							{t(`feedback.categories.${choice.key}.label`)}
 						</option>
 					))}
 				</Select>
 			</FormField>
 			<FormField
-				label="Nội dung"
+				label={t("feedback.fields.message")}
 				required
 				data-id="modal-feedback-body"
-				hint={`${formatNumber(draft.message.trim().length)}/${formatNumber(CONTACT_MESSAGE_MAX)} ký tự`}
-				error={errors.message}
+				hint={t("feedback.fields.length", {
+					length: formatNumber(draft.message.trim().length),
+					max: formatNumber(CONTACT_MESSAGE_MAX),
+				})}
+				error={feedbackErrorText(t, errors.message)}
 			>
 				<Textarea
 					ref={firstFieldRef}
 					rows={5}
 					maxLength={CONTACT_MESSAGE_MAX}
-					placeholder={category?.placeholder}
+					placeholder={
+						category
+							? t(`feedback.categories.${category.key}.placeholder`)
+							: undefined
+					}
 					value={draft.message}
 					onChange={(event) => onChange({ message: event.target.value })}
 				/>
 			</FormField>
 			<div className="grid items-start gap-4 sm:grid-cols-2">
 				<FormField
-					label={<>Tên{OPTIONAL}</>}
+					label={
+						<>
+							{t("feedback.fields.name")}
+							<Optional />
+						</>
+					}
 					data-id="modal-feedback-name"
-					hint={prefilled.name ? FROM_ACCOUNT : undefined}
-					error={errors.name}
+					hint={prefilled.name ? fromAccount : undefined}
+					error={feedbackErrorText(t, errors.name)}
 				>
 					<Input
 						autoComplete="name"
@@ -95,19 +135,22 @@ export function FeedbackFields({
 					/>
 				</FormField>
 				<FormField
-					label={<>Email hoặc Telegram{OPTIONAL}</>}
+					label={
+						<>
+							{t("feedback.fields.contact")}
+							<Optional />
+						</>
+					}
 					data-id="modal-feedback-contact"
 					hint={
-						prefilled.contact
-							? FROM_ACCOUNT
-							: "Để lại nếu bạn muốn được trả lời."
+						prefilled.contact ? fromAccount : t("feedback.fields.contactHint")
 					}
-					error={errors.contact}
+					error={feedbackErrorText(t, errors.contact)}
 				>
 					<Input
 						autoComplete="email"
 						maxLength={CONTACT_HANDLE_MAX}
-						placeholder="ban@example.com hoặc @username"
+						placeholder={t("feedback.fields.contactPlaceholder")}
 						value={draft.contact}
 						onChange={(event) => onChange({ contact: event.target.value })}
 					/>
@@ -117,7 +160,7 @@ export function FeedbackFields({
 			    name avoids words browsers autofill (website, url, company…). */}
 			<div aria-hidden="true" className="sr-only">
 				<label>
-					Không điền ô này
+					{t("feedback.fields.honeypot")}
 					<input
 						name="contact_extra"
 						tabIndex={-1}

@@ -2,19 +2,16 @@ import type { PlanId } from "@localman/shared/constants";
 import { useEffect, useRef, useState } from "react";
 import { Modal } from "../../components/ui/modal";
 import { useToast } from "../../components/ui/toast";
+import { useI18n } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import type { Project } from "../../pages/projects/projects-api";
 import { useCurrentUser } from "../auth/use-current-user";
+import { collaboratorLabel, memberName } from "./collaborator-labels";
 import { CollaboratorList } from "./collaborator-list";
-import { collaboratorLabel } from "./collaborator-row";
 import { type Collaborator, removeCollaborator } from "./collaborators-api";
 import { CollaboratorsFooter } from "./collaborators-footer";
 import { InviteForm } from "./invite-form";
-import {
-	type MemberConfirm,
-	MemberConfirmModal,
-	memberName,
-} from "./member-confirm-modal";
+import { type MemberConfirm, MemberConfirmModal } from "./member-confirm-modal";
 import { MemberSeatsGate, seatsFull } from "./member-seats-gate";
 import { RotateSecretHint } from "./rotate-secret-hint";
 import { memberCountOf, useCollaborators } from "./use-collaborators";
@@ -25,7 +22,7 @@ export interface CollaboratorsModalProps {
 	/** Plan of the signed-in user: the owner's plan when they manage. */
 	plan: PlanId;
 	onOpenChange: (open: boolean) => void;
-	/** Opens "Quản lý gói" for the member limit. */
+	/** Opens "Manage plan" for the member limit. */
 	onPlans: () => void;
 	/** Owner plus accepted members, whenever the list changes (keep stable). */
 	onMemberCount: (projectId: string, count: number) => void;
@@ -49,6 +46,8 @@ export function CollaboratorsModal({
 	onCloseAutoFocus,
 }: CollaboratorsModalProps) {
 	const toast = useToast();
+	const i18n = useI18n();
+	const { t } = i18n;
 	const session = useCurrentUser();
 	const viewerSub =
 		session.status === "authenticated" ? session.user.sub : null;
@@ -95,7 +94,8 @@ export function CollaboratorsModal({
 		focus.remember(item.id);
 		try {
 			if (await members.remove(item)) {
-				done(`Đã huỷ lời mời ${collaboratorLabel(item)}`);
+				const label = collaboratorLabel(item, i18n);
+				done(t("collaborators.toast.inviteCancelled", { label }));
 			}
 		} catch (error) {
 			toast.show({ tone: "error", title: errorMessage(error) });
@@ -105,7 +105,9 @@ export function CollaboratorsModal({
 	async function confirmed({ item, leave }: MemberConfirm) {
 		if (leave) {
 			await removeCollaborator(project.id, item.id);
-			toast.show({ title: `Đã rời ${project.name}` });
+			toast.show({
+				title: t("collaborators.toast.left", { project: project.name }),
+			});
 			onLeft(project);
 			return;
 		}
@@ -113,14 +115,15 @@ export function CollaboratorsModal({
 		if (!(await members.remove(item))) return;
 		removedByConfirm.current = true;
 		setRotateHint(true);
-		done(`Đã xoá ${memberName(item)} khỏi project`);
+		const name = memberName(item, i18n);
+		done(t("collaborators.toast.removed", { name }));
 	}
 
 	return (
 		<Modal
 			open
 			onOpenChange={onOpenChange}
-			title={`Cộng tác viên · ${project.name}`}
+			title={t("collaborators.modal.title", { project: project.name })}
 			initialFocusRef={project.role === "owner" ? input : close}
 			onCloseAutoFocus={onCloseAutoFocus}
 			data-id="modal-collaborators"

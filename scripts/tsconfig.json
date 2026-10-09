@@ -9,6 +9,7 @@
 		"check-tokens.ts",
 		"check-tokens/**/*.ts",
 		"check-i18n.ts",
-		"check-i18n/**/*.ts"
+		"check-i18n/**/*.ts",
+		"check-mcp-docs/**/*.ts"
 	]
 }

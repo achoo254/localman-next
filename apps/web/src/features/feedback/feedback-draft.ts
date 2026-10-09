@@ -1,6 +1,7 @@
 /**
- * Draft, limits and checks of the "Góp ý / Liên hệ" form. Limits mirror
- * `POST /api/v1/feedback/contact`, which validates again.
+ * Draft, limits and checks of the "Feedback / Contact" form. Limits mirror
+ * `POST /api/v1/feedback/contact`, which validates again. Texts live in
+ * the `feedback` dictionary; this module only names them.
  */
 
 import {
@@ -13,30 +14,19 @@ import {
 	type ContactSource,
 	TELEGRAM_USERNAME_PATTERN,
 } from "@localman/shared/constants";
-import { formatNumber } from "../../lib/format";
 import { isRecord } from "../../lib/json-guards";
 
-const CATEGORY_COPY: Readonly<
-	Record<ContactCategory, { label: string; placeholder: string }>
-> = {
-	feedback: {
-		label: "Góp ý",
-		placeholder: "Bạn muốn Localman làm tốt hơn điều gì?",
-	},
-	bug: {
-		label: "Báo lỗi",
-		placeholder: "Bạn đang làm gì thì gặp lỗi, và lỗi hiện ra thế nào?",
-	},
-	plan_question: {
-		label: "Hỏi về gói",
-		placeholder: "Bạn cần hạn mức hay tính năng nào?",
-	},
-};
+/** Key of each category under `feedback.categories`. */
+const CATEGORY_KEYS = {
+	feedback: "feedback",
+	bug: "bug",
+	plan_question: "planQuestion",
+} as const satisfies Record<ContactCategory, string>;
 
-/** The "Loại" choices in the API's order, with their copy. */
+/** The "Type" choices in the API's order, with their dictionary key. */
 export const FEEDBACK_CATEGORIES = CONTACT_CATEGORIES.map((id) => ({
 	id,
-	...CATEGORY_COPY[id],
+	key: CATEGORY_KEYS[id],
 }));
 
 /**
@@ -77,16 +67,24 @@ export function emptyDraft(
 }
 
 export type FeedbackField = "message" | "name" | "contact" | "turnstile";
-export type FeedbackErrors = Partial<Record<FeedbackField, string>>;
+/** Key under `feedback.errors` of what is wrong with a field. */
+export type FeedbackError =
+	| "messageRequired"
+	| "messageTooLong"
+	| "nameTooLong"
+	| "contactInvalid"
+	| "turnstile";
+export type FeedbackErrors = Partial<Record<FeedbackField, FeedbackError>>;
 
-const FIELD_MESSAGES: Readonly<Record<FeedbackField, string>> = {
-	message: `Nhập nội dung, tối đa ${formatNumber(CONTACT_MESSAGE_MAX)} ký tự.`,
-	name: `Tên tối đa ${formatNumber(CONTACT_NAME_MAX)} ký tự.`,
-	contact: "Nhập email hoặc username Telegram hợp lệ, hoặc để trống.",
-	turnstile: "Hoàn tất xác minh trước khi gửi.",
+/** The error of a field the API refused, whatever its own reason. */
+const FIELD_ERRORS: Readonly<Record<FeedbackField, FeedbackError>> = {
+	message: "messageTooLong",
+	name: "nameTooLong",
+	contact: "contactInvalid",
+	turnstile: "turnstile",
 };
 
-/** Field messages for the draft; empty when it can be sent. */
+/** Field errors of the draft; empty when it can be sent. */
 export function validateFeedback(
 	draft: FeedbackDraft,
 	needsTurnstile: boolean,
@@ -94,12 +92,12 @@ export function validateFeedback(
 ): FeedbackErrors {
 	const errors: FeedbackErrors = {};
 	const message = draft.message.trim();
-	if (message === "") errors.message = "Nhập nội dung.";
+	if (message === "") errors.message = "messageRequired";
 	else if (message.length > CONTACT_MESSAGE_MAX) {
-		errors.message = FIELD_MESSAGES.message;
+		errors.message = FIELD_ERRORS.message;
 	}
 	if (draft.name.trim().length > CONTACT_NAME_MAX) {
-		errors.name = FIELD_MESSAGES.name;
+		errors.name = FIELD_ERRORS.name;
 	}
 	const contact = draft.contact.trim();
 	if (
@@ -107,10 +105,10 @@ export function validateFeedback(
 		!CONTACT_EMAIL_PATTERN.test(contact) &&
 		!TELEGRAM_USERNAME_PATTERN.test(contact)
 	) {
-		errors.contact = FIELD_MESSAGES.contact;
+		errors.contact = FIELD_ERRORS.contact;
 	}
 	if (needsTurnstile && !turnstileToken) {
-		errors.turnstile = FIELD_MESSAGES.turnstile;
+		errors.turnstile = FIELD_ERRORS.turnstile;
 	}
 	return errors;
 }
@@ -120,7 +118,7 @@ function isField(key: unknown): key is Exclude<FeedbackField, "turnstile"> {
 }
 
 /**
- * Field messages from the `details` of a 400 `VALIDATION_ERROR` (each
+ * Field errors from the `details` of a 400 `VALIDATION_ERROR` (each
  * `{ path, message }`, `path` naming the body field); empty when none
  * names a field of the form.
  */
@@ -130,7 +128,7 @@ export function fieldErrorsFromDetails(details: unknown): FeedbackErrors {
 	for (const detail of details) {
 		const path: unknown = isRecord(detail) ? detail.path : undefined;
 		const field = Array.isArray(path) ? path[0] : path;
-		if (isField(field)) errors[field] = FIELD_MESSAGES[field];
+		if (isField(field)) errors[field] = FIELD_ERRORS[field];
 	}
 	return errors;
 }

@@ -109,16 +109,16 @@ describe("generator writes that drop child data", () => {
 			}),
 		});
 		await clickBar("users", 0);
-		const dialog = await screen.findByRole("dialog", { name: "Xoá dữ liệu" });
+		const dialog = await screen.findByRole("dialog", { name: "Delete data" });
 		const list = within(dialog).getByRole("list");
-		expect(list).toHaveTextContent("posts: 40 → 0 bản ghi");
+		expect(list).toHaveTextContent("posts: 40 → 0 records");
 		expect(list).not.toHaveTextContent("users");
 		const posts = () => calls.filter((c) => c.method === "POST");
 		expect(posts().map((c) => c.query.get("dryRun"))).toEqual(["true"]);
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Xoá dữ liệu" }),
+			within(dialog).getByRole("button", { name: "Delete data" }),
 		);
-		expect(await findToast("users không còn bản ghi nào.")).toBeInTheDocument();
+		expect(await findToast("users has no records now.")).toBeInTheDocument();
 		expect(posts().map((c) => c.query.get("dryRun"))).toEqual(["true", null]);
 	});
 
@@ -130,7 +130,7 @@ describe("generator writes that drop child data", () => {
 			}),
 		});
 		await clickBar("users", 60);
-		expect(await findToast("60 bản ghi cho users.")).toBeInTheDocument();
+		expect(await findToast("60 records for users.")).toBeInTheDocument();
 		expect(screen.queryByRole("dialog")).toBeNull();
 		const posts = calls.filter((c) => c.method === "POST");
 		expect(posts.map((c) => c.query.get("dryRun"))).toEqual(["true", null]);
@@ -144,7 +144,7 @@ describe("generator writes that drop child data", () => {
 			}),
 		});
 		await clickBar("users", 0);
-		expect(await findToast("users không còn bản ghi nào.")).toBeInTheDocument();
+		expect(await findToast("users has no records now.")).toBeInTheDocument();
 		const posts = calls.filter((c) => c.method === "POST");
 		expect(posts.map((c) => c.query.get("dryRun"))).toEqual([null]);
 	});

@@ -3,6 +3,7 @@ import { IconX } from "@tabler/icons-react";
 import { IconButton } from "../../components/ui/icon-button";
 import { Input } from "../../components/ui/input";
 import { Select } from "../../components/ui/select";
+import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import { FakerMethodSelect } from "./faker-method-select";
 import {
@@ -46,7 +47,8 @@ export function SchemaFieldRow({
 	onChange,
 	onRemove,
 }: SchemaFieldRowProps) {
-	const label = field.name || `field ${position}`;
+	const t = useT();
+	const label = field.name || t("resources.schema.fieldFallback", { position });
 	const errorId = error ? `${field.key}-error` : undefined;
 
 	function changeType(value: string) {
@@ -68,7 +70,7 @@ export function SchemaFieldRow({
 			value={field.type === "Parent Resource" ? (place.parentName ?? "") : ""}
 			placeholder="—"
 			disabled
-			aria-label={`Kiểu này không cần method (${label})`}
+			aria-label={t("resources.schema.noMethod", { label })}
 		/>
 	);
 	if (field.type === "Faker.js") {
@@ -76,7 +78,7 @@ export function SchemaFieldRow({
 			<FakerMethodSelect
 				value={field.fakerMethod}
 				onChange={(fakerMethod) => onChange({ fakerMethod })}
-				label={`Faker method của ${label}`}
+				label={t("resources.schema.fakerMethod", { label })}
 				invalid={Boolean(error)}
 			/>
 		);
@@ -85,7 +87,7 @@ export function SchemaFieldRow({
 			<Select
 				className={COMPACT_CONTROL}
 				value={field.childId}
-				aria-label={`Resource con của ${label}`}
+				aria-label={t("resources.schema.childResource", { label })}
 				onChange={(event) => onChange({ childId: event.target.value })}
 			>
 				{place.children.map((child) => (
@@ -109,7 +111,7 @@ export function SchemaFieldRow({
 					placeholder="fieldName"
 					autoComplete="off"
 					spellCheck={false}
-					aria-label={`Tên field ${position}`}
+					aria-label={t("resources.schema.fieldName", { position })}
 					aria-describedby={errorId}
 					invalid={Boolean(error)}
 					onChange={(event) => onChange({ name: event.target.value })}
@@ -118,7 +120,7 @@ export function SchemaFieldRow({
 					<Select
 						className={COMPACT_CONTROL}
 						value={field.type}
-						aria-label={`Kiểu dữ liệu của ${label}`}
+						aria-label={t("resources.schema.dataType", { label })}
 						onChange={(event) => changeType(event.target.value)}
 					>
 						{typeOptions(place).map((type) => (
@@ -131,7 +133,7 @@ export function SchemaFieldRow({
 				<div className={CELL_THIRD}>{third}</div>
 				<IconButton
 					size="md"
-					label={`Xoá field ${label}`}
+					label={t("resources.schema.remove", { label })}
 					icon={<IconX size={16} aria-hidden="true" />}
 					className={cn(
 						CELL_REMOVE,

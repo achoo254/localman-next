@@ -1,4 +1,6 @@
 import { type ReactNode, useMemo } from "react";
+import { useT } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
 import { AddToRootRail } from "./add-to-root-rail";
 import {
 	type LaidOutNode,
@@ -31,6 +33,7 @@ export function TreeCanvasFrame<T extends TreeItem>({
 	railDataId,
 	renderNode,
 }: TreeCanvasFrameProps<T>) {
+	const t = useT();
 	const layout = useMemo(() => layoutTree(items, geometry), [items, geometry]);
 	const { selected } = connect;
 	return (
@@ -40,15 +43,12 @@ export function TreeCanvasFrame<T extends TreeItem>({
 				data-id={`${dataId}-hint`}
 				className="m-0 px-6 pt-3 text-[0.8125rem] text-muted leading-[1.55]"
 			>
-				{selected ? (
-					<>
-						Đang chọn <b className="font-mono text-primary">{selected.name}</b>.
-						Bấm chấm tròn bên phải resource đích để lồng vào, hoặc bấm thanh
-						“Thêm vào root”. Nhấn Esc để huỷ.
-					</>
-				) : (
-					"Bấm chấm tròn bên trái một resource để chọn, sau đó bấm chấm tròn bên phải của resource khác để lồng vào."
-				)}
+				{selected
+					? renderRich(
+							t("resourceTree.hint.selected", { name: selected.name }),
+							{ b: (name) => <b className="font-mono text-primary">{name}</b> },
+						)
+					: t("resourceTree.hint.idle")}
 			</p>
 			<div
 				className="overflow-x-auto px-6 pt-4 pb-6"

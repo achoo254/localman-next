@@ -20,13 +20,13 @@ describe("/invite/:token eligibility", () => {
 		renderInvite({
 			[PREVIEW]: preview({ eligible: false, reason: "NOT_INVITEE" }),
 		});
-		await screen.findByText("Tài khoản này không nhận được lời mời");
+		await screen.findByText("This account can't accept the invitation");
 		expect(byId("invite-page-ineligible")).toHaveTextContent(
-			"Lời mời gửi cho t***@example.com.",
+			"The invitation was sent to t***@example.com.",
 		);
-		expect(screen.queryByRole("button", { name: "Tham gia" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "Join" })).toBeNull();
 		expect(
-			screen.getByRole("button", { name: "Đăng nhập tài khoản khác" }),
+			screen.getByRole("button", { name: "Sign in with another account" }),
 		).toBeInTheDocument();
 	});
 
@@ -35,7 +35,7 @@ describe("/invite/:token eligibility", () => {
 			[PREVIEW]: preview({ eligible: false, reason: "EMAIL_NOT_VERIFIED" }),
 		});
 		expect(
-			await screen.findByText(/Email của tài khoản này chưa được xác minh/),
+			await screen.findByText(/This account's email isn't verified/),
 		).toBeInTheDocument();
 	});
 
@@ -44,13 +44,13 @@ describe("/invite/:token eligibility", () => {
 			[PREVIEW]: preview({ eligible: false, reason: "ALREADY_MEMBER" }),
 		});
 		expect(
-			await screen.findByText("Bạn đã là thành viên của Demo shop."),
+			await screen.findByText("You're already a member of Demo shop."),
 		).toBeInTheDocument();
-		expect(screen.getByRole("link", { name: "Mở project" })).toHaveAttribute(
+		expect(screen.getByRole("link", { name: "Open project" })).toHaveAttribute(
 			"href",
 			"/projects/p1",
 		);
-		expect(screen.queryByRole("button", { name: "Tham gia" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "Join" })).toBeNull();
 	});
 
 	it("says a full project cannot take more members, without an upgrade", async () => {
@@ -59,11 +59,11 @@ describe("/invite/:token eligibility", () => {
 		});
 		expect(
 			await screen.findByText(
-				/Project đã đủ thành viên theo gói của chủ project/,
+				/The project already has as many members as the owner's plan allows/,
 			),
 		).toBeInTheDocument();
-		expect(screen.queryByRole("button", { name: "Tham gia" })).toBeNull();
-		expect(screen.queryByRole("button", { name: "Xem gói" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "Join" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "See plans" })).toBeNull();
 	});
 
 	it("tells a member the owner removed that the link no longer admits them", async () => {
@@ -72,10 +72,10 @@ describe("/invite/:token eligibility", () => {
 		});
 		expect(
 			await screen.findByText(
-				"Chủ project đã gỡ bạn khỏi project này. Liên hệ chủ project nếu cần tham gia lại.",
+				"The project owner removed you from this project. Contact the project owner if you need to join again.",
 			),
 		).toBeInTheDocument();
-		expect(screen.queryByRole("button", { name: "Tham gia" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "Join" })).toBeNull();
 	});
 
 	it.each([
@@ -85,27 +85,23 @@ describe("/invite/:token eligibility", () => {
 		[410, "INVITE_USED", "invite-page-invalid"],
 	])("maps a refused accept (%s %s) to its state", async (status, code, id) => {
 		renderInvite({ [PREVIEW]: preview(), [ACCEPT]: tokenError(status, code) });
-		await userEvent.click(
-			await screen.findByRole("button", { name: "Tham gia" }),
-		);
+		await userEvent.click(await screen.findByRole("button", { name: "Join" }));
 		await screen.findByRole("heading", { level: 1 });
 		await vi.waitFor(() => expect(byId(id)).not.toBeNull());
 	});
 
-	it("keeps Tham gia for other accept errors", async () => {
+	it("keeps Join for other accept errors", async () => {
 		renderInvite({
 			[PREVIEW]: preview(),
 			[ACCEPT]: tokenError(429, "RATE_LIMITED"),
 		});
-		await userEvent.click(
-			await screen.findByRole("button", { name: "Tham gia" }),
-		);
+		await userEvent.click(await screen.findByRole("button", { name: "Join" }));
 		expect(
 			await screen.findByText(
-				"Bạn đã mở quá nhiều link mời. Hãy thử lại sau ít phút.",
+				"You've opened too many invite links. Try again in a few minutes.",
 			),
 		).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Tham gia" })).toBeEnabled();
+		expect(screen.getByRole("button", { name: "Join" })).toBeEnabled();
 	});
 
 	it("retries a preview that failed", async () => {
@@ -113,16 +109,18 @@ describe("/invite/:token eligibility", () => {
 		renderInvite({
 			[PREVIEW]: () => (fail ? tokenError(500, "INTERNAL") : preview()),
 		});
-		await screen.findByRole("heading", { name: "Không mở được lời mời" });
+		await screen.findByRole("heading", {
+			name: "Couldn't open the invitation",
+		});
 		// API messages are English: the page shows its own Vietnamese text.
 		expect(byId("invite-page-error")).toHaveTextContent(
-			"Không mở được lời mời. Hãy thử lại sau.",
+			"Couldn't open the invitation. Try again later.",
 		);
 		expect(byId("invite-page-error")).not.toHaveTextContent("INTERNAL");
 		fail = false;
-		await userEvent.click(screen.getByRole("button", { name: "Thử lại" }));
+		await userEvent.click(screen.getByRole("button", { name: "Try again" }));
 		expect(
-			await screen.findByRole("heading", { name: "Tham gia Demo shop" }),
+			await screen.findByRole("heading", { name: "Join Demo shop" }),
 		).toBeInTheDocument();
 	});
 
@@ -130,10 +128,10 @@ describe("/invite/:token eligibility", () => {
 		renderInvite({ [PREVIEW]: tokenError(400, "VALIDATION_ERROR") });
 		expect(
 			await screen.findByRole("heading", {
-				name: "Link mời không còn hiệu lực",
+				name: "This invite link is no longer valid",
 			}),
 		).toBeInTheDocument();
-		expect(screen.queryByRole("button", { name: "Thử lại" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
 	});
 
 	it("explains a CONFLICT on accept in Vietnamese", async () => {
@@ -141,11 +139,9 @@ describe("/invite/:token eligibility", () => {
 			[PREVIEW]: preview(),
 			[ACCEPT]: tokenError(409, "CONFLICT"),
 		});
-		await userEvent.click(
-			await screen.findByRole("button", { name: "Tham gia" }),
-		);
+		await userEvent.click(await screen.findByRole("button", { name: "Join" }));
 		expect(
-			await screen.findByText("Lời mời vừa thay đổi. Hãy thử lại."),
+			await screen.findByText("The invitation just changed. Please try again."),
 		).toBeInTheDocument();
 	});
 });

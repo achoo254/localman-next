@@ -28,7 +28,7 @@ function renderToken(routes: Record<string, MockRoute>) {
 }
 
 const tokenSwitch = () =>
-	screen.findByRole("switch", { name: "Yêu cầu token cho MCP" });
+	screen.findByRole("switch", { name: "Require a token for MCP" });
 
 describe("MCP token setting", () => {
 	beforeEach(() => resetCurrentUserCache());
@@ -45,15 +45,17 @@ describe("MCP token setting", () => {
 		const toggle = await tokenSwitch();
 		expect(toggle).toHaveAttribute("aria-checked", "false");
 		await userEvent.click(toggle);
-		const dialog = screen.getByRole("dialog", { name: "Bật token cho MCP" });
-		expect(dialog).toHaveTextContent("Token mới chỉ hiện một lần");
+		const dialog = screen.getByRole("dialog", {
+			name: "Turn on the MCP token",
+		});
+		expect(dialog).toHaveTextContent("The new token is shown only once");
 		expect(toggle).toHaveAttribute("aria-checked", "false");
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Bật token" }),
+			within(dialog).getByRole("button", { name: "Turn on token" }),
 		);
 
 		expect(await screen.findByDisplayValue(TOKEN)).toBeInTheDocument();
-		const copy = screen.getByRole("button", { name: "Sao chép token" });
+		const copy = screen.getByRole("button", { name: "Copy token" });
 		await waitFor(() => expect(copy).toHaveFocus());
 		vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
 		const panel = document.querySelector('[data-id="project-detail-mcp"]');
@@ -73,13 +75,16 @@ describe("MCP token setting", () => {
 			JSON.stringify(queryClient.getQueryData(["mcp-token", PROJECT_ID])),
 		).not.toContain(TOKEN);
 
-		await userEvent.click(screen.getByRole("button", { name: "Đã lưu token" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "I've saved the token" }),
+		);
 		expect(screen.queryByDisplayValue(TOKEN)).toBeNull();
 		expect(document.body).not.toHaveTextContent(TOKEN);
+		// The date follows the language on screen; every format has the year.
 		expect(
 			document.querySelector('[data-id="project-detail-mcp-token-hint"]'),
-		).toHaveTextContent("Token lmmcp_…a9e5 · tạo 09/10/2026");
-		expect(screen.getByRole("button", { name: "Xoay token" })).toHaveFocus();
+		).toHaveTextContent(/^Token lmmcp_…a9e5 · .*2026$/);
+		expect(screen.getByRole("button", { name: "Rotate token" })).toHaveFocus();
 	});
 
 	it("rotates only after confirmation and shows the new token", async () => {
@@ -90,17 +95,19 @@ describe("MCP token setting", () => {
 			},
 		});
 		await userEvent.click(
-			await screen.findByRole("button", { name: "Xoay token" }),
+			await screen.findByRole("button", { name: "Rotate token" }),
 		);
-		let dialog = screen.getByRole("dialog", { name: "Xoay token MCP" });
-		expect(dialog).toHaveTextContent("Token cũ hết hiệu lực ngay");
-		await userEvent.click(within(dialog).getByRole("button", { name: "Huỷ" }));
+		let dialog = screen.getByRole("dialog", { name: "Rotate MCP token" });
+		expect(dialog).toHaveTextContent("The old token stops working right away");
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Cancel" }),
+		);
 		expect(calls.some((call) => call.path === ROTATE_PATH)).toBe(false);
 
-		await userEvent.click(screen.getByRole("button", { name: "Xoay token" }));
-		dialog = screen.getByRole("dialog", { name: "Xoay token MCP" });
+		await userEvent.click(screen.getByRole("button", { name: "Rotate token" }));
+		dialog = screen.getByRole("dialog", { name: "Rotate MCP token" });
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Xoay token" }),
+			within(dialog).getByRole("button", { name: "Rotate token" }),
 		);
 		expect(await screen.findByDisplayValue(ROTATED)).toBeInTheDocument();
 		expect(calls.filter((call) => call.path === ROTATE_PATH)).toHaveLength(1);
@@ -113,12 +120,16 @@ describe("MCP token setting", () => {
 		});
 		const toggle = await tokenSwitch();
 		await userEvent.click(toggle);
-		const dialog = screen.getByRole("dialog", { name: "Tắt token cho MCP" });
-		expect(dialog).toHaveTextContent("Token hiện tại được giữ lại");
+		const dialog = screen.getByRole("dialog", {
+			name: "Turn off the MCP token",
+		});
+		expect(dialog).toHaveTextContent("The current token is kept");
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Tắt token" }),
+			within(dialog).getByRole("button", { name: "Turn off token" }),
 		);
-		expect(await findToast("Đã tắt yêu cầu token MCP.")).toBeInTheDocument();
+		expect(
+			await findToast("Turned off the MCP token requirement."),
+		).toBeInTheDocument();
 		expect(toggle).toHaveAttribute("aria-checked", "false");
 		expect(screen.queryByDisplayValue(/lmmcp_/)).toBeNull();
 	});
@@ -133,9 +144,11 @@ describe("MCP token setting", () => {
 		});
 		const toggle = await tokenSwitch();
 		await userEvent.click(toggle);
-		const dialog = screen.getByRole("dialog", { name: "Bật token cho MCP" });
+		const dialog = screen.getByRole("dialog", {
+			name: "Turn on the MCP token",
+		});
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Bật token" }),
+			within(dialog).getByRole("button", { name: "Turn on token" }),
 		);
 		expect(await within(dialog).findByText("Lỗi máy chủ.")).toBeVisible();
 		expect(toggle).toHaveAttribute("aria-checked", "false");
@@ -149,9 +162,9 @@ describe("MCP token setting", () => {
 			},
 		});
 		expect(
-			await screen.findByText("Không tải được cài đặt token"),
+			await screen.findByText("Couldn't load token settings"),
 		).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Thử lại" })).toBeVisible();
+		expect(screen.getByRole("button", { name: "Try again" })).toBeVisible();
 		expect(screen.queryByRole("switch")).toBeNull();
 	});
 });

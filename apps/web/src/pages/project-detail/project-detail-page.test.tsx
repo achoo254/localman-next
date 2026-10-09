@@ -51,9 +51,9 @@ describe("ProjectDetailPage", () => {
 		await userEvent.tab();
 		expect(screen.getByText("abc123")).toHaveFocus();
 		expect(await screen.findByRole("tooltip")).toHaveTextContent(
-			/Mã bí mật của project/,
+			/The project's secret/,
 		);
-		expect(screen.getByRole("button", { name: "Sinh tất cả" })).toBeEnabled();
+		expect(screen.getByRole("button", { name: "Generate all" })).toBeEnabled();
 	});
 
 	it("lays the tree out with links to the mock endpoints", async () => {
@@ -72,18 +72,18 @@ describe("ProjectDetailPage", () => {
 			"https://abc123.mock.localman.test/api/v1/posts",
 		);
 		expect(posts.style.left).toBe("340px");
-		expect(screen.getByText("4 resource")).toBeInTheDocument();
+		expect(screen.getByText("4 resources")).toBeInTheDocument();
 	});
 
 	it("opens New resource 500ms after an empty project loads", async () => {
 		renderDetail({ [`GET ${RESOURCES_PATH}`]: { body: { items: [] } } });
-		await screen.findByText(/Chưa có resource nào/);
+		await screen.findByText(/No resources yet/);
 		const shownAt = Date.now();
 		expect(screen.queryByRole("dialog")).toBeNull();
 		expect(
 			await screen.findByRole(
 				"dialog",
-				{ name: "Resource mới" },
+				{ name: "New resource" },
 				{ timeout: 3000 },
 			),
 		).toBeInTheDocument();
@@ -95,7 +95,7 @@ describe("ProjectDetailPage", () => {
 	it("reads the project from GET /projects/:id and says so when it is gone", async () => {
 		const { calls } = renderDetail({}, makeProject("other"));
 		expect(
-			await screen.findByRole("heading", { name: "Không tìm thấy project" }),
+			await screen.findByRole("heading", { name: "Project not found" }),
 		).toBeInTheDocument();
 		expect(calls.map((c) => c.path)).toContain("/api/v1/projects/p1");
 		expect(calls.map((c) => c.path)).not.toContain("/api/v1/projects");
@@ -104,9 +104,11 @@ describe("ProjectDetailPage", () => {
 	it("offers a retry when the project cannot be loaded", async () => {
 		renderDetail({ "GET /api/v1/projects/p1": apiError(500, "INTERNAL") });
 		expect(
-			await screen.findByText("Không tải được project"),
+			await screen.findByText("Couldn't load the project"),
 		).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Thử lại" })).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Try again" }),
+		).toBeInTheDocument();
 	});
 });
 
@@ -143,8 +145,8 @@ describe("generating from the canvas", () => {
 		generate.answer({
 			body: { dryRun: false, changes: [change("likes", 0, 50)] },
 		});
-		expect(await screen.findByText("Đã sinh dữ liệu")).toBeInTheDocument();
-		expect(await findToast("50 bản ghi cho likes.")).toBeInTheDocument();
+		expect(await screen.findByText("Data generated")).toBeInTheDocument();
+		expect(await findToast("50 records for likes.")).toBeInTheDocument();
 		expect(slider).toHaveAttribute("aria-valuenow", "50");
 	});
 
@@ -163,7 +165,7 @@ describe("generating from the canvas", () => {
 		);
 		expect(
 			await screen.findByText(
-				"Dữ liệu của users vượt 2 MB. Hãy giảm số bản ghi hoặc kích thước mỗi bản ghi.",
+				"The data of users is over 2 MB. Reduce the number of records or the size of each record.",
 			),
 		).toBeInTheDocument();
 		await waitFor(() => expect(slider).toHaveAttribute("aria-valuenow", "10"));
@@ -178,7 +180,7 @@ describe("generating from the canvas", () => {
 		fireEvent.click(slider, { clientX: 10 });
 		expect(
 			await screen.findByText(
-				"Cần sinh dữ liệu cho posts trước khi sinh cho comments.",
+				"Generate data for posts before generating comments.",
 			),
 		).toBeInTheDocument();
 		expect(calls.some((c) => c.method === "POST")).toBe(false);

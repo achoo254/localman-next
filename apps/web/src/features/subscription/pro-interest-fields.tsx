@@ -1,16 +1,18 @@
 import { PRO_INTEREST_NOTE_MAX } from "@localman/shared";
-import { type RefObject, useId } from "react";
+import type { RefObject } from "react";
 import { FormField } from "../../components/ui/form-field";
 import { Input } from "../../components/ui/input";
 import { Select } from "../../components/ui/select";
 import { Textarea } from "../../components/ui/textarea";
 import { useFeatures } from "../../config/features";
+import { useT } from "../../i18n/i18n-context";
 import { ChoiceChips } from "./choice-chips";
+import { ProInterestConsent } from "./pro-interest-consent";
 import {
 	type Choice,
-	PRICE_HINTS,
-	TEAM_SIZES,
+	priceHints,
 	proNeedsFor,
+	teamSizes,
 } from "./pro-interest-options";
 import type {
 	ProInterestDraft,
@@ -27,10 +29,6 @@ export interface ProInterestFieldsProps {
 	onChange: (patch: Partial<ProInterestDraft>) => void;
 }
 
-const OPTIONAL = (
-	<span className="font-normal font-sans text-muted text-xs"> (tuỳ chọn)</span>
-);
-
 function pick<T extends string>(list: readonly Choice<T>[], id: string): T {
 	const found = list.find((choice) => choice.id === id);
 	if (!found) throw new Error(`Unknown choice "${id}"`);
@@ -46,21 +44,32 @@ export function ProInterestFields({
 	firstField,
 	onChange,
 }: ProInterestFieldsProps) {
-	const consentErrorId = `${useId()}-consent-error`;
-	const needs = proNeedsFor(useFeatures());
+	const t = useT();
+	const needs = proNeedsFor(useFeatures(), t);
+	const teams = teamSizes(t);
+	// A field error is a message key, translated here so it follows the language.
+	const error = (field: keyof ProInterestErrors) => {
+		const key = errors[field];
+		return key ? t(key) : undefined;
+	};
+	const optional = (
+		<span className="font-normal font-sans text-muted text-xs">
+			{` ${t("common.optional")}`}
+		</span>
+	);
 	return (
 		<>
 			<div className="grid items-start gap-4 sm:grid-cols-2">
 				<FormField
-					label="Email"
+					label={t("subscription.proInterest.fields.email")}
 					required
 					data-id="pro-interest-email"
 					hint={
 						prefilled
-							? "Lấy từ tài khoản của bạn, sửa được."
-							: "Chỉ dùng để liên hệ về gói Pro."
+							? t("subscription.proInterest.fields.emailHintPrefilled")
+							: t("subscription.proInterest.fields.emailHint")
 					}
-					error={errors.email}
+					error={error("email")}
 				>
 					<Input
 						ref={firstField === "email" ? firstFieldRef : undefined}
@@ -72,10 +81,10 @@ export function ProInterestFields({
 					/>
 				</FormField>
 				<FormField
-					label="Tên"
+					label={t("subscription.proInterest.fields.name")}
 					required
 					data-id="pro-interest-name"
-					error={errors.name}
+					error={error("name")}
 				>
 					<Input
 						ref={firstField === "name" ? firstFieldRef : undefined}
@@ -90,11 +99,11 @@ export function ProInterestFields({
 				name="need"
 				data-id="pro-interest-needs"
 				required
-				legend="Bạn cần gói Pro cho việc gì?"
-				hint="Chọn một hoặc nhiều"
+				legend={t("subscription.proInterest.fields.needs")}
+				hint={t("subscription.proInterest.fields.needsHint")}
 				choices={needs}
 				selected={draft.needs}
-				error={errors.needs}
+				error={error("needs")}
 				onToggle={(id) => {
 					const need = pick(needs, id);
 					onChange({
@@ -109,21 +118,26 @@ export function ProInterestFields({
 				name="team"
 				data-id="pro-interest-team"
 				required
-				legend="Quy mô team"
-				choices={TEAM_SIZES}
+				legend={t("subscription.proInterest.fields.team")}
+				choices={teams}
 				selected={draft.teamSize ? [draft.teamSize] : []}
-				error={errors.teamSize}
-				onToggle={(id) => onChange({ teamSize: pick(TEAM_SIZES, id) })}
+				error={error("teamSize")}
+				onToggle={(id) => onChange({ teamSize: pick(teams, id) })}
 			/>
 			<FormField
-				label={<>Mức giá sẵn sàng trả{OPTIONAL}</>}
+				label={
+					<>
+						{t("subscription.proInterest.fields.price")}
+						{optional}
+					</>
+				}
 				data-id="pro-interest-price"
 			>
 				<Select
 					value={draft.priceHint}
 					onChange={(event) => onChange({ priceHint: event.target.value })}
 				>
-					{PRICE_HINTS.map((choice) => (
+					{priceHints(t).map((choice) => (
 						<option key={choice.id} value={choice.id}>
 							{choice.label}
 						</option>
@@ -131,14 +145,19 @@ export function ProInterestFields({
 				</Select>
 			</FormField>
 			<FormField
-				label={<>Ghi chú{OPTIONAL}</>}
+				label={
+					<>
+						{t("subscription.proInterest.fields.note")}
+						{optional}
+					</>
+				}
 				data-id="pro-interest-note"
-				error={errors.note}
+				error={error("note")}
 			>
 				<Textarea
 					rows={3}
 					maxLength={PRO_INTEREST_NOTE_MAX}
-					placeholder="Ví dụ: team QA cần 30 project, chạy CI mỗi giờ"
+					placeholder={t("subscription.proInterest.fields.notePlaceholder")}
 					value={draft.note}
 					onChange={(event) => onChange({ note: event.target.value })}
 				/>
@@ -147,7 +166,7 @@ export function ProInterestFields({
 			    name avoids words browsers autofill (website, url, company…). */}
 			<div aria-hidden="true" className="sr-only">
 				<label>
-					Không điền ô này
+					{t("subscription.proInterest.fields.honeypot")}
 					<input
 						name="contact_extra"
 						tabIndex={-1}
@@ -159,27 +178,11 @@ export function ProInterestFields({
 					/>
 				</label>
 			</div>
-			<div className="grid gap-1.5">
-				<label
-					data-id="pro-interest-consent"
-					className="flex min-h-11 cursor-pointer items-start gap-2 text-fg text-sm leading-normal"
-				>
-					<input
-						type="checkbox"
-						checked={draft.consent}
-						onChange={(event) => onChange({ consent: event.target.checked })}
-						aria-invalid={errors.consent ? true : undefined}
-						aria-describedby={errors.consent ? consentErrorId : undefined}
-						className="mt-0.5 size-4.5 shrink-0 accent-(--c-primary)"
-					/>
-					<span>Tôi đồng ý cho Localman lưu email để liên hệ về gói Pro</span>
-				</label>
-				{errors.consent ? (
-					<p id={consentErrorId} className="text-[0.8125rem] text-error">
-						{errors.consent}
-					</p>
-				) : null}
-			</div>
+			<ProInterestConsent
+				checked={draft.consent}
+				error={error("consent")}
+				onChange={(consent) => onChange({ consent })}
+			/>
 		</>
 	);
 }

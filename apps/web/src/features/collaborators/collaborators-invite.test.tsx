@@ -40,7 +40,7 @@ describe("inviting collaborators", () => {
 		vi.restoreAllMocks();
 	});
 
-	it("looks up only on Mời, shows the unverified account, then invites on confirm", async () => {
+	it("looks up only on Invite, shows the unverified account, then invites on confirm", async () => {
 		const store = memberStore([]);
 		const lan = person("lan", { emailVerified: false });
 		const invited = member("lan", {
@@ -65,33 +65,33 @@ describe("inviting collaborators", () => {
 		expect(card).toHaveTextContent("l***@ex***.com");
 		expect(
 			dialog.querySelector('[data-id="invite-match-unverified"]'),
-		).toHaveTextContent("email chưa xác minh");
-		expect(dialog).toHaveTextContent("chỉ mời nếu bạn nhận ra người này");
+		).toHaveTextContent("email not verified");
+		expect(dialog).toHaveTextContent(
+			"Only invite them if you recognize this person",
+		);
 		expect(await seriousViolations(dialog)).toEqual([]);
 
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Xác nhận mời" }),
+			within(dialog).getByRole("button", { name: "Confirm invite" }),
 		);
-		expect(await findToast("Đã mời Lan")).toHaveTextContent(
-			"Họ thấy lời mời trong app",
+		expect(await findToast("Invited Lan")).toHaveTextContent(
+			"They'll see the invitation in the app",
 		);
 		expect(
 			dialog.querySelector('[data-id="modal-collaborators-status"]'),
-		).toHaveTextContent("Đã mời Lan");
-		const link = within(dialog).getByLabelText("Link mời cho Lan");
+		).toHaveTextContent("Invited Lan");
+		const link = within(dialog).getByLabelText("Invite link for Lan");
 		expect(link).toHaveValue(`${ORIGIN}/invite/toklan`);
-		expect(dialog).toHaveTextContent("Link chỉ hiện lần này");
-		expect(within(dialog).getByLabelText("Username hoặc email")).toHaveFocus();
+		expect(dialog).toHaveTextContent("The link is shown only this once");
+		expect(within(dialog).getByLabelText("Username or email")).toHaveFocus();
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Sao chép link" }),
+			within(dialog).getByRole("button", { name: "Copy link" }),
 		);
 		expect(copyText).toHaveBeenCalledWith(`${ORIGIN}/invite/toklan`);
-		expect(
-			await within(dialog).findByText("Đã sao chép link"),
-		).toBeInTheDocument();
+		expect(await within(dialog).findByText("Copied link")).toBeInTheDocument();
 		expect(
 			dialog.querySelector('[data-id="collaborator-lan"]'),
-		).toHaveTextContent("Đang chờ");
+		).toHaveTextContent("Pending");
 	});
 
 	it("announces lookup errors and drops them when the input changes", async () => {
@@ -102,13 +102,13 @@ describe("inviting collaborators", () => {
 		await within(dialog).findByText("Minh Anh · @minhanh");
 		await typeAndLook(dialog, "ghost");
 		expect(within(dialog).getByRole("alert")).toHaveTextContent(
-			"Không tìm thấy tài khoản với username hoặc email này.",
+			"No account uses this username or email.",
 		);
 		await userEvent.type(
-			within(dialog).getByLabelText("Username hoặc email"),
+			within(dialog).getByLabelText("Username or email"),
 			"x",
 		);
-		expect(within(dialog).queryByText(/Không tìm thấy/)).toBeNull();
+		expect(within(dialog).queryByText(/No account uses/)).toBeNull();
 	});
 
 	it("creates a one-time link for an email without account and copies it", async () => {
@@ -125,14 +125,14 @@ describe("inviting collaborators", () => {
 			dialog.querySelector('[data-id="modal-collaborators-no-match"]'),
 		).toHaveTextContent("new@example.com");
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Tạo link mời" }),
+			within(dialog).getByRole("button", { name: "Create invite link" }),
 		);
 		await waitFor(() =>
 			expect(copyText).toHaveBeenCalledWith(`${ORIGIN}/invite/tokx1`),
 		);
 		expect(
 			dialog.querySelector('[data-id="collaborator-link-x1"]'),
-		).toHaveTextContent("Link mời · new@example.com · hết hạn 16/10/2026");
+		).toHaveTextContent("Invite link · new@example.com · expires Oct 16, 2026");
 	});
 
 	it("points at the copy button, without an error, when the automatic copy is refused", async () => {
@@ -146,19 +146,21 @@ describe("inviting collaborators", () => {
 		await within(dialog).findByText("Minh Anh · @minhanh");
 		await typeAndLook(dialog, "a@b.co");
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Tạo link mời" }),
+			within(dialog).getByRole("button", { name: "Create invite link" }),
 		);
-		const link = await within(dialog).findByLabelText("Link mời cho a@b.co");
+		const link = await within(dialog).findByLabelText("Invite link for a@b.co");
 		await waitFor(() =>
 			expect(link).toHaveAccessibleDescription(
-				/Bấm nút sao chép để copy link\./,
+				/Press the copy button to copy the link\./,
 			),
 		);
 		expect(link).not.toHaveAttribute("aria-invalid");
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Sao chép link" }),
+			within(dialog).getByRole("button", { name: "Copy link" }),
 		);
-		expect(link).toHaveAccessibleDescription(/chọn link và sao chép thủ công/);
+		expect(link).toHaveAccessibleDescription(
+			/Select the link and copy it yourself/,
+		);
 	});
 
 	it("refuses an invite link that is not an /invite/ path", async () => {
@@ -178,10 +180,10 @@ describe("inviting collaborators", () => {
 		await within(dialog).findByText("Minh Anh · @minhanh");
 		await typeAndLook(dialog, "c@d.co");
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Tạo link mời" }),
+			within(dialog).getByRole("button", { name: "Create invite link" }),
 		);
 		expect(await within(dialog).findByRole("alert")).toBeInTheDocument();
-		expect(within(dialog).queryByLabelText(/^Link mời cho/)).toBeNull();
+		expect(within(dialog).queryByLabelText(/^Invite link for/)).toBeNull();
 		expect(copyText).not.toHaveBeenCalled();
 	});
 });

@@ -1,4 +1,5 @@
 import { MAX_RESOURCE_DEPTH } from "@localman/shared/constants";
+import type { Translate } from "../../i18n/translate";
 import { ApiError, errorMessage } from "../../lib/api-client";
 import { isRecord } from "../../lib/json-guards";
 
@@ -18,75 +19,80 @@ function detailString(details: unknown, key: string): string | null {
 }
 
 /** 413 DATA_TOO_LARGE names the resource and the cap that was passed. */
-function dataTooLarge(details: unknown): string {
+function dataTooLarge(details: unknown, t: Translate): string {
 	const name = detailString(details, "name");
-	const subject = name ? `Dữ liệu của ${name}` : "Dữ liệu";
-	return detailString(details, "limit") === "record"
-		? `${subject} có bản ghi vượt 32 KB. Hãy rút gọn bản ghi hoặc template.`
-		: `${subject} vượt 2 MB. Hãy giảm số bản ghi hoặc kích thước mỗi bản ghi.`;
+	if (detailString(details, "limit") === "record") {
+		return name
+			? t("resources.errors.recordTooLargeOf", { name })
+			: t("resources.errors.recordTooLarge");
+	}
+	return name
+		? t("resources.errors.dataTooLargeOf", { name })
+		: t("resources.errors.dataTooLarge");
 }
 
 /**
- * Vietnamese sentence for an error of the resource API (the API answers
- * in English). Unknown codes fall back to the API's message.
+ * Sentence in the current language for an error of the resource API (the
+ * API answers in English). Unknown codes fall back to `errorMessage`.
  */
-export function resourceErrorMessage(error: unknown): string {
+export function resourceErrorMessage(error: unknown, t: Translate): string {
 	if (!(error instanceof ApiError)) return errorMessage(error);
 	switch (error.code) {
 		case "VALIDATION_ERROR": {
 			const path = firstIssuePath(error.details);
 			return path
-				? `Dữ liệu không hợp lệ ở “${path}”: ${error.message}`
-				: "Dữ liệu gửi lên không hợp lệ.";
+				? t("resources.errors.invalidAt", { path, message: error.message })
+				: t("resources.errors.invalid");
 		}
 		case "TEMPLATE_TOO_LARGE":
-			return "Object template có thể sinh bản ghi lớn hơn 32 KB. Hãy rút gọn template.";
+			return t("resources.errors.templateTooLarge");
 		case "NOT_FOUND":
-			return "Resource hoặc project không còn tồn tại. Tải lại trang để cập nhật.";
+			return t("resources.errors.notFound");
 		case "PARENT_HAS_NO_DATA":
-			return "Cần sinh dữ liệu cho resource cha trước.";
+			return t("resources.errors.parentHasNoData");
 		case "RESOURCE_NAME_TAKEN":
-			return "Đã có resource cùng tên ở vị trí này.";
+			return t("resources.errors.nameTaken");
 		case "TREE_CYCLE":
-			return "Không thể lồng resource vào chính nó hoặc vào resource con của nó.";
+			return t("resources.errors.treeCycle");
 		case "TREE_TOO_DEEP":
-			return `Cây resource chỉ lồng được tối đa ${MAX_RESOURCE_DEPTH} cấp.`;
+			return t("resourceTree.refuse.tooDeep", { max: MAX_RESOURCE_DEPTH });
 		case "FIELD_CONFLICT":
-			return "Thay đổi này làm một field trùng tên với field sinh tự động (ví dụ userId). Đổi tên hoặc xoá field đó trước.";
+			return t("resources.errors.fieldConflict");
 		case "PLAN_LIMIT_REACHED":
-			return "Bạn đã dùng hết số resource gói hiện tại cho phép.";
+			return t("resources.errors.planLimit");
 		case "DATA_TOO_LARGE":
-			return dataTooLarge(error.details);
+			return dataTooLarge(error.details, t);
 		case "FORBIDDEN":
-			return "Bạn chỉ có quyền xem project này.";
+			return t("resources.errors.forbidden");
 		default:
-			if (error.status === 413) {
-				return "Dữ liệu gửi lên quá lớn (tối đa 2 MB mỗi resource).";
-			}
+			if (error.status === 413) return t("resources.errors.requestTooLarge");
 			return errorMessage(error);
 	}
 }
 
 /**
- * The same error with the Vietnamese sentence as its message, for
+ * The same error with the translated sentence as its message, for
  * components that display `errorMessage(error)` (ConfirmModal).
  */
-export function localizedError(error: unknown): unknown {
+export function localizedError(error: unknown, t: Translate): unknown {
 	return error instanceof ApiError
 		? new ApiError(
 				error.status,
 				error.code,
-				resourceErrorMessage(error),
+				resourceErrorMessage(error, t),
 				error.details,
 			)
 		: error;
 }
 
 /** Awaits `promise`, rejecting with `localizedError` of its failure. */
-export async function localized<T>(promise: Promise<T>): Promise<T> {
+export async function localized<T>(
+	promise: Promise<T>,
+	t: Translate,
+): Promise<T> {
 	try {
 		return await promise;
 	} catch (error) {
-		throw localizedError(error);
+		throw localizedError(error, t);
 	}
 }

@@ -1,6 +1,8 @@
 import { IconLink, IconUserPlus } from "@tabler/icons-react";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
+import { useT } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
 import type { Invitee } from "./collaborators-api";
 import { PersonAvatar } from "./person-avatar";
 
@@ -17,8 +19,14 @@ export interface InviteeCardProps {
 }
 
 const CONFIRM_LABEL = {
-	account: { idle: "Xác nhận mời", busy: "Đang mời…" },
-	email: { idle: "Tạo link mời", busy: "Đang tạo link…" },
+	account: {
+		idle: "collaborators.invitee.confirm",
+		busy: "collaborators.invitee.confirming",
+	},
+	email: {
+		idle: "collaborators.invitee.createLink",
+		busy: "collaborators.invitee.creatingLink",
+	},
 } as const;
 
 const CARD =
@@ -26,7 +34,7 @@ const CARD =
 
 /**
  * The account an invitation would go to (name, avatar, masked email and
- * "email chưa xác minh"), or the email that will get a one-time link, with
+ * "email not verified"), or the email that will get a one-time link, with
  * the confirm step. Lets the owner spot a look-alike account first.
  */
 export function InviteeCard({
@@ -35,6 +43,7 @@ export function InviteeCard({
 	onConfirm,
 	onCancel,
 }: InviteeCardProps) {
+	const t = useT();
 	const actions = (
 		<div className="flex flex-wrap gap-2">
 			<Button
@@ -51,7 +60,7 @@ export function InviteeCard({
 				}
 				onClick={onConfirm}
 			>
-				{CONFIRM_LABEL[candidate.kind][busy ? "busy" : "idle"]}
+				{t(CONFIRM_LABEL[candidate.kind][busy ? "busy" : "idle"])}
 			</Button>
 			<Button
 				variant="ghost"
@@ -60,7 +69,7 @@ export function InviteeCard({
 				disabled={busy}
 				onClick={onCancel}
 			>
-				Huỷ
+				{t("common.actions.cancel")}
 			</Button>
 		</div>
 	);
@@ -69,9 +78,10 @@ export function InviteeCard({
 		return (
 			<div data-id="modal-collaborators-no-match" className={CARD}>
 				<p className="m-0 text-sm">
-					Chưa có tài khoản dùng{" "}
-					<b className="font-mono break-all">{candidate.typed}</b>. Tạo link mời
-					dùng 1 lần (7 ngày) gắn với email này rồi tự gửi cho họ.
+					{/* The typed text goes in through the renderer, never parsed as tags. */}
+					{renderRich(t("collaborators.invitee.noAccount", { email: "" }), {
+						b: () => <b className="font-mono break-all">{candidate.typed}</b>,
+					})}
 				</p>
 				{actions}
 			</div>
@@ -98,7 +108,7 @@ export function InviteeCard({
 				</span>
 				{invitee.emailVerified ? null : (
 					<Badge tone="warning" data-id="invite-match-unverified">
-						email chưa xác minh
+						{t("collaborators.row.emailUnverified")}
 					</Badge>
 				)}
 			</div>
@@ -107,7 +117,7 @@ export function InviteeCard({
 					data-id="invite-match-unverified-warning"
 					className="m-0 text-sm text-warning-text"
 				>
-					Tài khoản này chưa xác minh email — chỉ mời nếu bạn nhận ra người này.
+					{t("collaborators.invitee.unverifiedWarning")}
 				</p>
 			) : null}
 			{actions}

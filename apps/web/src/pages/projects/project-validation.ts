@@ -5,6 +5,7 @@ import {
 	projectNameSchema,
 	projectPrefixSchema,
 } from "@localman/shared";
+import type { Translate } from "../../i18n/translate";
 import type { ProjectInput } from "./projects-api";
 
 export interface ProjectFormErrors {
@@ -12,40 +13,41 @@ export interface ProjectFormErrors {
 	prefix?: string;
 }
 
-function nameError(name: string): string | undefined {
+function nameError(name: string, t: Translate): string | undefined {
 	const result = projectNameSchema.safeParse(name);
 	if (result.success) return undefined;
 	const issue = result.error.issues[0];
-	if (issue?.code === "too_small") return "Nhập tên project.";
+	if (issue?.code === "too_small") return t("projects.validation.nameRequired");
 	if (issue?.code === "too_big") {
-		return `Tên tối đa ${PROJECT_NAME_MAX} ký tự.`;
+		return t("projects.validation.nameTooLong", { max: PROJECT_NAME_MAX });
 	}
 	if (!/^[\p{L}\p{N}]/u.test(name.trim())) {
-		return "Tên phải bắt đầu bằng chữ hoặc số.";
+		return t("projects.validation.nameStart");
 	}
-	return "Tên chỉ gồm chữ, số, khoảng trắng, -, _ và dấu ngoặc đơn.";
+	return t("projects.validation.namePattern");
 }
 
-function prefixError(prefix: string): string | undefined {
+function prefixError(prefix: string, t: Translate): string | undefined {
 	const result = projectPrefixSchema.safeParse(prefix);
 	if (result.success) return undefined;
 	if (result.error.issues[0]?.code === "too_big") {
-		return `Prefix tối đa ${PROJECT_PREFIX_MAX} ký tự.`;
+		return t("projects.validation.prefixTooLong", { max: PROJECT_PREFIX_MAX });
 	}
-	return "Prefix chỉ gồm chữ không dấu, số, -, _ và /.";
+	return t("projects.validation.prefixPattern");
 }
 
 /**
  * Validates with the API's shared schemas. Returns the body to send (name
- * trimmed, prefix normalized to `/x/y`) or Vietnamese field errors.
+ * trimmed, prefix normalized to `/x/y`) or field errors in the language of `t`.
  */
 export function validateProject(
 	name: string,
 	prefix: string,
+	t: Translate,
 ): { input: ProjectInput | null; errors: ProjectFormErrors } {
 	const errors: ProjectFormErrors = {
-		name: nameError(name),
-		prefix: prefixError(prefix),
+		name: nameError(name, t),
+		prefix: prefixError(prefix, t),
 	};
 	if (errors.name || errors.prefix) return { input: null, errors };
 	return {

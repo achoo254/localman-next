@@ -22,11 +22,11 @@ describe("SwitchAccountButton", () => {
 		expect(form).toHaveAttribute("method", "post");
 		expect(form).toHaveAttribute("action", "/auth/logout");
 		const button = screen.getByRole("button", {
-			name: "Đăng nhập tài khoản khác",
+			name: "Sign in with another account",
 		});
 		await userEvent.click(button);
 		expect(button).toBeDisabled();
-		expect(button).toHaveTextContent("Đang đăng xuất…");
+		expect(button).toHaveTextContent("Signing out…");
 		release(null);
 		await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
 	});

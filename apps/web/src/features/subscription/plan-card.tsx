@@ -3,14 +3,9 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { cardClassName } from "../../components/ui/card";
 import { type FeatureFlags, useFeatures } from "../../config/features";
+import { useT } from "../../i18n/i18n-context";
+import type { Translate } from "../../i18n/translate";
 import { cn } from "../../lib/cn";
-import { formatNumber } from "../../lib/format";
-
-function monthly(limit: number | null, unit: string): string {
-	return limit === null
-		? `Không giới hạn ${unit} mỗi tháng`
-		: `${formatNumber(limit)} ${unit} mỗi tháng`;
-}
 
 /**
  * What a plan includes, in the order the prototype lists it. Items of a
@@ -20,24 +15,34 @@ function monthly(limit: number | null, unit: string): string {
 export function planItems(
 	limits: PlanLimits,
 	flags: FeatureFlags,
+	t: Translate,
 ): Array<[boolean, string]> {
+	const mock = limits.mockRequestsPerMonth;
 	const items: Array<[boolean, string]> = [
-		[true, `${limits.projects} project`],
-		[true, `${limits.resources} resource mỗi project`],
+		[true, t("subscription.plan.projects", { count: limits.projects })],
+		[true, t("subscription.plan.resources", { count: limits.resources })],
 		[
 			limits.customResponse && limits.objectTemplate,
-			"Custom response và object template",
+			t("subscription.plan.customResponse"),
 		],
 		[
 			true,
-			`Tối đa ${limits.membersPerWorkspace} thành viên mỗi project, tính cả bạn`,
+			t("subscription.plan.members", { count: limits.membersPerWorkspace }),
 		],
-		[true, monthly(limits.mockRequestsPerMonth, "request tới mock")],
+		[
+			true,
+			mock === null
+				? t("subscription.plan.mockRequestsUnlimited")
+				: t("subscription.plan.mockRequests", { count: mock }),
+		],
 	];
 	if (flags.apiClient) {
+		const proxy = limits.proxyRequestsPerMonth;
 		items.push([
 			true,
-			monthly(limits.proxyRequestsPerMonth, "request qua proxy"),
+			proxy === null
+				? t("subscription.plan.proxyRequestsUnlimited")
+				: t("subscription.plan.proxyRequests", { count: proxy }),
 		]);
 	}
 	return items;
@@ -55,7 +60,7 @@ export interface PlanCardProps {
 	limits: PlanLimits;
 	featured?: boolean;
 	badge?: ReactNode;
-	/** Large price line under the name ("Miễn phí"). */
+	/** Large price line under the name ("Free"). */
 	price?: ReactNode;
 	/** Short pitch under the name or price. */
 	lead?: ReactNode;
@@ -78,6 +83,7 @@ export function PlanCard({
 	"data-id": dataId,
 }: PlanCardProps) {
 	const flags = useFeatures();
+	const t = useT();
 	return (
 		<article
 			data-id={dataId}
@@ -104,7 +110,7 @@ export function PlanCard({
 			) : null}
 			{lead ? <p className="m-0 text-muted text-sm">{lead}</p> : null}
 			<ul className={cn("m-0 grid list-none gap-2 p-0", SIZE[size].list)}>
-				{planItems(limits, flags).map(([included, label]) => (
+				{planItems(limits, flags, t).map(([included, label]) => (
 					<li
 						key={label}
 						className={cn(
@@ -122,7 +128,11 @@ export function PlanCard({
 							<IconX size={18} aria-hidden="true" className="text-icon-muted" />
 						)}
 						<span>
-							{included ? null : <span className="sr-only">Không có: </span>}
+							{included ? null : (
+								<span className="sr-only">
+									{`${t("subscription.plan.notIncluded")} `}
+								</span>
+							)}
 							{label}
 						</span>
 					</li>

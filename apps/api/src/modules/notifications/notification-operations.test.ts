@@ -10,7 +10,12 @@ import {
 	useOperationsFixture,
 } from "./testing/operations-fixture.js";
 
-const EVENT = { type: "project.invitation", title: "T", body: "B" } as const;
+const EVENT = {
+	type: "project.mockUrlChanged",
+	params: { project: "Demo" },
+} as const;
+const store = (sub: string, project = "Demo") =>
+	storeInAppNotification(sub, { ...EVENT, params: { project } }, "en");
 
 useOperationsFixture();
 
@@ -27,18 +32,18 @@ describe("notification operations", () => {
 
 	it("list the user's own notifications, newest first, with a cursor", async () => {
 		for (let i = 0; i < 25; i += 1) {
-			await storeInAppNotification(ALICE, { ...EVENT, title: `n${i}` });
+			await store(ALICE, `n${i}`);
 		}
-		await storeInAppNotification(BOB, EVENT);
+		await store(BOB);
 		const first = await as(ALICE).get("/notifications?limit=10");
 		expect(first.status).toBe(200);
 		expect(first.body.items).toHaveLength(10);
-		expect(first.body.items[0].title).toBe("n24");
+		expect(first.body.items[0].body).toContain('"n24"');
 		expect(first.body.unreadCount).toBe(25);
 		const second = await as(ALICE).get(
 			`/notifications?limit=10&cursor=${first.body.nextCursor}`,
 		);
-		expect(second.body.items[0].title).toBe("n14");
+		expect(second.body.items[0].body).toContain('"n14"');
 		const last = await as(ALICE).get(
 			`/notifications?cursor=${second.body.nextCursor}`,
 		);
@@ -48,9 +53,9 @@ describe("notification operations", () => {
 	});
 
 	it("mark one or all as read, never another user's", async () => {
-		const mine = await storeInAppNotification(ALICE, EVENT);
-		await storeInAppNotification(ALICE, EVENT);
-		const theirs = await storeInAppNotification(BOB, EVENT);
+		const mine = await store(ALICE);
+		await store(ALICE);
+		const theirs = await store(BOB);
 		const read = await as(ALICE).send("post", `/notifications/${mine.id}/read`);
 		expect(read.status).toBe(200);
 		expect(read.body.readAt).toEqual(expect.any(String));

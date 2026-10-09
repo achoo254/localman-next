@@ -52,7 +52,7 @@ describe("JsonEditor", () => {
 		blurEditor(frame());
 		await waitFor(() =>
 			expect(onValidate).toHaveBeenLastCalledWith(
-				"JSON không hợp lệ ở dòng 2, cột 8.",
+				"Invalid JSON at line 2, column 8.",
 			),
 		);
 	});

@@ -1,10 +1,11 @@
 import {
-	PRICE_HINTS,
-	PRO_NEEDS,
-	PRO_SOURCES,
-	TEAM_SIZES,
 	choiceLabel,
+	priceHints,
+	proNeeds,
+	proSources,
+	teamSizes,
 } from "../../features/subscription/pro-interest-options";
+import type { Translate } from "../../i18n/translate";
 
 /** `minhanh@example.com` → `mi***@example.com`; the CSV keeps the full address. */
 export function maskEmail(email: string): string {
@@ -13,17 +14,17 @@ export function maskEmail(email: string): string {
 	return `${email.slice(0, Math.min(2, at))}***${email.slice(at)}`;
 }
 
-export const needsLabel = (needs: string[]): string =>
-	needs.map((need) => choiceLabel(PRO_NEEDS, need)).join(", ");
+export const needsLabel = (t: Translate, needs: string[]): string =>
+	needs.map((need) => choiceLabel(proNeeds(t), need)).join(", ");
 
-export const teamLabel = (teamSize: string): string =>
-	teamSize ? choiceLabel(TEAM_SIZES, teamSize) : "—";
+export const teamLabel = (t: Translate, teamSize: string): string =>
+	teamSize ? choiceLabel(teamSizes(t), teamSize) : "—";
 
-export const sourceLabel = (source: string): string =>
-	choiceLabel(PRO_SOURCES, source);
+export const sourceLabel = (t: Translate, source: string): string =>
+	choiceLabel(proSources(t), source);
 
-export const priceLabel = (priceHint: string): string =>
-	choiceLabel(PRICE_HINTS, priceHint);
+export const priceLabel = (t: Translate, priceHint: string): string =>
+	choiceLabel(priceHints(t), priceHint);
 
 /** Table cell padding and borders shared by the list and history rows. */
 export const CELL =

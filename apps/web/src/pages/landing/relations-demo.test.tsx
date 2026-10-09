@@ -19,12 +19,12 @@ function groupOrder(container: HTMLElement): string[] {
 
 async function nest(moving: string, target: string | null) {
 	await userEvent.click(
-		screen.getByRole("button", { name: `Chọn ${moving} để di chuyển` }),
+		screen.getByRole("button", { name: `Select ${moving} to move` }),
 	);
 	await userEvent.click(
 		target === null
-			? screen.getByRole("button", { name: "Thêm vào root" })
-			: screen.getByRole("button", { name: `Lồng ${moving} vào ${target}` }),
+			? screen.getByRole("button", { name: "Add to root" })
+			: screen.getByRole("button", { name: `Nest ${moving} into ${target}` }),
 	);
 }
 
@@ -76,7 +76,7 @@ describe("RelationsDemo", () => {
 		await nest("users", "posts");
 		expect(
 			await screen.findByText(
-				"Không thể lồng users vào posts vì sẽ tạo vòng lặp.",
+				"Can't nest users into posts because it would create a loop.",
 			),
 		).toBeInTheDocument();
 		expect(count(container)).toBe("25 endpoints");

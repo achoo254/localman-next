@@ -11,6 +11,7 @@ import {
 	relationSourceOf,
 } from "@localman/shared/constants";
 import { isFakerMethodId } from "@localman/shared/faker-catalog";
+import type { Translate } from "../../i18n/translate";
 import { isRecord } from "../../lib/json-guards";
 import { parseJsonText } from "../../lib/json-text";
 import {
@@ -26,19 +27,23 @@ import type {
 	SchemaField,
 } from "./resource-model";
 
-function nameError(name: string, place: FormPlace): string | undefined {
-	if (name === "") return "Nhập tên resource.";
+function nameError(
+	name: string,
+	place: FormPlace,
+	t: Translate,
+): string | undefined {
+	if (name === "") return t("resources.validation.nameRequired");
 	if (name.length > RESOURCE_NAME_MAX) {
-		return `Tên tối đa ${RESOURCE_NAME_MAX} ký tự.`;
+		return t("resources.validation.nameTooLong", { max: RESOURCE_NAME_MAX });
 	}
 	if (!RESOURCE_NAME_PATTERN.test(name)) {
-		return "Chỉ dùng chữ không dấu, số, - và _, bắt đầu bằng chữ hoặc số.";
+		return t("resources.validation.namePattern");
 	}
 	if (RESERVED_RESOURCE_NAMES.includes(name)) {
-		return `Tên "${MOCK_MCP_SEGMENT}" dành cho endpoint MCP của project, hãy chọn tên khác.`;
+		return t("resources.validation.nameReserved", { name: MOCK_MCP_SEGMENT });
 	}
 	if (place.siblingNames.includes(name)) {
-		return "Đã có resource cùng tên ở vị trí này.";
+		return t("resources.errors.nameTaken");
 	}
 	return undefined;
 }
@@ -47,13 +52,14 @@ function nameError(name: string, place: FormPlace): string | undefined {
 interface SeenFields {
 	readonly names: Set<string>;
 	readonly sources: Map<string, string>;
+	readonly t: Translate;
 }
 
 /** A second field reading the same parent or child would repeat its records. */
 function repeatedSourceError(
 	field: FieldDraft,
 	name: string,
-	sources: Map<string, string>,
+	{ sources, t }: SeenFields,
 ): string | undefined {
 	const source = relationSourceOf(field);
 	if (source === null) return undefined;
@@ -63,8 +69,8 @@ function repeatedSourceError(
 		return undefined;
 	}
 	return field.type === "Parent Resource"
-		? `Đã có field “${first}” lấy bản ghi cha.`
-		: `Đã có field “${first}” lấy resource con này.`;
+		? t("resources.validation.parentRepeated", { first })
+		: t("resources.validation.childRepeated", { first });
 }
 
 function fieldError(
@@ -73,30 +79,38 @@ function fieldError(
 	seen: SeenFields,
 	place: FormPlace,
 ): string | undefined {
+	const { t } = seen;
 	const name = field.name.trim();
-	if (name === "") return "Nhập tên field.";
-	if (name.length > FIELD_NAME_MAX)
-		return `Tên field tối đa ${FIELD_NAME_MAX} ký tự.`;
-	if (!FIELD_NAME_PATTERN.test(name)) {
-		return "Tên field chỉ gồm chữ không dấu, số, _, - và dấu chấm.";
+	if (name === "") return t("resources.validation.fieldRequired");
+	if (name.length > FIELD_NAME_MAX) {
+		return t("resources.validation.fieldTooLong", { max: FIELD_NAME_MAX });
 	}
-	if (FORBIDDEN_KEYS.includes(name)) return `Không dùng được tên “${name}”.`;
-	if (reserved.has(name)) return `Field “${name}” được sinh tự động.`;
-	if (seen.names.has(name)) return `Field “${name}” bị trùng.`;
+	if (!FIELD_NAME_PATTERN.test(name)) {
+		return t("resources.validation.fieldPattern");
+	}
+	if (FORBIDDEN_KEYS.includes(name)) {
+		return t("resources.validation.fieldForbidden", { name });
+	}
+	if (reserved.has(name)) {
+		return t("resources.validation.fieldGenerated", { name });
+	}
+	if (seen.names.has(name)) {
+		return t("resources.validation.fieldDuplicate", { name });
+	}
 	seen.names.add(name);
 	if (field.type === "Faker.js" && !isFakerMethodId(field.fakerMethod)) {
-		return "Chọn một Faker method trong danh sách.";
+		return t("resources.validation.fakerMethod");
 	}
 	if (
 		field.type === "Child Resource" &&
 		!place.children.some((child) => child.id === field.childId)
 	) {
-		return "Chọn resource con.";
+		return t("resources.validation.childRequired");
 	}
 	if (field.type === "Parent Resource" && place.parentKey === null) {
-		return "Resource gốc không có Parent Resource.";
+		return t("resources.validation.parentOnRoot");
 	}
-	return repeatedSourceError(field, name, seen.sources);
+	return repeatedSourceError(field, name, seen);
 }
 
 function toField(field: FieldDraft): SchemaField {
@@ -116,18 +130,21 @@ function toField(field: FieldDraft): SchemaField {
 export function validateDraft(
 	draft: ResourceDraft,
 	place: FormPlace,
+	t: Translate,
 ): { input: ResourceInput | null; errors: DraftErrors } {
 	const errors: DraftErrors = { fields: {}, endpoints: {} };
 	const name = draft.name.trim();
-	errors.name = nameError(name, place);
+	errors.name = nameError(name, place, t);
 	if (draft.fields.length > MAX_SCHEMA_FIELDS) {
-		errors.schema = `Mỗi resource có tối đa ${MAX_SCHEMA_FIELDS} field.`;
+		errors.schema = t("resources.validation.tooManyFields", {
+			max: MAX_SCHEMA_FIELDS,
+		});
 	}
 	const reserved = new Set([
 		OBJECT_ID_FIELD,
 		...(place.parentKey ? [place.parentKey] : []),
 	]);
-	const seen: SeenFields = { names: new Set(), sources: new Map() };
+	const seen: SeenFields = { names: new Set(), sources: new Map(), t };
 	for (const field of draft.fields) {
 		const error = fieldError(field, reserved, seen, place);
 		if (error) errors.fields[field.key] = error;
@@ -135,17 +152,18 @@ export function validateDraft(
 	let template: Record<string, unknown> | null = null;
 	if (draft.template.trim() !== "") {
 		const parsed = parseJsonText(draft.template);
-		if (!parsed.ok) errors.template = "Object template không phải JSON hợp lệ.";
+		if (!parsed.ok) errors.template = t("resources.validation.templateInvalid");
 		else if (!isRecord(parsed.value)) {
-			errors.template = "Object template phải là một object JSON.";
+			errors.template = t("resources.validation.templateNotObject");
 		} else template = parsed.value;
 	}
 	const endpoints: ResourceEndpoint[] = [];
 	for (const endpoint of draft.endpoints) {
 		const parsed = parseJsonText(endpoint.response);
 		if (!parsed.ok) {
-			errors.endpoints[endpointKey(endpoint)] =
-				"Response template không phải JSON hợp lệ.";
+			errors.endpoints[endpointKey(endpoint)] = t(
+				"resources.validation.responseInvalid",
+			);
 			continue;
 		}
 		endpoints.push({ ...endpoint, response: parsed.value });

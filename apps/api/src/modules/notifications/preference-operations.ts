@@ -1,17 +1,16 @@
 import { defineOperation } from "@localman/operations";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import { localeOrDefault } from "../users/user-locale.js";
 import { UserModel } from "../users/user-model.js";
-import {
-	NOTIFICATION_EVENTS,
-	NOTIFICATION_EVENT_TYPES,
-} from "./notification-events.js";
+import { NOTIFICATION_EVENT_TYPES } from "./notification-events.js";
 import {
 	type EventPreference,
 	readEventPreferences,
 	updateEventPreferences,
 } from "./notification-preferences-model.js";
 import { getNotificationService } from "./notification-runtime.js";
+import { eventLabel } from "./notification-texts.js";
 import { PushSubscriptionModel } from "./push-subscription-model.js";
 
 const preferencesView = z.object({
@@ -37,18 +36,16 @@ const preferencesView = z.object({
 
 type PreferencesView = z.input<typeof preferencesView>;
 
-interface StoredTelegram {
+interface StoredUser {
 	telegram?: { chatId?: string | null; blockedAt?: Date | null } | null;
+	locale?: string | null;
 }
-
-const LABELS = new Map<string, string>(
-	NOTIFICATION_EVENTS.map((event) => [event.type, event.label]),
-);
 
 /**
  * Channel state for the settings page. `webPush.enabled`: at least one of
  * the user's devices is subscribed. `telegram.activated`: linked and the
- * bot has not been refused (403) since the chat was linked.
+ * bot has not been refused (403) since the chat was linked. Event labels
+ * are in the user's language.
  */
 async function buildView(
 	userSub: string,
@@ -57,11 +54,12 @@ async function buildView(
 	const availability = getNotificationService().availability;
 	const [user, devices] = await Promise.all([
 		UserModel.findOne({ sub: userSub })
-			.select("telegram")
-			.lean<StoredTelegram>(),
+			.select("telegram locale")
+			.lean<StoredUser>(),
 		PushSubscriptionModel.countDocuments({ userSub }),
 	]);
 	const linked = Boolean(user?.telegram?.chatId);
+	const locale = localeOrDefault(user?.locale);
 	return {
 		channels: {
 			webPush: { available: availability.webPush, enabled: devices > 0 },
@@ -74,7 +72,7 @@ async function buildView(
 		},
 		events: events.map((event) => ({
 			type: event.type,
-			label: LABELS.get(event.type) ?? event.type,
+			label: eventLabel(event.type, locale),
 			inApp: event.inApp,
 			webPush: event.webPush,
 			telegram: event.telegram,
@@ -119,7 +117,7 @@ export const updateNotificationPreferences = defineOperation({
 					telegram: z.boolean().optional(),
 				}),
 			)
-			.max(NOTIFICATION_EVENTS.length * 2),
+			.max(NOTIFICATION_EVENT_TYPES.length * 2),
 	}),
 	output: preferencesView,
 	scopes: [USER_SCOPE],

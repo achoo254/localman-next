@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useToast } from "../../components/ui/toast";
+import { useT } from "../../i18n/i18n-context";
 import { isPlanLimitError } from "../../pages/projects/projects-api";
 import { appPageUrl } from "../../platform/navigation";
 import {
@@ -7,11 +8,7 @@ import {
 	inviteCollaborator,
 	lookupInvitee,
 } from "./collaborators-api";
-import {
-	NOT_FOUND_MESSAGE,
-	inviteErrorMessage,
-	looksLikeEmail,
-} from "./invite-errors";
+import { inviteErrorMessage, looksLikeEmail } from "./invite-errors";
 import type { InviteCandidate } from "./invitee-card";
 
 /** The one-time link of the invitation just made; never shown again. */
@@ -25,7 +22,7 @@ export interface CreatedLink {
 
 export interface InviteFlowOptions {
 	projectId: string;
-	/** `message`: what was done, e.g. "Đã mời Lan", for announcements. */
+	/** `message`: what was done, e.g. "Invited Lan", for announcements. */
 	onInvited: (result: InviteResult, message: string) => void;
 	onPlanLimit: () => void;
 }
@@ -41,6 +38,7 @@ export function useInviteFlow({
 	onPlanLimit,
 }: InviteFlowOptions) {
 	const toast = useToast();
+	const t = useT();
 	const [value, setValue] = useState("");
 	const [checking, setChecking] = useState(false);
 	const [candidate, setCandidate] = useState<InviteCandidate | null>(null);
@@ -59,13 +57,13 @@ export function useInviteFlow({
 
 	function fail(cause: unknown) {
 		if (isPlanLimitError(cause)) onPlanLimit();
-		else setError(inviteErrorMessage(cause));
+		else setError(inviteErrorMessage(cause, t));
 	}
 
 	async function look() {
 		const typed = value.trim();
 		if (typed === "") {
-			setError("Nhập username hoặc email.");
+			setError(t("collaborators.form.empty"));
 			return;
 		}
 		setChecking(true);
@@ -75,7 +73,7 @@ export function useInviteFlow({
 			if (latest.current !== typed) return;
 			if (invitee) setCandidate({ kind: "account", typed, invitee });
 			else if (looksLikeEmail(typed)) setCandidate({ kind: "email", typed });
-			else setError(NOT_FOUND_MESSAGE);
+			else setError(t("collaborators.errors.notFound"));
 		} catch (cause) {
 			if (latest.current === typed) fail(cause);
 		} finally {
@@ -92,7 +90,9 @@ export function useInviteFlow({
 			const who = invitee
 				? invitee.name || `@${invitee.username}`
 				: target.typed;
-			const title = invitee ? `Đã mời ${who}` : `Đã tạo link mời cho ${who}`;
+			const title = invitee
+				? t("collaborators.form.invited", { who })
+				: t("collaborators.form.linkCreated", { who });
 			onInvited(result, title);
 			change("");
 			setCreated({
@@ -105,7 +105,7 @@ export function useInviteFlow({
 				title,
 				description:
 					invitee && result.notified
-						? "Họ thấy lời mời trong app và qua kênh thông báo đã bật."
+						? t("collaborators.form.notified")
 						: undefined,
 			});
 		} catch (cause) {

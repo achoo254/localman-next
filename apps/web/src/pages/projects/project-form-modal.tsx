@@ -6,6 +6,8 @@ import { FormField } from "../../components/ui/form-field";
 import { Input } from "../../components/ui/input";
 import { Modal, ModalClose } from "../../components/ui/modal";
 import { ModalFooter } from "../../components/ui/modal-footer";
+import { useT } from "../../i18n/i18n-context";
+import { renderRich } from "../../i18n/rich-text";
 import { errorMessage } from "../../lib/api-client";
 import {
 	type ProjectFormErrors,
@@ -29,7 +31,7 @@ export interface ProjectFormModalProps {
 	onPlanLimit: () => void;
 }
 
-/** "Project mới" / "Sửa project". Mount it only while open. */
+/** "New project" / "Edit project". Mount it only while open. */
 export function ProjectFormModal({
 	project,
 	sampleBaseUrl,
@@ -37,6 +39,7 @@ export function ProjectFormModal({
 	onSave,
 	onPlanLimit,
 }: ProjectFormModalProps) {
+	const t = useT();
 	const formId = useId();
 	const nameInput = useRef<HTMLInputElement>(null);
 	const editing = project !== null;
@@ -49,7 +52,7 @@ export function ProjectFormModal({
 	async function submit(event: FormEvent) {
 		event.preventDefault();
 		if (busy) return;
-		const result = validateProject(name, prefix);
+		const result = validateProject(name, prefix, t);
 		setErrors(result.errors);
 		if (!result.input) return;
 		setPrefix(result.input.prefix);
@@ -75,7 +78,9 @@ export function ProjectFormModal({
 		<Modal
 			open
 			onOpenChange={(open) => !busy && onOpenChange(open)}
-			title={editing ? "Sửa project" : "Project mới"}
+			title={
+				editing ? t("projects.form.titleEdit") : t("projects.form.titleNew")
+			}
 			size="md"
 			initialFocusRef={nameInput}
 			data-id={editing ? "modal-edit-project" : "modal-new-project"}
@@ -83,7 +88,7 @@ export function ProjectFormModal({
 				<ModalFooter>
 					<ModalClose asChild>
 						<Button variant="ghost" disabled={busy}>
-							Huỷ
+							{t("common.actions.cancel")}
 						</Button>
 					</ModalClose>
 					<Button
@@ -93,7 +98,7 @@ export function ProjectFormModal({
 						disabled={busy}
 						data-id="project-form-submit"
 					>
-						{editing ? "Lưu thay đổi" : "Tạo project"}
+						{editing ? t("projects.form.save") : t("projects.form.create")}
 					</Button>
 				</ModalFooter>
 			}
@@ -106,7 +111,7 @@ export function ProjectFormModal({
 				className="grid gap-4"
 			>
 				<FormField
-					label="Tên project"
+					label={t("projects.form.nameLabel")}
 					required
 					error={errors.name}
 					data-id="project-form-name"
@@ -122,13 +127,7 @@ export function ProjectFormModal({
 					label="API Prefix"
 					error={errors.prefix}
 					data-id="project-form-prefix"
-					hint={
-						<>
-							Thêm vào trước mọi endpoint, ví dụ <code>/api/v1</code>. Để trống
-							nếu không cần. Chỉ dùng chữ, số, <code>-</code>, <code>_</code> và{" "}
-							<code>/</code>.
-						</>
-					}
+					hint={renderRich(t("projects.form.prefixHint"))}
 				>
 					<Input
 						placeholder="/api/v1"
@@ -139,7 +138,7 @@ export function ProjectFormModal({
 				</FormField>
 				<div className="grid gap-1.5" data-id="project-form-preview">
 					<span className="font-mono font-semibold text-[0.8125rem]">
-						Xem trước
+						{t("projects.form.preview")}
 					</span>
 					<output className="break-all font-mono text-[0.8125rem] text-muted">
 						{preview}

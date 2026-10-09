@@ -2,17 +2,17 @@ import type { Messages } from "../../message-types";
 
 export const landing: Messages["landing"] = {
 	meta: {
-		titleMock: "Localman · 带状态、关联和 Faker 的 Mock REST API",
+		titleMock: "Localman · 带状态、关联和 Faker 的 mock REST API",
 		titleLocalhost: "Localman · 直接在浏览器中测试 localhost API",
 		description:
 			"几分钟内搭建带状态的 mock REST API：声明 resource，用 Faker.js 生成数据，嵌套关联，立即获得 CRUD endpoint。Free 套餐含 {projects} 个 project。",
 	},
 	hero: {
-		badgeMock: "面向开发者的 Mock REST API",
+		badgeMock: "面向开发者的 mock REST API",
 		badgeLocalhost: "直接在浏览器中访问 localhost",
 		titleMock: {
 			other:
-				"带状态、关联和 Faker 的 <code>Mock</code> REST API，Free 套餐含 {count} 个 project",
+				"带状态、关联和 Faker 的 <code>mock</code> REST API，Free 套餐含 {count} 个 project",
 		},
 		titleLocalhost: "直接在浏览器中测试 <code>localhost</code> API",
 		subMock:
@@ -39,7 +39,7 @@ export const landing: Messages["landing"] = {
 		fields: "Field：",
 		collection: { other: "Collection · {count} 个 request" },
 		headerKept:
-			"你在 “List {name}” 中添加的 <code>X-Debug</code> header 保持不变。",
+			"你在“List {name}”中添加的 <code>X-Debug</code> header 保持不变。",
 	},
 	mockMcp: {
 		eyebrow: "即时 Mock MCP",
@@ -59,7 +59,7 @@ export const landing: Messages["landing"] = {
 		freePrice: "免费",
 		proBadge: "接受意向登记",
 		proLead:
-			"为真实运行的 project 提供更高额度和更多成员。留下你的需求，Pro 开放时我们会联系你。",
+			"为实际使用中的 project 提供更高额度和更多成员。留下你的需求，Pro 开放时我们会联系你。",
 	},
 	modeling: {
 		title: "简单的数据建模",
@@ -74,11 +74,11 @@ export const landing: Messages["landing"] = {
 	},
 	relations: {
 		eyebrow: "关联",
-		title: "resource 之间的关联",
+		title: "Resource 之间的关联",
 		lead: "把 resource 互相嵌套，即可得到 <code>/users/:userId/posts</code> 这样的 endpoint。试着在下方把 <b>comments</b> 嵌套到 <b>posts</b> 中。",
 		tree: "Resource 树",
 		nested: "已将 {child} 嵌套到 {parent}。",
-		movedToRoot: "已将 {child} 移回 root。",
+		movedToRoot: "已将 {child} 移回根级。",
 		endpoints: "生成的 endpoint",
 		endpointCount: { other: "{count} 个 endpoint" },
 		listLabel: "Endpoint 列表，可纵向滚动",
@@ -106,9 +106,9 @@ export const landing: Messages["landing"] = {
 				"{methods} 个 Faker.js 方法，每次点击最多生成 {max} 条记录。",
 		},
 		customResponse: {
-			title: "自定义 response",
+			title: "Custom response",
 			description:
-				'为每个 endpoint 设置专属模板，可使用 <code>"$mockData"</code>、<code>"$count"</code> 变量和 Faker.js。',
+				'为每个 endpoint 设置专属 template，可使用 <code>"$mockData"</code>、<code>"$count"</code> 变量和 Faker.js。',
 		},
 		collaboration: {
 			title: "协作",
@@ -125,6 +125,6 @@ export const landing: Messages["landing"] = {
 	},
 	cta: {
 		title: "几分钟内搭建你的第一个 mock API",
-		text: "创建账户，添加 resource，点击数据生成条，就有一个可用的 endpoint。",
+		text: "创建账号，添加 resource，点击数据生成条，即可得到一个可用的 endpoint。",
 	},
 };

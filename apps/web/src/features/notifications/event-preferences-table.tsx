@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Button } from "../../components/ui/button";
 import { cardClassName } from "../../components/ui/card";
+import { useT } from "../../i18n/i18n-context";
+import type { SourceMessages } from "../../i18n/message-types";
+import type { Translate } from "../../i18n/translate";
 import { cn } from "../../lib/cn";
 import {
 	EVENT_CHANNELS,
@@ -9,11 +12,23 @@ import {
 	type NotificationChannels,
 } from "./notification-preferences-api";
 
-const CHANNEL_LABEL: Record<EventChannel, string> = {
-	inApp: "Trong app",
-	webPush: "Web Push",
-	telegram: "Telegram",
+type EventTypeKey =
+	`notifications.events.types.${keyof SourceMessages["notifications"]["events"]["types"]}`;
+
+/** Labels the web knows for each API event `type`. */
+const EVENT_TYPE_KEYS: Readonly<Record<string, EventTypeKey>> = {
+	"project.invitation": "notifications.events.types.projectInvitation",
+	"project.mockUrlChanged": "notifications.events.types.projectMockUrlChanged",
+	"usage.quota": "notifications.events.types.usageQuota",
 };
+
+/** The event's label in the current language; a type unknown to this build keeps the API's label. */
+function eventLabel(event: EventPreference, t: Translate): string {
+	const key = Object.hasOwn(EVENT_TYPE_KEYS, event.type)
+		? EVENT_TYPE_KEYS[event.type]
+		: undefined;
+	return key ? t(key) : event.label;
+}
 
 export interface EventPreferencesTableProps {
 	events: EventPreference[];
@@ -39,6 +54,7 @@ export function EventPreferencesTable({
 	channels,
 	onSave,
 }: EventPreferencesTableProps) {
+	const t = useT();
 	const [draft, setDraft] = useState(events);
 	const [saving, setSaving] = useState(false);
 	const usable = usableChannels(channels);
@@ -75,17 +91,19 @@ export function EventPreferencesTable({
 				id="notify-events-title"
 				className="m-0 font-bold font-mono text-base"
 			>
-				Nhận thông báo theo loại sự kiện
+				{t("notifications.events.title")}
 			</h2>
 			{draft.length === 0 ? (
-				<p className="m-0 text-muted text-sm">Chưa có loại sự kiện nào.</p>
+				<p className="m-0 text-muted text-sm">
+					{t("notifications.events.empty")}
+				</p>
 			) : (
 				<div className="overflow-x-auto">
 					<table className="w-full border-collapse text-sm">
 						<thead>
 							<tr className="text-left font-mono text-muted text-xs">
 								<th scope="col" className="py-2 pr-4 font-semibold">
-									Sự kiện
+									{t("notifications.events.event")}
 								</th>
 								{EVENT_CHANNELS.map((channel) => (
 									<th
@@ -93,7 +111,7 @@ export function EventPreferencesTable({
 										scope="col"
 										className="px-2 py-2 text-center font-semibold"
 									>
-										{CHANNEL_LABEL[channel]}
+										{t(`notifications.channels.${channel}`)}
 									</th>
 								))}
 							</tr>
@@ -102,14 +120,17 @@ export function EventPreferencesTable({
 							{draft.map((event) => (
 								<tr key={event.type} className="border-border-subtle border-t">
 									<th scope="row" className="py-3 pr-4 text-left font-normal">
-										{event.label}
+										{eventLabel(event, t)}
 									</th>
 									{EVENT_CHANNELS.map((channel) => (
 										<td key={channel} className="px-2 py-3 text-center">
 											<input
 												type="checkbox"
 												data-id={`notify-events-${event.type}-${channel}`}
-												aria-label={`${event.label}: ${CHANNEL_LABEL[channel]}`}
+												aria-label={t("notifications.events.cell", {
+													event: eventLabel(event, t),
+													channel: t(`notifications.channels.${channel}`),
+												})}
 												checked={event[channel]}
 												disabled={!usable[channel] || saving}
 												onChange={(e) =>
@@ -126,8 +147,7 @@ export function EventPreferencesTable({
 				</div>
 			)}
 			<p className="m-0 text-[0.8125rem] text-muted">
-				Ô bị khoá khi kênh chưa sẵn sàng. Không có kênh email: hoandat không gửi
-				email.
+				{t("notifications.events.note")}
 			</p>
 			<div>
 				<Button
@@ -137,7 +157,7 @@ export function EventPreferencesTable({
 					aria-busy={saving || undefined}
 					onClick={() => void save()}
 				>
-					Lưu tuỳ chọn
+					{t("notifications.events.save")}
 				</Button>
 			</div>
 		</section>

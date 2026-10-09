@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { NO_FEATURES } from "../../config/features";
+import { en } from "../../i18n/messages/en/dictionary";
+import { createTranslator } from "../../i18n/translate";
 import { proNeedsFor, sourceNeedFor } from "./pro-interest-options";
 
-const ids = (flags: typeof NO_FEATURES) => proNeedsFor(flags).map((c) => c.id);
+const english = createTranslator("en", en).t;
+const ids = (flags: typeof NO_FEATURES) =>
+	proNeedsFor(flags, english).map((c) => c.id);
 
 describe("Pro interest needs by released features", () => {
 	it("offers only what runs today while every flag is off", () => {
