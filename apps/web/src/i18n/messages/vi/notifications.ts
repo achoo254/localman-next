@@ -22,6 +22,28 @@ export const notifications: Messages["notifications"] = {
 		channelsTitle: "Kênh nhận thông báo",
 		inAppText: "Chuông trên Localman, chọn theo từng loại sự kiện ở bảng dưới.",
 	},
+	test: {
+		title: "Thông báo thử",
+		text: "Gửi thông báo thử tới mọi kênh đã sẵn sàng, không phụ thuộc lựa chọn theo loại sự kiện ở bảng dưới.",
+		send: "Gửi thông báo thử",
+		sending: "Đang gửi…",
+		resultTitle: "Kết quả gửi thông báo thử",
+		rateLimited:
+			"Bạn vừa gửi thông báo thử chưa tới một phút trước. Chờ một phút rồi thử lại.",
+		status: {
+			sent: "Đã gửi",
+			notSetUp: "Chưa thiết lập",
+			unavailable: "Máy chủ chưa bật",
+			failed: "Gửi lỗi",
+			blocked: "Chưa kích hoạt bot",
+		},
+		inAppHint: "Mở chuông ở trên cùng để xem.",
+		failedHint: "Không gửi được. Thử lại sau.",
+		blockedWithBot:
+			"Mở <bot></bot> và bấm Start, rồi gửi thông báo thử lần nữa.",
+		blockedNoBot:
+			"Mở bot Telegram của Localman và bấm Start, rồi gửi thông báo thử lần nữa.",
+	},
 	channels: {
 		inApp: "Trong app",
 		webPush: "Web Push",

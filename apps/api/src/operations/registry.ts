@@ -27,6 +27,7 @@ import {
 	deletePushSubscription,
 	getVapidPublicKey,
 } from "../modules/notifications/push-operations.js";
+import { sendTestNotification } from "../modules/notifications/test-notification-operations.js";
 import { projectOperations } from "../modules/projects/project-operations.js";
 import { rotateProjectSecret } from "../modules/projects/project-secret-operations.js";
 import { mockAdvancedOperations } from "../modules/resources/mock-advanced-operations.js";
@@ -54,6 +55,7 @@ export const operations: readonly AnyOperation[] = [
 	getVapidPublicKey,
 	createPushSubscription,
 	deletePushSubscription,
+	sendTestNotification,
 	...projectOperations,
 	rotateProjectSecret,
 	...mcpTokenOperations,

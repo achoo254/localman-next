@@ -20,6 +20,12 @@ export interface PushPayload {
 	readonly link: string | null;
 }
 
+/**
+ * `sent`: at least one device accepted the message; `skipped`: no device of
+ * a signed-in session; `failed`: every device refused it or was gone.
+ */
+export type WebPushDelivery = "sent" | "skipped" | "failed";
+
 /** Sends one encrypted push message; the `web-push` library by default. */
 export type PushSender = (
 	subscription: webpush.PushSubscription,
@@ -83,7 +89,10 @@ export class WebPushChannel {
 		return this.vapid.publicKey;
 	}
 
-	async deliver(userSub: string, payload: PushPayload): Promise<void> {
+	async deliver(
+		userSub: string,
+		payload: PushPayload,
+	): Promise<WebPushDelivery> {
 		const subscriptions = await PushSubscriptionModel.find({ userSub })
 			.select("endpoint keys sessionId")
 			.lean<StoredSubscription[]>();
@@ -95,18 +104,20 @@ export class WebPushChannel {
 				endpoint: { $in: orphaned.map((s) => s.endpoint) },
 			});
 		}
+		const devices = subscriptions.filter((s) => live.has(s.sessionId ?? ""));
+		if (devices.length === 0) return "skipped";
 		const body = JSON.stringify(payload);
-		await Promise.all(
-			subscriptions
-				.filter((s) => live.has(s.sessionId ?? ""))
-				.map((subscription) => this.sendOne(subscription, body)),
+		const accepted = await Promise.all(
+			devices.map((subscription) => this.sendOne(subscription, body)),
 		);
+		return accepted.includes(true) ? "sent" : "failed";
 	}
 
+	/** Whether the push service accepted the message. */
 	private async sendOne(
 		subscription: StoredSubscription,
 		body: string,
-	): Promise<void> {
+	): Promise<boolean> {
 		try {
 			await this.send(
 				{ endpoint: subscription.endpoint, keys: subscription.keys },
@@ -117,6 +128,7 @@ export class WebPushChannel {
 					timeout: PUSH_TIMEOUT_MS,
 				},
 			);
+			return true;
 		} catch (error) {
 			const status = statusCodeOf(error);
 			// The endpoint is a capability URL: log its host only.
@@ -129,9 +141,10 @@ export class WebPushChannel {
 					{ host, status },
 					"Removed an expired push subscription",
 				);
-				return;
+				return false;
 			}
 			this.logger.warn({ host, status }, "Web Push delivery failed");
+			return false;
 		}
 	}
 }

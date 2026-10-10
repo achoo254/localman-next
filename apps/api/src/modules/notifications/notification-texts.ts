@@ -6,8 +6,11 @@ import {
 	messagesFor,
 } from "../../i18n/server-messages.js";
 import {
+	NOTIFICATION_EVENT_TYPES,
 	NOTIFICATION_PARAMS,
 	type NotificationEventType,
+	type NotificationType,
+	TEST_NOTIFICATION_TYPE,
 } from "./notification-events.js";
 
 /** Title and body of one notification in one language. */
@@ -35,7 +38,7 @@ function template<S extends z.ZodType>(
 	};
 }
 
-const TEMPLATES: Readonly<Record<NotificationEventType, Template>> = {
+const TEMPLATES: Readonly<Record<NotificationType, Template>> = {
 	"project.invitation": template(
 		NOTIFICATION_PARAMS["project.invitation"],
 		(params, { invitation }) => ({
@@ -68,10 +71,18 @@ const TEMPLATES: Readonly<Record<NotificationEventType, Template>> = {
 				: { title: quota.warningTitle(text), body: quota.warningBody(text) };
 		},
 	),
+	[TEST_NOTIFICATION_TYPE]: template(
+		NOTIFICATION_PARAMS[TEST_NOTIFICATION_TYPE],
+		(_params, { testNotification }) => testNotification,
+	),
 };
 
-function isEventType(type: string): type is NotificationEventType {
+function isNotificationType(type: string): type is NotificationType {
 	return Object.hasOwn(TEMPLATES, type);
+}
+
+function isEventType(type: string): type is NotificationEventType {
+	return NOTIFICATION_EVENT_TYPES.some((eventType) => eventType === type);
 }
 
 /**
@@ -83,7 +94,7 @@ export function renderNotification(
 	params: unknown,
 	locale: Locale,
 ): NotificationText | null {
-	return isEventType(type) ? TEMPLATES[type](params, locale) : null;
+	return isNotificationType(type) ? TEMPLATES[type](params, locale) : null;
 }
 
 /** Label of an event type on the notification settings page. */

@@ -1,7 +1,7 @@
 import type { Locale } from "@localman/shared";
 import { Types } from "mongoose";
 import type {
-	NotificationEventType,
+	NotificationType,
 	ValidatedEvent,
 } from "../notification-events.js";
 import { NotificationModel } from "../notification-model.js";
@@ -13,7 +13,7 @@ import {
 
 /** What Web Push and Telegram deliver: texts in the recipient's language. */
 export interface NotificationMessage extends NotificationText {
-	readonly type: NotificationEventType;
+	readonly type: NotificationType;
 	readonly link?: string;
 }
 

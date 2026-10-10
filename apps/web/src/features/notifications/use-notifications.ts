@@ -5,6 +5,7 @@ import {
 	markAllNotificationsRead,
 	markNotificationRead,
 } from "./notifications-api";
+import { onNotificationsChanged } from "./notifications-changed";
 
 export interface NotificationsState {
 	items: AppNotification[];
@@ -23,8 +24,8 @@ const INITIAL: NotificationsState = {
 };
 
 /**
- * Bell data: first page on mount, `refresh` when the menu opens, `loadMore`
- * for the next cursor. Mark-read calls update local state once the server
+ * Bell data: first page on mount, `refresh` when the menu opens or another
+ * part of the app announces a change, `loadMore` for the next cursor. Mark-read calls update local state once the server
  * confirms; failures reject so the caller can tell the user.
  */
 export function useNotifications() {
@@ -94,6 +95,8 @@ export function useNotifications() {
 	useEffect(() => {
 		void refresh();
 	}, [refresh]);
+
+	useEffect(() => onNotificationsChanged(() => void refresh()), [refresh]);
 
 	return { ...state, refresh, loadMore, markRead, markAllRead };
 }

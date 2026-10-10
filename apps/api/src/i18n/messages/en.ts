@@ -75,6 +75,11 @@ export const en = {
 		warningBody: (p: QuotaText): string =>
 			`Your projects have used ${p.used}/${p.limit} mock API requests of ${p.month}.`,
 	},
+	/** Sent from the settings page to check every ready channel. */
+	testNotification: {
+		title: "Test notification",
+		body: "If you can read this, Localman's notifications reach you on this channel.",
+	},
 	/** Errors of the API client (proxy, tunnel mappings) in the user's language. */
 	apiClient: {
 		/** 429 `PROXY_BUSY`: the account's concurrent proxied requests. */

@@ -22,6 +22,26 @@ export const notifications: Messages["notifications"] = {
 		channelsTitle: "接收通知的渠道",
 		inAppText: "Localman 中的铃铛，可在下表中按事件类型选择。",
 	},
+	test: {
+		title: "测试通知",
+		text: "向所有已就绪的渠道发送一条测试通知，不受下方按事件类型的选择影响。",
+		send: "发送测试通知",
+		sending: "正在发送…",
+		resultTitle: "测试通知结果",
+		rateLimited: "你在一分钟内已发送过测试通知。请等一分钟后再试。",
+		status: {
+			sent: "已发送",
+			notSetUp: "未设置",
+			unavailable: "服务器未启用",
+			failed: "发送失败",
+			blocked: "机器人未启动",
+		},
+		inAppHint: "打开顶部的铃铛即可查看。",
+		failedHint: "未能送达。请稍后再试。",
+		blockedWithBot: "打开 <bot></bot> 并点击 Start，然后再发送一次测试通知。",
+		blockedNoBot:
+			"打开 Localman 的 Telegram 机器人并点击 Start，然后再发送一次测试通知。",
+	},
 	channels: {
 		inApp: "应用内",
 		webPush: "Web Push",

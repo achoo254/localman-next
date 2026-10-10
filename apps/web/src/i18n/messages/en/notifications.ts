@@ -22,6 +22,27 @@ export const notifications = {
 		inAppText:
 			"The bell in Localman. Choose it per event type in the table below.",
 	},
+	test: {
+		title: "Test notification",
+		text: "Send a test to every channel that's ready, whatever you chose per event type below.",
+		send: "Send test notification",
+		sending: "Sending…",
+		resultTitle: "Test notification results",
+		rateLimited:
+			"You sent a test less than a minute ago. Wait a minute and try again.",
+		status: {
+			sent: "Sent",
+			notSetUp: "Not set up",
+			unavailable: "Not on this server",
+			failed: "Failed",
+			blocked: "Bot not started",
+		},
+		inAppHint: "Open the bell at the top to see it.",
+		failedHint: "Couldn't deliver it. Try again later.",
+		blockedWithBot: "Open <bot></bot> and press Start, then send another test.",
+		blockedNoBot:
+			"Open Localman's Telegram bot and press Start, then send another test.",
+	},
 	channels: {
 		inApp: "In app",
 		webPush: "Web Push",

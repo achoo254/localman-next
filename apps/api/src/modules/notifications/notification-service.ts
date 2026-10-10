@@ -59,6 +59,14 @@ export class NotificationService {
 		};
 	}
 
+	/** The optional channels and the logger, for a delivery that awaits them. */
+	get channels(): Pick<
+		NotificationServiceOptions,
+		"logger" | "webPush" | "telegram"
+	> {
+		return this.options;
+	}
+
 	/** The stored in-app notification, or `null` when the user turned it off. */
 	async notify(
 		userSub: string,
@@ -66,7 +74,7 @@ export class NotificationService {
 	): Promise<NotificationItem | null> {
 		const valid = validateEvent(event);
 		const [choice, locale] = await Promise.all([
-			channelChoiceFor(userSub, valid.type),
+			channelChoiceFor(userSub, event.type),
 			readUserLocale(userSub),
 		]);
 		const item = choice.inApp

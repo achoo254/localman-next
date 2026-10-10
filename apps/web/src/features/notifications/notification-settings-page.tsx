@@ -17,6 +17,7 @@ import {
 	savePreferences,
 } from "./notification-preferences-api";
 import { TelegramRow } from "./telegram-row";
+import { TestNotificationPanel } from "./test-notification-panel";
 import { WebPushRow } from "./web-push-row";
 
 type PreferencesState =
@@ -61,6 +62,19 @@ export function NotificationSettingsPage() {
 		} catch (error) {
 			toast.show({ tone: "error", title: errorMessage(error) });
 		}
+	}
+
+	/** A test reached the bot or got a 403: show or hide the Start reminder. */
+	function setTelegramActivated(activated: boolean) {
+		setState((s) => {
+			if (s.status !== "ready") return s;
+			const { channels } = s.value;
+			const telegram = { ...channels.telegram, activated };
+			return {
+				...s,
+				value: { ...s.value, channels: { ...channels, telegram } },
+			};
+		});
 	}
 
 	const telegramUsername =
@@ -113,6 +127,10 @@ export function NotificationSettingsPage() {
 						<TelegramRow
 							channel={state.value.channels.telegram}
 							username={telegramUsername}
+						/>
+						<TestNotificationPanel
+							channels={state.value.channels}
+							onTelegramActivated={setTelegramActivated}
 						/>
 					</section>
 					<EventPreferencesTable

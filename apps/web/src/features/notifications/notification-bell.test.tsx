@@ -5,6 +5,7 @@ import { makeNotification } from "../../test/fixtures";
 import { type FetchCall, mockFetch } from "../../test/mock-fetch";
 import { renderRoutes } from "../../test/render-app";
 import { NotificationBell } from "./notification-bell";
+import { announceNotificationsChanged } from "./notifications-changed";
 
 const FIRST_PAGE = {
 	items: [
@@ -106,6 +107,16 @@ describe("NotificationBell", () => {
 		expect(calls.some((c) => c.path === "/api/v1/notifications/read-all")).toBe(
 			true,
 		);
+	});
+
+	it("reloads when another part of the app announces a change", async () => {
+		const { calls } = renderBell();
+		await screen.findByRole("button", { name: "Notifications, 2 unread" });
+		const loads = () =>
+			calls.filter((c) => c.path === "/api/v1/notifications").length;
+		const before = loads();
+		announceNotificationsChanged();
+		await waitFor(() => expect(loads()).toBe(before + 1));
 	});
 
 	it("loads the next page with the cursor", async () => {

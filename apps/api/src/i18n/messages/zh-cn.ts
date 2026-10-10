@@ -34,6 +34,10 @@ export const zhCN: ServerMessages = {
 		warningBody: (p) =>
 			`你的 project 已使用 ${p.month}的 ${p.used}/${p.limit} 次 mock API request。`,
 	},
+	testNotification: {
+		title: "测试通知",
+		body: "看到这条消息，说明 Localman 的通知可以通过此渠道送达。",
+	},
 	apiClient: {
 		proxyBusyUser: (p) =>
 			`你已有 ${p.max} 个 request 正在通过 proxy 发送，请等其中一个完成后再试。`,

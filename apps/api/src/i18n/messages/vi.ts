@@ -27,6 +27,10 @@ export const vi: ServerMessages = {
 		warningBody: (p) =>
 			`Các project của bạn đã dùng ${p.used}/${p.limit} lượt gọi mock API của tháng ${p.month}.`,
 	},
+	testNotification: {
+		title: "Thông báo thử",
+		body: "Bạn đọc được dòng này nghĩa là thông báo của Localman đã tới được kênh này.",
+	},
 	apiClient: {
 		proxyBusyUser: (p) =>
 			`Bạn đang có ${p.max} request chạy qua proxy; chờ một request xong rồi thử lại.`,

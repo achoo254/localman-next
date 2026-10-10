@@ -144,7 +144,7 @@ describe("in-app choice, links and background delivery", () => {
 		const lines: string[] = [];
 		const logger = pino({}, { write: (line: string) => lines.push(line) });
 		class FailingChannel extends WebPushChannel {
-			override async deliver(): Promise<void> {
+			override async deliver(): Promise<never> {
 				throw new Error("push service exploded");
 			}
 		}

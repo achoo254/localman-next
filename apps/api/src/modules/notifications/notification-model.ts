@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { NOTIFICATION_EVENT_TYPES } from "./notification-events.js";
+import { NOTIFICATION_TYPES } from "./notification-events.js";
 
 /** In-app notifications are deleted this long after they were created. */
 const NOTIFICATION_RETENTION_SECONDS = 90 * 24 * 60 * 60;
@@ -16,7 +16,7 @@ const NOTIFICATION_BODY_MAX = 2000;
 const notificationSchema = new Schema(
 	{
 		userSub: { type: String, required: true },
-		type: { type: String, enum: [...NOTIFICATION_EVENT_TYPES], required: true },
+		type: { type: String, enum: [...NOTIFICATION_TYPES], required: true },
 		params: { type: Schema.Types.Mixed },
 		title: { type: String, maxlength: NOTIFICATION_TITLE_MAX },
 		body: { type: String, maxlength: NOTIFICATION_BODY_MAX },
