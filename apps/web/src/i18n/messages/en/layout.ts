@@ -30,8 +30,7 @@ export const layout = {
 	idpMenu: {
 		heading: "hoandat account · opens in a new tab",
 		email: "Email",
-		recovery: "Recovery codes",
-		password: "Password and sign-in",
+		signIn: "Sign-in methods",
 		apps: "Authorized apps",
 		opensIdp: ", opens your hoandat account in a new tab",
 	},

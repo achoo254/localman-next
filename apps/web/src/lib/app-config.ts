@@ -39,5 +39,5 @@ export const appConfig = {
 	idpOrigin: parseIdpOrigin(import.meta.env.VITE_IDP_ORIGIN),
 } as const;
 
-/** IdP page for password, recovery codes, linked accounts and sessions. */
+/** IdP page for linked sign-in methods (Google, GitHub, Telegram) and sessions. */
 export const idpAccountUrl = `${appConfig.idpOrigin}/account`;

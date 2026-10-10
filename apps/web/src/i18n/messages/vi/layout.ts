@@ -31,8 +31,7 @@ export const layout: Messages["layout"] = {
 	idpMenu: {
 		heading: "Tài khoản hoandat · mở tab mới",
 		email: "Email",
-		recovery: "Mã khôi phục",
-		password: "Mật khẩu và đăng nhập",
+		signIn: "Phương thức đăng nhập",
 		apps: "Ứng dụng đã cấp quyền",
 		opensIdp: ", mở trang tài khoản hoandat ở tab mới",
 	},

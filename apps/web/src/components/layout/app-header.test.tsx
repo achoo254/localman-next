@@ -54,8 +54,7 @@ describe("AppHeader", () => {
 
 	it.each([
 		["Email", "account-email"],
-		["Recovery codes", "account-recovery"],
-		["Password and sign-in", "account-password"],
+		["Sign-in methods", "account-sign-in"],
 	])("opens the IdP section of '%s' in a new tab", async (label, hash) => {
 		const open = vi.spyOn(window, "open").mockReturnValue(null);
 		renderHeader();
@@ -91,7 +90,6 @@ describe("AppHeader", () => {
 			"account-menu-notifications",
 			"account-menu-docs",
 			"account-menu-email",
-			"account-menu-recovery",
 			"account-menu-idp",
 			"topbar-logout",
 		]);

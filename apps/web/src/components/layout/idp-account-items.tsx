@@ -1,6 +1,5 @@
 import {
 	IconExternalLink,
-	IconKey,
 	IconMail,
 	IconPlug,
 	IconUser,
@@ -11,23 +10,17 @@ import { openExternal } from "../../platform/navigation";
 import { DropdownMenuItem, DropdownMenuLabel } from "../ui/dropdown-menu";
 
 /**
- * Account pages of the IdP. Email and recovery codes are IdP claims that
- * Localman only syncs at sign-in, so the menu links to them instead of
- * editing them here. The IdP has no email change flow yet; the email entry
+ * Account pages of the IdP. Email and the linked sign-in methods (Google,
+ * GitHub) are IdP data that Localman only syncs at sign-in, so the menu
+ * links to them instead of editing them here. The IdP has no email change flow yet; the email entry
  * opens the section that shows it.
  */
 const IDP_ENTRIES = [
 	{ id: "email", labelKey: "email", hash: "account-email", Icon: IconMail },
 	{
-		id: "recovery",
-		labelKey: "recovery",
-		hash: "account-recovery",
-		Icon: IconKey,
-	},
-	{
 		id: "idp",
-		labelKey: "password",
-		hash: "account-password",
+		labelKey: "signIn",
+		hash: "account-sign-in",
 		Icon: IconUser,
 	},
 ] as const;

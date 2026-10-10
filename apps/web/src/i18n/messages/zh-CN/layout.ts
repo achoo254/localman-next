@@ -31,8 +31,7 @@ export const layout: Messages["layout"] = {
 	idpMenu: {
 		heading: "hoandat 账号 · 在新标签页中打开",
 		email: "邮箱",
-		recovery: "恢复码",
-		password: "密码与登录",
+		signIn: "登录方式",
 		apps: "已授权的应用",
 		opensIdp: "，在新标签页中打开 hoandat 账号",
 	},
