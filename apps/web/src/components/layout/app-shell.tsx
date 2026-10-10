@@ -33,7 +33,7 @@ export function AppShell() {
 				{(user) => (
 					<>
 						<SkipLink />
-						<AppHeader user={user} />
+						<AppHeader user={user} wide={workbench} />
 						<main
 							id={MAIN_ID}
 							tabIndex={-1}

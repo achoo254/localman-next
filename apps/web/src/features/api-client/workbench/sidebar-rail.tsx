@@ -38,7 +38,7 @@ export function SidebarRail({
 		<nav
 			aria-label={t("apiClient.sidebar.rail")}
 			data-id="sidebar-rail"
-			className="flex flex-none gap-1 border-border-subtle bg-surface-subtle p-1 max-lg:border-b lg:flex-col lg:border-r"
+			className="flex w-18 flex-none flex-col gap-1 border-border-subtle border-r bg-surface-subtle p-1"
 		>
 			{SIDEBAR_SECTIONS.map((id) => {
 				const Icon = ICONS[id];

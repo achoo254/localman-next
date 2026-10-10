@@ -1,7 +1,8 @@
 import { DRAFT_MAX_TABS } from "@localman/shared/api-client";
 import { IconCode, IconUpload } from "@tabler/icons-react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Button } from "../../components/ui/button";
+import { IconButton } from "../../components/ui/icon-button";
 import { useToast } from "../../components/ui/toast";
 import type { HistoryDetail } from "../../features/api-client/history/history-api";
 import { HistorySidebar } from "../../features/api-client/history/history-sidebar";
@@ -69,6 +70,24 @@ export function ApiClientScreen() {
 		[actions],
 	);
 
+	// Same element between renders, like the callbacks: the history stays memoized.
+	const historyTools = useMemo(
+		() => (
+			<>
+				<IconButton
+					size="sm"
+					data-id="sidebar-import"
+					label={t("apiClient.actions.import")}
+					title={t("apiClient.actions.import")}
+					icon={<IconUpload size={18} aria-hidden="true" />}
+					onClick={() => setImportOpen(true)}
+				/>
+				<ExportMenu readRequests={readRequests} compact />
+			</>
+		),
+		[t, readRequests],
+	);
+
 	const importButton = (dataId: string) => (
 		<Button
 			variant="secondary"
@@ -86,13 +105,7 @@ export function ApiClientScreen() {
 			<OpenFromNavigation />
 			<WorkbenchLayout
 				sidebar={
-					<div className="grid">
-						<div className="flex flex-wrap gap-2 border-border-subtle border-b p-2">
-							{importButton("sidebar-import")}
-							<ExportMenu readRequests={readRequests} />
-						</div>
-						<HistorySidebar onOpen={openFromHistory} />
-					</div>
+					<HistorySidebar onOpen={openFromHistory} tools={historyTools} />
 				}
 				renderHeadActions={() => (
 					<Button

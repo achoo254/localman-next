@@ -24,7 +24,7 @@ export function HistoryFilters({
 }: HistoryFiltersProps) {
 	const t = useT();
 	return (
-		<div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 px-3 pb-2">
+		<div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 p-2">
 			<Input
 				type="search"
 				value={query}

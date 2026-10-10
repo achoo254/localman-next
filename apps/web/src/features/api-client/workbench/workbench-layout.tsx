@@ -1,16 +1,21 @@
-import { type KeyboardEvent, type ReactNode, useId, useState } from "react";
+import { IconMenu2 } from "@tabler/icons-react";
+import {
+	type KeyboardEvent,
+	type ReactNode,
+	useEffect,
+	useId,
+	useState,
+} from "react";
+import { IconButton } from "../../../components/ui/icon-button";
 import { useT } from "../../../i18n/i18n-context";
-import { cn } from "../../../lib/cn";
 import { useDelayedFlag } from "../../../lib/use-delayed-flag";
 import { RequestEditor } from "../request/request-editor";
-import { RoutingSettings } from "../routing/routing-settings";
 import { TabBar } from "../tabs/tab-bar";
 import { tabDomId } from "../tabs/tab-item";
-import { TuneloSidebar } from "../tunelo/tunelo-sidebar";
 import { EmptyEditor } from "./empty-editor";
-import { SidebarRail, type SidebarSection } from "./sidebar-rail";
 import { StatusBar } from "./status-bar";
 import { useWorkbench } from "./workbench-context";
+import { WorkbenchSidebar } from "./workbench-sidebar";
 import { WorkbenchSkeleton } from "./workbench-skeleton";
 import type { WorkbenchTab } from "./workbench-types";
 
@@ -30,9 +35,10 @@ function isMod(event: KeyboardEvent): boolean {
 }
 
 /**
- * Columns of the API client: rail and sidebar, request, response; stacked
- * on narrow screens. Ctrl/Cmd+Enter sends the active tab and Ctrl/Cmd+S
- * saves drafts now, from anywhere inside (editors included).
+ * API client as in the prototype: rail and sidebar (a drawer below 768px),
+ * then the tab bar over the request with its response underneath.
+ * Ctrl/Cmd+Enter sends the active tab and Ctrl/Cmd+S saves drafts now,
+ * from anywhere inside (editors included).
  */
 export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 	const t = useT();
@@ -42,18 +48,13 @@ export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 	const restoring =
 		workbench.syncStatus.state === "loading" && workbench.tabs.length === 0;
 	const skeleton = useDelayedFlag(restoring);
-	// Open beside the editor on wide screens; on narrow ones it would push it down.
-	const [sidebarOpen, setSidebarOpen] = useState(
-		() =>
-			typeof window.matchMedia !== "function" ||
-			window.matchMedia("(min-width: 64rem)").matches,
-	);
-	const [section, setSection] = useState<SidebarSection>("history");
-	const selectSection = (next: SidebarSection) => {
-		setSidebarOpen((open) => !(open && next === section));
-		setSection(next);
-	};
-	const sidebarId = useId();
+	const [drawerOpen, setDrawerOpen] = useState(false);
+	const drawerId = useId();
+	// Opening a request (from history, a new tab) brings the editor back.
+	const activeTabId = activeTab?.id;
+	useEffect(() => {
+		if (activeTabId) setDrawerOpen(false);
+	}, [activeTabId]);
 	const panelId = useId();
 
 	const onKeyDownCapture = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -76,28 +77,13 @@ export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 			onKeyDownCapture={onKeyDownCapture}
 		>
 			<h1 className="sr-only">{t("apiClient.title")}</h1>
-			<div className="flex min-h-0 flex-1 max-lg:flex-col">
-				<SidebarRail
-					section={section}
-					open={sidebarOpen}
-					sidebarId={sidebarId}
-					onSelect={selectSection}
+			<div className="flex min-h-0 flex-1">
+				<WorkbenchSidebar
+					history={props.sidebar}
+					drawerId={drawerId}
+					drawerOpen={drawerOpen}
+					onDrawerClose={() => setDrawerOpen(false)}
 				/>
-				<aside
-					id={sidebarId}
-					hidden={!sidebarOpen}
-					aria-label={t("apiClient.sidebar.label")}
-					data-id="sidebar"
-					data-section={section}
-					className={cn(
-						"min-h-0 flex-none overflow-y-auto border-border-subtle bg-surface-subtle max-lg:max-h-64 max-lg:border-b lg:border-r",
-						section === "history" ? "lg:w-64" : "lg:w-80",
-					)}
-				>
-					{section === "history" ? props.sidebar : null}
-					{section === "tunelo" ? <TuneloSidebar /> : null}
-					{section === "routing" ? <RoutingSettings /> : null}
-				</aside>
 				{skeleton ? <WorkbenchSkeleton /> : null}
 				{restoring && !skeleton ? (
 					<div aria-busy="true" className="min-h-0 min-w-0 flex-1" />
@@ -106,18 +92,32 @@ export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 					hidden={restoring || skeleton}
 					className="flex min-h-0 min-w-0 flex-1 flex-col"
 				>
-					<TabBar panelId={panelId} />
+					<TabBar
+						panelId={panelId}
+						leading={
+							<IconButton
+								size="sm"
+								className="m-1 flex-none md:hidden"
+								icon={<IconMenu2 size={18} aria-hidden="true" />}
+								label={t("apiClient.sidebar.open")}
+								aria-expanded={drawerOpen}
+								aria-controls={drawerId}
+								data-id="tabbar-sidebar-toggle"
+								onClick={() => setDrawerOpen(true)}
+							/>
+						}
+					/>
 					<div
 						id={panelId}
 						data-id="editor"
 						{...(activeTab
 							? { role: "tabpanel", "aria-labelledby": tabDomId(activeTab.id) }
 							: {})}
-						className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-2 lg:overflow-hidden"
+						className="flex min-h-0 flex-1 flex-col overflow-y-auto"
 					>
 						{activeTab ? (
 							<>
-								<div className="min-h-0 min-w-0 lg:overflow-y-auto">
+								<div className="min-w-0 flex-none">
 									<RequestEditor
 										key={activeTab.id}
 										tab={activeTab}
@@ -127,19 +127,17 @@ export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 								<section
 									aria-label={t("apiClient.response.label")}
 									data-id="response"
-									className="min-h-64 min-w-0 border-border-subtle max-lg:border-t lg:overflow-y-auto lg:border-l"
+									className="flex min-h-64 min-w-0 flex-1 flex-col border-border-subtle border-t"
 								>
 									{props.renderResponse(activeTab)}
 								</section>
 							</>
 						) : (
-							<div className="lg:col-span-2">
-								<EmptyEditor
-									canOpen={workbench.canOpenTab}
-									onNew={() => workbench.openTab()}
-									actions={props.emptyActions}
-								/>
-							</div>
+							<EmptyEditor
+								canOpen={workbench.canOpenTab}
+								onNew={() => workbench.openTab()}
+								actions={props.emptyActions}
+							/>
 						)}
 					</div>
 				</div>

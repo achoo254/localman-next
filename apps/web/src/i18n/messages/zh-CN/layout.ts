@@ -15,6 +15,8 @@ export const layout: Messages["layout"] = {
 	},
 	appHeader: {
 		home: "Localman，返回 Projects",
+		nav: "产品",
+		mocks: "Mock API",
 	},
 	plan: {
 		free: "Free 套餐",

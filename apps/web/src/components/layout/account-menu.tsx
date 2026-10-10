@@ -98,7 +98,7 @@ export function AccountMenu({
 				>
 					<UserAvatar user={user} />
 					{compact ? null : (
-						<span className="max-w-48 truncate font-mono text-[0.8125rem] text-muted max-sm:hidden">
+						<span className="max-w-48 truncate font-mono text-[0.8125rem] text-muted max-lg:hidden">
 							{name}
 						</span>
 					)}

@@ -9,6 +9,8 @@ export const apiClient: Messages["apiClient"] = {
 		rail: "侧边栏分区",
 		label: "侧边栏",
 		history: "历史记录",
+		open: "显示侧边栏",
+		close: "隐藏侧边栏",
 	},
 	tabs: {
 		label: "已打开的 request",

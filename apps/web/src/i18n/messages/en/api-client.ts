@@ -9,6 +9,8 @@ export const apiClient = {
 		rail: "Sidebar sections",
 		label: "Sidebar",
 		history: "History",
+		open: "Show sidebar",
+		close: "Hide sidebar",
 	},
 	tabs: {
 		label: "Open requests",

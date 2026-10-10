@@ -59,7 +59,10 @@ export function RequestEditor({ tab, headActions }: RequestEditorProps) {
 	};
 
 	return (
-		<div data-id="request" className="grid min-w-0 content-start gap-3 p-4">
+		<div
+			data-id="request"
+			className="@container grid min-w-0 grid-cols-1 content-start gap-3 p-4"
+		>
 			<div data-id="request-head" className="flex min-w-0 items-center gap-2">
 				<input
 					type="text"

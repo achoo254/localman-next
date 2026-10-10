@@ -32,8 +32,8 @@ export function UrlBar({ draft, update, sending, onSend }: UrlBarProps) {
 	const t = useT();
 	const [pastedCurl, setPastedCurl] = useState<string | null>(null);
 	return (
-		<div className="flex flex-wrap items-stretch gap-2 md:flex-nowrap">
-			<div className="flex min-w-0 flex-1 basis-full items-stretch rounded-md border border-border-strong bg-surface transition-[border-color,box-shadow] focus-within:border-primary focus-within:shadow-focus-primary md:basis-auto">
+		<div className="flex flex-wrap items-stretch gap-2 @2xl:flex-nowrap">
+			<div className="flex min-w-0 flex-1 basis-full items-stretch rounded-md border border-border-strong bg-surface transition-[border-color,box-shadow] focus-within:border-primary focus-within:shadow-focus-primary @2xl:basis-auto">
 				<MethodSelect
 					value={draft.method}
 					onChange={(method) => update((current) => ({ ...current, method }))}
@@ -64,7 +64,7 @@ export function UrlBar({ draft, update, sending, onSend }: UrlBarProps) {
 				value={draft.settings.route}
 				aria-label={t("apiClient.request.route")}
 				data-id="request-route"
-				className="min-h-11 flex-1 cursor-pointer rounded-md border border-border-strong bg-surface px-3 font-mono text-sm md:flex-none"
+				className="min-h-11 flex-1 cursor-pointer rounded-md border border-border-strong bg-surface px-3 font-mono text-sm @2xl:flex-none"
 				onChange={(event) => {
 					const route = event.target.value;
 					if (!isRouteMode(route)) return;
@@ -81,8 +81,9 @@ export function UrlBar({ draft, update, sending, onSend }: UrlBarProps) {
 				))}
 			</select>
 			<Button
+				variant="primary"
 				data-id="request-send"
-				className="flex-1 md:flex-none"
+				className="flex-1 @2xl:flex-none"
 				loading={sending}
 				aria-keyshortcuts="Control+Enter Meta+Enter"
 				onClick={onSend}

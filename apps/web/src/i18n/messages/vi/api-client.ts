@@ -9,6 +9,8 @@ export const apiClient: Messages["apiClient"] = {
 		rail: "Các mục của sidebar",
 		label: "Sidebar",
 		history: "History",
+		open: "Mở sidebar",
+		close: "Đóng sidebar",
 	},
 	tabs: {
 		label: "Request đang mở",

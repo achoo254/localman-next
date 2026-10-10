@@ -2,6 +2,7 @@ import { DRAFT_MAX_TABS } from "@localman/shared/api-client";
 import { IconPlus } from "@tabler/icons-react";
 import {
 	type KeyboardEvent,
+	type ReactNode,
 	useCallback,
 	useEffect,
 	useRef,
@@ -34,8 +35,14 @@ function targetIndex(key: string, index: number, last: number): number | null {
 	}
 }
 
+export interface TabBarProps {
+	panelId: string;
+	/** Control before the tabs (the sidebar drawer button on narrow screens). */
+	leading?: ReactNode;
+}
+
 /** Open requests as tabs (←/→, Home/End, Delete to close) plus "New". */
-export function TabBar({ panelId }: { panelId: string }) {
+export function TabBar({ panelId, leading }: TabBarProps) {
 	const t = useT();
 	const { tabs, activeTabId, canOpenTab } = useWorkbenchState();
 	const { activateTab, closeTab, openTab } = useWorkbenchActions();
@@ -89,12 +96,13 @@ export function TabBar({ panelId }: { panelId: string }) {
 			data-id="tabbar"
 			className="flex min-w-0 items-stretch border-border-subtle border-b bg-surface-subtle"
 		>
+			{leading}
 			{tabs.length > 0 ? (
 				<div
 					role="tablist"
 					aria-label={t("apiClient.tabs.label")}
 					data-id="tabbar-tabs"
-					className="flex min-w-0 overflow-x-auto"
+					className="flex min-w-0 overflow-x-auto [scrollbar-width:thin]"
 				>
 					{tabs.map((tab) => (
 						<TabItem

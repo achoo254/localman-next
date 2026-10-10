@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, NavLink, useLocation } from "react-router";
 import { useFeatures } from "../../config/features";
 import type { CurrentUser } from "../../features/auth/current-user";
 import { NotificationBell } from "../../features/notifications/notification-bell";
@@ -10,19 +10,34 @@ import { Badge } from "../ui/badge";
 import { buttonClassName } from "../ui/button";
 import { AccountControls } from "./account-controls";
 
+const NAV_LINK_CLASS = cn(
+	buttonClassName({ variant: "ghost", size: "sm" }),
+	"no-underline aria-[current=page]:bg-primary/10 aria-[current=page]:text-primary",
+);
+
 /**
- * Signed-in top bar: wordmark, API Client (behind its flag), Docs, language, notification bell, plan
- * and account menu.
+ * Signed-in top bar: wordmark and the product nav (Mock API, API Client
+ * behind its flag) on the left; Docs, language, notification bell, plan and
+ * account menu on the right. `wide` spans the full width (the workbench).
  */
-export function AppHeader({ user }: { user: CurrentUser }) {
+export function AppHeader({
+	user,
+	wide = false,
+}: { user: CurrentUser; wide?: boolean }) {
 	const t = useT();
 	const { apiClient } = useFeatures();
+	const apiClientActive = useLocation().pathname.startsWith("/api-client");
 	return (
 		<header
 			data-id="topbar"
 			className="sticky top-0 z-30 border-border-subtle border-b bg-bg/82 backdrop-blur-md"
 		>
-			<div className="mx-auto flex min-h-(--topbar-h) w-full max-w-page items-center justify-between gap-3 px-gutter">
+			<div
+				className={cn(
+					"mx-auto flex min-h-(--topbar-h) w-full items-center gap-3",
+					wide ? "px-3" : "max-w-page px-gutter",
+				)}
+			>
 				<Link
 					to="/projects"
 					data-id="topbar-home"
@@ -31,19 +46,29 @@ export function AppHeader({ user }: { user: CurrentUser }) {
 				>
 					<Wordmark />
 				</Link>
-				<div className="flex items-center gap-2">
+				<nav
+					aria-label={t("layout.appHeader.nav")}
+					className="flex gap-0.5 max-sm:hidden"
+				>
+					<NavLink
+						to="/projects"
+						data-id="topbar-nav-mock-api"
+						className={NAV_LINK_CLASS}
+					>
+						{t("layout.appHeader.mocks")}
+					</NavLink>
 					{apiClient ? (
 						<Link
 							to="/api-client"
 							data-id="topbar-nav-api-client"
-							className={cn(
-								buttonClassName({ variant: "ghost", size: "sm" }),
-								"no-underline max-sm:hidden",
-							)}
+							aria-current={apiClientActive ? "page" : undefined}
+							className={NAV_LINK_CLASS}
 						>
 							{t("apiClient.nav")}
 						</Link>
 					) : null}
+				</nav>
+				<div className="ml-auto flex items-center gap-2">
 					<Link
 						to="/docs"
 						data-id="topbar-docs"

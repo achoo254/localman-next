@@ -9,6 +9,7 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuTrigger,
 } from "../../../components/ui/dropdown-menu";
+import { IconButton } from "../../../components/ui/icon-button";
 import { useToast } from "../../../components/ui/toast";
 import { useT } from "../../../i18n/i18n-context";
 import { downloadText } from "../../../platform/download";
@@ -32,6 +33,8 @@ export interface ExportMenuProps {
 	name?: string;
 	/** Offered as a third format when given (environments come later). */
 	environment?: ExportableEnvironment | null;
+	/** Icon-only trigger, for a panel head. */
+	compact?: boolean;
 }
 
 /** Export menu: Collection v2.1 or OpenAPI 3.0 of the requests, or an environment. */
@@ -39,6 +42,7 @@ export const ExportMenu = memo(function ExportMenu({
 	readRequests,
 	name,
 	environment = null,
+	compact = false,
 }: ExportMenuProps) {
 	const t = useT();
 	const toast = useToast();
@@ -67,15 +71,24 @@ export const ExportMenu = memo(function ExportMenu({
 			}}
 		>
 			<DropdownMenuTrigger asChild>
-				<Button
-					size="sm"
-					data-id="export-menu"
-					aria-label={t("apiClientTools.import.export.label")}
-				>
-					<IconDownload size={16} aria-hidden="true" />
-					{t("apiClientTools.import.export.trigger")}
-					<IconChevronDown size={14} aria-hidden="true" />
-				</Button>
+				{compact ? (
+					<IconButton
+						size="sm"
+						data-id="export-menu"
+						label={t("apiClientTools.import.export.label")}
+						icon={<IconDownload size={18} aria-hidden="true" />}
+					/>
+				) : (
+					<Button
+						size="sm"
+						data-id="export-menu"
+						aria-label={t("apiClientTools.import.export.label")}
+					>
+						<IconDownload size={16} aria-hidden="true" />
+						{t("apiClientTools.import.export.trigger")}
+						<IconChevronDown size={14} aria-hidden="true" />
+					</Button>
+				)}
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
 				{empty ? (

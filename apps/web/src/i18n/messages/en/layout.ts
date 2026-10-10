@@ -14,6 +14,8 @@ export const layout = {
 	},
 	appHeader: {
 		home: "Localman, go to Projects",
+		nav: "Products",
+		mocks: "Mock API",
 	},
 	plan: {
 		free: "Free plan",

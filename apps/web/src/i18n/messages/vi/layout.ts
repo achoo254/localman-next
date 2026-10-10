@@ -15,6 +15,8 @@ export const layout: Messages["layout"] = {
 	},
 	appHeader: {
 		home: "Localman, về Projects",
+		nav: "Sản phẩm",
+		mocks: "Mock API",
 	},
 	plan: {
 		free: "Gói Free",

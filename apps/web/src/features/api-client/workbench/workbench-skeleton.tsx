@@ -28,8 +28,8 @@ export function WorkbenchSkeleton() {
 					</div>
 				))}
 			</div>
-			<div className="grid min-h-0 flex-1 overflow-hidden lg:grid-cols-2">
-				<div className="grid min-w-0 content-start gap-3 p-4">
+			<div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+				<div className="grid min-w-0 flex-none content-start gap-3 p-4">
 					<Skeleton className="h-9 w-48 max-w-full" />
 					<Skeleton className="h-11 w-full" />
 					<div className="flex min-h-11 items-center gap-5 border-border-subtle border-b">
@@ -41,7 +41,7 @@ export function WorkbenchSkeleton() {
 						<Skeleton key={row} className="h-9 w-full" />
 					))}
 				</div>
-				<div className="grid min-h-64 min-w-0 place-items-center content-center gap-3 border-border-subtle px-6 py-12 max-lg:border-t lg:border-l">
+				<div className="grid min-h-64 min-w-0 flex-1 place-items-center content-center gap-3 border-border-subtle border-t px-6 py-12">
 					<Skeleton variant="circle" className="size-8" />
 					<Skeleton className="h-4 w-40 max-w-full" />
 					<Skeleton className="h-3 w-64 max-w-full" />
