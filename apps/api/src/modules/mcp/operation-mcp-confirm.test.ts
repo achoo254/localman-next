@@ -50,7 +50,13 @@ describe("destructive tools: dry run and confirm_token", () => {
 		const { client } = await connectTestClient();
 		const preview = await deleteTree(client, { widgetId: "w1", dry_run: true });
 		expect(preview.isError).toBeFalsy();
-		expect(preview.structuredContent).toEqual({ dryRun: true, removed: 3 });
+		// Claude Code shows agents only the structured result: the token is there.
+		expect(preview.structuredContent).toEqual({
+			dryRun: true,
+			removed: 3,
+			confirm_token: expect.any(String),
+			confirm_token_expires_at: expect.any(String),
+		});
 		expect(textJson(preview)).toMatchObject({
 			dry_run: true,
 			preview: { dryRun: true, removed: 3 },
@@ -60,6 +66,20 @@ describe("destructive tools: dry run and confirm_token", () => {
 			expect.any(String),
 		);
 		expect(deletedWidgets).toEqual([]);
+	});
+
+	it("declares the confirm token in the output schema of confirmed tools only", async () => {
+		const { client } = await connectTestClient();
+		const { tools } = await client.listTools();
+		const propsOf = (name: string) =>
+			Object.keys(
+				tools.find((tool) => tool.name === name)?.outputSchema?.properties ??
+					{},
+			);
+		expect(propsOf("delete_widget_tree")).toEqual(
+			expect.arrayContaining(["confirm_token", "confirm_token_expires_at"]),
+		);
+		expect(propsOf("reset_widget")).not.toContain("confirm_token");
 	});
 
 	it("refuses the real call without a token", async () => {

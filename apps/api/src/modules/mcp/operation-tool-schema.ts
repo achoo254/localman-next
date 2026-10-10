@@ -79,12 +79,39 @@ function toolDescription(tool: McpToolDescriptor): string {
 	return tool.description;
 }
 
+/**
+ * Output of a tool that asks for confirmation: the operation's output plus
+ * the token of a dry run. The token is in the structured result because
+ * clients such as Claude Code show agents only `structuredContent` when a
+ * tool declares an output schema.
+ */
+function toolOutputSchema(tool: McpToolDescriptor): JsonSchema {
+	const schema = tool.outputSchema;
+	if (!tool.requiresConfirmation || schema.type !== "object") return schema;
+	return {
+		...schema,
+		properties: {
+			...(schema.properties ?? {}),
+			[CONFIRM_TOKEN_ARG]: {
+				type: "string",
+				description: `Dry run only: pass it back as ${CONFIRM_TOKEN_ARG} to apply this exact input.`,
+			},
+			[`${CONFIRM_TOKEN_ARG}_expires_at`]: {
+				type: "string",
+				format: "date-time",
+			},
+		},
+	};
+}
+
 /** Everything about an operation's tool that does not depend on the caller. */
 export interface PreparedOperationTool {
 	readonly descriptor: McpToolDescriptor;
 	readonly description: string;
 	/** Operation input plus `dry_run`/`confirm_token` where supported. */
 	readonly inputSchema: JsonSchema;
+	/** Operation output plus the dry run's `confirm_token` where needed. */
+	readonly outputSchema: JsonSchema;
 }
 
 const prepared = new WeakMap<AnyOperation, PreparedOperationTool | null>();
@@ -104,6 +131,7 @@ export function prepareOperationTool(
 		descriptor,
 		description: toolDescription(descriptor),
 		inputSchema: toolInputSchema(descriptor),
+		outputSchema: toolOutputSchema(descriptor),
 	};
 	prepared.set(op, tool);
 	return tool;

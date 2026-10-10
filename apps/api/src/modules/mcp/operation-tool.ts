@@ -163,7 +163,7 @@ export function registerOperationTool(
 			title: op.summary,
 			description: prepared.description,
 			inputSchema: advertisedSchema(prepared.inputSchema),
-			outputSchema: advertisedSchema(tool.outputSchema),
+			outputSchema: advertisedSchema(prepared.outputSchema),
 			annotations: { ...tool.annotations, openWorldHint: false },
 			// Over HTTP with a verified token, a missing scope becomes an
 			// OAuth `insufficient_scope` challenge (incremental consent).

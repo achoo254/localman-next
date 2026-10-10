@@ -28,8 +28,9 @@ export function toolSuccess(output: unknown): CallToolResult {
 }
 
 /**
- * Dry run of a destructive tool: the preview as structured output, and the
- * confirm token in the text an agent reads (and in `_meta` for programs).
+ * Dry run of a destructive tool: the preview plus the confirm token, both
+ * in the structured output (some clients show agents nothing else), in the
+ * text and in `_meta`.
  */
 export function dryRunSuccess(
 	output: unknown,
@@ -47,7 +48,11 @@ export function dryRunSuccess(
 	});
 	return {
 		content: [{ type: "text", text }],
-		structuredContent: structured,
+		structuredContent: {
+			...structured,
+			confirm_token: confirm.token,
+			confirm_token_expires_at: expiresAt,
+		},
 		_meta: {
 			"localman/confirm_token": confirm.token,
 			"localman/confirm_token_expires_at": expiresAt,
