@@ -20,6 +20,9 @@ const NESTED: FormPlace = {
 	siblingNames: [],
 };
 
+/** A new draft of a resource nested under users (it keeps `userId`). */
+const nestedDraft = () => ({ ...draftOf(null), parentKey: "userId" });
+
 describe("validateDraft", () => {
 	it("builds the API body of a valid draft", () => {
 		const draft = { ...draftOf(null), name: " orders " };
@@ -67,7 +70,7 @@ describe("validateDraft", () => {
 			childId: "nope",
 		};
 		const draft = {
-			...draftOf(null),
+			...nestedDraft(),
 			name: "posts",
 			fields: [parentId, twice, again, unknown, child],
 		};
@@ -94,7 +97,7 @@ describe("validateDraft", () => {
 			childId: "c1",
 		};
 		const { input } = validateDraft(
-			{ ...draftOf(null), name: "posts", fields: [parent, child] },
+			{ ...nestedDraft(), name: "posts", fields: [parent, child] },
 			NESTED,
 			t,
 		);
@@ -121,7 +124,7 @@ describe("validateDraft", () => {
 			relation("replies", "Child Resource"),
 		];
 		const { input, errors } = validateDraft(
-			{ ...draftOf(null), name: "posts", fields },
+			{ ...nestedDraft(), name: "posts", fields },
 			NESTED,
 			t,
 		);

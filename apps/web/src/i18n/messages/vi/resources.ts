@@ -51,10 +51,19 @@ export const resources: Messages["resources"] = {
 		templateInvalid: "Object template không phải JSON hợp lệ.",
 		templateNotObject: "Object template phải là một object JSON.",
 		responseInvalid: "Response template không phải JSON hợp lệ.",
+		parentKeyRequired: "Nhập parent key.",
+		parentKeyTooLong: "Parent key tối đa {max} ký tự.",
+		parentKeyPattern:
+			"Chỉ dùng chữ, số, _ và $, không bắt đầu bằng số (ví dụ userId).",
+		parentKeyId: "“id” là id của chính bản ghi, hãy chọn tên khác.",
+		parentKeyTaken: "Field “{name}” đã dùng tên này.",
+		parentKeyRefused: "Không dùng được parent key này, hãy chọn tên khác.",
+		parentKeyInData:
+			"Bản ghi của resource này đã có field “{name}”, hãy chọn khoá khác.",
 	},
 	form: {
 		titleNew: "Resource mới",
-		titleEdit: "Sửa resource · {name}",
+		titleEdit: "Sửa resource · <name>{name}</name>",
 		create: "Tạo resource",
 		update: "Cập nhật",
 		nameLabel: "Tên resource",
@@ -63,6 +72,11 @@ export const resources: Messages["resources"] = {
 		childOf: "Resource con của <code>{parent}</code>.",
 		schemaHint: "Cấu trúc mỗi bản ghi",
 		checkMarked: "Kiểm tra lại các ô được đánh dấu đỏ.",
+		parentKeyLabel: "Parent key",
+		parentKeyHint:
+			"Field chứa id của bản ghi cha <code>{parent}</code>. Đổi khoá sẽ đổi tên field mà mock trả về và tham số lọc theo nó, nên client đang dùng mock cũng cần đổi theo.",
+		partialTitle: "Đã lưu resource, chưa lưu callbacks",
+		partialBody: "{reason} Sửa callbacks rồi bấm Cập nhật lần nữa.",
 	},
 	schema: {
 		typeOf: "Kiểu của {name}",
@@ -94,7 +108,7 @@ export const resources: Messages["resources"] = {
 			'Biến trong template: <code>"$mockData"</code> dữ liệu đang lưu, <code>"$count"</code> số bản ghi, <code>"$category.method"</code> giá trị Faker sinh mỗi request (ví dụ <code>"$name.fullName"</code>).',
 	},
 	data: {
-		title: "Dữ liệu · {name}",
+		title: "Dữ liệu · <name>{name}</name>",
 		hint: "Sửa trực tiếp hoặc dán một mảng JSON mới để thay toàn bộ dữ liệu (tối đa {max} bản ghi).",
 		loading: "Đang tải dữ liệu…",
 		loadFailed: "Không tải được dữ liệu",
@@ -105,6 +119,12 @@ export const resources: Messages["resources"] = {
 		notArray: "Dữ liệu phải là một mảng JSON.",
 		tooMany: "Tối đa {max} bản ghi (đang có {count}).",
 		notObject: "Mỗi phần tử phải là một object JSON.",
+		goToLabel: "Đến id",
+		goTo: "Đến",
+		goToNotFound: "Không có bản ghi nào có id “{id}”.",
+		goToInvalid: "Sửa JSON cho hợp lệ rồi mới tìm theo id.",
+		wrap: "Xuống dòng",
+		scrollLabel: "Vùng cuộn dữ liệu JSON của {name}",
 	},
 	delete: {
 		title: "Xoá resource",

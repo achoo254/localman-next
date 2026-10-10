@@ -12,6 +12,8 @@ export interface SelectConnectorProps {
 	/** Distance from the node's top edge, in px. */
 	top: number;
 	"data-id": string;
+	/** 0 while focus is in the node (see `useRovingTree`), else -1. */
+	tabIndex?: 0 | -1;
 	onSelect: () => void;
 }
 
@@ -21,6 +23,7 @@ export function SelectConnector({
 	selected,
 	top,
 	"data-id": dataId,
+	tabIndex,
 	onSelect,
 }: SelectConnectorProps) {
 	const t = useT();
@@ -30,6 +33,7 @@ export function SelectConnector({
 			aria-pressed={selected}
 			aria-label={t("resourceTree.connector.select", { name })}
 			data-id={dataId}
+			tabIndex={tabIndex}
 			style={{ top }}
 			className={cn(
 				HANDLE,
@@ -50,6 +54,8 @@ export interface NestConnectorProps {
 	state: ConnectorState;
 	top: number;
 	"data-id": string;
+	/** 0 while focus is in the node (see `useRovingTree`), else -1. */
+	tabIndex?: 0 | -1;
 	onNest: () => void;
 }
 
@@ -60,6 +66,7 @@ export function NestConnector({
 	state,
 	top,
 	"data-id": dataId,
+	tabIndex,
 	onNest,
 }: NestConnectorProps) {
 	const t = useT();
@@ -73,6 +80,7 @@ export function NestConnector({
 			aria-disabled={state === "invalid" || undefined}
 			data-id={dataId}
 			data-state={state}
+			tabIndex={tabIndex}
 			style={{ top }}
 			className={cn(
 				HANDLE,

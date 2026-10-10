@@ -2,7 +2,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
 import { allowAutoLoginRedirect } from "../../lib/login-redirect-guard";
 import { navigateToLogin } from "../../platform/navigation";
-import { AuthStatus } from "./auth-status";
+import { AuthStatus, ShellSessionLoading } from "./auth-status";
 import type { CurrentUser } from "./current-user";
 import { useCurrentUser } from "./use-current-user";
 
@@ -49,6 +49,7 @@ export function RequireAuth({
 		case "error":
 			return <AuthStatus kind="error" error={session.error} />;
 		default:
-			return <AuthStatus kind="loading" />;
+			// Before the header exists: the placeholder draws the shell's frame.
+			return <ShellSessionLoading />;
 	}
 }

@@ -1,6 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { type RefObject, useState } from "react";
-import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { type CallbackDraft, draftOf, newDraft } from "./callback-draft";
@@ -37,10 +36,27 @@ function focusLater(section: RefObject<HTMLElement | null>, selector: string) {
 	}, 0);
 }
 
+/** What saving the callbacks came to; never a thrown error. */
+export type CallbacksSaveOutcome =
+	| { status: "unchanged" }
+	| { status: "saved" }
+	| { status: "failed"; message: string };
+
 /**
- * Drafts of a resource's callbacks, saved together with one `PUT`
- * (separately from the resource). Errors show after Save and leave a
- * field as soon as it changes.
+ * What the resource form drives: Update checks the callbacks before it
+ * writes anything, then saves them once the resource is saved.
+ */
+export interface CallbacksController {
+	/** Marks invalid callbacks; false when one is invalid. True when unchanged. */
+	check: () => boolean;
+	/** Saves changed callbacks with one `PUT`; errors stay on the fields. */
+	save: () => Promise<CallbacksSaveOutcome>;
+}
+
+/**
+ * Drafts of a resource's callbacks, saved together with one `PUT` when the
+ * resource form's Update runs. Errors show after Update and leave a field
+ * as soon as it changes.
  */
 export function useCallbacksEditor({
 	projectId,
@@ -49,7 +65,6 @@ export function useCallbacksEditor({
 	section,
 }: CallbacksEditorOptions) {
 	const t = useT();
-	const toast = useToast();
 	const queryClient = useQueryClient();
 	const [drafts, setDrafts] = useState(() => data.callbacks.map(draftOf));
 	const [dirty, setDirty] = useState(false);
@@ -107,10 +122,23 @@ export function useCallbacksEditor({
 		focusLater(section, '[aria-invalid="true"]');
 	}
 
-	async function save() {
-		if (busy) return;
+	function check(): boolean {
+		if (!dirty) return true;
 		const checked = checkDrafts(drafts, t);
-		if (checked.inputs === null) return fail(checked.errors);
+		if (checked.inputs === null) {
+			fail(checked.errors);
+			return false;
+		}
+		return true;
+	}
+
+	async function save(): Promise<CallbacksSaveOutcome> {
+		if (!dirty || busy) return { status: "unchanged" };
+		const checked = checkDrafts(drafts, t);
+		if (checked.inputs === null) {
+			fail(checked.errors);
+			return { status: "failed", message: t("mockCallbacks.invalid") };
+		}
 		setErrors({});
 		setFormError(null);
 		setBusy(true);
@@ -119,11 +147,16 @@ export function useCallbacksEditor({
 			queryClient.setQueryData(callbacksKey(projectId, resourceId), saved);
 			setDrafts(saved.callbacks.map(draftOf));
 			setDirty(false);
-			toast.show({ tone: "success", title: t("mockCallbacks.saved") });
+			return { status: "saved" };
 		} catch (error) {
 			const placed = serverErrors(error, drafts, t);
-			if (placed) fail(placed);
-			else setFormError(errorMessage(error));
+			if (placed) {
+				fail(placed);
+				return { status: "failed", message: t("mockCallbacks.invalid") };
+			}
+			const message = errorMessage(error);
+			setFormError(message);
+			return { status: "failed", message };
 		} finally {
 			setBusy(false);
 		}
@@ -134,11 +167,11 @@ export function useCallbacksEditor({
 		dirty,
 		errors,
 		formError,
-		busy,
 		update,
 		add,
 		remove,
 		showErrors,
+		check,
 		save,
 	};
 }

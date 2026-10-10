@@ -28,6 +28,8 @@ export interface GeneratorBarProps {
 	/** Click or Enter on a blocked bar. */
 	onBlocked: () => void;
 	"data-id"?: string;
+	/** -1 keeps the slider out of the tab order (roving tree). */
+	tabIndex?: 0 | -1;
 }
 
 const clamp = (value: number): number =>
@@ -56,6 +58,7 @@ export function GeneratorBar({
 	onCommit,
 	onBlocked,
 	"data-id": dataId,
+	tabIndex = 0,
 }: GeneratorBarProps) {
 	// SVG `url(#…)` references need a plain id; React's contains « » or :.
 	const t = useT();
@@ -106,7 +109,7 @@ export function GeneratorBar({
 		>
 			<div
 				role="slider"
-				tabIndex={0}
+				tabIndex={tabIndex}
 				aria-label={label}
 				aria-valuemin={0}
 				aria-valuemax={MAX_GENERATE_COUNT}

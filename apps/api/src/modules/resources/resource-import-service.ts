@@ -124,10 +124,11 @@ export async function createImportedResources(
 					planned.parentName ??
 					existing.find((r) => r._id.toHexString() === parent)?.name ??
 					null;
+				const parentKey = parentName === null ? null : parentKeyOf(parentName);
 				const { schema, seed } = prepare(planned, {
 					id,
 					parentId: parent,
-					parentKey: parentName === null ? null : parentKeyOf(parentName),
+					parentKey,
 					idOf,
 					parentRecordIds:
 						planned.parent === null
@@ -144,6 +145,7 @@ export async function createImportedResources(
 					projectId: project._id,
 					parentId: parent === null ? null : new Types.ObjectId(parent),
 					name: planned.name,
+					parentKey,
 					schema,
 					template: null,
 					endpoints: completeEndpoints(undefined),

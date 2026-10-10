@@ -2,7 +2,6 @@ import type { Messages } from "../../message-types";
 
 export const resourceExport: Messages["resourceExport"] = {
 	trigger: "Xuất type",
-	triggerLabel: "Xuất type của {name}",
 	copyTs: "Sao chép TypeScript",
 	copyZod: "Sao chép Zod schema",
 	download: "Tải <code>{file}</code>",

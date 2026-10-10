@@ -3,6 +3,7 @@ import { IconPlayerPlay } from "@tabler/icons-react";
 import { useId, useState } from "react";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
+import { Skeleton, SkeletonRegion } from "../../components/ui/skeleton";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
 import type { McpTarget } from "./mcp-snippets";
@@ -12,8 +13,33 @@ import { McpTryPanel } from "./mcp-try-panel";
 const TRY_PANEL_ID = "mcp-try-panel";
 
 export interface McpToolsSectionProps {
-	resources: readonly MockToolNode[];
+	/** Null while the resources load: a skeleton, not "No tools yet". */
+	resources: readonly MockToolNode[] | null;
 	target: McpTarget;
+}
+
+const SKELETON_ROWS = [0, 1, 2, 3];
+
+/** Placeholder rows in the shape of the tool list (two columns from md). */
+function ToolListSkeleton() {
+	const t = useT();
+	return (
+		<SkeletonRegion
+			data-id="project-detail-mcp-tools-loading"
+			label={t("projectDetail.resources.loading")}
+			className="grid gap-2 md:grid-cols-2"
+		>
+			{SKELETON_ROWS.map((row) => (
+				<div
+					key={row}
+					className="flex items-center gap-2 rounded-sm border border-border-subtle px-2 py-1.5"
+				>
+					<Skeleton className="h-4 w-28" />
+					<Skeleton className="h-3 w-16" />
+				</div>
+			))}
+		</SkeletonRegion>
+	);
 }
 
 /**
@@ -24,7 +50,7 @@ export function McpToolsSection({ resources, target }: McpToolsSectionProps) {
 	const t = useT();
 	const titleId = useId();
 	const [tryOpen, setTryOpen] = useState(false);
-	const entries = mockToolEntries(resources);
+	const entries = resources ? mockToolEntries(resources) : null;
 	return (
 		<section
 			data-id="project-detail-mcp-tools"
@@ -35,12 +61,16 @@ export function McpToolsSection({ resources, target }: McpToolsSectionProps) {
 				<h3 id={titleId} className="m-0 font-mono font-semibold text-sm">
 					{t("mcp.tools.title")}
 				</h3>
-				<Badge tone="primary">
-					{entries.length}
-					<span className="sr-only">
-						{` ${t("mcp.tools.countUnit", { count: entries.length })}`}
-					</span>
-				</Badge>
+				{entries ? (
+					<Badge tone="primary">
+						{entries.length}
+						<span className="sr-only">
+							{` ${t("mcp.tools.countUnit", { count: entries.length })}`}
+						</span>
+					</Badge>
+				) : (
+					<Skeleton className="h-5 w-8 rounded-full" />
+				)}
 				<Button
 					size="sm"
 					className="ml-auto"
@@ -54,7 +84,9 @@ export function McpToolsSection({ resources, target }: McpToolsSectionProps) {
 				</Button>
 			</div>
 			<McpTryPanel id={TRY_PANEL_ID} hidden={!tryOpen} target={target} />
-			{entries.length > 0 ? (
+			{entries === null ? (
+				<ToolListSkeleton />
+			) : entries.length > 0 ? (
 				<McpToolList
 					entries={entries}
 					itemDataIdPrefix="mcp-tool-"
@@ -66,7 +98,11 @@ export function McpToolsSection({ resources, target }: McpToolsSectionProps) {
 					className="m-0 text-muted text-sm"
 				>
 					{renderRich(
-						t(resources.length > 0 ? "mcp.tools.allOff" : "mcp.tools.empty"),
+						t(
+							resources && resources.length > 0
+								? "mcp.tools.allOff"
+								: "mcp.tools.empty",
+						),
 					)}
 				</p>
 			)}

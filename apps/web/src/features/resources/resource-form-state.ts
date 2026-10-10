@@ -55,6 +55,8 @@ export interface EndpointDraft {
 
 export interface ResourceDraft {
 	name: string;
+	/** `{parent}Id` field of a nested resource; empty on a root one. */
+	parentKey: string;
 	fields: FieldDraft[];
 	/** Object template as JSON text; empty means "use the schema". */
 	template: string;
@@ -72,6 +74,7 @@ export interface FormPlace {
 
 export interface DraftErrors {
 	name?: string;
+	parentKey?: string;
 	schema?: string;
 	/** By `FieldDraft.key`. */
 	fields: Record<string, string>;
@@ -131,6 +134,7 @@ export function draftOf(resource: Resource | null): ResourceDraft {
 		}));
 	return {
 		name: resource?.name ?? "",
+		parentKey: resource?.parentKey ?? "",
 		fields: (resource?.schema ?? DEFAULT_RESOURCE_FIELDS).map(fieldDraft),
 		template: resource?.template ? jsonText(resource.template) : "",
 		endpoints: endpoints.map((endpoint) => ({

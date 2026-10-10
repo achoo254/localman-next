@@ -14,7 +14,7 @@ import { makeProject } from "../../test/fixtures";
 import { ProjectRow } from "./project-row";
 
 describe("layout at 375px and 1440px", () => {
-	it("project rows truncate long names and URLs instead of overflowing", () => {
+	it("project rows keep long names to two lines and truncate URLs", () => {
 		render(
 			<MemoryRouter>
 				<ul>
@@ -28,7 +28,8 @@ describe("layout at 375px and 1440px", () => {
 			</MemoryRouter>,
 		);
 		const name = screen.getByText(/Một tên project rất dài/);
-		expect(name).toHaveClass("truncate");
+		expect(name).toHaveClass("line-clamp-2", "wrap-anywhere");
+		expect(name).toHaveAttribute("title", name.textContent);
 		expect(name.closest(".min-w-0")).not.toBeNull();
 		expect(screen.getByText(/mock\.localman\.test/)).toHaveClass("truncate");
 	});

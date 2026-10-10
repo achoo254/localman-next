@@ -3,6 +3,15 @@ export const resourceTree = {
 	rail: {
 		addToRoot: "Add to root",
 	},
+	tree: {
+		label: "Resource tree",
+	},
+	zoom: {
+		label: "Zoom",
+		fit: "Fit",
+		fitHint: "Fit the whole tree in view (Shift+1)",
+		actualHint: "Actual size (Shift+0)",
+	},
 	hint: {
 		idle: "Click the dot on the left of a resource to select it, then the dot on the right of another resource to nest it there.",
 		selected:
@@ -21,6 +30,7 @@ export const resourceTree = {
 		dataLabel: "Data of {name}",
 		delete: "Delete",
 		deleteLabel: "Delete {name}",
+		moreLabel: "More actions for {name}",
 	},
 	generator: {
 		label: "Records of {name}",

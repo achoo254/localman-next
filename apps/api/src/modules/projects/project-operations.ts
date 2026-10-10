@@ -29,7 +29,7 @@ export const listProjects = defineOperation({
 	path: "/projects",
 	summary: "List mock projects",
 	description:
-		"Projects the signed-in user owns or collaborates on, oldest first, with the mock base URL (`https://{secret}.{domain}{prefix}`) and the caller's role.",
+		"Projects the signed-in user owns or collaborates on, oldest first, with the mock base URL (`https://{secret}.{domain}{prefix}`), the caller's role, `resourceCount` (nested resources included) and `recordCount` (records over all resources).",
 	input: z.object({}),
 	output: z.object({ items: z.array(projectView) }),
 	scopes: [USER_SCOPE],

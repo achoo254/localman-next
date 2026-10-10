@@ -45,6 +45,32 @@ describe("names", () => {
 		expect(mcpTokenEnvVar("日本")).toBe("LOCALMAN_MCP_TOKEN_MOCK");
 	});
 
+	it("adds the end of the project id when the slug dropped characters", () => {
+		const id = "65f0c2a1b4e9d3f7a19f3a1c";
+		expect(mcpServerName("UI test - 中文项目", id)).toBe(
+			"localman-ui-test-9f3a1c",
+		);
+		expect(mcpServerName("UI test - 日本", "65f0c2a1b4e9d3f7a1000042")).toBe(
+			"localman-ui-test-000042",
+		);
+		expect(mcpTokenEnvVar("UI test - 中文项目", id)).toBe(
+			"LOCALMAN_MCP_TOKEN_UI_TEST_9F3A1C",
+		);
+		expect(mcpServerName("日本", id)).toBe("localman-mock-9f3a1c");
+	});
+
+	it("adds it to generic and cut slugs, not to distinctive ones", () => {
+		const id = "65f0c2a1b4e9d3f7a19f3a1c";
+		expect(mcpServerName("Demo", id)).toBe("localman-demo-9f3a1c");
+		expect(mcpServerName("My project", id)).toBe("localman-my-project-9f3a1c");
+		expect(mcpServerName(`${"a".repeat(39)} b`, id)).toBe(
+			`localman-${"a".repeat(39)}-9f3a1c`,
+		);
+		expect(mcpServerName("Cửa hàng", id)).toBe("localman-cua-hang");
+		expect(mcpServerName("Đồ ăn & uống!!", id)).toBe("localman-do-an-uong");
+		expect(mcpTokenEnvVar("Cửa hàng", id)).toBe("LOCALMAN_MCP_TOKEN_CUA_HANG");
+	});
+
 	it("appends /mcp to the mock base URL", () => {
 		expect(mcpEndpointUrl("https://a1b2.localman.test/api/v1")).toBe(URL);
 		expect(mcpEndpointUrl("https://a1b2.localman.test/")).toBe(

@@ -29,6 +29,11 @@ Path được tách theo cây resource thành `/{res}[/{id}]/{childRes}[/{id}]�
 - **Đoạn đầu:** khớp resource gốc cùng tên; không có gốc thì khớp resource lồng **duy nhất** mang tên đó (route phẳng `/{child}` của mockapi.io). Tên trùng ở nhiều nhánh mà không có gốc thì 404.
 - **Route lồng** (`/users/1/posts`): mọi bản ghi tổ tiên phải tồn tại và đúng cha, kết quả lọc theo bản ghi cha trên path.
 - **Route phẳng** (`/posts`): trả mọi bản ghi của resource, không lọc theo cha.
+- **Tên field cha (`{parent}Id`)** là `parentKey` của resource con, đọc qua một hàm duy nhất `resourceParentKey` (`packages/shared/src/parent-key.ts`) ở mọi nơi: route, bộ lọc `?{parent}Id=`, bản ghi sinh ra, export types, `list_resources`, Hosted Mock MCP và OpenAPI của mock. Bản ghi chỉ lưu `parentRecordId`; tên field được dựng lúc trả về, nên đổi `parentKey` không phải ghi lại bản ghi.
+  - Resource tạo mới, import, hoặc vừa được chuyển sang cha khác (`move_resource`) lưu khoá theo `parentKeyOf`: camelCase tên cha (`-`, `_` mở từ mới), từ cuối về số ít (bảng bất quy tắc như `people` → `person`, `series`, `data` giữ nguyên; luật đuôi `-zzes`, `-uses`, `-yses`/`-eses` → `-sis`, `-ies` → `-y`, `-sses`/`-xes`/`-ches`/`-shes` bỏ `-es`, `-s`), rồi nối `Id`; tên bắt đầu bằng số thêm `_` ở đầu. Ví dụ `quizzes` → `quizId`, `order-items` → `orderItemId`.
+  - Resource lưu trước khi có field này không có `parentKey` và giữ khoá theo luật cũ (`legacyParentKeyOf`: chỉ `-ies`, `-es`, `-s`, giữ nguyên `-`), nên client hiện có không bị đổi tên field. Không migrate dữ liệu.
+  - Đổi tên cha: khoá dựng từ tên cũ (luật mới hoặc luật cũ) đi theo tên mới như trước; khoá người dùng tự đặt giữ nguyên.
+  - Người dùng đặt khoá qua `parentKey` của `create_resource`/`update_resource` (`POST`/`PUT /api/v1/projects/:projectId/resources…`, kiểm ở `modules/resources/resource-parent-key.ts`): định danh JS `^[A-Za-z_$][A-Za-z0-9_$]*$`, tối đa 64 ký tự, không phải `id` hay `FORBIDDEN_KEYS`, không trùng field schema hoặc key template của chính resource; sai thì 400 `VALIDATION_ERROR` với `details[0].path = "parentKey"`. Resource gốc gửi `parentKey` cũng là 400 đó. Gửi lại đúng khoá hiện tại luôn được nhận (kể cả khoá luật cũ không phải định danh JS). Khoá mới trùng field dữ liệu đã có trong bản ghi thì 409 `FIELD_CONFLICT`.
 
 ## Method
 

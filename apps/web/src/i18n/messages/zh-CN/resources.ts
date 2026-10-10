@@ -44,10 +44,18 @@ export const resources: Messages["resources"] = {
 		templateInvalid: "Object template 不是有效的 JSON。",
 		templateNotObject: "Object template 必须是一个 JSON object。",
 		responseInvalid: "Response template 不是有效的 JSON。",
+		parentKeyRequired: "请输入 parent key。",
+		parentKeyTooLong: "Parent key 最多 {max} 个字符。",
+		parentKeyPattern:
+			"只能使用字母、数字、_ 和 $，且不能以数字开头（例如 userId）。",
+		parentKeyId: "“id”是记录自身的 id，请换一个名称。",
+		parentKeyTaken: "Field“{name}”已使用此名称。",
+		parentKeyRefused: "无法使用此 parent key，请换一个名称。",
+		parentKeyInData: "此 resource 的记录中已有 field“{name}”，请换一个 key。",
 	},
 	form: {
 		titleNew: "新建 resource",
-		titleEdit: "编辑 resource · {name}",
+		titleEdit: "编辑 resource · <name>{name}</name>",
 		create: "创建 resource",
 		update: "更新",
 		nameLabel: "Resource 名称",
@@ -56,6 +64,11 @@ export const resources: Messages["resources"] = {
 		childOf: "<code>{parent}</code> 的子 resource。",
 		schemaHint: "每条记录的结构",
 		checkMarked: "请检查标红的输入项。",
+		parentKeyLabel: "Parent key",
+		parentKeyHint:
+			"保存父记录 <code>{parent}</code> id 的 field。重命名后，mock 返回的 field 名及其筛选参数都会改变，已在使用 mock 的客户端也需要同步修改。",
+		partialTitle: "已保存 resource，callbacks 未保存",
+		partialBody: "{reason} 请修正 callbacks，然后再次点击更新。",
 	},
 	schema: {
 		typeOf: "{name} 的类型",
@@ -86,7 +99,7 @@ export const resources: Messages["resources"] = {
 			'Template 变量：<code>"$mockData"</code> 为已存储的数据，<code>"$count"</code> 为记录数，<code>"$category.method"</code> 为每次 request 时 Faker 生成的值（例如 <code>"$name.fullName"</code>）。',
 	},
 	data: {
-		title: "数据 · {name}",
+		title: "数据 · <name>{name}</name>",
 		hint: "直接编辑，或粘贴一个新的 JSON 数组来替换全部数据（最多 {max} 条记录）。",
 		loading: "正在加载数据…",
 		loadFailed: "无法加载数据",
@@ -97,6 +110,12 @@ export const resources: Messages["resources"] = {
 		notArray: "数据必须是一个 JSON 数组。",
 		tooMany: "最多 {max} 条记录（当前 {count} 条）。",
 		notObject: "每个元素都必须是一个 JSON object。",
+		goToLabel: "跳转到 id",
+		goTo: "跳转",
+		goToNotFound: "没有 id 为“{id}”的记录。",
+		goToInvalid: "请先修正 JSON，再按 id 查找。",
+		wrap: "自动换行",
+		scrollLabel: "{name} 的 JSON 数据滚动区域",
 	},
 	delete: {
 		title: "删除 resource",

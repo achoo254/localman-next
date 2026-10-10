@@ -86,8 +86,9 @@ describe("project page accessibility and layout", () => {
 		const node = await findNode("comments");
 		const page = document.querySelector('[data-id="project-detail"]');
 		expect(page).toHaveClass("grid", "grid-cols-[minmax(0,1fr)]");
-		const canvas = node.parentElement;
-		expect(canvas?.parentElement).toHaveClass("overflow-x-auto");
+		expect(node.closest('[data-id="resource-tree-viewport"]')).toHaveClass(
+			"overflow-auto",
+		);
 		expect(document.querySelector('[data-id="resource-tree"]')).toHaveClass(
 			"min-w-0",
 		);

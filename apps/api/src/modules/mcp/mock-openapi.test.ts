@@ -178,7 +178,18 @@ describe("buildMockOpenApi", () => {
 
 describe("collectionPath", () => {
 	it("numbers a parent parameter repeated along the path", () => {
-		expect(collectionPath(["items", "items"], "parts")).toEqual({
+		const node = (id: string, parentId: string | null, name: string) => ({
+			id,
+			parentId,
+			name,
+		});
+		expect(
+			collectionPath([
+				node("1", null, "items"),
+				node("2", "1", "items"),
+				node("3", "2", "parts"),
+			]),
+		).toEqual({
 			path: "/items/{itemId}/items/{itemId2}/parts",
 			params: ["itemId", "itemId2"],
 		});

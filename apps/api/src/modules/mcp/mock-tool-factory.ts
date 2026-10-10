@@ -4,8 +4,9 @@ import {
 	type MockToolNode,
 	type ResourceFieldDefinition,
 	mockToolEntries,
-	parentKeyOf,
+	resourceParentKey,
 } from "@localman/shared";
+import { collectionPath } from "./mock-api-paths.js";
 import {
 	ACTIONS,
 	type MockToolAnnotations,
@@ -17,6 +18,8 @@ export type { MockToolAction, MockToolAnnotations, ToolInputSchema };
 
 /** A resource of the project, as stored (ids as strings). */
 export interface MockToolResource extends MockToolNode {
+	/** Stored Parent ID; absent on resources stored before keys were. */
+	readonly parentKey?: string | null;
 	readonly schema: readonly ResourceFieldDefinition[];
 	readonly template: JsonObject | null;
 }
@@ -64,6 +67,7 @@ export function buildMockTools(
 			const place = {
 				name: resource.name,
 				ancestors: names,
+				path: collectionPath([...ancestors, resource]).path,
 				hasChildren: parents.has(resource.id),
 			};
 			return {
@@ -73,7 +77,8 @@ export function buildMockTools(
 				inputSchema: ACTIONS[action].input({
 					schema: resource.schema,
 					template: resource.template,
-					parentKey: parent === null ? null : parentKeyOf(parent.name),
+					parentKey:
+						parent === null ? null : resourceParentKey(resource, parent.name),
 					parentName: parent?.name ?? null,
 				}),
 				annotations: ACTIONS[action].annotations,

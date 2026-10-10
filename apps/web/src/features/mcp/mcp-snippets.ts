@@ -17,6 +17,20 @@ export type McpConfigFormat = (typeof MCP_CONFIG_FORMATS)[number];
 
 const SLUG_MAX = 40;
 const FALLBACK_SLUG = "mock";
+const ID_SUFFIX_LENGTH = 6;
+/** Slugs too common to tell projects apart (`""` is the fallback). */
+const GENERIC_SLUGS: ReadonlySet<string> = new Set([
+	"",
+	"api",
+	"app",
+	"demo",
+	"mock",
+	"my-project",
+	"new-project",
+	"project",
+	"test",
+	"untitled",
+]);
 
 /** Where an agent connects, and the variable holding the token if any. */
 export interface McpTarget {
@@ -26,32 +40,65 @@ export interface McpTarget {
 	tokenEnv: string | null;
 }
 
+/** Accents dropped, `đ` → `d`, lower case: what the slug keeps of a name. */
+function foldToAscii(name: string): string {
+	return name
+		.normalize("NFD")
+		.replace(/\p{M}+/gu, "")
+		.replace(/[đĐ]/g, "d")
+		.toLowerCase();
+}
+
+/** Runs of characters other than `a-z0-9` → `-`, trimmed, not yet cut. */
+function uncutSlug(folded: string): string {
+	return folded.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
 /**
  * ASCII slug of a project name: accents dropped, `đ` → `d`, lower case,
  * runs of other characters → `-`, at most 40 characters. "" when nothing
  * is left.
  */
 export function mcpProjectSlug(name: string): string {
-	return name
-		.normalize("NFD")
-		.replace(/\p{M}+/gu, "")
-		.replace(/[đĐ]/g, "d")
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, "-")
-		.replace(/^-+|-+$/g, "")
-		.slice(0, SLUG_MAX)
-		.replace(/-+$/, "");
+	return uncutSlug(foldToAscii(name)).slice(0, SLUG_MAX).replace(/-+$/, "");
 }
 
-/** `localman-cua-hang`: one name per project, so two never collide. */
-export function mcpServerName(projectName: string): string {
-	return `localman-${mcpProjectSlug(projectName) || FALLBACK_SLUG}`;
+/**
+ * The slug says little about which project it is: letters or digits were
+ * dropped (`中文`), it was cut at 40 characters, or the name is generic.
+ */
+function slugIsAmbiguous(name: string): boolean {
+	const folded = foldToAscii(name);
+	const slug = uncutSlug(folded);
+	const dropped = /[\p{L}\p{N}]/u.test(folded.replace(/[a-z0-9]/g, ""));
+	return dropped || slug.length > SLUG_MAX || GENERIC_SLUGS.has(slug);
 }
 
-/** `LOCALMAN_MCP_TOKEN_CUA_HANG`: one variable per project. */
-export function mcpTokenEnvVar(projectName: string): string {
+/**
+ * Slug of the server name and token variable. An ambiguous slug gets the
+ * last 6 characters of the project id (`ui-test-9f3a1c`), so projects that
+ * differ only in non-Latin characters get different names. Names that
+ * differ only in case or punctuation (`Shop`, `shop!`) still share one:
+ * it is a suggestion the user may edit.
+ */
+function mcpProjectKey(projectName: string, projectId: string): string {
 	const slug = mcpProjectSlug(projectName) || FALLBACK_SLUG;
-	return `LOCALMAN_MCP_TOKEN_${slug.toUpperCase().replace(/-/g, "_")}`;
+	const suffix = projectId
+		.toLowerCase()
+		.replace(/[^a-z0-9]/g, "")
+		.slice(-ID_SUFFIX_LENGTH);
+	return suffix && slugIsAmbiguous(projectName) ? `${slug}-${suffix}` : slug;
+}
+
+/** `localman-cua-hang`; see `mcpProjectKey` for the id suffix. */
+export function mcpServerName(projectName: string, projectId = ""): string {
+	return `localman-${mcpProjectKey(projectName, projectId)}`;
+}
+
+/** `LOCALMAN_MCP_TOKEN_CUA_HANG`, with the same id suffix as the server. */
+export function mcpTokenEnvVar(projectName: string, projectId = ""): string {
+	const key = mcpProjectKey(projectName, projectId);
+	return `LOCALMAN_MCP_TOKEN_${key.toUpperCase().replace(/-/g, "_")}`;
 }
 
 /** `{mockBaseUrl}/mcp`; the base URL already carries secret and prefix. */

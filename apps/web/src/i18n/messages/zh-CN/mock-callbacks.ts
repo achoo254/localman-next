@@ -10,13 +10,9 @@ export const mockCallbacks: Messages["mockCallbacks"] = {
 		"还没有 callback。添加一个后，mock 会在 create、update 或 delete 时向你的服务器发送 request。",
 	variables:
 		"变量：<code>{record}</code> 为 JSON 格式的记录，<code>{field}</code> 为记录的某个 field，<code>{event}</code> 为 create、update 或 delete，<code>{resource}</code> 为 resource 名称。在后台发送，失败时按间隔最多重试 3 次；结果写入 request log，来源为 <code>callback</code>。",
-	saveNote:
-		"Callback 单独保存：点击“保存 callback”才会保存，保存 resource 的按钮不包含这一部分。",
 	loading: "正在加载 callback…",
 	loadFailed: "无法加载 callback，请重试。",
-	save: "保存 callback",
 	unsaved: "有未保存的更改",
-	saved: "已保存 callback。",
 	invalid: "有 callback 无效，请检查标记的字段。",
 	item: {
 		enable: "启用 callback {n}",

@@ -95,9 +95,10 @@ function webBuildEnv(): NodeJS.ProcessEnv {
 		...baseEnv(),
 		VITE_API_BASE_URL: "",
 		VITE_IDP_ORIGIN: IDP_ORIGIN,
-		// Every flag the specs need: the API client, and the hybrid mock tabs
-		// (upstream, request log, webhook inbox, callbacks).
-		VITE_FEATURES: "apiClient,hybridMock",
+		// Every flag the specs need: the API client, the MCP tab of the
+		// endpoint card, and the hybrid mock tabs (upstream, request log,
+		// webhook inbox, callbacks).
+		VITE_FEATURES: "apiClient,mockMcp,hybridMock",
 	};
 }
 

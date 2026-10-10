@@ -21,6 +21,9 @@ import {
 	toResourceView,
 } from "./resource-view.js";
 
+const PARENT_KEY_NOTE =
+	"`parentKey` (nested resources only) names the parent id field of the records: a JavaScript identifier of at most 64 characters, not `id` nor a field of the resource (400 VALIDATION_ERROR at parentKey otherwise); by default it is built from the parent's name (people → personId) and follows a rename of the parent.";
+
 export const listResources = defineOperation({
 	id: "mock.listResources",
 	method: "GET",
@@ -48,7 +51,7 @@ export const createResourceOperation = defineOperation({
 	method: "POST",
 	path: RESOURCES_PATH,
 	summary: "Create a resource in a mock project",
-	description: `Adds a resource (a REST collection such as \`users\`) at the root or under \`parentId\`, which nests its routes as /parents/:id/children. Defaults: schema createdAt (date.past), name (name.fullName), avatar (image.avatar) besides the generated \`id\`; no object template; GET list, GET one, POST, PUT/PATCH and DELETE enabled with response "$mockData". Schema field types: Faker.js (needs fakerMethod from list_faker_methods), String, Number, Boolean, Object, Array, Date, Parent Resource, Child Resource (needs childId). Sibling names must be unique (409 RESOURCE_NAME_TAKEN). ${PLAN_NOTE}`,
+	description: `Adds a resource (a REST collection such as \`users\`) at the root or under \`parentId\`, which nests its routes as /parents/:id/children. Defaults: schema createdAt (date.past), name (name.fullName), avatar (image.avatar) besides the generated \`id\`; no object template; GET list, GET one, POST, PUT/PATCH and DELETE enabled with response "$mockData". Schema field types: Faker.js (needs fakerMethod from list_faker_methods), String, Number, Boolean, Object, Array, Date, Parent Resource, Child Resource (needs childId). Sibling names must be unique (409 RESOURCE_NAME_TAKEN). ${PARENT_KEY_NOTE} ${PLAN_NOTE}`,
 	input: resourceCreateSchema.extend({ projectId: projectIdParam }),
 	output: resourceView,
 	scopes: [USER_SCOPE],
@@ -95,7 +98,7 @@ export const updateResourceOperation = defineOperation({
 	method: "PUT",
 	path: `${RESOURCES_PATH}/:resourceId`,
 	summary: "Rename a resource or change its schema, template or endpoints",
-	description: `Sets the name and, when sent, replaces the schema, the object template (null to use the schema) or the endpoints (missing endpoints are reset to enabled with "$mockData"). Records are kept. To change the parent use move_resource. ${ACCESS_NOTE}`,
+	description: `Sets the name and, when sent, replaces the schema, the object template (null to use the schema) or the endpoints (missing endpoints are reset to enabled with "$mockData"). Records are kept. To change the parent use move_resource. ${PARENT_KEY_NOTE} ${ACCESS_NOTE}`,
 	input: resourceUpdateSchema.extend({
 		projectId: projectIdParam,
 		resourceId: resourceIdParam,

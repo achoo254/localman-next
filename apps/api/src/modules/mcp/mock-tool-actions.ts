@@ -1,8 +1,4 @@
-import {
-	MOCK_TOOL_ENDPOINTS,
-	type MockToolAction,
-	parentKeyOf,
-} from "@localman/shared";
+import { MOCK_TOOL_ENDPOINTS, type MockToolAction } from "@localman/shared";
 import type { ToolShape } from "./mock-tool-fields.js";
 import {
 	type ToolInputSchema,
@@ -72,6 +68,8 @@ export interface ToolPlace {
 	readonly name: string;
 	/** Names of the ancestor resources, outermost first. */
 	readonly ancestors: readonly string[];
+	/** Nested REST collection route (`/users/{userId}/posts`). */
+	readonly path: string;
 	/** Whether other resources nest under it (delete cascades). */
 	readonly hasChildren: boolean;
 }
@@ -79,11 +77,8 @@ export interface ToolPlace {
 /** `GET /users/{userId}/posts/{id}`: the nested REST route of `action`. */
 function restRoute(action: MockToolAction, place: ToolPlace): string {
 	const { method, path } = MOCK_TOOL_ENDPOINTS[action];
-	const above = place.ancestors.map(
-		(name) => `/${name}/{${parentKeyOf(name)}}`,
-	);
 	const one = path === "/:res/:id" ? "/{id}" : "";
-	return `${method} ${above.join("")}/${place.name}${one}`;
+	return `${method} ${place.path}${one}`;
 }
 
 /** Short English description of the tool for the agent. */

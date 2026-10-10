@@ -1,3 +1,4 @@
+import { MAIN_CLASS } from "../../components/layout/skip-link";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
 import { cardClassName } from "../../components/ui/card";
@@ -17,14 +18,9 @@ type AuthStatusProps =
 	| { kind: "loading" | "redirecting" | "loginLoop" }
 	| { kind: "error"; error: unknown };
 
-/**
- * The session is being checked: after 150 ms, a page-shaped skeleton
- * (title, lead, two cards) that says "Checking your session…" once.
- */
-function SessionLoading() {
+/** Page-shaped skeleton (title, lead, two cards), announced once. */
+function SessionSkeleton() {
 	const t = useT();
-	const shown = useDelayedFlag(true);
-	if (!shown) return null;
 	return (
 		<SkeletonRegion
 			data-id="auth-loading"
@@ -40,6 +36,41 @@ function SessionLoading() {
 				</div>
 			))}
 		</SkeletonRegion>
+	);
+}
+
+/**
+ * The session is being checked inside a page that already has its frame:
+ * after 150 ms, the skeleton that says "Checking your session…" once.
+ */
+function SessionLoading() {
+	const shown = useDelayedFlag(true);
+	return shown ? <SessionSkeleton /> : null;
+}
+
+/**
+ * The signed-in shell checks the session before it can draw its header:
+ * after 150 ms, a top bar placeholder at the header's height and the
+ * skeleton in the page container, so nothing moves when the shell arrives.
+ */
+export function ShellSessionLoading() {
+	const shown = useDelayedFlag(true);
+	if (!shown) return null;
+	return (
+		<>
+			<div
+				data-id="auth-loading-topbar"
+				className="border-border-subtle border-b"
+			>
+				<div className="mx-auto flex min-h-(--topbar-h) w-full max-w-page items-center justify-between gap-3 px-gutter">
+					<Skeleton className="h-6 w-28" />
+					<Skeleton variant="circle" className="size-8" />
+				</div>
+			</div>
+			<div className={MAIN_CLASS}>
+				<SessionSkeleton />
+			</div>
+		</>
 	);
 }
 

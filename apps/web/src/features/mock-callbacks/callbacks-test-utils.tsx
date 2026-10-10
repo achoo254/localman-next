@@ -1,6 +1,9 @@
+import { screen } from "@testing-library/react";
+import { useRef, useState } from "react";
 import { type MockRoute, mockFetch } from "../../test/mock-fetch";
 import { renderRoutes } from "../../test/render-app";
 import { CallbacksEditor } from "./callbacks-editor";
+import type { CallbacksController } from "./use-callbacks-editor";
 
 export const BASE = "/api/v1/projects/p1/resources/r1/callbacks";
 export const DEFAULT_TEMPLATE =
@@ -37,6 +40,34 @@ export function callbacksJson(
 	};
 }
 
+/**
+ * The section with a "Save callbacks" button standing in for the resource
+ * form's Update: it runs `controller.save()` and shows the outcome.
+ */
+function CallbacksHarness() {
+	const controller = useRef<CallbacksController | null>(null);
+	const [outcome, setOutcome] = useState("");
+	return (
+		<>
+			<CallbacksEditor projectId="p1" resourceId="r1" controller={controller} />
+			<button
+				type="button"
+				onClick={async () => {
+					const result = await controller.current?.save();
+					setOutcome(result?.status ?? "not loaded");
+				}}
+			>
+				Save callbacks
+			</button>
+			<output data-testid="save-outcome">{outcome}</output>
+		</>
+	);
+}
+
+/** What the last "Save callbacks" of the harness came to. */
+export const saveOutcome = (): HTMLElement =>
+	screen.getByTestId("save-outcome");
+
 /** The Callbacks section of resource r1 with its list and `routes` stubbed. */
 export function renderCallbacks(
 	data: Record<string, unknown>,
@@ -47,7 +78,7 @@ export function renderCallbacks(
 		[
 			{
 				path: "/",
-				element: <CallbacksEditor projectId="p1" resourceId="r1" />,
+				element: <CallbacksHarness />,
 			},
 		],
 		"/",

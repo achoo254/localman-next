@@ -2,6 +2,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetCurrentUserCache } from "../../features/auth/use-current-user";
+import { openNodeMenu } from "../../features/resource-tree/tree-test-helpers";
 import { findToast } from "../../test/toast";
 import {
 	RESOURCES_PATH,
@@ -43,6 +44,14 @@ describe("Generate all and Reset all", () => {
 		await findNode("likes");
 		await userEvent.click(screen.getByRole("button", { name: "Generate all" }));
 		const dialog = await screen.findByRole("dialog", { name: "Generate all" });
+		// One total for the listed resources; the lines fold under it.
+		expect(
+			dialog.querySelector('[data-id="modal-generate-all-summary"]'),
+		).toHaveTextContent("1 resource, 10 → 10 records");
+		const details = dialog.querySelector("details");
+		expect(details).not.toHaveAttribute("open");
+		await userEvent.click(within(dialog).getByText("Show each resource"));
+		expect(details).toHaveAttribute("open");
 		expect(within(dialog).getByRole("list")).toHaveTextContent(
 			"users: 10 → 10 records",
 		);
@@ -123,9 +132,11 @@ describe("Delete resource", () => {
 				body: { dryRun: query.get("dryRun") === "true", removed },
 			}),
 		});
-		const users = await findNode("users");
+		await findNode("users");
 		await userEvent.click(
-			within(users).getByRole("button", { name: "Delete users" }),
+			within(await openNodeMenu("users")).getByRole("menuitem", {
+				name: "Delete users",
+			}),
 		);
 		const dialog = await screen.findByRole("dialog", {
 			name: "Delete resource",

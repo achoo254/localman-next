@@ -4,7 +4,6 @@ import {
 	OBJECT_ID_FIELD,
 	type ResourceField,
 	jsonSize,
-	parentKeyOf,
 	relationSourceOf,
 } from "@localman/shared";
 import type { ClientSession } from "mongoose";
@@ -82,7 +81,7 @@ function childPlan(
 	);
 	if (!child) return { query: null, build: () => () => [] };
 	const ids = stringIds(views, OBJECT_ID_FIELD);
-	const childKey = parentKeyOf(resource.name);
+	const childKey = parentKeyIn(resources, child);
 	return {
 		query: {
 			resource: child,

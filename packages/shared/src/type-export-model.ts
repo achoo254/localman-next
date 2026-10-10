@@ -8,11 +8,11 @@
  * relations gets a separate `…Record` type for the embedded form.
  */
 import type { JsonObject } from "./json-value.js";
+import { legacyParentKeyOf, resourceParentKey } from "./parent-key.js";
 import {
 	OBJECT_ID_FIELD,
 	RELATION_FIELD_TYPES,
 	type ResourceFieldDefinition,
-	parentKeyOf,
 } from "./resource-constants.js";
 import {
 	DICT,
@@ -31,7 +31,7 @@ export interface TypeExportResource {
 	readonly id: string;
 	readonly name: string;
 	readonly parentId: string | null;
-	/** `{parent}Id`; worked out from the parent when absent. */
+	/** `{parent}Id`; worked out from the parent (`resourceParentKey`) when absent. */
 	readonly parentKey?: string | null;
 	readonly schema: readonly ResourceFieldDefinition[];
 	readonly template?: JsonObject | null;
@@ -49,8 +49,9 @@ export interface ResourceTypeModel {
 
 /** `blog-posts` → `BlogPost`; a leading digit gets a `Resource` prefix. */
 function typeNameOf(resourceName: string): string {
-	// `parentKeyOf` singularises: `categories` → `categoryId`.
-	const singular = parentKeyOf(resourceName).slice(0, -"Id".length);
+	// The old Parent ID rule singularises: `categories` → `categoryId`. Type
+	// names keep it so exported code keeps compiling against older exports.
+	const singular = legacyParentKeyOf(resourceName).slice(0, -"Id".length);
 	const words = singular.match(/[A-Za-z0-9]+/g) ?? [];
 	const name = words
 		.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
@@ -110,7 +111,7 @@ export function buildTypeModels(
 		const parentKey =
 			resource.parentKey !== undefined
 				? resource.parentKey
-				: parent && parentKeyOf(parent.name);
+				: parent && resourceParentKey(resource, parent.name);
 		const relations = resource.schema.flatMap((field): TypeField[] => {
 			const note = field.type;
 			if (field.type === "Parent Resource") {

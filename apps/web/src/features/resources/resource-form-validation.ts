@@ -15,6 +15,8 @@ import type { Translate } from "../../i18n/translate";
 import { isRecord } from "../../lib/json-guards";
 import { parseJsonText } from "../../lib/json-text";
 import { checkBehavior } from "./endpoint-behavior-validation";
+import { changedParentKey, parentKeyError, takenNamesOf } from "./parent-key";
+import { hasDraftErrors } from "./resource-form-errors";
 import {
 	type DraftErrors,
 	type FieldDraft,
@@ -141,14 +143,19 @@ export function validateDraft(
 			max: MAX_SCHEMA_FIELDS,
 		});
 	}
+	// A changed parent key is checked against the fields instead.
+	const parentKey = changedParentKey(draft, place);
 	const reserved = new Set([
 		OBJECT_ID_FIELD,
-		...(place.parentKey ? [place.parentKey] : []),
+		...(place.parentKey && parentKey === null ? [place.parentKey] : []),
 	]);
 	const seen: SeenFields = { names: new Set(), sources: new Map(), t };
 	for (const field of draft.fields) {
 		const error = fieldError(field, reserved, seen, place);
 		if (error) errors.fields[field.key] = error;
+	}
+	if (parentKey !== null) {
+		errors.parentKey = parentKeyError(parentKey, takenNamesOf(draft), t);
 	}
 	let template: Record<string, unknown> | null = null;
 	if (draft.template.trim() !== "") {
@@ -177,16 +184,15 @@ export function validateDraft(
 			...behavior,
 		});
 	}
-	const failed =
-		errors.name !== undefined ||
-		errors.schema !== undefined ||
-		errors.template !== undefined ||
-		Object.keys(errors.fields).length > 0 ||
-		Object.keys(errors.endpoints).length > 0 ||
-		Object.keys(errors.behavior).length > 0;
-	if (failed) return { input: null, errors };
+	if (hasDraftErrors(errors)) return { input: null, errors };
 	return {
-		input: { name, schema: draft.fields.map(toField), template, endpoints },
+		input: {
+			name,
+			schema: draft.fields.map(toField),
+			template,
+			endpoints,
+			...(parentKey === null ? {} : { parentKey }),
+		},
 		errors,
 	};
 }

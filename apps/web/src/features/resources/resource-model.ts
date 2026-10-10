@@ -62,6 +62,8 @@ export interface Resource {
 export interface ResourceInput {
 	name: string;
 	parentId?: string | null;
+	/** Update only: renames the `{parent}Id` field of a nested resource. */
+	parentKey?: string;
 	schema: SchemaField[];
 	template: JsonRecord | null;
 	endpoints: ResourceEndpoint[];

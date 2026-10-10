@@ -18,6 +18,8 @@ export const projects = {
 			one: "{count} collaborator",
 			other: "{count} collaborators",
 		},
+		resources: { one: "{count} resource", other: "{count} resources" },
+		records: { one: "{count} record", other: "{count} records" },
 	},
 	menu: {
 		trigger: "Options for {name}",
@@ -41,7 +43,7 @@ export const projects = {
 		nameTooLong: "Names can be at most {max} characters.",
 		nameStart: "Names must start with a letter or number.",
 		namePattern:
-			"Names can only contain letters, numbers, spaces, -, _ and parentheses.",
+			"Names can only contain letters, numbers, spaces and the characters - _ ( ) . · , & + ' :",
 		prefixTooLong: "The prefix can be at most {max} characters.",
 		prefixPattern:
 			"The prefix can only contain unaccented letters, numbers, -, _ and /.",
@@ -51,6 +53,7 @@ export const projects = {
 		updated: "Updated project {name}.",
 		cloned: "Duplicated as {name}.",
 		deleted: "Deleted project {name}.",
+		open: "Open project",
 	},
 	delete: {
 		title: "Delete project",

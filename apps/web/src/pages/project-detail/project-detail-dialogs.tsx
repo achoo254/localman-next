@@ -9,6 +9,7 @@ import type { Resource } from "../../features/resources/resource-model";
 import { useResourceCache } from "../../features/resources/use-resources";
 import { useT } from "../../i18n/i18n-context";
 import { importedToast } from "./imported-toast";
+import { SummarizedChangesConfirmModal } from "./summarized-changes-confirm-modal";
 import { toastText } from "./toast-text";
 
 /*
@@ -28,13 +29,16 @@ const ResourceDataModal = lazy(async () => ({
 		.ResourceDataModal,
 }));
 
+/** `summarize`: a project-wide write, its lines folded under a total. */
+export type ProjectConfirm = DataConfirm & { summarize?: boolean };
+
 export type ProjectDialog =
 	| { kind: "none" }
 	| { kind: "form"; resource: Resource | null }
 	| { kind: "import" }
 	| { kind: "data"; resource: Resource }
 	| { kind: "delete"; resource: Resource }
-	| { kind: "confirm"; confirm: DataConfirm };
+	| { kind: "confirm"; confirm: ProjectConfirm };
 
 export const NO_DIALOG: ProjectDialog = { kind: "none" };
 
@@ -165,7 +169,12 @@ export function ProjectDetailDialogs({
 				/>
 			);
 		case "confirm":
-			return (
+			return dialog.confirm.summarize ? (
+				<SummarizedChangesConfirmModal
+					confirm={dialog.confirm}
+					onOpenChange={closeOnFalse}
+				/>
+			) : (
 				<DataChangesConfirmModal
 					confirm={dialog.confirm}
 					onOpenChange={closeOnFalse}

@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useId, useMemo, useState } from "react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
-import { JsonEditor } from "../../components/ui/json-editor";
 import { Modal, ModalClose } from "../../components/ui/modal";
 import { ModalFooter } from "../../components/ui/modal-footer";
 import { SkeletonRegion } from "../../components/ui/skeleton";
@@ -17,9 +16,11 @@ import {
 import { hasDescendantData, lostDescendants } from "./data-loss";
 import { JsonSkeleton } from "./json-skeleton";
 import { fetchResourceData, replaceResourceData } from "./resource-data-api";
+import { ResourceDataEditor } from "./resource-data-editor";
 import { localized, resourceErrorMessage } from "./resource-errors";
+import { ResourceModalTitle } from "./resource-modal-title";
 import type { DataChange, Resource } from "./resource-model";
-import { checkRecords, recordsProblem } from "./resource-records-check";
+import { checkRecords } from "./resource-records-check";
 
 export { checkRecords } from "./resource-records-check";
 
@@ -110,7 +111,11 @@ export function ResourceDataModal({
 		<Modal
 			open
 			onOpenChange={(open) => !busy && onOpenChange(open)}
-			title={t("resources.data.title", { name: resource.name })}
+			title={
+				<ResourceModalTitle
+					text={t("resources.data.title", { name: resource.name })}
+				/>
+			}
 			size="lg"
 			initialFocusRef="dialog"
 			data-id="modal-resource-data"
@@ -148,19 +153,17 @@ export function ResourceDataModal({
 					{resourceErrorMessage(data.error, t)}
 				</Alert>
 			) : (
-				<JsonEditor
+				<ResourceDataEditor
+					name={resource.name}
 					value={current}
 					onChange={(next) => {
 						setText(next);
 						if (blurError) setBlurError(null);
 					}}
-					label={t("resources.data.jsonLabel", { name: resource.name })}
+					count={checked.records?.length ?? data.data.count}
 					describedBy={`${ids}-hint${blurError ? ` ${ids}-error` : ""}`}
 					invalid={Boolean(blurError)}
-					validate={(value) => recordsProblem(value, t)}
 					onValidate={setBlurError}
-					className="h-[min(60vh,28rem)]"
-					data-id="modal-resource-data-json"
 				/>
 			)}
 			{blurError ? (

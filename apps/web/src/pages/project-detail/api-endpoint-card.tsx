@@ -16,13 +16,13 @@ import { cn } from "../../lib/cn";
 import type { Project } from "../projects/projects-api";
 import { EndpointTabs } from "./endpoint-tabs";
 import { splitMockBaseUrl } from "./mock-url-parts";
-import { UrlChip } from "./url-chip";
+import { UrlChip, breakAfterSlashes } from "./url-chip";
 import type { BulkAction } from "./use-project-actions";
 
 export interface ApiEndpointCardProps {
 	project: Project;
-	/** Resources of the project, for the tools of the MCP tab. */
-	resources: readonly MockToolNode[];
+	/** Resources of the project, for the MCP tools; null while they load. */
+	resources: readonly MockToolNode[] | null;
 	/** A data write runs: the bulk buttons wait for it. */
 	busy: boolean;
 	/** The bulk button whose request runs shows a spinner. */
@@ -91,8 +91,9 @@ export function ApiEndpointCard({
 						tone="[--tone:var(--c-accent)]"
 						tip={t("projectDetail.endpoint.prefixTip")}
 						data-id="project-detail-endpoint-prefix"
+						wrap
 					>
-						{url.prefix}
+						{breakAfterSlashes(url.prefix)}
 					</UrlChip>
 				) : null}
 				/

@@ -80,6 +80,8 @@ export interface MoveResult extends ResourceSnapshot {
  * Nests the resource under `parentId` (or makes it a root). Its records
  * and those of its descendants are reset, since they pointed at records
  * of the old parent; relation fields that no longer apply are dropped.
+ * The resource gets the Parent ID `parentKeyOf` builds from the new
+ * parent's name, whatever key it had.
  * Moving to the current parent changes nothing.
  */
 export async function moveResource(
@@ -91,7 +93,13 @@ export async function moveResource(
 	const plan = (resources: readonly StoredResource[]) => {
 		const target = findResource(resources, resourceId);
 		if ((target.parentId?.toHexString() ?? null) === parentId) {
-			return { target, unchanged: true, schema: target.schema, subtree: [] };
+			return {
+				target,
+				unchanged: true,
+				schema: target.schema,
+				parentKey: null,
+				subtree: [],
+			};
 		}
 		const problem = attachProblem(toTreeNodes(resources), {
 			id: resourceId,
@@ -107,7 +115,13 @@ export async function moveResource(
 		const schema = withoutStaleRelations(target.schema, place);
 		assertDefinitionFits({ schema, template: target.template }, place, false);
 		const subtree = subtreeOf(resources, target).filter((r) => r.count > 0);
-		return { target, unchanged: false, schema, subtree };
+		return {
+			target,
+			unchanged: false,
+			schema,
+			parentKey: place.parentKey,
+			subtree,
+		};
 	};
 	const changesOf = (subtree: readonly StoredResource[]) =>
 		subtree.map((r) => changeOf(r, 0));
@@ -118,13 +132,14 @@ export async function moveResource(
 	}
 	return inProjectTransaction(project._id, async (session) => {
 		const before = await loadResources(project._id, session);
-		const { target, unchanged, schema, subtree } = plan(before);
+		const { target, unchanged, schema, parentKey, subtree } = plan(before);
 		if (unchanged) return { resource: target, resources: before, changes: [] };
 		await ResourceModel.updateOne(
 			{ _id: target._id },
 			{
 				$set: {
 					parentId: parentId === null ? null : new Types.ObjectId(parentId),
+					parentKey,
 					schema,
 				},
 			},

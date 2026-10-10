@@ -16,6 +16,8 @@ export const projects: Messages["projects"] = {
 		ownedBy: "Project của {owner}",
 		ownerFallback: "người khác",
 		collaborators: { other: "{count} cộng tác viên" },
+		resources: { other: "{count} resource" },
+		records: { other: "{count} bản ghi" },
 	},
 	menu: {
 		trigger: "Tuỳ chọn cho {name}",
@@ -38,7 +40,8 @@ export const projects: Messages["projects"] = {
 		nameRequired: "Nhập tên project.",
 		nameTooLong: "Tên tối đa {max} ký tự.",
 		nameStart: "Tên phải bắt đầu bằng chữ hoặc số.",
-		namePattern: "Tên chỉ gồm chữ, số, khoảng trắng, -, _ và dấu ngoặc đơn.",
+		namePattern:
+			"Tên chỉ gồm chữ, số, khoảng trắng và các ký tự - _ ( ) . · , & + ' :",
 		prefixTooLong: "Prefix tối đa {max} ký tự.",
 		prefixPattern: "Prefix chỉ gồm chữ không dấu, số, -, _ và /.",
 	},
@@ -47,6 +50,7 @@ export const projects: Messages["projects"] = {
 		updated: "Đã cập nhật project {name}.",
 		cloned: "Đã nhân bản thành {name}.",
 		deleted: "Đã xoá project {name}.",
+		open: "Mở project",
 	},
 	delete: {
 		title: "Xoá project",

@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FeaturesContext, NO_FEATURES } from "../../config/features";
 import { resetCurrentUserCache } from "../../features/auth/use-current-user";
+import { openNodeMenu } from "../../features/resource-tree/tree-test-helpers";
 import { seriousViolations } from "../../test/axe";
 import { makeProject, makeUser } from "../../test/fixtures";
 import { mockFetch } from "../../test/mock-fetch";
@@ -56,9 +57,11 @@ describe("project page: open in API Client", () => {
 
 	it("opens a resource from its node actions with ids in the navigation state", async () => {
 		const { router } = renderPage(true);
-		const posts = await findNode("posts");
+		await findNode("posts");
 		await userEvent.click(
-			within(posts).getByRole("button", { name: "Open posts in API Client" }),
+			within(await openNodeMenu("posts")).getByRole("menuitem", {
+				name: "Open posts in API Client",
+			}),
 		);
 		await screen.findByText("API client stand-in");
 		expect(router.state.location.pathname).toBe("/api-client");
@@ -82,11 +85,13 @@ describe("project page: open in API Client", () => {
 
 	it("has no serious axe violations with the new actions", async () => {
 		const { container } = renderPage(true);
-		const users = await findNode("users");
-		expect(
-			users.querySelector('[data-id="resource-node-users-client"]'),
-		).not.toBeNull();
+		await findNode("users");
 		expect(await seriousViolations(container)).toEqual([]);
+		const menu = await openNodeMenu("users");
+		expect(
+			menu.querySelector('[data-id="resource-node-users-client"]'),
+		).not.toBeNull();
+		expect(await seriousViolations(menu)).toEqual([]);
 	});
 
 	it("hides both actions while the apiClient flag is off", async () => {
@@ -96,7 +101,9 @@ describe("project page: open in API Client", () => {
 			within(users).getByRole("button", { name: "Edit users" }),
 		).toBeInTheDocument();
 		expect(
-			within(users).queryByRole("button", { name: "Open users in API Client" }),
+			within(await openNodeMenu("users")).queryByRole("menuitem", {
+				name: "Open users in API Client",
+			}),
 		).not.toBeInTheDocument();
 		expect(
 			screen.queryByRole("button", { name: "Open in API Client" }),

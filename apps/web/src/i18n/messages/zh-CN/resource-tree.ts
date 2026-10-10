@@ -4,6 +4,15 @@ export const resourceTree: Messages["resourceTree"] = {
 	rail: {
 		addToRoot: "移到根级",
 	},
+	tree: {
+		label: "Resource 树",
+	},
+	zoom: {
+		label: "缩放",
+		fit: "适应",
+		fitHint: "缩放整棵树以适应视图（Shift+1）",
+		actualHint: "实际大小（Shift+0）",
+	},
 	hint: {
 		idle: "点击某个 resource 左侧的圆点将其选中，再点击另一个 resource 右侧的圆点，将其嵌套进去。",
 		selected:
@@ -22,6 +31,7 @@ export const resourceTree: Messages["resourceTree"] = {
 		dataLabel: "{name} 的数据",
 		delete: "删除",
 		deleteLabel: "删除 {name}",
+		moreLabel: "{name} 的更多操作",
 	},
 	generator: {
 		label: "{name} 的记录数",

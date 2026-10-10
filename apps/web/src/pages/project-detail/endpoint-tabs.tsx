@@ -13,12 +13,15 @@ import { RequestLogPanel } from "../../features/request-log/request-log-panel";
 import { UpstreamSettings } from "../../features/upstream/upstream-settings";
 import { useT } from "../../i18n/i18n-context";
 import type { Project } from "../projects/projects-api";
+import { useTabRowScroll } from "./use-tab-row-scroll";
 
 /** Query parameter holding the open tab, so docs can link to it. */
 export const ENDPOINT_TAB_PARAM = "endpoint";
 
 const ENDPOINT_TABS = ["rest", "mcp", "upstream", "log", "inbox"] as const;
 type EndpointTab = (typeof ENDPOINT_TABS)[number];
+
+const tabDataId = (tab: EndpointTab) => `project-detail-endpoint-tab-${tab}`;
 
 function isEndpointTab(value: string): value is EndpointTab {
 	return ENDPOINT_TABS.some((tab) => tab === value);
@@ -52,7 +55,8 @@ function useEndpointTab(
 
 export interface EndpointTabsProps {
 	project: Project;
-	resources: readonly MockToolNode[];
+	/** Null while they load: the MCP tools show a skeleton. */
+	resources: readonly MockToolNode[] | null;
 	/** The REST panel, unchanged from the card without tabs. */
 	rest: ReactNode;
 	/** Content of the Inbox tab (webhook inboxes); no tab without it. */
@@ -61,9 +65,11 @@ export interface EndpointTabsProps {
 
 /**
  * Tabs of the endpoint card: REST, MCP (`mockMcp`), then Upstream, Request
- * log and Inbox (`hybridMock`). The MCP panel stays mounted while hidden,
- * so a token shown once survives a look at the REST tab; the traffic
- * panels mount only while open, so the live log closes with its tab.
+ * log and Inbox (`hybridMock`). The MCP panel stays mounted while hidden
+ * (`forceMount` drops Radix's `hidden`, so the class hides it), so a token
+ * shown once survives a look at the REST tab; the traffic panels mount
+ * only while open, so the live log closes with its tab. On a narrow screen
+ * the row fades at the right while tabs hide there.
  */
 export function EndpointTabs({
 	project,
@@ -79,6 +85,7 @@ export function EndpointTabs({
 	if (traffic) shown.push("upstream", "log");
 	if (traffic && inbox !== undefined) shown.push("inbox");
 	const [tab, setTab] = useEndpointTab(shown);
+	const row = useTabRowScroll(`[data-id="${tabDataId(tab)}"]`);
 	const labels: Record<EndpointTab, string> = {
 		rest: t("mcp.tabs.rest"),
 		mcp: t("mcp.tabs.mcp"),
@@ -88,21 +95,39 @@ export function EndpointTabs({
 	};
 	return (
 		<Tabs value={tab} onValueChange={setTab}>
-			<TabsList aria-label={t("mcp.tabs.label")}>
-				{shown.map((id) => (
-					<TabsTrigger
-						key={id}
-						value={id}
-						className="flex-none"
-						data-id={`project-detail-endpoint-tab-${id}`}
-					>
-						{labels[id]}
-					</TabsTrigger>
-				))}
-			</TabsList>
+			<div className="relative">
+				<TabsList
+					ref={row.rowRef}
+					aria-label={t("mcp.tabs.label")}
+					className="relative"
+				>
+					{shown.map((id) => (
+						<TabsTrigger
+							key={id}
+							value={id}
+							className="flex-none"
+							data-id={tabDataId(id)}
+						>
+							{labels[id]}
+						</TabsTrigger>
+					))}
+				</TabsList>
+				{row.fade ? (
+					<div
+						aria-hidden="true"
+						data-id="project-detail-endpoint-tabs-fade"
+						className="pointer-events-none absolute top-0 right-0 bottom-px w-12 bg-linear-to-l from-surface to-transparent"
+					/>
+				) : null}
+			</div>
 			<TabsContent value="rest">{rest}</TabsContent>
 			{flags.mockMcp ? (
-				<TabsContent value="mcp" forceMount data-id="project-detail-mcp">
+				<TabsContent
+					value="mcp"
+					forceMount
+					data-id="project-detail-mcp"
+					className="data-[state=inactive]:hidden"
+				>
 					<McpTab project={project} resources={resources} />
 				</TabsContent>
 			) : null}

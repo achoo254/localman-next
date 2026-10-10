@@ -100,7 +100,9 @@ describe("callbacks editor: test, read only and limit", () => {
 			expect(within(first).queryByRole("button", { name })).toBeNull();
 		}
 		expect(screen.queryByRole("button", { name: "Add callback" })).toBeNull();
-		expect(screen.queryByRole("button", { name: "Save callbacks" })).toBeNull();
+		// The resource form's Update is the only save button.
+		const section = screen.getByRole("region", { name: "Callbacks" });
+		expect(within(section).queryByRole("button", { name: /save/i })).toBeNull();
 		expect(within(first).getByText("Not sent yet.")).toBeInTheDocument();
 		expect(await seriousViolations(container)).toEqual([]);
 	});

@@ -5,11 +5,8 @@
  * into child resources while depth and the resource cap allow.
  */
 import { type JsonValue, isJsonObject } from "./json-value.js";
-import {
-	MAX_RESOURCE_DEPTH,
-	OBJECT_ID_FIELD,
-	parentKeyOf,
-} from "./resource-constants.js";
+import { parentKeyOf } from "./parent-key.js";
+import { MAX_RESOURCE_DEPTH, OBJECT_ID_FIELD } from "./resource-constants.js";
 import { SchemaImportFailure, paramText } from "./schema-import-errors.js";
 import { FieldCollector, normalizeFieldName } from "./schema-import-fields.js";
 import {

@@ -1,7 +1,6 @@
 /** "Export types" menu of a resource (node and resource form). */
 export const resourceExport = {
 	trigger: "Export types",
-	triggerLabel: "Export types of {name}",
 	copyTs: "Copy TypeScript",
 	copyZod: "Copy Zod schema",
 	download: "Download <code>{file}</code>",

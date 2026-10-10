@@ -3,13 +3,13 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { isRecord } from "../../lib/json-guards";
 import { seriousViolations } from "../../test/axe";
-import { findToast } from "../../test/toast";
 import {
 	BASE,
 	block,
 	callbackJson,
 	callbacksJson,
 	renderCallbacks,
+	saveOutcome,
 } from "./callbacks-test-utils";
 
 const SECRET = callbackJson("cb1", {
@@ -69,7 +69,7 @@ describe("callbacks editor", () => {
 			within(first).getByRole("switch", { name: "Enable callback 1" }),
 		);
 		await user.click(screen.getByRole("button", { name: "Save callbacks" }));
-		await findToast("Saved the callbacks.");
+		await waitFor(() => expect(saveOutcome()).toHaveTextContent("saved"));
 		expect(putCallbacks(calls)).toEqual([
 			{
 				id: "cb1",
@@ -115,7 +115,7 @@ describe("callbacks editor", () => {
 		await user.type(within(first).getByLabelText("Header value 1"), "dev");
 		expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
 		await user.click(screen.getByRole("button", { name: "Save callbacks" }));
-		await findToast("Saved the callbacks.");
+		await waitFor(() => expect(saveOutcome()).toHaveTextContent("saved"));
 		expect(putCallbacks(calls)).toEqual([
 			{
 				on: "delete",
@@ -175,9 +175,10 @@ describe("callbacks editor", () => {
 			},
 		});
 		await waitFor(() => block(2));
-		await userEvent
-			.setup()
-			.click(screen.getByRole("button", { name: "Save callbacks" }));
+		const user = userEvent.setup();
+		await user.type(within(block(2)).getByLabelText("Target"), "/x");
+		await user.click(screen.getByRole("button", { name: "Save callbacks" }));
+		await waitFor(() => expect(saveOutcome()).toHaveTextContent("failed"));
 		expect(
 			await within(block(2)).findByText("This host is private."),
 		).toBeInTheDocument();

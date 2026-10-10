@@ -13,6 +13,8 @@ export interface ProjectDetailHeaderProps {
 /**
  * Breadcrumb "Projects / {name}" and the member entries: "Collaborators"
  * for everyone (a collaborator may leave there), "Magic link" for the owner.
+ * A long name wraps to two lines, then ends in an ellipsis; its `title`
+ * holds it whole.
  */
 export function ProjectDetailHeader({
 	project,
@@ -22,11 +24,14 @@ export function ProjectDetailHeader({
 	const members = project.memberCount - 1;
 	return (
 		<div className="flex min-h-11 flex-wrap items-center justify-between gap-3">
-			<nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2">
+			<nav
+				aria-label="Breadcrumb"
+				className="flex min-w-0 items-baseline gap-2"
+			>
 				<Link
 					to="/projects"
 					data-id="project-detail-back"
-					className="font-bold font-mono text-muted text-xl no-underline hover:text-primary"
+					className="shrink-0 font-bold font-mono text-muted text-xl no-underline hover:text-primary"
 				>
 					{t("projects.title")}
 				</Link>
@@ -35,7 +40,8 @@ export function ProjectDetailHeader({
 				</span>
 				<h1
 					aria-current="page"
-					className="m-0 truncate font-bold font-mono text-xl tracking-[-0.01em]"
+					title={project.name}
+					className="m-0 line-clamp-2 min-w-0 wrap-break-word font-bold font-mono text-xl tracking-[-0.01em]"
 				>
 					{project.name}
 				</h1>

@@ -18,7 +18,11 @@ export interface ProjectRowProps {
 	onAction: (action: ProjectAction, project: Project) => void;
 }
 
-/** List card: avatar, name, prefix and mock URL, then the ⋮ menu. */
+/**
+ * List card: avatar, name (up to two lines, full name in `title`), prefix
+ * and mock URL, resource and record counts when the API sends them, then
+ * the ⋮ menu.
+ */
 export function ProjectRow({ project, onAction }: ProjectRowProps) {
 	const t = useT();
 	const shared = project.role === "collaborator";
@@ -44,7 +48,13 @@ export function ProjectRow({ project, onAction }: ProjectRowProps) {
 				<ProjectAvatar name={project.name} />
 				<div className="grid min-w-0">
 					<span className="flex min-w-0 items-center gap-2">
-						<span className="truncate font-bold font-mono">{project.name}</span>
+						<span
+							className="line-clamp-2 font-bold font-mono wrap-anywhere"
+							title={project.name}
+							data-id={`project-row-${project.id}-name`}
+						>
+							{project.name}
+						</span>
 						{shared ? (
 							<Badge
 								tone="info"
@@ -62,6 +72,16 @@ export function ProjectRow({ project, onAction }: ProjectRowProps) {
 							: null}
 						{project.mockBaseUrl}
 					</span>
+					{project.counts ? (
+						<span
+							className="truncate text-muted text-xs"
+							data-id={`project-row-${project.id}-meta`}
+						>
+							{t("projects.row.resources", { count: project.counts.resources })}
+							{" · "}
+							{t("projects.row.records", { count: project.counts.records })}
+						</span>
+					) : null}
 				</div>
 			</Link>
 			<ProjectActionsMenu project={project} onAction={onAction} />

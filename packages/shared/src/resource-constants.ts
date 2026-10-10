@@ -85,7 +85,7 @@ export function relationSourceOf(
 
 /**
  * Generated, non-removable fields: `id` (Object ID) on every resource and
- * `{parent}Id` (Parent ID, see `parentKeyOf`) on a nested one. They are
+ * `{parent}Id` (Parent ID, see `parent-key.ts`) on a nested one. They are
  * not part of `schema`; user fields may not reuse their names.
  */
 export const OBJECT_ID_FIELD = "id";
@@ -107,22 +107,6 @@ export const DEFAULT_RESOURCE_FIELDS: readonly ResourceFieldDefinition[] =
 		{ name: "name", type: "Faker.js", fakerMethod: "name.fullName" },
 		{ name: "avatar", type: "Faker.js", fakerMethod: "image.avatar" },
 	]);
-
-function singular(name: string): string {
-	if (/ies$/i.test(name)) return `${name.slice(0, -3)}y`;
-	if (/(?:ss|sh|ch|x|z)es$/i.test(name)) return name.slice(0, -2);
-	if (/(?:ss|us|is)$/i.test(name)) return name;
-	if (/s$/i.test(name)) return name.slice(0, -1);
-	return name;
-}
-
-/**
- * Name of the Parent ID field of the children of `parentName`:
- * `users` → `userId`, `categories` → `categoryId`, `boxes` → `boxId`.
- */
-export function parentKeyOf(parentName: string): string {
-	return `${singular(parentName) || parentName}Id`;
-}
 
 /** The five generated endpoints of a resource (PATCH shares PUT). */
 export const RESOURCE_ENDPOINTS = Object.freeze([

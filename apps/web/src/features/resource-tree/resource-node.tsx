@@ -1,12 +1,13 @@
-import type { ReactNode } from "react";
 import { ExternalLink } from "../../components/ui/external-link";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
+import { middleEllipsisParts } from "../../lib/middle-ellipsis";
 import type { Resource } from "../resources/resource-model";
 import { GeneratorBar } from "./generator-bar";
 import { type NodeAction, NodeActions } from "./node-actions";
 import { NestConnector, SelectConnector } from "./node-connectors";
 import type { TreeGeometry } from "./tree-layout";
+import type { TreeCardBinding } from "./use-roving-tree";
 import type { ConnectorState } from "./use-tree-connect";
 
 export interface ResourceNodeProps {
@@ -22,6 +23,8 @@ export interface ResourceNodeProps {
 	targetState: ConnectorState;
 	/** Why the generator is disabled, or null. */
 	blockedReason: string | null;
+	/** Focus state and roving tabindex of the node, from the canvas tree. */
+	tree: TreeCardBinding;
 	onSelect: () => void;
 	onNest: () => void;
 	onGenerate: (count: number) => void;
@@ -29,14 +32,15 @@ export interface ResourceNodeProps {
 	onAction: (action: NodeAction) => void;
 	/** Opens the resource in the API client; absent hides the action. */
 	onOpenInClient?: () => void;
-	/** Extra control at the end of the action row. */
-	trailingAction?: ReactNode;
+	/** "Export types" in the ⋯ menu; absent hides it. */
+	exportOf?: { resource: Resource; resources: readonly Resource[] };
 }
 
 /**
- * Card of one resource on the canvas: connectors on both sides, the name
- * as a link to its mock endpoint, the generator bar with the record count
- * and the action row.
+ * Card of one resource on the canvas: connectors on
+ * both sides, the name as a link to its mock endpoint (a long name loses
+ * its middle, not its distinct end; the full name stays its text and
+ * tooltip), the generator bar with the record count and the action row.
  */
 export function ResourceNode({
 	resource,
@@ -48,19 +52,25 @@ export function ResourceNode({
 	selectionName,
 	targetState,
 	blockedReason,
+	tree,
 	onSelect,
 	onNest,
 	onGenerate,
 	onBlocked,
 	onAction,
 	onOpenInClient,
-	trailingAction,
+	exportOf,
 }: ResourceNodeProps) {
 	const t = useT();
 	const { name } = resource;
 	const base = `resource-node-${resource.id}`;
+	const { head, tail } = middleEllipsisParts(name);
+	const inner = tree.innerTabIndex;
 	return (
 		<div
+			{...tree.cardProps}
+			data-tree-node=""
+			data-focused={tree.focused ? "true" : undefined}
 			data-id={base}
 			data-name={name}
 			data-selected={selected ? "true" : undefined}
@@ -71,7 +81,7 @@ export function ResourceNode({
 				height: geometry.nodeHeight,
 			}}
 			className={cn(
-				"group absolute rounded-md border bg-surface py-2.5 pr-3.5 pl-4.5 shadow-sm transition-[border-color,box-shadow]",
+				"group absolute cursor-default rounded-md border bg-surface py-2.5 pr-3.5 pl-4.5 shadow-sm transition-[border-color,box-shadow]",
 				selected
 					? "border-primary ring-3 ring-primary/22"
 					: "border-border hover:border-[color-mix(in_srgb,var(--c-primary)_45%,var(--c-border))]",
@@ -82,16 +92,21 @@ export function ResourceNode({
 				selected={selected}
 				top={geometry.handleY}
 				data-id={`${base}-select`}
+				tabIndex={inner}
 				onSelect={onSelect}
 			/>
 			<div className="flex h-6 items-center">
 				<ExternalLink
 					href={href}
 					data-id={`${base}-link`}
-					title={t("resourceTree.node.open", { url: href })}
-					className="truncate rounded-xs font-bold font-mono text-fg text-sm no-underline hover:text-primary hover:underline"
+					tabIndex={inner}
+					// Browsers may read the two halves as two words; the label keeps one.
+					aria-label={tail ? name : undefined}
+					title={`${name}\n${t("resourceTree.node.open", { url: href })}`}
+					className="flex min-w-0 rounded-xs font-bold font-mono text-fg text-sm no-underline hover:text-primary hover:underline"
 				>
-					{name}
+					<span className="truncate">{head}</span>
+					{tail ? <span className="shrink-0">{tail}</span> : null}
 				</ExternalLink>
 			</div>
 			<div className="mt-2 flex items-center gap-2">
@@ -101,6 +116,7 @@ export function ResourceNode({
 					blockedReason={blockedReason}
 					onCommit={onGenerate}
 					onBlocked={onBlocked}
+					tabIndex={inner}
 					data-id={`${base}-bar`}
 				/>
 				<span
@@ -115,8 +131,9 @@ export function ResourceNode({
 				name={name}
 				onAction={onAction}
 				dataIdBase={base}
+				tabIndex={inner}
 				onOpenInClient={onOpenInClient}
-				trailing={trailingAction}
+				exportOf={exportOf}
 			/>
 			<NestConnector
 				name={name}
@@ -124,6 +141,7 @@ export function ResourceNode({
 				state={targetState}
 				top={geometry.handleY}
 				data-id={`${base}-nest`}
+				tabIndex={inner}
 				onNest={onNest}
 			/>
 		</div>

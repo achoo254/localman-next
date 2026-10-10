@@ -33,6 +33,16 @@ describe("projectInputSchema", () => {
 	});
 
 	it.each([
+		"Shop v2.0",
+		"Shop · v2",
+		"R&D: Shop, Admin + API",
+		"Jev's shop",
+		"Cửa hàng v2.1 · bản thử",
+	])("accepts the punctuation of %j", (name) => {
+		expect(projectInputSchema.parse({ name }).name).toBe(name);
+	});
+
+	it.each([
 		{ name: "" },
 		{ name: "   " },
 		{ name: "a".repeat(PROJECT_NAME_MAX + 1) },
@@ -41,6 +51,12 @@ describe("projectInputSchema", () => {
 		{ name: "(copy)" },
 		{ name: "_hidden" },
 		{ name: "-dash" },
+		{ name: ".hidden" },
+		{ name: "· dot" },
+		{ name: 'a"b' },
+		{ name: "a;b" },
+		{ name: "a\\b" },
+		{ name: "a`b" },
 		{ name: "ok", prefix: "/a b" },
 		{ name: "ok", prefix: "/a?b" },
 		{ name: "ok", prefix: "/a.b" },

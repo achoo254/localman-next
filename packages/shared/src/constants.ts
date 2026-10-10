@@ -30,7 +30,6 @@ export {
 	MAX_SCHEMA_FIELDS,
 	OBJECT_ID_FIELD,
 	OBJECT_ID_PATTERN,
-	parentKeyOf,
 	MOCK_MCP_SEGMENT,
 	RECORD_ID_MAX,
 	RECORD_ID_PATTERN,
@@ -42,6 +41,13 @@ export {
 	RESERVED_RESOURCE_NAMES,
 	type ResourceFieldDefinition,
 } from "./resource-constants.js";
+export {
+	PARENT_KEY_MAX,
+	PARENT_KEY_PATTERN,
+	parentKeyIssue,
+	parentKeyOf,
+	resourceParentKey,
+} from "./parent-key.js";
 export {
 	MAX_JSON_BODY_KB,
 	MAX_PAGE_LIMIT,

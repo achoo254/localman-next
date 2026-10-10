@@ -1,10 +1,6 @@
-import { IconBox } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
-import { Alert } from "../../components/ui/alert";
-import { Button, buttonClassName } from "../../components/ui/button";
-import { EmptyState } from "../../components/ui/empty-state";
+import { useNavigate, useParams } from "react-router";
 import { useToast } from "../../components/ui/toast";
 import { useCurrentUser } from "../../features/auth/use-current-user";
 import {
@@ -16,7 +12,6 @@ import { useResources } from "../../features/resources/use-resources";
 import { useSubscriptionDialogs } from "../../features/subscription/use-subscription-dialogs";
 import { ProjectInboxTab } from "../../features/webhook-inbox/project-inbox-tab";
 import { useT } from "../../i18n/i18n-context";
-import { errorMessage } from "../../lib/api-client";
 import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { useAppTitle } from "../../lib/use-document-title";
 import type { Project } from "../projects/projects-api";
@@ -27,6 +22,7 @@ import {
 	ProjectDetailDialogs,
 	type ProjectDialog,
 } from "./project-detail-dialogs";
+import { ProjectLoadError, ProjectMissing } from "./project-detail-fallbacks";
 import { ProjectDetailHeader } from "./project-detail-header";
 import { ProjectDetailSkeleton } from "./project-detail-skeleton";
 import { ResourcesCard, type ResourcesState } from "./resources-card";
@@ -36,7 +32,6 @@ import { useProjectActions } from "./use-project-actions";
 
 /** `/projects/:projectId`: API endpoint card, resource tree and modals. */
 export function ProjectDetailPage() {
-	const t = useT();
 	const { projectId = "" } = useParams();
 	const project = useProject(projectId);
 	useAppTitle(project.data?.name ?? "Project");
@@ -45,43 +40,14 @@ export function ProjectDetailPage() {
 	if (project.isPending) return null;
 	if (project.isError) {
 		return (
-			<div
-				data-id="project-detail-error"
-				className="grid justify-items-start gap-3"
-			>
-				<Alert tone="danger" title={t("projectDetail.loadFailed")}>
-					{errorMessage(project.error)}
-				</Alert>
-				<Button
-					loading={project.isFetching}
-					onClick={() => void project.refetch()}
-				>
-					{t("common.cta.retry")}
-				</Button>
-			</div>
+			<ProjectLoadError
+				error={project.error}
+				retrying={project.isFetching}
+				onRetry={() => void project.refetch()}
+			/>
 		);
 	}
-	if (!project.data) {
-		return (
-			<EmptyState
-				data-id="project-missing"
-				headingLevel={1}
-				icon={<IconBox size={32} aria-hidden="true" />}
-				title={t("projectDetail.missing.title")}
-				action={
-					<Link
-						to="/projects"
-						className={buttonClassName({ variant: "primary" })}
-						data-id="project-missing-back"
-					>
-						{t("projectDetail.missing.back")}
-					</Link>
-				}
-			>
-				{t("projectDetail.missing.body")}
-			</EmptyState>
-		);
-	}
+	if (!project.data) return <ProjectMissing />;
 	return <ProjectDetail project={project.data} />;
 }
 
@@ -115,6 +81,7 @@ function ProjectDetail({ project }: { project: Project }) {
 	const isOwner = project.role === "owner";
 
 	useFirstResourcePrompt(
+		project.id,
 		query.isSuccess && query.data.length === 0,
 		members !== null || rotating,
 		() =>
@@ -137,7 +104,7 @@ function ProjectDetail({ project }: { project: Project }) {
 			<ProjectDetailHeader project={project} onOpen={setMembers} />
 			<ApiEndpointCard
 				project={project}
-				resources={resources}
+				resources={query.isPending ? null : resources}
 				busy={actions.busy}
 				pressed={actions.pressed}
 				onNewResource={openNew}

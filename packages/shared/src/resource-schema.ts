@@ -33,12 +33,12 @@ export {
 	MAX_SCHEMA_FIELDS,
 	OBJECT_ID_FIELD,
 	OBJECT_ID_PATTERN,
-	parentKeyOf,
 	RECORD_ID_MAX,
 	RELATION_FIELD_TYPES,
 	RESOURCE_NAME_MAX,
 	RESOURCE_NAME_PATTERN,
 } from "./resource-constants.js";
+export { parentKeyOf } from "./parent-key.js";
 
 export const resourceNameSchema = z
 	.string()
@@ -136,12 +136,16 @@ export const resourceFieldsSchema = z
 	});
 
 /**
- * Body of `PUT /resources/:id`. Absent `schema`, `template` or `endpoints`
- * keep their stored value. The parent changes only through
- * `PUT /resources/:id/parent`, which resets data.
+ * Body of `PUT /resources/:id`. Absent `schema`, `template`, `endpoints`
+ * or `parentKey` keep their stored value. The parent changes only through
+ * `PUT /resources/:id/parent`, which resets data. `parentKey` is checked
+ * by the API (`parentKeyIssue`, no clash with a field): a key equal to the
+ * current one is accepted as is, even one an older rule built.
  */
 export const resourceUpdateSchema = z.object({
 	name: resourceNameSchema,
+	/** Parent ID field name of a nested resource's records (`userId`). */
+	parentKey: z.string().optional(),
 	schema: resourceFieldsSchema.optional(),
 	template: objectTemplateSchema.optional(),
 	endpoints: endpointsInputSchema.optional(),

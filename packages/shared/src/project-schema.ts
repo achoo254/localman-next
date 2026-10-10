@@ -6,10 +6,13 @@ export const PROJECT_PREFIX_MAX = 100;
 /**
  * Starts with a letter (Vietnamese included, any script) or a digit, then
  * letters, combining marks, digits, `_`, space and `-` as in mockapi.io,
- * plus parentheses so a clone named "Demo (copy)" stays editable without
- * renaming it.
+ * parentheses so a clone named "Demo (copy)" stays editable without
+ * renaming it, and `. · , & + ' :` for names like "Shop v2.0" or
+ * "R&D: Shop · Admin". The name is display text only: the MCP server name
+ * and every file name are slugs built from it, never the name itself.
  */
-export const PROJECT_NAME_PATTERN = /^[\p{L}\p{N}][\p{L}\p{M}\p{N}_ ()-]*$/u;
+export const PROJECT_NAME_PATTERN =
+	/^[\p{L}\p{N}][\p{L}\p{M}\p{N}_ ().·,&+':-]*$/u;
 
 /** Word characters, `-` and `/` (mockapi.io). */
 export const PROJECT_PREFIX_PATTERN = /^[\w\-/]*$/;
@@ -34,7 +37,7 @@ export const projectNameSchema = z
 	.max(PROJECT_NAME_MAX, `Name must be at most ${PROJECT_NAME_MAX} characters`)
 	.regex(
 		PROJECT_NAME_PATTERN,
-		"Name must start with a letter or digit and contain only letters, digits, spaces, _, - and parentheses",
+		"Name must start with a letter or digit and contain only letters, digits, spaces and the characters - _ ( ) . · , & + ' :",
 	);
 
 export const projectPrefixSchema = z

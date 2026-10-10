@@ -66,6 +66,10 @@ async function copyResources(
 					parentId:
 						resource.parentId === null ? null : mapped(resource.parentId),
 					name: resource.name,
+					// Absent stays absent: the old rule keeps applying to the copy.
+					...(resource.parentKey !== undefined
+						? { parentKey: resource.parentKey }
+						: {}),
 					schema: resource.schema.map((field) =>
 						field.childId === undefined
 							? field

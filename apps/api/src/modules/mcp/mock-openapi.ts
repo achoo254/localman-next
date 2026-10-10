@@ -6,7 +6,7 @@ import {
 	type MockToolAction,
 	type MockToolEntry,
 	mockToolEntries,
-	parentKeyOf,
+	resourceParentKey,
 } from "@localman/shared";
 import { collectionPath } from "./mock-api-paths.js";
 import type { MockApiResource } from "./mock-mcp-tools-cache.js";
@@ -94,7 +94,7 @@ function shapeOf(entry: MockToolEntry<MockApiResource>): ToolShape {
 	return {
 		schema: entry.resource.schema,
 		template: entry.resource.template,
-		parentKey: parent ? parentKeyOf(parent.name) : null,
+		parentKey: parent ? resourceParentKey(entry.resource, parent.name) : null,
 		parentName: parent?.name ?? null,
 	};
 }
@@ -161,8 +161,7 @@ export function buildMockOpenApi(input: MockOpenApiInput): Json {
 	const schemas: Record<string, SchemaObject> = { Error: ERROR_SCHEMA };
 	for (const entry of mockToolEntries(input.resources)) {
 		const slug = entry.name.slice(entry.action.length + 1);
-		const ancestors = entry.ancestors.map((node) => node.name);
-		const route = collectionPath(ancestors, entry.resource.name);
+		const route = collectionPath([...entry.ancestors, entry.resource]);
 		const one =
 			entry.action === "list" || entry.action === "create" ? "" : "/{id}";
 		const shape = shapeOf(entry);

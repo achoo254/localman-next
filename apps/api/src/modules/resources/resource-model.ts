@@ -49,6 +49,13 @@ const resourceSchema = new Schema(
 		projectId: { type: Schema.Types.ObjectId, required: true },
 		parentId: { type: Schema.Types.ObjectId, default: null },
 		name: { type: String, required: true },
+		/**
+		 * Parent ID field of the records (`userId`), set when the resource is
+		 * created or moved, `null` on a root. No default: resources stored
+		 * before the field existed lack it and keep the key the old rule
+		 * builds from the parent's name (`resourceParentKey`).
+		 */
+		parentKey: { type: String },
 		schema: { type: [fieldSchema], default: [] },
 		template: { type: Schema.Types.Mixed, default: null },
 		endpoints: { type: [endpointSchema], default: [] },
@@ -84,6 +91,8 @@ export interface StoredResource {
 	readonly projectId: Types.ObjectId;
 	readonly parentId: Types.ObjectId | null;
 	readonly name: string;
+	/** Absent on resources stored before the field existed. */
+	readonly parentKey?: string | null;
 	readonly schema: readonly ResourceField[];
 	readonly template: JsonObject | null;
 	readonly endpoints: readonly ResourceEndpoint[];

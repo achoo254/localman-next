@@ -5,6 +5,7 @@ import {
 	acceptedCountsPipeline,
 } from "../collaborators/collaborator-model.js";
 import { UserModel } from "../users/user-model.js";
+import { NO_COUNTS, projectCounts } from "./project-counts.js";
 import type { StoredProject } from "./project-model.js";
 
 export const projectView = z.object({
@@ -25,6 +26,10 @@ export const projectView = z.object({
 	}),
 	/** Owner plus accepted collaborators (pending invitations excluded). */
 	memberCount: z.number(),
+	/** Resources of the project, nested ones included. */
+	resourceCount: z.number().int().min(0),
+	/** Records over all its resources. */
+	recordCount: z.number().int().min(0),
 	createdAt: z.string(),
 });
 export type ProjectView = z.input<typeof projectView>;
@@ -67,17 +72,21 @@ async function acceptedCounts(
 	return new Map(counts.map((row) => [row._id.toHexString(), row.count]));
 }
 
-/** Views of projects as seen by `viewerSub`, owners loaded in one query. */
+/**
+ * Views of projects as seen by `viewerSub`: owners, member counts and
+ * resource/record counts each loaded in one query for all projects.
+ */
 export async function toProjectViews(
 	projects: readonly StoredProject[],
 	viewerSub: string,
 ): Promise<ProjectView[]> {
 	const subs = [...new Set(projects.map((project) => project.owner))];
-	const [owners, members] = await Promise.all([
+	const [owners, members, counts] = await Promise.all([
 		UserModel.find({ sub: { $in: subs } })
 			.select("sub username name picture")
 			.lean<OwnerProfile[]>(),
 		acceptedCounts(projects),
+		projectCounts(projects.map((project) => project._id)),
 	]);
 	const bySub = new Map(owners.map((owner) => [owner.sub, owner]));
 	return projects.map((project) => {
@@ -98,6 +107,7 @@ export async function toProjectViews(
 				picture: owner?.picture ?? null,
 			},
 			memberCount: 1 + (members.get(project._id.toHexString()) ?? 0),
+			...(counts.get(project._id.toHexString()) ?? NO_COUNTS),
 			createdAt: project.createdAt.toISOString(),
 		};
 	});

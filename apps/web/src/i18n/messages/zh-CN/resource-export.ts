@@ -2,7 +2,6 @@ import type { Messages } from "../../message-types";
 
 export const resourceExport: Messages["resourceExport"] = {
 	trigger: "导出类型",
-	triggerLabel: "导出 {name} 的类型",
 	copyTs: "复制 TypeScript",
 	copyZod: "复制 Zod schema",
 	download: "下载 <code>{file}</code>",

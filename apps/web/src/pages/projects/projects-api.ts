@@ -1,6 +1,7 @@
 import { ApiError, apiRequest, withDryRun } from "../../lib/api-client";
 import {
 	InvalidResponseError,
+	type JsonRecord,
 	expectArray,
 	expectNumber,
 	expectRecord,
@@ -26,6 +27,13 @@ export interface Project {
 	/** Owner plus accepted collaborators (pending invitations excluded). */
 	memberCount: number;
 	createdAt: string;
+	/** Sizes the list answers with; absent elsewhere and from older APIs. */
+	counts?: ProjectCounts;
+}
+
+export interface ProjectCounts {
+	resources: number;
+	records: number;
 }
 
 export interface ProjectInput {
@@ -41,6 +49,17 @@ export interface DeleteDependent {
 
 const PROJECTS = "/api/v1/projects";
 const projectPath = (id: string) => `${PROJECTS}/${encodeURIComponent(id)}`;
+
+const isCount = (value: unknown): value is number =>
+	typeof value === "number" && Number.isInteger(value) && value >= 0;
+
+/** `resourceCount` and `recordCount` when both are there, else nothing. */
+function countsOf(data: JsonRecord): { counts?: ProjectCounts } {
+	const { resourceCount, recordCount } = data;
+	return isCount(resourceCount) && isCount(recordCount)
+		? { counts: { resources: resourceCount, records: recordCount } }
+		: {};
+}
 
 export function parseProject(value: unknown): Project {
 	const data = expectRecord(value, "project");
@@ -64,6 +83,7 @@ export function parseProject(value: unknown): Project {
 		},
 		memberCount: expectNumber(data, "memberCount"),
 		createdAt: expectString(data, "createdAt"),
+		...countsOf(data),
 	};
 }
 

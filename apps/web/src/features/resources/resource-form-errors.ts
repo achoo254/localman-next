@@ -125,6 +125,7 @@ export function revealErrors(
 export function hasDraftErrors(errors: DraftErrors): boolean {
 	return (
 		errors.name !== undefined ||
+		errors.parentKey !== undefined ||
 		errors.schema !== undefined ||
 		errors.template !== undefined ||
 		Object.keys(errors.fields).length > 0 ||

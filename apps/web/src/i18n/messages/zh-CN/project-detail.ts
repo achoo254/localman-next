@@ -62,6 +62,8 @@ export const projectDetail: Messages["projectDetail"] = {
 		empty: "此 project 还没有 resource。",
 		question: "替换现有数据？",
 		lead: "以下 resource 已有数据，将重新生成：",
+		summary: "{resources}，{records}",
+		details: "查看每个 resource",
 	},
 	resetAll: {
 		nothing: "还没有可重置的数据。",

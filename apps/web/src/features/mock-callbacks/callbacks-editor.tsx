@@ -1,6 +1,6 @@
 import { IconPlus } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { useId, useRef } from "react";
+import { type RefObject, useId, useImperativeHandle, useRef } from "react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
 import { useT } from "../../i18n/i18n-context";
@@ -14,24 +14,30 @@ import {
 	fetchCallbacks,
 } from "./callbacks-api";
 import { CallbacksSkeleton } from "./callbacks-skeleton";
-import { useCallbacksEditor } from "./use-callbacks-editor";
+import {
+	type CallbacksController,
+	useCallbacksEditor,
+} from "./use-callbacks-editor";
 
 export interface CallbacksEditorProps {
 	projectId: string;
 	/** An existing resource: callbacks belong to a saved resource. */
 	resourceId: string;
+	/** Filled once the callbacks loaded; the resource form's Update saves them. */
+	controller: RefObject<CallbacksController | null>;
 }
 
 const HELP = "m-0 text-muted text-sm";
 
 /**
  * "Callbacks" of the resource form: requests the mock sends when a record
- * is created, updated or deleted through it. Saved with its own button
- * and `PUT`, apart from the resource. Read only for collaborators.
+ * is created, updated or deleted through it. The form's Update saves them
+ * (their own `PUT`, after the resource's). Read only for collaborators.
  */
 export function CallbacksEditor({
 	projectId,
 	resourceId,
+	controller,
 }: CallbacksEditorProps) {
 	const t = useT();
 	const titleId = useId();
@@ -72,6 +78,7 @@ export function CallbacksEditor({
 				<CallbacksForm
 					projectId={projectId}
 					resourceId={resourceId}
+					controller={controller}
 					data={query.data}
 				/>
 			)}
@@ -82,31 +89,26 @@ export function CallbacksEditor({
 function CallbacksForm({
 	projectId,
 	resourceId,
+	controller,
 	data,
 }: CallbacksEditorProps & { data: ResourceCallbacks }) {
 	const t = useT();
-	const root = useRef<HTMLFormElement>(null);
+	const root = useRef<HTMLDivElement>(null);
 	const editor = useCallbacksEditor({
 		projectId,
 		resourceId,
 		data,
 		section: root,
 	});
+	useImperativeHandle(controller, () => ({
+		check: editor.check,
+		save: editor.save,
+	}));
 	const manage = data.canManage;
 	const full = editor.drafts.length >= data.max;
 	return (
-		<form
-			ref={root}
-			noValidate
-			className="grid gap-3"
-			onSubmit={(event) => {
-				event.preventDefault();
-				void editor.save();
-			}}
-		>
-			{manage ? (
-				<p className={HELP}>{t("mockCallbacks.saveNote")}</p>
-			) : (
+		<div ref={root} className="grid gap-3">
+			{manage ? null : (
 				<ReadonlyNote data-id="resource-form-callbacks-readonly">
 					{t("mockCallbacks.readonly")}
 				</ReadonlyNote>
@@ -156,14 +158,6 @@ function CallbacksForm({
 					>
 						{t("mockCallbacks.add")}
 					</Button>
-					<Button
-						type="submit"
-						size="sm"
-						loading={editor.busy}
-						data-id="resource-form-callbacks-save"
-					>
-						{t("mockCallbacks.save")}
-					</Button>
 					{editor.dirty ? (
 						<span
 							className="text-muted text-sm"
@@ -182,6 +176,6 @@ function CallbacksForm({
 					) : null}
 				</div>
 			) : null}
-		</form>
+		</div>
 	);
 }

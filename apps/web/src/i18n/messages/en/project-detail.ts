@@ -72,6 +72,8 @@ export const projectDetail = {
 		empty: "This project has no resources yet.",
 		question: "Replace the existing data?",
 		lead: "These resources already have data and will be generated again:",
+		summary: "{resources}, {records}",
+		details: "Show each resource",
 	},
 	resetAll: {
 		nothing: "There's no data to reset yet.",

@@ -1,18 +1,18 @@
 import { useId, useRef } from "react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
-import { FormField } from "../../components/ui/form-field";
-import { Input } from "../../components/ui/input";
 import { Modal, ModalClose } from "../../components/ui/modal";
 import { ModalFooter } from "../../components/ui/modal-footer";
 import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
-import { renderRich } from "../../i18n/rich-text";
 import { CallbacksEditor } from "../mock-callbacks/callbacks-editor";
 import { EndpointsEditor } from "./endpoints-editor";
 import { ExportTypesMenu } from "./export-types-menu";
 import { ObjectTemplateEditor } from "./object-template-editor";
+import { ParentKeyField } from "./parent-key-field";
+import { ResourceModalTitle } from "./resource-modal-title";
 import type { Resource } from "./resource-model";
+import { ResourceNameField } from "./resource-name-field";
 import { SchemaEditor } from "./schema-editor";
 import { useResourceForm } from "./use-resource-form";
 
@@ -49,8 +49,12 @@ export function ResourceFormModal({
 		errors,
 		invalid,
 		submitError,
+		partial,
+		setParentKey,
+		parentKeyError,
 		busy,
 		dirty,
+		callbacks,
 		submit,
 	} = useResourceForm({
 		projectId,
@@ -67,9 +71,13 @@ export function ResourceFormModal({
 			open
 			onOpenChange={(open) => !busy && onOpenChange(open)}
 			title={
-				editing
-					? t("resources.form.titleEdit", { name: resource.name })
-					: t("resources.form.titleNew")
+				editing ? (
+					<ResourceModalTitle
+						text={t("resources.form.titleEdit", { name: resource.name })}
+					/>
+				) : (
+					t("resources.form.titleNew")
+				)
 			}
 			size="xl"
 			initialFocusRef={nameInput}
@@ -101,36 +109,21 @@ export function ResourceFormModal({
 				data-id="resource-form"
 				className="grid gap-6"
 			>
-				<FormField
-					label={t("resources.form.nameLabel")}
-					required
+				<ResourceNameField
+					ref={nameInput}
+					value={draft.name}
+					onChange={(name) => setDraft({ ...draft, name })}
 					error={errors.name}
-					data-id="resource-form-name"
-					hint={
-						<>
-							{renderRich(t("resources.form.nameHint"))}
-							{place.parentName ? (
-								<>
-									{" "}
-									{renderRich(
-										t("resources.form.childOf", { parent: place.parentName }),
-									)}
-								</>
-							) : null}
-						</>
-					}
-				>
-					<Input
-						ref={nameInput}
-						placeholder="users"
-						autoComplete="off"
-						spellCheck={false}
-						value={draft.name}
-						onChange={(event) =>
-							setDraft({ ...draft, name: event.target.value })
-						}
+					parentName={place.parentName}
+				/>
+				{editing && place.parentKey !== null ? (
+					<ParentKeyField
+						value={draft.parentKey}
+						onChange={setParentKey}
+						error={parentKeyError}
+						parentName={place.parentName ?? ""}
 					/>
-				</FormField>
+				) : null}
 				<section className="grid gap-3" data-id="resource-form-schema">
 					<div className="flex flex-wrap items-center justify-between gap-2">
 						<h3 className="m-0 font-bold font-mono text-sm">Schema</h3>
@@ -142,7 +135,6 @@ export function ResourceFormModal({
 								<ExportTypesMenu
 									resource={resource}
 									resources={resources}
-									variant="form"
 									unsaved={dirty}
 									data-id="resource-form-export-types"
 								/>
@@ -171,15 +163,28 @@ export function ResourceFormModal({
 					errors={errors.endpoints}
 					behaviorErrors={errors.behavior}
 				/>
+				{/* Saved by Update after the resource: a callback needs a saved one. */}
+				{hybridMock && resource ? (
+					<CallbacksEditor
+						projectId={projectId}
+						resourceId={resource.id}
+						controller={callbacks}
+					/>
+				) : null}
 				{invalid ? (
 					<Alert tone="danger">{t("resources.form.checkMarked")}</Alert>
 				) : null}
 				{submitError ? <Alert tone="danger">{submitError}</Alert> : null}
+				{partial ? (
+					<Alert
+						tone="danger"
+						title={t("resources.form.partialTitle")}
+						data-id="resource-form-partial"
+					>
+						{t("resources.form.partialBody", { reason: partial.reason })}
+					</Alert>
+				) : null}
 			</form>
-			{/* Its own form and PUT: a callback belongs to a saved resource. */}
-			{hybridMock && resource ? (
-				<CallbacksEditor projectId={projectId} resourceId={resource.id} />
-			) : null}
 		</Modal>
 	);
 }

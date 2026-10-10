@@ -14,7 +14,7 @@ import {
 	MAX_OPENAPI_IMPORT_STEPS,
 	SchemaWalker,
 } from "./openapi-schema-walker.js";
-import { parentKeyOf } from "./resource-constants.js";
+import { parentKeyOf } from "./parent-key.js";
 import {
 	type OpenApiImportResult,
 	importOpenApiSchema,

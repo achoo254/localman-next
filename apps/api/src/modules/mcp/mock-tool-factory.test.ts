@@ -103,6 +103,19 @@ describe("buildMockTools", () => {
 		expect(buildMockTools([bare])).toEqual([]);
 	});
 
+	it("names the parent placeholder after the stored Parent ID, else the old rule", () => {
+		const people = resource(1, "people", null);
+		const quizzes = { ...resource(2, "quizzes", 1), parentKey: "ownerId" };
+		const tags = resource(3, "tags", 1);
+		const tools = buildMockTools([people, quizzes, tags]);
+		expect(tool(tools, "get_quizzes").description).toContain(
+			"GET /people/{ownerId}/quizzes/{id}",
+		);
+		expect(tool(tools, "list_tags").description).toContain(
+			"GET /people/{peopleId}/tags",
+		);
+	});
+
 	it("sets the annotations per action", () => {
 		const tools = buildMockTools([resource(1, "users", null)]);
 		expect(tool(tools, "list_users").annotations).toEqual({

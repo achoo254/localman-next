@@ -1,6 +1,7 @@
 import { limitsFor } from "@localman/shared/constants";
 import { IconPlus } from "@tabler/icons-react";
 import { useCallback, useRef, useState } from "react";
+import { useNavigate } from "react-router";
 import { IconButton } from "../../components/ui/icon-button";
 import { useToast } from "../../components/ui/toast";
 import { useCurrentUser } from "../../features/auth/use-current-user";
@@ -9,7 +10,9 @@ import { useSubscriptionDialogs } from "../../features/subscription/use-subscrip
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { useAppTitle } from "../../lib/use-document-title";
+import { markProjectCreated } from "../project-detail/use-first-resource-prompt";
 import { DeleteProjectModal } from "./delete-project-modal";
+import { OpenProjectLink } from "./open-project-link";
 import type { ProjectAction } from "./project-actions-menu";
 import { ProjectFormModal } from "./project-form-modal";
 import { maskSecretHost } from "./project-validation";
@@ -43,6 +46,7 @@ export function ProjectsPage() {
 	const session = useCurrentUser();
 	const plan = session.status === "authenticated" ? session.user.plan : "free";
 	const toast = useToast();
+	const navigate = useNavigate();
 	const subscription = useSubscriptionDialogs(plan);
 	const query = useProjects();
 	const setProjects = useSetProjects();
@@ -77,9 +81,19 @@ export function ProjectsPage() {
 			? await updateProject(editing.id, input)
 			: await createProject(input);
 		if (editing) replaceProject(saved);
-		else setProjects((list) => [...list, saved]);
+		else {
+			setProjects((list) => [...list, saved]);
+			// Its page offers a first resource on the next visit only.
+			markProjectCreated(saved.id);
+		}
 		const done = editing ? "projects.toast.updated" : "projects.toast.created";
-		toast.show({ title: t(done, { name: saved.name }) });
+		// A new project stays in the list; the toast leads to its page.
+		toast.show({
+			title: t(done, { name: saved.name }),
+			description: editing ? undefined : (
+				<OpenProjectLink project={saved} navigate={navigate} />
+			),
+		});
 		setDialog(CLOSED);
 	}
 

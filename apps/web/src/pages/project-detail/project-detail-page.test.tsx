@@ -21,7 +21,6 @@ import {
 	renderDetail,
 	sampleTree,
 } from "./project-detail-test-helpers";
-import { EMPTY_PROMPT_DELAY_MS } from "./use-first-resource-prompt";
 
 vi.mock("../../platform/navigation", async (importOriginal) => ({
 	...(await importOriginal<typeof import("../../platform/navigation")>()),
@@ -73,23 +72,6 @@ describe("ProjectDetailPage", () => {
 		);
 		expect(posts.style.left).toBe("340px");
 		expect(screen.getByText("4 resources")).toBeInTheDocument();
-	});
-
-	it("opens New resource 500ms after an empty project loads", async () => {
-		renderDetail({ [`GET ${RESOURCES_PATH}`]: { body: { items: [] } } });
-		await screen.findByText(/No resources yet/);
-		const shownAt = Date.now();
-		expect(screen.queryByRole("dialog")).toBeNull();
-		expect(
-			await screen.findByRole(
-				"dialog",
-				{ name: "New resource" },
-				{ timeout: 3000 },
-			),
-		).toBeInTheDocument();
-		expect(Date.now() - shownAt).toBeGreaterThanOrEqual(
-			EMPTY_PROMPT_DELAY_MS - 50,
-		);
 	});
 
 	it("reads the project from GET /projects/:id and says so when it is gone", async () => {

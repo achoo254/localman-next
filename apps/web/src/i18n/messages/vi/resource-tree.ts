@@ -4,6 +4,15 @@ export const resourceTree: Messages["resourceTree"] = {
 	rail: {
 		addToRoot: "Thêm vào root",
 	},
+	tree: {
+		label: "Cây resource",
+	},
+	zoom: {
+		label: "Thu phóng",
+		fit: "Vừa khung",
+		fitHint: "Thu cả cây cho vừa khung (Shift+1)",
+		actualHint: "Kích thước thật (Shift+0)",
+	},
 	hint: {
 		idle: "Bấm chấm tròn bên trái một resource để chọn, sau đó bấm chấm tròn bên phải của resource khác để lồng vào.",
 		selected:
@@ -22,6 +31,7 @@ export const resourceTree: Messages["resourceTree"] = {
 		dataLabel: "Dữ liệu {name}",
 		delete: "Xoá",
 		deleteLabel: "Xoá {name}",
+		moreLabel: "Thao tác khác cho {name}",
 	},
 	generator: {
 		label: "Số bản ghi của {name}",

@@ -1,5 +1,5 @@
 import { defineOperation } from "@localman/operations";
-import { parentKeyOf } from "@localman/shared";
+import { resourceParentKey } from "@localman/shared";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
 import { requireProject } from "../projects/project-service.js";
@@ -28,18 +28,21 @@ const resourceUrls = z.object({
 
 /**
  * Path of a resource's collection from the root: a nested resource sits
- * under one record of each ancestor (`/users/{userId}/posts`).
+ * under one record of each ancestor (`/users/{userId}/posts`), the
+ * placeholder named like the Parent ID of the resource below it.
  */
 function collectionPathOf(
 	resource: StoredResource,
 	byId: ReadonlyMap<string, StoredResource>,
 ): string {
 	const segments = [resource.name];
+	let child = resource;
 	let parentId = resource.parentId?.toHexString() ?? null;
 	while (parentId !== null) {
 		const parent = byId.get(parentId);
 		if (!parent) break;
-		segments.unshift(parent.name, `{${parentKeyOf(parent.name)}}`);
+		segments.unshift(parent.name, `{${resourceParentKey(child, parent.name)}}`);
+		child = parent;
 		parentId = parent.parentId?.toHexString() ?? null;
 	}
 	return `/${segments.map(encodePathSegment).join("/")}`;

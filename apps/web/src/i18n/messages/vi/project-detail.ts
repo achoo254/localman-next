@@ -62,6 +62,8 @@ export const projectDetail: Messages["projectDetail"] = {
 		empty: "Project chưa có resource nào.",
 		question: "Thay dữ liệu đang có?",
 		lead: "Các resource sau đã có dữ liệu và sẽ được sinh lại:",
+		summary: "{resources}, {records}",
+		details: "Xem từng resource",
 	},
 	resetAll: {
 		nothing: "Chưa có dữ liệu nào để reset.",

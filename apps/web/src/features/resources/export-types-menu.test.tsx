@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ALL_FEATURES } from "../../pages/landing/landing-test-helpers";
@@ -11,6 +11,7 @@ import {
 import { downloadText } from "../../platform/download";
 import { findToast } from "../../test/toast";
 import { resetCurrentUserCache } from "../auth/use-current-user";
+import { openNodeMenu } from "../resource-tree/tree-test-helpers";
 import { exportSetOf } from "./export-types";
 import { parseResource } from "./resource-model";
 
@@ -40,11 +41,8 @@ async function openMenu(name: string) {
 		undefined,
 		{ flags: ALL_FEATURES },
 	);
-	const node = await findNode(name);
-	await userEvent.click(
-		within(node).getByRole("button", { name: `Export types of ${name}` }),
-	);
-	return screen.findByRole("menu");
+	await findNode(name);
+	return openNodeMenu(name);
 }
 
 describe("Export types", () => {

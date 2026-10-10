@@ -18,6 +18,9 @@ export function toMockApiResource(resource: StoredResource): MockApiResource {
 		id: resource._id.toHexString(),
 		parentId: resource.parentId?.toHexString() ?? null,
 		name: resource.name,
+		...(resource.parentKey !== undefined
+			? { parentKey: resource.parentKey }
+			: {}),
 		schema: resource.schema,
 		template: resource.template,
 		endpoints: resource.endpoints,
@@ -25,7 +28,7 @@ export function toMockApiResource(resource: StoredResource): MockApiResource {
 }
 
 /**
- * Revision of what the tools are built from: the tree, schemas,
+ * Revision of what the tools are built from: the tree, Parent IDs, schemas,
  * templates and which endpoints are on. Records, counters and custom
  * responses do not change the tools, so mock traffic keeps the entry.
  */
@@ -34,6 +37,7 @@ export function toolsRevision(resources: readonly MockApiResource[]): string {
 		resource.id,
 		resource.parentId,
 		resource.name,
+		resource.parentKey ?? null,
 		resource.schema,
 		resource.template,
 		resource.endpoints.map((e) => [e.method, e.path, e.enabled]),

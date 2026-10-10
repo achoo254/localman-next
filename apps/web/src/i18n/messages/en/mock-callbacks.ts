@@ -10,13 +10,9 @@ export const mockCallbacks = {
 		"No callbacks yet. Add one and the mock sends a request to your server on create, update or delete.",
 	variables:
 		"Variables: <code>{record}</code> the record as JSON, <code>{field}</code> one of its fields, <code>{event}</code> create, update or delete, <code>{resource}</code> the resource name. Sent in the background, retried up to 3 times with backoff; results go to the request log with source <code>callback</code>.",
-	saveNote:
-		"Callbacks save on their own: Save callbacks keeps them, the resource button does not.",
 	loading: "Loading callbacks…",
 	loadFailed: "Couldn't load the callbacks. Try again.",
-	save: "Save callbacks",
 	unsaved: "Unsaved changes",
-	saved: "Saved the callbacks.",
 	invalid: "A callback isn't valid. Check the marked fields.",
 	item: {
 		enable: "Enable callback {n}",

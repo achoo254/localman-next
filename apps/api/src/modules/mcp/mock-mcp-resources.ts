@@ -1,6 +1,6 @@
-import { DEFAULT_RESPONSE, parentKeyOf } from "@localman/shared";
+import { DEFAULT_RESPONSE, resourceParentKey } from "@localman/shared";
 import type { McpServer } from "@modelcontextprotocol/server";
-import { ancestorNames, collectionPath } from "./mock-api-paths.js";
+import { ancestorsOf, collectionPath } from "./mock-api-paths.js";
 import type { MockApiResource } from "./mock-mcp-tools-cache.js";
 import { buildMockOpenApi } from "./mock-openapi.js";
 import type { MockToolDefinition } from "./mock-tool-factory.js";
@@ -28,14 +28,17 @@ export function mockSchemaDocument(source: MockDocumentsSource) {
 		mockBaseUrl: source.mockBaseUrl,
 		mcpUrl: `${source.mockBaseUrl}/mcp`,
 		resources: source.resources.map((resource) => {
-			const ancestors = ancestorNames(byId, resource);
+			const ancestors = ancestorsOf(byId, resource);
 			const parent = ancestors.at(-1);
 			return {
 				id: resource.id,
 				name: resource.name,
 				parentId: resource.parentId,
-				path: collectionPath(ancestors, resource.name).path,
-				parentKey: parent === undefined ? null : parentKeyOf(parent),
+				path: collectionPath([...ancestors, resource]).path,
+				parentKey:
+					parent === undefined
+						? null
+						: resourceParentKey(resource, parent.name),
 				schema: resource.schema,
 				template: resource.template,
 				endpoints: resource.endpoints.map((endpoint) => ({

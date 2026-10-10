@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker";
 import { OperationError } from "@localman/operations";
-import { parentKeyOf } from "@localman/shared";
+import { resourceParentKey } from "@localman/shared";
 import type { AnyBulkWriteOperation, ClientSession, Types } from "mongoose";
 import type { GeneratedRecord } from "./data-generator.js";
 import { assertResourceSize, resourceRef } from "./data-size.js";
@@ -41,15 +41,18 @@ export function toTreeNodes(resources: readonly StoredResource[]): TreeNode[] {
 	}));
 }
 
-/** `{parent}Id` of the resource's records, `null` for a root. */
+/**
+ * `{parent}Id` of the resource's records (`resourceParentKey`: the stored
+ * key, else the old rule on the parent's name), `null` for a root.
+ */
 export function parentKeyIn(
 	resources: readonly StoredResource[],
-	resource: Pick<StoredResource, "parentId">,
+	resource: Pick<StoredResource, "parentId" | "parentKey">,
 ): string | null {
 	const { parentId } = resource;
 	if (parentId === null) return null;
 	const parent = resources.find((candidate) => candidate._id.equals(parentId));
-	return parent ? parentKeyOf(parent.name) : null;
+	return parent ? resourceParentKey(resource, parent.name) : null;
 }
 
 /** The resource and its descendants, as stored resources. */

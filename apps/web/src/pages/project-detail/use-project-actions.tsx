@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useToast } from "../../components/ui/toast";
-import type { DataConfirm } from "../../features/resources/data-changes-confirm-modal";
 import {
 	generateAllData,
 	resetAllData,
@@ -17,6 +16,7 @@ import { moveResource } from "../../features/resources/resources-api";
 import { useResourceCache } from "../../features/resources/use-resources";
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
+import type { ProjectConfirm } from "./project-detail-dialogs";
 import { toastText } from "./toast-text";
 import { useGenerateAction } from "./use-generate-action";
 
@@ -31,14 +31,13 @@ const withData = (changes: readonly DataChange[]) =>
  * with a dry run first: when they would replace or reset existing records
  * the user confirms the listed changes, otherwise they run at once.
  * `busy` covers the dry run and the real write, so Generate all and Reset
- * all stay disabled until the request has finished. `pressed` names the
- * bulk button whose own request runs (its spinner); once a confirmation
- * opens, that dialog's button spins instead.
+ * all stay disabled until it has finished. `pressed` names the bulk button
+ * whose request runs (its spinner), until a confirmation opens.
  */
 export function useProjectActions(
 	projectId: string,
 	resources: readonly Resource[],
-	askConfirm: (confirm: DataConfirm) => void,
+	askConfirm: (confirm: ProjectConfirm) => void,
 ) {
 	const t = useT();
 	const toast = useToast();
@@ -75,7 +74,7 @@ export function useProjectActions(
 	}
 
 	/** Asks first when something would change, else runs now (still busy). */
-	async function confirmOrRun(confirm: DataConfirm) {
+	async function confirmOrRun(confirm: ProjectConfirm) {
 		if (confirm.changes.length > 0) {
 			askConfirm(confirm);
 			return;
@@ -103,6 +102,7 @@ export function useProjectActions(
 				lead: t("projectDetail.generateAll.lead"),
 				confirmLabel: t("projectDetail.generate.title"),
 				changes: withData(changes),
+				summarize: true,
 				"data-id": "modal-generate-all",
 				run: () =>
 					whileBusy(async () => {

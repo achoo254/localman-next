@@ -11,13 +11,9 @@ export const mockCallbacks: Messages["mockCallbacks"] = {
 		"Chưa có callback. Thêm một callback để mock gửi request tới server của bạn khi có create, update hoặc delete.",
 	variables:
 		"Biến: <code>{record}</code> bản ghi dạng JSON, <code>{field}</code> một field của bản ghi, <code>{event}</code> là create, update hoặc delete, <code>{resource}</code> tên resource. Gửi nền, thử lại tối đa 3 lần có giãn cách, kết quả ghi vào Request log với nguồn <code>callback</code>.",
-	saveNote:
-		"Callback được lưu riêng: bấm Lưu callback để lưu, nút lưu resource không lưu phần này.",
 	loading: "Đang tải callback…",
 	loadFailed: "Không tải được callback. Hãy thử lại.",
-	save: "Lưu callback",
 	unsaved: "Có thay đổi chưa lưu",
-	saved: "Đã lưu callback.",
 	invalid: "Có callback chưa hợp lệ. Hãy xem các ô được đánh dấu.",
 	item: {
 		enable: "Bật callback {n}",

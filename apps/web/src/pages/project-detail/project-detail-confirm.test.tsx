@@ -2,6 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetCurrentUserCache } from "../../features/auth/use-current-user";
+import { openNodeMenu } from "../../features/resource-tree/tree-test-helpers";
 import type { MockReply } from "../../test/mock-fetch";
 import { findToast } from "../../test/toast";
 import {
@@ -32,9 +33,11 @@ describe("Delete resource while the dry run is pending or fails", () => {
 			[`GET ${RESOURCES_PATH}`]: { body: { items: sampleTree() } },
 			[`DELETE ${RESOURCES_PATH}/users`]: preview.route,
 		});
-		const users = await findNode("users");
+		await findNode("users");
 		await userEvent.click(
-			within(users).getByRole("button", { name: "Delete users" }),
+			within(await openNodeMenu("users")).getByRole("menuitem", {
+				name: "Delete users",
+			}),
 		);
 		const dialog = await screen.findByRole("dialog", {
 			name: "Delete resource",
@@ -57,9 +60,11 @@ describe("Delete resource while the dry run is pending or fails", () => {
 			[`GET ${RESOURCES_PATH}`]: { body: { items: sampleTree() } },
 			[`DELETE ${RESOURCES_PATH}/users`]: apiError(500, "INTERNAL"),
 		});
-		const users = await findNode("users");
+		await findNode("users");
 		await userEvent.click(
-			within(users).getByRole("button", { name: "Delete users" }),
+			within(await openNodeMenu("users")).getByRole("menuitem", {
+				name: "Delete users",
+			}),
 		);
 		const dialog = await screen.findByRole("dialog", {
 			name: "Delete resource",

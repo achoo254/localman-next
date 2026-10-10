@@ -16,6 +16,8 @@ export const projects: Messages["projects"] = {
 		ownedBy: "{owner} 的 project",
 		ownerFallback: "其他人",
 		collaborators: { other: "{count} 位协作者" },
+		resources: { other: "{count} 个 resource" },
+		records: { other: "{count} 条记录" },
 	},
 	menu: {
 		trigger: "{name} 的选项",
@@ -38,7 +40,7 @@ export const projects: Messages["projects"] = {
 		nameRequired: "请输入 project 名称。",
 		nameTooLong: "名称最多 {max} 个字符。",
 		nameStart: "名称必须以字母或数字开头。",
-		namePattern: "名称只能包含字母、数字、空格、-、_ 和圆括号。",
+		namePattern: "名称只能包含字母、数字、空格和字符 - _ ( ) . · , & + ' :",
 		prefixTooLong: "Prefix 最多 {max} 个字符。",
 		prefixPattern: "Prefix 只能包含不带声调的字母、数字、-、_ 和 /。",
 	},
@@ -47,6 +49,7 @@ export const projects: Messages["projects"] = {
 		updated: "已更新 project {name}。",
 		cloned: "已复制为 {name}。",
 		deleted: "已删除 project {name}。",
+		open: "打开 project",
 	},
 	delete: {
 		title: "删除 project",

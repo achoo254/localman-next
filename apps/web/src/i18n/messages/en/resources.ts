@@ -54,10 +54,19 @@ export const resources = {
 		templateInvalid: "The object template isn't valid JSON.",
 		templateNotObject: "The object template must be a JSON object.",
 		responseInvalid: "The response template isn't valid JSON.",
+		parentKeyRequired: "Enter a parent key.",
+		parentKeyTooLong: "The parent key can be at most {max} characters.",
+		parentKeyPattern:
+			"Use letters, numbers, _ and $, not starting with a number (for example userId).",
+		parentKeyId: "“id” is the record's own id. Pick another name.",
+		parentKeyTaken: "The field “{name}” already has this name.",
+		parentKeyRefused: "This parent key can't be used. Pick another name.",
+		parentKeyInData:
+			"Records of this resource already have a field “{name}”. Pick another key.",
 	},
 	form: {
 		titleNew: "New resource",
-		titleEdit: "Edit resource · {name}",
+		titleEdit: "Edit resource · <name>{name}</name>",
 		create: "Create resource",
 		update: "Update",
 		nameLabel: "Resource name",
@@ -66,6 +75,11 @@ export const resources = {
 		childOf: "Child resource of <code>{parent}</code>.",
 		schemaHint: "Shape of each record",
 		checkMarked: "Check the fields marked in red.",
+		parentKeyLabel: "Parent key",
+		parentKeyHint:
+			"Field that holds the id of the parent <code>{parent}</code> record. Renaming it renames the field the mock returns and its filter, so clients already using the mock must change too.",
+		partialTitle: "Saved the resource, not the callbacks",
+		partialBody: "{reason} Fix the callbacks, then select Update again.",
 	},
 	schema: {
 		typeOf: "Type of {name}",
@@ -96,7 +110,7 @@ export const resources = {
 			'Template variables: <code>"$mockData"</code> the stored data, <code>"$count"</code> the record count, <code>"$category.method"</code> a Faker value generated on each request (for example <code>"$name.fullName"</code>).',
 	},
 	data: {
-		title: "Data · {name}",
+		title: "Data · <name>{name}</name>",
 		hint: "Edit directly or paste a new JSON array to replace all the data (up to {max} records).",
 		loading: "Loading data…",
 		loadFailed: "Couldn't load the data",
@@ -107,6 +121,12 @@ export const resources = {
 		notArray: "The data must be a JSON array.",
 		tooMany: "Up to {max} records ({count} now).",
 		notObject: "Each item must be a JSON object.",
+		goToLabel: "Go to id",
+		goTo: "Go",
+		goToNotFound: "No record has the id “{id}”.",
+		goToInvalid: "Fix the JSON first, then search by id.",
+		wrap: "Wrap lines",
+		scrollLabel: "Scrollable JSON data of {name}",
 	},
 	delete: {
 		title: "Delete resource",

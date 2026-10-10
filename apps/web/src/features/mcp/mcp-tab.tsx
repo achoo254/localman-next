@@ -17,7 +17,8 @@ import { McpToolsSection } from "./mcp-tools-section";
 
 export interface McpTabProps {
 	project: Project;
-	resources: readonly MockToolNode[];
+	/** Null while the project's resources load: the tools show a skeleton. */
+	resources: readonly MockToolNode[] | null;
 }
 
 /**
@@ -33,11 +34,11 @@ export function McpTab({ project, resources }: McpTabProps) {
 		queryFn: () => fetchMcpTokenStatus(project.id),
 		enabled: owner,
 	});
-	const tokenEnv = mcpTokenEnvVar(project.name);
+	const tokenEnv = mcpTokenEnvVar(project.name, project.id);
 	const mode: McpTokenMode =
 		owner && query.data ? (query.data.required ? "on" : "off") : "unknown";
 	const target: McpTarget = {
-		serverName: mcpServerName(project.name),
+		serverName: mcpServerName(project.name, project.id),
 		url: mcpEndpointUrl(project.mockBaseUrl),
 		tokenEnv: mode === "on" ? tokenEnv : null,
 	};

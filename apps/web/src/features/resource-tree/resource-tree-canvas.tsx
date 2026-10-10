@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { useToast } from "../../components/ui/toast";
 import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
-import { ExportTypesMenu } from "../resources/export-types-menu";
 import type { Resource } from "../resources/resource-model";
 import { DemoNode } from "./demo-node";
 import type { NodeAction } from "./node-actions";
@@ -71,13 +70,14 @@ function DemoTreeCanvas({ resources, onMove }: DemoTreeCanvasProps) {
 			connect={connect}
 			data-id="demo-tree"
 			railDataId="demo-node-root"
-			renderNode={({ item, x, y }) => (
+			renderNode={({ item, x, y }, tree) => (
 				<DemoNode
 					key={item.id}
 					item={item}
 					x={x}
 					y={y}
 					geometry={DEMO_TREE_GEOMETRY}
+					tree={tree}
 					selected={selected?.id === item.id}
 					selectionName={selected?.name ?? null}
 					targetState={connect.targetState(item.id)}
@@ -140,13 +140,16 @@ function AppTreeCanvas({
 			connect={connect}
 			data-id="resource-tree"
 			railDataId="resource-tree-root"
-			renderNode={({ item, x, y }) => (
+			zoomable
+			onActivate={(item) => onAction("data", item)}
+			renderNode={({ item, x, y }, tree) => (
 				<ResourceNode
 					key={item.id}
 					resource={item}
 					x={x}
 					y={y}
 					geometry={TREE_GEOMETRY}
+					tree={tree}
 					href={mockUrlOf(mockBaseUrl, item.name)}
 					selected={selected?.id === item.id}
 					selectionName={selected?.name ?? null}
@@ -160,16 +163,7 @@ function AppTreeCanvas({
 					onOpenInClient={
 						onOpenInClient ? () => onOpenInClient(item) : undefined
 					}
-					trailingAction={
-						mockPowerUps ? (
-							<ExportTypesMenu
-								resource={item}
-								resources={resources}
-								variant="node"
-								data-id={`resource-node-${item.id}-types`}
-							/>
-						) : null
-					}
+					exportOf={mockPowerUps ? { resource: item, resources } : undefined}
 				/>
 			)}
 		/>
