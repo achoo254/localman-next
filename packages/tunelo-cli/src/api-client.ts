@@ -1,6 +1,7 @@
 /**
- * Minimal HTTP client for the Tunelo server API.
- * Surfaces after the account/admin removal: device pairing + token verify.
+ * Minimal HTTP client for the Tunelo server API: token verify and
+ * `tunelo link`. Account sign-in talks to the identity provider instead
+ * (idp-client.ts).
  */
 
 interface ApiErrorResponse {
@@ -39,6 +40,7 @@ async function request<T>(
 		method: options.method ?? "GET",
 		headers,
 		body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+		signal: AbortSignal.timeout(15_000),
 	});
 
 	const text = await res.text();
@@ -64,45 +66,92 @@ async function request<T>(
 	return data;
 }
 
-/** Starts a device login; returns the request id the browser will approve. */
-export async function initDeviceLogin(
-	baseUrl: string,
-	deviceId: string,
-	name: string,
-): Promise<string> {
-	const data = await request<{ requestId: string }>(baseUrl, "/device/init", {
-		method: "POST",
-		body: { deviceId, name },
-	});
-	return data.requestId;
+export interface VerifyResult {
+	valid: boolean;
+	kind?: "idp" | "legacy" | "link";
+	/** ISO date anonymous tokens stop working, when the server set one. */
+	legacyTokenCutoff?: string;
+	code?: string;
 }
 
-export type DeviceLoginPoll =
-	| { status: "pending" }
-	| { status: "approved"; token: string }
-	| { status: "expired" };
-
-/** Polls a device-login request; returns the token once approved. */
-export async function pollDeviceLogin(
-	baseUrl: string,
-	requestId: string,
-): Promise<DeviceLoginPoll> {
-	return request<DeviceLoginPoll>(baseUrl, "/device/poll", {
-		method: "POST",
-		body: { req: requestId },
-	});
-}
-
-/** Checks an access token with the server. true = valid, false = rejected (401). */
+/** Checks a token with the server; a rejected token is `{ valid: false }`. */
 export async function verifyKey(
 	baseUrl: string,
 	key: string,
-): Promise<boolean> {
+): Promise<VerifyResult> {
 	try {
-		await request<{ valid: boolean }>(baseUrl, "/verify", { apiKey: key });
-		return true;
+		return await request<VerifyResult>(baseUrl, "/verify", { apiKey: key });
 	} catch (err) {
-		if (err instanceof ApiClientError && err.statusCode === 401) return false;
+		if (err instanceof ApiClientError && err.statusCode === 401) {
+			return { valid: false, code: err.code };
+		}
 		throw err;
 	}
+}
+
+/** `tunelo link <code>`: approve a pairing a client (Localman) opened. */
+export async function approveLink(
+	baseUrl: string,
+	key: string,
+	code: string,
+): Promise<{ clientName: string }> {
+	return request(baseUrl, "/links/approve", {
+		method: "POST",
+		apiKey: key,
+		body: { code },
+	});
+}
+
+export interface LinkInfo {
+	id: string;
+	clientName: string;
+	createdAt: string | null;
+	lastUsedAt: string | null;
+}
+
+export async function listLinks(
+	baseUrl: string,
+	key: string,
+): Promise<LinkInfo[]> {
+	const data = await request<{ links: LinkInfo[] }>(baseUrl, "/links", {
+		apiKey: key,
+	});
+	return data.links;
+}
+
+export async function revokeLink(
+	baseUrl: string,
+	key: string,
+	id: string,
+): Promise<void> {
+	await request(baseUrl, `/links/${encodeURIComponent(id)}`, {
+		method: "DELETE",
+		apiKey: key,
+	});
+}
+
+export interface AccountTunnel {
+	subdomain: string | null;
+	url: string;
+	protocol: "http" | "tcp";
+	localPort: number | null;
+	publicPort?: number;
+	deviceName: string;
+	connectedAt: string;
+	basicAuth: boolean;
+}
+
+/** Every live tunnel of the signed-in account, on all its machines. */
+export async function listAccountTunnels(
+	baseUrl: string,
+	accessToken: string,
+): Promise<AccountTunnel[]> {
+	const data = await request<{ tunnels: AccountTunnel[] }>(
+		baseUrl,
+		"/tunnels",
+		{
+			apiKey: accessToken,
+		},
+	);
+	return data.tunnels;
 }

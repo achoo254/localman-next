@@ -1,11 +1,29 @@
 import { Router, json } from "express";
+import type { AuthConfig } from "../config/auth-config.js";
 import * as deviceLogin from "../services/device-login-service.js";
 
-// Device-login pairing for `tunelo login`: the CLI registers its device,
-// the browser approves it, the CLI polls for the issued token.
-export function createDeviceRouter(): Router {
+// Anonymous device-login pairing of tunelo CLI 1.6.x: the CLI registers its
+// device, the browser approves it, the CLI polls for the issued token.
+// Anyone holding the link could approve, so in `hybrid` mode approving is
+// refused: new CLIs sign in at the identity provider instead, and tokens
+// already issued keep working until LEGACY_TOKEN_CUTOFF. Opening a request is
+// refused too, so a 1.6.x CLI prints the upgrade hint instead of waiting on a
+// page nobody can approve.
+export function createDeviceRouter(config: AuthConfig): Router {
 	const router = Router();
 	router.use(json({ limit: "16kb" }));
+
+	if (config.mode === "hybrid") {
+		router.post(["/init", "/approve"], (_req, res) => {
+			res.status(403).json({
+				error: {
+					code: "TUNELO_DEVICE_004",
+					message:
+						"Anonymous sign-in is closed. Update tunelo (npm i -g tunelo@latest) and run `tunelo login`.",
+				},
+			});
+		});
+	}
 
 	// POST /api/device/init { deviceId, name } — CLI starts a login.
 	router.post("/init", async (req, res, next) => {

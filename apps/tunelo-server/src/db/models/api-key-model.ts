@@ -14,8 +14,15 @@ const apiKeySchema = new Schema(
 		keyPrefix: { type: String, required: true },
 		label: { type: String, default: "Default" },
 		// Set for tokens minted via device login; lets a device keep one token
-		// (re-login revokes prior active tokens for the same deviceId).
+		// (re-login revokes prior full-rights tokens for the same deviceId).
 		deviceId: { type: String, default: null, index: true },
+		// Empty (or missing on rows older than scopes) = anonymous token with
+		// full rights. `['tunnels:read']` = link token: it only lists the
+		// tunnels of `linkedDeviceId` and can never open one.
+		scopes: { type: [String], default: [] },
+		linkedDeviceId: { type: String, default: null, index: true },
+		// Who holds a link token (e.g. "Localman"), shown in `tunelo links`.
+		clientName: { type: String, default: "" },
 		status: { type: String, enum: ["active", "revoked"], default: "active" },
 		maxTunnels: { type: Number, default: 3 },
 		expiresAt: { type: Date, default: null },
@@ -29,3 +36,8 @@ export type ApiKeyDocument = InferRawDocType<typeof apiKeySchema> & {
 };
 
 export const ApiKey = model("ApiKey", apiKeySchema);
+
+/** Matches full-rights tokens only, including rows that predate `scopes`. */
+export const FULL_RIGHTS_FILTER = {
+	$or: [{ scopes: { $exists: false } }, { scopes: { $size: 0 } }],
+};

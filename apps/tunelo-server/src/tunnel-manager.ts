@@ -9,6 +9,7 @@ import { purgeSubdomain } from "./cache/response-cache.js";
 import { createLogger } from "./logger.js";
 import { StreamRegistry, type StreamSink } from "./stream/stream-registry.js";
 import { checkBasicAuth, hashCredentials } from "./tunnel-auth-checker.js";
+import type { TunnelOwner } from "./tunnel-owner.js";
 import { safeSend } from "./ws-send.js";
 
 const logger = createLogger("tunelo-tunnel-manager");
@@ -34,6 +35,22 @@ export interface TunnelConnection {
 	pendingRequests: Map<string, PendingRequest>;
 	/** SHA-256 hash of "user:pass" for Basic Auth — undefined means no auth required */
 	authHash?: string;
+	owner: TunnelOwner;
+	/** Port on the client machine; null when an older CLI did not send it. */
+	localPort: number | null;
+}
+
+export interface RegisterTunnelInput {
+	subdomain: string;
+	socket: WebSocket;
+	connectionId: string;
+	apiKeyHash: string;
+	userId: string;
+	keyId: string;
+	owner: TunnelOwner;
+	localPort: number | null;
+	/** Basic auth "user:pass" required from visitors, if any. */
+	auth?: string;
 }
 
 class TunnelManager {
@@ -45,15 +62,8 @@ class TunnelManager {
 	/** In-flight response streams keyed by request id (live HTTP relay path). */
 	private streams = new StreamRegistry();
 
-	register(
-		subdomain: string,
-		socket: WebSocket,
-		connectionId: string,
-		apiKeyHash: string,
-		userId: string,
-		keyId: string,
-		auth?: string,
-	): boolean {
+	register(input: RegisterTunnelInput): boolean {
+		const { subdomain, auth } = input;
 		// If tunnel exists with a different socket, reject (subdomain taken)
 		if (this.tunnels.has(subdomain)) return false;
 
@@ -80,15 +90,17 @@ class TunnelManager {
 		}
 
 		this.tunnels.set(subdomain, {
-			socket,
-			connectionId,
-			apiKeyHash,
-			userId,
-			keyId,
+			socket: input.socket,
+			connectionId: input.connectionId,
+			apiKeyHash: input.apiKeyHash,
+			userId: input.userId,
+			keyId: input.keyId,
 			subdomain,
 			connectedAt: new Date(),
 			pendingRequests,
 			authHash,
+			owner: input.owner,
+			localPort: input.localPort,
 		});
 
 		logger.info(
@@ -272,6 +284,15 @@ class TunnelManager {
 		let count = 0;
 		for (const tunnel of this.tunnels.values()) {
 			if (tunnel.apiKeyHash === keyHash) count++;
+		}
+		return count;
+	}
+
+	/** Count active tunnels opened by an account (any machine) */
+	countByOwner(ownerSub: string): number {
+		let count = 0;
+		for (const tunnel of this.tunnels.values()) {
+			if (tunnel.owner.ownerSub === ownerSub) count++;
 		}
 		return count;
 	}

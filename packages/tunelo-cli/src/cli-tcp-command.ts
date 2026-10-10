@@ -2,7 +2,7 @@
 
 import type { TcpRegisterResult } from "@tunelo/shared";
 import type { Command } from "commander";
-import { loadConfig } from "./config.js";
+import { setupTunnel, showCredentialNotices } from "./cli-tunnel-setup.js";
 import type { Display } from "./display.js";
 import { TcpProxy } from "./tcp-proxy.js";
 import { TunnelClient } from "./tunnel-client.js";
@@ -26,23 +26,17 @@ export function registerTcpCommand(program: Command, display: Display): void {
 					process.exit(1);
 				}
 
-				const config = loadConfig();
-				const apiKey = options.key ?? process.env.TUNELO_KEY ?? config.key;
-				const serverUrl =
-					options.server ??
-					process.env.TUNELO_SERVER ??
-					config.server ??
-					"wss://tunnel.inetdev.io.vn";
-
-				if (!apiKey) {
-					display.showError("API key required.");
-					process.exit(1);
-				}
+				const setup = setupTunnel(options, display);
 
 				display.showBanner(VERSION);
-				display.showConnecting(serverUrl);
+				display.showConnecting(setup.serverUrl);
 
-				const client = new TunnelClient({ serverUrl, apiKey, localPort: port });
+				const client = new TunnelClient({
+					...setup.clientOptions,
+					localPort: port,
+					tcpOnly: true,
+				});
+				showCredentialNotices(client, setup.credential, display);
 
 				client.on("connected", () => {
 					const remotePort = options.remotePort

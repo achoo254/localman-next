@@ -1,24 +1,17 @@
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import type http from "node:http";
 import type { Duplex } from "node:stream";
 import {
-	type AuthMessage,
 	type ClientToServerMessage,
 	DEFAULTS,
-	ErrorCode,
-	type RegisterTunnelMessage,
-	SUBDOMAIN_REGEX,
 	WS_CLOSE_CODES,
-	buildTunnelUrl,
 	parseMessage,
 } from "@tunelo/shared";
-import { customAlphabet } from "nanoid";
 import { type WebSocket, WebSocketServer } from "ws";
-import type { KeyInfo, KeyStore } from "./key-store/key-store-types.js";
+import type { TokenAuthenticator } from "./auth/token-authenticator.js";
 import { createLogger } from "./logger.js";
 import { extractSubdomain } from "./request-relay.js";
 import {
-	type TcpConnectionState,
 	cleanupTcpState,
 	createTcpState,
 	handleTcpConnectionClose,
@@ -27,17 +20,20 @@ import {
 } from "./tcp-ws-handler.js";
 import { tunnelManager } from "./tunnel-manager.js";
 import { wsAppRelay } from "./ws-app-relay.js";
+import type { ConnectionState } from "./ws-connection-state.js";
+import {
+	isAuthMessage,
+	isRegisterTunnelMessage,
+	isTcpRegisterMessage,
+} from "./ws-message-guards.js";
+import {
+	allowTcpRegister,
+	handleRegisterTunnel,
+} from "./ws-register-tunnel.js";
 import { safeSend } from "./ws-send.js";
+import { handleAuth } from "./ws-tunnel-auth.js";
 
-const generateSubdomain = customAlphabet(
-	"abcdefghijklmnopqrstuvwxyz0123456789",
-	8,
-);
 const logger = createLogger("tunelo-ws");
-
-function hashKey(key: string): string {
-	return createHash("sha256").update(key).digest("hex");
-}
 
 /**
  * Refuse a WebSocket upgrade with a real HTTP response.
@@ -68,21 +64,10 @@ function rejectUpgrade(
 	socket.destroy();
 }
 
-/** Per-connection state attached after upgrade */
-interface ConnectionState {
-	id: string;
-	authenticated: boolean;
-	subdomain: string;
-	keyInfo: KeyInfo | null;
-	messageCount: number;
-	rateLimitInterval: ReturnType<typeof setInterval>;
-	authTimer: ReturnType<typeof setTimeout>;
-	pingInterval: ReturnType<typeof setInterval> | null;
-	tcpState: TcpConnectionState;
-	alive: boolean;
-}
-
-export function attachWsHandler(server: http.Server, keyStore: KeyStore): void {
+export function attachWsHandler(
+	server: http.Server,
+	authenticator: TokenAuthenticator,
+): void {
 	const wss = new WebSocketServer({
 		noServer: true,
 		maxPayload: DEFAULTS.MAX_BODY_SIZE,
@@ -154,9 +139,11 @@ export function attachWsHandler(server: http.Server, keyStore: KeyStore): void {
 	wss.on("connection", (ws: WebSocket) => {
 		const state: ConnectionState = {
 			id: randomUUID(),
+			authStarted: false,
 			authenticated: false,
 			subdomain: "",
 			keyInfo: null,
+			owner: null,
 			messageCount: 0,
 			rateLimitInterval: setInterval(() => {
 				state.messageCount = 0;
@@ -209,9 +196,15 @@ export function attachWsHandler(server: http.Server, keyStore: KeyStore): void {
 
 			switch (msg.type) {
 				case "auth":
-					handleAuth(ws, state, msg, keyStore);
+					if (!isAuthMessage(msg)) {
+						logger.warn({ connectionId: state.id }, "Malformed auth message");
+						ws.close(WS_CLOSE_CODES.AUTH_FAILED, "Malformed auth message");
+						return;
+					}
+					void handleAuth(ws, state, msg, authenticator);
 					break;
 				case "register-tunnel":
+					if (!isRegisterTunnelMessage(msg)) return;
 					handleRegisterTunnel(ws, state, msg);
 					break;
 				case "response":
@@ -226,8 +219,10 @@ export function attachWsHandler(server: http.Server, keyStore: KeyStore): void {
 					tunnelManager.handleStreamFrame(msg);
 					break;
 				case "tcp-register":
-					if (!state.authenticated) return;
-					handleTcpRegister(ws, state.id, msg, state.tcpState);
+					if (!state.authenticated || !state.owner || !state.keyInfo) return;
+					if (!isTcpRegisterMessage(msg)) return;
+					if (!allowTcpRegister(ws, state.keyInfo, msg.localPort)) return;
+					handleTcpRegister(ws, state.id, msg, state.tcpState, state.owner);
 					break;
 				case "tcp-data":
 					if (!state.authenticated) return;
@@ -257,7 +252,8 @@ export function attachWsHandler(server: http.Server, keyStore: KeyStore): void {
 			clearInterval(state.rateLimitInterval);
 			if (state.pingInterval) clearInterval(state.pingInterval);
 			cleanupTcpState(state.tcpState);
-			if (state.subdomain) tunnelManager.unregisterByConnectionId(state.id);
+			// Always: a `tcpOnly` channel may still have used `register-tunnel`.
+			tunnelManager.unregisterByConnectionId(state.id);
 			wsAppRelay.cleanupByConnection(state.id);
 		});
 
@@ -265,163 +261,4 @@ export function attachWsHandler(server: http.Server, keyStore: KeyStore): void {
 			logger.error({ err, subdomain: state.subdomain }, "Socket error");
 		});
 	});
-}
-
-async function handleAuth(
-	ws: WebSocket,
-	state: ConnectionState,
-	msg: AuthMessage,
-	keyStore: KeyStore,
-): Promise<void> {
-	if (state.authenticated) return;
-	clearTimeout(state.authTimer);
-
-	const keyHash = hashKey(msg.key);
-	const keyInfo = await keyStore.validate(keyHash);
-
-	if (!keyInfo) {
-		safeSend(ws, {
-			type: "auth-result",
-			success: false,
-			subdomain: "",
-			url: "",
-			error: "Invalid API key",
-		});
-		ws.close(WS_CLOSE_CODES.AUTH_FAILED, "Invalid API key");
-		return;
-	}
-
-	// Enforce maxTunnelsPerKey
-	const currentCount = tunnelManager.countByKeyHash(keyHash);
-	if (currentCount >= keyInfo.maxTunnels) {
-		safeSend(ws, {
-			type: "auth-result",
-			success: false,
-			subdomain: "",
-			url: "",
-			error: "Max tunnels per key exceeded",
-		});
-		ws.close(WS_CLOSE_CODES.AUTH_FAILED, "Max tunnels exceeded");
-		return;
-	}
-
-	const requestedSubdomain = msg.subdomain || generateSubdomain();
-
-	if (!SUBDOMAIN_REGEX.test(requestedSubdomain)) {
-		safeSend(ws, {
-			type: "auth-result",
-			success: false,
-			subdomain: requestedSubdomain,
-			url: "",
-			error: "Invalid subdomain format",
-		});
-		ws.close(WS_CLOSE_CODES.AUTH_FAILED, "Invalid subdomain");
-		return;
-	}
-
-	if (
-		!tunnelManager.register(
-			requestedSubdomain,
-			ws,
-			state.id,
-			keyHash,
-			keyInfo.userId,
-			keyInfo.keyId,
-			msg.auth,
-		)
-	) {
-		safeSend(ws, {
-			type: "auth-result",
-			success: false,
-			subdomain: requestedSubdomain,
-			url: "",
-			error: "Subdomain already in use",
-		});
-		ws.close(WS_CLOSE_CODES.SUBDOMAIN_TAKEN, "Subdomain taken");
-		return;
-	}
-
-	state.authenticated = true;
-	state.subdomain = requestedSubdomain;
-	state.keyInfo = keyInfo;
-	const url = buildTunnelUrl(requestedSubdomain);
-
-	safeSend(ws, {
-		type: "auth-result",
-		success: true,
-		subdomain: requestedSubdomain,
-		url,
-	});
-	logger.info({ subdomain: requestedSubdomain, url }, "Client authenticated");
-}
-
-function handleRegisterTunnel(
-	ws: WebSocket,
-	state: ConnectionState,
-	msg: RegisterTunnelMessage,
-): void {
-	if (!state.authenticated || !state.keyInfo) return;
-
-	const requestedSubdomain = msg.subdomain || generateSubdomain();
-
-	if (!SUBDOMAIN_REGEX.test(requestedSubdomain)) {
-		safeSend(ws, {
-			type: "register-tunnel-result",
-			success: false,
-			subdomain: requestedSubdomain,
-			localPort: msg.localPort,
-			url: "",
-			error: "Invalid subdomain format",
-		});
-		return;
-	}
-
-	// Enforce maxTunnelsPerKey
-	const currentCount = tunnelManager.countByKeyHash(state.keyInfo.keyHash);
-	if (currentCount >= state.keyInfo.maxTunnels) {
-		safeSend(ws, {
-			type: "register-tunnel-result",
-			success: false,
-			subdomain: requestedSubdomain,
-			localPort: msg.localPort,
-			url: "",
-			error: "Max tunnels per key exceeded",
-		});
-		return;
-	}
-
-	if (
-		!tunnelManager.register(
-			requestedSubdomain,
-			ws,
-			state.id,
-			state.keyInfo.keyHash,
-			state.keyInfo.userId,
-			state.keyInfo.keyId,
-			msg.auth,
-		)
-	) {
-		safeSend(ws, {
-			type: "register-tunnel-result",
-			success: false,
-			subdomain: requestedSubdomain,
-			localPort: msg.localPort,
-			url: "",
-			error: "Subdomain already in use",
-		});
-		return;
-	}
-
-	const url = buildTunnelUrl(requestedSubdomain);
-	safeSend(ws, {
-		type: "register-tunnel-result",
-		success: true,
-		subdomain: requestedSubdomain,
-		localPort: msg.localPort,
-		url,
-	});
-	logger.info(
-		{ subdomain: requestedSubdomain, url, localPort: msg.localPort },
-		"Additional tunnel registered",
-	);
 }

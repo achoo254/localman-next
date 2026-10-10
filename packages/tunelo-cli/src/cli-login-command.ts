@@ -1,137 +1,126 @@
-import { randomUUID } from "node:crypto";
-import { hostname } from "node:os";
 import type { Command } from "commander";
+import { getApiBaseUrl, verifyKey } from "./api-client.js";
+import { type StoredSession, loadConfig, updateConfig } from "./config.js";
 import {
-	getApiBaseUrl,
-	initDeviceLogin,
-	pollDeviceLogin,
-	verifyKey,
-} from "./api-client.js";
-import { loadConfig, saveConfig } from "./config.js";
+	deviceNameForIdp,
+	pollForTokens,
+	startDeviceAuthorization,
+} from "./device-login.js";
+import { discover, idpIssuer, revokeToken } from "./idp-client.js";
+import { clearSession, saveSession, sessionFromTokens } from "./idp-session.js";
+import { openBrowser } from "./open-browser.js";
+import { printServerMigration, resolveServerUrl } from "./server-url.js";
 
-function getServerBaseUrl(): string {
-	const config = loadConfig();
-	const serverUrl =
-		process.env.TUNELO_SERVER ?? config.server ?? "wss://tunnel.inetdev.io.vn";
-	return getApiBaseUrl(serverUrl);
+function fail(message: string): never {
+	console.error(`  ${message}`);
+	process.exit(1);
 }
 
-/** Stable per-machine id; created once and persisted in the config. */
-function getDeviceId(): string {
-	const config = loadConfig();
-	if (config.deviceId) return config.deviceId;
-	const deviceId = randomUUID();
-	saveConfig({ ...config, deviceId });
-	return deviceId;
+/** `--legacy-key`: CI without a browser keeps using an anonymous token. */
+async function saveLegacyKey(key: string): Promise<void> {
+	const baseUrl = getApiBaseUrl(
+		resolveServerUrl(undefined, printServerMigration),
+	);
+	const result = await verifyKey(baseUrl, key).catch((err: Error) =>
+		fail(`Could not reach the server: ${err.message}`),
+	);
+	if (!result.valid || result.kind !== "legacy") {
+		fail("That token is not a valid anonymous access token.");
+	}
+	updateConfig((config) => ({ ...config, key }));
+	console.log("  ✓ Token verified & saved. Run: tunelo http <port>");
 }
 
-function saveKey(token: string): void {
-	saveConfig({ ...loadConfig(), key: token });
+async function deviceLogin(): Promise<void> {
+	const issuer = idpIssuer();
+	const endpoints = await discover(issuer).catch((err: Error) =>
+		fail(`Could not reach ${issuer}: ${err.message}`),
+	);
+	const authorization = await startDeviceAuthorization(
+		endpoints,
+		deviceNameForIdp(),
+	).catch((err: Error) => fail(err.message));
+
+	const url =
+		authorization.verificationUriComplete ?? authorization.verificationUri;
+	console.log();
+	console.log("  Sign in to Tunelo in your browser:");
+	console.log(`  ${url}`);
+	console.log(`  Confirm the code: ${authorization.userCode}`);
+	console.log();
+	console.log("  Waiting for approval...");
+	await openBrowser(url);
+
+	const tokens = await pollForTokens(endpoints, authorization).catch(
+		(err: Error) => fail(err.message),
+	);
+	const session = sessionFromTokens(issuer, tokens, undefined, Date.now());
+	saveSession(session);
+	console.log(
+		`  ✓ Signed in (account ${session.sub}). Run: tunelo http <port>`,
+	);
 }
 
-function sleep(ms: number): Promise<void> {
-	return new Promise((r) => setTimeout(r, ms));
-}
-
-/** Open a URL in the default browser — cross-platform, no deps. */
-async function openBrowser(url: string): Promise<void> {
-	const { execFile } = await import("node:child_process");
-	const { promisify } = await import("node:util");
-	const run = promisify(execFile);
+/** Revokes the grant at the IdP; on failure says where to do it by hand. */
+async function revokeSession(session: StoredSession): Promise<void> {
+	const { issuer, refreshToken } = session;
 	try {
-		if (process.platform === "darwin") await run("open", [url]);
-		else if (process.platform === "win32")
-			await run("cmd", ["/c", "start", "", url]);
-		else await run("xdg-open", [url]);
-	} catch {
-		// ignore — the URL is printed for manual opening
+		await revokeToken(await discover(issuer), refreshToken);
+	} catch (err) {
+		console.error(
+			`  Could not revoke at ${issuer} (${(err as Error).message}); revoke this machine at ${issuer}/account.`,
+		);
 	}
 }
 
 export function registerLoginCommands(program: Command): void {
 	program
 		.command("login")
-		.description("Authorize this device via the browser")
-		.option("-k, --key <token>", "Use an existing access token (skip browser)")
-		.option("-f, --force", "Re-authorize even if already signed in")
-		.action(async (options: { key?: string; force?: boolean }) => {
-			const baseUrl = getServerBaseUrl();
-
-			// Headless path: verify and save a token directly.
-			if (options.key) {
-				if (!(await verifyKey(baseUrl, options.key).catch(() => false))) {
-					console.error("  Invalid access token.");
-					process.exit(1);
+		.description("Sign in with your account (opens the browser)")
+		.option(
+			"--legacy-key [token]",
+			"Save an anonymous access token instead (CI, no browser); without a value it is read from TUNELO_KEY, keeping it out of shell history",
+		)
+		.option("-f, --force", "Sign in again even if already signed in")
+		.action(
+			async (options: { legacyKey?: string | boolean; force?: boolean }) => {
+				if (options.legacyKey !== undefined) {
+					const key =
+						typeof options.legacyKey === "string"
+							? options.legacyKey
+							: process.env.TUNELO_KEY;
+					if (!key) fail("Pass the token or set TUNELO_KEY.");
+					await saveLegacyKey(key);
+					return;
 				}
-				saveKey(options.key);
-				console.log("  ✓ Verified & saved. Run: tunelo http <port>");
-				return;
-			}
-
-			// Idempotent: a still-valid token on this device needs no re-auth.
-			const existing = loadConfig().key;
-			if (existing && !options.force) {
-				if (await verifyKey(baseUrl, existing).catch(() => false)) {
+				const existing = loadConfig().session;
+				if (existing && !options.force) {
 					console.log(
-						"  Already authorized on this device. (use --force to redo)",
+						`  Already signed in (account ${existing.sub}). Use --force to sign in again.`,
 					);
 					return;
 				}
-			}
-
-			const deviceId = getDeviceId();
-			let requestId: string;
-			try {
-				requestId = await initDeviceLogin(baseUrl, deviceId, hostname());
-			} catch (err) {
-				console.error(`  Could not reach server: ${(err as Error).message}`);
-				process.exit(1);
-			}
-
-			const url = `${baseUrl}/login?req=${encodeURIComponent(requestId)}`;
-			console.log();
-			console.log("  Opening browser to authorize this device...");
-			console.log(`  ${url}`);
-			console.log();
-			console.log("  Waiting for approval in the browser...");
-			await openBrowser(url);
-
-			const deadline = Date.now() + 5 * 60 * 1000;
-			while (Date.now() < deadline) {
-				await sleep(2000);
-				let result: Awaited<ReturnType<typeof pollDeviceLogin>>;
-				try {
-					result = await pollDeviceLogin(baseUrl, requestId);
-				} catch {
-					continue; // transient — keep polling
-				}
-				if (result.status === "approved") {
-					saveKey(result.token);
-					console.log(
-						"  ✓ Device authorized & signed in. Run: tunelo http <port>",
-					);
-					return;
-				}
-				if (result.status === "expired") {
-					console.error("  Login request expired. Run `tunelo login` again.");
-					process.exit(1);
-				}
-			}
-			console.error("  Timed out waiting for approval.");
-			process.exit(1);
-		});
+				// Signing in again replaces this machine's grant: end the old one.
+				if (existing) await revokeSession(existing);
+				await deviceLogin();
+			},
+		);
 
 	program
 		.command("logout")
-		.description("Remove the saved access token")
-		.action(() => {
+		.description("Sign out: revoke this machine's sign-in and forget tokens")
+		.action(async () => {
 			const config = loadConfig();
-			if (!config.key) {
-				console.log("  Not logged in.");
+			if (!config.session && !config.key) {
+				console.log("  Not signed in.");
 				return;
 			}
-			// Keep deviceId so re-login stays idempotent for this machine.
-			saveConfig({ ...config, key: undefined });
-			console.log("  Logged out. Access token removed.");
+			if (config.session) {
+				await revokeSession(config.session);
+				clearSession();
+			}
+			// Keep deviceId so a later sign-in stays idempotent for this machine.
+			updateConfig((current) => ({ ...current, key: undefined }));
+			console.log("  Signed out. Tokens removed from this machine.");
 		});
 }

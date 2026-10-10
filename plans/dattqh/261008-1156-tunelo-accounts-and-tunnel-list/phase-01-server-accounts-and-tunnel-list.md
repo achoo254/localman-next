@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Server: xác minh token của IdP, tài khoản, scope, API liệt kê tunnel, link-code"
-status: pending
+status: completed
 priority: P1
 effort: "L"
 dependencies: []
@@ -69,16 +69,16 @@ Test trong `apps/tunelo-server/src/**/__tests__/`:
 | T10 | Review cuối phase | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 Verifier JWT và biến môi trường mới
-- [ ] T2 Model token có scope, thu hồi chỉ áp cho token đầy đủ quyền, có `issueLinkToken`
-- [ ] T3 Registry lưu chủ sở hữu và thiết bị, có `listByOwner` và `listByDeviceId`
-- [ ] T4 ws-handler trả đúng `TUNELO_AUTH_003`, `TUNELO_AUTH_004` và áp `maxTunnels`
-- [ ] T5 Link-code đủ 6 route, TTL, khoá sai nhiều lần
-- [ ] T6 `GET /api/tunnels` trả đúng shape, không lộ hash hay key
-- [ ] T7 Trang approve cũ redirect sang IdP khi `AUTH_MODE=hybrid`
-- [ ] T8 `TUNNEL_DOMAINS` chạy song song 2 domain, URL trả về là `https://<tên>.tunnel.hoandat.com`
-- [ ] T9 Toàn bộ test mới pass
-- [ ] T10 Review không còn finding mức high
-- [ ] Verification: các case của verifier, ws-handler, registry, thu hồi token và `extractSubdomain` pass
-- [ ] lint/typecheck/test sạch: `biome check`, `tsc --noEmit`, `pnpm --filter @tunelo/server test`
-- [ ] `pnpm check:mcp-coverage` pass
+- [x] T1 Verifier JWT và biến môi trường mới
+- [x] T2 Model token có scope, thu hồi chỉ áp cho token đầy đủ quyền, có `issueLinkToken`
+- [x] T3 Registry lưu chủ sở hữu và thiết bị, có `listByOwner` và `listByDeviceId`
+- [x] T4 ws-handler trả đúng `TUNELO_AUTH_003`, `TUNELO_AUTH_004` và áp `maxTunnels`
+- [x] T5 Link-code đủ 6 route, TTL, khoá sai nhiều lần
+- [x] T6 `GET /api/tunnels` trả đúng shape, không lộ hash hay key
+- [x] T7 Trang approve cũ redirect sang IdP khi `AUTH_MODE=hybrid`
+- [x] T8 `TUNNEL_DOMAINS` chạy song song 2 domain, URL trả về là `https://<tên>.tunnel.hoandat.com`
+- [x] T9 Toàn bộ test mới pass
+- [x] T10 Review không còn finding mức high
+- [x] Verification: các case của verifier, ws-handler, registry, thu hồi token và `extractSubdomain` pass
+- [x] lint/typecheck/test sạch: `biome check`, `tsc --noEmit`, `pnpm --filter @tunelo/server test`
+- [x] `pnpm check:mcp-coverage` pass

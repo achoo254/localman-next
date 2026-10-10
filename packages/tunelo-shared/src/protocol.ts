@@ -59,6 +59,15 @@ export interface AuthMessage {
 	subdomain: string;
 	/** Basic auth credentials in "user:pass" format — sent during tunnel registration */
 	auth?: string;
+	/** Local port of the first tunnel, listed back to the account owner. */
+	localPort?: number;
+	/** Stable id of this machine (from the CLI config). */
+	deviceId?: string;
+	/** Human name of this machine (hostname). */
+	deviceName?: string;
+	/** Authenticate only, open no HTTP tunnel (`tunelo tcp`). Servers that do
+	 *  not know the flag open one as before. */
+	tcpOnly?: boolean;
 }
 
 export interface AuthResult {
@@ -67,6 +76,10 @@ export interface AuthResult {
 	subdomain: string;
 	url: string;
 	error?: string;
+	/** `TUNELO_*` code of a refusal, e.g. `TUNELO_AUTH_004`. */
+	code?: string;
+	/** ISO date after which this anonymous token stops opening tunnels. */
+	legacyTokenCutoff?: string;
 }
 
 export interface ErrorMessage {

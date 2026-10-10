@@ -147,6 +147,9 @@ importers:
       ioredis:
         specifier: ^5.11.1
         version: 5.11.1
+      jose:
+        specifier: ^6.2.12
+        version: 6.2.12
       jsonwebtoken:
         specifier: ^9.0.3
         version: 9.0.3
@@ -346,6 +349,9 @@ importers:
 
   packages/tunelo-cli:
     dependencies:
+      '@modelcontextprotocol/server':
+        specifier: 2.3.1
+        version: 2.3.1
       '@tunelo/shared':
         specifier: workspace:*
         version: link:../tunelo-shared
@@ -361,7 +367,13 @@ importers:
       ws:
         specifier: ^8.16.0
         version: 8.22.0
+      zod:
+        specifier: ^4.3.6
+        version: 4.6.5
     devDependencies:
+      '@modelcontextprotocol/client':
+        specifier: 2.3.1
+        version: 2.3.1
       '@tailwindcss/vite':
         specifier: ^4.1.3
         version: 4.3.3(vite@6.4.4(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))

@@ -10,6 +10,8 @@ interface InspectorIntegrationOptions {
 	inspectPort: number;
 	/** Subdomain→port map (mutated externally as tunnels register) */
 	subdomainPortMap: Map<string, number>;
+	/** Public URL of each subdomain, as the server reported it. */
+	tunnelUrls: Map<string, string>;
 	/** Fallback local port for replay */
 	defaultPort: number;
 }
@@ -23,7 +25,7 @@ export interface InspectorIntegration {
 export function createInspectorIntegration(
 	options: InspectorIntegrationOptions,
 ): InspectorIntegration {
-	const { inspectPort, subdomainPortMap, defaultPort } = options;
+	const { inspectPort, subdomainPortMap, tunnelUrls, defaultPort } = options;
 	const store = new RequestStore();
 
 	async function start(): Promise<number> {
@@ -99,7 +101,7 @@ export function createInspectorIntegration(
 				[...subdomainPortMap.entries()].map(([subdomain, localPort]) => ({
 					subdomain,
 					localPort,
-					url: `https://${subdomain}.tunnel.inetdev.io.vn`,
+					url: tunnelUrls.get(subdomain) ?? "",
 				})),
 		});
 		return handle.port;

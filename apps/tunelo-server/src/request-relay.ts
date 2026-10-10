@@ -1,11 +1,11 @@
 import type http from "node:http";
 import {
 	DEFAULTS,
-	TUNNEL_DOMAIN,
 	type TunnelRequest,
 	generateRequestId,
 } from "@tunelo/shared";
 import { tryServeFromCache, wrapForCache } from "./cache/caching-sink.js";
+import { tunnelDomains } from "./config/tunnel-domains.js";
 import { createLogger } from "./logger.js";
 import { usageTracker } from "./services/usage-tracker.js";
 import { createResponseSink } from "./stream/response-sink.js";
@@ -13,11 +13,26 @@ import { tunnelManager } from "./tunnel-manager.js";
 
 const logger = createLogger("tunelo-relay");
 
-export function extractSubdomain(host: string): string | null {
-	const domainEscaped = TUNNEL_DOMAIN.replace(/\./g, "\\.");
-	const regex = new RegExp(`^([^.]+)\\.${domainEscaped}`);
-	const match = host.match(regex);
-	return match ? match[1] : null;
+/**
+ * Tenant subdomain of a Host header on any configured tunnel domain (old and
+ * new run side by side during a move), or null for the apex / foreign hosts.
+ */
+export function extractSubdomain(
+	host: string,
+	domains: readonly string[] = tunnelDomains(),
+): string | null {
+	const hostname = host.toLowerCase().replace(/:\d+$/, "");
+	// Longest first: with `x.io` and `tunnel.x.io` both configured, the apex
+	// `tunnel.x.io` must not read as subdomain `tunnel` of `x.io`.
+	const byLength = [...domains].sort((a, b) => b.length - a.length);
+	for (const domain of byLength) {
+		if (hostname === domain) return null;
+		const suffix = `.${domain}`;
+		if (!hostname.endsWith(suffix)) continue;
+		const label = hostname.slice(0, -suffix.length);
+		if (label.length > 0 && !label.includes(".")) return label;
+	}
+	return null;
 }
 
 export function createRelayHandler(): http.RequestListener {

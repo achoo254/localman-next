@@ -1,3 +1,22 @@
+import type { RequestHandler } from "express";
+import type { AuthConfig } from "../config/auth-config.js";
+
+/**
+ * GET /login?req=<id>, opened by tunelo CLI 1.6.x. In `hybrid` mode nobody
+ * may approve anonymously any more, so the browser goes to the identity
+ * provider, where signing in is required; `legacy` mode keeps the old page.
+ */
+export function createLoginPageHandler(config: AuthConfig): RequestHandler {
+	return (req, res) => {
+		if (config.mode === "hybrid") {
+			res.redirect(302, `${config.issuer}/account`);
+			return;
+		}
+		const requestId = String(req.query.req ?? "").slice(0, 128);
+		res.type("html").send(renderLoginPage(requestId));
+	};
+}
+
 // Server-rendered approve page for `tunelo login`. The CLI opens
 // /login?req=<id>; this page shows the requesting device and an Approve
 // button, then flips to success. No framework/build — one inline HTML string.

@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "CLI: đăng nhập bằng device flow, refresh, link, nhắc token ẩn danh"
-status: pending
+status: in-progress
 priority: P1
 effort: "M"
 dependencies: [1]
@@ -55,15 +55,15 @@ dependencies: [1]
 | T9 | Review cuối phase | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 `idp-session` refresh đúng lúc, config quyền 600
-- [ ] T2 `login`, `logout`, `--legacy-key` và chuyển domain mặc định chạy đúng
-- [ ] T3 `whoami` và dòng nhắc ẩn danh kèm ngày cutoff
-- [ ] T4 `link`, `links`, `links revoke` chạy đúng
-- [ ] T5 `tunelo mcp` có đủ 6 tool, tunnel đóng khi tiến trình thoát
-- [ ] T6 Lệnh đã đăng ký, `tunelo` version 1.7.0, `repository` đúng
-- [ ] T7 Unit test pass
+- [x] T1 `idp-session` refresh đúng lúc, config quyền 600
+- [x] T2 `login`, `logout`, `--legacy-key` và chuyển domain mặc định chạy đúng
+- [x] T3 `whoami` và dòng nhắc ẩn danh kèm ngày cutoff
+- [x] T4 `link`, `links`, `links revoke` chạy đúng
+- [x] T5 `tunelo mcp` có đủ 6 tool, tunnel đóng khi tiến trình thoát
+- [x] T6 Lệnh đã đăng ký, `tunelo` version 1.7.0, `repository` đúng
+- [x] T7 Unit test pass
 - [ ] T8 Test MCP stdio và E2E pass
-- [ ] T9 Review không còn finding mức high
+- [x] T9 Review không còn finding mức high
 - [ ] Verification: MCP stdio mở và đóng tunnel; unit cho device flow, refresh, quyền file, dòng nhắc; E2E login, http, liệt kê qua token đổi từ Localman và logout pass
-- [ ] lint/typecheck/test sạch: `biome check`, `tsc --noEmit`, `pnpm --filter tunelo test`
-- [ ] `pnpm check:mcp-coverage` pass
+- [x] lint/typecheck/test sạch: `biome check`, `tsc --noEmit`, `pnpm --filter tunelo test`
+- [x] `pnpm check:mcp-coverage` pass

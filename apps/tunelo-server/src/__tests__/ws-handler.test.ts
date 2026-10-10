@@ -1,15 +1,24 @@
 import http from "node:http";
 import net from "node:net";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import type { KeyStore } from "../key-store/key-store-types.js";
+import type { TokenAuthenticator } from "../auth/token-authenticator.js";
 import { attachWsHandler } from "../ws-handler.js";
 
-/** No key ever validates — these tests only exercise the upgrade gate. */
-const keyStore: KeyStore = {
-	validate: async () => null,
-	recordUsage: async () => {},
-	initialize: async () => {},
-	shutdown: async () => {},
+/** No token ever validates — these tests only exercise the upgrade gate. */
+const authenticator: TokenAuthenticator = {
+	config: {
+		mode: "hybrid",
+		issuer: "https://auth.test.local",
+		audience: "https://tunnel.hoandat.com",
+		legacyCutoffMs: null,
+	},
+	authenticate: async () => ({
+		ok: false,
+		code: "TUNELO_AUTH_001",
+		message: "Invalid or expired token",
+		retryable: false,
+	}),
+	legacyCutoffIso: () => undefined,
 };
 
 describe("ws upgrade rejection", () => {
@@ -21,7 +30,7 @@ describe("ws upgrade rejection", () => {
 			res.writeHead(404);
 			res.end();
 		});
-		attachWsHandler(server, keyStore);
+		attachWsHandler(server, authenticator);
 		await new Promise<void>((resolve) => server.listen(0, resolve));
 		const addr = server.address();
 		port = typeof addr === "object" && addr ? addr.port : 0;

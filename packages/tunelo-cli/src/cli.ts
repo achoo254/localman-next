@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 import type { RegisterTunnelResult } from "@tunelo/shared";
 import { program } from "commander";
+import { registerLinkCommands } from "./cli-link-command.js";
 import { registerLoginCommands } from "./cli-login-command.js";
+import { registerMcpCommand } from "./cli-mcp-command.js";
 import { registerStatusCommands } from "./cli-status-commands.js";
 import { registerTcpCommand } from "./cli-tcp-command.js";
+import { setupTunnel, showCredentialNotices } from "./cli-tunnel-setup.js";
 import { registerUpdateCommand } from "./cli-update-command.js";
+import { registerWhoamiCommand } from "./cli-whoami-command.js";
 import { getConfigPath, loadConfig, saveConfig } from "./config.js";
 import { Display } from "./display.js";
 import { createInspectorIntegration } from "./inspector-integration.js";
@@ -70,20 +74,8 @@ program
 				process.exit(1);
 			}
 
-			const config = loadConfig();
-			const apiKey = options.key ?? process.env.TUNELO_KEY ?? config.key;
-			const serverUrl =
-				options.server ??
-				process.env.TUNELO_SERVER ??
-				config.server ??
-				"wss://tunnel.inetdev.io.vn";
-
-			if (!apiKey) {
-				display.showError(
-					"API key required. Use --key, TUNELO_KEY env, or `tunelo config --key <key>`",
-				);
-				process.exit(1);
-			}
+			const setup = setupTunnel(options, display);
+			const { serverUrl } = setup;
 
 			if (options.quiet) display.setLogLevel("quiet");
 			else if (options.verbose) display.setLogLevel("verbose");
@@ -94,6 +86,7 @@ program
 			const primary = tunnels[0];
 			const additional = tunnels.slice(1);
 			const subdomainPortMap = new Map<string, number>();
+			const tunnelUrls = new Map<string, string>();
 			const inspectPort = Number(options.inspectPort) || 4040;
 
 			const inspector =
@@ -101,18 +94,20 @@ program
 					? createInspectorIntegration({
 							inspectPort,
 							subdomainPortMap,
+							tunnelUrls,
 							defaultPort: primary.port,
 						})
 					: null;
 
 			const client = new TunnelClient({
-				serverUrl,
-				apiKey,
+				...setup.clientOptions,
 				subdomain: options.subdomain ?? primary.subdomain,
 				localPort: primary.port,
 				auth: options.auth,
 				additionalTunnels: additional,
 			});
+
+			showCredentialNotices(client, setup.credential, display);
 
 			// Record this process so `tunelo status`/`kill` can see and stop it.
 			const run = startRunRecord("http", serverUrl);
@@ -123,12 +118,13 @@ program
 
 			client.on("connected", (result: { url: string; subdomain: string }) => {
 				subdomainPortMap.set(result.subdomain, primary.port);
+				tunnelUrls.set(result.subdomain, result.url);
 				runTunnels.push({ url: result.url, localPort: primary.port });
 				run.update(runTunnels);
 				display.showConnected(
 					result.url,
 					`http://localhost:${primary.port}`,
-					apiKey,
+					setup.displayKey,
 					options.auth !== undefined,
 				);
 				if (inspector) {
@@ -156,6 +152,7 @@ program
 
 			client.on("tunnel-registered", (result: RegisterTunnelResult) => {
 				subdomainPortMap.set(result.subdomain, result.localPort);
+				tunnelUrls.set(result.subdomain, result.url);
 				runTunnels.push({ url: result.url, localPort: result.localPort });
 				run.update(runTunnels);
 				display.showTunnelRegistered(
@@ -218,20 +215,31 @@ program
 
 registerTcpCommand(program, display);
 registerLoginCommands(program);
+registerWhoamiCommand(program);
+registerLinkCommands(program);
+registerMcpCommand(program);
 registerStatusCommands(program);
 registerUpdateCommand(program);
 
 program
 	.command("config")
 	.description("Set default configuration")
-	.option("-k, --key <apikey>", "Set default API key")
+	.option("-k, --key <apikey>", "Set default anonymous access token")
 	.option("-s, --server <url>", "Set default server URL")
 	.option("--show", "Show current config")
 	.action((options: { key?: string; server?: string; show?: boolean }) => {
 		if (options.show) {
-			const config = loadConfig();
+			const { key, session, ...rest } = loadConfig();
+			// Tokens never go to the terminal: show only that they exist.
+			const shown = {
+				...rest,
+				...(key ? { key: "(saved)" } : {}),
+				...(session
+					? { session: { issuer: session.issuer, account: session.sub } }
+					: {}),
+			};
 			console.log(`Config path: ${getConfigPath()}`);
-			console.log(JSON.stringify(config, null, 2));
+			console.log(JSON.stringify(shown, null, 2));
 			return;
 		}
 

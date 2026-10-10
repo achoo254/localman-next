@@ -1,28 +1,39 @@
-import { createHash } from "node:crypto";
 import { Router } from "express";
-import { ApiKey } from "../db/models/api-key-model.js";
+import {
+	type TokenAuthenticator,
+	bearerTokenOf,
+} from "../auth/token-authenticator.js";
 
 /**
- * GET /api/verify — checks a Bearer access token is valid and active.
- * Used by `tunelo login` to confirm a pasted token before saving it.
+ * GET /api/verify — checks a Bearer token (anonymous, link or account JWT).
+ * `tunelo login --legacy-key` uses it to confirm a pasted token; `tunelo
+ * whoami` reads `kind` and, for anonymous tokens, the cutoff date.
  */
-export function createVerifyRouter(): Router {
+export function createVerifyRouter(authenticator: TokenAuthenticator): Router {
 	const router = Router();
 
 	router.get("/", async (req, res, next) => {
 		try {
-			const authHeader = req.headers.authorization;
-			if (!authHeader?.startsWith("Bearer ")) {
-				res.status(401).json({ valid: false });
+			const token = bearerTokenOf(req.headers.authorization);
+			if (!token) {
+				res.status(401).json({ valid: false, code: "TUNELO_AUTH_002" });
 				return;
 			}
-			const rawKey = authHeader.slice(7);
-			const keyHash = createHash("sha256").update(rawKey).digest("hex");
-			const key = await ApiKey.findOne({ keyHash, status: "active" }).lean();
-			const valid = Boolean(
-				key && (!key.expiresAt || new Date(key.expiresAt) > new Date()),
-			);
-			res.status(valid ? 200 : 401).json({ valid });
+			const outcome = await authenticator.authenticate(token, null);
+			if (!outcome.ok) {
+				res
+					.status(outcome.retryable ? 503 : 401)
+					.json({ valid: false, code: outcome.code });
+				return;
+			}
+			const { kind } = outcome.keyInfo;
+			const cutoff =
+				kind === "legacy" ? authenticator.legacyCutoffIso() : undefined;
+			res.json({
+				valid: true,
+				kind,
+				...(cutoff ? { legacyTokenCutoff: cutoff } : {}),
+			});
 		} catch (err) {
 			next(err);
 		}

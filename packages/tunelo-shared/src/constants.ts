@@ -42,11 +42,25 @@ export const DEFAULTS = {
 
 export const SUBDOMAIN_REGEX = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;
 
-export const TUNNEL_DOMAIN = "tunnel.inetdev.io.vn";
-
-export function buildTunnelUrl(subdomain: string): string {
-	return `https://${subdomain}.${TUNNEL_DOMAIN}`;
+/** Public URL of an HTTP tunnel. The domain is deployment config (the
+ *  server's primary entry of `TUNNEL_DOMAINS`), never a constant. */
+export function buildTunnelUrl(subdomain: string, domain: string): string {
+	return `https://${subdomain}.${domain}`;
 }
+
+/** Scopes of the Tunelo resource on the identity provider. */
+export const TUNNEL_SCOPES = {
+	/** Open tunnels on the account (CLI). */
+	OPEN: "tunnels:open",
+	/** List the account's tunnels (Localman, link tokens). */
+	READ: "tunnels:read",
+} as const;
+
+export type TunnelScope = (typeof TUNNEL_SCOPES)[keyof typeof TUNNEL_SCOPES];
+
+/** Prefix of the server-minted tokens (anonymous device and link tokens);
+ *  anything else is an identity-provider JWT. */
+export const SERVER_TOKEN_PREFIX = "tunelo_";
 
 export function generateRequestId(): string {
 	return `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;

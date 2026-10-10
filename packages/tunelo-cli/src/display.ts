@@ -24,6 +24,13 @@ function portFallbackNote(port: number, requestedPort?: number): string {
 	return chalk.gray(` (${requestedPort} in use)`);
 }
 
+/** The one-line nudge an anonymous machine sees on every run. */
+export function legacyReminder(cutoff?: string): string {
+	const day = cutoff?.slice(0, 10);
+	const when = day ? `stops working on ${day}` : "will stop working soon";
+	return `Anonymous token: it ${when}. Run \`tunelo login\` to sign in with your account.`;
+}
+
 export class Display {
 	private logLevel: LogLevel = "normal";
 	private startTime = 0;
@@ -152,6 +159,14 @@ export class Display {
 			console.log(`  Errors:    ${chalk.red(String(this.errorRequests))}`);
 		}
 		console.log("");
+	}
+
+	showLegacyReminder(cutoff?: string): void {
+		console.log(chalk.yellow(`  ${legacyReminder(cutoff)}`));
+	}
+
+	showAccount(sub: string): void {
+		console.log(chalk.green("  Account:   ") + chalk.gray(sub));
 	}
 
 	showError(message: string): void {

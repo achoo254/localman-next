@@ -24,6 +24,24 @@ describe("extractSubdomain", () => {
 			"my-cool-app",
 		);
 	});
+
+	test("accepts every configured domain, primary or not", () => {
+		expect(extractSubdomain("myapp.tunnel.hoandat.com")).toBe("myapp");
+		expect(extractSubdomain("MyApp.Tunnel.Hoandat.com:443")).toBe("myapp");
+		expect(extractSubdomain("tunnel.hoandat.com")).toBeNull();
+	});
+
+	test("an apex that is also under a shorter domain stays the apex", () => {
+		const domains = ["x.io", "tunnel.x.io"];
+		expect(extractSubdomain("tunnel.x.io", domains)).toBeNull();
+		expect(extractSubdomain("app.tunnel.x.io", domains)).toBe("app");
+	});
+
+	test("rejects hosts that only contain a tunnel domain", () => {
+		expect(extractSubdomain("a.tunnel.hoandat.com.evil.com")).toBeNull();
+		expect(extractSubdomain("a.b.tunnel.hoandat.com")).toBeNull();
+		expect(extractSubdomain("xtunnel.hoandat.com")).toBeNull();
+	});
 });
 
 describe("relay handler — control-plane host gating", () => {

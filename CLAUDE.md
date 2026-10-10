@@ -99,12 +99,19 @@ This is a **tunnel proxy** — it relays untrusted HTTP traffic. Critical rules:
 |------|---------|
 | `TUNELO_AUTH_001` | Invalid API key |
 | `TUNELO_AUTH_002` | API key required |
+| `TUNELO_AUTH_003` | Token lacks the scope (link token opening a tunnel, `tunnels:read` vs `tunnels:open`) |
+| `TUNELO_AUTH_004` | Anonymous token past `LEGACY_TOKEN_CUTOFF`; run `tunelo login` |
 | `TUNELO_TUNNEL_001` | Subdomain already in use |
 | `TUNELO_TUNNEL_002` | No tunnel found for subdomain |
 | `TUNELO_TUNNEL_003` | Tunnel connection lost |
 | `TUNELO_RELAY_001` | Request relay timeout |
 | `TUNELO_RELAY_002` | Response too large |
 | `TUNELO_SERVER_001` | Server startup failed |
+| `TUNELO_DEVICE_004` | Anonymous device sign-in closed (`AUTH_MODE=hybrid`); update CLI and `tunelo login` |
+| `TUNELO_LINK_001` | Invalid or expired link code |
+| `TUNELO_LINK_002` | Too many wrong link codes / link requests (rate limited) |
+| `TUNELO_LINK_003` | Link not found |
+| `TUNELO_LINK_004` | Token not bound to a machine (cannot link) |
 
 ### Architecture Reference
 

@@ -16,12 +16,22 @@ import {
 } from "@tunelo/shared";
 import WebSocket from "ws";
 import { type ActiveStream, proxyRequestStream } from "./http-stream.js";
+import { TunnelAuthError, isFatal } from "./tunnel-auth-error.js";
 import type { TunnelMapping } from "./tunnel-config-parser.js";
 import { WsAppProxy } from "./ws-app-proxy.js";
 
 export interface TunnelClientOptions {
 	serverUrl: string;
-	apiKey: string;
+	/** Fixed token; or use `getApiKey`. */
+	apiKey?: string;
+	/** Called before every connect and reconnect, e.g. to refresh an account
+	 *  access token. An error with `fatal: true` stops reconnecting. */
+	getApiKey?: () => Promise<string>;
+	/** Reported to the server so an account can tell its machines apart. */
+	deviceId?: string;
+	deviceName?: string;
+	/** Authenticate without opening an HTTP tunnel (TCP-only clients). */
+	tcpOnly?: boolean;
 	subdomain?: string;
 	localPort: number;
 	localHost?: string;
@@ -59,7 +69,16 @@ export class TunnelClient extends EventEmitter {
 		this.options = options;
 	}
 
-	connect(): Promise<AuthResult> {
+	/** Resolves the token first, so each (re)connect uses a fresh one. */
+	async connect(): Promise<AuthResult> {
+		const key = this.options.getApiKey
+			? await this.options.getApiKey()
+			: this.options.apiKey;
+		if (!key) throw new Error("No access token");
+		return this.open(key);
+	}
+
+	private open(key: string): Promise<AuthResult> {
 		return new Promise((resolve, reject) => {
 			const wsUrl = this.buildWsUrl();
 			// Bind every handler to this exact socket. Reading `this.socket`
@@ -93,9 +112,13 @@ export class TunnelClient extends EventEmitter {
 			socket.on("open", () => {
 				const authMsg: AuthMessage = {
 					type: "auth",
-					key: this.options.apiKey,
+					key,
 					subdomain: this.options.subdomain ?? "",
 					auth: this.options.auth,
+					localPort: this.options.localPort,
+					deviceId: this.options.deviceId,
+					deviceName: this.options.deviceName,
+					...(this.options.tcpOnly ? { tcpOnly: true } : {}),
 				};
 				socket.send(JSON.stringify(authMsg));
 
@@ -209,6 +232,11 @@ export class TunnelClient extends EventEmitter {
 		this.socket?.close();
 	}
 
+	/** False once disconnected or given up (e.g. the sign-in expired). */
+	isActive(): boolean {
+		return !this.stopped;
+	}
+
 	/** Register a TCP tunnel after auth */
 	registerTcp(localPort: number, remotePort?: number): void {
 		const msg: TcpRegisterMessage = {
@@ -250,10 +278,13 @@ export class TunnelClient extends EventEmitter {
 
 		if (!result.success) {
 			socket.close();
-			reject(new Error(result.error ?? "Auth failed"));
+			reject(new TunnelAuthError(result.error ?? "Auth failed", result.code));
 			return;
 		}
 		this.attempts = 0;
+		if (result.legacyTokenCutoff !== undefined) {
+			this.emit("legacy-token", result.legacyTokenCutoff);
+		}
 		this.subdomainPortMap.set(result.subdomain, this.options.localPort);
 		this.emit("connected", result);
 		this.registerAdditionalTunnels();
@@ -356,7 +387,12 @@ export class TunnelClient extends EventEmitter {
 				try {
 					await this.connect();
 					return;
-				} catch {
+				} catch (err) {
+					if (isFatal(err)) {
+						this.stopped = true;
+						this.emit("error", err);
+						return;
+					}
 					delay = Math.min(delay * 2, DEFAULTS.RECONNECT_MAX_MS);
 				}
 			}

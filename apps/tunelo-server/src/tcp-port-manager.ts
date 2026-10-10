@@ -2,14 +2,16 @@
 
 import { DEFAULTS } from "@tunelo/shared";
 import { createLogger } from "./logger.js";
+import type { TunnelOwner } from "./tunnel-owner.js";
 
 const logger = createLogger("tunelo-tcp-port-manager");
 
-interface PortAllocation {
+export interface PortAllocation {
 	port: number;
 	socketId: string;
 	localPort: number;
 	allocatedAt: Date;
+	owner: TunnelOwner;
 }
 
 class TcpPortManager {
@@ -37,6 +39,7 @@ class TcpPortManager {
 	allocate(
 		socketId: string,
 		localPort: number,
+		owner: TunnelOwner,
 		preferred?: number,
 	): number | null {
 		if (this.allocated.size >= DEFAULTS.TCP_MAX_TUNNELS) {
@@ -59,6 +62,7 @@ class TcpPortManager {
 				socketId,
 				localPort,
 				allocatedAt: new Date(),
+				owner,
 			});
 			logger.info(
 				{ port: preferred, socketId, localPort },
@@ -75,6 +79,7 @@ class TcpPortManager {
 					socketId,
 					localPort,
 					allocatedAt: new Date(),
+					owner,
 				});
 				logger.info({ port, socketId, localPort }, "TCP port allocated");
 				return port;
@@ -117,6 +122,11 @@ class TcpPortManager {
 			if (alloc.socketId === socketId) result.push(alloc);
 		}
 		return result;
+	}
+
+	/** Every live TCP allocation (for listing tunnels by owner). */
+	all(): PortAllocation[] {
+		return [...this.allocated.values()];
 	}
 
 	get stats(): { allocated: number; total: number } {

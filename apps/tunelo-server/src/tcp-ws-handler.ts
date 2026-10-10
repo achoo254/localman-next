@@ -1,14 +1,12 @@
 /** TCP tunnel WebSocket event handlers — handles tcp-register, tcp-data, tcp-connection-close */
 
-import {
-	DEFAULTS,
-	TUNNEL_DOMAIN,
-	type TcpRegisterMessage,
-} from "@tunelo/shared";
+import type { TcpRegisterMessage } from "@tunelo/shared";
 import type { WebSocket } from "ws";
+import { buildTcpUrl } from "./config/tunnel-domains.js";
 import { createLogger } from "./logger.js";
 import { tcpPortManager } from "./tcp-port-manager.js";
 import { type TcpRelay, createTcpRelay } from "./tcp-relay.js";
+import type { TunnelOwner } from "./tunnel-owner.js";
 import { safeSend } from "./ws-send.js";
 
 const logger = createLogger("tunelo-tcp-ws");
@@ -28,10 +26,12 @@ export function handleTcpRegister(
 	connectionId: string,
 	msg: TcpRegisterMessage,
 	state: TcpConnectionState,
+	owner: TunnelOwner,
 ): void {
 	const port = tcpPortManager.allocate(
 		connectionId,
 		msg.localPort,
+		owner,
 		msg.remotePort,
 	);
 	if (port === null) {
@@ -52,7 +52,7 @@ export function handleTcpRegister(
 		});
 		state.relays.set(port, relay);
 
-		const url = `tcp://${TUNNEL_DOMAIN}:${port}`;
+		const url = buildTcpUrl(port);
 		safeSend(ws, {
 			type: "tcp-register-result",
 			success: true,

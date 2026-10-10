@@ -5,6 +5,14 @@ import type { KeyInfo, KeyStore } from "./key-store-types.js";
 
 const logger = createLogger("tunelo-mongo-key-store");
 
+const DEVICE_LABEL_PREFIX = "device:";
+
+/** Device login labels its tokens `device:<name>`. */
+function deviceNameOf(label: string | null | undefined): string | undefined {
+	if (!label?.startsWith(DEVICE_LABEL_PREFIX)) return undefined;
+	return label.slice(DEVICE_LABEL_PREFIX.length) || undefined;
+}
+
 export class MongoKeyStore implements KeyStore {
 	constructor(private readonly uri: string) {}
 
@@ -32,13 +40,19 @@ export class MongoKeyStore implements KeyStore {
 		// No user accounts: the key stands alone. Its _id is the identity used
 		// for tunnel ownership/usage; limits come from the key itself.
 		const keyId = String(apiKey._id);
+		const scopes = apiKey.scopes ?? [];
 		return {
+			kind: scopes.length > 0 ? "link" : "legacy",
 			userId: keyId,
 			keyId,
 			keyHash,
 			maxTunnels: apiKey.maxTunnels ?? 3,
 			plan: "free",
 			role: "user",
+			scopes,
+			deviceId: apiKey.deviceId ?? undefined,
+			deviceName: deviceNameOf(apiKey.label),
+			linkedDeviceId: apiKey.linkedDeviceId ?? undefined,
 		};
 	}
 
