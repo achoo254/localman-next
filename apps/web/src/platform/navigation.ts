@@ -3,6 +3,7 @@
  * server's OIDC routes and opening pages on other sites. A desktop/mobile
  * shell can replace this module without touching components.
  */
+import { activeTranslator } from "../i18n/active-translator";
 import { type LoginOptions, loginUrl } from "../lib/api-url";
 
 /** Path, query and hash of the current page, used as `returnTo`. */
@@ -19,9 +20,14 @@ export function appPageUrl(path: string): string {
 	return new URL(path, window.location.origin).href;
 }
 
-/** Leaves the SPA for `/auth/login`, which redirects to the IdP. */
+/**
+ * Leaves the SPA for `/auth/login`, which redirects to the IdP; the IdP
+ * pages open in the language on screen unless `options.locale` says else.
+ */
 export function navigateToLogin(options: LoginOptions = {}): void {
-	window.location.assign(loginUrl(options));
+	window.location.assign(
+		loginUrl({ locale: activeTranslator().locale, ...options }),
+	);
 }
 
 /**

@@ -1,3 +1,4 @@
+import { isLocale } from "@localman/shared";
 import { type RequestHandler, type Response, Router } from "express";
 import { rateLimit } from "express-rate-limit";
 import * as oidcLib from "openid-client";
@@ -80,6 +81,7 @@ export function createAuthRouter(options: AuthRoutesOptions): Router {
 				url = await oidc.authorizationUrl({
 					...transaction,
 					promptCreate: req.query.prompt === "create",
+					uiLocale: isLocale(req.query.locale) ? req.query.locale : undefined,
 				});
 			} catch (error) {
 				if (!(error instanceof IdpUnavailableError)) throw error;

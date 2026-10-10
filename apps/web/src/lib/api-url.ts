@@ -1,3 +1,4 @@
+import type { Locale } from "@localman/shared/constants";
 import { appConfig } from "./app-config";
 
 /**
@@ -16,6 +17,8 @@ export interface LoginOptions {
 	returnTo?: string;
 	/** `create` opens the IdP sign-up screen instead of sign-in. */
 	prompt?: "create";
+	/** Language the IdP pages should use (sent on as `ui_locales`). */
+	locale?: Locale;
 }
 
 /** Only root-relative in-app paths are allowed back (no open redirect). */
@@ -23,12 +26,17 @@ export function isSafeReturnPath(path: string): boolean {
 	return path.startsWith("/") && !path.startsWith("//") && !path.includes("\\");
 }
 
-export function loginUrl({ returnTo, prompt }: LoginOptions = {}): string {
+export function loginUrl({
+	returnTo,
+	prompt,
+	locale,
+}: LoginOptions = {}): string {
 	const params: string[] = [];
 	if (returnTo && isSafeReturnPath(returnTo)) {
 		params.push(`returnTo=${encodeURIComponent(returnTo)}`);
 	}
 	if (prompt) params.push(`prompt=${prompt}`);
+	if (locale) params.push(`locale=${encodeURIComponent(locale)}`);
 	const query = params.length > 0 ? `?${params.join("&")}` : "";
 	return apiUrl(`/auth/login${query}`);
 }

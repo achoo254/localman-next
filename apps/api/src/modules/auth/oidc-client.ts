@@ -37,6 +37,8 @@ export interface AuthorizationRequest {
 	readonly codeVerifier: string;
 	/** Ask the IdP to open its sign-up page (only if it advertises `create`). */
 	readonly promptCreate: boolean;
+	/** Web language (a checked `Locale`), sent as `ui_locales` to the IdP. */
+	readonly uiLocale?: string;
 }
 
 interface Discovered {
@@ -133,6 +135,7 @@ export class OidcClient {
 		) {
 			params.prompt = "create";
 		}
+		if (request.uiLocale) params.ui_locales = request.uiLocale;
 		return oidc.buildAuthorizationUrl(config, params);
 	}
 

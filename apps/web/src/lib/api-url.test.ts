@@ -14,6 +14,13 @@ describe("api URLs", () => {
 		expect(logoutUrl()).toBe("/auth/logout");
 	});
 
+	it("passes the sign-in language on to the API", () => {
+		expect(loginUrl({ locale: "zh-CN" })).toBe("/auth/login?locale=zh-CN");
+		expect(loginUrl({ returnTo: "/projects", locale: "vi" })).toBe(
+			"/auth/login?returnTo=%2Fprojects&locale=vi",
+		);
+	});
+
 	it("drops returnTo values that could leave the site", () => {
 		for (const path of ["//evil.example", "https://evil.example", "/\\evil"]) {
 			expect(isSafeReturnPath(path)).toBe(false);
