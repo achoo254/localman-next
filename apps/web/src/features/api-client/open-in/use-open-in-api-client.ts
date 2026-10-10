@@ -6,7 +6,10 @@ import {
 	openInApiClientState,
 } from "./open-in-state";
 
-/** Goes to `/api-client`, which opens the target's requests as tabs. */
+/**
+ * Goes to `/api-client`, which opens the target as tabs: a project's or
+ * resource's mock requests, or one request log line.
+ */
 export function useOpenInApiClient(): (target: OpenInApiClient) => void {
 	const navigate = useNavigate();
 	return useCallback(

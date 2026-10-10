@@ -15,6 +15,7 @@ import {
 	createSessionAuthResolver,
 } from "./http/require-auth.js";
 import type { Logger } from "./logger.js";
+import { createLogStreamRouter } from "./modules/mock-runtime/log-stream-routes.js";
 import { operations as registeredOperations } from "./operations/registry.js";
 
 export const API_PREFIX = "/api/v1";
@@ -117,6 +118,8 @@ export function createDashboardApp(options: DashboardAppOptions): Express {
 			app.get(`${API_PREFIX}/openapi.json`, (_req, res) => {
 				res.json(openApi);
 			});
+			// Live request log (SSE), before the operation router's 404.
+			app.use(createLogStreamRouter({ resolveAuth }));
 			// API answers are per user: never let a browser or proxy cache them.
 			app.use(API_PREFIX, noStore, router);
 		},

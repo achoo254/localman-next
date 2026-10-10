@@ -68,6 +68,15 @@ export const projects = {
 				other: "{count} collaborators",
 			},
 			mcpTokens: { one: "{count} MCP token", other: "{count} MCP tokens" },
+			requestLogs: {
+				one: "{count} request log entry",
+				other: "{count} request log entries",
+			},
+			webhookInboxes: {
+				one: "{count} webhook inbox",
+				other: "{count} webhook inboxes",
+			},
+			callbacks: { one: "{count} callback", other: "{count} callbacks" },
 		},
 	},
 	rotate: {

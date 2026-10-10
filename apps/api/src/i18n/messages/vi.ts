@@ -40,6 +40,33 @@ export const vi: ServerMessages = {
 			`URL tunnel phải có dạng https://<tên>.<domain>, không có port, path hay query, và domain là một trong: ${p.domains}.`,
 		tunnelsDisabled: "Server này chưa bật URL tunnel.",
 	},
+	traffic: {
+		tunnelMissing: (p) =>
+			`Chưa có tunnel nào gắn với localhost:${p.port} trong thiết lập API client của chủ project. Chạy "tunelo http ${p.port}" rồi thêm URL của nó làm tunnel cho localhost:${p.port}.`,
+		tunnelDown: (p) =>
+			`Tunnel tới localhost:${p.port} không phản hồi. Kiểm tra "tunelo http ${p.port}" và server local còn đang chạy.`,
+		unreachable: "Upstream không phản hồi (kết nối lỗi hoặc quá thời gian).",
+		blocked:
+			"Upstream trỏ tới địa chỉ private, loopback hoặc link-local nên không được gọi tới.",
+		responseTooLarge: (p) => `Response của upstream lớn hơn ${p.mb} MB.`,
+		busy: "Có quá nhiều request đang chờ upstream của project này; thử lại sau giây lát.",
+		loop: "Request từ upstream quay lại một mock của Localman; kiểm tra thiết lập upstream của project.",
+		baseUrlInvalid:
+			"URL upstream phải có dạng https://host[:port][/path], không có thông tin đăng nhập, query hay fragment, và không được là URL mock của Localman.",
+		baseUrlBlocked:
+			"URL upstream trỏ tới địa chỉ private, loopback hoặc link-local; hãy mở server local bằng tunnel Tunelo.",
+		baseUrlDns: "Không phân giải được tên host của upstream.",
+		replayBodyTruncated:
+			"Body của request này đã bị cắt ở 64 KB trong log nên không gửi lại đúng được.",
+		replayFailed: "Request gửi lại không nhận được phản hồi từ mock.",
+		streamLimit: (p) =>
+			`Bạn đang mở ${p.max} log request trực tiếp; đóng bớt một cái rồi thử lại.`,
+		callbackUrlInvalid:
+			"URL callback phải có dạng https://…, không có thông tin đăng nhập hay fragment, và không được là URL mock của Localman. Muốn gửi về máy bạn thì dùng tunnel:<port><path>.",
+		callbackUrlBlocked:
+			"Địa chỉ này trỏ vào mạng private nên Localman không gửi callback tới được. Hãy mở server local bằng tunnel Tunelo.",
+		callbackDns: "Không phân giải được tên host của URL callback.",
+	},
 	ownerAlerts: {
 		suppressed: (count) =>
 			`(và ${count} lượt khác chưa báo vì vượt giới hạn tin báo)`,

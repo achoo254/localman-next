@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import request from "supertest";
-import { type Mock, beforeEach, expect, vi } from "vitest";
+import { type Mock, afterEach, beforeEach, expect, vi } from "vitest";
+import type { RuntimeSettings } from "../../../config/runtime-settings.js";
 import { createLogger } from "../../../logger.js";
 import { createMockApp } from "../../../mock-server.js";
 import {
@@ -10,7 +11,9 @@ import {
 import { UserModel } from "../../users/user-model.js";
 import type { QuotaWarning } from "../quota-warnings.js";
 import type { MockRateLimits } from "../rate-limit.js";
+import { requestLog } from "../request-log-service.js";
 import { clearMockProjectCache } from "../resolve-project.js";
+import type { UpstreamDeps } from "../upstream-proxy.js";
 import { UsageMeter } from "../usage-meter.js";
 
 /** TEST ONLY. Base domain of mock hosts in tests. */
@@ -46,13 +49,24 @@ export interface MockTestKit {
 	client(secret: string, options?: ClientOptions): MockClient;
 }
 
+export interface MockTestKitOptions {
+	/** Upstream forwarding of the apps (fresh per test); runtime defaults otherwise. */
+	readonly upstream?: () => UpstreamDeps;
+	/** Runtime settings on top of the test mock domain. */
+	readonly settings?: () => Partial<RuntimeSettings>;
+}
+
 /**
  * TEST ONLY. Mongo per file (dashboard settings with the test domain),
  * an owner user, an empty project cache and a fresh usage meter (never
- * started: tests flush it) before each test.
+ * started: tests flush it) before each test. The shared request log is
+ * flushed after each test, so no line leaks into the next one.
  */
-export function useMockTestKit(): MockTestKit {
-	useDashboardTestDb(() => ({ mockBaseDomain: MOCK_DOMAIN }));
+export function useMockTestKit(options: MockTestKitOptions = {}): MockTestKit {
+	useDashboardTestDb(() => ({
+		mockBaseDomain: MOCK_DOMAIN,
+		...options.settings?.(),
+	}));
 	const logger = createLogger("silent");
 	const warn = vi.fn(async (_owner: string, _warning: QuotaWarning) => {});
 	let meter = new UsageMeter({ logger, warn });
@@ -62,6 +76,7 @@ export function useMockTestKit(): MockTestKit {
 			usageMeter: meter,
 			trustProxy: "loopback",
 			rateLimits: limits,
+			...(options.upstream ? { upstream: options.upstream() } : {}),
 		});
 	let shared = build(RELAXED);
 	beforeEach(async () => {
@@ -71,6 +86,7 @@ export function useMockTestKit(): MockTestKit {
 		shared = build(RELAXED);
 		await UserModel.create({ sub: OWNER, username: "owner" });
 	});
+	afterEach(() => requestLog.flush());
 	return {
 		warn,
 		meter: () => meter,

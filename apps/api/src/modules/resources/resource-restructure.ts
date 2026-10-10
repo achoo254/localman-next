@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import { inProjectTransaction } from "../projects/project-lock.js";
 import type { StoredProject } from "../projects/project-model.js";
 import { RecordModel } from "./record-model.js";
+import { deleteResourceDependents } from "./resource-dependents.js";
 import { ResourceModel, type StoredResource } from "./resource-model.js";
 import {
 	assertDefinitionFits,
@@ -37,9 +38,10 @@ export interface DeletedResource {
 }
 
 /**
- * Deletes a resource with every descendant and their records, and drops
- * Child Resource fields of its parent that pointed at it. `dryRun` only
- * lists what would go.
+ * Deletes a resource with every descendant, their records and the data
+ * other modules keep per resource (`registerResourceDependent`), and
+ * drops Child Resource fields of its parent that pointed at it. `dryRun`
+ * only lists what would go.
  */
 export async function deleteResource(
 	project: StoredProject,
@@ -60,6 +62,7 @@ export async function deleteResource(
 		const ids = subtree.map((r) => r._id);
 		await RecordModel.deleteMany({ resourceId: { $in: ids } }, { session });
 		await ResourceModel.deleteMany({ _id: { $in: ids } }, { session });
+		await deleteResourceDependents(project._id, ids, session);
 		await ResourceModel.updateMany(
 			{ projectId: project._id },
 			{ $pull: { schema: { childId: resourceId } } },

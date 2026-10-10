@@ -13,6 +13,8 @@ import {
 	submitProInterest,
 } from "../modules/feedback/pro-interest-operations.js";
 import { mcpTokenOperations } from "../modules/mcp/mcp-token-operations.js";
+import { callbackOperations } from "../modules/mock-callbacks/callback-operations.js";
+import { trafficOperations } from "../modules/mock-runtime/traffic-operations.js";
 import {
 	listNotifications,
 	markAllNotificationsRead,
@@ -37,6 +39,7 @@ import { createResourceFromSchema } from "../modules/resources/resource-import-o
 import { resourceOperations } from "../modules/resources/resource-operations.js";
 import { resourceTreeOperations } from "../modules/resources/resource-tree-operations.js";
 import { getMe, setLocale } from "../modules/users/user-operations.js";
+import { webhookInboxOperations } from "../modules/webhook-inbox/inbox-operations.js";
 
 /**
  * Every dashboard API operation. REST routes, MCP tools and the OpenAPI
@@ -65,6 +68,9 @@ export const operations: readonly AnyOperation[] = [
 	...resourceOperations,
 	createResourceFromSchema,
 	...mockAdvancedOperations,
+	...trafficOperations,
+	...webhookInboxOperations,
+	...callbackOperations,
 	...proxyOperations,
 	...clientStoreOperations,
 	...resourceTreeOperations,

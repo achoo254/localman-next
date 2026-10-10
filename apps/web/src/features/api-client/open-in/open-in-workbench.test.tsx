@@ -11,6 +11,7 @@ const RESOURCE_STATE = {
 	openInApiClient: { projectId: "p1", resourceId: "posts" },
 };
 const PROJECT_STATE = { openInApiClient: { projectId: "p1" } };
+const LOG_STATE = { openInApiClient: { projectId: "p1", logId: "l1" } };
 
 describe("opening mock requests in the API client", () => {
 	beforeEach(() => {
@@ -79,6 +80,56 @@ describe("opening mock requests in the API client", () => {
 		});
 		await findToast("This resource is no longer in the project.");
 		expect(byDataId("editor-empty")).toBeInTheDocument();
+	});
+
+	it("opens a request log line handed over by id as one tab", async () => {
+		const logDraft = createRequestDraft({
+			name: "Logged order",
+			method: "POST",
+			url: `${MOCK_BASE}/orders`,
+		});
+		const { router, mockUrlCalls } = renderOpenIn({
+			state: LOG_STATE,
+			logDraft,
+		});
+		const tab = await screen.findByRole("tab", { name: /Logged order/ });
+		expect(tab).toHaveAttribute("aria-selected", "true");
+		expect(byDataId("request-method")).toHaveValue("POST");
+		expect(byDataId("request-url")).toHaveValue(`${MOCK_BASE}/orders`);
+		expect(router.state.location.state).toBeNull();
+		expect(await findTabs()).toHaveLength(1);
+		expect(mockUrlCalls).toHaveLength(0);
+	});
+
+	it("says so when the log line is gone or not a valid request", async () => {
+		renderOpenIn({ state: LOG_STATE });
+		await findToast("Couldn't open this request in the API Client");
+		expect(byDataId("editor-empty")).toBeInTheDocument();
+	});
+
+	it("ignores a draft put straight into location.state", async () => {
+		renderOpenIn({
+			state: { openInApiClient: { draft: createRequestDraft({ name: "x" }) } },
+		});
+		expect(
+			await screen.findByText("Drafts saved to your account"),
+		).toBeVisible();
+		expect(byDataId("editor-empty")).toBeInTheDocument();
+	});
+
+	it("says so when a log line finds no tab left", async () => {
+		const drafts = Array.from({ length: 50 }, (_, index) => ({
+			tabId: `t${index}`,
+			draft: createRequestDraft({ url: `https://a.test/${index}` }),
+		}));
+		renderOpenIn({
+			state: LOG_STATE,
+			logDraft: createRequestDraft({ name: "x" }),
+			drafts,
+		});
+		const toast = await findToast("No tab left to open");
+		expect(toast).toHaveTextContent("Up to 50 tabs can stay open.");
+		expect(await findTabs()).toHaveLength(50);
 	});
 
 	it("opens every CRUD request of a project picked in 'From mock project'", async () => {

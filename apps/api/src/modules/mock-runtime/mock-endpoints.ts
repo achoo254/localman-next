@@ -1,4 +1,5 @@
 import type { JsonValue } from "@localman/shared";
+import { dispatchRecordEvent } from "../mock-callbacks/dispatcher.js";
 import { RecordModel } from "../resources/record-model.js";
 import { createRecord, deleteRecord, updateRecord } from "./crud-handlers.js";
 import {
@@ -38,6 +39,22 @@ export interface EndpointResult {
 export interface EndpointCall {
 	readonly query: Readonly<Record<string, unknown>>;
 	readonly body: unknown;
+	/**
+	 * The request came from a Localman delivery (`X-Localman-Hop`): its
+	 * write fires no callback, so a callback into a mock cannot loop.
+	 */
+	readonly hop?: boolean;
+}
+
+/** Queues the resource's callbacks of a write unless it came from one. */
+function fireCallbacks(
+	target: MockTarget,
+	event: "create" | "update" | "delete",
+	record: JsonValue,
+	call: EndpointCall,
+): void {
+	if (call.hop === true) return;
+	dispatchRecordEvent(target.projectId, target.resource, event, record);
 }
 
 const notFound: EndpointResult = {
@@ -81,6 +98,7 @@ export async function runEndpoint(
 	if (kind === "create") {
 		const created = await createRecord(target, call.body);
 		if (!created) return notFound;
+		fireCallbacks(target, "create", created, call);
 		return {
 			status: 201,
 			data: created,
@@ -104,6 +122,7 @@ export async function runEndpoint(
 		data = await deleteRecord(target, recordId);
 	}
 	if (data === null) return notFound;
+	if (kind !== "one") fireCallbacks(target, kind, data, call);
 	return {
 		status: 200,
 		data,

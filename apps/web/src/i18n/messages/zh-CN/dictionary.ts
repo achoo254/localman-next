@@ -15,6 +15,7 @@ import { invite } from "./invite";
 import { landing } from "./landing";
 import { layout } from "./layout";
 import { mcp } from "./mcp";
+import { mockCallbacks } from "./mock-callbacks";
 import { notifications } from "./notifications";
 import { primitives } from "./primitives";
 import { projectDetail } from "./project-detail";
@@ -26,7 +27,10 @@ import { resourceRules } from "./resource-rules";
 import { resourceTree } from "./resource-tree";
 import { resources } from "./resources";
 import { subscription } from "./subscription";
+import { trafficLog } from "./traffic-log";
 import { ui } from "./ui";
+import { upstream } from "./upstream";
+import { webhookInbox } from "./webhook-inbox";
 
 /** Simplified Chinese, loaded on demand (`load-messages.ts`). */
 export const zhCN: Messages = {
@@ -58,4 +62,8 @@ export const zhCN: Messages = {
 	apiClientTools,
 	apiClientRouting,
 	apiClientTunelo,
+	upstream,
+	trafficLog,
+	webhookInbox,
+	mockCallbacks,
 };

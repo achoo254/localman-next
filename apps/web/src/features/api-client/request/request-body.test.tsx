@@ -67,7 +67,12 @@ describe("Request body", () => {
 		await user.click(byDataId("request-body-type-urlencoded"));
 		await user.click(byDataId("request-body-add"));
 		const table = within(byDataId("request-body-urlencoded"));
-		expect(table.getByRole("textbox", { name: "Key of row 1" })).toHaveFocus();
+		// The new row takes focus after it renders.
+		await waitFor(() =>
+			expect(
+				table.getByRole("textbox", { name: "Key of row 1" }),
+			).toHaveFocus(),
+		);
 		fireEvent.change(table.getByRole("textbox", { name: "Key of row 1" }), {
 			target: { value: "name" },
 		});

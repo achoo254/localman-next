@@ -19,7 +19,8 @@ import {
 } from "./proxy-concurrency.js";
 import { forwardRequest } from "./proxy-forwarder.js";
 import { admitProxyRequest } from "./proxy-quota.js";
-import { type SsrfGuard, createSsrfGuard } from "./ssrf-guard.js";
+import { createRuntimeSsrfGuard } from "./runtime-ssrf-guard.js";
+import { type SsrfGuard, normalizeHostname } from "./ssrf-guard.js";
 
 let proxyLogger: Logger = createLogger("silent");
 
@@ -40,8 +41,10 @@ export interface ProxyDependencies {
  * (`{secret}.{MOCK_BASE_DOMAIN}`), so that label is masked.
  */
 function loggedHost(url: string): string {
-	const host = new URL(url).hostname;
-	const base = runtimeSettings().mockBaseDomain.split(":")[0] ?? "";
+	const host = normalizeHostname(new URL(url).hostname);
+	const base = normalizeHostname(
+		runtimeSettings().mockBaseDomain.split(":")[0] ?? "",
+	);
 	return base && host.endsWith(`.${base}`) ? `[secret].${base}` : host;
 }
 
@@ -103,17 +106,8 @@ export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
 	return [sendRequest];
 }
 
-/**
- * Operations of the API client proxy, for the registry. The guard reads
- * `PROXY_BLOCKED_CIDRS`, `MOCK_BASE_DOMAIN` and `TUNNEL_DOMAINS` from the
- * runtime settings at every call and the machine's interface addresses
- * itself.
- */
+/** Operations of the API client proxy, for the registry. */
 export const proxyOperations: AnyOperation[] = createProxyOperations({
-	guard: createSsrfGuard({
-		extraBlocked: () => runtimeSettings().proxyBlockedCidrs,
-		mockBaseDomain: () => runtimeSettings().mockBaseDomain,
-		tunnelDomains: () => runtimeSettings().tunnelDomains,
-	}),
+	guard: createRuntimeSsrfGuard(),
 	logger: () => proxyLogger,
 });

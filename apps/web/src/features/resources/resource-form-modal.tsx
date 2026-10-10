@@ -8,6 +8,7 @@ import { ModalFooter } from "../../components/ui/modal-footer";
 import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
+import { CallbacksEditor } from "../mock-callbacks/callbacks-editor";
 import { EndpointsEditor } from "./endpoints-editor";
 import { ExportTypesMenu } from "./export-types-menu";
 import { ObjectTemplateEditor } from "./object-template-editor";
@@ -37,7 +38,7 @@ export function ResourceFormModal({
 	onPlanLimit,
 }: ResourceFormModalProps) {
 	const t = useT();
-	const { mockPowerUps } = useFeatures();
+	const { mockPowerUps, hybridMock } = useFeatures();
 	const formId = useId();
 	const nameInput = useRef<HTMLInputElement>(null);
 	const form = useRef<HTMLFormElement>(null);
@@ -179,6 +180,10 @@ export function ResourceFormModal({
 				) : null}
 				{submitError ? <Alert tone="danger">{submitError}</Alert> : null}
 			</form>
+			{/* Its own form and PUT: a callback belongs to a saved resource. */}
+			{hybridMock && resource ? (
+				<CallbacksEditor projectId={projectId} resourceId={resource.id} />
+			) : null}
 		</Modal>
 	);
 }

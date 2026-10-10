@@ -81,8 +81,13 @@ const systemResolver: Resolver = async (hostname) => {
 	);
 };
 
+/** A host name as DNS reads it: lower case, no trailing dots (`a.b.` is `a.b`). */
+export function normalizeHostname(hostname: string): string {
+	return hostname.toLowerCase().replace(/\.+$/, "");
+}
+
 function bareHostname(url: URL): string {
-	return url.hostname.replace(/^\[|\]$/g, "").replace(/\.$/, "");
+	return normalizeHostname(url.hostname.replace(/^\[|\]$/g, ""));
 }
 
 /** Every address on the machine's interfaces, zone ids dropped. */
@@ -93,8 +98,8 @@ export function interfaceAddresses(): string[] {
 }
 
 function isMockHost(hostname: string, mockBaseDomain: string): boolean {
-	const base = mockBaseDomain.split(":")[0]?.toLowerCase() ?? "";
-	return base !== "" && hostname.toLowerCase().endsWith(`.${base}`);
+	const base = normalizeHostname(mockBaseDomain.split(":")[0] ?? "");
+	return base !== "" && normalizeHostname(hostname).endsWith(`.${base}`);
 }
 
 /** nginx serves mock hosts on the scheme's default port only. */
@@ -103,9 +108,16 @@ function onDefaultPort(url: URL): boolean {
 }
 
 /** nginx serves tunnels over https on 443 only (`:443` parses to ""). */
-function isTunnelHost(url: URL, domains: readonly string[]): boolean {
+function isTunnelHost(
+	url: URL,
+	hostname: string,
+	domains: readonly string[],
+): boolean {
 	return (
-		domains.length > 0 && url.port === "" && isTunnelUrl(url.href, domains)
+		domains.length > 0 &&
+		url.protocol === "https:" &&
+		url.port === "" &&
+		isTunnelUrl(`https://${hostname}/`, domains)
 	);
 }
 
@@ -167,6 +179,7 @@ export function createSsrfGuard(options: SsrfGuardOptions = {}): SsrfGuard {
 			const mockHost = isMockHost(hostname, options.mockBaseDomain?.() ?? "");
 			const tunnelHost = isTunnelHost(
 				url,
+				hostname,
 				options.tunnelDomains?.() ?? NO_EXTRA,
 			);
 			const ownAllowed = (mockHost && onDefaultPort(url)) || tunnelHost;

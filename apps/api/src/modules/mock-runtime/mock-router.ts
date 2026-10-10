@@ -4,26 +4,22 @@ import type { Request, RequestHandler, Response } from "express";
 import { requestIdOf } from "../../http/request-log.js";
 import type { Logger } from "../../logger.js";
 import { effectivePlan } from "../billing/plan-guard.js";
-import type { StoredResource } from "../resources/resource-model.js";
-import { loadResources, parentKeyIn } from "../resources/resource-store.js";
+import { isInboxAddress, serveInbox } from "../webhook-inbox/inbox-route.js";
 import { answeredByBehavior } from "./mock-behavior-rest.js";
 import { runEndpoint } from "./mock-endpoints.js";
 import { addressOf, maskSecret } from "./mock-http.js";
-import type { MockTarget } from "./mock-records.js";
+import { resolveRestCall } from "./mock-route-call.js";
 import { type MockLimiters, owesWrite, tooManyRequests } from "./rate-limit.js";
-import {
-	enabledEndpoint,
-	endpointKind,
-	renderResponse,
-	usesCount,
-} from "./render-response.js";
+import { renderResponse, usesCount } from "./render-response.js";
+import { setLogSource, trackRequestLog } from "./request-log-capture.js";
+import type { RequestLogService } from "./request-log-service.js";
 import {
 	type MockAddress,
 	type MockProject,
 	resolveProject,
-	stripPrefix,
 } from "./resolve-project.js";
-import { matchRoute } from "./route-matcher.js";
+import { SOURCE_HEADER, UPSTREAM_HOP_HEADER } from "./upstream-headers.js";
+import { type UpstreamDeps, serveFromUpstream } from "./upstream-proxy.js";
 import type { UsageMeter } from "./usage-meter.js";
 
 /** The source answers unknown routes and records with this JSON string. */
@@ -55,35 +51,23 @@ export function admitMonthly(
 	return meter.admit(project.owner, limit, project.id.toHexString());
 }
 
-interface RouteNodeOf {
-	readonly id: string;
-	readonly parentId: string | null;
-	readonly name: string;
-	readonly resource: StoredResource;
-}
-
-function routeNodes(resources: readonly StoredResource[]): RouteNodeOf[] {
-	return resources.map((resource) => ({
-		id: resource._id.toHexString(),
-		parentId: resource.parentId?.toHexString() ?? null,
-		name: resource.name,
-		resource,
-	}));
-}
-
 /** What the router needs besides the request. */
 export interface MockRouterDeps {
 	readonly logger: Logger;
 	readonly meter: UsageMeter;
 	/** Charged with the bytes of every response body or of the scan behind it. */
 	readonly limiters: MockLimiters;
+	/** Hybrid mock forwarding of unmatched requests. */
+	readonly upstream: UpstreamDeps;
+	/** Every admitted request is logged here. */
+	readonly requestLog: RequestLogService;
 }
 
 async function serve(
 	req: Request,
 	res: Response,
 	address: MockAddress,
-	{ meter, limiters }: MockRouterDeps,
+	{ meter, limiters, upstream, requestLog }: MockRouterDeps,
 ): Promise<void> {
 	if (owesWrite(req.method, address)) {
 		const write = limiters.admitWrite(address.secret);
@@ -94,43 +78,37 @@ async function serve(
 	const projectId = project.id.toHexString();
 	// Read by the request log line.
 	res.locals.projectId = projectId;
+	// Upstream requests count too: they cost the server's bandwidth.
 	if (!(await admitMonthly(meter, project))) {
 		res.status(429).json(monthlyQuotaExceeded().toBody());
 		return;
 	}
-
-	const segments = stripPrefix(address.segments, project.prefix);
-	const resources = segments ? await loadResources(project.id) : [];
-	const steps = segments ? matchRoute(routeNodes(resources), segments) : null;
-	const last = steps?.at(-1);
-	if (!steps || !last) return notFound(res);
-	const { resource } = last.node;
-	const kind = endpointKind(req.method, last.recordId !== null);
-	const endpoint = kind ? enabledEndpoint(resource, kind) : null;
-	if (!kind || !endpoint) return notFound(res);
-
-	const target: MockTarget = {
-		projectId: project.id,
-		resources,
-		resource,
-		parentKey: parentKeyIn(resources, resource),
-		ancestors: steps
-			.slice(0, -1)
-			.flatMap((step) =>
-				step.recordId === null
-					? []
-					: [{ resource: step.node.resource, recordId: step.recordId }],
-			),
-	};
-	const call = { endpoint, kind, target, recordId: last.recordId };
+	trackRequestLog(req, res, project, address, requestLog);
+	// `/_inbox/<name>` is the webhook inbox, before resources and upstream.
+	if (isInboxAddress(address)) return serveInbox(req, res, project, address);
 	const charge = (bytes: number) =>
 		limiters.chargeResponse(address.secret, bytes);
+
+	const call = await resolveRestCall(req, address, project);
+	if (!call) {
+		if (project.upstream.kind !== "none") {
+			return serveFromUpstream(req, res, project, address, upstream, charge);
+		}
+		res.setHeader(SOURCE_HEADER, "mock");
+		return notFound(res);
+	}
+	res.setHeader(SOURCE_HEADER, "mock");
+	// Rules and chaos answer as `rule`; set before they may send.
+	setLogSource(res, "rule");
 	if (await answeredByBehavior(req, res, call, charge)) return;
+	setLogSource(res, "mock");
+	const { endpoint, kind, target, recordId } = call;
+	const hop = req.headers[UPSTREAM_HOP_HEADER.toLowerCase()] !== undefined;
 	const result = await runEndpoint(
 		kind,
 		target,
-		last.recordId,
-		req,
+		recordId,
+		{ query: req.query, body: req.body, hop },
 		usesCount(endpoint.response),
 	);
 	if (result.data === null) return notFound(res);

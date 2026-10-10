@@ -93,6 +93,38 @@ export const en = {
 			`The tunnel URL must be https://<name>.<domain> without port, path or query, where the domain is one of: ${p.domains}.`,
 		tunnelsDisabled: "Tunnel URLs are not enabled on this server.",
 	},
+	/** Hybrid mock, request log and replay (traffic) errors. */
+	traffic: {
+		/** 502: no enabled tunnel mapping of the owner for the port. */
+		tunnelMissing: (p: { readonly port: number }): string =>
+			`No tunnel is mapped to localhost:${p.port} in the project owner's API client settings. Run "tunelo http ${p.port}" and add its URL as the tunnel of localhost:${p.port}.`,
+		/** 502: the tunnel did not answer (stopped, refused, timed out). */
+		tunnelDown: (p: { readonly port: number }): string =>
+			`The tunnel to localhost:${p.port} did not answer. Check that "tunelo http ${p.port}" and the local server are running.`,
+		unreachable:
+			"The upstream did not answer (connection failed or timed out).",
+		blocked:
+			"The upstream resolves to a private, loopback or link-local address and is not reached.",
+		responseTooLarge: (p: { readonly mb: number }): string =>
+			`The upstream response is larger than ${p.mb} MB.`,
+		busy: "Too many requests are waiting for this project's upstream; try again in a moment.",
+		loop: "The request came back to a Localman mock from its upstream; check the project's upstream setting.",
+		baseUrlInvalid:
+			"The upstream URL must be https://host[:port][/path] without credentials, query or fragment, and must not be a Localman mock URL.",
+		baseUrlBlocked:
+			"The upstream URL resolves to a private, loopback or link-local address; expose a local server with a Tunelo tunnel instead.",
+		baseUrlDns: "The upstream host name could not be resolved.",
+		replayBodyTruncated:
+			"This request's body was cut at 64 KB in the log, so it cannot be replayed exactly.",
+		replayFailed: "The replayed request got no answer from the mock.",
+		streamLimit: (p: { readonly max: number }): string =>
+			`You already have ${p.max} live request logs open; close one and try again.`,
+		callbackUrlInvalid:
+			"The callback URL must be https://… without credentials or fragment, and must not be a Localman mock URL. To reach your machine, use tunnel:<port><path>.",
+		callbackUrlBlocked:
+			"This address points to a private network, so Localman can't send callbacks to it. Expose a local server with a Tunelo tunnel instead.",
+		callbackDns: "The callback host name could not be resolved.",
+	},
 	ownerAlerts: {
 		suppressed: (count: number): string =>
 			`(and ${count} more not sent because of the alert limit)`,

@@ -30,6 +30,24 @@ const projectSchema = new Schema(
 		 */
 		lastRequestAt: { type: Date, default: null },
 		mockRequests: { type: Number, default: 0 },
+		/**
+		 * Hybrid mock: where requests that match no resource or enabled
+		 * endpoint go (`kind`: `tunnel` with `port`, `url` with `baseUrl`).
+		 * Absent means none. Validated by the traffic operations.
+		 */
+		upstream: {
+			type: new Schema(
+				{
+					kind: { type: String, enum: ["tunnel", "url"], required: true },
+					port: { type: Number },
+					baseUrl: { type: String },
+				},
+				{ _id: false },
+			),
+			default: undefined,
+		},
+		/** Header names (lowercase) masked in the request log, on top of the defaults. */
+		redactHeaders: { type: [String], default: undefined },
 	},
 	{ collection: "projects", timestamps: true, versionKey: false },
 );
@@ -43,6 +61,13 @@ projectSchema.index(
 
 export const ProjectModel = mongoose.model("Project", projectSchema);
 
+/** `upstream` as stored; read through `upstreamOf` (mock runtime). */
+export interface StoredUpstream {
+	readonly kind: string;
+	readonly port?: number | null;
+	readonly baseUrl?: string | null;
+}
+
 export interface StoredProject {
 	readonly _id: Types.ObjectId;
 	readonly name: string;
@@ -53,6 +78,8 @@ export interface StoredProject {
 	readonly deletingAt?: Date | null;
 	readonly lastRequestAt?: Date | null;
 	readonly mockRequests?: number;
+	readonly upstream?: StoredUpstream | null;
+	readonly redactHeaders?: readonly string[];
 	readonly createdAt: Date;
 	/** Last edit of the project document (traffic does not count). */
 	readonly updatedAt?: Date;

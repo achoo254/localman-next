@@ -377,6 +377,18 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Câu hỏi mở của bước xia phase 10 (`plans/dattqh/reports/xia-phase-10-api-client-port.md`), chốt theo khuyến nghị: hộp thoại "hỏi trước khi secret đi qua proxy" kiểm bằng unit với dữ liệu giả, E2E dời sang phase 13 (biến `type=secret`); script dùng `lm.*`, không alias `pm.*`; nhãn import/export ghi "Collection v2.1" (không nêu tên đối thủ); thêm tab Tests ở response, chỉ hiện khi request có script; OpenAPI chỉ nhận JSON, YAML báo lỗi rõ.
 - Bước xia phát hiện CSP `connect-src 'self'` sẽ chặn mọi request gửi thẳng từ trình duyệt và thiếu `'wasm-unsafe-eval'` cho QuickJS; T3 phải sửa CSP và thêm `location` riêng cho proxy (body 10 MB, timeout 120 s).
 
+### Vòng 28: khi cook phase 20 (2026-10-10, user: "tiếp tục đi, xong thì deploy luôn")
+- `tunnel:<localPort>` của upstream, inbox forward và callback tìm URL tunnel trong ánh xạ thủ công của **chính owner** project (client settings `tunnelMappings` của phase 10, key `localhost:<port>`, chỉ mapping đang bật, URL đã qua kiểm `TUNNEL_DOMAINS`). Tự nhận tunnel qua `GET /api/tunnels` của Tunelo làm cùng T8b khi plan Tunelo xong; phase 20 không chờ.
+- Mọi request ra ngoài (upstream, inbox forward, callback) dùng forwarder có ghim DNS và bộ chặn SSRF của proxy phase 10, kèm `X-Localman-Proxy: 1`.
+- T1: màn Inbox và Callback bổ sung vào prototype rồi làm luôn, không chờ duyệt (user yêu cầu làm tiếp và deploy). T10: deploy production và thêm cờ `hybridMock` vào `released-features` sau khi mọi cổng kiểm tra và review pass.
+- Chốt sau T1 (spec `plans/dattqh/reports/ui-phase-20-traffic-spec.md`): lỗi upstream theo quy ước repo `{ error: { code: "UPSTREAM_UNAVAILABLE", message, hint } }`; chưa có role Editor nên chỉ owner đặt upstream, inbox, callback, collaborator chỉ đọc; hạn mức `webhookInboxes` tính theo project; có operation xoá log (owner, cần xác nhận).
+
+### Vòng 29: trang chủ khi đã đăng nhập (2026-10-10, user hỏi, Jev quyết)
+- Vấn đề: `/` chuyển người đã đăng nhập sang `/projects`, nên họ không xem lại landing (tính năng, giá, FAQ) được nữa.
+- `/` luôn hiện landing, kể cả khi đã đăng nhập (Jev 0.99). Với người đã đăng nhập, header của landing hiện "Open app" và avatar thay cho "Sign in", nút chính ở hero dẫn tới `/projects`. Wordmark trong app vẫn về `/projects`. Menu tài khoản và footer có link "Localman home" về `/`.
+- Thêm trang `/pricing` riêng, link từ landing, menu tài khoản và hộp thoại giới hạn gói (noul 0.75).
+- Không nhớ lựa chọn để tự chuyển người đã đăng nhập từ `/` sang `/projects` (noul 0.14).
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 

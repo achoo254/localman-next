@@ -30,6 +30,9 @@ describe("project dialogs", () => {
 						dependents: [
 							{ kind: "resources", count: 3 },
 							{ kind: "collaborators", count: 1 },
+							{ kind: "requestLogs", count: 120 },
+							{ kind: "webhookInboxes", count: 2 },
+							{ kind: "callbacks", count: 1 },
 						],
 					},
 				};
@@ -40,7 +43,7 @@ describe("project dialogs", () => {
 		const dialog = screen.getByRole("dialog", { name: "Delete project" });
 		expect(
 			await within(dialog).findByText(
-				"This also deletes 3 resources, 1 collaborator.",
+				"This also deletes 3 resources, 1 collaborator, 120 request log entries, 2 webhook inboxes, 1 callback.",
 			),
 		).toBeInTheDocument();
 		await userEvent.click(

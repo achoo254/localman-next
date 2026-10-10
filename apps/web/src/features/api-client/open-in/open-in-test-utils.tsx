@@ -71,6 +71,8 @@ export interface OpenInRenderOptions {
 	drafts?: { tabId: string; draft: ApiRequestDraft }[];
 	/** Status of `GET /projects/p1/mock-urls` (200 by default). */
 	mockUrlsStatus?: number;
+	/** `draft` of `GET /projects/p1/request-logs/l1/draft`; absent: 404. */
+	logDraft?: unknown;
 }
 
 /**
@@ -81,6 +83,7 @@ export function renderOpenIn({
 	state = null,
 	drafts = [],
 	mockUrlsStatus = 200,
+	logDraft,
 }: OpenInRenderOptions = {}) {
 	stubClientApi(drafts);
 	const clientFetch = globalThis.fetch;
@@ -91,6 +94,11 @@ export function renderOpenIn({
 			const path = new URL(String(input), window.location.origin).pathname;
 			if (path === "/api/v1/projects") {
 				return json({ items: [makeProject("p1", { name: "Demo shop" })] });
+			}
+			if (path === "/api/v1/projects/p1/request-logs/l1/draft") {
+				return logDraft === undefined
+					? json({ error: { code: "NOT_FOUND", message: "Gone." } }, 404)
+					: json({ draft: logDraft });
 			}
 			if (path === "/api/v1/projects/p1/mock-urls") {
 				mockUrlCalls.push(path);

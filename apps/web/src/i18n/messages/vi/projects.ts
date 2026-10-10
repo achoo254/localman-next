@@ -62,6 +62,9 @@ export const projects: Messages["projects"] = {
 			records: { other: "{count} bản ghi dữ liệu" },
 			collaborators: { other: "{count} cộng tác viên" },
 			mcpTokens: { other: "{count} token MCP" },
+			requestLogs: { other: "{count} dòng request log" },
+			webhookInboxes: { other: "{count} webhook inbox" },
+			callbacks: { other: "{count} callback" },
 		},
 	},
 	rotate: {

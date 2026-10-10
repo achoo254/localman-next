@@ -26,7 +26,7 @@ Nối mock, Tunelo và API client thành một luồng mà mockapi.io và Postma
 | Upstream của mock lai | Mỗi project có `upstream`: `none` (mặc định), `tunnel:<localPort>` (tunnel của **chính owner**, tìm theo tài khoản như phase 10), hoặc `url:<https base>`. Với `url`, host phải qua bộ chặn SSRF của phase 10, và chỉ owner hay Editor mới đặt được |
 | Quyết định chuyển tiếp | Path khớp resource hoặc endpoint đang bật thì là mock. Còn lại thì chuyển nguyên request (method, header trừ hop-by-hop, body) sang upstream. Response có header `X-Localman-Source: mock` hoặc `upstream` |
 | Hạn mức | **Mọi** request đi vào mock runtime đều tính vào `mockRequestsPerMonth`, kể cả request được chuyển sang upstream, vì tất cả đều tốn băng thông của server |
-| Upstream lỗi | Tunnel đã dừng thì trả 502 kèm JSON `{error:"UPSTREAM_UNAVAILABLE", hint:"tunelo http <port>"}` |
+| Upstream lỗi | Tunnel đã dừng (kể cả khi chính Tunelo trả 502/504) thì trả 502 theo dạng lỗi chung `{ error: { code: "UPSTREAM_UNAVAILABLE", message, hint: "tunelo http <port>" } }` |
 | Log | Lưu 7 ngày ở gói Free, 30 ngày ở Pro (`plan-limits.requestLogDays`). Mỗi dòng có thời gian, method, path, status, thời gian xử lý, nguồn (mock, upstream hay rule), header và body (cắt ở 64 KB). **Header nhạy cảm bị che** (`authorization`, `cookie`, `x-api-key`, cộng danh sách tuỳ chỉnh) |
 | Live | Cập nhật live qua SSE trên trang project; lọc theo method, status và path |
 | Replay | "Replay" gửi lại đúng request vào mock (tính vào hạn mức). "Mở trong API client" tạo tab request ở phase 10 |
@@ -66,19 +66,19 @@ Nối mock, Tunelo và API client thành một luồng mà mockapi.io và Postma
 | T11 | Review cuối phase, chú trọng SSRF, che header và tính hạn mức | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 Spec Upstream và Request log chốt theo prototype; màn Inbox và Callback đã thêm và user đã duyệt
-- [ ] T2 Forwarder, header nguồn, 502 kèm hint, SSRF, hạn mức
-- [ ] T3 Request log có TTL, che header, cắt body, SSE có lọc
-- [ ] T4 Pipeline mock runtime ghi log, replay, "Mở trong API client"
-- [ ] T5 Webhook inbox có forward và thử lại 3 lần
-- [ ] T6 Mock callback qua hàng đợi, có backoff và SSRF
-- [ ] T7 UI request log, upstream và các tab trên card endpoint
-- [ ] T8 UI inbox và callback
-- [ ] T9 Integration pass
+- [x] T1 Spec Upstream và Request log chốt theo prototype; màn Inbox và Callback đã thêm (`plans/dattqh/reports/ui-phase-20-traffic-spec.md`), làm luôn không chờ duyệt theo Vòng 28
+- [x] T2 Forwarder, header nguồn, 502 kèm hint, SSRF, hạn mức
+- [x] T3 Request log có TTL, che header, cắt body, SSE có lọc
+- [x] T4 Pipeline mock runtime ghi log, replay, "Mở trong API client"
+- [x] T5 Webhook inbox có forward và thử lại 3 lần
+- [x] T6 Mock callback qua hàng đợi, có backoff và SSRF
+- [x] T7 UI request log, upstream và các tab trên card endpoint
+- [x] T8 UI inbox và callback
+- [x] T9 Integration pass
 - [ ] T10 Staging deploy và cờ `features.hybridMock` bật sau khi user xác nhận
-- [ ] T11 Review không còn finding mức high
-- [ ] Verification: mock và upstream tách đúng, có `X-Localman-Source`; tunnel tắt trả 502 kèm hint; IP private bị chặn
-- [ ] Verification: log che `authorization`, xoá khi quá TTL, replay đúng
-- [ ] Verification: inbox forward và thử lại 3 lần; callback gửi body từ template
+- [x] T11 Review không còn finding mức high (`plans/dattqh/reports/review-phase-20-traffic.md`: 1 Critical, 4 High, 7 Medium đã sửa: CSP sandbox + nosniff trên mọi response mock và `/m/` ở nginx, inbox chỉ JSON/text, allowlist header upstream, không gửi cookie sang upstream, nhận diện 502 của Tunelo, chặn `%2e%2e`, buffer log 32 MB và 20.000 dòng/project, hàng đợi chia slot theo owner với trần 200 job chờ, callback/forward tính quota, thứ tự shutdown trong 10 s. Còn mở: L3 ký HMAC callback, L8 job đã xếp hàng vẫn gửi khi callback bị tắt)
+- [x] Verification: mock và upstream tách đúng, có `X-Localman-Source`; tunnel tắt trả 502 kèm hint; IP private bị chặn
+- [x] Verification: log che `authorization`, xoá khi quá TTL, replay đúng
+- [x] Verification: inbox forward và thử lại 3 lần; callback gửi body từ template
 - [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
 - [ ] `pnpm check:mcp-coverage` pass

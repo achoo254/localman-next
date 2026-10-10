@@ -28,7 +28,7 @@ export interface ForwardOptions {
 }
 
 /** The request of one hop; redirects derive the next one from it. */
-interface HopState {
+export interface HopState {
 	readonly method: string;
 	readonly url: URL;
 	readonly headers: readonly HeaderEntry[];
@@ -93,7 +93,13 @@ function untilAborted<T>(work: Promise<T>, signal: AbortSignal): Promise<T> {
 	});
 }
 
-async function sendChecked(
+/**
+ * Sends one hop: pins the URL's address through the SSRF guard (bounded
+ * by `signal`, so a slow DNS answer cannot outlive the deadline), builds
+ * the outgoing headers and connects to the pinned address. Shared with
+ * the mock runtime's upstream forwarder.
+ */
+export async function sendChecked(
 	state: HopState,
 	options: ForwardOptions,
 	clientIp: string | null,

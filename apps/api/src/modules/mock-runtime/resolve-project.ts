@@ -1,8 +1,13 @@
 import { MOCK_MCP_SEGMENT } from "@localman/shared";
 import type { Types } from "mongoose";
 import { type StoredPlan, storedPlanOf } from "../billing/plan-guard.js";
-import { LIVE_PROJECT, ProjectModel } from "../projects/project-model.js";
+import {
+	LIVE_PROJECT,
+	ProjectModel,
+	type StoredUpstream,
+} from "../projects/project-model.js";
 import { TtlLruCache } from "./ttl-lru-cache.js";
+import { type ProjectUpstream, upstreamOf } from "./upstream-config.js";
 
 /** A secret is one DNS label (projects use 24 chars of `a-z0-9`). */
 const DNS_LABEL = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
@@ -16,6 +21,11 @@ export interface MockAddress {
 	readonly secret: string;
 	/** Decoded path segments after the secret, prefix still included. */
 	readonly segments: readonly string[];
+	/**
+	 * The same path still percent-encoded, trailing slash kept (`/` at
+	 * least): what an upstream receives and the request log shows.
+	 */
+	readonly rawPath: string;
 }
 
 /**
@@ -56,12 +66,17 @@ export function readMockAddress(
 	const host = hostname.toLowerCase();
 	if (host.endsWith(`.${base}`)) {
 		const label = host.slice(0, -(base.length + 1));
-		if (DNS_LABEL.test(label)) return { secret: label, segments };
+		if (DNS_LABEL.test(label)) {
+			return { secret: label, segments, rawPath: rawPath || "/" };
+		}
 	}
 	const [head, secret, ...rest] = segments;
 	if (head === PATH_FALLBACK && secret !== undefined) {
 		const label = secret.toLowerCase();
-		if (DNS_LABEL.test(label)) return { secret: label, segments: rest };
+		const below = `/${rawPath.split("/").slice(3).join("/")}`;
+		if (DNS_LABEL.test(label)) {
+			return { secret: label, segments: rest, rawPath: below };
+		}
 	}
 	return null;
 }
@@ -97,6 +112,10 @@ export interface MockProject {
 	readonly owner: string;
 	/** The owner's stored plan; its expiry is checked on every request. */
 	readonly ownerPlan: StoredPlan;
+	/** Hybrid mock: where unmatched requests go. */
+	readonly upstream: ProjectUpstream;
+	/** Extra header names (lowercase) masked in the request log. */
+	readonly redactHeaders: readonly string[];
 }
 
 /**
@@ -110,12 +129,14 @@ const cache = new TtlLruCache<Promise<MockProject | null>>(10_000, 60_000);
 
 async function loadProject(secret: string): Promise<MockProject | null> {
 	const project = await ProjectModel.findOne({ secret, ...LIVE_PROJECT })
-		.select("_id name prefix owner")
+		.select("_id name prefix owner upstream redactHeaders")
 		.lean<{
 			_id: Types.ObjectId;
 			name: string;
 			prefix?: string;
 			owner: string;
+			upstream?: StoredUpstream | null;
+			redactHeaders?: string[];
 		}>();
 	if (!project) return null;
 	return {
@@ -124,6 +145,8 @@ async function loadProject(secret: string): Promise<MockProject | null> {
 		prefix: project.prefix ?? "",
 		owner: project.owner,
 		ownerPlan: await storedPlanOf(project.owner),
+		upstream: upstreamOf(project.upstream),
+		redactHeaders: project.redactHeaders ?? [],
 	};
 }
 
@@ -138,7 +161,10 @@ export function resolveProject(secret: string): Promise<MockProject | null> {
 	return loading;
 }
 
-/** Drops a project from the cache (prefix or secret changed, deletion started). */
+/**
+ * Drops a project from the cache (prefix, secret, upstream or redacted
+ * headers changed, deletion started).
+ */
 export function forgetMockProject(secret: string): void {
 	cache.delete(secret);
 }

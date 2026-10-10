@@ -150,10 +150,12 @@ describe("Localman MCP (OAuth) over Streamable HTTP", () => {
 		}
 		const toolsets = await call(client, "list_toolsets", {});
 		const listed = toolsets.toolsets as { name: string }[];
-		// `mock-advanced` tools use the mock:* scopes, so they are offered too.
+		// `mock-advanced` and `traffic` tools use the mock:* scopes, so they
+		// are offered too.
 		expect(listed.map((toolset) => toolset.name)).toEqual([
 			"mock",
 			"mock-advanced",
+			"traffic",
 		]);
 		const enable = await client.callTool({
 			name: "enable_toolset",

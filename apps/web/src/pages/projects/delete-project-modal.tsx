@@ -33,6 +33,12 @@ function dependentText(
 			return t("projects.delete.kinds.collaborators", { count });
 		case "mcpTokens":
 			return t("projects.delete.kinds.mcpTokens", { count });
+		case "requestLogs":
+			return t("projects.delete.kinds.requestLogs", { count });
+		case "webhookInboxes":
+			return t("projects.delete.kinds.webhookInboxes", { count });
+		case "callbacks":
+			return t("projects.delete.kinds.callbacks", { count });
 		default:
 			return `${formatNumber(count)} ${kind}`;
 	}

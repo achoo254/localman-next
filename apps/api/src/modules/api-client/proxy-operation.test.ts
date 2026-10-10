@@ -130,16 +130,19 @@ describe("client.sendRequest", () => {
 		expect(logs.lines.join("")).not.toMatch(/hunter2|secret-path|token=abc/);
 	});
 
-	it("masks the project secret of a mock host in the log", async () => {
-		logs.lines.length = 0;
-		const mockUrl = `https://s3cretmock.${DEFAULT_RUNTIME_SETTINGS.mockBaseDomain}/users`;
-		await postProxy(open, { method: "GET", url: mockUrl });
-		const [entry] = logs.entries("proxy");
-		expect(entry?.host).toBe(
-			`[secret].${DEFAULT_RUNTIME_SETTINGS.mockBaseDomain}`,
-		);
-		expect(logs.lines.join("")).not.toContain("s3cretmock");
-	});
+	it.each(["", ".", ".."])(
+		"masks the project secret of a mock host in the log (trailing %j)",
+		async (dots) => {
+			logs.lines.length = 0;
+			const mockUrl = `https://s3cretmock.${DEFAULT_RUNTIME_SETTINGS.mockBaseDomain.toUpperCase()}${dots}/users`;
+			await postProxy(open, { method: "GET", url: mockUrl });
+			const [entry] = logs.entries("proxy");
+			expect(entry?.host).toBe(
+				`[secret].${DEFAULT_RUNTIME_SETTINGS.mockBaseDomain}`,
+			);
+			expect(logs.lines.join("")).not.toMatch(/s3cretmock/i);
+		},
+	);
 
 	it("is the MCP tool send_request of the client toolset", () => {
 		const [operation] = createProxyOperations({

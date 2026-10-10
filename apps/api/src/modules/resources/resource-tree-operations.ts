@@ -17,7 +17,7 @@ export const deleteResourceOperation = defineOperation({
 	method: "DELETE",
 	path: `${RESOURCES_PATH}/:resourceId`,
 	summary: "Delete a resource with its child resources and records",
-	description: `Removes the resource, every resource nested under it and all their records. Call with dryRun first to list what would be removed. ${ACCESS_NOTE}`,
+	description: `Removes the resource, every resource nested under it, all their records and their mock callbacks (deliveries still waiting included). Call with dryRun first to list what would be removed. ${ACCESS_NOTE}`,
 	input: z.object({ projectId: projectIdParam, resourceId: resourceIdParam }),
 	output: z.object({
 		dryRun: z.boolean(),

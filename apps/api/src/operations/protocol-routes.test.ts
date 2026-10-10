@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { createLogger } from "../logger.js";
 import { createAuthModule } from "../modules/auth/auth-module.js";
 import { createLocalmanMcpRouter } from "../modules/mcp/localman-mcp-server.js";
+import { createLogStreamRouter } from "../modules/mock-runtime/log-stream-routes.js";
 import { PROTOCOL_ROUTES } from "./protocol-routes.js";
 
 /** `METHOD path` of every route mounted directly on the router. */
@@ -33,7 +34,7 @@ function manifestOf(server: "dashboard" | "mock"): string[] {
 }
 
 describe("protocol route manifest", () => {
-	it("lists exactly the dashboard routes the auth and MCP routers mount", () => {
+	it("lists exactly the dashboard routes the auth, MCP and log stream routers mount", () => {
 		const logger = createLogger("silent");
 		const publicUrl = "https://localman.example";
 		const auth = createAuthModule(
@@ -54,8 +55,13 @@ describe("protocol route manifest", () => {
 			allowedOrigins: [publicUrl],
 			logger,
 		});
+		const logStream = createLogStreamRouter({ resolveAuth: () => null });
 		expect(
-			[...mountedRoutes(auth.router), ...mountedRoutes(mcp)].sort(),
+			[
+				...mountedRoutes(auth.router),
+				...mountedRoutes(mcp),
+				...mountedRoutes(logStream),
+			].sort(),
 		).toEqual(manifestOf("dashboard").sort());
 	});
 

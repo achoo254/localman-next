@@ -13,16 +13,20 @@ import {
 	initModels,
 } from "./db/connect-mongo.js";
 import { closeServer } from "./http/close-server.js";
+import { runShutdownSteps, shutdownSteps } from "./lib/shutdown-sequence.js";
 import { type Logger, createLogger } from "./logger.js";
-import { configureProxyLogger } from "./modules/api-client/proxy-operations.js";
 import { createMockApp } from "./mock-server.js";
+import { configureProxyLogger } from "./modules/api-client/proxy-operations.js";
 import {
 	authSettingsFromEnv,
 	createAuthModule,
 } from "./modules/auth/auth-module.js";
 import { createLocalmanMcpRouter } from "./modules/mcp/localman-mcp-server.js";
 import { McpHandlerRegistry } from "./modules/mcp/mcp-handler-registry.js";
+import { outboundQueue } from "./modules/mock-callbacks/retry-queue.js";
+import { closeLogStreams } from "./modules/mock-runtime/log-stream-routes.js";
 import { notifyQuotaWarning } from "./modules/mock-runtime/quota-warnings.js";
+import { requestLog } from "./modules/mock-runtime/request-log-service.js";
 import { UsageMeter } from "./modules/mock-runtime/usage-meter.js";
 import {
 	getNotificationService,
@@ -34,6 +38,7 @@ import {
 } from "./modules/notifications/notification-service.js";
 import { TombstoneSweeper } from "./modules/projects/tombstone-sweeper.js";
 
+/** Budget of the whole shutdown (`runShutdownSteps` cuts it there). */
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 /**
  * Per-address connect budget of Node's happy eyeballs (default 250 ms).
@@ -75,6 +80,7 @@ function listen(
 const env = loadEnvOrExit();
 const logger: Logger = createLogger(env.LOG_LEVEL);
 configureProxyLogger(logger);
+requestLog.configure(logger);
 const servers: Server[] = [];
 let shuttingDown = false;
 let notifications: NotificationService | undefined;
@@ -82,6 +88,8 @@ const usageMeter = new UsageMeter({
 	logger,
 	warn: notifyQuotaWarning(getNotificationService),
 });
+// Callbacks and inbox forwards count against the owners' monthly quota.
+outboundQueue.configure(logger, usageMeter);
 const tombstoneSweeper = new TombstoneSweeper(logger);
 const mcpHandlers = new McpHandlerRegistry();
 
@@ -89,30 +97,36 @@ async function shutdown(reason: string, exitCode: number): Promise<void> {
 	if (shuttingDown) return;
 	shuttingDown = true;
 	logger.info({ reason }, "Shutting down");
-	const forceExit = setTimeout(() => {
-		logger.error("Graceful shutdown timed out; forcing exit");
-		process.exit(1);
-	}, SHUTDOWN_TIMEOUT_MS);
-	forceExit.unref();
-	try {
-		// End open MCP streams (SSE) first: the HTTP servers wait for them.
-		await mcpHandlers.closeAll((error) =>
-			logger.warn({ err: error }, "Closing an MCP handler failed"),
+	const steps = shutdownSteps({
+		outboundQueue,
+		// The HTTP servers wait for open streams (MCP and log SSE).
+		closeStreams: async () => {
+			closeLogStreams();
+			await mcpHandlers.closeAll((error) =>
+				logger.warn({ err: error }, "Closing an MCP handler failed"),
+			);
+		},
+		usageMeter,
+		requestLog,
+		closeServers: () => Promise.all(servers.map(closeServer)).then(() => {}),
+		// Background Web Push / Telegram deliveries (owner alerts included).
+		drain: () => tombstoneSweeper.stop().then(() => notifications?.drain()),
+		disconnect: disconnectMongo,
+	});
+	const outcome = await runShutdownSteps(
+		steps,
+		SHUTDOWN_TIMEOUT_MS,
+		(step, error) => logger.error({ err: error, step }, "Shutdown step failed"),
+	);
+	if (!outcome.finished) {
+		logger.error(
+			{ step: outcome.cutAt },
+			"Graceful shutdown timed out; forcing exit",
 		);
-		await Promise.all(servers.map(closeServer));
-		// Write the mock requests counted since the last flush.
-		await usageMeter.stop();
-		await tombstoneSweeper.stop();
-		// Let background Web Push / Telegram deliveries (owner alerts
-		// included) finish their writes.
-		await notifications?.drain();
-		await disconnectMongo();
-		logger.info("Shutdown complete");
-		process.exit(exitCode);
-	} catch (error) {
-		logger.error({ err: error }, "Shutdown failed");
 		process.exit(1);
 	}
+	logger.info("Shutdown complete");
+	process.exit(outcome.failed.length > 0 ? 1 : exitCode);
 }
 
 process.once("SIGTERM", () => void shutdown("SIGTERM", 0));
@@ -157,6 +171,8 @@ try {
 		"Dashboard API listening",
 	);
 	usageMeter.start();
+	requestLog.start();
+	outboundQueue.start();
 	const mock = createMockApp({
 		logger,
 		usageMeter,

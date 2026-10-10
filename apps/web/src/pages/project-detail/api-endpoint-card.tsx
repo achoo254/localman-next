@@ -30,6 +30,11 @@ export interface ApiEndpointCardProps {
 	onResetAll: () => void;
 	/** Owner only: "Change mock URL" (new secret); absent for collaborators. */
 	onRotateSecret?: () => void;
+	/**
+	 * Content of the Inbox tab (webhook inboxes), shown with `hybridMock`;
+	 * no Inbox tab without it.
+	 */
+	inbox?: ReactNode;
 }
 
 /** Tinted chip with a tooltip, focusable so keyboard users can read it. */
@@ -64,7 +69,8 @@ function UrlChip({
 /**
  * "API endpoint": the mock base URL with secret, prefix and `:endpoint`
  * coloured and explained, then New resource / Generate all / Reset all.
- * With Mock MCP released, REST and MCP become tabs over the same footer.
+ * With Mock MCP or the hybrid mock released, REST becomes the first of
+ * tabs (MCP, Upstream, Request log, Inbox) over the same footer.
  */
 export function ApiEndpointCard({
 	project,
@@ -75,6 +81,7 @@ export function ApiEndpointCard({
 	onGenerateAll,
 	onResetAll,
 	onRotateSecret,
+	inbox,
 }: ApiEndpointCardProps) {
 	const t = useT();
 	const flags = useFeatures();
@@ -129,8 +136,13 @@ export function ApiEndpointCard({
 			aria-label="API endpoint"
 			className={cn(cardClassName, "min-w-0 overflow-hidden")}
 		>
-			{flags.mockMcp ? (
-				<EndpointTabs project={project} resources={resources} rest={rest} />
+			{flags.mockMcp || flags.hybridMock ? (
+				<EndpointTabs
+					project={project}
+					resources={resources}
+					rest={rest}
+					inbox={inbox}
+				/>
 			) : (
 				rest
 			)}

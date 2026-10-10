@@ -762,8 +762,11 @@ fieldset:disabled{opacity:.55}
 .idp-account .auth-form{margin-top:var(--space-4);padding-top:var(--space-4);border-top:1px solid var(--c-border-subtle)}
 
 /* hybrid mock: upstream + request log */
-.upstream-options{grid-template-columns:1fr}
-@media (min-width:768px){.upstream-options{grid-template-columns:repeat(3,1fr)}}
+.upstream-options{grid-template-columns:minmax(0,1fr)}
+@media (min-width:768px){.upstream-options{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.mcp-pane .help code,.modal .help code{overflow-wrap:anywhere}
+.endpoint-tabs{overflow-x:auto;scrollbar-width:thin}
+.endpoint-tab{white-space:nowrap;flex:none}
 .upstream-option .field{margin-top:var(--space-2)}
 .upstream-option .field input{position:static;opacity:1;pointer-events:auto}
 .upstream-option .help .icon{color:var(--c-success)}
@@ -776,6 +779,58 @@ fieldset:disabled{opacity:.55}
 .log-path{max-width:220px;overflow:hidden;text-overflow:ellipsis}
 .log-err{color:var(--c-error)}
 .log-actions{display:flex;gap:var(--space-1)}
+.log-path-btn{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:left;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.log-path-btn:focus-visible{outline:2px solid var(--c-primary);outline-offset:2px;border-radius:var(--radius-xs)}
+.log-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2);align-items:end}
+@media (min-width:768px){.log-filters{grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.6fr) auto}}
+.log-filters .input{min-height:40px;font-size:13px}
+.log-filters .field{gap:2px}
+.log-filters .label{font-size:12px;color:var(--c-text-muted)}
+.log-live{display:inline-flex;align-items:center;font-family:var(--font-mono);font-size:12px;color:var(--c-text-muted)}
+.status-dot.is-off{background:var(--c-border-strong)}
+.status-dot.is-warn{background:var(--c-warning)}
+.log-empty td{white-space:normal;text-align:center;padding:var(--space-6) var(--space-4);color:var(--c-text-muted);font-family:var(--font-sans);font-size:14px;cursor:default}
+.log-table tbody tr.log-empty:hover{background:none}
+.log-detail-body{display:grid;gap:var(--space-3);padding:var(--space-4)}
+.log-detail-body .code-block{max-height:200px;border-radius:var(--radius-sm)}
+.log-detail-title{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--c-text-muted)}
+.log-detail-meta{margin-left:auto;display:inline-flex;align-items:center;gap:var(--space-2);flex:none}
+.badge-info{color:var(--c-info-text);background:color-mix(in srgb,var(--c-info) 8%,var(--c-surface));border-color:color-mix(in srgb,var(--c-info) 30%,var(--c-surface))}
+.tunnel-status{display:flex;align-items:flex-start;gap:var(--space-1)}
+.tunnel-status>.icon{flex:none;margin-top:1px}
+.tunnel-status.is-ok>.icon{color:var(--c-success)}
+.tunnel-status.is-missing>.icon{color:var(--c-warning)}
+.tunnel-status .btn{margin-top:var(--space-1)}
+.upstream-option .help .tunnel-status .icon{color:inherit}
+.readonly-note{display:flex;align-items:flex-start;gap:var(--space-2)}
+.readonly-note .icon{flex:none;color:var(--c-icon-muted)}
+
+/* webhook inbox + mock callbacks */
+.inbox-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-3)}
+.inbox-item{display:grid;gap:var(--space-3);padding:var(--space-4);border:1px solid var(--c-border-subtle);border-radius:var(--radius-md);min-width:0}
+.inbox-head{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);min-width:0}
+.inbox-head .badge{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.inbox-name{font-family:var(--font-mono);font-weight:700;font-size:14px}
+.inbox-tools{margin-left:auto;display:flex;align-items:center;gap:var(--space-1)}
+.inbox-item .copy-row .input{font-family:var(--font-mono);font-size:13px}
+.pair-grid{display:grid;gap:var(--space-3);grid-template-columns:minmax(0,1fr)}
+@media (min-width:480px){.pair-grid{grid-template-columns:140px minmax(0,1fr)}}
+.attempts{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-1)}
+.attempt{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-1) var(--space-2);padding:6px var(--space-2);border-radius:var(--radius-sm);background:var(--c-surface-subtle);font-family:var(--font-mono);font-size:12px}
+.attempt .badge{padding:3px 6px;font-size:10px}
+.attempt .help{font-family:var(--font-sans);font-size:12px}
+.cb-item{display:grid;gap:var(--space-3);padding:var(--space-3);border:1px solid var(--c-border-subtle);border-radius:var(--radius-md);min-width:0}
+.cb-item.is-off .cb-fields{opacity:.55}
+.cb-head{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);font-family:var(--font-mono);font-size:13px}
+.cb-head .select{width:132px}
+.cb-head .input{min-height:36px;font-size:13px}
+.cb-head .row-remove{margin-left:auto;opacity:1}
+.cb-fields{display:grid;gap:var(--space-3)}
+.cb-headers{display:grid;gap:var(--space-2)}
+.kv-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) 36px;gap:var(--space-2);align-items:center}
+.kv-row .input{min-height:36px;font-size:13px}
+.cb-foot{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2)}
+.cb-last{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-1) var(--space-2);font-size:13px;color:var(--c-text-muted)}
 
 /* =====================================================================
    PAGE: APP — ACCOUNT (plan + quota meters)
@@ -963,6 +1018,15 @@ fieldset:disabled{opacity:.55}
       <button class="switch" role="switch" aria-checked="false" aria-labelledby="lbl-owner" aria-describedby="help-owner" data-action="toggle-owner" data-id="proto-controls-owner"></button>
     </div>
     <p class="help" id="help-owner">Bật để xem trang quản trị người quan tâm gói Pro.</p>
+    <div class="proto-row">
+      <label id="lbl-viewas">Xem demo như collaborator</label>
+      <button class="switch" role="switch" aria-checked="false" aria-labelledby="lbl-viewas" aria-describedby="help-viewas" data-action="toggle-viewas" data-id="proto-controls-view-as-collaborator"></button>
+    </div>
+    <p class="help" id="help-viewas">Upstream, Inbox và Callbacks chỉ đọc khi không phải owner hoặc Editor.</p>
+    <div class="proto-row">
+      <label id="lbl-sse">Request log mất kết nối SSE</label>
+      <button class="switch" role="switch" aria-checked="false" aria-labelledby="lbl-sse" data-action="toggle-sse" data-id="proto-controls-sse-down"></button>
+    </div>
     <div class="field">
       <span class="label">Feature flags</span>
       <div class="proto-row">
@@ -1043,8 +1107,8 @@ const APP_HOST = 'localman.hoandat.com';
  * null = no monthly cap (per-second rate limits only).
  * ------------------------------------------------------------------ */
 const PLAN_LIMITS = {
-  FREE: { projects: 3, resources: 10, customResponse: true, objectTemplate: true, teamWorkspaces: 1, membersPerWorkspace: 3, forkPrPublic: false, mockRequestsPerMonth: 10000, proxyRequestsPerMonth: 5000, trashDays: 30 },
-  PRO: { projects: 20, resources: 50, customResponse: true, objectTemplate: true, teamWorkspaces: Infinity, membersPerWorkspace: 10, forkPrPublic: true, mockRequestsPerMonth: null, proxyRequestsPerMonth: null, trashDays: 30 },
+  FREE: { projects: 3, resources: 10, customResponse: true, objectTemplate: true, teamWorkspaces: 1, membersPerWorkspace: 3, forkPrPublic: false, mockRequestsPerMonth: 10000, proxyRequestsPerMonth: 5000, trashDays: 30, requestLogDays: 7, webhookInboxes: 2 },
+  PRO: { projects: 20, resources: 50, customResponse: true, objectTemplate: true, teamWorkspaces: Infinity, membersPerWorkspace: 10, forkPrPublic: true, mockRequestsPerMonth: null, proxyRequestsPerMonth: null, trashDays: 30, requestLogDays: 30, webhookInboxes: 20 },
 };
 const limitsFor = (plan) => (plan === 'pro' ? PLAN_LIMITS.PRO : PLAN_LIMITS.FREE);
 const fmtNum = (n) => Number(n).toLocaleString('vi-VN');
@@ -1267,6 +1331,7 @@ function setCount(list, r, value) {
  * Seed state
  * ------------------------------------------------------------------ */
 const CURRENT_USER = 'minh.anh@example.com';
+const CB_DEFAULT_BODY = '{\n  "event": "{{event}}",\n  "resource": "{{resource}}",\n  "record": {{record}}\n}';
 function seedProjects() {
   const demo = {
     id: 'demo', name: 'Demo shop', prefix: '/api/v1', secret: '6f1c2a9e8b7d40c3', owner: CURRENT_USER, syncCollection: 'Mock · Demo shop',
@@ -1300,6 +1365,15 @@ function seedProjects() {
   };
   const mobile = { id: 'mobile-app', name: 'Mobile app', prefix: '/v2', secret: '3d5e7f9a1b2c4d6e', owner: CURRENT_USER, collaborators: [], resources: [] };
   [demo, crm, mobile].forEach((p) => regenerateAll(p.resources));
+  demo.inboxes = [{
+    id: uid('ib'), name: 'stripe', status: 200, contentType: 'application/json', body: '{\n  "received": true\n}',
+    forward: { on: true, port: 3000, path: '/webhooks/stripe' }, count: 14,
+    lastAttempts: [{ n: 1, status: 503, ms: 61, note: 'Server local trả 503' }, { n: 2, status: 200, ms: 84, note: '' }],
+  }];
+  byId(demo.resources, 'users').callbacks = [
+    { id: uid('cb'), on: true, event: 'create', target: 'tunnel:3000/hooks/users', body: CB_DEFAULT_BODY, headers: [['X-Hook-Secret', 'dev-only']], last: { ok: true, status: 200, ms: 92, at: '09:41:12', attempts: 1 } },
+    { id: uid('cb'), on: false, event: 'delete', target: 'https://hooks.example.com/users-deleted', body: CB_DEFAULT_BODY, headers: [], last: null },
+  ];
   return [demo, crm, mobile];
 }
 function seedLanding() {
@@ -1323,7 +1397,8 @@ const state = {
   notify: { inApp: true, push: 'default', telegram: null, tgCode: null },
   recovery: null,
   upstreamDraft: null,
-  logLive: true, logSel: null,
+  logLive: true, logSel: null, sseDown: false, viewAs: 'owner',
+  logFilter: { method: '', status: '', path: '', source: '' },
   endpointTab: 'rest',
   forceEmpty: false,
   theme: 'auto',
@@ -2554,12 +2629,12 @@ function openCollaborators(project) {
 }
 /* reason: 'limit' (with what: projects | resources | members) or 'manage'. Copy reads PLAN_LIMITS.
    No billing yet: the Pro card's "Liên hệ nâng cấp" opens the Pro interest form with a source per trigger. */
-const LIMIT_SOURCE = { projects: 'project-limit', resources: 'resource-limit', members: 'member-limit' };
+const LIMIT_SOURCE = { projects: 'project-limit', resources: 'resource-limit', members: 'member-limit', inboxes: 'inbox-limit' };
 function openSubscription(reason, what) {
   const L = lim();
   const cur = isFree() ? 'free' : 'pro';
   const source = reason === 'limit' ? LIMIT_SOURCE[what] : 'manage-plan';
-  const hit = { projects: `${L.projects} project`, resources: `${L.resources} resource trong một project`, members: `${L.membersPerWorkspace} thành viên trong một project` }[what];
+  const hit = { projects: `${L.projects} project`, resources: `${L.resources} resource trong một project`, members: `${L.membersPerWorkspace} thành viên trong một project`, inboxes: `${L.webhookInboxes} webhook inbox trong một project` }[what];
   const card = (id, name, limits) => `
     <article class="card price-card${id === 'pro' ? ' is-featured' : ''}" data-id="modal-subscription-${id}">
       <div class="price-head"><h3 class="price-name">${name}</h3>${id === cur ? '<span class="badge badge-neutral">Gói hiện tại</span>' : ''}</div>
@@ -2589,7 +2664,7 @@ function viewProject({ id }) {
     $('#app').innerHTML = `${topbar('app')}<main class="page container app-page" data-id="project-missing"><div class="card empty"><span class="empty-icon">${icon('box', 32)}</span><h2>Không tìm thấy project</h2><p>Project có thể đã bị xoá hoặc bạn không có quyền truy cập.</p><a class="btn btn-primary" href="#/projects">Về danh sách projects</a></div></main>`;
     return;
   }
-  const endpointTabs = [['rest', 'REST'], ...(state.features.mockMcp ? [['mcp', 'MCP']] : []), ...(state.features.hybridMock ? [['upstream', 'Upstream'], ['log', 'Request log']] : [])];
+  const endpointTabs = [['rest', 'REST'], ...(state.features.mockMcp ? [['mcp', 'MCP']] : []), ...(state.features.hybridMock ? [['upstream', 'Upstream'], ['log', 'Request log'], ['inbox', 'Inbox']] : [])];
   const tab = endpointTabs.some(([k]) => k === state.endpointTab) ? state.endpointTab : 'rest';
   const linked = state.features.liveMockSync && project.syncCollection;
   const linkedBadge = linked ? `<span class="badge badge-primary" title="Đồng bộ với collection ${esc(project.syncCollection)}" data-id="project-detail-sync-badge">${icon('refresh', 16)}Live Mock Sync</span>` : '';
@@ -2607,7 +2682,7 @@ function viewProject({ id }) {
       ${endpointTabs.length > 1 ? `<div class="endpoint-tabs" role="tablist" aria-label="Endpoint của mock">${endpointTabs.map(([k, l]) => `
         <button type="button" class="endpoint-tab" role="tab" aria-selected="${tab === k}" data-action="endpoint-tab" data-tab="${k}" data-id="project-detail-endpoint-tab-${k}">${l}</button>`).join('')}
       </div>` : ''}
-      <div class="endpoint-body">${tab === 'mcp' ? mcpPaneHTML(project) : tab === 'upstream' ? upstreamPaneHTML(project) : tab === 'log' ? logPaneHTML(project) : `
+      <div class="endpoint-body">${tab === 'mcp' ? mcpPaneHTML(project) : tab === 'upstream' ? upstreamPaneHTML(project) : tab === 'log' ? logPaneHTML(project) : tab === 'inbox' ? inboxPaneHTML(project) : `
         <div class="endpoint-label"><span class="section-head-left">API endpoint${linkedBadge}</span>
           <button type="button" class="btn btn-minimal btn-icon" data-action="copy-endpoint" aria-label="Sao chép base URL" title="Sao chép base URL" data-id="project-detail-endpoint-copy">${icon('copy', 20)}</button></div>
         <p class="endpoint-url">https://<span class="chip chip-secret" tabindex="0" data-tip="Mã bí mật của project. Ai có mã này đều gọi được API, đừng chia sẻ công khai.">${esc(project.secret)}</span>.${MOCK_HOST}${project.prefix ? `<span class="chip chip-prefix" tabindex="0" data-tip="API prefix. Đổi trong Sửa project.">${esc(project.prefix)}</span>` : ''}/<span class="chip chip-endpoint" tabindex="0" data-tip="Tên resource, ví dụ users. Mỗi resource có đủ GET, POST, PUT, DELETE.">:endpoint</span></p>`}
@@ -2723,15 +2798,33 @@ function mcpTry(project) {
  * ------------------------------------------------------------------ */
 const upstreamOf = (p) => p.upstream || (p.upstream = { mode: 'none', port: 3000, url: '' });
 const upstreamLabel = (u) => (u.mode === 'tunnel' ? `tunnel:${u.port}` : u.mode === 'url' ? u.url : 'none');
+/* Tunnel lookup = the owner's manual mappings in the API client (key localhost:<port>, enabled only).
+   Port 3000 is mapped in the demo; any other port shows the "no mapping" state. */
+const TUNNEL_MAPPINGS = { 3000: 'https://minh-anh.tunnel.hoandat.com' };
+const tunnelUrl = (port) => TUNNEL_MAPPINGS[Number(port)] || null;
+/* Owner or Editor manage upstream, inboxes and callbacks; a collaborator only reads. */
+const canManageTraffic = () => state.viewAs !== 'collaborator';
+const readonlyNote = (dataId, what) => `<p class="help readonly-note" data-id="${dataId}">${icon('lock', 16)}<span>Bạn đang xem với quyền collaborator. Chỉ owner hoặc Editor của project ${what}.</span></p>`;
+function tunnelStatusHTML(port, dataId) {
+  const url = tunnelUrl(port);
+  if (url) return `<span class="help tunnel-status is-ok" data-id="${dataId}">${icon('plug', 16)}<span>Đã gắn: <code>localhost:${esc(port)}</code> → <code>${esc(url)}</code></span></span>`;
+  return `<span class="help tunnel-status is-missing" data-id="${dataId}" data-state="missing">${icon('alert-triangle', 16)}<span>Chưa có ánh xạ cho <code>localhost:${esc(port)}</code>. Chạy <code>tunelo http ${esc(port)}</code> rồi thêm ánh xạ ở <a class="link" href="api-client.html#/workspace">Tunelo trong API client</a>.<br>
+    <button type="button" class="btn btn-secondary btn-sm" data-action="copy-text" data-text="tunelo http ${esc(port)}" data-id="${dataId}-copy">${icon('copy', 16)}Sao chép lệnh</button></span></span>`;
+}
 const SENSITIVE_HEADER = /^(authorization|proxy-authorization|cookie|set-cookie|x-api-key)$/i;
 const maskHeader = (k, v) => (SENSITIVE_HEADER.test(k) ? `${/^bearer /i.test(v) ? 'Bearer ' : ''}••••••••` : v);
+const clock = () => { const d = new Date(); return [d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, '0')).join(':'); };
+const BROWSER_HEADERS = () => [['Accept', 'application/json'], ['Authorization', 'Bearer eyJhbGciOiJIUzI1NiJ9.ZGVtby10b2tlbg.c2ln'], ['Cookie', 'session=7f3a91c2; theme=dark'], ['User-Agent', 'Mozilla/5.0 (frontend dev)'], ['X-Request-Id', randomToken(8)]];
+const WEBHOOK_HEADERS = () => [['Content-Type', 'application/json'], ['User-Agent', 'Payments-Webhook/1.0'], ['Webhook-Signature', `t=${Date.now()},v1=${randomToken(16)}`], ['X-Request-Id', randomToken(8)]];
+const SAMPLE_WEBHOOK = '{\n  "type": "payment.succeeded",\n  "data": { "amount": 250000, "currency": "VND" }\n}';
 let logSeq = 0;
-function logEntry(project, method, path, status, ms, source) {
-  const d = new Date();
+/* source: mock | rule | upstream | inbox | callback | none (no match, 404) */
+function logEntry(project, method, path, status, ms, source, extra = {}) {
   return {
-    id: `log${(logSeq++).toString(36)}`, at: `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`,
-    method, path, status, ms, source,
-    headers: [['Accept', 'application/json'], ['Authorization', 'Bearer eyJhbGciOiJIUzI1NiJ9.ZGVtby10b2tlbg.c2ln'], ['Cookie', 'session=7f3a91c2; theme=dark'], ['User-Agent', 'Mozilla/5.0 (frontend dev)'], ['X-Request-Id', randomToken(8)]],
+    id: `log${(logSeq++).toString(36)}`, at: clock(), method, path, status, ms, source,
+    headers: extra.headers || BROWSER_HEADERS(),
+    body: extra.body ?? (method === 'POST' || method === 'PUT' || method === 'PATCH' ? '{\n  "name": "Nguyễn Minh Anh"\n}' : ''),
+    resBody: extra.resBody || '', target: extra.target || '', attempts: extra.attempts || null, inbox: extra.inbox || '', event: extra.event || '',
   };
 }
 /* A route is mocked when its first segment (after the prefix) is a mock resource. */
@@ -2739,76 +2832,351 @@ function routeSource(project, path) {
   const seg = path.split('?')[0].split('/').filter(Boolean)[0];
   return project.resources.some((r) => r.name === seg) ? 'mock' : upstreamOf(project).mode === 'none' ? 'none' : 'upstream';
 }
+const upstreamDown = (project) => upstreamOf(project).mode === 'tunnel' && !tunnelUrl(upstreamOf(project).port);
 const SAMPLE_CALLS = [['GET', '/users?page=1&limit=10'], ['GET', '/orders/42'], ['POST', '/users'], ['GET', '/likes'], ['POST', '/payments'], ['GET', '/users/3/posts'], ['GET', '/health']];
-function nextLogEntry(project) {
-  const [m, path] = SAMPLE_CALLS[rint(0, SAMPLE_CALLS.length - 1)];
+function callEntry(project, m, path) {
   const src = routeSource(project, path);
+  if (src === 'upstream' && upstreamDown(project)) {
+    const port = upstreamOf(project).port;
+    return logEntry(project, m, path, 502, rint(2, 6), src, { resBody: JSON.stringify({ error: 'UPSTREAM_UNAVAILABLE', hint: `tunelo http ${port}` }, null, 2) });
+  }
   return logEntry(project, m, path, src === 'none' ? 404 : m === 'POST' ? 201 : 200, src === 'mock' ? rint(8, 40) : src === 'upstream' ? rint(60, 240) : 3, src);
 }
+/* Forward of one inbox hit: up to 3 attempts, retried on network error, 30 s timeout or 5xx. */
+function forwardAttempts(port) {
+  if (!tunnelUrl(port)) return [1, 2, 3].map((n) => ({ n, status: 502, ms: rint(2, 6), note: `Chưa có ánh xạ cho localhost:${port}` }));
+  return rint(1, 3) === 1 ? [{ n: 1, status: 503, ms: rint(30, 90), note: 'Server local trả 503' }, { n: 2, status: 200, ms: rint(40, 120), note: '' }] : [{ n: 1, status: 200, ms: rint(40, 120), note: '' }];
+}
+function inboxHit(project, box) {
+  const attempts = box.forward.on ? forwardAttempts(box.forward.port) : null;
+  box.count += 1;
+  if (attempts) box.lastAttempts = attempts;
+  return logEntry(project, 'POST', `/_inbox/${box.name}`, box.status, rint(4, 12), 'inbox', {
+    inbox: box.name, headers: WEBHOOK_HEADERS(), body: SAMPLE_WEBHOOK, resBody: box.body, attempts,
+    target: box.forward.on ? `tunnel:${box.forward.port}${box.forward.path}` : '',
+  });
+}
+function nextLogEntry(project) {
+  const box = (project.inboxes || [])[0];
+  if (box && rint(1, 4) === 1) return inboxHit(project, box);
+  const [m, path] = pick(SAMPLE_CALLS);
+  return callEntry(project, m, path);
+}
 const logOf = (p) => p.log || (p.log = Array.from({ length: 6 }, () => nextLogEntry(p)));
-const sourceBadge = (project, src) => (src === 'mock' ? '<span class="badge badge-primary">Mock</span>'
-  : src === 'upstream' ? `<span class="badge badge-neutral">${esc(upstreamLabel(upstreamOf(project)))}</span>` : '<span class="badge badge-danger">Không khớp</span>');
+const LOG_SOURCES = [['mock', 'Mock'], ['rule', 'Rule'], ['upstream', 'Upstream'], ['inbox', 'Inbox'], ['callback', 'Callback']];
+const sourceBadge = (project, e) => ({
+  mock: '<span class="badge badge-primary">Mock</span>',
+  rule: '<span class="badge badge-primary">Rule</span>',
+  upstream: `<span class="badge badge-neutral">${esc(upstreamLabel(upstreamOf(project)))}</span>`,
+  inbox: `<span class="badge badge-info">Inbox · ${esc(e.inbox)}</span>`,
+  callback: `<span class="badge badge-accent">Callback · ${esc(e.event)}</span>`,
+}[e.source] || '<span class="badge badge-danger">Không khớp</span>');
 
 function upstreamPaneHTML(project) {
   const u = state.upstreamDraft && state.upstreamDraft.pid === project.id ? state.upstreamDraft : { pid: project.id, ...upstreamOf(project) };
   state.upstreamDraft = u;
+  const manage = canManageTraffic();
   const opt = (mode, title, help, extra = '') => `<label class="plan-option upstream-option" data-id="project-detail-upstream-${mode}"><input type="radio" name="upstream" value="${mode}" ${u.mode === mode ? 'checked' : ''} data-act="upstream-mode">
     <span class="plan-option-body"><span class="plan-top"><span class="plan-name">${title}</span><span class="plan-radio"></span></span><span class="help">${help}</span>${u.mode === mode ? extra : ''}</span></label>`;
   return `<div class="mcp-pane" data-id="project-detail-upstream">
     <div><span class="label">Upstream cho route mock chưa có</span>
-      <p class="help">Route khớp resource trong mock thì mock trả; route còn lại chuyển tiếp tới upstream. Frontend chỉ cần một base URL: <code>${esc(projectBaseUrl(project))}</code>.</p></div>
-    <fieldset class="plan-options upstream-options"><legend class="sr-only">Chọn upstream</legend>
+      <p class="help">Route khớp resource hoặc endpoint đang bật thì mock trả; route còn lại được chuyển nguyên method, header và body tới upstream. Frontend chỉ cần một base URL: <code>${esc(projectBaseUrl(project))}</code>. Response có header <code>X-Localman-Source: mock</code> hoặc <code>upstream</code>.</p></div>
+    ${manage ? '' : readonlyNote('project-detail-upstream-readonly', 'đổi được upstream')}
+    <fieldset class="plan-options upstream-options" ${manage ? '' : 'disabled'}><legend class="sr-only">Chọn upstream</legend>
       ${opt('none', 'none', 'Không chuyển tiếp: route không khớp trả 404.')}
-      ${opt('tunnel', 'tunnel:&lt;port&gt;', 'Backend trên máy bạn, qua Tunelo. Localman tự nhận tunnel theo port.', `<span class="field"><label class="label" for="up-port">Port</label><input class="input" id="up-port" type="number" min="1" max="65535" value="${u.port}" data-id="project-detail-upstream-port"><span class="help" data-id="project-detail-upstream-tunnel-status">${icon('plug', 16)} Tunelo: MacBook-Dat · HTTP :${esc(u.port)} đang chạy</span></span>`)}
-      ${opt('url', 'URL', 'Backend đã deploy, ví dụ môi trường staging.', `<span class="field"><label class="label" for="up-url">URL upstream</label><input class="input" id="up-url" placeholder="https://staging.example.com" value="${esc(u.url)}" data-id="project-detail-upstream-url"><span class="error-text" id="up-url-err" role="alert"></span></span>`)}
+      ${opt('tunnel', 'tunnel:&lt;port&gt;', 'Backend trên máy bạn, qua tunnel Tunelo của chính bạn (owner).', `<span class="field"><label class="label" for="up-port">Port</label><input class="input" id="up-port" type="number" min="1" max="65535" value="${esc(u.port)}" data-id="project-detail-upstream-port" aria-describedby="up-port-err"><span class="error-text" id="up-port-err" role="alert"></span><span id="up-tunnel">${tunnelStatusHTML(u.port, 'project-detail-upstream-tunnel-status')}</span><span class="help">Tunnel dừng thì route chuyển tiếp nhận <code>502 UPSTREAM_UNAVAILABLE</code> kèm gợi ý lệnh.</span></span>`)}
+      ${opt('url', 'URL', 'Backend đã deploy, ví dụ môi trường staging. Chỉ nhận https công khai.', `<span class="field"><label class="label" for="up-url">URL upstream</label><input class="input" id="up-url" placeholder="https://staging.example.com" value="${esc(u.url)}" data-id="project-detail-upstream-url" aria-describedby="up-url-err"><span class="error-text" id="up-url-err" role="alert"></span></span>`)}
     </fieldset>
-    <div class="lms-actions" style="margin:0"><button type="button" class="btn btn-primary" data-action="upstream-save" data-id="project-detail-upstream-save">Lưu upstream</button>
+    <div class="lms-actions" style="margin:0">${manage ? `<button type="button" class="btn btn-primary" data-action="upstream-save" data-id="project-detail-upstream-save">Lưu upstream</button>` : ''}
       <span class="help" data-id="project-detail-upstream-current">Đang dùng: <code>${esc(upstreamLabel(upstreamOf(project)))}</code></span></div>
+    <p class="help">Mọi request vào mock đều tính vào hạn mức request tới mock, kể cả request được chuyển tiếp.</p>
   </div>`;
 }
+
+/* Request log: filters (method, status class, path, source), live tail over SSE, detail panel. */
+const filteredLog = (project) => {
+  const f = state.logFilter; const q = f.path.trim().toLowerCase();
+  return logOf(project).filter((e) => (!f.method || e.method === f.method) && (!f.status || String(e.status)[0] === f.status[0])
+    && (!q || e.path.toLowerCase().includes(q)) && (!f.source || e.source === f.source));
+};
+const filterActive = () => Object.values(state.logFilter).some((v) => v);
 function logRowsHTML(project) {
-  return logOf(project).map((e) => `<tr class="${state.logSel === e.id ? 'is-selected' : ''} ${e.fresh ? 'is-new' : ''}" data-log="${e.id}" data-id="request-log-row">
-      <td class="mono">${e.at}</td><td><span class="badge method method-${e.method}">${e.method}</span></td><td class="mono log-path">${esc(e.path)}</td><td>${sourceBadge(project, e.source)}</td>
+  const rows = filteredLog(project);
+  if (!rows.length) {
+    return logOf(project).length
+      ? `<tr class="log-empty" data-id="request-log-empty-filtered"><td colspan="7">Không có request nào khớp bộ lọc. <button type="button" class="btn btn-minimal btn-sm" data-action="log-filter-clear" data-id="request-log-empty-clear">Xoá bộ lọc</button></td></tr>`
+      : `<tr class="log-empty" data-id="request-log-empty"><td colspan="7">Chưa có request nào. Gọi thử <code>GET ${esc(projectBaseUrl(project))}/users</code>, request sẽ hiện ở đây ngay.</td></tr>`;
+  }
+  return rows.map((e) => `<tr class="${state.logSel === e.id ? 'is-selected' : ''} ${e.fresh ? 'is-new' : ''}" data-log="${e.id}" data-id="request-log-row">
+      <td class="mono">${e.at}</td><td><span class="badge method method-${e.method}">${e.method}</span></td>
+      <td class="mono"><button type="button" class="log-path-btn" data-action="log-select" data-log="${e.id}" aria-controls="log-detail" aria-pressed="${state.logSel === e.id}" title="${esc(e.path)}" data-id="request-log-path">${esc(e.path)}</button></td><td>${sourceBadge(project, e)}</td>
       <td class="mono ${e.status >= 400 ? 'log-err' : ''}">${e.status}</td><td class="mono">${e.ms} ms</td>
-      <td><span class="log-actions"><button type="button" class="btn btn-minimal btn-sm" data-action="log-replay" data-log="${e.id}" data-id="request-log-replay">${icon('refresh', 16)}Replay</button>
-        <a class="btn btn-minimal btn-sm" href="api-client.html#/workspace" data-id="request-log-open-client">Mở trong API client</a></span></td></tr>`).join('');
+      <td><span class="log-actions">${e.source === 'callback' ? '' : `<button type="button" class="btn btn-minimal btn-sm" data-action="log-replay" data-log="${e.id}" aria-label="Replay ${e.method} ${esc(e.path)}" data-id="request-log-replay">${icon('refresh', 16)}Replay</button>`}
+        <a class="btn btn-minimal btn-sm" href="api-client.html#/workspace" aria-label="Mở ${e.method} ${esc(e.path)} trong API client" data-id="request-log-open-client">Mở trong API client</a></span></td></tr>`).join('');
+}
+function attemptsHTML(list, dataId) {
+  return `<ol class="attempts" data-id="${dataId}" aria-label="Các lần forward, tối đa 3 lần">${list.map((a) => `<li class="attempt" data-id="${dataId}-${a.n}">
+    <span>Lần ${a.n}/3</span><span class="badge ${a.status < 400 ? 'badge-success' : 'badge-danger'}">${a.status}</span><span>${a.ms} ms</span>${a.note ? `<span class="help">${esc(a.note)}</span>` : ''}</li>`).join('')}</ol>`;
 }
 function logDetailHTML(project) {
   const e = logOf(project).find((x) => x.id === state.logSel);
-  if (!e) return '<p class="help">Chọn một dòng để xem header. Header nhạy cảm luôn bị che.</p>';
-  return `<div class="card code-card" data-id="request-log-detail"><div class="code-head"><span class="badge method method-${e.method}">${e.method}</span><code>${esc(e.path)}</code></div>
-    <div class="table-wrap"><table class="schema-table"><thead><tr><th scope="col">Header</th><th scope="col">Value</th></tr></thead><tbody>
-    ${e.headers.map(([k, v]) => `<tr data-id="request-log-header-${slug(k)}"><td>${esc(k)}</td><td>${esc(maskHeader(k, v))}${SENSITIVE_HEADER.test(k) ? ' <span class="badge badge-neutral">đã che</span>' : ''}</td></tr>`).join('')}</tbody></table></div></div>`;
+  if (!e) return '<p class="help">Chọn một request để xem header, body và response. Header nhạy cảm luôn bị che.</p>';
+  const xsrc = e.source === 'mock' || e.source === 'rule' ? 'mock' : e.source === 'upstream' ? 'upstream' : '';
+  const block = (title, text, dataId) => `<h3 class="log-detail-title">${title}</h3><pre class="code-block" data-id="${dataId}"><code>${esc(text)}</code></pre>`;
+  return `<div class="card code-card" data-id="request-log-detail"><div class="code-head"><span class="badge method method-${e.method}">${e.method}</span><code>${esc(e.path)}</code><span class="log-detail-meta">${sourceBadge(project, e)}<span class="mono ${e.status >= 400 ? 'log-err' : ''}">${e.status}</span></span></div>
+    <div class="log-detail-body">
+      ${e.source === 'callback' ? `<p class="help" data-id="request-log-detail-callback">Callback <code>${esc(e.event)}</code> gửi tới <code>${esc(e.target)}</code>.</p>` : ''}
+      ${e.inbox ? `<p class="help" data-id="request-log-detail-inbox">Inbox <code>${esc(e.inbox)}</code>${e.target ? `, forward tới <code>${esc(e.target)}</code>` : ', không forward'}.</p>` : ''}
+      ${e.attempts ? attemptsHTML(e.attempts, 'request-log-detail-attempts') : ''}
+      <h3 class="log-detail-title">Request headers</h3>
+      <div class="table-wrap"><table class="schema-table"><thead><tr><th scope="col">Header</th><th scope="col">Value</th></tr></thead><tbody>
+      ${e.headers.map(([k, v]) => `<tr data-id="request-log-header-${slug(k)}"><td>${esc(k)}</td><td>${esc(maskHeader(k, v))}${SENSITIVE_HEADER.test(k) ? ' <span class="badge badge-neutral">đã che</span>' : ''}</td></tr>`).join('')}</tbody></table></div>
+      ${e.body ? block('Request body', e.body, 'request-log-detail-body') : ''}
+      <h3 class="log-detail-title">Response</h3><p class="help mono" data-id="request-log-detail-response">${e.status} · ${e.ms} ms${xsrc ? ` · X-Localman-Source: ${xsrc}` : ''}</p>
+      ${e.resBody ? `<pre class="code-block" data-id="request-log-detail-response-body"><code>${esc(e.resBody)}</code></pre>` : ''}
+      <p class="help">Body lớn hơn 64 KB bị cắt khi lưu.</p>
+    </div></div>`;
+}
+function liveStatusHTML() {
+  if (!state.logLive) return '<span class="log-live" data-id="request-log-status"><span class="status-dot is-off"></span>Tạm dừng</span>';
+  if (state.sseDown) return '<span class="log-live" data-id="request-log-status" data-state="reconnecting"><span class="status-dot is-warn"></span>Mất kết nối, đang thử lại…</span>';
+  return '<span class="log-live" data-id="request-log-status" data-state="live"><span class="status-dot"></span>Đang live</span>';
+}
+function logFiltersHTML() {
+  const f = state.logFilter; const chevron = icon('chevron-down', 16);
+  const sel = (key, label, opts) => `<div class="field"><label class="label" for="lf-${key}">${label}</label><div class="select"><select class="input" id="lf-${key}" data-log-filter="${key}" data-id="request-log-filter-${key}">
+    <option value="">Tất cả</option>${opts.map(([v, l]) => `<option value="${v}"${f[key] === v ? ' selected' : ''}>${l}</option>`).join('')}</select>${chevron}</div></div>`;
+  return `<div class="log-filters" role="search" aria-label="Lọc request log" data-id="request-log-filters">
+    ${sel('method', 'Method', ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].map((m) => [m, m]))}
+    ${sel('status', 'Status', ['2xx', '3xx', '4xx', '5xx'].map((s) => [s, s]))}
+    ${sel('source', 'Nguồn', LOG_SOURCES)}
+    <div class="field"><label class="label" for="lf-path">Path chứa</label><input class="input" id="lf-path" type="search" value="${esc(f.path)}" placeholder="/orders" data-log-filter="path" data-id="request-log-filter-path"></div>
+    <button type="button" class="btn btn-minimal btn-sm" data-action="log-filter-clear" ${filterActive() ? '' : 'disabled'} data-id="request-log-filter-clear">Xoá bộ lọc</button>
+  </div>`;
 }
 function logPaneHTML(project) {
   return `<div class="mcp-pane" data-id="project-detail-request-log">
-    <div class="section-head"><span class="label">Request log</span>
+    <div class="section-head"><span class="section-head-left"><span class="label">Request log</span><span id="log-status">${liveStatusHTML()}</span></span>
       <span class="invite-actions"><span class="proto-row"><label id="lbl-log-live" class="help">Live</label><button type="button" class="switch" role="switch" aria-checked="${state.logLive}" aria-labelledby="lbl-log-live" data-action="log-live" data-id="request-log-live"></button></span>
-        <button type="button" class="btn btn-minimal btn-sm" data-action="log-clear" data-id="request-log-clear">Xoá log</button></span></div>
-    <div class="table-wrap"><table class="schema-table log-table" data-id="request-log-table"><thead><tr><th scope="col">Giờ</th><th scope="col">Method</th><th scope="col">Path</th><th scope="col">Nguồn</th><th scope="col">Status</th><th scope="col">Thời gian</th><th scope="col"><span class="sr-only">Thao tác</span></th></tr></thead>
-      <tbody id="log-body" aria-live="polite">${logRowsHTML(project)}</tbody></table></div>
+        ${canManageTraffic() ? '<button type="button" class="btn btn-minimal btn-sm" data-action="log-clear" data-id="request-log-clear">Xoá log</button>' : ''}</span></div>
+    ${logFiltersHTML()}
+    <div class="table-wrap"><table class="schema-table log-table" data-id="request-log-table"><caption class="sr-only">Request tới mock, mới nhất ở trên</caption><thead><tr><th scope="col">Giờ</th><th scope="col">Method</th><th scope="col">Path</th><th scope="col">Nguồn</th><th scope="col">Status</th><th scope="col">Thời gian</th><th scope="col"><span class="sr-only">Thao tác</span></th></tr></thead>
+      <tbody id="log-body">${logRowsHTML(project)}</tbody></table></div>
+    <p class="sr-only" id="log-announce" aria-live="polite"></p>
     <div id="log-detail">${logDetailHTML(project)}</div>
+    <p class="help" data-id="request-log-retention">Log lưu ${lim().requestLogDays} ngày ở gói ${isFree() ? 'Free' : 'Pro'}. Header <code>authorization</code>, <code>cookie</code>, <code>x-api-key</code> luôn bị che. Replay gửi lại đúng request vào mock và tính vào hạn mức.</p>
   </div>`;
 }
-/* Live tail: one simulated call every 2.5 s while the log tab is visible. */
+const refreshLogRows = (project) => { const body = $('#log-body'); if (body) body.innerHTML = logRowsHTML(project); };
+/* Live tail: one simulated SSE event every 2.5 s while the log tab is visible. */
 let logTimer = null;
 function stopLogTimer() { if (logTimer) { clearInterval(logTimer); logTimer = null; } }
 function startLogTimer(project) {
   stopLogTimer();
-  if (!state.logLive) return;
+  if (!state.logLive || state.sseDown) return;
   logTimer = setInterval(() => {
-    const body = $('#log-body');
-    if (!body) { stopLogTimer(); return; }
+    if (!$('#log-body')) { stopLogTimer(); return; }
     pushLog(project, nextLogEntry(project));
   }, 2500);
 }
+let announceCount = 0;
 function pushLog(project, entry) {
   const list = logOf(project);
   list.forEach((x) => { x.fresh = false; });
   entry.fresh = true;
   list.unshift(entry); list.length = Math.min(list.length, 50);
-  if (entry.source === 'mock') state.usage.mock += 1;
-  const body = $('#log-body'); if (body) body.innerHTML = logRowsHTML(project);
+  if (entry.source !== 'callback') state.usage.mock += 1;
+  refreshLogRows(project);
+  /* Batched announcement: screen readers hear a count every 5 rows, not every row. */
+  announceCount += 1;
+  const live = $('#log-announce');
+  if (live && announceCount % 5 === 0) live.textContent = `${announceCount} request mới`;
+}
+
+/* ------------------------------------------------------------------ *
+ * Webhook inbox: public URL per inbox on the project's mock host.
+ * ------------------------------------------------------------------ */
+const INBOX_NAME_RE = /^[a-z0-9](?:[a-z0-9-]{0,30}[a-z0-9])?$/;
+const inboxesOf = (p) => p.inboxes || (p.inboxes = []);
+const inboxUrl = (p, name) => `https://${p.secret}.${MOCK_HOST}/_inbox/${name}`;
+function inboxItemHTML(project, b, manage) {
+  const url = inboxUrl(project, b.name);
+  return `<li class="inbox-item" data-id="inbox-item-${esc(b.name)}">
+    <div class="inbox-head"><span class="inbox-name">${esc(b.name)}</span>
+      <span class="help mono" data-id="inbox-item-response">Trả ${b.status} · ${esc(b.contentType)}</span>
+      <span class="help" data-id="inbox-item-target">${b.forward.on ? `Forward tới <code>tunnel:${esc(b.forward.port)}${esc(b.forward.path)}</code>` : 'Không forward'}</span>
+      <span class="inbox-tools">
+        <button type="button" class="btn btn-minimal btn-sm" data-action="inbox-view-log" data-name="${esc(b.name)}" aria-label="Xem ${b.count} request của inbox ${esc(b.name)} trong Request log" data-id="inbox-item-view-log">${icon('list-numbers', 16)}${fmtNum(b.count)} request</button>
+        ${manage ? `<button type="button" class="btn btn-minimal btn-icon" data-action="inbox-delete" data-name="${esc(b.name)}" aria-label="Xoá inbox ${esc(b.name)}" data-id="inbox-item-delete">${icon('trash', 20)}</button>` : ''}
+      </span></div>
+    <div class="copy-row"><label class="sr-only" for="ib-url-${esc(b.name)}">URL của inbox ${esc(b.name)}</label><input class="input" id="ib-url-${esc(b.name)}" readonly value="${esc(url)}" data-id="inbox-item-url">
+      <button type="button" class="btn btn-secondary btn-icon" data-action="copy-text" data-text="${esc(url)}" aria-label="Sao chép URL của inbox ${esc(b.name)}" data-id="inbox-item-url-copy">${icon('copy', 20)}</button></div>
+    ${b.forward.on ? `<div class="field" data-id="inbox-item-forward"><span class="label">Lần forward gần nhất</span>
+      ${b.lastAttempts ? attemptsHTML(b.lastAttempts, 'inbox-item-attempts') : '<p class="help">Chưa có request nào để forward.</p>'}
+      ${tunnelUrl(b.forward.port) ? '' : tunnelStatusHTML(b.forward.port, 'inbox-item-tunnel-status')}</div>` : ''}
+  </li>`;
+}
+function inboxPaneHTML(project) {
+  const list = inboxesOf(project); const max = lim().webhookInboxes; const manage = canManageTraffic();
+  return `<div class="mcp-pane" data-id="project-detail-inbox">
+    <div class="section-head"><div><span class="label">Webhook inbox</span>
+        <p class="help">URL công khai để hứng webhook từ dịch vụ bên ngoài. Nhận mọi method, trả response bạn đặt, tuỳ chọn forward về máy bạn qua tunnel.</p></div>
+      <span class="invite-actions"><span class="help mono" data-id="inbox-count">${list.length} / ${max} inbox</span>
+        ${manage ? `<button type="button" class="btn btn-primary btn-sm" data-action="inbox-new" data-id="inbox-new">${icon('plus', 16)}Tạo inbox</button>` : ''}</span></div>
+    ${manage ? '' : readonlyNote('inbox-readonly', 'tạo và xoá được inbox')}
+    ${list.length ? `<ul class="inbox-list" data-id="inbox-list">${list.map((b) => inboxItemHTML(project, b, manage)).join('')}</ul>`
+      : `<div class="empty" data-id="inbox-empty"><span class="empty-icon">${icon('webhook', 32)}</span><h2>Chưa có inbox nào</h2><p>Tạo một inbox, dán URL vào phần cài đặt webhook của dịch vụ bên ngoài rồi xem request đến ngay trong Request log.</p>
+        ${manage ? `<button type="button" class="btn btn-primary" data-action="inbox-new" data-id="inbox-empty-new">${icon('plus', 20)}Tạo inbox</button>` : ''}</div>`}
+    <p class="help">Request vào inbox hiện trong Request log với nguồn <code>inbox</code>, bị che header nhạy cảm và tính vào hạn mức request tới mock.</p>
+  </div>`;
+}
+function openInboxModal(project) {
+  if (inboxesOf(project).length >= lim().webhookInboxes) { openSubscription('limit', 'inboxes'); return; }
+  const d = { name: '', status: 200, contentType: 'application/json', body: '{\n  "received": true\n}', forward: { on: false, port: 3000, path: '/webhooks' } };
+  const chevron = icon('chevron-down', 16);
+  openModal({
+    title: 'Tạo webhook inbox', size: 'lg', dataId: 'modal-new-inbox',
+    body: `
+      <div class="field"><label class="label" for="ib-name">Tên</label>
+        <input class="input" id="ib-name" placeholder="stripe" autocomplete="off" spellcheck="false" maxlength="32" data-id="inbox-form-name" aria-describedby="ib-name-help ib-name-err">
+        <p class="help" id="ib-name-help">Chữ thường không dấu, số và <code>-</code>, tối đa 32 ký tự. URL: <code id="ib-url" data-id="inbox-form-url-preview">${esc(inboxUrl(project, '<tên>'))}</code></p>
+        <p class="error-text" id="ib-name-err" role="alert"></p></div>
+      <section class="form-section" data-id="inbox-form-response"><div class="section-head"><h3>Response trả cho bên gửi</h3></div>
+        <div class="pair-grid">
+          <div class="field"><label class="label" for="ib-status">Status</label><input class="input" id="ib-status" type="number" min="100" max="599" value="200" data-id="inbox-form-status" aria-describedby="ib-status-err"><p class="error-text" id="ib-status-err" role="alert"></p></div>
+          <div class="field"><label class="label" for="ib-ctype">Content-Type</label><div class="select"><select class="input" id="ib-ctype" data-id="inbox-form-content-type">${['application/json', 'text/plain', 'application/xml'].map((c) => `<option>${c}</option>`).join('')}</select>${chevron}</div></div>
+        </div>
+        <div class="field"><label class="label" for="ib-body">Body</label><textarea class="input input-code" id="ib-body" rows="4" spellcheck="false" data-id="inbox-form-body" aria-describedby="ib-body-err">${esc(d.body)}</textarea><p class="error-text" id="ib-body-err" role="alert"></p></div>
+      </section>
+      <section class="form-section" data-id="inbox-form-forward">
+        <div class="proto-row"><div><h3 class="label" id="lbl-ib-fwd">Forward về máy bạn (tuỳ chọn)</h3><p class="help" id="ib-fwd-help">Gửi bản sao request tới tunnel của bạn. Thử lại tối đa 3 lần khi lỗi mạng, quá 30 giây hoặc nhận 5xx. Bên gửi vẫn nhận response ở trên.</p></div>
+          <button type="button" class="switch" role="switch" aria-checked="false" aria-labelledby="lbl-ib-fwd" aria-describedby="ib-fwd-help" data-act="ib-fwd" data-id="inbox-form-forward-toggle"></button></div>
+        <div id="ib-fwd-fields" class="form-section" hidden>
+          <div class="pair-grid">
+            <div class="field"><label class="label" for="ib-port">Port</label><input class="input" id="ib-port" type="number" min="1" max="65535" value="3000" data-id="inbox-form-forward-port" aria-describedby="ib-port-err"><p class="error-text" id="ib-port-err" role="alert"></p></div>
+            <div class="field"><label class="label" for="ib-path">Path</label><input class="input" id="ib-path" value="/webhooks" spellcheck="false" data-id="inbox-form-forward-path" aria-describedby="ib-path-err"><p class="error-text" id="ib-path-err" role="alert"></p></div>
+          </div>
+          <p class="help">Đích: <code id="ib-target" data-id="inbox-form-forward-target">tunnel:3000/webhooks</code></p>
+          <div id="ib-tunnel">${tunnelStatusHTML(3000, 'inbox-form-tunnel-status')}</div>
+        </div>
+      </section>
+      <p class="form-error" id="ib-error" role="alert"></p>`,
+    foot: footButtons('Huỷ', 'Tạo inbox'),
+    onMount: (m, entry) => {
+      const syncTarget = () => { $('#ib-target', m).textContent = `tunnel:${d.forward.port}${d.forward.path}`; $('#ib-tunnel', m).innerHTML = tunnelStatusHTML(d.forward.port, 'inbox-form-tunnel-status'); };
+      m.addEventListener('input', (e) => {
+        const t = e.target;
+        if (t.id === 'ib-name') { d.name = t.value.trim(); $('#ib-url', m).textContent = inboxUrl(project, d.name || '<tên>'); }
+        if (t.id === 'ib-status') d.status = t.value;
+        if (t.id === 'ib-body') d.body = t.value;
+        if (t.id === 'ib-port') { d.forward.port = t.value; syncTarget(); }
+        if (t.id === 'ib-path') { d.forward.path = t.value.trim(); syncTarget(); }
+        t.removeAttribute('aria-invalid');
+        const err = $(`#${t.id}-err`, m); if (err) err.textContent = '';
+      });
+      $('#ib-ctype', m).addEventListener('change', (e) => { d.contentType = e.target.value; });
+      $('[data-act="ib-fwd"]', m).addEventListener('click', (e) => {
+        d.forward.on = !d.forward.on; e.currentTarget.setAttribute('aria-checked', String(d.forward.on));
+        $('#ib-fwd-fields', m).hidden = !d.forward.on;
+      });
+      $('[data-modal-primary]', m).addEventListener('click', () => {
+        const status = Number(d.status); const port = Number(d.forward.port);
+        const errs = {
+          name: !d.name ? 'Nhập tên inbox.' : !INBOX_NAME_RE.test(d.name) ? 'Chỉ dùng chữ thường không dấu, số và -, không bắt đầu hay kết thúc bằng -.'
+            : inboxesOf(project).some((b) => b.name === d.name) ? 'Project đã có inbox tên này.' : '',
+          status: Number.isInteger(status) && status >= 100 && status <= 599 ? '' : 'Status là số nguyên từ 100 đến 599.',
+          body: '',
+          port: d.forward.on && !(Number.isInteger(port) && port >= 1 && port <= 65535) ? 'Port từ 1 đến 65535.' : '',
+          path: d.forward.on && !/^\/\S*$/.test(d.forward.path) ? 'Path bắt đầu bằng /, không có khoảng trắng.' : '',
+        };
+        if (d.contentType === 'application/json' && d.body.trim()) { try { JSON.parse(d.body); } catch (_e) { errs.body = 'Body không phải JSON hợp lệ. Đổi Content-Type nếu bạn muốn trả chữ thường.'; } }
+        let first = null;
+        Object.entries(errs).forEach(([k, msg]) => {
+          $(`#ib-${k}-err`, m).textContent = msg;
+          const input = $(`#ib-${k}`, m); input.setAttribute('aria-invalid', String(!!msg));
+          if (msg && !first) first = input;
+        });
+        if (first) { first.focus(); return; }
+        inboxesOf(project).push({ id: uid('ib'), name: d.name, status, contentType: d.contentType, body: d.body, forward: { on: d.forward.on, port, path: d.forward.path }, count: 0, lastAttempts: null });
+        closeModal(entry); render();
+        toast(`Đã tạo inbox <b>${esc(d.name)}</b>. Dán URL vào phần webhook của dịch vụ gửi.`);
+      });
+    },
+  });
+}
+function confirmDeleteInbox(project, name) {
+  openConfirm({ title: 'Xoá webhook inbox', dataId: 'modal-delete-inbox', confirmLabel: 'Xoá inbox',
+    message: `<strong>Xoá inbox ${esc(name)}?</strong>URL ngừng nhận ngay, bên gửi sẽ nhận 404. Request đã ghi vẫn ở Request log đến khi hết hạn lưu.`,
+    onConfirm: () => { project.inboxes = inboxesOf(project).filter((b) => b.name !== name); render(); toast(`Đã xoá inbox <b>${esc(name)}</b>.`); } });
+}
+
+/* ------------------------------------------------------------------ *
+ * Mock callbacks: outgoing POST on create/update/delete of a resource.
+ * ------------------------------------------------------------------ */
+const CB_EVENTS = [['create', 'create'], ['update', 'update'], ['delete', 'delete']];
+const CB_TARGET_RE = /^(https:\/\/[^\s/]+\.[^\s]+|tunnel:\d{1,5}\/\S*)$/;
+const renderCbBody = (tpl, event, resource, record) => tpl.replaceAll('{{event}}', event).replaceAll('{{resource}}', resource).replaceAll('{{record}}', JSON.stringify(record));
+function cbTargetError(target) {
+  const v = target.trim();
+  if (!v) return 'Nhập URL https hoặc tunnel:<port><path>.';
+  if (/^http:\/\//.test(v)) return 'Chỉ nhận https. Để gửi về máy bạn, dùng tunnel:<port><path>.';
+  if (!CB_TARGET_RE.test(v)) return 'Đích là URL https hoặc tunnel:<port><path>, ví dụ tunnel:3000/hooks/users.';
+  const port = v.startsWith('tunnel:') ? Number(v.slice(7).split('/')[0]) : 1;
+  return port >= 1 && port <= 65535 ? '' : 'Port từ 1 đến 65535.';
+}
+function cbBodyError(tpl) {
+  try { JSON.parse(renderCbBody(tpl, 'create', 'users', { id: '1' })); return ''; } catch (_e) { return 'Body sau khi thay biến không phải JSON hợp lệ. Lưu ý {{record}} không đặt trong dấu ngoặc kép.'; }
+}
+function cbLastHTML(cb) {
+  if (!cb.last) return '<span class="cb-last" data-id="resource-form-callback-last">Chưa gửi lần nào.</span>';
+  const l = cb.last;
+  return `<span class="cb-last" data-id="resource-form-callback-last" data-state="${l.ok ? 'ok' : 'failed'}">Gần nhất ${l.at}:
+    <span class="badge ${l.ok ? 'badge-success' : 'badge-danger'}">${l.status}</span><span class="mono">${l.ms} ms</span><span>sau ${l.attempts}/3 lần thử</span>${l.note ? `<span>· ${esc(l.note)}</span>` : ''}</span>`;
+}
+function cbItemHTML(cb, i, manage) {
+  const chevron = icon('chevron-down', 16);
+  const dis = manage ? '' : 'disabled';
+  return `<div class="cb-item${cb.on ? '' : ' is-off'}" data-cb="${cb.id}" data-id="resource-form-callback-${i + 1}">
+    <div class="cb-head">
+      <button type="button" class="switch" role="switch" aria-checked="${cb.on}" data-act="cb-toggle" aria-label="Bật callback ${i + 1}" ${dis} data-id="resource-form-callback-toggle"></button>
+      <span class="badge method method-POST">POST</span><span class="help">khi</span>
+      <div class="select"><select class="input" data-cbf="event" aria-label="Sự kiện của callback ${i + 1}" ${dis} data-id="resource-form-callback-event">${CB_EVENTS.map(([v, l]) => `<option value="${v}"${cb.event === v ? ' selected' : ''}>${l}</option>`).join('')}</select>${chevron}</div>
+      ${manage ? `<button type="button" class="btn btn-minimal btn-icon row-remove" data-act="cb-remove" aria-label="Xoá callback ${i + 1}" data-id="resource-form-callback-remove">${icon('x', 16)}</button>` : ''}
+    </div>
+    <div class="cb-fields">
+      <div class="field"><label class="label" for="cb-target-${cb.id}">Đích</label><input class="input mono" id="cb-target-${cb.id}" data-cbf="target" value="${esc(cb.target)}" placeholder="https://hooks.example.com/users hoặc tunnel:3000/hooks/users" spellcheck="false" ${dis} aria-describedby="cb-target-err-${cb.id}" data-id="resource-form-callback-target"><p class="error-text" id="cb-target-err-${cb.id}" role="alert"></p></div>
+      <div class="field"><label class="label" for="cb-body-${cb.id}">Body template</label><textarea class="input input-code" id="cb-body-${cb.id}" data-cbf="body" rows="4" spellcheck="false" ${dis} aria-describedby="cb-body-help cb-body-err-${cb.id}" data-id="resource-form-callback-body">${esc(cb.body)}</textarea><p class="error-text" id="cb-body-err-${cb.id}" role="alert"></p></div>
+      <div class="field"><span class="label" id="cb-h-${cb.id}">Header</span>
+        <div class="cb-headers" role="group" aria-labelledby="cb-h-${cb.id}">${cb.headers.map(([k, v], hi) => `<div class="kv-row" data-h="${hi}"><input class="input mono" data-hk="${hi}" value="${esc(k)}" placeholder="X-Hook-Secret" aria-label="Tên header ${hi + 1}" ${dis}><input class="input mono" data-hv="${hi}" value="${esc(v)}" placeholder="giá trị" aria-label="Giá trị header ${hi + 1}" ${dis}>${manage ? `<button type="button" class="btn btn-minimal btn-icon" data-act="cb-h-remove" aria-label="Xoá header ${esc(k || hi + 1)}">${icon('x', 16)}</button>` : '<span></span>'}</div>`).join('')}</div>
+        ${manage ? `<div><button type="button" class="btn btn-minimal btn-sm" data-act="cb-h-add" data-id="resource-form-callback-add-header">${icon('plus', 16)}Thêm header</button></div>` : ''}</div>
+    </div>
+    <div class="cb-foot">${manage ? `<button type="button" class="btn btn-secondary btn-sm" data-act="cb-test" data-id="resource-form-callback-test">${icon('send', 16)}Gửi thử</button>` : ''}<span aria-live="polite" data-cb-last>${cbLastHTML(cb)}</span></div>
+  </div>`;
+}
+const cbListHTML = (callbacks, manage) => (callbacks.length ? callbacks.map((cb, i) => cbItemHTML(cb, i, manage)).join('')
+  : '<p class="help" data-id="resource-form-callbacks-empty">Chưa có callback. Thêm một callback để mock gửi request tới server của bạn khi có create, update hoặc delete.</p>');
+function callbacksSectionHTML(callbacks, manage) {
+  return `<section class="form-section" data-id="resource-form-callbacks">
+    <div class="section-head"><div class="section-head-left"><h3>Callbacks</h3><span class="help">Gửi request khi bản ghi thay đổi</span></div>
+      ${manage ? `<button type="button" class="btn btn-minimal btn-sm" data-act="cb-add" data-id="resource-form-callback-add">${icon('plus', 16)}Thêm callback</button>` : ''}</div>
+    ${manage ? '' : readonlyNote('resource-form-callbacks-readonly', 'sửa được callback')}
+    <div class="form-section" id="rs-callbacks">${cbListHTML(callbacks, manage)}</div>
+    <p class="help" id="cb-body-help">Biến: <code>{{record}}</code> bản ghi dạng JSON, <code>{{event}}</code> là create, update hoặc delete, <code>{{resource}}</code> tên resource. Gửi nền, thử lại tối đa 3 lần có giãn cách, kết quả ghi vào Request log với nguồn <code>callback</code>.</p>
+  </section>`;
+}
+/* Simulated delivery of one callback: https always lands, a tunnel needs a mapping. */
+function sendCallback(project, resource, cb) {
+  const target = cb.target.trim(); const tunnel = target.startsWith('tunnel:');
+  const port = tunnel ? Number(target.slice(7).split('/')[0]) : 0;
+  const ok = !tunnel || !!tunnelUrl(port);
+  const ms = ok ? rint(60, 160) : rint(2, 6);
+  cb.last = { ok, status: ok ? 200 : 502, ms, at: clock(), attempts: ok ? 1 : 3, note: ok ? '' : `chưa có ánh xạ cho localhost:${port}` };
+  const attempts = ok ? [{ n: 1, status: 200, ms, note: '' }] : [1, 2, 3].map((n) => ({ n, status: 502, ms: rint(2, 6), note: `Chưa có ánh xạ cho localhost:${port}` }));
+  pushLog(project, logEntry(project, 'POST', target, cb.last.status, ms, 'callback', {
+    event: cb.event, target, attempts, headers: [['Content-Type', 'application/json'], ...cb.headers.filter(([k]) => k), ['X-Localman-Proxy', '1']],
+    body: renderCbBody(cb.body, cb.event, resource.name, resource.data[0] || { id: '1' }),
+  }));
+  return ok;
 }
 function hybridSection() {
   if (!state.features.hybridMock) return '';
@@ -2909,8 +3277,9 @@ function openResourceModal(project, resource) {
   const parent = editing ? byId(list, resource.parentId) : null;
   const children = editing ? childrenOf(list, resource.id) : [];
   const draft = editing
-    ? { name: resource.name, schema: resource.schema.map((f) => ({ ...f })), template: resource.template, endpoints: resource.endpoints.map((e) => ({ ...e })) }
-    : { name: '', schema: [field('createdAt', 'faker', 'date.past'), field('name', 'faker', 'person.fullName')], template: '', endpoints: defaultEndpoints() };
+    ? { name: resource.name, schema: resource.schema.map((f) => ({ ...f })), template: resource.template, endpoints: resource.endpoints.map((e) => ({ ...e })), callbacks: (resource.callbacks || []).map((cb) => ({ ...cb, headers: cb.headers.map((h) => [...h]) })) }
+    : { name: '', schema: [field('createdAt', 'faker', 'date.past'), field('name', 'faker', 'person.fullName')], template: '', endpoints: defaultEndpoints(), callbacks: [] };
+  const cbManage = canManageTraffic();
   const chevron = icon('chevron-down', 16);
   const typeOptions = (selected) => [...BASE_TYPES, ...(parent ? ['parent'] : []), ...(children.length ? ['child'] : [])]
     .map((t) => `<option value="${t}"${t === selected ? ' selected' : ''}>${TYPE_LABELS[t]}</option>`).join('');
@@ -2975,11 +3344,27 @@ function openResourceModal(project, resource) {
           <p class="help" style="margin-top:8px">Biến trong template: <code>$mockData</code> dữ liệu đang lưu, <code>$count</code> số bản ghi, <code>$faker.method</code> giá trị Faker sinh mỗi request (ví dụ <code>$faker.person.fullName</code>).</p>
         </fieldset>
       </section>
+      ${state.features.hybridMock ? callbacksSectionHTML(draft.callbacks, cbManage) : ''}
       <p class="form-error" id="rs-error" role="alert"></p>`,
     foot: footButtons('Huỷ', editing ? 'Cập nhật' : 'Tạo resource'),
     onMount: (m, entry) => {
       const rowsEl = $('#rs-rows', m);
       const findField = (row) => draft.schema.find((f) => f.id === row.dataset.row);
+      const findCb = (el) => draft.callbacks.find((cb) => cb.id === el.dataset.cb);
+      const renderCbs = (focusSel) => { $('#rs-callbacks', m).innerHTML = cbListHTML(draft.callbacks, cbManage); if (focusSel) { const f = $(focusSel, m); if (f) f.focus(); } };
+      const checkCb = (cb) => {
+        const errs = [['target', cbTargetError(cb.target)], ['body', cbBodyError(cb.body)]];
+        errs.forEach(([k, msg]) => { $(`#cb-${k}-err-${cb.id}`, m).textContent = msg; $(`#cb-${k}-${cb.id}`, m).setAttribute('aria-invalid', String(!!msg)); });
+        const bad = errs.find(([, msg]) => msg);
+        return bad ? $(`#cb-${bad[0]}-${cb.id}`, m) : null;
+      };
+      m.addEventListener('focusout', (e) => {
+        const cbEl = e.target.closest('[data-cb]');
+        if (!cbEl || !e.target.dataset.cbf || e.target.dataset.cbf === 'event' || !e.target.value.trim()) return;
+        const cb = findCb(cbEl); const k = e.target.dataset.cbf;
+        const msg = k === 'target' ? cbTargetError(cb.target) : cbBodyError(cb.body);
+        $(`#cb-${k}-err-${cb.id}`, m).textContent = msg; e.target.setAttribute('aria-invalid', String(!!msg));
+      });
       const refreshPaths = () => $$('.ep-path', m).forEach((el) => {
         const def = ENDPOINT_DEFS.find((d) => d.key === el.closest('[data-ep]').dataset.ep);
         el.textContent = `/${draft.name || 'resource'}${def.suffix}`;
@@ -2989,11 +3374,22 @@ function openResourceModal(project, resource) {
         if (t.id === 'rs-name') { draft.name = t.value.trim(); refreshPaths(); return; }
         if (t.id === 'rs-template') { draft.template = t.value; return; }
         if (t.dataset.epTpl) { draft.endpoints.find((x) => x.key === t.dataset.epTpl).tpl = t.value; return; }
+        const cbEl = t.closest('[data-cb]');
+        if (cbEl) {
+          const cb = findCb(cbEl);
+          /* Clear the error while typing, so the layout does not shift under the pointer on blur. */
+          if (t.dataset.cbf === 'target' || t.dataset.cbf === 'body') { cb[t.dataset.cbf] = t.value; $(`#cb-${t.dataset.cbf}-err-${cb.id}`, m).textContent = ''; }
+          if (t.dataset.hk) cb.headers[Number(t.dataset.hk)][0] = t.value.trim();
+          if (t.dataset.hv) cb.headers[Number(t.dataset.hv)][1] = t.value;
+          t.removeAttribute('aria-invalid');
+          return;
+        }
         const row = t.closest('[data-row]');
         if (row && t.dataset.f && t.dataset.f !== 'type') { findField(row)[t.dataset.f] = t.dataset.f === 'name' ? t.value.trim() : t.value; t.removeAttribute('aria-invalid'); }
       });
       m.addEventListener('change', (e) => {
         const t = e.target;
+        if (t.dataset.cbf === 'event') { findCb(t.closest('[data-cb]')).event = t.value; return; }
         const row = t.closest('[data-row]');
         if (!row || t.dataset.f !== 'type') return;
         const f = findField(row);
@@ -3020,6 +3416,32 @@ function openResourceModal(project, resource) {
           const row = btn.closest('[data-row]');
           draft.schema = draft.schema.filter((f) => f.id !== row.dataset.row);
           row.remove();
+        } else if (act === 'cb-add') {
+          const cb = { id: uid('cb'), on: true, event: 'create', target: '', body: CB_DEFAULT_BODY, headers: [], last: null };
+          draft.callbacks.push(cb); renderCbs(`#cb-target-${cb.id}`);
+        } else if (act === 'cb-remove') {
+          const cb = findCb(btn.closest('[data-cb]'));
+          draft.callbacks = draft.callbacks.filter((x) => x !== cb); renderCbs('[data-act="cb-add"]');
+        } else if (act === 'cb-toggle') {
+          const cb = findCb(btn.closest('[data-cb]')); cb.on = !cb.on;
+          btn.setAttribute('aria-checked', String(cb.on)); btn.closest('.cb-item').classList.toggle('is-off', !cb.on);
+        } else if (act === 'cb-h-add') {
+          const cb = findCb(btn.closest('[data-cb]')); cb.headers.push(['', '']);
+          renderCbs(`[data-cb="${cb.id}"] [data-hk="${cb.headers.length - 1}"]`);
+        } else if (act === 'cb-h-remove') {
+          const cb = findCb(btn.closest('[data-cb]')); cb.headers.splice(Number(btn.closest('[data-h]').dataset.h), 1);
+          renderCbs(`[data-cb="${cb.id}"] [data-act="cb-h-add"]`);
+        } else if (act === 'cb-test') {
+          const cbEl = btn.closest('[data-cb]'); const cb = findCb(cbEl);
+          const bad = checkCb(cb);
+          if (bad) { bad.focus(); return; }
+          btn.disabled = true; btn.lastChild.textContent = 'Đang gửi…';
+          setTimeout(() => {
+            const ok = sendCallback(project, editing ? resource : { name: draft.name || 'resource', data: [] }, cb);
+            btn.disabled = false; btn.lastChild.textContent = 'Gửi thử';
+            $('[data-cb-last]', cbEl).innerHTML = cbLastHTML(cb);
+            toast(ok ? `Đã gửi thử callback tới <code>${esc(cb.target)}</code>.` : `Gửi thử thất bại sau 3 lần: chưa có ánh xạ tunnel cho <code>${esc(cb.target)}</code>.`, ok ? 'success' : 'error');
+          }, 600);
         } else if (act === 'toggle-ep') {
           const key = btn.closest('[data-ep]').dataset.ep;
           const ep = draft.endpoints.find((x) => x.key === key);
@@ -3050,14 +3472,15 @@ function openResourceModal(project, resource) {
         });
         let tplErr = '';
         if (draft.template.trim()) { try { JSON.parse(draft.template); } catch (_e) { tplErr = 'Object template không phải JSON hợp lệ.'; } }
-        $('#rs-error', m).textContent = fieldErr || tplErr;
-        if (nameErr || fieldErr || tplErr) { (nameErr ? nameInput : $('[aria-invalid="true"]', m) || nameInput).focus(); return; }
+        const cbBad = state.features.hybridMock && cbManage ? draft.callbacks.map(checkCb).find(Boolean) : null;
+        $('#rs-error', m).textContent = fieldErr || tplErr || (cbBad ? 'Có callback chưa hợp lệ.' : '');
+        if (nameErr || fieldErr || tplErr || cbBad) { (nameErr ? nameInput : $('[aria-invalid="true"]', m) || nameInput).focus(); return; }
         if (editing) {
-          Object.assign(resource, { name: n, schema: draft.schema, template: draft.template, endpoints: draft.endpoints });
+          Object.assign(resource, { name: n, schema: draft.schema, template: draft.template, endpoints: draft.endpoints, callbacks: draft.callbacks });
           if (resource.count) { resource.data = genData(list, resource); regenChildren(list, resource); }
           toast(`Đã cập nhật resource <b>${esc(n)}</b>.`);
         } else {
-          list.push({ ...makeResource(uid('r'), n, null, 0, draft.schema), template: draft.template, endpoints: draft.endpoints });
+          list.push({ ...makeResource(uid('r'), n, null, 0, draft.schema), template: draft.template, endpoints: draft.endpoints, callbacks: draft.callbacks });
           toast(`Đã tạo resource <b>${esc(n)}</b>. Bấm vào thanh xám để sinh dữ liệu.`);
         }
         closeModal(entry);
@@ -3135,13 +3558,13 @@ const PI_PRICE = [
 ];
 const PI_SOURCES = {
   landing: 'Landing · thẻ Pro', 'manage-plan': 'Quản lý gói', 'project-limit': 'Giới hạn project',
-  'resource-limit': 'Giới hạn resource', 'member-limit': 'Giới hạn thành viên', 'workspace-limit': 'Giới hạn workspace team',
+  'resource-limit': 'Giới hạn resource', 'member-limit': 'Giới hạn thành viên', 'workspace-limit': 'Giới hạn workspace team', 'inbox-limit': 'Giới hạn webhook inbox',
   'proxy-quota': 'Hết quota proxy', 'pro-feature': 'Tính năng Pro (fork, PR, public)', 'api-client-plan': 'API Client · Xem gói',
   devops: 'DevOps',
 };
 /* The need that most likely brought the user here is pre-ticked; they can change it. */
 const PI_SOURCE_NEED = {
-  'project-limit': 'mock', 'resource-limit': 'mock', 'member-limit': 'team', 'workspace-limit': 'team',
+  'project-limit': 'mock', 'resource-limit': 'mock', 'inbox-limit': 'mock', 'member-limit': 'team', 'workspace-limit': 'team',
   'proxy-quota': 'client', 'pro-feature': 'client', 'api-client-plan': 'client', devops: 'devops',
 };
 const piLabel = (list, id) => (list.find((o) => o.id === id) || { label: '—' }).label;
@@ -3473,13 +3896,27 @@ const ACTIONS = {
   'mcp-try': () => mcpTry(state.currentProject),
   'upstream-save': () => {
     const p = state.currentProject; const d = state.upstreamDraft;
-    if (d.mode === 'url' && !/^https:\/\/[^\s/]+\.[^\s]+$/.test(d.url.trim())) { $('#up-url-err').textContent = 'Nhập URL https hợp lệ.'; $('#up-url').setAttribute('aria-invalid', 'true'); return; }
+    if (d.mode === 'url' && !/^https:\/\/[^\s/]+\.[^\s]+$/.test(d.url.trim())) { $('#up-url-err').textContent = 'Nhập URL https công khai, ví dụ https://staging.example.com.'; $('#up-url').setAttribute('aria-invalid', 'true'); $('#up-url').focus(); return; }
+    if (d.mode === 'tunnel' && !(Number.isInteger(Number(d.port)) && Number(d.port) >= 1 && Number(d.port) <= 65535)) { $('#up-port-err').textContent = 'Port từ 1 đến 65535.'; $('#up-port').setAttribute('aria-invalid', 'true'); $('#up-port').focus(); return; }
     p.upstream = { mode: d.mode, port: Number(d.port) || 3000, url: d.url.trim() };
     state.upstreamDraft = null; render();
     toast(`Upstream: <code>${esc(upstreamLabel(p.upstream))}</code>. Route chưa có trong mock sẽ đi tới đây.`);
   },
   'log-live': () => { state.logLive = !state.logLive; render(); },
-  'log-clear': () => { state.currentProject.log = []; state.logSel = null; render(); },
+  'log-clear': () => openConfirm({ title: 'Xoá request log', dataId: 'modal-clear-log', confirmLabel: 'Xoá log',
+    message: '<strong>Xoá toàn bộ log của project?</strong>Mọi thành viên đều mất các dòng này. Request mới vẫn được ghi tiếp.',
+    onConfirm: () => { state.currentProject.log = []; state.logSel = null; render(); toast('Đã xoá request log.'); } }),
+  'log-select': (el) => {
+    state.logSel = el.dataset.log;
+    $$('#log-body tr[data-log]').forEach((r) => { const on = r.dataset.log === state.logSel; r.classList.toggle('is-selected', on); const b = $('.log-path-btn', r); if (b) b.setAttribute('aria-pressed', String(on)); });
+    $('#log-detail').innerHTML = logDetailHTML(state.currentProject);
+  },
+  'log-filter-clear': () => { state.logFilter = { method: '', status: '', path: '', source: '' }; render(); const f = $('#lf-method'); if (f) f.focus(); },
+  'inbox-new': () => openInboxModal(state.currentProject),
+  'inbox-delete': (el) => confirmDeleteInbox(state.currentProject, el.dataset.name),
+  'inbox-view-log': (el) => { state.logFilter = { method: '', status: '', path: `/_inbox/${el.dataset.name}`, source: 'inbox' }; state.endpointTab = 'log'; render(); const t = $('[data-tab="log"]'); if (t) t.focus(); },
+  'toggle-viewas': () => { state.viewAs = state.viewAs === 'collaborator' ? 'owner' : 'collaborator'; state.upstreamDraft = null; syncProtoControls(); render(); toast(state.viewAs === 'collaborator' ? 'Đang xem project demo với quyền collaborator.' : 'Đang xem project demo với quyền owner.', 'info'); },
+  'toggle-sse': () => { state.sseDown = !state.sseDown; syncProtoControls(); render(); },
   'log-replay': (el) => { const p = state.currentProject; const e = logOf(p).find((x) => x.id === el.dataset.log); const r = logEntry(p, e.method, e.path, e.status, Math.max(3, e.ms + rint(-5, 5)), routeSource(p, e.path)); r.headers = e.headers; pushLog(p, r); toast(`Đã replay <code>${e.method} ${esc(e.path)}</code> qua ${r.source === 'mock' ? 'mock' : esc(upstreamLabel(upstreamOf(p)))}.`, 'info'); },
   'pro-interest': (el) => { closeAllModals(); openProInterest(el.dataset.source); },
   'toggle-owner': () => { state.isOwner = !state.isOwner; syncProtoControls(); render(); toast(state.isOwner ? 'Đang mô phỏng owner: xem được #/admin/pro-interest.' : 'Đang mô phỏng user thường.', 'info'); },
@@ -3497,13 +3934,13 @@ const ACTIONS = {
   'pi-export': () => piExportCsv(),
   'toggle-empty': () => { state.forceEmpty = !state.forceEmpty; syncProtoControls(); render(); },
   'theme': (el) => { state.theme = el.dataset.themeValue; applyTheme(); syncProtoControls(); },
-  'reset-demo': () => { state.projects = seedProjects(); state.landing = seedLanding(); state.forceEmpty = false; state.liveSyncDemo = false; state.mcpTry = null; state.usage = { mock: 8420, proxy: 3870 }; piStore.rows = []; piStore.seeded = false; piEnsureSeed(); syncProtoControls(); render(); toast('Đã khôi phục dữ liệu demo.'); },
+  'reset-demo': () => { state.logFilter = { method: '', status: '', path: '', source: '' }; state.viewAs = 'owner'; state.sseDown = false; state.projects = seedProjects(); state.landing = seedLanding(); state.forceEmpty = false; state.liveSyncDemo = false; state.mcpTry = null; state.usage = { mock: 8420, proxy: 3870 }; piStore.rows = []; piStore.seeded = false; piEnsureSeed(); syncProtoControls(); render(); toast('Đã khôi phục dữ liệu demo.'); },
 };
 document.addEventListener('click', (e) => {
   if (openMenuState && !e.target.closest('.menu') && !e.target.closest('[data-action="project-menu"],[data-action="account-menu"],[data-action="bell"]')) closeMenu();
   const el = e.target.closest('[data-action]');
   const row = e.target.closest('tr[data-log]');
-  if (!el && row) { state.logSel = row.dataset.log; $$('#log-body tr').forEach((r) => r.classList.toggle('is-selected', r === row)); $('#log-detail').innerHTML = logDetailHTML(state.currentProject); return; }
+  if (!el && row) { ACTIONS['log-select'](row); return; }
   if (!el) return;
   const fn = ACTIONS[el.dataset.action];
   if (fn) { e.preventDefault(); fn(el, e); }
@@ -3511,12 +3948,15 @@ document.addEventListener('click', (e) => {
 document.addEventListener('change', (e) => {
   const pf = e.target.dataset ? e.target.dataset.piFilter : null;
   if (pf) { state.piFilter[pf] = e.target.value; render(); const again = $(`[data-pi-filter="${pf}"]`); if (again) again.focus(); return; }
+  const lf = e.target.dataset ? e.target.dataset.logFilter : null;
+  if (lf && lf !== 'path') { state.logFilter[lf] = e.target.value; refreshLogRows(state.currentProject); $('[data-action="log-filter-clear"]').disabled = !filterActive(); return; }
   const d = state.upstreamDraft;
-  if (e.target.matches('[data-act="upstream-mode"]') && d) { d.mode = e.target.value; render(); }
+  if (e.target.matches('[data-act="upstream-mode"]') && d) { d.mode = e.target.value; render(); const r = $(`[data-act="upstream-mode"][value="${d.mode}"]`); if (r) r.focus(); }
 });
 document.addEventListener('input', (e) => {
+  if (e.target.id === 'lf-path') { state.logFilter.path = e.target.value; refreshLogRows(state.currentProject); $('[data-action="log-filter-clear"]').disabled = !filterActive(); return; }
   const d = state.upstreamDraft; if (!d) return;
-  if (e.target.id === 'up-port') { d.port = e.target.value; const st = $('[data-id="project-detail-upstream-tunnel-status"]'); if (st) st.lastChild.textContent = ` Tunelo: MacBook-Dat · HTTP :${e.target.value} đang chạy`; }
+  if (e.target.id === 'up-port') { d.port = e.target.value; e.target.removeAttribute('aria-invalid'); $('#up-tunnel').innerHTML = tunnelStatusHTML(d.port, 'project-detail-upstream-tunnel-status'); }
   if (e.target.id === 'up-url') d.url = e.target.value;
 });
 document.addEventListener('keydown', (e) => {
@@ -3540,6 +3980,8 @@ function syncProtoControls() {
   $$('[data-action="toggle-flag"]').forEach((b) => b.setAttribute('aria-checked', String(!!state.features[b.dataset.flag])));
   $('[data-action="toggle-empty"]').setAttribute('aria-checked', String(state.forceEmpty));
   $('[data-action="toggle-owner"]').setAttribute('aria-checked', String(state.isOwner));
+  $('[data-action="toggle-viewas"]').setAttribute('aria-checked', String(state.viewAs === 'collaborator'));
+  $('[data-action="toggle-sse"]').setAttribute('aria-checked', String(state.sseDown));
   $$('[data-action="theme"]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeValue === state.theme)));
 }
 

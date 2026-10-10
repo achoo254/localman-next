@@ -42,6 +42,14 @@ export const MCP_PATHS = {
 } as const;
 
 /**
+ * Live request log of a project (Server-Sent Events), mounted on the
+ * dashboard before the operation router.
+ */
+export const TRAFFIC_PATHS = {
+	logStream: "/api/v1/projects/:projectId/request-logs/stream",
+} as const;
+
+/**
  * Hosted Mock MCP, as reached by path; on `{secret}.{MOCK_BASE_DOMAIN}`
  * it is `/{prefix}/mcp`.
  */
@@ -106,6 +114,14 @@ export const PROTOCOL_ROUTES: readonly ProtocolRoute[] = [
 		path: MCP_PATHS.mcpResourceMetadata,
 		summary: "Protected Resource Metadata of Localman MCP (path-aware form)",
 		mcpExempt: RESOURCE_METADATA_EXEMPT,
+	},
+	{
+		server: "dashboard",
+		methods: ["GET"],
+		path: TRAFFIC_PATHS.logStream,
+		summary: "Live request log of a mock project (Server-Sent Events)",
+		mcpExempt:
+			"luồng SSE không có một câu trả lời JSON cho REST hay MCP tool; agent đọc log qua tool list_request_logs và get_request_log",
 	},
 	{
 		server: "mock",

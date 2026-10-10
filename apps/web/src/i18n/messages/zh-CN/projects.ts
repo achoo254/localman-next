@@ -61,6 +61,9 @@ export const projects: Messages["projects"] = {
 			records: { other: "{count} 条数据记录" },
 			collaborators: { other: "{count} 位协作者" },
 			mcpTokens: { other: "{count} 个 MCP token" },
+			requestLogs: { other: "{count} 条 request log 记录" },
+			webhookInboxes: { other: "{count} 个 webhook inbox" },
+			callbacks: { other: "{count} 个 callback" },
 		},
 	},
 	rotate: {

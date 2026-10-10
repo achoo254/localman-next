@@ -25,6 +25,9 @@ describe("SSRF guard and Tunelo tunnel hosts", () => {
 		for (const url of [
 			"https://app.tunnel.test/users?id=1",
 			"https://APP.tunnel.test:443/",
+			// DNS ignores trailing dots; so does every host comparison.
+			"https://app.tunnel.test./",
+			"https://app.tunnel.test../",
 		]) {
 			const pinned = await guard.pin(new URL(url));
 			expect(pinned).toMatchObject({

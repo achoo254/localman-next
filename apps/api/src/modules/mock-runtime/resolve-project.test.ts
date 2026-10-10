@@ -17,10 +17,14 @@ describe("readMockAddress", () => {
 				"/api/users/1",
 				"localman.hoandat.com",
 			),
-		).toEqual({ secret: SECRET, segments: ["api", "users", "1"] });
+		).toEqual({
+			secret: SECRET,
+			segments: ["api", "users", "1"],
+			rawPath: "/api/users/1",
+		});
 		expect(
 			readMockAddress(`${SECRET}.localtest.me`, "/users", "localtest.me:4100"),
-		).toEqual({ secret: SECRET, segments: ["users"] });
+		).toEqual({ secret: SECRET, segments: ["users"], rawPath: "/users" });
 	});
 
 	it("falls back to /m/:secret on other hosts", () => {
@@ -29,7 +33,15 @@ describe("readMockAddress", () => {
 		).toEqual({
 			secret: SECRET,
 			segments: ["users"],
+			rawPath: "/users/",
 		});
+		expect(
+			readMockAddress("localhost", `/m/${SECRET}/a%20b`, "localtest.me")
+				?.rawPath,
+		).toBe("/a%20b");
+		expect(
+			readMockAddress("localhost", `/m/${SECRET}`, "localtest.me")?.rawPath,
+		).toBe("/");
 		expect(readMockAddress("localhost", "/healthz", "localtest.me")).toBeNull();
 		expect(readMockAddress("localhost", "/m", "localtest.me")).toBeNull();
 	});

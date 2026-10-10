@@ -42,11 +42,13 @@ export type Toolset = (typeof TOOLSETS)[number];
 
 /**
  * Toolsets whose MCP tools use another toolset's OAuth scopes: the
- * `mock-advanced` tools work on the same projects as `mock`, so a token
- * with `mock:read` / `mock:write` opens them without a new IdP scope.
+ * `mock-advanced` and `traffic` (request log, inboxes, callbacks) tools
+ * work on the same projects as `mock`, so a token with `mock:read` /
+ * `mock:write` opens them without a new IdP scope.
  */
 const SCOPE_AREAS: Readonly<Partial<Record<Toolset, Toolset>>> = {
 	"mock-advanced": "mock",
+	traffic: "mock",
 };
 
 /** Prefix of the `<area>:read|write` MCP scopes of a toolset's tools. */

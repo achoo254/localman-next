@@ -2,6 +2,7 @@ import type { Request, RequestHandler } from "express";
 import { runtimeSettings } from "../../config/runtime-settings.js";
 import { REQUEST_ID_HEADER } from "../../http/request-log.js";
 import { type MockAddress, readMockAddress } from "./resolve-project.js";
+import { SOURCE_HEADER } from "./upstream-headers.js";
 
 const ALLOWED_METHODS = "GET,POST,PUT,PATCH,DELETE,OPTIONS";
 /** A comma-separated list of header names (RFC 9110 tokens). */
@@ -13,14 +14,15 @@ const MAX_REQUESTED_HEADERS = 1024;
  * Open CORS for a public API: any origin (`*`, so browsers never send
  * cookies or credentials with it), every mock method, and whatever
  * request headers the preflight names (so `Authorization` works; the
- * MCP endpoint's 401 challenge is readable through `WWW-Authenticate`).
+ * MCP endpoint's 401 challenge is readable through `WWW-Authenticate`,
+ * who answered through `X-Localman-Source`).
  * Preflights end here with 204 and are not rate limited or counted.
  */
 export const mockCors: RequestHandler = (req, res, next) => {
 	res.setHeader("Access-Control-Allow-Origin", "*");
 	res.setHeader(
 		"Access-Control-Expose-Headers",
-		`${REQUEST_ID_HEADER}, Retry-After, WWW-Authenticate`,
+		`${REQUEST_ID_HEADER}, ${SOURCE_HEADER}, Retry-After, WWW-Authenticate`,
 	);
 	if (req.method !== "OPTIONS") {
 		next();

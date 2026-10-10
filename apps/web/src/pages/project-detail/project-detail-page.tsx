@@ -14,6 +14,7 @@ import {
 import type { Resource } from "../../features/resources/resource-model";
 import { useResources } from "../../features/resources/use-resources";
 import { useSubscriptionDialogs } from "../../features/subscription/use-subscription-dialogs";
+import { ProjectInboxTab } from "../../features/webhook-inbox/project-inbox-tab";
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { useAppTitle } from "../../lib/use-document-title";
@@ -145,6 +146,7 @@ function ProjectDetail({ project }: { project: Project }) {
 				onGenerateAll={() => void actions.generateAll()}
 				onResetAll={() => void actions.resetAll()}
 				onRotateSecret={isOwner ? () => setRotating(true) : undefined}
+				inbox={<ProjectInboxTab project={project} />}
 			/>
 			<ResourcesCard
 				projectId={project.id}

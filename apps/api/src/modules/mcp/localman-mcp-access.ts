@@ -10,13 +10,15 @@ import type { AuthInfo } from "@modelcontextprotocol/server";
 
 /**
  * Toolsets an OAuth token of the IdP can open: the IdP grants the MCP
- * resource `mock:*` and `client:*` scopes only (`mock-advanced` tools use
- * the `mock:*` scopes, see `scopeAreaOf`), so account, notification and
- * admin tools are never reachable through Localman MCP.
+ * resource `mock:*` and `client:*` scopes only (`mock-advanced` and
+ * `traffic` tools use the `mock:*` scopes, see `scopeAreaOf`), so
+ * account, notification and admin tools are never reachable through
+ * Localman MCP.
  */
 export const OAUTH_TOOLSETS: readonly Toolset[] = [
 	"mock",
 	"mock-advanced",
+	"traffic",
 	"client",
 ];
 

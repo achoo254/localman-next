@@ -60,7 +60,10 @@ describe("project page accessibility and layout", () => {
 			within(dialog).getByRole("button", { name: "Cancel" }),
 		);
 		expect(await seriousViolations(container)).toEqual([]);
-		const [add] = screen.getAllByRole("button", { name: "Add resource" });
+		// The closed modal hands the page back to assistive tech asynchronously.
+		const [add] = await screen.findAllByRole("button", {
+			name: "Add resource",
+		});
 		if (!add) throw new Error("no Add resource button");
 		await userEvent.click(add);
 		const form = await screen.findByRole("dialog", { name: "New resource" });

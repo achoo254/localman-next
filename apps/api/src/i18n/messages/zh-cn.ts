@@ -46,6 +46,32 @@ export const zhCN: ServerMessages = {
 			`tunnel URL 必须是 https://<名称>.<domain>，不能带端口、路径或查询参数，且 domain 须为以下之一：${p.domains}。`,
 		tunnelsDisabled: "此服务器未启用 tunnel URL。",
 	},
+	traffic: {
+		tunnelMissing: (p) =>
+			`项目所有者的 API client 设置中没有映射到 localhost:${p.port} 的 tunnel。请运行 "tunelo http ${p.port}"，并把它的 URL 设为 localhost:${p.port} 的 tunnel。`,
+		tunnelDown: (p) =>
+			`到 localhost:${p.port} 的 tunnel 没有响应。请确认 "tunelo http ${p.port}" 和本地服务器仍在运行。`,
+		unreachable: "upstream 没有响应（连接失败或超时）。",
+		blocked: "upstream 解析到私有、回环或链路本地地址，不会被访问。",
+		responseTooLarge: (p) => `upstream 的 response 超过 ${p.mb} MB。`,
+		busy: "等待此项目 upstream 的 request 过多，请稍后再试。",
+		loop: "request 从 upstream 又回到了 Localman 的 mock，请检查项目的 upstream 设置。",
+		baseUrlInvalid:
+			"upstream URL 必须是 https://host[:port][/path]，不能带登录信息、查询参数或片段，也不能是 Localman 的 mock URL。",
+		baseUrlBlocked:
+			"upstream URL 解析到私有、回环或链路本地地址；请改用 Tunelo tunnel 暴露本地服务器。",
+		baseUrlDns: "无法解析 upstream 的主机名。",
+		replayBodyTruncated:
+			"此 request 的 body 在日志中被截断为 64 KB，无法原样重放。",
+		replayFailed: "重放的 request 没有收到 mock 的响应。",
+		streamLimit: (p) =>
+			`你已打开 ${p.max} 个实时 request 日志，请关闭一个后再试。`,
+		callbackUrlInvalid:
+			"callback URL 必须是 https://…，不能包含凭据或 fragment，也不能是 Localman 的 mock URL。要发到你的电脑，请使用 tunnel:<port><path>。",
+		callbackUrlBlocked:
+			"该地址指向私有网络，Localman 无法向其发送 callback。请改用 Tunelo tunnel 暴露本地服务器。",
+		callbackDns: "无法解析 callback 的主机名。",
+	},
 	ownerAlerts: {
 		suppressed: (count) => `（另有 ${count} 条因超出提醒上限未发送）`,
 		contactCategories: {
