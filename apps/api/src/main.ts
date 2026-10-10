@@ -1,4 +1,5 @@
 import type { Server } from "node:http";
+import { setDefaultAutoSelectFamilyAttemptTimeout } from "node:net";
 import type { Express } from "express";
 import { type Env, parseEnv } from "./config/env.js";
 import {
@@ -34,6 +35,15 @@ import {
 import { TombstoneSweeper } from "./modules/projects/tombstone-sweeper.js";
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;
+/**
+ * Per-address connect budget of Node's happy eyeballs (default 250 ms).
+ * From the production host IPv6 to api.telegram.org is dead and IPv4 needs
+ * about 290 ms to connect, so the default aborted most Telegram sends with
+ * ETIMEDOUT.
+ */
+const CONNECT_ATTEMPT_TIMEOUT_MS = 1_000;
+
+setDefaultAutoSelectFamilyAttemptTimeout(CONNECT_ATTEMPT_TIMEOUT_MS);
 
 function loadEnvOrExit(): Env {
 	try {

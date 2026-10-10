@@ -67,6 +67,8 @@ Trên máy deploy: pnpm 11.9, Node ≥ 22.12, ssh tới server qua alias (`SSH_T
    read -rs TOKEN && printf 'url = "https://api.telegram.org/bot%s/getMe"\n' "$TOKEN" | curl -s --config -; unset TOKEN
    ```
    Lấy chat id của owner: thay `getMe` bằng `getUpdates` sau khi owner nhắn bot, đọc `message.chat.id`.
+
+   `curl` thành công chưa chứng minh Node gửi được. Trên .65, IPv6 tới `api.telegram.org` không đi được còn IPv4 mất khoảng 290 ms để kết nối (đo 09/10/2026). Ngưỡng happy-eyeballs mặc định của Node là 250 ms, nên với mặc định đó `fetch` báo `ETIMEDOUT` khoảng 2/3 số lần. Vì vậy `main.ts` của API (và `server.ts` của IdP) nâng ngưỡng lên 1000 ms. Để kiểm bằng chính Node của release, chạy `getMe` vài lần bằng `/opt/localman/runtime/node -e 'fetch(...)'`; mọi lần phải trả `ok`.
 10. **Backup.** Cron đã cài ở bước 4. Chạy thử một lần: `bash /opt/localman/infra/backup-localman-db.sh` rồi `ls -l /opt/localman/backups`. Khi lỗi, script nhắn owner qua bot Localman (`TELEGRAM_BOT_TOKEN`, `OWNER_TELEGRAM_CHAT_ID` trong `.env`), nên bước 9 phải xong trước.
 
 ## Các lần sau
