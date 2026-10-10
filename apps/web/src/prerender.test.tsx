@@ -7,7 +7,7 @@ import { RouterProvider, createMemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "./app-providers";
 import { resetCurrentUserCache } from "./features/auth/use-current-user";
-import { renderLandingHtml } from "./prerender";
+import { renderPageHtml } from "./prerender";
 import { routes } from "./routes";
 import { makeUser } from "./test/fixtures";
 import { type MockRoute, UNAUTHENTICATED, mockFetch } from "./test/mock-fetch";
@@ -15,9 +15,9 @@ import { createTestQueryClient } from "./test/render-app";
 
 let root: Root | null = null;
 
-/** Prerenders `/`, then hydrates it the way main.tsx does. */
-async function hydrateLanding(me: MockRoute, path = "/") {
-	const html = await renderLandingHtml();
+/** Prerenders `page`, then hydrates it at `path` the way main.tsx does. */
+async function hydrateLanding(me: MockRoute, path = "/", page = "/") {
+	const html = await renderPageHtml(page);
 	mockFetch({
 		"GET /api/v1/users/me": me,
 		"GET /api/v1/notifications": {
@@ -58,7 +58,7 @@ describe("landing prerender", () => {
 	});
 
 	it("renders the whole landing for an anonymous visitor, flags off", async () => {
-		const html = await renderLandingHtml();
+		const html = await renderPageHtml("/");
 		for (const id of [
 			"topbar-signup",
 			"landing-hero",
@@ -91,7 +91,7 @@ describe("landing prerender", () => {
 	});
 
 	it("is written in English", async () => {
-		const html = await renderLandingHtml();
+		const html = await renderPageHtml("/");
 		expect(html).toContain("REST APIs with relations and Faker");
 		expect(html).toContain("Get started free");
 		expect(html).not.toMatch(/Bắt đầu miễn phí|免费开始/);
@@ -126,10 +126,35 @@ describe("landing prerender", () => {
 		expect(recoverable).toEqual([]);
 	});
 
-	it("moves a signed-in visitor to the projects after hydration", async () => {
-		const { router } = await hydrateLanding({ body: makeUser() });
-		await waitFor(() =>
-			expect(router.state.location.pathname).toBe("/projects"),
+	it("keeps a signed-in visitor on the landing and offers Open app", async () => {
+		const { router, recoverable } = await hydrateLanding({ body: makeUser() });
+		const openApp = await screen.findAllByRole("link", { name: "Open app" });
+		expect(openApp.map((link) => link.getAttribute("data-id"))).toEqual([
+			"topbar-projects",
+			"landing-hero-cta",
+			"pricing-card-free-cta",
+			"landing-cta-button",
+		]);
+		expect(router.state.location.pathname).toBe("/");
+		expect(recoverable).toEqual([]);
+	});
+
+	it("hydrates the prerendered pricing page without a mismatch", async () => {
+		const consoleError = vi.spyOn(console, "error");
+		const { html, recoverable } = await hydrateLanding(
+			UNAUTHENTICATED,
+			"/pricing",
+			"/pricing",
 		);
+		expect(html).toContain('data-id="pricing-card-free-cta"');
+		expect(html).not.toContain('data-id="landing-hero"');
+		expect(
+			await screen.findByRole("heading", { level: 1, name: /Start free/ }),
+		).toBeInTheDocument();
+		expect(recoverable).toEqual([]);
+		const errors = consoleError.mock.calls
+			.map((args) => args.map(String).join(" "))
+			.filter((text) => !text.includes("multiple renderers concurrently"));
+		expect(errors).toEqual([]);
 	});
 });

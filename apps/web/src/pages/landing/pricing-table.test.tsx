@@ -1,4 +1,4 @@
-import { limitsFor } from "@localman/shared/constants";
+import { type PlanId, limitsFor } from "@localman/shared/constants";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -15,10 +15,10 @@ import { PricingTable } from "./pricing-table";
 
 const english = createTranslator("en", en).t;
 
-function renderTable(flags = NO_FEATURES) {
+function renderTable(flags = NO_FEATURES, plan: PlanId | null = null) {
 	const onContactPro = vi.fn();
 	const view = renderWithFeatures(
-		<PricingTable onContactPro={onContactPro} />,
+		<PricingTable onContactPro={onContactPro} plan={plan} />,
 		flags,
 	);
 	return { ...view, onContactPro };
@@ -100,5 +100,34 @@ describe("PricingTable", () => {
 		expect(pro).toHaveTextContent("Interest list open");
 		await userEvent.click(screen.getByRole("button", { name: "Contact" }));
 		expect(onContactPro).toHaveBeenCalledTimes(1);
+	});
+
+	it("invites visitors to sign up from the Free card", () => {
+		renderTable();
+		expect(
+			screen.getByRole("link", { name: "Get started free" }),
+		).toHaveAttribute("href", "/auth/login?returnTo=%2Fprojects&prompt=create");
+		expect(screen.queryByText("Current plan")).toBeNull();
+	});
+
+	it("marks a Free user's plan and opens the app instead of signing up", () => {
+		const { container } = renderTable(NO_FEATURES, "free");
+		expect(screen.queryByRole("link", { name: "Get started free" })).toBeNull();
+		expect(screen.getByRole("link", { name: "Open app" })).toHaveAttribute(
+			"href",
+			"/projects",
+		);
+		expect(
+			container.querySelector('[data-id="pricing-card-free"]'),
+		).toHaveTextContent("Current plan");
+		expect(screen.getByRole("button", { name: "Contact" })).toBeVisible();
+	});
+
+	it("marks a Pro user's plan without asking them to contact us", () => {
+		const { container } = renderTable(NO_FEATURES, "pro");
+		const pro = container.querySelector('[data-id="pricing-card-pro"]');
+		expect(pro).toHaveTextContent("Current plan");
+		expect(pro).not.toHaveTextContent("Interest list open");
+		expect(screen.queryByRole("button", { name: "Contact" })).toBeNull();
 	});
 });

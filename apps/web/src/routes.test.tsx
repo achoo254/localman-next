@@ -35,17 +35,17 @@ describe("route guards", () => {
 		expect(screen.queryByRole("banner")).not.toBeInTheDocument();
 	});
 
-	it("moves signed-in users from / to /projects", async () => {
+	it("keeps signed-in users on the landing at /", async () => {
 		mockFetch({
 			"GET /api/v1/users/me": { body: makeUser() },
 			"GET /api/v1/notifications": EMPTY_BELL,
-			"GET /api/v1/projects": { body: { items: [] } },
 		});
 		const { router } = renderRoutes(routes, "/");
 		expect(
-			await screen.findByRole("heading", { name: "Projects" }),
-		).toBeInTheDocument();
-		expect(router.state.location.pathname).toBe("/projects");
+			await screen.findAllByRole("link", { name: "Open app" }),
+		).not.toHaveLength(0);
+		expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
+		expect(router.state.location.pathname).toBe("/");
 		expect(navigateToLogin).not.toHaveBeenCalled();
 	});
 

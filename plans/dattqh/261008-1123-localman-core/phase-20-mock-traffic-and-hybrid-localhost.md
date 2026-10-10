@@ -1,7 +1,7 @@
 ---
 phase: 20
 title: "Mock lai localhost, log request có replay, webhook inbox về localhost, mock callback"
-status: pending
+status: completed
 priority: P1
 effort: "L"
 dependencies: [5, 10]
@@ -75,10 +75,10 @@ Nối mock, Tunelo và API client thành một luồng mà mockapi.io và Postma
 - [x] T7 UI request log, upstream và các tab trên card endpoint
 - [x] T8 UI inbox và callback
 - [x] T9 Integration pass
-- [ ] T10 Staging deploy và cờ `features.hybridMock` bật sau khi user xác nhận
+- [x] T10 Deploy production (user: "xong thì deploy luôn") release `20261010-010120-b95488938e89` build từ bản clone sạch của `b954889`, cờ `hybridMock` trong `released-features`; kiểm live: CSP sandbox + nosniff trên host mock và `/m/`, route traffic/inbox/callbacks có trong OpenAPI
 - [x] T11 Review không còn finding mức high (`plans/dattqh/reports/review-phase-20-traffic.md`: 1 Critical, 4 High, 7 Medium đã sửa: CSP sandbox + nosniff trên mọi response mock và `/m/` ở nginx, inbox chỉ JSON/text, allowlist header upstream, không gửi cookie sang upstream, nhận diện 502 của Tunelo, chặn `%2e%2e`, buffer log 32 MB và 20.000 dòng/project, hàng đợi chia slot theo owner với trần 200 job chờ, callback/forward tính quota, thứ tự shutdown trong 10 s. Còn mở: L3 ký HMAC callback, L8 job đã xếp hàng vẫn gửi khi callback bị tắt)
 - [x] Verification: mock và upstream tách đúng, có `X-Localman-Source`; tunnel tắt trả 502 kèm hint; IP private bị chặn
 - [x] Verification: log che `authorization`, xoá khi quá TTL, replay đúng
 - [x] Verification: inbox forward và thử lại 3 lần; callback gửi body từ template
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
-- [ ] `pnpm check:mcp-coverage` pass
+- [x] `pnpm lint && pnpm typecheck && pnpm test` sạch (3220 test; 2 test chỉ lỗi khi máy tải nặng đã sửa cho chờ điều kiện), E2E 26/26
+- [x] `pnpm check:mcp-coverage` pass (93 operation, 68 tool, 25 exempt)

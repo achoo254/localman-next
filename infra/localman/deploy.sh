@@ -68,7 +68,7 @@ cp -R apps/web/dist "$OUT/web"
 
 echo "== nginx config with the CSP hashes of this build"
 cp infra/localman/nginx/localman-http.conf "$OUT/nginx/"
-HASHES="$(node infra/localman/csp-hashes.mjs apps/web/dist/index.html)"
+HASHES="$(node infra/localman/csp-hashes.mjs apps/web/dist/*.html)"
 # Base64 hashes never contain '|' or '&'.
 sed "s|__CSP_SCRIPT_HASHES__|$HASHES|" infra/localman/nginx/localman.hoandat.com.conf \
 	>"$OUT/nginx/localman.hoandat.com.conf"

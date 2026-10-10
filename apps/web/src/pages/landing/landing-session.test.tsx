@@ -1,0 +1,148 @@
+import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { resetCurrentUserCache } from "../../features/auth/use-current-user";
+import { routes } from "../../routes";
+import { seriousViolations } from "../../test/axe";
+import { makeUser } from "../../test/fixtures";
+import {
+	type MockRoute,
+	UNAUTHENTICATED,
+	mockFetch,
+} from "../../test/mock-fetch";
+import { renderRoutes } from "../../test/render-app";
+
+const SIGNED_IN: Record<string, MockRoute> = {
+	"GET /api/v1/users/me": { body: makeUser() },
+	"GET /api/v1/notifications": {
+		body: { items: [], nextCursor: null, unreadCount: 0 },
+	},
+	"GET /api/v1/projects": { body: { items: [] } },
+};
+
+const SIGN_UP_HREF = "/auth/login?returnTo=%2Fprojects&prompt=create";
+
+function topbar(): HTMLElement {
+	const bar = document.querySelector('header[data-id="topbar"]');
+	if (!(bar instanceof HTMLElement)) throw new Error("no top bar");
+	return bar;
+}
+
+function byDataId(id: string): HTMLElement {
+	const element = document.querySelector(`[data-id="${id}"]`);
+	if (!(element instanceof HTMLElement)) throw new Error(`no ${id}`);
+	return element;
+}
+
+beforeEach(() => {
+	resetCurrentUserCache();
+	vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
+	// axe probes fonts through canvas, which jsdom lacks.
+	vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+});
+afterEach(() => {
+	vi.unstubAllGlobals();
+	vi.restoreAllMocks();
+});
+
+describe("landing at / by session", () => {
+	it("shows the landing with Open app to a signed-in user, without a redirect", async () => {
+		mockFetch(SIGNED_IN);
+		const { router } = renderRoutes(routes, "/");
+		const bar = within(topbar());
+		expect(await bar.findByRole("link", { name: "Open app" })).toHaveAttribute(
+			"href",
+			"/projects",
+		);
+		expect(
+			bar.getByRole("button", { name: "Minh Anh · Account" }),
+		).toBeVisible();
+		expect(bar.queryByRole("link", { name: "Sign in" })).toBeNull();
+		for (const id of ["landing-hero-cta", "landing-cta-button"]) {
+			expect(byDataId(id)).toHaveAttribute("href", "/projects");
+			expect(byDataId(id)).toHaveAccessibleName("Open app");
+		}
+		// No call to action invites an existing account to sign up again.
+		expect(screen.queryByRole("link", { name: /Get started/ })).toBeNull();
+		expect(router.state.location.pathname).toBe("/");
+	});
+
+	it("keeps Sign in and the sign-up calls to action for visitors", async () => {
+		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
+		renderRoutes(routes, "/");
+		const bar = within(topbar());
+		expect(await bar.findByRole("link", { name: "Sign in" })).toBeVisible();
+		expect(bar.queryByRole("link", { name: "Open app" })).toBeNull();
+		for (const id of ["landing-hero-cta", "landing-cta-button"]) {
+			expect(byDataId(id)).toHaveAttribute("href", SIGN_UP_HREF);
+			expect(byDataId(id)).toHaveAccessibleName("Get started free");
+		}
+	});
+
+	it("paints the visitor's landing at once while the session loads", async () => {
+		mockFetch({
+			"GET /api/v1/users/me": () => new Promise<never>(() => undefined),
+		});
+		renderRoutes(routes, "/");
+		expect(
+			await screen.findByRole("heading", { level: 1 }),
+		).toBeInTheDocument();
+		expect(
+			within(topbar()).getByRole("link", { name: "Sign in" }),
+		).toBeVisible();
+		expect(byDataId("landing-hero-cta")).toHaveAccessibleName(
+			"Get started free",
+		);
+	});
+
+	it("has no serious axe violations once signed in", async () => {
+		mockFetch(SIGNED_IN);
+		const { container } = renderRoutes(routes, "/");
+		await within(topbar()).findByRole("link", { name: "Open app" });
+		expect(await seriousViolations(container)).toEqual([]);
+	});
+});
+
+describe("links back to the landing and to pricing", () => {
+	it("keeps the app wordmark on Projects and offers home and pricing in the account menu", async () => {
+		mockFetch(SIGNED_IN);
+		const { router } = renderRoutes(routes, "/projects");
+		await screen.findByRole("heading", { name: "Projects" });
+		expect(byDataId("topbar-home")).toHaveAttribute("href", "/projects");
+
+		const openMenu = () =>
+			userEvent.click(
+				within(topbar()).getByRole("button", { name: "Minh Anh · Account" }),
+			);
+		await openMenu();
+		await userEvent.click(
+			await screen.findByRole("menuitem", { name: "Pricing" }),
+		);
+		expect(router.state.location.pathname).toBe("/pricing");
+
+		await openMenu();
+		await userEvent.click(
+			await screen.findByRole("menuitem", { name: "Localman home" }),
+		);
+		expect(router.state.location.pathname).toBe("/");
+	});
+
+	it.each([
+		["/", { "GET /api/v1/users/me": UNAUTHENTICATED }],
+		["/projects", SIGNED_IN],
+	])(
+		"puts Localman home and Pricing in the footer on %s",
+		async (path, api) => {
+			mockFetch(api);
+			renderRoutes(routes, path);
+			const footer = within(await screen.findByRole("contentinfo"));
+			expect(
+				await footer.findByRole("link", { name: "Localman home" }),
+			).toHaveAttribute("href", "/");
+			expect(footer.getByRole("link", { name: "Pricing" })).toHaveAttribute(
+				"href",
+				"/pricing",
+			);
+		},
+	);
+});

@@ -5,10 +5,11 @@ import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import { useDocumentTitle } from "../../lib/use-document-title";
 import { DataModelingDemo } from "./data-modeling-demo";
-import { HeroSection, SignUpCta } from "./hero-section";
+import { HeroSection } from "./hero-section";
 import { MoreFeaturesSection } from "./more-features-section";
 import { PricingSection } from "./pricing-section";
 import { RelationsDemo } from "./relations-demo";
+import { StartCta } from "./start-cta";
 
 // Flagged blocks load on demand, so an unreleased feature adds nothing to
 // the landing bundle until its flag is on.
@@ -79,7 +80,7 @@ function CtaBand() {
 				</h2>
 				<p className="m-0 text-muted">{t("landing.cta.text")}</p>
 			</div>
-			<SignUpCta data-id="landing-cta-button" />
+			<StartCta data-id="landing-cta-button" />
 		</section>
 	);
 }

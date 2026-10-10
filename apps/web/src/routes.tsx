@@ -3,13 +3,14 @@ import { Navigate, type RouteObject } from "react-router";
 import { AppLayout } from "./components/layout/app-layout";
 import { AppShell, WORKBENCH_HANDLE } from "./components/layout/app-shell";
 import { PageLoading } from "./components/layout/page-loading";
-import { RedirectIfAuthenticated } from "./features/auth/route-guards";
 import { LandingPage } from "./pages/landing/landing-page";
+import { PricingPage } from "./pages/pricing/pricing-page";
 
 /**
- * Page code split into its own chunk, loaded on first visit. The landing and
- * the shell (header, guards) stay in the main chunk so the first paint and
- * the session check do not wait for a second request.
+ * Page code split into its own chunk, loaded on first visit. The
+ * prerendered pages (landing, pricing) and the shell (header, guards) stay
+ * in the main chunk so the first paint and the session check do not wait
+ * for a second request.
  */
 function lazyPage<K extends string>(
 	load: () => Promise<Record<K, ComponentType>>,
@@ -32,14 +33,10 @@ export const routes: RouteObject[] = [
 		path: "/",
 		element: <AppLayout />,
 		children: [
-			{
-				index: true,
-				element: (
-					<RedirectIfAuthenticated>
-						<LandingPage />
-					</RedirectIfAuthenticated>
-				),
-			},
+			// The landing stays reachable once signed in: its header, hero and
+			// pricing turn into "Open app" instead of moving the user away.
+			{ index: true, element: <LandingPage /> },
+			{ path: "pricing", element: <PricingPage /> },
 			// Public on purpose: anonymous visitors choose sign-in or sign-up
 			// and come back here (the shell's guard would go straight to sign-in).
 			{

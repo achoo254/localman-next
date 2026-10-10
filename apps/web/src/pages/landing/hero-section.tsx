@@ -1,35 +1,15 @@
 import { limitsFor } from "@localman/shared/constants";
-import { IconArrowRight } from "@tabler/icons-react";
 import { Badge } from "../../components/ui/badge";
 import { buttonClassName } from "../../components/ui/button";
 import { useFeatures } from "../../config/features";
-import { LoginLink } from "../../features/auth/login-link";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
 import { cn } from "../../lib/cn";
 import { AuthErrorAlert } from "./auth-error-alert";
 import { HeroPreview } from "./hero-preview";
+import { StartCta } from "./start-cta";
 
 const CODE_WORD = "font-mono text-primary";
-
-/** Sign-up link styled as a large primary button (hero and closing band). */
-export function SignUpCta({ "data-id": dataId }: { "data-id": string }) {
-	const t = useT();
-	return (
-		<LoginLink
-			returnTo="/projects"
-			prompt="create"
-			data-id={dataId}
-			className={cn(
-				buttonClassName({ variant: "primary", size: "lg" }),
-				"no-underline max-sm:w-full",
-			)}
-		>
-			{t("common.cta.startFree")}
-			<IconArrowRight size={20} aria-hidden="true" />
-		</LoginLink>
-	);
-}
 
 const codeWord = (chunk: string) => <span className={CODE_WORD}>{chunk}</span>;
 
@@ -77,7 +57,7 @@ export function HeroSection({ howItWorksHref }: { howItWorksHref: string }) {
 						: t("landing.hero.subMock")}
 				</p>
 				<div className="flex flex-wrap gap-3">
-					<SignUpCta data-id="landing-hero-cta" />
+					<StartCta data-id="landing-hero-cta" />
 					<a
 						href={howItWorksHref}
 						data-id="landing-hero-how"

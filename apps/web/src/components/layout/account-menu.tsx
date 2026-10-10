@@ -5,8 +5,10 @@ import {
 	IconChartBar,
 	IconChevronDown,
 	IconGauge,
+	IconHome,
 	IconInbox,
 	IconLogout,
+	IconTag,
 } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router";
@@ -114,6 +116,18 @@ export function AccountMenu({
 					t("layout.docs"),
 					() => navigate("/docs"),
 					"sm:hidden",
+				)}
+				{item(
+					"account-menu-pricing",
+					<IconTag {...ICON} />,
+					t("layout.pricing"),
+					() => navigate("/pricing"),
+				)}
+				{item(
+					"account-menu-home",
+					<IconHome {...ICON} />,
+					t("layout.home"),
+					() => navigate("/"),
 				)}
 				<DropdownMenuSeparator />
 				<IdpAccountItems withApps={flags.mockMcp} />

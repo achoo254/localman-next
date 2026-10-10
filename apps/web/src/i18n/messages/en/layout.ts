@@ -4,11 +4,12 @@ export const layout = {
 	pageLoading: "Loading page…",
 	docs: "Docs",
 	projects: "Projects",
+	home: "Localman home",
+	pricing: "Pricing",
 	publicHeader: {
 		home: "Localman, home",
 		nav: "Main navigation",
 		features: "Features",
-		pricing: "Pricing",
 		signIn: "Sign in",
 	},
 	appHeader: {

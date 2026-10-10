@@ -1,5 +1,5 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
@@ -49,8 +49,6 @@ function vendorChunk(id: string): string | undefined {
 	return VENDOR_CHUNKS.find(([, pattern]) => pattern.test(name))?.[0];
 }
 
-const APP_MOUNT = '<div id="app"></div>';
-
 const ENTRY_SCRIPT =
 	/<script type="module" crossorigin src="([^"]+)"><\/script>\s*/;
 const MODULE_PRELOAD =
@@ -58,34 +56,56 @@ const MODULE_PRELOAD =
 
 /**
  * Replaces the entry `<script>` and its `modulepreload` links with a small
- * loader. On "/" the prerendered landing is already readable (its sign-in
- * links are plain anchors), so the app (about 185 kB) starts downloading
- * after its first contentful paint (or 3 s, for background tabs and
- * browsers without paint timing) and leaves the bandwidth to the
- * stylesheet and fonts; every other path loads at once, as before. Phase 09's CSP must hash this script at build time (its asset
- * names change with every build).
+ * loader. On a prerendered page ("/", "/pricing") the markup is already
+ * readable (its sign-in links are plain anchors), so the app (about
+ * 185 kB) starts downloading after its first contentful paint (or 3 s, for
+ * background tabs and browsers without paint timing) and leaves the
+ * bandwidth to the stylesheet and fonts; every other path (whose markup the
+ * inline script of index.html has dropped) loads at once. The loader is the
+ * same in every prerendered file, so the CSP hashes it once per build
+ * (infra/localman/csp-hashes.mjs; its asset names change with every build).
  */
 function deferAppScripts(html: string): string {
 	const entry = ENTRY_SCRIPT.exec(html)?.[1];
 	if (!entry) throw new Error("dist/index.html has no module entry script");
 	const preloads = [...html.matchAll(MODULE_PRELOAD)].map((match) => match[1]);
-	const loader = `<script>(function(){function load(){${JSON.stringify(preloads)}.forEach(function(href){var link=document.createElement("link");link.rel="modulepreload";link.crossOrigin="";link.href=href;document.head.append(link)});var script=document.createElement("script");script.type="module";script.crossOrigin="";script.src=${JSON.stringify(entry)};document.head.append(script)}var started=false;function start(){if(!started){started=true;setTimeout(load)}}if(location.pathname==="/"&&document.getElementById("app").firstElementChild){try{new PerformanceObserver(function(list){if(list.getEntriesByName("first-contentful-paint").length)start()}).observe({type:"paint",buffered:true})}catch(error){start()}setTimeout(start,3000)}else start()})()</script>`;
+	const loader = `<script>(function(){function load(){${JSON.stringify(preloads)}.forEach(function(href){var link=document.createElement("link");link.rel="modulepreload";link.crossOrigin="";link.href=href;document.head.append(link)});var script=document.createElement("script");script.type="module";script.crossOrigin="";script.src=${JSON.stringify(entry)};document.head.append(script)}var started=false;function start(){if(!started){started=true;setTimeout(load)}}if(document.getElementById("app").firstElementChild){try{new PerformanceObserver(function(list){if(list.getEntriesByName("first-contentful-paint").length)start()}).observe({type:"paint",buffered:true})}catch(error){start()}setTimeout(start,3000)}else start()})()</script>`;
 	return html
 		.replace(ENTRY_SCRIPT, "")
 		.replace(MODULE_PRELOAD, "")
 		.replace("</body>", `${loader}\n\t</body>`);
 }
 
+function isFileList(
+	value: unknown,
+): value is Array<{ file: string; html: string }> {
+	return (
+		Array.isArray(value) &&
+		value.length > 0 &&
+		value.every(
+			(item: unknown) =>
+				typeof item === "object" &&
+				item !== null &&
+				"file" in item &&
+				typeof item.file === "string" &&
+				/^[a-z-]+\.html$/.test(item.file) &&
+				"html" in item &&
+				typeof item.html === "string",
+		)
+	);
+}
+
 /**
- * After `vite build`, renders the landing (`src/prerender.tsx`, anonymous
- * visitor, this build's flags) into `#app` of `dist/index.html`, so the
- * first paint does not wait for JavaScript or `/users/me`. `main.tsx`
+ * After `vite build`, renders the public pages of `src/prerender.tsx` (the
+ * landing into `dist/index.html`, `/pricing` into `dist/pricing.html`;
+ * anonymous visitor, this build's flags), so their first paint does not
+ * wait for JavaScript or `/users/me` and crawlers read them. `main.tsx`
  * hydrates that markup. Never runs in dev; a failure fails the build.
  */
-function prerenderLanding(): Plugin {
+function prerenderPages(): Plugin {
 	let config: ResolvedConfig | null = null;
 	return {
-		name: "localman:prerender-landing",
+		name: "localman:prerender-pages",
 		apply: "build",
 		configResolved(resolved) {
 			config = resolved;
@@ -102,25 +122,22 @@ function prerenderLanding(): Plugin {
 			});
 			try {
 				const entry = await server.ssrLoadModule("/src/prerender.tsx");
-				const render: unknown = entry.renderLandingHtml;
+				const render: unknown = entry.renderPrerenderedFiles;
 				if (typeof render !== "function") {
-					throw new Error("src/prerender.tsx must export renderLandingHtml");
+					throw new Error(
+						"src/prerender.tsx must export renderPrerenderedFiles",
+					);
 				}
-				const markup: unknown = await render();
-				if (typeof markup !== "string" || markup === "") {
-					throw new Error("renderLandingHtml returned no markup");
+				// `--outDir` may be absolute (resolve keeps it) or relative to the root.
+				const outDir = resolve(config.root, config.build.outDir);
+				const template = await readFile(join(outDir, "index.html"), "utf8");
+				const files: unknown = await render(template);
+				if (!isFileList(files)) {
+					throw new Error("renderPrerenderedFiles returned no pages");
 				}
-				const file = join(config.root, config.build.outDir, "index.html");
-				const html = await readFile(file, "utf8");
-				if (!html.includes(APP_MOUNT)) {
-					throw new Error(`dist/index.html has no ${APP_MOUNT}`);
+				for (const { file, html } of files) {
+					await writeFile(join(outDir, file), deferAppScripts(html));
 				}
-				await writeFile(
-					file,
-					deferAppScripts(
-						html.replace(APP_MOUNT, `<div id="app">${markup}</div>`),
-					),
-				);
 			} finally {
 				await server.close();
 			}
@@ -135,7 +152,7 @@ export default defineConfig(({ mode }) => {
 	// instead of failing in the browser at startup.
 	parseFeatureFlags(loadEnv(mode, ROOT, "VITE_").VITE_FEATURES);
 	return {
-		plugins: [react(), tailwindcss(), prerenderLanding()],
+		plugins: [react(), tailwindcss(), prerenderPages()],
 		// The API client's script worker imports QuickJS lazily, which needs
 		// code splitting inside the worker: only the ES format allows it.
 		worker: { format: "es" },

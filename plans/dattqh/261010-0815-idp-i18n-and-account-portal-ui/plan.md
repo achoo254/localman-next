@@ -36,11 +36,11 @@ Every page of `auth.hoandat.com` is in English, Simplified Chinese and Vietnames
 - No new sign-in method and no change to OIDC contracts, apart from honouring `ui_locales`.
 
 ## Acceptance criteria
-- [ ] All IdP pages render in `en`, `zh-CN`, `vi`. `<html lang>` matches the page language, and dates are formatted for that locale.
-- [ ] Language is picked in this order: `ui_locales`, then cookie, then `Accept-Language`, then English. The switcher works on every page without JavaScript, and its return path cannot redirect off-site.
-- [ ] Localman passes its current language as `ui_locales` when it starts sign-in.
-- [ ] `/account` shows three groups and six cards, each with an icon, description, count and empty state, and works at phone width.
-- [ ] Revoke buttons are labelled by effect. Removing app access and signing out other sessions go through a confirmation page that keeps CSRF and the recent-login check.
-- [ ] Sign-in and consent pages name the requesting app and show provider logos.
-- [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm check:tokens` are clean in `hoandat-auth`, and Localman's affected tests pass.
+- [x] All IdP pages render in `en`, `zh-CN`, `vi`. `<html lang>` matches the page language, and dates are formatted for that locale.
+- [x] Language is picked in this order: `ui_locales`, then cookie, then `Accept-Language`, then English. The switcher works on every page without JavaScript, and its return path cannot redirect off-site.
+- [x] Localman passes its current language as `ui_locales` when it starts sign-in.
+- [x] `/account` shows three groups and six cards, each with an icon, description, count and empty state, and works at phone width.
+- [x] Revoke buttons are labelled by effect. Removing app access and signing out other sessions go through a confirmation page that keeps CSRF and the recent-login check.
+- [x] Sign-in and consent pages name the requesting app and show provider logos.
+- [x] `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm check:tokens` are clean in `hoandat-auth`, and Localman's affected tests pass.
 - [ ] Deployed to `auth.hoandat.com` and checked live.

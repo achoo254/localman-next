@@ -15,6 +15,11 @@ export function useDocumentTitle(title: string): void {
 }
 
 /** Title of an app page: "{page} · Localman". */
+export function appTitle(page: string): string {
+	return `${page} · Localman`;
+}
+
+/** Sets the tab title of an app page (see `appTitle`). */
 export function useAppTitle(page: string): void {
-	useDocumentTitle(`${page} · Localman`);
+	useDocumentTitle(appTitle(page));
 }

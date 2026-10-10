@@ -11,6 +11,7 @@ export const common = {
 	cta: {
 		startFree: "Get started free",
 		start: "Get started",
+		openApp: "Open app",
 		contact: "Contact",
 		reset: "Reset",
 		retry: "Try again",

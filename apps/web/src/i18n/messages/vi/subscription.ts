@@ -15,6 +15,7 @@ export const subscription: Messages["subscription"] = {
 	manage: {
 		title: "Quản lý gói",
 		currentBadge: "Gói hiện tại",
+		seePricing: "Xem bảng giá",
 		reachedTitle: "Bạn đã đạt giới hạn gói {plan}: {limit}",
 		reachedText: "So sánh hai gói bên dưới.",
 		current: "Gói hiện tại: <b>{plan}</b>. Hạn mức từng gói bên dưới.",

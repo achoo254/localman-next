@@ -8,11 +8,12 @@ if (!container) {
 	throw new Error("Missing #app mount point in index.html");
 }
 
-// The build prerenders the landing into #app; an inline script in
-// index.html empties it on every other path. Markup left here is the
-// landing (in English), so hydrate it instead of painting it a second
-// time; the provider then switches to the visitor's language. Any other
-// page waits for its language first so it paints once, in that language.
+// The build prerenders public pages (landing, pricing) into #app; an inline
+// script in index.html empties it on any path the markup does not belong
+// to. Markup left here is this page (in English), so hydrate it instead of
+// painting it a second time; the provider then switches to the visitor's
+// language. Any other page waits for its language first so it paints once,
+// in that language.
 if (container.firstElementChild) {
 	hydrateRoot(container, <App />);
 } else {

@@ -1,12 +1,14 @@
 import { type PlanId, limitsFor } from "@localman/shared/constants";
+import { Link, useInRouterContext } from "react-router";
 import { Alert } from "../../components/ui/alert";
 import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
+import { Button, buttonClassName } from "../../components/ui/button";
 import { Modal, ModalClose } from "../../components/ui/modal";
 import { ModalFooter } from "../../components/ui/modal-footer";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
 import type { Translate } from "../../i18n/translate";
+import { cn } from "../../lib/cn";
 import { PlanCard } from "./plan-card";
 import type { ProInterestSource } from "./pro-interest-options";
 
@@ -58,7 +60,30 @@ const SOURCE: Record<Exclude<LimitReason, null>, ProInterestSource> = {
 	proxy: "plan_limit_proxy",
 };
 
-/** "Manage plan": why the limit was hit and the Free/Pro comparison. */
+/**
+ * "See pricing": the `/pricing` page, closing the dialog on the way. The
+ * dialog also renders outside a router (component tests of the screens
+ * that open it); a plain link still reaches the page there.
+ */
+function PricingPageLink({ onNavigate }: { onNavigate: () => void }) {
+	const t = useT();
+	const props = {
+		"data-id": "modal-subscription-pricing",
+		onClick: onNavigate,
+		className: cn(buttonClassName(), "no-underline"),
+		children: t("subscription.manage.seePricing"),
+	};
+	return useInRouterContext() ? (
+		<Link to="/pricing" {...props} />
+	) : (
+		<a href="/pricing" {...props} />
+	);
+}
+
+/**
+ * "Manage plan": why the limit was hit, the Free/Pro comparison and a link
+ * to the full pricing page.
+ */
 export function ManageSubscriptionModal({
 	open,
 	onOpenChange,
@@ -84,6 +109,7 @@ export function ManageSubscriptionModal({
 			data-id="modal-subscription"
 			footer={
 				<ModalFooter>
+					<PricingPageLink onNavigate={() => onOpenChange(false)} />
 					<ModalClose asChild>
 						<Button data-id="modal-subscription-close">
 							{t("common.actions.close")}

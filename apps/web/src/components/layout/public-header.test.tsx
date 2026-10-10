@@ -24,7 +24,7 @@ describe("public top bar and skip link", () => {
 		vi.restoreAllMocks();
 	});
 
-	it("offers the landing anchors, Docs, sign-in and sign-up on /", async () => {
+	it("offers Features, Pricing, Docs, sign-in and sign-up on /", async () => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		renderRoutes(routes, "/");
 		await screen.findByRole("heading", { level: 1 });
@@ -37,11 +37,9 @@ describe("public top bar and skip link", () => {
 				.map((link) => [link.textContent, link.getAttribute("href")]),
 		).toEqual([
 			["Features", "#features"],
-			["Pricing", "#pricing"],
+			["Pricing", "/pricing"],
 		]);
-		for (const anchor of ["features", "pricing"]) {
-			expect(document.getElementById(anchor)).not.toBeNull();
-		}
+		expect(document.getElementById("features")).not.toBeNull();
 		const bar = within(topbar());
 		expect(bar.getByRole("link", { name: "Docs" })).toHaveAttribute(
 			"href",
@@ -69,11 +67,11 @@ describe("public top bar and skip link", () => {
 		).toHaveAttribute("href", "/auth/login?returnTo=%2Fdocs%2Fquick-start");
 	});
 
-	it("gives signed-in readers of /docs their projects and account menu", async () => {
+	it("gives signed-in readers of /docs Open app and their account menu", async () => {
 		mockFetch({ "GET /api/v1/users/me": { body: makeUser() } });
 		renderRoutes(routes, "/docs/quick-start");
 		const bar = within(topbar());
-		expect(await bar.findByRole("link", { name: "Projects" })).toHaveAttribute(
+		expect(await bar.findByRole("link", { name: "Open app" })).toHaveAttribute(
 			"href",
 			"/projects",
 		);

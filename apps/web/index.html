@@ -13,7 +13,9 @@
 		     follows the landing hero while the API client flag is off; switch it
 		     to the "localhost" wording in the same change that turns the flag on.
 		     No canonical/og:url here: this file serves every SPA route, and a
-		     fixed "/" would tell crawlers that /docs pages are the landing. -->
+		     fixed "/" would tell crawlers that /docs pages are the landing.
+		     The prerendered pricing.html swaps title and descriptions for its
+		     own (src/prerender.tsx). -->
 		<title>Localman · Stateful mock REST APIs with relations and Faker</title>
 		<meta
 			name="description"
@@ -45,11 +47,14 @@
 	<body>
 		<div id="app"></div>
 		<script>
-			// The build prerenders the landing into #app, and every SPA path gets
-			// this file: drop that markup anywhere but "/" so other pages do not
-			// flash the landing (main.tsx then renders instead of hydrating).
-			// Phase 09: allow this script and the theme script above by CSP hash.
-			if (location.pathname !== "/") document.getElementById("app").replaceChildren();
+			// The build prerenders public pages into #app (this file for "/",
+			// pricing.html for "/pricing"; src/prerender.tsx), marked with their
+			// path. Every other SPA path gets index.html: drop the markup unless
+			// it belongs to this path, so other pages do not flash the landing
+			// (main.tsx then renders instead of hydrating). Same script in every
+			// prerendered file, so the CSP hashes it once (csp-hashes.mjs).
+			var app = document.getElementById("app");
+			if (location.pathname !== app.getAttribute("data-prerendered")) app.replaceChildren();
 		</script>
 		<script type="module" src="/src/main.tsx"></script>
 	</body>

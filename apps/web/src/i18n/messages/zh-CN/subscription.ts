@@ -15,6 +15,7 @@ export const subscription: Messages["subscription"] = {
 	manage: {
 		title: "管理套餐",
 		currentBadge: "当前套餐",
+		seePricing: "查看价格",
 		reachedTitle: "你已达到 {plan} 套餐的上限：{limit}",
 		reachedText: "请比较下面的两个套餐。",
 		current: "当前套餐：<b>{plan}</b>。各套餐的额度见下方。",

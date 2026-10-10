@@ -5,11 +5,12 @@ export const layout: Messages["layout"] = {
 	pageLoading: "正在加载页面…",
 	docs: "文档",
 	projects: "Projects",
+	home: "Localman 首页",
+	pricing: "价格",
 	publicHeader: {
 		home: "Localman，返回首页",
 		nav: "主导航",
 		features: "功能",
-		pricing: "价格",
 		signIn: "登录",
 	},
 	appHeader: {

@@ -1,6 +1,8 @@
 /**
  * Public landing (`pages/landing`). `meta` is also the static copy of
- * `apps/web/index.html` (title, description) for crawlers.
+ * `apps/web/index.html` (title, description) for crawlers;
+ * `pricingDescription` is the one of the prerendered `/pricing`
+ * (`src/prerender.tsx`).
  */
 export const landing = {
 	meta: {
@@ -8,6 +10,8 @@ export const landing = {
 		titleLocalhost: "Localman · Test localhost APIs right in your browser",
 		description:
 			"Spin up a stateful mock REST API in minutes: declare resources, generate data with Faker.js, nest relations and get CRUD endpoints right away. Free plan with {projects} projects.",
+		pricingDescription:
+			"Compare Localman plans: Free with {projects} projects, and Pro with higher limits and more members for projects in real use.",
 	},
 	hero: {
 		badgeMock: "Mock REST API for developers",

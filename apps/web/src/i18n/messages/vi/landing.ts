@@ -6,6 +6,8 @@ export const landing: Messages["landing"] = {
 		titleLocalhost: "Localman · Test API localhost ngay trên trình duyệt",
 		description:
 			"Dựng mock REST API có trạng thái trong vài phút: khai báo resource, sinh dữ liệu bằng Faker.js, lồng quan hệ và có ngay endpoint CRUD. Gói Free {projects} project.",
+		pricingDescription:
+			"So sánh các gói của Localman: Free với {projects} project, Pro với hạn mức lớn hơn và nhiều thành viên hơn cho các project chạy thật.",
 	},
 	hero: {
 		badgeMock: "Mock REST API cho developer",

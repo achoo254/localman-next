@@ -12,6 +12,7 @@ export const common: Messages["common"] = {
 	cta: {
 		startFree: "Bắt đầu miễn phí",
 		start: "Bắt đầu",
+		openApp: "Mở ứng dụng",
 		contact: "Liên hệ",
 		reset: "Đặt lại",
 		retry: "Thử lại",

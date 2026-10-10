@@ -9,26 +9,20 @@ import { ThemeToggle } from "../theme/theme-toggle";
 import { buttonClassName } from "../ui/button";
 import { AccountControls } from "./account-controls";
 
-/** In-page anchors of the landing, shown in the top bar on `/` only. */
-const LANDING_ANCHORS = [
-	{ href: "#features", labelKey: "features", id: "topbar-features" },
-	{ href: "#pricing", labelKey: "pricing", id: "topbar-pricing" },
-] as const;
-
 const GHOST_SM = cn(
 	buttonClassName({ variant: "ghost", size: "sm" }),
 	"no-underline",
 );
 
 /**
- * Top bar of public pages (landing, invite, docs). Signed-in visitors (on
- * docs or an invite) get "Projects" and their account menu instead of the
- * sign-in pair; while the session loads the pair shows, as on the
- * prerendered landing. At 375px only the
+ * Top bar of public pages (landing, pricing, invite, docs). Signed-in
+ * visitors get "Open app" and their account menu instead of the sign-in
+ * pair; while the session loads the pair shows, as on the prerendered
+ * pages, and the bar keeps its height when they swap. At 375px only the
  * wordmark, "Sign in" and "Get started" fit; Docs, the language and theme
  * switches return from 640px (all are in the footer below that). The
- * landing anchors need 1024px: at 768px they would push the bar past its
- * width.
+ * landing's navigation (Features anchor, Pricing page) needs 1024px: at
+ * 768px it would push the bar past its width.
  */
 export function PublicHeader() {
 	const t = useT();
@@ -57,16 +51,12 @@ export function PublicHeader() {
 						aria-label={t("layout.publicHeader.nav")}
 						className="flex items-center gap-1 max-lg:hidden"
 					>
-						{LANDING_ANCHORS.map((anchor) => (
-							<a
-								key={anchor.id}
-								href={anchor.href}
-								data-id={anchor.id}
-								className={GHOST_SM}
-							>
-								{t(`layout.publicHeader.${anchor.labelKey}`)}
-							</a>
-						))}
+						<a href="#features" data-id="topbar-features" className={GHOST_SM}>
+							{t("layout.publicHeader.features")}
+						</a>
+						<Link to="/pricing" data-id="topbar-pricing" className={GHOST_SM}>
+							{t("layout.pricing")}
+						</Link>
 					</nav>
 				) : null}
 				<div className="flex items-center gap-2">
@@ -93,7 +83,7 @@ export function PublicHeader() {
 									"no-underline",
 								)}
 							>
-								{t("layout.projects")}
+								{t("common.cta.openApp")}
 							</Link>
 							<AccountControls user={session.user} />
 						</>

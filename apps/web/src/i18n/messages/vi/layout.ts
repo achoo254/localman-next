@@ -5,11 +5,12 @@ export const layout: Messages["layout"] = {
 	pageLoading: "Đang tải trang…",
 	docs: "Docs",
 	projects: "Projects",
+	home: "Trang chủ Localman",
+	pricing: "Bảng giá",
 	publicHeader: {
 		home: "Localman, về trang chủ",
 		nav: "Điều hướng chính",
 		features: "Tính năng",
-		pricing: "Bảng giá",
 		signIn: "Đăng nhập",
 	},
 	appHeader: {

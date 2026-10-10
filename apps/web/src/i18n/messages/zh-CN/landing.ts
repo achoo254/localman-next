@@ -6,6 +6,8 @@ export const landing: Messages["landing"] = {
 		titleLocalhost: "Localman · 直接在浏览器中测试 localhost API",
 		description:
 			"几分钟内搭建带状态的 mock REST API：声明 resource，用 Faker.js 生成数据，嵌套关联，立即获得 CRUD endpoint。Free 套餐含 {projects} 个 project。",
+		pricingDescription:
+			"比较 Localman 套餐：Free 含 {projects} 个 project，Pro 为实际使用中的 project 提供更高额度和更多成员。",
 	},
 	hero: {
 		badgeMock: "面向开发者的 mock REST API",

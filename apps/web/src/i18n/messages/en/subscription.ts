@@ -27,6 +27,7 @@ export const subscription = {
 	manage: {
 		title: "Manage plan",
 		currentBadge: "Current plan",
+		seePricing: "See pricing",
 		reachedTitle: "You've reached the {plan} plan limit: {limit}",
 		reachedText: "Compare the two plans below.",
 		current: "Current plan: <b>{plan}</b>. Each plan's limits are below.",

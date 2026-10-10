@@ -89,6 +89,8 @@ describe("AppHeader", () => {
 			"account-menu-plan",
 			"account-menu-notifications",
 			"account-menu-docs",
+			"account-menu-pricing",
+			"account-menu-home",
 			"account-menu-email",
 			"account-menu-idp",
 			"topbar-logout",
