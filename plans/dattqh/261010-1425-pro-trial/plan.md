@@ -1,6 +1,6 @@
 ---
 title: "Pro as a 30-day trial instead of a paid plan"
-status: in-progress
+status: completed
 created: 2026-10-10
 tier: L
 ---
@@ -69,7 +69,7 @@ No billing yet: the owner does not want to charge before Vietnamese tax rules ar
 - [x] Reminders are sent once each at 7 days and 1 day before the end and on the end day. The owner is told about each new extension request.
 - [x] After the trial, nothing is deleted. Creating above the Free limits is refused with the existing `PLAN_LIMIT_REACHED`, and the UI lists the exceeded limits.
 - [x] The pricing page, plan dialog and account page show the trial (no price). The admin page lists requests and approves or declines them.
-- [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm e2e && pnpm check:mcp-coverage` clean; deployed and checked live.
+- [x] `pnpm lint && pnpm typecheck && pnpm test && pnpm e2e && pnpm check:mcp-coverage` clean (3826 unit, e2e 31/31); deployed release `20261010-081815-46a686b6cd6b` (backup `localman-20261010-151815` first). The release also carries the phase 11 backend (UI hidden behind `workspaces`); the owner approved deploying the whole HEAD. Live: 6 trial routes in OpenAPI, /pricing shows the 30-day trial, starting a trial needs a session (401).
 
 ## Implementation notes
 - Routes live under `/api/v1/users/me/trial` and `/api/v1/users/me/trial/extension` (the real "me" route), admin routes as planned.
