@@ -34,11 +34,28 @@ import { UserAvatar } from "./user-avatar";
 
 const ICON = { size: 16, "aria-hidden": true } as const;
 
+const TRIGGER = cn(buttonClassName({ variant: "ghost" }), "px-2");
+
 export interface AccountMenuProps {
 	user: CurrentUser;
 	logoutBusy: boolean;
 	onLogout: () => void;
 	onManagePlan: () => void;
+	/** Avatar and chevron only: the name stays in the menu and the label. */
+	compact?: boolean;
+}
+
+/**
+ * Empty box of the compact trigger's size, for a layout that keeps its
+ * room before the user is known.
+ */
+export function AccountTriggerSpacer() {
+	return (
+		<span className={TRIGGER}>
+			<span className="size-7" />
+			<span className="size-4" />
+		</span>
+	);
 }
 
 /** Avatar button and the account menu of the signed-in top bar. */
@@ -47,6 +64,7 @@ export function AccountMenu({
 	logoutBusy,
 	onLogout,
 	onManagePlan,
+	compact = false,
 }: AccountMenuProps) {
 	const navigate = useNavigate();
 	const flags = useFeatures();
@@ -76,12 +94,14 @@ export function AccountMenu({
 					type="button"
 					data-id="topbar-account"
 					aria-label={t("layout.accountMenu.trigger", { name })}
-					className={cn(buttonClassName({ variant: "ghost" }), "px-2")}
+					className={TRIGGER}
 				>
 					<UserAvatar user={user} />
-					<span className="max-w-48 truncate font-mono text-[0.8125rem] text-muted max-sm:hidden">
-						{name}
-					</span>
+					{compact ? null : (
+						<span className="max-w-48 truncate font-mono text-[0.8125rem] text-muted max-sm:hidden">
+							{name}
+						</span>
+					)}
 					<IconChevronDown size={16} aria-hidden="true" />
 				</button>
 			</DropdownMenuTrigger>
