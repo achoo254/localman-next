@@ -1,6 +1,6 @@
 ---
 title: "Web: loading states, skeletons and pending feedback"
-status: in-progress
+status: completed
 created: 2026-10-10
 tier: L
 ---
@@ -54,4 +54,4 @@ Nothing flashes on fast loads, and the layout does not jump when data arrives.
 - [x] Refetch and filter changes keep data and show `PanelProgress`. Navigation shows `RouteProgress`.
 - [x] Every create/update/delete/send button shows a spinner while pending. Toggles and renames are optimistic with rollback and an error toast.
 - [x] Reduced motion turns the shimmer off. axe shows no serious violations. Each loading region has one polite status.
-- [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm e2e` clean. Deployed and checked live.
+- [x] `pnpm lint && pnpm typecheck && pnpm test && pnpm e2e` clean (3316 unit, e2e 28). Deployed release `20261010-042012-f3ef7885125b`.
