@@ -1,6 +1,6 @@
 ---
 title: "IdP: English, Chinese and a clearer account portal"
-status: in-progress
+status: completed
 created: 2026-10-10
 tier: L
 repos: [hoandat-auth, localman-next]
@@ -43,4 +43,4 @@ Every page of `auth.hoandat.com` is in English, Simplified Chinese and Vietnames
 - [x] Revoke buttons are labelled by effect. Removing app access and signing out other sessions go through a confirmation page that keeps CSRF and the recent-login check.
 - [x] Sign-in and consent pages name the requesting app and show provider logos.
 - [x] `pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm check:tokens` are clean in `hoandat-auth`, and Localman's affected tests pass.
-- [ ] Deployed to `auth.hoandat.com` and checked live.
+- [x] Deployed to `auth.hoandat.com` (hoandat-auth `239e3a6`) and checked live: pages answer in en/zh-CN/vi by Accept-Language, discovery lists `ui_locales_supported`, `/lang` refuses an off-site return path. Localman `037aa55` sends `ui_locales` (release `20261010-012949-8179213cb602`).
