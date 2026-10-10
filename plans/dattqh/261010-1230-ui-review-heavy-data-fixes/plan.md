@@ -38,6 +38,7 @@ Every finding of `plans/dattqh/reports/ui-review-heavy-data.md` is fixed as Jev 
 - **D** (web resources modals and project list): M4 key editing UI, M7, M8, M2 project rows and modal titles, L2 meta line.
 
 ## Acceptance
-- [ ] All findings above fixed with tests.
-- [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm e2e` clean.
-- [ ] Deployed, checked on production with the test projects, then the test projects deleted and the owner's plan decision recorded.
+- [x] All findings above fixed with tests (commit `ed99b7a`).
+- [x] `pnpm lint && pnpm typecheck && pnpm test && pnpm e2e` clean: 3470 unit, e2e 30/30; clean clone of the commit alone: typecheck 0 errors, web 1010/1010.
+- [x] Deployed release `20261010-053905-ed99b7ac67fe`; checked through the production MCP: project counts returned, an old resource keeps `quizzId` and can be switched to `quizId`, "UI test - Shop v2.0 · beta" accepted.
+- [ ] Owner reviews the UI with the test projects; then delete them (Jev 0.91) and decide whether to revert the owner's Pro grant (backup `localman-20261010-114356`; preimage `plan: "free"`, no `planExpiresAt`).
