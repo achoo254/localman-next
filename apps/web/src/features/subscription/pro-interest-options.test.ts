@@ -31,6 +31,7 @@ describe("Pro interest needs by released features", () => {
 			directMode: true,
 			hybridMock: true,
 			mockPowerUps: true,
+			workspaces: true,
 		};
 		expect(ids(all)).not.toContain("devops_ci");
 		expect(sourceNeedFor("devops", all)).toBeUndefined();

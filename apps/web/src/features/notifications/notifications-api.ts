@@ -1,3 +1,4 @@
+import type { ElementRole } from "@localman/shared/access";
 import { apiRequest } from "../../lib/api-client";
 import {
 	expectArray,
@@ -6,6 +7,11 @@ import {
 	expectString,
 	optionalString,
 } from "../../lib/json-guards";
+import {
+	type AccessRequestStatus,
+	parseRequestStatus,
+} from "../sharing/access-requests-api";
+import { parseElementRole } from "../sharing/sharing-api";
 
 export interface AppNotification {
 	id: string;
@@ -16,6 +22,16 @@ export interface AppNotification {
 	link: string | null;
 	readAt: string | null;
 	createdAt: string;
+	/**
+	 * `access.requested` items: the request with the role asked for now
+	 * (`role`) and the role this notification announced (`notifiedRole`).
+	 */
+	accessRequest: {
+		id: string;
+		status: AccessRequestStatus;
+		role: ElementRole;
+		notifiedRole: ElementRole;
+	} | null;
 }
 
 export interface NotificationPage {
@@ -25,6 +41,25 @@ export interface NotificationPage {
 }
 
 export const NOTIFICATION_PAGE_SIZE = 10;
+
+function parseAccessRequestRef(
+	value: unknown,
+): AppNotification["accessRequest"] {
+	// Absent from older API builds: a notification without a request.
+	if (value === null || value === undefined) return null;
+	const data = expectRecord(value, "access request");
+	const role = parseElementRole(data.role, "access request role");
+	return {
+		id: expectString(data, "id"),
+		status: parseRequestStatus(data.status),
+		role,
+		// Older API builds do not send it: the current role is the best guess.
+		notifiedRole:
+			data.notifiedRole === undefined
+				? role
+				: parseElementRole(data.notifiedRole, "notified role"),
+	};
+}
 
 function parseNotification(value: unknown): AppNotification {
 	const item = expectRecord(value, "notification");
@@ -36,6 +71,7 @@ function parseNotification(value: unknown): AppNotification {
 		link: optionalString(item, "link"),
 		readAt: optionalString(item, "readAt"),
 		createdAt: expectString(item, "createdAt"),
+		accessRequest: parseAccessRequestRef(item.accessRequest),
 	};
 }
 

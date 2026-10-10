@@ -98,6 +98,26 @@ Module `apps/api/src/modules/collaborators/`, operation `collab.*` (toolset MCP 
 - **Index:** token, `(projectId, inviteeUserId)` và `(projectId, inviteeEmail)` là unique partial theo `$exists` (planner dùng được cho truy vấn bằng), thêm `(projectId, status)` cho đếm chỗ và `memberCount`; `users.username` và `users.email` có index collation `en` strength 2 (`CASE_INSENSITIVE_COLLATION`). `users.username` là bản sao từ IdP nên không unique: mời theo username mà khớp hai tài khoản thì 409 `AMBIGUOUS_USERNAME` (mời bằng email), không gắn bừa vào một tài khoản.
 - **Project dependents:** `collaborators` và `magicLinks` (đếm và xoá, không `copy`): xoá project xoá cả thành viên, lời mời, dấu gỡ thành viên và magic link; bản clone không có thành viên.
 
+## Workspace, vai trò và chia sẻ phần tử
+
+Bảng quyền nằm ở `@localman/shared/access` (`packages/shared/src/access-permissions.ts`), chép từ bảng "Roles and permissions" của Postman. API quyết định theo bảng này, web đọc nó để ẩn hoặc khoá nút. Mọi operation dưới đây thuộc toolset MCP `sharing`. UI nằm sau cờ `workspaces` của web.
+
+- **Workspace** (`apps/api/src/modules/workspaces/`, `/api/v1/workspaces…`):
+  - Mỗi user có đúng một workspace cá nhân, tạo khi dùng lần đầu, bảo đảm bằng unique partial index.
+  - Workspace team có thành viên Admin, Editor hoặc Viewer (`workspace_members`). Trần số thành viên là `membersPerWorkspace` theo gói của chủ (`ownerId`); số workspace team mỗi người tạo bị giới hạn bởi `teamWorkspaces` (Free 1).
+  - Lời mời theo username, email hoặc link dùng một lần dùng chung quy tắc token và người nhận với lời mời project (`access/invite-addressee.ts`). Preview và accept ở `/workspace-invites/{preview,accept}`, token đi trong body.
+  - Admin cuối cùng không hạ vai trò, không bị xoá và không rời được (409 `LAST_ADMIN`). Chủ rời đi thì quyền chủ chuyển cho Admin cũ nhất, kể cả khi người đó vượt hạn mức (`workspace-ownership.ts`).
+- **Vai trò trên phần tử** (`apps/api/src/modules/access/`): collection và environment đăng ký adapter (`element-adapters.ts`) ở phase 12 và 13; trước đó `/elements/...` trả 404.
+  - Vai trò hiệu lực là vai trò mạnh hơn giữa vai trò suy từ workspace (Admin và Editor thành Editor, Viewer thành Viewer) và share riêng (`element_roles`). Share chỉ nâng, không hạ, và không chiếm ghế thành viên.
+  - Không có quyền thì 404, có quyền xem mà thiếu quyền hành động thì 403.
+  - Phần tử trong workspace cá nhân không chia sẻ được (409 `PERSONAL_WORKSPACE`). Share theo email chỉ gắn vào tài khoản đã xác minh email đó.
+- **Request access:**
+  - Luôn trả `{ status: "sent" }` dù phần tử có tồn tại hay không, giới hạn 20 lượt mỗi giờ. Gửi lại với vai trò mạnh hơn thì nâng yêu cầu đang chờ.
+  - Editor của phần tử nhận thông báo `access.requested` (tối đa 50 người). Approve phải gửi kèm vai trò đã thấy; yêu cầu đã đổi thì trả 409 `REQUEST_CHANGED`.
+- **Move:** cần Admin hoặc Editor ở workspace nguồn và quyền `addElements` ở workspace đích. Không chuyển từ workspace team về workspace cá nhân. Share riêng đi theo phần tử.
+- **Project mock** không có workspace: `project-access.ts` quyết định theo `MOCK_PROJECT_PERMISSIONS` (owner là Editor có quyền quản lý, collaborator là Editor không quản lý).
+- **Thông báo mới:** `workspace.invitation`, `element.shared`, `access.requested`, `access.resolved`. Item thông báo `access.requested` có `accessRequest: { id, status, role }`.
+
 ## Resources và dữ liệu mock
 
 Module `apps/api/src/modules/resources/`, operation `mock.*` dưới `/api/v1/projects/:projectId/resources` (cộng `GET /api/v1/faker-methods`). Zod, whitelist Faker và template nằm ở `packages/shared`, web và api dùng chung. Hằng của resource (`resource-constants.ts`) tách khỏi các module zod (`resource-schema.ts`, `resource-templates.ts` re-export lại), để web đọc qua `@localman/shared/constants` mà không kéo zod và catalog Faker vào trang; catalog chỉ nằm trong chunk modal resource.

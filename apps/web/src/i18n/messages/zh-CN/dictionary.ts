@@ -26,11 +26,13 @@ import { resourceImport } from "./resource-import";
 import { resourceRules } from "./resource-rules";
 import { resourceTree } from "./resource-tree";
 import { resources } from "./resources";
+import { sharing } from "./sharing";
 import { subscription } from "./subscription";
 import { trafficLog } from "./traffic-log";
 import { ui } from "./ui";
 import { upstream } from "./upstream";
 import { webhookInbox } from "./webhook-inbox";
+import { workspaces } from "./workspaces";
 
 /** Simplified Chinese, loaded on demand (`load-messages.ts`). */
 export const zhCN: Messages = {
@@ -66,4 +68,6 @@ export const zhCN: Messages = {
 	trafficLog,
 	webhookInbox,
 	mockCallbacks,
+	workspaces,
+	sharing,
 };

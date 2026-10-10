@@ -1,4 +1,5 @@
 import type { AnyOperation } from "@localman/operations";
+import { accessOperations } from "../modules/access/access-operations.js";
 import { clientStoreOperations } from "../modules/api-client/client-store-operations.js";
 import { proxyOperations } from "../modules/api-client/proxy-operations.js";
 import { getAccountUsage } from "../modules/billing/usage-operations.js";
@@ -40,6 +41,7 @@ import { resourceOperations } from "../modules/resources/resource-operations.js"
 import { resourceTreeOperations } from "../modules/resources/resource-tree-operations.js";
 import { getMe, setLocale } from "../modules/users/user-operations.js";
 import { webhookInboxOperations } from "../modules/webhook-inbox/inbox-operations.js";
+import { workspaceOperations } from "../modules/workspaces/workspace-operations.js";
 
 /**
  * Every dashboard API operation. REST routes, MCP tools and the OpenAPI
@@ -73,6 +75,8 @@ export const operations: readonly AnyOperation[] = [
 	...callbackOperations,
 	...proxyOperations,
 	...clientStoreOperations,
+	...workspaceOperations,
+	...accessOperations,
 	...resourceTreeOperations,
 	...resourceDataOperations,
 	getMockUrls,

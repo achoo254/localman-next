@@ -3,12 +3,14 @@ import { useT } from "../../i18n/i18n-context";
 import type { SourceMessages } from "../../i18n/message-types";
 import type { Translate } from "../../i18n/translate";
 import { cn } from "../../lib/cn";
+import { useWorkspacesEnabled } from "../workspaces/use-workspaces-enabled";
 import {
 	EVENT_CHANNELS,
 	type EventChannel,
 	type EventPreference,
 	type NotificationChannels,
 } from "./notification-preferences-api";
+import { WORKSPACE_EVENT_TYPES } from "./workspace-event-types";
 
 type EventTypeKey =
 	`notifications.events.types.${keyof SourceMessages["notifications"]["events"]["types"]}`;
@@ -18,6 +20,10 @@ const EVENT_TYPE_KEYS: Readonly<Record<string, EventTypeKey>> = {
 	"project.invitation": "notifications.events.types.projectInvitation",
 	"project.mockUrlChanged": "notifications.events.types.projectMockUrlChanged",
 	"usage.quota": "notifications.events.types.usageQuota",
+	"workspace.invitation": "notifications.events.types.workspaceInvitation",
+	"element.shared": "notifications.events.types.elementShared",
+	"access.requested": "notifications.events.types.accessRequested",
+	"access.resolved": "notifications.events.types.accessResolved",
 };
 
 /** The event's label in the current language; a type unknown to this build keeps the API's label. */
@@ -48,12 +54,16 @@ function usableChannels(
 
 /** Event type × channel matrix; each box saves as soon as it changes. */
 export function EventPreferencesTable({
-	events,
+	events: allEvents,
 	channels,
 	onToggle,
 }: EventPreferencesTableProps) {
 	const t = useT();
+	const workspaces = useWorkspacesEnabled();
 	const usable = usableChannels(channels);
+	const events = workspaces
+		? allEvents
+		: allEvents.filter((event) => !WORKSPACE_EVENT_TYPES.has(event.type));
 
 	return (
 		<section

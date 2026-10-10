@@ -55,6 +55,10 @@ export const notifications: Messages["notifications"] = {
 			projectInvitation: "Project 协作邀请",
 			projectMockUrlChanged: "共享 project 的 mock URL 已更改",
 			usageQuota: "每月 mock request 额度提醒",
+			workspaceInvitation: "Workspace 邀请",
+			elementShared: "共享给你的 collection 和 environment",
+			accessRequested: "对你的项目的访问申请",
+			accessResolved: "你的访问申请的处理结果",
 		},
 	},
 	webPush: {

@@ -5,6 +5,7 @@
 	"type": "module",
 	"exports": {
 		".": "./src/index.ts",
+		"./access": "./src/access-permissions.ts",
 		"./api-client": "./src/api-client/index.ts",
 		"./api-client/script-sandbox": "./src/api-client/script-sandbox/index.ts",
 		"./constants": "./src/constants.ts",

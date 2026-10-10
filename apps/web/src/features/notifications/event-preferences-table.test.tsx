@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { FeaturesContext, NO_FEATURES } from "../../config/features";
 import { EventPreferencesTable } from "./event-preferences-table";
 import type { NotificationChannels } from "./notification-preferences-api";
 
@@ -54,4 +55,36 @@ describe("EventPreferencesTable", () => {
 			screen.getByRole("rowheader", { name: "Plan renewal" }),
 		).toBeVisible();
 	});
+
+	it.each([
+		[true, 5],
+		[false, 1],
+	])(
+		"shows the four sharing events only with workspaces (%s)",
+		(workspaces, rows) => {
+			render(
+				<FeaturesContext
+					value={{ ...NO_FEATURES, apiClient: true, workspaces }}
+				>
+					<EventPreferencesTable
+						events={[
+							event("project.invitation", "Project invitations"),
+							event("workspace.invitation", "Workspace invitations"),
+							event("element.shared", "Shared"),
+							event("access.requested", "Requested"),
+							event("access.resolved", "Resolved"),
+						]}
+						channels={CHANNELS}
+						onToggle={() => {}}
+					/>
+				</FeaturesContext>,
+			);
+			expect(screen.getAllByRole("rowheader")).toHaveLength(rows);
+			const requested = screen.queryByRole("rowheader", {
+				name: "Requests for access to your items",
+			});
+			if (workspaces) expect(requested).toBeVisible();
+			else expect(requested).toBeNull();
+		},
+	);
 });

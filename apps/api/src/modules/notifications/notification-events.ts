@@ -1,3 +1,8 @@
+import {
+	ELEMENT_ROLES,
+	SHAREABLE_ELEMENT_TYPES,
+	WORKSPACE_ROLES,
+} from "@localman/shared/access";
 import { z } from "zod";
 import { normalizeInternalPath } from "../../http/internal-path.js";
 
@@ -10,6 +15,10 @@ export const NOTIFICATION_EVENT_TYPES = [
 	"project.invitation",
 	"project.mockUrlChanged",
 	"usage.quota",
+	"workspace.invitation",
+	"element.shared",
+	"access.requested",
+	"access.resolved",
 ] as const;
 
 export type NotificationEventType = (typeof NOTIFICATION_EVENT_TYPES)[number];
@@ -51,6 +60,33 @@ export const NOTIFICATION_PARAMS = {
 		used: z.number().int().min(0),
 		/** `YYYYMM` of the counted month. */
 		month: z.string().regex(/^\d{4}(0[1-9]|1[0-2])$/),
+	}),
+	"workspace.invitation": z.object({
+		inviter: name.nullable(),
+		workspace: name,
+		role: z.enum(WORKSPACE_ROLES),
+		days: z.number().int().min(1).max(365),
+	}),
+	"element.shared": z.object({
+		/** `null` when the sharer has no name or username. */
+		sharer: name.nullable(),
+		elementType: z.enum(SHAREABLE_ELEMENT_TYPES),
+		element: name,
+		role: z.enum(ELEMENT_ROLES),
+	}),
+	"access.requested": z.object({
+		requester: name,
+		elementType: z.enum(SHAREABLE_ELEMENT_TYPES),
+		element: name,
+		role: z.enum(ELEMENT_ROLES),
+		/** Id of the access request the Editor approves or denies. */
+		requestId: z.string().min(1).max(64),
+	}),
+	"access.resolved": z.object({
+		elementType: z.enum(SHAREABLE_ELEMENT_TYPES),
+		element: name,
+		role: z.enum(ELEMENT_ROLES),
+		approved: z.boolean(),
 	}),
 	// No values; Mongo drops an empty object, so a stored test has none.
 	[TEST_NOTIFICATION_TYPE]: z.object({}).optional(),

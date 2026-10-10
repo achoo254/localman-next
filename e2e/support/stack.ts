@@ -98,7 +98,7 @@ function webBuildEnv(): NodeJS.ProcessEnv {
 		// Every flag the specs need: the API client, the MCP tab of the
 		// endpoint card, and the hybrid mock tabs (upstream, request log,
 		// webhook inbox, callbacks).
-		VITE_FEATURES: "apiClient,mockMcp,hybridMock",
+		VITE_FEATURES: "apiClient,mockMcp,hybridMock,workspaces",
 	};
 }
 

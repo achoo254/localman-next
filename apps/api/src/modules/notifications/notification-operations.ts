@@ -1,6 +1,10 @@
 import { OperationError, defineOperation } from "@localman/operations";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import {
+	notifiedAccessRequest,
+	withAccessRequests,
+} from "../access/notification-access-requests.js";
 import { readUserLocale } from "../users/user-locale.js";
 import {
 	listNotifications as listInbox,
@@ -18,6 +22,8 @@ const notificationItem = z.object({
 	link: z.string().nullable(),
 	readAt: z.string().nullable(),
 	createdAt: z.string(),
+	/** For `access.requested`: the request and its status; else `null`. */
+	accessRequest: notifiedAccessRequest,
 });
 
 export const listNotifications = defineOperation({
@@ -26,7 +32,7 @@ export const listNotifications = defineOperation({
 	path: "/notifications",
 	summary: "List the signed-in user's notifications, newest first",
 	description:
-		"Paginated with `cursor` (the `nextCursor` of the previous page). Also returns the number of unread notifications. Titles and bodies are in the user's language (`users.setLocale`), older ones included.",
+		"Paginated with `cursor` (the `nextCursor` of the previous page). Also returns the number of unread notifications. Titles and bodies are in the user's language (`users.setLocale`), older ones included. `access.requested` items carry `accessRequest` (`{ id, status, role, notifiedRole }`: `role` is the role asked for now, `notifiedRole` the one this notification announced) so the request can be approved (with `notifiedRole`; 409 REQUEST_CHANGED if it was upgraded since) or denied while pending; other items have `null`.",
 	input: z.object({
 		cursor: z
 			.string()
@@ -45,7 +51,8 @@ export const listNotifications = defineOperation({
 	mcp: true,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
-		return listInbox(sub, input, await readUserLocale(sub));
+		const page = await listInbox(sub, input, await readUserLocale(sub));
+		return { ...page, items: await withAccessRequests(page.items) };
 	},
 });
 
@@ -70,7 +77,8 @@ export const markNotificationRead = defineOperation({
 		if (!item) {
 			throw new OperationError(404, "NOT_FOUND", "Notification not found");
 		}
-		return item;
+		const [withRequest] = await withAccessRequests([item]);
+		return withRequest ?? { ...item, accessRequest: null };
 	},
 });
 

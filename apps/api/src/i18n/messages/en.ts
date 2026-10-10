@@ -5,6 +5,22 @@ export interface InvitationText {
 	readonly days: number;
 }
 
+/** Values of a workspace invitation; `role` is already a role name. */
+export interface WorkspaceInvitationText {
+	readonly inviter: string | null;
+	readonly workspace: string;
+	readonly role: string;
+	readonly days: number;
+}
+
+/** An element (collection, environment) and a role, names already translated. */
+export interface ElementAccessText {
+	readonly element: string;
+	/** "collection" or "environment" in the language. */
+	readonly kind: string;
+	readonly role: string;
+}
+
 /** Quota warning values, already formatted for the language. */
 export interface QuotaText {
 	readonly threshold: number;
@@ -55,6 +71,36 @@ export const en = {
 		"project.invitation": "Project collaboration invitations",
 		"project.mockUrlChanged": "A shared project's mock URL changed",
 		"usage.quota": "Monthly mock request quota warnings",
+		"workspace.invitation": "Workspace invitations",
+		"element.shared": "Collections and environments shared with you",
+		"access.requested":
+			"Requests for access to your collections and environments",
+		"access.resolved": "Answers to your access requests",
+	},
+	roleNames: { admin: "Admin", editor: "Editor", viewer: "Viewer" },
+	elementNames: { collection: "collection", environment: "environment" },
+	workspaceInvitation: {
+		title: "Workspace invitation",
+		body: (p: WorkspaceInvitationText): string =>
+			`${p.inviter ?? "A workspace Admin"} invited you to the workspace "${p.workspace}" as ${p.role}. The invitation expires in ${p.days} ${p.days === 1 ? "day" : "days"}.`,
+	},
+	elementShared: {
+		title: "Shared with you",
+		body: (p: ElementAccessText & { readonly sharer: string | null }): string =>
+			`${p.sharer ?? "Someone"} shared the ${p.kind} "${p.element}" with you as ${p.role}.`,
+	},
+	accessRequested: {
+		title: "Access request",
+		body: (p: ElementAccessText & { readonly requester: string }): string =>
+			`${p.requester} asks for ${p.role} access to the ${p.kind} "${p.element}".`,
+	},
+	accessResolved: {
+		approvedTitle: "Access request approved",
+		approvedBody: (p: ElementAccessText): string =>
+			`You now have ${p.role} access to the ${p.kind} "${p.element}".`,
+		deniedTitle: "Access request declined",
+		deniedBody: (p: ElementAccessText): string =>
+			`Your request for ${p.role} access to the ${p.kind} "${p.element}" was declined.`,
 	},
 	invitation: {
 		title: "Project collaboration invitation",

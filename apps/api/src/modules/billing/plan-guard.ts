@@ -3,7 +3,11 @@ import { type PlanId, limitsFor } from "@localman/shared";
 import { UserModel } from "../users/user-model.js";
 
 /** Quotas enforced by count; extend when another resource gets a cap. */
-export type CountedLimit = "projects" | "resources" | "members";
+export type CountedLimit =
+	| "projects"
+	| "resources"
+	| "members"
+	| "teamWorkspaces";
 
 /** 403 `PLAN_LIMIT_REACHED` with the numbers the upgrade dialog shows. */
 export class PlanLimitError extends OperationError {

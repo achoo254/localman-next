@@ -30,6 +30,7 @@ export function makeNotification(
 		link: null,
 		readAt: null,
 		createdAt: "2026-10-09T01:00:00.000Z",
+		accessRequest: null,
 		...overrides,
 	};
 }

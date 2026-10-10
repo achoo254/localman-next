@@ -55,6 +55,14 @@ export const routes: RouteObject[] = [
 					"AcceptInvitePage",
 				),
 			},
+			// Public like `/invite/:token`; redirects while `workspaces` is off.
+			{
+				path: "workspace-invite/:token",
+				element: lazyPage(
+					() => import("./features/workspaces/workspace-invite-page"),
+					"WorkspaceInvitePage",
+				),
+			},
 			// Design-system reference page kept for comparing with the prototype.
 			{
 				path: "_primitives",
@@ -128,6 +136,29 @@ export const routes: RouteObject[] = [
 				element: lazyPage(
 					() => import("./pages/api-client/api-client-page"),
 					"ApiClientPage",
+				),
+			},
+			// Settings of the API client's current workspace (`workspaces` flag).
+			{
+				path: "workspace/settings",
+				element: lazyPage(
+					() => import("./features/workspaces/workspace-settings-page"),
+					"WorkspaceSettingsPage",
+				),
+			},
+			// Shared-item links and access requests (`workspaces` flag).
+			{
+				path: "elements/:type/:id",
+				element: lazyPage(
+					() => import("./features/sharing/element-link-page"),
+					"ElementLinkPage",
+				),
+			},
+			{
+				path: "access-requests/:requestId",
+				element: lazyPage(
+					() => import("./features/sharing/access-request-page"),
+					"AccessRequestPage",
 				),
 			},
 			{

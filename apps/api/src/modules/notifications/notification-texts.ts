@@ -71,6 +71,59 @@ const TEMPLATES: Readonly<Record<NotificationType, Template>> = {
 				: { title: quota.warningTitle(text), body: quota.warningBody(text) };
 		},
 	),
+	"workspace.invitation": template(
+		NOTIFICATION_PARAMS["workspace.invitation"],
+		(params, { workspaceInvitation, roleNames }) => ({
+			title: workspaceInvitation.title,
+			body: workspaceInvitation.body({
+				...params,
+				role: roleNames[params.role],
+			}),
+		}),
+	),
+	"element.shared": template(
+		NOTIFICATION_PARAMS["element.shared"],
+		(params, { elementShared, roleNames, elementNames }) => ({
+			title: elementShared.title,
+			body: elementShared.body({
+				sharer: params.sharer,
+				element: params.element,
+				kind: elementNames[params.elementType],
+				role: roleNames[params.role],
+			}),
+		}),
+	),
+	"access.requested": template(
+		NOTIFICATION_PARAMS["access.requested"],
+		(params, { accessRequested, roleNames, elementNames }) => ({
+			title: accessRequested.title,
+			body: accessRequested.body({
+				requester: params.requester,
+				element: params.element,
+				kind: elementNames[params.elementType],
+				role: roleNames[params.role],
+			}),
+		}),
+	),
+	"access.resolved": template(
+		NOTIFICATION_PARAMS["access.resolved"],
+		(params, { accessResolved, roleNames, elementNames }) => {
+			const text = {
+				element: params.element,
+				kind: elementNames[params.elementType],
+				role: roleNames[params.role],
+			};
+			return params.approved
+				? {
+						title: accessResolved.approvedTitle,
+						body: accessResolved.approvedBody(text),
+					}
+				: {
+						title: accessResolved.deniedTitle,
+						body: accessResolved.deniedBody(text),
+					};
+		},
+	),
 	[TEST_NOTIFICATION_TYPE]: template(
 		NOTIFICATION_PARAMS[TEST_NOTIFICATION_TYPE],
 		(_params, { testNotification }) => testNotification,

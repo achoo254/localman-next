@@ -1,3 +1,7 @@
+import {
+	MOCK_PROJECT_PERMISSIONS,
+	type MockProjectAction,
+} from "@localman/shared/access";
 import type { Types } from "mongoose";
 import { CollaboratorModel } from "../collaborators/collaborator-model.js";
 
@@ -9,13 +13,7 @@ import { CollaboratorModel } from "../collaborators/collaborator-model.js";
  * - `update`, `delete`: rename/re-prefix or delete the project itself;
  * - `manageMembers`: invite and remove members, manage the magic link.
  */
-export type ProjectAction =
-	| "read"
-	| "editResources"
-	| "clone"
-	| "update"
-	| "delete"
-	| "manageMembers";
+export type ProjectAction = MockProjectAction;
 
 export interface ProjectAccessUser {
 	readonly sub: string;
@@ -25,17 +23,6 @@ export interface ProjectAccessTarget {
 	readonly _id: Types.ObjectId;
 	readonly owner: string;
 }
-
-/**
- * Collaborators work on the project like the owner (resources and data,
- * within the owner's plan) and may copy it, but never rename, re-prefix or
- * delete it, nor manage its members.
- */
-const COLLABORATOR_ACTIONS: ReadonlySet<ProjectAction> = new Set([
-	"read",
-	"editResources",
-	"clone",
-]);
 
 /**
  * Projects shared with the user through an accepted invitation or the
@@ -71,15 +58,19 @@ export async function roleIn(
 }
 
 /**
- * The single authorization rule of projects: the owner may do everything,
- * an accepted collaborator what `COLLABORATOR_ACTIONS` allows.
+ * The single authorization rule of projects, read from the shared
+ * permission table: the owner is an Editor who also manages the project,
+ * a collaborator an Editor who works on resources and data (within the
+ * owner's plan) and may copy it, but never renames, re-prefixes or deletes
+ * it, nor manages its members.
  */
 export function roleAllows(
 	role: ProjectRole | null,
 	action: ProjectAction,
 ): boolean {
-	if (role === "owner") return true;
-	return role === "collaborator" && COLLABORATOR_ACTIONS.has(action);
+	if (role === null) return false;
+	const allowed: readonly ProjectRole[] = MOCK_PROJECT_PERMISSIONS[action];
+	return allowed.includes(role);
 }
 
 /**
@@ -93,7 +84,8 @@ export async function can(
 	action: ProjectAction,
 	project: ProjectAccessTarget,
 ): Promise<boolean> {
-	if (project.owner !== user.sub && !COLLABORATOR_ACTIONS.has(action)) {
+	// Only the owner can hold an owner-only action: skip the query.
+	if (project.owner !== user.sub && !roleAllows("collaborator", action)) {
 		return false;
 	}
 	return roleAllows(await roleIn(user, project), action);

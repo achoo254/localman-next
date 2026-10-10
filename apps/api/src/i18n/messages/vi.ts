@@ -8,6 +8,35 @@ export const vi: ServerMessages = {
 		"project.invitation": "Lời mời cộng tác project",
 		"project.mockUrlChanged": "URL mock của project được chia sẻ đã đổi",
 		"usage.quota": "Cảnh báo hạn mức lượt gọi mock tháng",
+		"workspace.invitation": "Lời mời vào workspace",
+		"element.shared": "Collection và environment được chia sẻ với bạn",
+		"access.requested": "Yêu cầu truy cập collection và environment của bạn",
+		"access.resolved": "Kết quả yêu cầu truy cập của bạn",
+	},
+	roleNames: { admin: "Admin", editor: "Editor", viewer: "Viewer" },
+	elementNames: { collection: "collection", environment: "environment" },
+	workspaceInvitation: {
+		title: "Lời mời vào workspace",
+		body: (p) =>
+			`${p.inviter ?? "Admin của workspace"} mời bạn vào workspace "${p.workspace}" với vai trò ${p.role}. Lời mời hết hạn sau ${p.days} ngày.`,
+	},
+	elementShared: {
+		title: "Được chia sẻ với bạn",
+		body: (p) =>
+			`${p.sharer ?? "Một người dùng"} đã chia sẻ ${p.kind} "${p.element}" với bạn, vai trò ${p.role}.`,
+	},
+	accessRequested: {
+		title: "Yêu cầu truy cập",
+		body: (p) =>
+			`${p.requester} xin quyền ${p.role} cho ${p.kind} "${p.element}".`,
+	},
+	accessResolved: {
+		approvedTitle: "Yêu cầu truy cập đã được duyệt",
+		approvedBody: (p) =>
+			`Bạn đã có quyền ${p.role} với ${p.kind} "${p.element}".`,
+		deniedTitle: "Yêu cầu truy cập bị từ chối",
+		deniedBody: (p) =>
+			`Yêu cầu quyền ${p.role} với ${p.kind} "${p.element}" của bạn đã bị từ chối.`,
 	},
 	invitation: {
 		title: "Lời mời cộng tác project",

@@ -1,6 +1,7 @@
 import type { Logger } from "../../logger.js";
 import { CollaboratorModel } from "../collaborators/collaborator-model.js";
 import { UserModel } from "../users/user-model.js";
+import { WorkspaceMemberModel } from "../workspaces/workspace-member-model.js";
 import type { AuditEvent } from "./security-event-token.js";
 
 /**
@@ -44,10 +45,13 @@ export async function applyAuditEvent(
 /**
  * The account lost its email to another account that verified it: drop the
  * address from the mirror at once (userinfo would only fix it at the next
- * sign-in), and unbind the pending invitations that were bound to the
- * account because of that address. They stay addressed to the email, so
- * the verified owner of the address can still accept them; invitations
- * bound by username are untouched.
+ * sign-in), and unbind the pending invitations (to projects and to
+ * workspaces) that were bound to the account because of that address. An
+ * invitation bound to an account admits only that account, whatever the
+ * email says, so without this the account would keep a seat meant for the
+ * address. They stay addressed to the email, so the verified owner of the
+ * address can still accept them; invitations bound by username are
+ * untouched.
  */
 async function forgetReclaimedEmail(sub: string): Promise<void> {
 	await UserModel.updateOne(
@@ -57,5 +61,9 @@ async function forgetReclaimedEmail(sub: string): Promise<void> {
 	await CollaboratorModel.updateMany(
 		{ inviteeUserId: sub, status: "pending", inviteeEmail: { $exists: true } },
 		{ $unset: { inviteeUserId: 1 } },
+	);
+	await WorkspaceMemberModel.updateMany(
+		{ userId: sub, status: "pending", email: { $exists: true } },
+		{ $unset: { userId: 1 } },
 	);
 }

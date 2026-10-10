@@ -6,6 +6,8 @@ import { cn } from "../../lib/cn";
 export const DropdownMenu = RadixMenu.Root;
 export const DropdownMenuTrigger = RadixMenu.Trigger;
 export const DropdownMenuRadioGroup = RadixMenu.RadioGroup;
+/** Groups related items, e.g. the actions under one entry (`role="group"`). */
+export const DropdownMenuGroup = RadixMenu.Group;
 
 export interface DropdownMenuContentProps
 	extends ComponentProps<typeof RadixMenu.Content> {}
@@ -115,4 +117,14 @@ export function DropdownMenuLabel({
 			{...rest}
 		/>
 	);
+}
+
+/**
+ * Menu item that renders its child as it is (`asChild`), without the row
+ * styling: a real button inside a menu that arrow keys still reach.
+ */
+export function DropdownMenuControlItem(
+	props: Omit<ComponentProps<typeof RadixMenu.Item>, "asChild">,
+) {
+	return <RadixMenu.Item asChild {...props} />;
 }

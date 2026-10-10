@@ -108,6 +108,7 @@ Operation có `mcp: { exempt }` vì chỉ trình duyệt dùng được:
 
 - `notifications.getVapidPublicKey`, `notifications.createPushSubscription`, `notifications.deletePushSubscription`: subscription Web Push do service worker tạo, agent không có push endpoint.
 - `mock.previewInvite`, `mock.acceptInvite`: người được mời mở link `/invite/:token` trên trình duyệt; nhận lời mời là quyết định của chính người đó, không phải của agent.
+- `sharing.previewWorkspaceInvite`, `sharing.acceptWorkspaceInvite`: như lời mời project, nhưng cho workspace (link `/workspace-invite/:token`). Token đi trong body POST, không nằm trong URL của API, để log nginx không ghi lại.
 - `feedback.submitProInterest`, `feedback.getProInterestFormConfig`: form quan tâm gói Pro là form công khai cho người. Khách phải qua Cloudflare Turnstile (agent không giải được), và việc để lại email liên hệ phải do chính người đó đồng ý.
 - `feedback.submitContactMessage`: form "Góp ý / Liên hệ" là form công khai cho người. Khách phải qua Cloudflare Turnstile (widget khai action `contact`, agent không giải được), và góp ý gửi owner phải do chính người dùng viết. Hộp thư của owner (`admin.listContactMessages`, `admin.updateContactMessageStatus`) có MCP tool.
 - `client.recordHistory`: trình duyệt ghi history sau mỗi lần gửi; tool `send_request` tự ghi history của nó.

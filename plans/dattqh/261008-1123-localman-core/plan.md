@@ -389,6 +389,16 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Thêm trang `/pricing` riêng, link từ landing, menu tài khoản và hộp thoại giới hạn gói (noul 0.75).
 - Không nhớ lựa chọn để tự chuyển người đã đăng nhập từ `/` sang `/projects` (noul 0.14).
 
+### Vòng 30: khi cook phase 11 (2026-10-10, user: "làm tiếp công việc trong plan", Jev quyết)
+- Collection và environment chưa có (phase 12, 13), nên UI Share, Manage access, trang Request access và nút duyệt/từ chối trong panel thông báo làm đủ ngay ở phase 11, test riêng; phase 12 chỉ việc gắn vào collection (Jev 0.78, dời sang 12 là 0.22).
+- UI workspace đặt sau cờ `workspaces`, chưa bật ở prod cho tới khi workspace chứa collection (Jev 1.0). Bốn loại thông báo mới cũng ẩn khỏi trang cài đặt khi cờ tắt.
+- Theo Postman: phần tử trong workspace cá nhân không chia sẻ được, phải chuyển sang workspace team trước (Jev noul 0.72).
+- Bảng quyền đặt ở `@localman/shared/access` (`packages/shared/src/access-permissions.ts`) để API và web dùng chung. Các dòng Postman về đối tượng Localman không có (specification, flow, monitor, integration, API) được bỏ, có ghi chú trong file.
+- Vai trò trên phần tử = mạnh hơn giữa vai trò suy từ workspace (Admin/Editor thành Editor, Viewer thành Viewer) và vai trò chia sẻ riêng; chia sẻ riêng chỉ nâng, không hạ.
+- Sau review backend: chủ rời workspace thì quyền chủ chuyển cho Admin cũ nhất còn lại, kể cả khi người đó vượt hạn mức workspace team; họ chỉ bị chặn tạo workspace mới (Jev 0.87, phương án chặn rời đi là 0.13).
+- Chia sẻ riêng một phần tử cho người ngoài workspace không chiếm ghế thành viên (Jev noul 0.12).
+- Move cần quyền `moveDeleteElements` ở workspace nguồn (Admin hoặc Editor của workspace), không chỉ share Editor, vì Localman tách chia sẻ phần tử khỏi tư cách thành viên. Approve phải nêu vai trò người duyệt đã thấy; yêu cầu đổi vai trò sau đó thì trả 409 `REQUEST_CHANGED`.
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 

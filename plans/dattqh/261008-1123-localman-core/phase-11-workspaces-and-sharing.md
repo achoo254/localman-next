@@ -1,7 +1,7 @@
 ---
 phase: 11
 title: "Workspace, vai trò và chia sẻ phần tử (theo Postman)"
-status: pending
+status: completed
 priority: P1
 effort: "L"
 dependencies: [10]
@@ -72,19 +72,26 @@ Nguồn tham chiếu: [Sharing](https://learning.postman.com/docs/collaborating-
 | T10 | Review cuối phase, ưu tiên mọi route chỉ đi qua `can()` và không lộ sự tồn tại của phần tử | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 State và `data-id` của workspace, share và request access đã chốt theo prototype
-- [ ] T2 `access-policy` dạng bảng, `element-role-model` và adapter xong
-- [ ] T3 Module workspaces, giới hạn gói và lời mời xong
-- [ ] T4 Share, Include environment, copy link và request access xong
-- [ ] T5 Move giữa workspace xong
-- [ ] T6 `project-access.ts` đã chạy qua policy chung
-- [ ] T7 UI workspace xong
-- [ ] T8 UI chia sẻ và panel thông báo xong
-- [ ] T9 Test bảng, integration và regression pass
-- [ ] T10 Review không còn finding chặn
-- [ ] Verification: mỗi ô (vai trò × hành động × loại phần tử) có một case và khớp bảng Postman trong `access-policy.ts`
-- [ ] Verification: integration share, accept, request access, approve, move pass; Viewer sửa nhận 403; không có quyền nhận 404
-- [ ] Verification: toàn bộ test phase 03 và 07 vẫn pass sau khi chuyển sang policy chung
-- [ ] Verification: mọi dòng trong ma trận tương đương có test hoặc kịch bản E2E pass
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
-- [ ] `pnpm check:mcp-coverage` pass
+- [x] T1 State và `data-id` của workspace, share và request access đã chốt theo prototype
+- [x] T2 `access-policy` dạng bảng, `element-role-model` và adapter xong
+- [x] T3 Module workspaces, giới hạn gói và lời mời xong
+- [x] T4 Share, Include environment, copy link và request access xong
+- [x] T5 Move giữa workspace xong
+- [x] T6 `project-access.ts` đã chạy qua policy chung
+- [x] T7 UI workspace xong
+- [x] T8 UI chia sẻ và panel thông báo xong
+- [x] T9 Test bảng, integration và regression pass
+- [x] T10 Review không còn finding chặn
+- [x] Verification: mỗi ô (vai trò × hành động × loại phần tử) có một case và khớp bảng Postman trong `access-policy.ts`
+- [x] Verification: integration share, accept, request access, approve, move pass; Viewer sửa nhận 403; không có quyền nhận 404
+- [x] Verification: toàn bộ test phase 03 và 07 vẫn pass sau khi chuyển sang policy chung
+- [x] Verification: mọi dòng trong ma trận tương đương có test hoặc kịch bản E2E pass
+- [x] `pnpm lint && pnpm typecheck && pnpm test` sạch
+- [x] `pnpm check:mcp-coverage` pass
+
+### Kết quả (10/10/2026)
+- Backend: module `workspaces` (14 operation) và `access` (10 operation, policy theo bảng `@localman/shared/access`), toolset MCP `sharing`. Review backend có 3 High và 4 Medium, đã sửa hết (`plans/dattqh/reports/code-reviewer-261010-1341-phase-11-backend.md`).
+- Web: switcher, `/workspace/settings`, `/workspace-invite/:token`, `ShareDialog` (phase 12 gắn vào collection), `/elements/:type/:id`, `/access-requests/:id`, duyệt/từ chối trong chuông. Tất cả sau cờ `workspaces` (và `apiClient`), chưa bật ở prod. Review web có 2 High, 2 Medium và 7 Low, đã sửa hết.
+- Kiểm trên bản xuất sạch của commit: lint, typecheck, 491 file / 3743 test, `check:mcp-coverage`, `check:tokens`, E2E `workspaces.spec.ts` và `api-client-workbench.spec.ts` (6 test).
+- Còn cho phase 12: cascade khi xoá workspace sang phần tử, share và request; gắn `ShareDialog`; adapter collection.
+

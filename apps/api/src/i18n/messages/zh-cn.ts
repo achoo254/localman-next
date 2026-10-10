@@ -15,6 +15,35 @@ export const zhCN: ServerMessages = {
 		"project.invitation": "Project 协作邀请",
 		"project.mockUrlChanged": "共享 project 的 mock URL 已更改",
 		"usage.quota": "每月 mock request 额度提醒",
+		"workspace.invitation": "Workspace 邀请",
+		"element.shared": "与你共享的 collection 和 environment",
+		"access.requested": "对你的 collection 和 environment 的访问请求",
+		"access.resolved": "你的访问请求的处理结果",
+	},
+	roleNames: { admin: "Admin", editor: "Editor", viewer: "Viewer" },
+	elementNames: { collection: "collection", environment: "environment" },
+	workspaceInvitation: {
+		title: "Workspace 邀请",
+		body: (p) =>
+			`${p.inviter === null ? "Workspace Admin" : p.inviter}邀请你以 ${p.role} 身份加入 workspace“${p.workspace}”。邀请将在 ${p.days} 天后过期。`,
+	},
+	elementShared: {
+		title: "与你共享",
+		body: (p) =>
+			`${p.sharer ?? "有人"}以 ${p.role} 身份与你共享了 ${p.kind}“${p.element}”。`,
+	},
+	accessRequested: {
+		title: "访问请求",
+		body: (p) =>
+			`${p.requester} 请求 ${p.kind}“${p.element}”的 ${p.role} 权限。`,
+	},
+	accessResolved: {
+		approvedTitle: "访问请求已批准",
+		approvedBody: (p) =>
+			`你现在拥有 ${p.kind}“${p.element}”的 ${p.role} 权限。`,
+		deniedTitle: "访问请求被拒绝",
+		deniedBody: (p) =>
+			`你对 ${p.kind}“${p.element}”的 ${p.role} 权限请求已被拒绝。`,
 	},
 	invitation: {
 		title: "Project 协作邀请",

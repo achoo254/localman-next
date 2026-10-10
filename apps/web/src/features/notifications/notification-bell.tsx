@@ -4,6 +4,7 @@ import {
 	IconChecks,
 	IconLoader2,
 } from "@tabler/icons-react";
+import { Fragment } from "react";
 import { useNavigate } from "react-router";
 import { buttonClassName } from "../../components/ui/button";
 import {
@@ -20,10 +21,13 @@ import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
 import { useDelayedFlag } from "../../lib/use-delayed-flag";
+import { useWorkspacesEnabled } from "../workspaces/use-workspaces-enabled";
+import { AccessRequestActions } from "./access-request-actions";
 import { NotificationItem } from "./notification-item";
 import { NotificationListSkeleton } from "./notification-list-skeleton";
 import { type AppNotification, inAppPath } from "./notifications-api";
 import { useNotifications } from "./use-notifications";
+import { WORKSPACE_EVENT_TYPES } from "./workspace-event-types";
 
 export const NOTIFICATION_SETTINGS_PATH = "/account/notifications";
 
@@ -33,8 +37,12 @@ export function NotificationBell() {
 	const navigate = useNavigate();
 	const toast = useToast();
 	const t = useT();
+	const workspaces = useWorkspacesEnabled();
 	const { unreadCount } = bell;
-	const empty = bell.items.length === 0;
+	const items = workspaces
+		? bell.items
+		: bell.items.filter((item) => !WORKSPACE_EVENT_TYPES.has(item.type));
+	const empty = items.length === 0;
 	// First page on its way: skeleton rows; with items on screen: a top bar.
 	const firstLoad = bell.loading && empty && !bell.error;
 	const skeleton = useDelayedFlag(firstLoad);
@@ -103,12 +111,20 @@ export function NotificationBell() {
 					aria-busy={bell.loading || undefined}
 					className="max-h-[60dvh] overflow-y-auto"
 				>
-					{(skeleton ? [] : bell.items).map((notification) => (
-						<NotificationItem
-							key={notification.id}
-							notification={notification}
-							onSelect={(event) => choose(event, notification)}
-						/>
+					{(skeleton ? [] : items).map((notification) => (
+						<Fragment key={notification.id}>
+							<NotificationItem
+								notification={notification}
+								onSelect={(event) => choose(event, notification)}
+							/>
+							{workspaces && notification.accessRequest ? (
+								<AccessRequestActions
+									request={notification.accessRequest}
+									title={notification.title}
+									onChanged={() => void bell.refresh()}
+								/>
+							) : null}
+						</Fragment>
 					))}
 					{skeleton ? <NotificationListSkeleton /> : null}
 					{empty ? (

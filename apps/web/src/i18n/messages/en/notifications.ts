@@ -57,6 +57,10 @@ export const notifications = {
 			projectInvitation: "Project collaboration invitations",
 			projectMockUrlChanged: "A shared project's mock URL changed",
 			usageQuota: "Monthly mock request quota warnings",
+			workspaceInvitation: "Workspace invitations",
+			elementShared: "Collections and environments shared with you",
+			accessRequested: "Requests for access to your items",
+			accessResolved: "Answers to your access requests",
 		},
 	},
 	webPush: {

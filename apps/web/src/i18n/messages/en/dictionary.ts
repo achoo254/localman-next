@@ -25,11 +25,13 @@ import { resourceImport } from "./resource-import";
 import { resourceRules } from "./resource-rules";
 import { resourceTree } from "./resource-tree";
 import { resources } from "./resources";
+import { sharing } from "./sharing";
 import { subscription } from "./subscription";
 import { trafficLog } from "./traffic-log";
 import { ui } from "./ui";
 import { upstream } from "./upstream";
 import { webhookInbox } from "./webhook-inbox";
+import { workspaces } from "./workspaces";
 
 /**
  * English dictionary: the source of every key and of the `Messages` type
@@ -68,4 +70,6 @@ export const en = {
 	trafficLog,
 	webhookInbox,
 	mockCallbacks,
+	workspaces,
+	sharing,
 } as const;

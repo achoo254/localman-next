@@ -2,6 +2,10 @@ import { Link, NavLink, useLocation } from "react-router";
 import { useFeatures } from "../../config/features";
 import type { CurrentUser } from "../../features/auth/current-user";
 import { NotificationBell } from "../../features/notifications/notification-bell";
+import {
+	WorkspaceSwitcher,
+	isWorkspaceRoute,
+} from "../../features/workspaces/workspace-switcher";
 import { useT } from "../../i18n/i18n-context";
 import { LanguageSwitcher } from "../../i18n/language-switcher";
 import { cn } from "../../lib/cn";
@@ -17,8 +21,9 @@ const NAV_LINK_CLASS = cn(
 
 /**
  * Signed-in top bar: wordmark and the product nav (Mock API, API Client
- * behind its flag) on the left; Docs, language, notification bell, plan and
- * account menu on the right. `wide` spans the full width (the workbench).
+ * behind its flag) and, on API client pages, the workspace switcher on the
+ * left; Docs, language, notification bell, plan and account menu on the
+ * right. `wide` spans the full width (the workbench).
  */
 export function AppHeader({
 	user,
@@ -26,7 +31,8 @@ export function AppHeader({
 }: { user: CurrentUser; wide?: boolean }) {
 	const t = useT();
 	const { apiClient } = useFeatures();
-	const apiClientActive = useLocation().pathname.startsWith("/api-client");
+	// Workspace settings and shared elements belong to the API client too.
+	const apiClientActive = isWorkspaceRoute(useLocation().pathname);
 	return (
 		<header
 			data-id="topbar"
@@ -68,6 +74,7 @@ export function AppHeader({
 						</Link>
 					) : null}
 				</nav>
+				<WorkspaceSwitcher />
 				<div className="ml-auto flex items-center gap-2">
 					<Link
 						to="/docs"

@@ -14,6 +14,7 @@ import {
 } from "../auth/testing/auth-harness.js";
 import { CollaboratorModel } from "../collaborators/collaborator-model.js";
 import { UserModel } from "../users/user-model.js";
+import { WorkspaceMemberModel } from "../workspaces/workspace-member-model.js";
 import { basic, signSecurityEvent } from "./testing/security-events.js";
 
 const LOSER = "acc_lost_email";
@@ -109,5 +110,47 @@ describe("email.reclaimed audit event", () => {
 		expect(byId(byEmail?._id)).not.toHaveProperty("inviteeUserId");
 		expect(byId(byUsername?._id)?.inviteeUserId).toBe(LOSER);
 		expect(byId(accepted?._id)?.inviteeUserId).toBe(LOSER);
+	});
+
+	it("unbinds the workspace invitations bound through the email too", async () => {
+		const workspaceId = new Types.ObjectId();
+		const pending = {
+			workspaceId,
+			role: "editor" as const,
+			status: "pending" as const,
+			invitedBy: "acc_owner",
+			expiresAt: new Date(Date.now() + 60_000),
+		};
+		const [byEmail, byUsername, accepted] = await WorkspaceMemberModel.create([
+			{
+				...pending,
+				userId: LOSER,
+				email: "shared@example.com",
+				inviteTokenHash: "c".repeat(64),
+			},
+			{
+				...pending,
+				workspaceId: new Types.ObjectId(),
+				userId: LOSER,
+				inviteTokenHash: "d".repeat(64),
+			},
+			{
+				...pending,
+				workspaceId: new Types.ObjectId(),
+				userId: LOSER,
+				email: "shared@example.com",
+				status: "accepted" as const,
+			},
+		]);
+		expect((await postReclaimed()).status).toBe(202);
+
+		const byId = async (id: unknown) =>
+			WorkspaceMemberModel.findById(id).lean();
+		const unbound = await byId(byEmail?._id);
+		// Still addressed to the email, which its verified owner can accept.
+		expect(unbound).toMatchObject({ email: "shared@example.com" });
+		expect(unbound).not.toHaveProperty("userId");
+		expect((await byId(byUsername?._id))?.userId).toBe(LOSER);
+		expect((await byId(accepted?._id))?.userId).toBe(LOSER);
 	});
 });

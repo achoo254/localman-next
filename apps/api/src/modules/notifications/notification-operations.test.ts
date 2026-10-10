@@ -1,5 +1,6 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
+import { AccessRequestModel } from "../access/access-request-model.js";
 import { UserModel } from "../users/user-model.js";
 import { storeInAppNotification } from "./channels/in-app-channel.js";
 import {
@@ -70,6 +71,81 @@ describe("notification operations", () => {
 		expect((await as(BOB).get("/notifications")).body.unreadCount).toBe(1);
 	});
 
+	it("give access.requested items their request and its status, others null", async () => {
+		const request = await AccessRequestModel.create({
+			elementType: "collection",
+			elementId: "c1",
+			requesterId: BOB,
+			role: "editor",
+			status: "pending",
+		});
+		const requestId = request._id.toHexString();
+		const asked = await storeInAppNotification(
+			ALICE,
+			{
+				type: "access.requested",
+				params: {
+					requester: "Bob",
+					elementType: "collection",
+					element: "Orders API",
+					role: "editor",
+					requestId,
+				},
+			},
+			"en",
+		);
+		const gone = await storeInAppNotification(
+			ALICE,
+			{
+				type: "access.requested",
+				params: {
+					requester: "Bob",
+					elementType: "collection",
+					element: "Old",
+					role: "viewer",
+					requestId: "0123456789abcdef01234567",
+				},
+			},
+			"en",
+		);
+		await store(ALICE);
+		const list = await as(ALICE).get("/notifications");
+		expect(list.status).toBe(200);
+		expect(
+			list.body.items.map(
+				(item: { accessRequest: unknown }) => item.accessRequest,
+			),
+		).toEqual([
+			null,
+			null,
+			{
+				id: requestId,
+				status: "pending",
+				role: "editor",
+				notifiedRole: "editor",
+			},
+		]);
+		await AccessRequestModel.updateOne(
+			{ _id: request._id },
+			{ $set: { status: "approved" } },
+		);
+		const read = await as(ALICE).send(
+			"post",
+			`/notifications/${asked.id}/read`,
+		);
+		expect(read.body.accessRequest).toEqual({
+			id: requestId,
+			status: "approved",
+			role: "editor",
+			notifiedRole: "editor",
+		});
+		const readGone = await as(ALICE).send(
+			"post",
+			`/notifications/${gone.id}/read`,
+		);
+		expect(readGone.body.accessRequest).toBeNull();
+	});
+
 	it("read and update per-event channel preferences", async () => {
 		const initial = await as(ALICE).get("/notification-preferences");
 		expect(initial.body).toEqual({
@@ -97,13 +173,19 @@ describe("notification operations", () => {
 					webPush: false,
 					telegram: false,
 				},
-				{
-					type: "usage.quota",
+				...[
+					"usage.quota",
+					"workspace.invitation",
+					"element.shared",
+					"access.requested",
+					"access.resolved",
+				].map((type) => ({
+					type,
 					label: expect.any(String),
 					inApp: true,
 					webPush: false,
 					telegram: false,
-				},
+				})),
 			],
 		});
 		await UserModel.updateOne(

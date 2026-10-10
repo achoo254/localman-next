@@ -1,10 +1,10 @@
 import { OperationError } from "@localman/operations";
+import { addresseeProblem } from "../access/invite-addressee.js";
 import { can } from "../projects/project-access.js";
 import {
 	type StoredProject,
 	findProjectById,
 } from "../projects/project-model.js";
-import { UserModel } from "../users/user-model.js";
 import { callerRows, verifiedEmailOf } from "./caller-rows.js";
 import {
 	CollaboratorModel,
@@ -106,27 +106,18 @@ function assertUsable(token: ResolvedToken, now: Date): void {
 }
 
 /**
- * Who may accept an invitation (a magic link admits anyone signed in but
- * the members the owner removed, see `MemberRemovalModel`):
- * - an invitation bound to an account: that account only;
- * - an invitation to an email without an account: an account whose email
- *   the IdP verified (Google/GitHub) and that equals it, lower-cased. An
- *   unverified email that merely reads the same is not enough, or anyone
- *   could register the address and take the seat.
+ * Who may accept an invitation: the addressee (see `addresseeProblem`); a
+ * magic link admits anyone signed in but the members the owner removed
+ * (see `MemberRemovalModel`).
  */
-async function addresseeProblem(
+function inviteeProblem(
 	sub: string,
 	row: StoredCollaborator,
 ): Promise<IneligibleReason | null> {
-	if (row.inviteeUserId) {
-		return row.inviteeUserId === sub ? null : "NOT_INVITEE";
-	}
-	const user = await UserModel.findOne({ sub })
-		.select("email emailVerified")
-		.lean<{ email?: string | null; emailVerified?: boolean }>();
-	const email = user?.email?.trim().toLowerCase();
-	if (!row.inviteeEmail || email !== row.inviteeEmail) return "NOT_INVITEE";
-	return user?.emailVerified === true ? null : "EMAIL_NOT_VERIFIED";
+	return addresseeProblem(sub, {
+		userId: row.inviteeUserId,
+		email: row.inviteeEmail,
+	});
 }
 
 /** Seats the caller would add: none if one of their rows holds one. */
@@ -158,7 +149,7 @@ export async function ineligibility(
 	if (await can({ sub }, "read", token.project)) return "ALREADY_MEMBER";
 	assertUsable(token, now);
 	if (token.kind === "invite") {
-		const problem = await addresseeProblem(sub, token.row);
+		const problem = await inviteeProblem(sub, token.row);
 		if (problem) return problem;
 	} else if (await wasRemovedByOwner(token.project._id, sub)) {
 		return "REMOVED_BY_OWNER";

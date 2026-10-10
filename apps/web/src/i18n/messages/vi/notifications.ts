@@ -57,6 +57,10 @@ export const notifications: Messages["notifications"] = {
 			projectInvitation: "Lời mời cộng tác project",
 			projectMockUrlChanged: "URL mock của project được chia sẻ đã đổi",
 			usageQuota: "Cảnh báo hạn mức lượt gọi mock tháng",
+			workspaceInvitation: "Lời mời tham gia workspace",
+			elementShared: "Collection và environment được chia sẻ với bạn",
+			accessRequested: "Yêu cầu truy cập mục của bạn",
+			accessResolved: "Kết quả yêu cầu truy cập của bạn",
 		},
 	},
 	webPush: {
