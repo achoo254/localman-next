@@ -1,17 +1,21 @@
 import { memo, useState } from "react";
 import { useToast } from "../../../components/ui/toast";
 import { useT } from "../../../i18n/i18n-context";
+import { useDelayedFlag } from "../../../lib/use-delayed-flag";
 import {
 	type TunnelMapping,
 	clientSettingsApi,
 } from "../routing/client-settings-api";
 import {
+	settingsEdits,
 	useClientSettings,
+	useOptimisticSettingsChange,
 	useSettingsChange,
 } from "../routing/use-client-settings";
 import { TuneloSteps } from "./tunelo-steps";
 import { TunnelMappingForm } from "./tunnel-mapping-form";
 import { TunnelMappingList } from "./tunnel-mapping-list";
+import { TunnelMappingsSkeleton } from "./tunnel-mappings-skeleton";
 import { TunnelWarning } from "./tunnel-warning";
 
 /** Port shown in `tunelo http <port>` until an address is typed. */
@@ -25,11 +29,16 @@ const DEFAULT_PORT = 3000;
 export const TuneloSidebar = memo(function TuneloSidebar() {
 	const t = useT();
 	const toast = useToast();
-	const { settings, data } = useClientSettings();
+	const { settings, data, isPending } = useClientSettings();
+	const skeleton = useDelayedFlag(isPending);
 	const [port, setPort] = useState<number | null>(null);
 	const save = useSettingsChange(clientSettingsApi.setTunnel);
+	// On/off shows at once and flips back with a toast if refused.
+	const toggle = useOptimisticSettingsChange(
+		clientSettingsApi.setTunnel,
+		settingsEdits.toggleTunnel,
+	);
 	const remove = useSettingsChange(clientSettingsApi.deleteTunnel);
-	const busy = save.isPending || remove.isPending;
 
 	const add = (mapping: TunnelMapping) => {
 		save.mutate(mapping, {
@@ -55,16 +64,19 @@ export const TuneloSidebar = memo(function TuneloSidebar() {
 			<TunnelWarning />
 			<TunnelMappingForm
 				onSave={add}
-				busy={busy}
+				busy={save.isPending}
 				domains={data?.tunnelDomains ?? null}
 				onPortChange={setPort}
 			/>
-			<TunnelMappingList
-				mappings={settings.tunnelMappings}
-				busy={busy}
-				onToggle={(mapping) => save.mutate(mapping)}
-				onDelete={(key) => remove.mutate(key)}
-			/>
+			{skeleton ? <TunnelMappingsSkeleton /> : null}
+			{isPending || skeleton ? null : (
+				<TunnelMappingList
+					mappings={settings.tunnelMappings}
+					deletingKey={remove.isPending ? (remove.variables ?? null) : null}
+					onToggle={(mapping) => toggle.mutate(mapping)}
+					onDelete={(key) => remove.mutate(key)}
+				/>
+			)}
 		</div>
 	);
 });

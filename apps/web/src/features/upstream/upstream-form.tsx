@@ -161,10 +161,10 @@ export function UpstreamForm({ projectId, settings }: UpstreamFormProps) {
 					<Button
 						type="submit"
 						variant="primary"
-						disabled={save.isPending}
+						loading={save.isPending}
 						data-id="project-detail-upstream-save"
 					>
-						{save.isPending ? t("upstream.saving") : t("upstream.save")}
+						{t("upstream.save")}
 					</Button>
 				) : null}
 				<p

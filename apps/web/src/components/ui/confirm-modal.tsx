@@ -84,11 +84,12 @@ export function ConfirmModal({
 					</ModalClose>
 					<Button
 						variant="danger"
-						disabled={busy || confirmDisabled}
+						disabled={confirmDisabled}
+						loading={busy}
 						onClick={() => void confirm()}
 						data-id={dataId ? `${dataId}-confirm` : undefined}
 					>
-						{busy ? t("common.actions.processing") : confirmLabel}
+						{confirmLabel}
 					</Button>
 				</ModalFooter>
 			}

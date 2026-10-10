@@ -8,12 +8,8 @@ import { Input } from "../../components/ui/input";
 import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
-import { errorMessage } from "../../lib/api-client";
-import {
-	type TrafficSettings,
-	saveRedactHeaders,
-} from "./traffic-settings-api";
-import { useTrafficSettingsChange } from "./use-traffic-settings";
+import type { TrafficSettings } from "./traffic-settings-api";
+import { useMaskedHeadersChange } from "./use-masked-headers-change";
 
 /** Limits of the server (`redactHeadersSchema`). */
 export const MAX_MASKED_HEADERS = 50;
@@ -31,7 +27,7 @@ export interface MaskedHeadersProps {
 /**
  * Headers stored as `[redacted]` in the request log: the fixed defaults,
  * then the project's own names, which the owner adds and removes (each
- * change saves at once).
+ * change shows and saves at once, rolled back if the server refuses it).
  */
 export function MaskedHeaders({ projectId, settings }: MaskedHeadersProps) {
 	const t = useT();
@@ -39,24 +35,16 @@ export function MaskedHeaders({ projectId, settings }: MaskedHeadersProps) {
 	const titleId = useId();
 	const [name, setName] = useState("");
 	const [error, setError] = useState<string | undefined>(undefined);
-	const change = useTrafficSettingsChange(projectId, (headers: string[]) =>
-		saveRedactHeaders(projectId, headers),
-	);
+	const change = useMaskedHeadersChange(projectId);
 	const custom = settings.redactHeaders;
 	const manage = settings.canManage;
 
-	const apply = (headers: string[], done?: () => void) => {
+	/** The chips change at once; a refused save puts them back. */
+	const apply = (headers: string[], onFailure?: () => void) => {
 		change.mutate(headers, {
-			onSuccess: () => {
-				done?.();
-				toast.show({ tone: "success", title: t("upstream.masked.saved") });
-			},
-			onError: (cause) =>
-				toast.show({
-					tone: "error",
-					title: t("upstream.masked.saveFailed"),
-					description: errorMessage(cause),
-				}),
+			onSuccess: () =>
+				toast.show({ tone: "success", title: t("upstream.masked.saved") }),
+			onError: onFailure,
 		});
 	};
 
@@ -71,7 +59,9 @@ export function MaskedHeaders({ projectId, settings }: MaskedHeadersProps) {
 		} else if (custom.length >= MAX_MASKED_HEADERS) {
 			setError(t("upstream.masked.max", { max: MAX_MASKED_HEADERS }));
 		} else {
-			apply([...custom, value], () => setName(""));
+			setName("");
+			// Give the typed name back unless the user already typed another.
+			apply([...custom, value], () => setName((typed) => typed || value));
 		}
 	};
 
@@ -111,7 +101,6 @@ export function MaskedHeaders({ projectId, settings }: MaskedHeadersProps) {
 									size="sm"
 									label={t("upstream.masked.remove", { name: header })}
 									icon={<IconX size={16} aria-hidden="true" />}
-									disabled={change.isPending}
 									onClick={() =>
 										apply(custom.filter((item) => item !== header))
 									}
@@ -149,11 +138,7 @@ export function MaskedHeaders({ projectId, settings }: MaskedHeadersProps) {
 							data-id="project-detail-masked-input"
 						/>
 					</FormField>
-					<Button
-						type="submit"
-						disabled={change.isPending}
-						data-id="project-detail-masked-add"
-					>
+					<Button type="submit" data-id="project-detail-masked-add">
 						{t("upstream.masked.add")}
 					</Button>
 				</form>

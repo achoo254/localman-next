@@ -123,6 +123,7 @@ describe("traffic tabs of the endpoint card", () => {
 								project={makeProject(PROJECT_ID)}
 								resources={[]}
 								busy={false}
+								pressed={null}
 								onNewResource={() => {}}
 								onImport={() => {}}
 								onGenerateAll={() => {}}

@@ -18,7 +18,6 @@ export const notifications: Messages["notifications"] = {
 		lead: "为每种事件类型选择接收通知的方式：应用内铃铛、Web Push 或 Telegram。",
 		loading: "正在加载设置…",
 		loadFailed: "无法加载通知设置",
-		saved: "已保存通知偏好。",
 		channelsTitle: "接收通知的渠道",
 		inAppText: "Localman 中的铃铛，可在下表中按事件类型选择。",
 	},
@@ -26,7 +25,6 @@ export const notifications: Messages["notifications"] = {
 		title: "测试通知",
 		text: "向所有已就绪的渠道发送一条测试通知，不受下方按事件类型的选择影响。",
 		send: "发送测试通知",
-		sending: "正在发送…",
 		resultTitle: "测试通知结果",
 		rateLimited: "你在一分钟内已发送过测试通知。请等一分钟后再试。",
 		status: {
@@ -52,8 +50,7 @@ export const notifications: Messages["notifications"] = {
 		empty: "暂无事件类型。",
 		event: "事件",
 		cell: "{event}：{channel}",
-		note: "渠道未就绪时对应选项会被锁定。没有邮件渠道：hoandat 不发送邮件。",
-		save: "保存偏好",
+		note: "每个选项更改后立即保存。渠道未就绪时对应选项会被锁定。没有邮件渠道：hoandat 不发送邮件。",
 		types: {
 			projectInvitation: "Project 协作邀请",
 			projectMockUrlChanged: "共享 project 的 mock URL 已更改",

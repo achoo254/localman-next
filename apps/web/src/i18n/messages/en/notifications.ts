@@ -17,7 +17,6 @@ export const notifications = {
 		lead: "Choose where to get notifications for each event type: the in-app bell, Web Push or Telegram.",
 		loading: "Loading settings…",
 		loadFailed: "Couldn't load notification settings",
-		saved: "Saved your notification preferences.",
 		channelsTitle: "Delivery channels",
 		inAppText:
 			"The bell in Localman. Choose it per event type in the table below.",
@@ -26,7 +25,6 @@ export const notifications = {
 		title: "Test notification",
 		text: "Send a test to every channel that's ready, whatever you chose per event type below.",
 		send: "Send test notification",
-		sending: "Sending…",
 		resultTitle: "Test notification results",
 		rateLimited:
 			"You sent a test less than a minute ago. Wait a minute and try again.",
@@ -53,8 +51,7 @@ export const notifications = {
 		empty: "No event types yet.",
 		event: "Event",
 		cell: "{event}: {channel}",
-		note: "A box is locked when its channel isn't ready. There's no email channel: hoandat doesn't send email.",
-		save: "Save preferences",
+		note: "Each box saves as soon as you change it. A box is locked when its channel isn't ready. There's no email channel: hoandat doesn't send email.",
 		/** Event types by API `type` ("project.invitation" → projectInvitation). */
 		types: {
 			projectInvitation: "Project collaboration invitations",

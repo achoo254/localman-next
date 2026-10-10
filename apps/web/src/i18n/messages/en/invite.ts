@@ -44,11 +44,9 @@ export const invite = {
 		ineligibleWrongAccount:
 			"The invitation was sent to {email}. Sign in with the invited account, or link Google/GitHub with a verified email that matches it.",
 		accept: "Join",
-		accepting: "Joining…",
 	},
 	switchAccount: {
 		action: "Sign in with another account",
-		busy: "Signing out…",
 		hint: "You'll be signed out. Sign in again with the invited account, then reopen this link.",
 	},
 	/** Errors of `/invite/:token` that are not a state of their own. */

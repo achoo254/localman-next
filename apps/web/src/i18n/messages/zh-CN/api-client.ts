@@ -36,7 +36,6 @@ export const apiClient: Messages["apiClient"] = {
 		route: "发送路径",
 		routes: { auto: "Auto", direct: "直连", proxy: "Proxy" },
 		send: "Send",
-		sending: "正在发送…",
 		parts: "Request 的各部分",
 		tabs: {
 			params: "Params",

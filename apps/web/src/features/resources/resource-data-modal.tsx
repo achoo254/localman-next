@@ -6,13 +6,16 @@ import { Button } from "../../components/ui/button";
 import { JsonEditor } from "../../components/ui/json-editor";
 import { Modal, ModalClose } from "../../components/ui/modal";
 import { ModalFooter } from "../../components/ui/modal-footer";
+import { SkeletonRegion } from "../../components/ui/skeleton";
 import { useT } from "../../i18n/i18n-context";
 import { useDebouncedValue } from "../../lib/use-debounced-value";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import {
 	DataChangesConfirmModal,
 	type DataConfirm,
 } from "./data-changes-confirm-modal";
 import { hasDescendantData, lostDescendants } from "./data-loss";
+import { JsonSkeleton } from "./json-skeleton";
 import { fetchResourceData, replaceResourceData } from "./resource-data-api";
 import { localized, resourceErrorMessage } from "./resource-errors";
 import type { DataChange, Resource } from "./resource-model";
@@ -63,6 +66,7 @@ export function ResourceDataModal({
 	const [submitError, setSubmitError] = useState<string | null>(null);
 	const [confirm, setConfirm] = useState<DataConfirm | null>(null);
 	const [busy, setBusy] = useState(false);
+	const skeleton = useDelayedFlag(data.isPending);
 	const current = text ?? original ?? "";
 	const settled = useDebouncedValue(current, DATA_CHECK_DELAY_MS);
 	const checked = useMemo(() => checkRecords(settled, t), [settled, t]);
@@ -119,11 +123,12 @@ export function ResourceDataModal({
 					</ModalClose>
 					<Button
 						variant="primary"
-						disabled={busy || !ready}
+						disabled={!ready}
+						loading={busy}
 						onClick={() => void update()}
 						data-id="modal-resource-data-submit"
 					>
-						{busy ? t("resources.data.updating") : t("resources.data.update")}
+						{t("resources.data.update")}
 					</Button>
 				</ModalFooter>
 			}
@@ -131,11 +136,14 @@ export function ResourceDataModal({
 			<p id={`${ids}-hint`} className="m-0 text-[0.8125rem] text-muted">
 				{t("resources.data.hint", { max: MAX_RECORDS_PER_RESOURCE })}
 			</p>
-			{data.isPending ? (
-				<output className="block py-6 font-mono text-muted text-sm">
-					{t("resources.data.loading")}
-				</output>
-			) : data.isError ? (
+			{skeleton ? (
+				<SkeletonRegion
+					data-id="modal-resource-data-loading"
+					label={t("resources.data.loading")}
+				>
+					<JsonSkeleton />
+				</SkeletonRegion>
+			) : data.isPending ? null : data.isError ? (
 				<Alert tone="danger" title={t("resources.data.loadFailed")}>
 					{resourceErrorMessage(data.error, t)}
 				</Alert>

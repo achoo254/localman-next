@@ -4,6 +4,7 @@ import { renderRich } from "../../i18n/rich-text";
 import { ButtonShowcase } from "./button-showcase";
 import { FeedbackShowcase } from "./feedback-showcase";
 import { FormShowcase } from "./form-showcase";
+import { LoadingShowcase } from "./loading-showcase";
 import { OverlayShowcase } from "./overlay-showcase";
 
 /** Reference page for comparing the UI primitives with the prototype. */
@@ -25,6 +26,7 @@ export function PrimitivesPage() {
 			<ButtonShowcase />
 			<FormShowcase />
 			<FeedbackShowcase />
+			<LoadingShowcase />
 			<OverlayShowcase />
 		</article>
 	);

@@ -59,7 +59,6 @@ export const subscription = {
 	proInterest: {
 		title: "Contact us about Pro",
 		submit: "Send request",
-		submitting: "Sending…",
 		successTitle: "Got it",
 		successText: "We'll contact you at the email you left: <b>{email}</b>.",
 		intro:

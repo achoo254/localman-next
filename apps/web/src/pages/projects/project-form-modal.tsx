@@ -95,7 +95,7 @@ export function ProjectFormModal({
 						type="submit"
 						form={formId}
 						variant="primary"
-						disabled={busy}
+						loading={busy}
 						data-id="project-form-submit"
 					>
 						{editing ? t("projects.form.save") : t("projects.form.create")}

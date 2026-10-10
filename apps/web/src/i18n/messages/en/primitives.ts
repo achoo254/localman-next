@@ -56,6 +56,19 @@ export const primitives = {
 		toastInfo: "Info toast",
 		toastInfoTitle: "URL copied.",
 	},
+	loading: {
+		title: "Loading states",
+		description:
+			"Skeletons for a first load, a thin bar while data refreshes, a spinner on the button that saves. Nothing shows for loads under 150 ms.",
+		save: "Save",
+		busy: "Saving",
+		busyIcon: "Refreshing",
+		skeletonCaption:
+			"Skeleton in the shape of the coming content; the shimmer stops when reduced motion is on.",
+		refresh: "Refresh",
+		panelCaption:
+			"Data stays on screen, dimmed, under a bar at the top of the panel.",
+	},
 	overlays: {
 		title: "Overlays",
 		description:

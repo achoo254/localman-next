@@ -58,7 +58,6 @@ export const resourceImport: Messages["resourceImport"] = {
 	planRoomCollaborator: "请关闭相关 resource，或请 project 所有者升级套餐。",
 	managePlan: "管理套餐",
 	submit: "创建 resource",
-	creating: "正在创建…",
 	errors: {
 		tooLarge:
 			"文件大小为 {size} KB，超过 2 MB 的上限。请使用更小的文件或拆分文件。",

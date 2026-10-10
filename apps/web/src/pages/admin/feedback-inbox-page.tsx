@@ -4,13 +4,16 @@ import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { cardClassName } from "../../components/ui/card";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
+import { PanelProgress } from "../../components/ui/panel-progress";
 import { AuthStatus } from "../../features/auth/auth-status";
 import { useCurrentUser } from "../../features/auth/use-current-user";
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { useAppTitle } from "../../lib/use-document-title";
 import { AdminNav } from "./admin-nav";
+import { AdminListSkeleton } from "./admin-skeletons";
 import type { ContactMessage } from "./feedback-inbox-api";
 import { FeedbackInboxFilters } from "./feedback-inbox-filters";
 import { FeedbackInboxItem, senderLabel } from "./feedback-inbox-item";
@@ -33,6 +36,9 @@ function FeedbackInbox() {
 	const inbox = useFeedbackInbox();
 	const { state } = inbox;
 	const [deleting, setDeleting] = useState<ContactMessage | null>(null);
+	// First load only; later pages and filters keep the list under a bar.
+	const skeleton = useDelayedFlag(state.status === "loading");
+	const refreshing = inbox.fetching && state.status === "ready";
 
 	if (inbox.forbidden) return <AdminForbidden />;
 
@@ -48,7 +54,7 @@ function FeedbackInbox() {
 			<section
 				data-id="admin-feedback-list"
 				aria-label={t("admin.nav.feedback")}
-				aria-busy={state.status === "loading"}
+				aria-busy={inbox.fetching}
 				className={cn(cardClassName, "overflow-hidden")}
 			>
 				<FeedbackInboxFilters
@@ -56,38 +62,49 @@ function FeedbackInbox() {
 					onChange={inbox.changeFilter}
 					countLabel={t("admin.inbox.count", { count: inbox.total })}
 				/>
-				{state.status === "loading" ? (
-					<output className="block px-5 py-6 font-mono text-muted text-sm">
-						{t("admin.inbox.loading")}
-					</output>
+				{skeleton ? (
+					<AdminListSkeleton
+						data-id="admin-feedback-loading"
+						label={t("admin.inbox.loading")}
+					/>
 				) : null}
-				{state.status === "error" ? (
+				{state.status === "error" && !skeleton ? (
 					<div className="grid justify-items-start gap-3 px-5 py-6">
 						<Alert tone="danger">{errorMessage(state.error)}</Alert>
 						<Button onClick={inbox.refresh}>{t("common.cta.retry")}</Button>
 					</div>
 				) : null}
-				{state.status === "ready" && state.page.items.length === 0 ? (
-					<p
-						data-id="admin-feedback-empty"
-						className="m-0 px-5 py-7 text-center text-muted"
-					>
-						{t("admin.inbox.empty")}
-					</p>
-				) : null}
-				{state.status === "ready" && state.page.items.length > 0 ? (
-					<ul className="m-0 list-none p-0">
-						{state.page.items.map((item) => (
-							<FeedbackInboxItem
-								key={item.id}
-								item={item}
-								pending={inbox.pendingId === item.id}
-								onStatus={(row, status) => void inbox.changeStatus(row, status)}
-								onDelete={setDeleting}
-							/>
-						))}
-					</ul>
-				) : null}
+				<PanelProgress active={refreshing} dim>
+					{state.status === "ready" &&
+					!skeleton &&
+					state.page.items.length === 0 ? (
+						<p
+							data-id="admin-feedback-empty"
+							className="m-0 px-5 py-7 text-center text-muted"
+						>
+							{t("admin.inbox.empty")}
+						</p>
+					) : null}
+					{state.status === "ready" &&
+					!skeleton &&
+					state.page.items.length > 0 ? (
+						<ul className="m-0 list-none p-0">
+							{state.page.items.map((item) => (
+								<FeedbackInboxItem
+									key={item.id}
+									item={item}
+									pendingStatus={
+										inbox.pending?.id === item.id ? inbox.pending.status : null
+									}
+									onStatus={(row, status) =>
+										void inbox.changeStatus(row, status)
+									}
+									onDelete={setDeleting}
+								/>
+							))}
+						</ul>
+					) : null}
+				</PanelProgress>
 				<Pagination
 					page={inbox.page}
 					pages={inbox.pages}

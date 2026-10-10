@@ -18,7 +18,6 @@ export const COLUMN_COUNT = 7;
 
 export interface ProInterestRowProps {
 	item: ProInterestItem;
-	pending: boolean;
 	onToggleContacted: (item: ProInterestItem) => void;
 	onDelete: (item: ProInterestItem) => void;
 }
@@ -26,7 +25,6 @@ export interface ProInterestRowProps {
 /** One sign-up, with its submission history folded underneath. */
 export function ProInterestRow({
 	item,
-	pending,
 	onToggleContacted,
 	onDelete,
 }: ProInterestRowProps) {
@@ -67,7 +65,6 @@ export function ProInterestRow({
 						<Button
 							size="sm"
 							variant={contacted ? "ghost" : "secondary"}
-							disabled={pending}
 							aria-describedby={emailId}
 							data-id={`${rowId}-contacted`}
 							leadingIcon={

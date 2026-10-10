@@ -24,7 +24,6 @@ export const common = {
 		save: "Save",
 		send: "Send",
 		sending: "Sending…",
-		processing: "Working…",
 		copied: "Copied",
 	},
 	loading: "Loading…",

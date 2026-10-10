@@ -127,11 +127,12 @@ export function ImportResourceDialog({
 					</ModalClose>
 					<Button
 						variant="primary"
-						disabled={!canCreate}
+						disabled={!canCreate && !busy}
+						loading={busy}
 						data-id="resource-import-submit"
 						onClick={() => void create()}
 					>
-						{busy ? t("resourceImport.creating") : t("resourceImport.submit")}
+						{t("resourceImport.submit")}
 					</Button>
 				</ModalFooter>
 			}

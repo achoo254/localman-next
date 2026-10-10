@@ -25,8 +25,12 @@ describe("SwitchAccountButton", () => {
 			name: "Sign in with another account",
 		});
 		await userEvent.click(button);
-		expect(button).toBeDisabled();
-		expect(button).toHaveTextContent("Signing out…");
+		await waitFor(() => expect(button).toHaveAttribute("aria-busy", "true"));
+		// Still focusable, but inert while signing out.
+		expect(button).toHaveAttribute("aria-disabled", "true");
+		expect(
+			button.querySelector('[data-id="button-spinner"]'),
+		).toBeInTheDocument();
 		release(null);
 		await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
 	});

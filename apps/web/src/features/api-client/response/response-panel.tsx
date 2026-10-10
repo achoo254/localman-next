@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useT } from "../../../i18n/i18n-context";
+import { useDelayedFlag } from "../../../lib/use-delayed-flag";
 import type { TabResponse } from "../workbench/workbench-types";
 import { ResponseError } from "./response-error";
 import { ResponseResult } from "./response-result";
@@ -37,24 +38,28 @@ export function ResponsePanel({
 	errorActions,
 }: ResponsePanelProps) {
 	const t = useT();
+	const sending = response.kind === "sending";
+	// Quick answers show no spinner; a shown one stays long enough to read.
+	const spinner = useDelayedFlag(sending);
+	const shown = spinner ? null : response;
 	return (
 		<section
 			data-id="response"
 			aria-label={t("apiClientTools.response.label")}
-			aria-busy={response.kind === "sending"}
+			aria-busy={sending}
 			className="flex min-h-0 min-w-0 flex-1 flex-col bg-surface"
 		>
-			{response.kind === "idle" ? <ResponseEmpty note={emptyNote} /> : null}
-			{response.kind === "sending" ? (
-				<ResponseSending onCancel={onCancel} />
+			{shown?.kind === "idle" ? <ResponseEmpty note={emptyNote} /> : null}
+			{spinner ? (
+				<ResponseSending onCancel={sending ? onCancel : undefined} />
 			) : null}
-			{response.kind === "cancelled" ? <ResponseCancelled /> : null}
-			{response.kind === "failed" ? (
-				<ResponseError failure={response.failure} actions={errorActions} />
+			{shown?.kind === "cancelled" ? <ResponseCancelled /> : null}
+			{shown?.kind === "failed" ? (
+				<ResponseError failure={shown.failure} actions={errorActions} />
 			) : null}
-			{response.kind === "done" ? (
+			{shown?.kind === "done" ? (
 				<ResponseResult
-					result={response.result}
+					result={shown.result}
 					routeBadge={routeBadge}
 					banner={banner}
 				/>

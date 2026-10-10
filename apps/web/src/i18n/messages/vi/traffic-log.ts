@@ -56,7 +56,6 @@ export const trafficLog: Messages["trafficLog"] = {
 		ms: "{ms} ms",
 		loading: "Đang tải request…",
 		more: "Tải request cũ hơn",
-		loadingMore: "Đang tải…",
 	},
 	empty:
 		"Chưa có request nào. Gọi thử một route bất kỳ của <code>{url}</code>, request sẽ hiện ở đây ngay.",
@@ -66,7 +65,6 @@ export const trafficLog: Messages["trafficLog"] = {
 	actions: {
 		replay: "Replay",
 		replayAria: "Replay {method} {path}",
-		replaying: "Đang replay…",
 		openClient: "Mở trong API Client",
 		openClientAria: "Mở trong API Client: {method} {path}",
 	},

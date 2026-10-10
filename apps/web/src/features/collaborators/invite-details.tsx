@@ -12,10 +12,12 @@ import { Card } from "../../components/ui/card";
 import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { ApiError } from "../../lib/api-client";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import type { CurrentUser } from "../auth/current-user";
 import { invitePageErrorMessage } from "./invite-errors";
 import { InviteInvalid, tokenErrorOf } from "./invite-invalid";
 import { InvitePreviewCard } from "./invite-preview-card";
+import { InviteSkeleton } from "./invite-skeleton";
 import {
 	type IneligibleReason,
 	type InvitePreview,
@@ -99,8 +101,12 @@ export function InviteDetails({
 	}
 
 	const refusal = refusalOf(acceptError);
-	const key =
-		view.status === "ready"
+	// The skeleton may stay a moment after the preview arrives: the card
+	// (and its h1) only counts as shown once it is gone.
+	const skeleton = useDelayedFlag(view.status === "loading");
+	const key = skeleton
+		? "loading"
+		: view.status === "ready"
 			? `ready-${refusal ?? view.preview.reason ?? "ok"}`
 			: view.status;
 	// biome-ignore lint/correctness/useExhaustiveDependencies: `key` names the visible state; focus its h1 whenever it changes.
@@ -111,16 +117,9 @@ export function InviteDetails({
 		heading.focus();
 	}, [key]);
 
-	let body: ReactNode;
-	if (view.status === "loading") {
-		body = (
-			<output
-				data-id="invite-page-loading"
-				className="block py-16 text-center font-mono text-muted text-sm"
-			>
-				{t("invite.loading")}
-			</output>
-		);
+	let body: ReactNode = null;
+	if (skeleton) {
+		body = <InviteSkeleton />;
 	} else if (view.status === "ready") {
 		body = (
 			<InvitePreviewCard
@@ -132,7 +131,7 @@ export function InviteDetails({
 				onAccept={() => void accept(view.preview)}
 			/>
 		);
-	} else {
+	} else if (view.status === "failed") {
 		const code = tokenErrorOf(view.error);
 		body = code ? (
 			<InviteInvalid code={code} error={view.error} />

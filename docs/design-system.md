@@ -38,7 +38,7 @@ Localman dùng design system riêng, không lấy từ bên thứ ba. Prototype 
 
 ## Primitive UI
 
-`apps/web/src/components/ui/`: `button`, `icon-button`, `input`, `select`, `textarea`, `modal`, `modal-footer`, `confirm-modal`, `card`, `empty-state`, `dropdown-menu`, `badge`, `alert`, `tooltip`, `toast`, `form-field`, `external-link`, `json-editor`, `code-editor`, `copy-field`, `code-block`, `tabs`, `switch`, `segmented-control`.
+`apps/web/src/components/ui/`: `button`, `icon-button`, `input`, `select`, `textarea`, `modal`, `modal-footer`, `confirm-modal`, `card`, `empty-state`, `dropdown-menu`, `badge`, `alert`, `tooltip`, `toast`, `form-field`, `external-link`, `json-editor`, `code-editor`, `copy-field`, `code-block`, `tabs`, `switch`, `segmented-control`, `skeleton`, `panel-progress`, `route-progress` (xem [Loading states](#loading-states)).
 
 - Nút bo 12px, hover scale 1.03, active 0.97, focus ring 2px offset 2. Ba size: `sm`, `md` (mặc định) và `lg` (cao 48px, chữ 16px) chỉ cho CTA cấp trang như hero và dải cuối landing.
 - Modal bo 16px, 4 size `sm`/`md`/`lg`/`xl`, fade và trượt từ -20px trong 200ms easing decelerate, footer dính đáy 2 cột.
@@ -66,6 +66,35 @@ Localman dùng design system riêng, không lấy từ bên thứ ba. Prototype 
 - Màu method HTTP: `METHOD_TEXT_CLASS` trong `lib/method-tone.ts` (GET `text-viz-green-text`, POST amber, PUT blue, PATCH violet, DELETE red, HEAD/OPTIONS grey/slate), dùng cho ô chọn method, chip tab và history; `methodShortLabel` rút DELETE/OPTIONS thành `DEL`/`OPT` cho chip hẹp.
 - Trang công cụ toàn màn hình (`/api-client`) gắn `handle: WORKBENCH_HANDLE` trong `routes.tsx`: `AppShell` bỏ footer và cho `<main>` cao bằng phần dưới header, sát mép.
 - Khối cấp trang, nút, input và link có `data-id` để trỏ bằng lời, phân cấp tối đa 3 bậc.
+
+## Loading states
+
+Mọi màn cho người dùng thấy điều gì đang xảy ra khi dữ liệu tải hoặc thay đổi, không nháy khi tải nhanh và không xô layout khi dữ liệu về. Màn mẫu: `/projects` (`pages/projects/projects-list.tsx`, `projects-skeleton.tsx`, `use-projects.ts`).
+
+**Ngưỡng** (`lib/use-delayed-flag.ts`): `useDelayedFlag(active, { delay = 150, minDuration = 300 })` chỉ bật khi `active` kéo dài quá 150 ms, đã bật thì giữ ít nhất 300 ms dù `active` tắt sớm hơn, bật/tắt nhanh hơn 150 ms không bao giờ bật. `PanelProgress`, `RouteProgress` và `PageLoading` đã gọi sẵn bên trong; skeleton lần tải đầu do màn tự gọi.
+
+| Tình huống | Dùng |
+|---|---|
+| Lần tải đầu, chưa có dữ liệu | `Skeleton` theo hình nội dung thật, bọc trong `SkeletonRegion` |
+| Refetch khi dữ liệu đang hiện, filter đổi | `PanelProgress` bọc panel; `dim` khi kết quả không còn khớp filter |
+| Đổi trang, chunk trang lazy đang tải | `RouteProgress` (đã gắn trong `AppLayout` và `AppShell`) + `PageLoading` |
+| Nút tạo, lưu, xoá, gửi | `Button loading` / `IconButton loading` |
+| Bật/tắt, đổi tên | Cập nhật lạc quan `useOptimisticMutation`, lỗi thì rollback và toast |
+
+- **`Skeleton`** (`components/ui/skeleton.tsx`): `variant` `block` (mặc định, kích thước qua `className`), `text` (`lines` dòng, dòng cuối ngắn hơn) và `circle`. Màu là utility `skeleton` (`--c-text` 9% trên `--c-surface`, đọc được ở cả hai theme), shimmer là `motion-safe:skeleton-shimmer`; khi `prefers-reduced-motion` chỉ còn khối tĩnh. Hai utility nằm trong `styles/global.css`. Skeleton dựng lại khung thật (thẻ `cardClassName`, avatar, dòng chữ) cùng padding và chiều cao để dữ liệu về không làm trang nhảy.
+- **`SkeletonRegion`**: bọc các skeleton của một vùng. Vùng có `aria-busy="true"`; bên cạnh (không nằm trong vùng busy, vì trình đọc màn hình có thể bỏ qua thay đổi bên trong) là một `<output>` `sr-only` đọc một lần nhãn `label` hoặc `common.loading`. Mỗi vùng đang tải chỉ có một status.
+- Mẫu lần tải đầu (giữ skeleton đủ 300 ms kể cả khi dữ liệu về sớm):
+
+  ```tsx
+  const skeleton = useDelayedFlag(query.isPending);
+  if (skeleton) return <ListSkeleton />;
+  if (query.isPending) return null;
+  ```
+- **`PanelProgress`** (`components/ui/panel-progress.tsx`): `div` `relative` bọc nội dung, prop `active` (ví dụ `query.isFetching && !query.isPending`) và `dim?` (mờ `opacity-60` khi thanh đang hiện). Thanh cao `h-1` (`--space-1`) ở mép trên, `aria-hidden`; nơi dùng tự đặt `aria-busy` lên panel. Panel bo góc truyền `overflow-hidden` để thanh theo góc.
+- **`RouteProgress`** (`components/ui/route-progress.tsx`): thanh cố định ở đầu cửa sổ khi `useNavigation().state !== "idle"` hoặc khi chunk trang lazy đang tải (fallback của `lazyPage` trong `routes.tsx` gắn `RouteChunkPending`). Cần data router. Không hiện thì không render gì.
+- **`PageLoading`** (`components/layout/page-loading.tsx`): fallback của `lazyPage`, skeleton trang chung (tiêu đề, mô tả, ba thẻ), chỉ hiện sau 150 ms.
+- **`Button loading`**: spinner `IconLoader2` (`motion-safe:animate-spin`) đè giữa nút, nhãn vẫn còn nhưng trong suốt nên độ rộng không đổi và tên truy cập vẫn đọc được; nút `aria-busy` và `aria-disabled` nhưng không `disabled`: vẫn giữ focus, không mờ, con trỏ `progress`, không hover; click (kể cả Enter trong form, vì trình duyệt submit bằng cách click nút mặc định) bị `preventDefault` nên form không submit lần hai. `disabled` thật vẫn mờ 45% như cũ. `IconButton loading` thay icon bằng spinner. Nút hiện spinner ngay khi bấm, không qua ngưỡng 150 ms, để chặn bấm hai lần.
+- **Cập nhật lạc quan** (`lib/optimistic.ts`): `useOptimisticMutation({ queryKey, mutationFn, apply })`. `onMutate` huỷ refetch của `queryKey`, chụp giá trị cũ rồi ghi `apply(current, variables)`; `onError` trả giá trị cũ và toast lỗi qua `errorMessage`; `onSettled` invalidate khi lần ghi cuối cùng vào key đó xong, để không ghi đè giá trị lạc quan còn đang chờ. Chỉ dùng cho thao tác chắc chắn thành công trong đa số trường hợp (toggle, đổi tên); thao tác mà kết quả do server quyết dùng `Button loading`. Cần ghép vào `useMutation` sẵn có thì dùng `optimisticHandlers(client, showError, { queryKey, apply })`.
 
 ## Canvas cây resource
 

@@ -25,7 +25,6 @@ export const common: Messages["common"] = {
 		save: "Lưu",
 		send: "Gửi",
 		sending: "Đang gửi…",
-		processing: "Đang xử lý…",
 		copied: "Đã sao chép",
 	},
 	loading: "Đang tải…",

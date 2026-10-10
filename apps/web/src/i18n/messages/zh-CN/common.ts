@@ -23,7 +23,6 @@ export const common: Messages["common"] = {
 		save: "保存",
 		send: "发送",
 		sending: "正在发送…",
-		processing: "正在处理…",
 		copied: "已复制",
 	},
 	loading: "正在加载…",

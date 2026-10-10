@@ -18,7 +18,6 @@ export const notifications: Messages["notifications"] = {
 		lead: "Chọn nơi nhận thông báo cho từng loại sự kiện: chuông trong app, Web Push hoặc Telegram.",
 		loading: "Đang tải cài đặt…",
 		loadFailed: "Không tải được cài đặt thông báo",
-		saved: "Đã lưu tuỳ chọn thông báo.",
 		channelsTitle: "Kênh nhận thông báo",
 		inAppText: "Chuông trên Localman, chọn theo từng loại sự kiện ở bảng dưới.",
 	},
@@ -26,7 +25,6 @@ export const notifications: Messages["notifications"] = {
 		title: "Thông báo thử",
 		text: "Gửi thông báo thử tới mọi kênh đã sẵn sàng, không phụ thuộc lựa chọn theo loại sự kiện ở bảng dưới.",
 		send: "Gửi thông báo thử",
-		sending: "Đang gửi…",
 		resultTitle: "Kết quả gửi thông báo thử",
 		rateLimited:
 			"Bạn vừa gửi thông báo thử chưa tới một phút trước. Chờ một phút rồi thử lại.",
@@ -54,8 +52,7 @@ export const notifications: Messages["notifications"] = {
 		empty: "Chưa có loại sự kiện nào.",
 		event: "Sự kiện",
 		cell: "{event}: {channel}",
-		note: "Ô bị khoá khi kênh chưa sẵn sàng. Không có kênh email: hoandat không gửi email.",
-		save: "Lưu tuỳ chọn",
+		note: "Mỗi ô được lưu ngay khi bạn đổi. Ô bị khoá khi kênh chưa sẵn sàng. Không có kênh email: hoandat không gửi email.",
 		types: {
 			projectInvitation: "Lời mời cộng tác project",
 			projectMockUrlChanged: "URL mock của project được chia sẻ đã đổi",

@@ -35,8 +35,6 @@ function prefs(
 	};
 }
 
-const SAVE = { name: "Save preferences" };
-
 const SUBSCRIPTION = {
 	endpoint: "https://push.example/sub-1",
 	keys: { p256dh: "key", auth: "secret" },
@@ -150,16 +148,24 @@ describe("NotificationSettingsPage", () => {
 		expect(del?.body).toEqual({ endpoint: SUBSCRIPTION.endpoint });
 	});
 
-	it("lets the user mute in-app notifications per event", async () => {
+	it("saves a ticked box at once with one PUT of every event", async () => {
+		const muted = prefs();
+		const [first] = muted.events;
+		if (first) first.inApp = false;
 		const { calls } = renderPage(prefs(), {
-			"PUT /api/v1/notification-preferences": { body: prefs() },
+			"PUT /api/v1/notification-preferences": { body: muted },
 		});
 		const inApp = await screen.findByRole("checkbox", {
 			name: "Member joined: In app",
 		});
-		expect(inApp).toBeEnabled();
+		expect(
+			screen.getByRole("checkbox", { name: "Member joined: Telegram" }),
+		).toBeDisabled();
+		expect(
+			screen.queryByRole("button", { name: "Save preferences" }),
+		).toBeNull();
 		await userEvent.click(inApp);
-		await userEvent.click(screen.getByRole("button", SAVE));
+		expect(inApp).not.toBeChecked();
 		await waitFor(() =>
 			expect(calls.find((c) => c.method === "PUT")?.body).toEqual({
 				events: [
@@ -172,29 +178,6 @@ describe("NotificationSettingsPage", () => {
 				],
 			}),
 		);
-	});
-
-	it("saves per-event choices with one PUT", async () => {
-		const saved = prefs();
-		const { calls } = renderPage(prefs(), {
-			"PUT /api/v1/notification-preferences": { body: saved },
-		});
-		const save = await screen.findByRole("button", SAVE);
-		expect(save).toBeDisabled();
-		expect(
-			screen.getByRole("checkbox", { name: "Member joined: Telegram" }),
-		).toBeDisabled();
-		await userEvent.click(
-			screen.getByRole("checkbox", { name: "Member joined: Web Push" }),
-		);
-		await userEvent.click(save);
-		await waitFor(() =>
-			expect(calls.some((c) => c.method === "PUT")).toBe(true),
-		);
-		expect(calls.find((c) => c.method === "PUT")?.body).toEqual({
-			events: [
-				{ type: "member.joined", inApp: true, webPush: true, telegram: false },
-			],
-		});
+		expect(inApp).not.toBeChecked();
 	});
 });

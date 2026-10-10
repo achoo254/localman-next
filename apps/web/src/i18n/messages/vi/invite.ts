@@ -43,11 +43,9 @@ export const invite: Messages["invite"] = {
 		ineligibleWrongAccount:
 			"Lời mời gửi cho {email}. Hãy đăng nhập bằng tài khoản được mời, hoặc liên kết Google/GitHub có email đã xác minh trùng với email này.",
 		accept: "Tham gia",
-		accepting: "Đang tham gia…",
 	},
 	switchAccount: {
 		action: "Đăng nhập tài khoản khác",
-		busy: "Đang đăng xuất…",
 		hint: "Bạn sẽ được đăng xuất. Đăng nhập lại bằng tài khoản được mời rồi mở lại link này.",
 	},
 	errors: {

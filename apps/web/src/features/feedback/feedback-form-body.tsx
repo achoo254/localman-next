@@ -13,6 +13,7 @@ import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
+import { TurnstileSkeleton } from "../subscription/form-skeleton";
 import { TurnstileField } from "../subscription/turnstile-field";
 import {
 	SESSION_LOST,
@@ -175,9 +176,10 @@ export function FeedbackFormBody({
 				/>
 			) : null}
 			{config.status === "loading" ? (
-				<output className="block font-mono text-muted text-sm">
-					{t("feedback.preparing")}
-				</output>
+				<TurnstileSkeleton
+					data-id="modal-feedback-turnstile-loading"
+					label={t("feedback.preparing")}
+				/>
 			) : null}
 			<p className="m-0 text-[0.8125rem] text-muted">
 				{signedIn ? t("feedback.noteSignedIn") : t("feedback.noteVisitor")}

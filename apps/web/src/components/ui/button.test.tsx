@@ -33,8 +33,12 @@ describe("Button", () => {
 	it("uses 12px radius (rounded-md) and press/hover scale at default size", () => {
 		const classes = buttonClassName();
 		expect(classes).toContain("rounded-md");
-		expect(classes).toContain("motion-safe:enabled:hover:scale-103");
-		expect(classes).toContain("motion-safe:enabled:active:scale-97");
+		expect(classes).toContain(
+			"motion-safe:enabled:not-aria-disabled:hover:scale-103",
+		);
+		expect(classes).toContain(
+			"motion-safe:enabled:not-aria-disabled:active:scale-97",
+		);
 	});
 
 	it("calls onClick when enabled", async () => {
@@ -70,7 +74,64 @@ describe("Button", () => {
 	});
 });
 
+describe("Button loading", () => {
+	it("keeps the label for width and name, adds a spinner, swallows clicks and marks busy", async () => {
+		const onClick = vi.fn();
+		render(
+			<Button
+				loading
+				variant="primary"
+				leadingIcon={<svg data-id="lead" aria-hidden="true" />}
+				onClick={onClick}
+			>
+				Create project
+			</Button>,
+		);
+		const button = screen.getByRole("button", { name: "Create project" });
+		expect(button).toBeEnabled();
+		expect(button).toHaveAttribute("aria-disabled", "true");
+		expect(button).toHaveAttribute("aria-busy", "true");
+		expect(button).toHaveClass("aria-busy:cursor-progress");
+		expect(button).toHaveClass("relative");
+		const label = screen.getByText("Create project");
+		expect(label).toHaveClass("opacity-0", "inline-flex", "gap-2");
+		expect(label.querySelector('[data-id="lead"]')).not.toBeNull();
+		const spinner = button.querySelector('[data-id="button-spinner"]');
+		expect(spinner).toHaveAttribute("aria-hidden", "true");
+		expect(spinner).toHaveClass("absolute", "inset-0");
+		expect(spinner?.querySelector("svg")).toHaveClass(
+			"motion-safe:animate-spin",
+		);
+		await userEvent.click(button);
+		expect(onClick).not.toHaveBeenCalled();
+	});
+
+	it("renders as before when not loading", () => {
+		render(<Button disabled={false}>Save</Button>);
+		const button = screen.getByRole("button", { name: "Save" });
+		expect(button).toBeEnabled();
+		expect(button).not.toHaveAttribute("aria-busy");
+		expect(button.querySelector('[data-id="button-spinner"]')).toBeNull();
+	});
+});
+
 describe("IconButton", () => {
+	it("swaps the icon for a spinner while loading", () => {
+		render(
+			<IconButton
+				loading
+				label="Refresh"
+				icon={<svg data-id="icon" aria-hidden="true" />}
+			/>,
+		);
+		const button = screen.getByRole("button", { name: "Refresh" });
+		expect(button).toBeEnabled();
+		expect(button).toHaveAttribute("aria-disabled", "true");
+		expect(button).toHaveAttribute("aria-busy", "true");
+		expect(button.querySelector('[data-id="icon"]')).toBeNull();
+		expect(button.querySelector('[data-id="button-spinner"]')).not.toBeNull();
+	});
+
 	it("exposes its label as the accessible name", () => {
 		render(<IconButton label="Đóng" icon={<svg aria-hidden="true" />} />);
 		expect(screen.getByRole("button", { name: "Đóng" })).toHaveClass("size-9");

@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { Button } from "../../components/ui/button";
 import { cardClassName } from "../../components/ui/card";
 import { useT } from "../../i18n/i18n-context";
 import type { SourceMessages } from "../../i18n/message-types";
@@ -33,8 +31,8 @@ function eventLabel(event: EventPreference, t: Translate): string {
 export interface EventPreferencesTableProps {
 	events: EventPreference[];
 	channels: NotificationChannels;
-	/** Persists the draft; resolves once saved (errors are reported upstream). */
-	onSave: (events: EventPreference[]) => Promise<void>;
+	/** A box was ticked: saved at once, flipped back upstream if refused. */
+	onToggle: (type: string, channel: EventChannel, value: boolean) => void;
 }
 
 function usableChannels(
@@ -48,38 +46,14 @@ function usableChannels(
 	};
 }
 
-/** Event type × channel matrix, saved with one PUT. */
+/** Event type × channel matrix; each box saves as soon as it changes. */
 export function EventPreferencesTable({
 	events,
 	channels,
-	onSave,
+	onToggle,
 }: EventPreferencesTableProps) {
 	const t = useT();
-	const [draft, setDraft] = useState(events);
-	const [saving, setSaving] = useState(false);
 	const usable = usableChannels(channels);
-	const dirty = draft.some((event, index) =>
-		EVENT_CHANNELS.some(
-			(channel) => event[channel] !== events[index]?.[channel],
-		),
-	);
-
-	function toggle(type: string, channel: EventChannel, value: boolean) {
-		setDraft((current) =>
-			current.map((event) =>
-				event.type === type ? { ...event, [channel]: value } : event,
-			),
-		);
-	}
-
-	async function save() {
-		setSaving(true);
-		try {
-			await onSave(draft);
-		} finally {
-			setSaving(false);
-		}
-	}
 
 	return (
 		<section
@@ -93,7 +67,7 @@ export function EventPreferencesTable({
 			>
 				{t("notifications.events.title")}
 			</h2>
-			{draft.length === 0 ? (
+			{events.length === 0 ? (
 				<p className="m-0 text-muted text-sm">
 					{t("notifications.events.empty")}
 				</p>
@@ -117,7 +91,7 @@ export function EventPreferencesTable({
 							</tr>
 						</thead>
 						<tbody>
-							{draft.map((event) => (
+							{events.map((event) => (
 								<tr key={event.type} className="border-border-subtle border-t">
 									<th scope="row" className="py-3 pr-4 text-left font-normal">
 										{eventLabel(event, t)}
@@ -132,9 +106,9 @@ export function EventPreferencesTable({
 													channel: t(`notifications.channels.${channel}`),
 												})}
 												checked={event[channel]}
-												disabled={!usable[channel] || saving}
+												disabled={!usable[channel]}
 												onChange={(e) =>
-													toggle(event.type, channel, e.currentTarget.checked)
+													onToggle(event.type, channel, e.currentTarget.checked)
 												}
 												className="size-4 cursor-pointer accent-primary-solid disabled:cursor-not-allowed"
 											/>
@@ -149,17 +123,6 @@ export function EventPreferencesTable({
 			<p className="m-0 text-[0.8125rem] text-muted">
 				{t("notifications.events.note")}
 			</p>
-			<div>
-				<Button
-					variant="primary"
-					data-id="notify-events-save"
-					disabled={!dirty || saving}
-					aria-busy={saving || undefined}
-					onClick={() => void save()}
-				>
-					{t("notifications.events.save")}
-				</Button>
-			</div>
 		</section>
 	);
 }

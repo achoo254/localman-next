@@ -1,10 +1,13 @@
 import type { RefObject } from "react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
+import { PanelProgress } from "../../components/ui/panel-progress";
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { CollaboratorRow, OwnerRow } from "./collaborator-row";
 import type { Collaborator } from "./collaborators-api";
+import { CollaboratorsSkeleton } from "./collaborators-skeleton";
 import type { CollaboratorsState } from "./use-collaborators";
 
 export interface CollaboratorListProps {
@@ -21,7 +24,10 @@ export interface CollaboratorListProps {
 	onGone: (id: string) => void;
 }
 
-/** Loading, error and the owner-first list of the collaborators dialog. */
+/**
+ * Loading, error and the owner-first list of the collaborators dialog. A
+ * background refresh keeps the rows and runs a bar along their top.
+ */
 export function CollaboratorList({
 	state,
 	leaving,
@@ -34,6 +40,9 @@ export function CollaboratorList({
 	onGone,
 }: CollaboratorListProps) {
 	const t = useT();
+	const skeleton = useDelayedFlag(state.status === "loading");
+	if (skeleton) return <CollaboratorsSkeleton />;
+	if (state.status === "loading") return null;
 	if (state.status === "error") {
 		return (
 			<div className="grid justify-items-start gap-3">
@@ -50,40 +59,28 @@ export function CollaboratorList({
 			</div>
 		);
 	}
-	const ready = state.status === "ready";
 	return (
-		<ul
-			ref={listRef}
-			aria-label={t("collaborators.list.label")}
-			aria-busy={!ready || refreshing}
-			className="m-0 grid list-none grid-cols-[minmax(0,1fr)] gap-2 p-0"
-		>
-			{ready ? (
-				<>
-					<OwnerRow owner={state.list.owner} />
-					{state.list.items.map((item) => (
-						<CollaboratorRow
-							key={item.id}
-							item={item}
-							self={item.user !== null && item.user.sub === viewerSub}
-							canManage={state.list.canManage}
-							leaving={leaving.has(item.id)}
-							busy={removing.has(item.id)}
-							onRemove={onRemove}
-							onGone={onGone}
-						/>
-					))}
-				</>
-			) : (
-				<li>
-					<output
-						data-id="modal-collaborators-loading"
-						className="block font-mono text-muted text-sm"
-					>
-						{t("collaborators.list.loading")}
-					</output>
-				</li>
-			)}
-		</ul>
+		<PanelProgress data-id="modal-collaborators-panel" active={refreshing}>
+			<ul
+				ref={listRef}
+				aria-label={t("collaborators.list.label")}
+				aria-busy={refreshing}
+				className="m-0 grid list-none grid-cols-[minmax(0,1fr)] gap-2 p-0"
+			>
+				<OwnerRow owner={state.list.owner} />
+				{state.list.items.map((item) => (
+					<CollaboratorRow
+						key={item.id}
+						item={item}
+						self={item.user !== null && item.user.sub === viewerSub}
+						canManage={state.list.canManage}
+						leaving={leaving.has(item.id)}
+						busy={removing.has(item.id)}
+						onRemove={onRemove}
+						onGone={onGone}
+					/>
+				))}
+			</ul>
+		</PanelProgress>
 	);
 }

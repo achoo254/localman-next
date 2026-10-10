@@ -6,7 +6,11 @@ import {
 	NO_FEATURES,
 } from "../../config/features";
 import { makeProject, makeUser } from "../../test/fixtures";
-import { type MockRoute, mockFetch } from "../../test/mock-fetch";
+import {
+	type MockReply,
+	type MockRoute,
+	mockFetch,
+} from "../../test/mock-fetch";
 import { renderRoutes } from "../../test/render-app";
 import type { Project } from "../projects/projects-api";
 import { ProjectDetailPage } from "./project-detail-page";
@@ -65,6 +69,33 @@ export function sampleTree(): ResourceJson[] {
 		}),
 		resourceJson("likes"),
 	];
+}
+
+/** A route whose answer waits until the test releases it. */
+export function held() {
+	const pending: Array<(reply: MockReply) => void> = [];
+	return {
+		route: () =>
+			new Promise<MockReply>((resolve) => {
+				pending.push(resolve);
+			}),
+		release: (reply: MockReply) => {
+			for (const resolve of pending.splice(0)) resolve(reply);
+		},
+	};
+}
+
+/** Whether an element matching `selector` ever appears from now on. */
+export function watchFor(selector: string): () => boolean {
+	let seen = document.querySelector(selector) !== null;
+	const observer = new MutationObserver(() => {
+		if (document.querySelector(selector)) seen = true;
+	});
+	observer.observe(document.body, { childList: true, subtree: true });
+	return () => {
+		observer.disconnect();
+		return seen;
+	};
 }
 
 export function change(name: string, countBefore: number, countAfter: number) {

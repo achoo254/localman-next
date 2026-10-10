@@ -46,7 +46,6 @@ export const collaborators: Messages["collaborators"] = {
 		hint: "Người chưa có tài khoản hoandat: nhập email để tạo link mời dùng 1 lần (7 ngày).",
 		placeholder: "@username hoặc ten@example.com",
 		submit: "Mời",
-		searching: "Đang tìm…",
 		empty: "Nhập username hoặc email.",
 		linkLabel: "Link mời cho {who}",
 		linkHint: "Hết hạn {date}. Link chỉ hiện lần này.",
@@ -57,9 +56,7 @@ export const collaborators: Messages["collaborators"] = {
 	},
 	invitee: {
 		confirm: "Xác nhận mời",
-		confirming: "Đang mời…",
 		createLink: "Tạo link mời",
-		creatingLink: "Đang tạo link…",
 		noAccount:
 			"Chưa có tài khoản dùng <b>{email}</b>. Tạo link mời dùng 1 lần (7 ngày) gắn với email này rồi tự gửi cho họ.",
 		unverifiedWarning:
@@ -89,7 +86,6 @@ export const collaborators: Messages["collaborators"] = {
 		shownOnce: "Link chỉ hiện lần này. Hãy sao chép trước khi đóng.",
 		expires: "Hết hạn {date}.",
 		copy: "Sao chép link",
-		creating: "Đang tạo…",
 		create: "Tạo magic link",
 		regenerate: "Tạo link mới",
 		regenerateQuestion: "Tạo magic link mới?",

@@ -57,6 +57,19 @@ export const primitives: Messages["primitives"] = {
 		toastInfo: "Toast thông tin",
 		toastInfoTitle: "Đã sao chép URL.",
 	},
+	loading: {
+		title: "Trạng thái tải",
+		description:
+			"Skeleton cho lần tải đầu, thanh mảnh khi dữ liệu làm mới, spinner trên nút đang lưu. Tải dưới 150 ms thì không hiện gì.",
+		save: "Lưu",
+		busy: "Đang lưu",
+		busyIcon: "Đang làm mới",
+		skeletonCaption:
+			"Skeleton theo hình nội dung sắp hiện; hiệu ứng lấp lánh tắt khi bật giảm chuyển động.",
+		refresh: "Làm mới",
+		panelCaption:
+			"Dữ liệu vẫn trên màn hình, mờ đi, dưới một thanh ở mép trên panel.",
+	},
 	overlays: {
 		title: "Lớp phủ",
 		description:

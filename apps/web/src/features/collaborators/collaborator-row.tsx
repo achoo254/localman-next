@@ -162,6 +162,7 @@ export function CollaboratorRow({
 					data-id={`${dataId}-remove`}
 					data-remove-button=""
 					aria-disabled={locked || undefined}
+					loading={busy}
 					className="col-start-3 row-start-1"
 					icon={<IconX size={16} aria-hidden="true" />}
 					// Stays focusable while folding away; focus moves on once it is gone.

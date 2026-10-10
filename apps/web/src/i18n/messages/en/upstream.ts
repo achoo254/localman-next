@@ -36,7 +36,6 @@ export const upstream = {
 			"This address points to a private network, so Localman can't forward to it.",
 	},
 	save: "Save upstream",
-	saving: "Saving…",
 	saved:
 		"Upstream set to <code>{label}</code>. Routes the mock doesn't have now go there.",
 	saveFailed: "Couldn't save the upstream",

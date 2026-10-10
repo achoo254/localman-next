@@ -1,81 +1,29 @@
-import { useCallback, useEffect, useState } from "react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
 import { cardClassName } from "../../components/ui/card";
-import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { useAppTitle } from "../../lib/use-document-title";
 import { useCurrentUser } from "../auth/use-current-user";
 import { ChannelRow } from "./channel-row";
 import { EventPreferencesTable } from "./event-preferences-table";
-import {
-	type EventPreference,
-	type NotificationPreferences,
-	fetchPreferences,
-	savePreferences,
-} from "./notification-preferences-api";
+import { NotificationSettingsSkeleton } from "./notification-settings-skeleton";
 import { TelegramRow } from "./telegram-row";
 import { TestNotificationPanel } from "./test-notification-panel";
+import { useNotificationPreferences } from "./use-notification-preferences";
 import { WebPushRow } from "./web-push-row";
-
-type PreferencesState =
-	| { status: "loading" }
-	| { status: "ready"; value: NotificationPreferences; version: number }
-	| { status: "error"; error: unknown };
 
 /** `/account/notifications`: delivery channels and per-event choices. */
 export function NotificationSettingsPage() {
 	const t = useT();
 	useAppTitle(t("notifications.settings.title"));
 	const session = useCurrentUser();
-	const toast = useToast();
-	const [state, setState] = useState<PreferencesState>({ status: "loading" });
-
-	const load = useCallback(async () => {
-		setState({ status: "loading" });
-		try {
-			setState({
-				status: "ready",
-				value: await fetchPreferences(),
-				version: 0,
-			});
-		} catch (error) {
-			setState({ status: "error", error });
-		}
-	}, []);
-
-	useEffect(() => {
-		void load();
-	}, [load]);
-
-	async function save(events: EventPreference[]) {
-		try {
-			const value = await savePreferences(events);
-			setState((s) => ({
-				status: "ready",
-				value,
-				version: s.status === "ready" ? s.version + 1 : 0,
-			}));
-			toast.show({ title: t("notifications.settings.saved") });
-		} catch (error) {
-			toast.show({ tone: "error", title: errorMessage(error) });
-		}
-	}
-
-	/** A test reached the bot or got a 403: show or hide the Start reminder. */
-	function setTelegramActivated(activated: boolean) {
-		setState((s) => {
-			if (s.status !== "ready") return s;
-			const { channels } = s.value;
-			const telegram = { ...channels.telegram, activated };
-			return {
-				...s,
-				value: { ...s.value, channels: { ...channels, telegram } },
-			};
-		});
-	}
+	const { state, load, toggleEvent, setTelegramActivated } =
+		useNotificationPreferences();
+	// Held its minimum time even when the preferences come back sooner.
+	const skeleton = useDelayedFlag(state.status === "loading");
 
 	const telegramUsername =
 		session.status === "authenticated" ? session.user.telegram.username : null;
@@ -88,12 +36,8 @@ export function NotificationSettingsPage() {
 				</h1>
 				<p className="m-0 text-muted">{t("notifications.settings.lead")}</p>
 			</header>
-			{state.status === "loading" ? (
-				<output className="block font-mono text-muted text-sm">
-					{t("notifications.settings.loading")}
-				</output>
-			) : null}
-			{state.status === "error" ? (
+			{skeleton ? <NotificationSettingsSkeleton /> : null}
+			{state.status === "error" && !skeleton ? (
 				<div
 					data-id="notify-settings-error"
 					className="grid justify-items-start gap-3"
@@ -104,7 +48,7 @@ export function NotificationSettingsPage() {
 					<Button onClick={() => void load()}>{t("common.cta.retry")}</Button>
 				</div>
 			) : null}
-			{state.status === "ready" ? (
+			{state.status === "ready" && !skeleton ? (
 				<>
 					<section
 						data-id="notify-channels"
@@ -134,10 +78,11 @@ export function NotificationSettingsPage() {
 						/>
 					</section>
 					<EventPreferencesTable
-						key={state.version}
 						events={state.value.events}
 						channels={state.value.channels}
-						onSave={save}
+						onToggle={(type, channel, value) =>
+							void toggleEvent(type, channel, value)
+						}
 					/>
 				</>
 			) : null}

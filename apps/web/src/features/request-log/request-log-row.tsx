@@ -127,13 +127,11 @@ export function RequestLogRow({
 							size="sm"
 							aria-label={t("trafficLog.actions.replayAria", target)}
 							leadingIcon={<IconRefresh size={16} aria-hidden="true" />}
-							disabled={busy !== null}
+							loading={busy === "replay"}
 							onClick={() => onAction(row, "replay")}
 							data-id="request-log-replay"
 						>
-							{busy === "replay"
-								? t("trafficLog.actions.replaying")
-								: t("trafficLog.actions.replay")}
+							{t("trafficLog.actions.replay")}
 						</Button>
 					)}
 					{showOpen ? (

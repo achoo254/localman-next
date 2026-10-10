@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "../../components/ui/card";
+import { Skeleton, SkeletonRegion } from "../../components/ui/skeleton";
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { LogDeliveryInfo } from "./log-delivery";
 import { DETAIL_TITLE, LogBody, LogHeaders } from "./log-message-views";
 import { fetchLogLine } from "./request-log-api";
@@ -35,6 +37,25 @@ function useMeta(): (
 	};
 }
 
+/** Headers, request body, response line and body of a line still loading. */
+function LineSkeleton() {
+	const t = useT();
+	return (
+		<SkeletonRegion
+			data-id="request-log-detail-loading"
+			label={t("trafficLog.detail.loading")}
+			className="grid gap-4"
+		>
+			<Skeleton className="h-3 w-32" />
+			<Skeleton variant="text" lines={3} className="max-w-md" />
+			<Skeleton className="h-20 w-full" />
+			<Skeleton className="h-3 w-24" />
+			<Skeleton className="h-3 w-48" />
+			<Skeleton className="h-20 w-full" />
+		</SkeletonRegion>
+	);
+}
+
 /** Headers, bodies and response of the selected request, then its replay. */
 export function RequestLogDetail({
 	projectId,
@@ -50,6 +71,7 @@ export function RequestLogDetail({
 		queryFn: () => fetchLogLine(projectId, rowId),
 		enabled: row !== null,
 	});
+	const skeleton = useDelayedFlag(row !== null && line.isPending);
 	return (
 		<section
 			id={id}
@@ -83,11 +105,9 @@ export function RequestLogDetail({
 						</span>
 					</div>
 					<LogDeliveryInfo row={row} />
-					{line.isPending ? (
-						<p className="m-0 text-muted text-sm">
-							{t("trafficLog.detail.loading")}
-						</p>
-					) : line.isError ? (
+					{skeleton ? (
+						<LineSkeleton />
+					) : line.isPending ? null : line.isError ? (
 						<p className="m-0 text-error-text text-sm" role="alert">
 							{t("trafficLog.detail.loadFailed")} {errorMessage(line.error)}
 						</p>

@@ -38,7 +38,6 @@ export const subscription: Messages["subscription"] = {
 	proInterest: {
 		title: "咨询 Pro 套餐",
 		submit: "提交申请",
-		submitting: "正在提交…",
 		successTitle: "已收到",
 		successText: "我们会通过你留下的邮箱联系你：<b>{email}</b>。",
 		intro:

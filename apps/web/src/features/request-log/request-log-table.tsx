@@ -1,8 +1,11 @@
 import { Button } from "../../components/ui/button";
+import { SkeletonRegion } from "../../components/ui/skeleton";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import type { LogSummary } from "./request-log-parse";
 import { RequestLogRow, type RowAction } from "./request-log-row";
+import { RequestLogSkeletonRows } from "./request-log-skeleton";
 
 const HEAD =
 	"whitespace-nowrap px-3 py-2 text-left font-mono font-semibold text-muted text-xs";
@@ -48,13 +51,10 @@ export function RequestLogTable({
 	onClearFilters,
 }: RequestLogTableProps) {
 	const t = useT();
+	const skeleton = useDelayedFlag(loading && rows.length === 0);
 	let message = null;
-	if (rows.length === 0) {
-		message = loading ? (
-			<td colSpan={COLUMNS} className={MESSAGE}>
-				{t("trafficLog.table.loading")}
-			</td>
-		) : filtered ? (
+	if (rows.length === 0 && !loading) {
+		message = filtered ? (
 			<td
 				colSpan={COLUMNS}
 				className={MESSAGE}
@@ -76,7 +76,7 @@ export function RequestLogTable({
 			</td>
 		);
 	}
-	return (
+	const table = (
 		<div className="min-w-0 overflow-x-auto rounded-md border border-border-subtle">
 			<table
 				data-id="request-log-table"
@@ -109,7 +109,9 @@ export function RequestLogTable({
 					</tr>
 				</thead>
 				<tbody>
-					{message ? (
+					{skeleton ? (
+						<RequestLogSkeletonRows />
+					) : message ? (
 						<tr>{message}</tr>
 					) : (
 						rows.map((row) => (
@@ -129,5 +131,15 @@ export function RequestLogTable({
 				</tbody>
 			</table>
 		</div>
+	);
+	return skeleton ? (
+		<SkeletonRegion
+			data-id="request-log-loading"
+			label={t("trafficLog.table.loading")}
+		>
+			{table}
+		</SkeletonRegion>
+	) : (
+		table
 	);
 }

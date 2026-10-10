@@ -137,8 +137,13 @@ describe("Request editor", () => {
 		);
 		await openWith("https://slow.test", Object.assign(pending, { drafts: [] }));
 		const user = userEvent.setup();
-		await user.click(byDataId("request-send"));
-		expect(byDataId("request-send")).toBeDisabled();
+		const send = byDataId("request-send");
+		await user.click(send);
+		// Spins and keeps focus; a second press does not send again.
+		expect(send).toHaveAttribute("aria-busy", "true");
+		expect(send).toHaveFocus();
+		await user.click(send);
+		expect(pending).toHaveBeenCalledTimes(1);
 		await user.click(
 			await screen.findByRole("button", { name: "Cancel request" }),
 		);

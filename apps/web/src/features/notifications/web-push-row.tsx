@@ -76,8 +76,8 @@ export function WebPushRow({ available, enabled }: WebPushRowProps) {
 				<Button
 					size="sm"
 					data-id={on ? "notify-push-disable" : "notify-push-enable"}
-					disabled={push.busy || !(on || canEnable)}
-					aria-busy={push.busy || undefined}
+					loading={push.busy}
+					disabled={!push.busy && !(on || canEnable)}
 					leadingIcon={
 						on ? (
 							<IconBellOff size={16} aria-hidden="true" />

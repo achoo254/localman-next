@@ -6,7 +6,6 @@ export interface HostListProps {
 	empty: string;
 	removeLabel: (host: string) => string;
 	onRemove: (host: string) => void;
-	busy?: boolean;
 	"data-id": string;
 }
 
@@ -16,7 +15,6 @@ export function HostList({
 	empty,
 	removeLabel,
 	onRemove,
-	busy = false,
 	"data-id": dataId,
 }: HostListProps) {
 	if (items.length === 0) {
@@ -43,7 +41,6 @@ export function HostList({
 					<IconButton
 						size="sm"
 						variant="ghost"
-						disabled={busy}
 						label={removeLabel(host)}
 						icon={<IconX size={16} aria-hidden="true" />}
 						data-id={`${dataId}-remove`}

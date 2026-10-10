@@ -1,6 +1,7 @@
 import { type KeyboardEvent, type ReactNode, useId, useState } from "react";
 import { useT } from "../../../i18n/i18n-context";
 import { cn } from "../../../lib/cn";
+import { useDelayedFlag } from "../../../lib/use-delayed-flag";
 import { RequestEditor } from "../request/request-editor";
 import { RoutingSettings } from "../routing/routing-settings";
 import { TabBar } from "../tabs/tab-bar";
@@ -10,6 +11,7 @@ import { EmptyEditor } from "./empty-editor";
 import { SidebarRail, type SidebarSection } from "./sidebar-rail";
 import { StatusBar } from "./status-bar";
 import { useWorkbench } from "./workbench-context";
+import { WorkbenchSkeleton } from "./workbench-skeleton";
 import type { WorkbenchTab } from "./workbench-types";
 
 export interface WorkbenchLayoutProps {
@@ -36,6 +38,10 @@ export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 	const t = useT();
 	const workbench = useWorkbench();
 	const { activeTab } = workbench;
+	// Saved drafts still on their way: no empty editor that would flash first.
+	const restoring =
+		workbench.syncStatus.state === "loading" && workbench.tabs.length === 0;
+	const skeleton = useDelayedFlag(restoring);
 	// Open beside the editor on wide screens; on narrow ones it would push it down.
 	const [sidebarOpen, setSidebarOpen] = useState(
 		() =>
@@ -92,7 +98,14 @@ export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 					{section === "tunelo" ? <TuneloSidebar /> : null}
 					{section === "routing" ? <RoutingSettings /> : null}
 				</aside>
-				<div className="flex min-h-0 min-w-0 flex-1 flex-col">
+				{skeleton ? <WorkbenchSkeleton /> : null}
+				{restoring && !skeleton ? (
+					<div aria-busy="true" className="min-h-0 min-w-0 flex-1" />
+				) : null}
+				<div
+					hidden={restoring || skeleton}
+					className="flex min-h-0 min-w-0 flex-1 flex-col"
+				>
 					<TabBar panelId={panelId} />
 					<div
 						id={panelId}

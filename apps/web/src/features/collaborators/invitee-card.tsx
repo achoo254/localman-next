@@ -19,14 +19,8 @@ export interface InviteeCardProps {
 }
 
 const CONFIRM_LABEL = {
-	account: {
-		idle: "collaborators.invitee.confirm",
-		busy: "collaborators.invitee.confirming",
-	},
-	email: {
-		idle: "collaborators.invitee.createLink",
-		busy: "collaborators.invitee.creatingLink",
-	},
+	account: "collaborators.invitee.confirm",
+	email: "collaborators.invitee.createLink",
 } as const;
 
 const CARD =
@@ -50,7 +44,7 @@ export function InviteeCard({
 				variant="primary"
 				size="sm"
 				data-id="modal-collaborators-confirm"
-				disabled={busy}
+				loading={busy}
 				leadingIcon={
 					candidate.kind === "account" ? (
 						<IconUserPlus size={16} aria-hidden="true" />
@@ -60,7 +54,7 @@ export function InviteeCard({
 				}
 				onClick={onConfirm}
 			>
-				{t(CONFIRM_LABEL[candidate.kind][busy ? "busy" : "idle"])}
+				{t(CONFIRM_LABEL[candidate.kind])}
 			</Button>
 			<Button
 				variant="ghost"

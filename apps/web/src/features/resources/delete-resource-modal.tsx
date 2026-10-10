@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
+import { Skeleton, SkeletonRegion } from "../../components/ui/skeleton";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { localizedError } from "./resource-errors";
 import type { Resource } from "./resource-model";
 import { type RemovedResource, deleteResource } from "./resources-api";
@@ -48,8 +50,9 @@ export function DeleteResourceModal({
 		};
 	}, [projectId, resource.id]);
 
+	const checking = useDelayedFlag(preview.status === "loading");
 	const children =
-		preview.status === "ready"
+		preview.status === "ready" && !checking
 			? preview.removed.filter((item) => item.resourceId !== resource.id)
 			: [];
 
@@ -80,10 +83,15 @@ export function DeleteResourceModal({
 					name: resource.name,
 				})}
 			</span>
-			{preview.status === "loading" ? (
-				<span>{t("resources.delete.checking")}</span>
+			{checking ? (
+				<SkeletonRegion
+					data-id="modal-delete-resource-checking"
+					label={t("resources.delete.checking")}
+				>
+					<Skeleton variant="text" lines={2} className="max-w-xs" />
+				</SkeletonRegion>
 			) : null}
-			{preview.status === "unavailable" ? (
+			{preview.status === "unavailable" && !checking ? (
 				<span data-id="modal-delete-resource-cascade">
 					{t("resources.delete.cascadeUnknown")}
 				</span>

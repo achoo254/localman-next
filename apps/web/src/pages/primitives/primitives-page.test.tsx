@@ -35,6 +35,7 @@ describe("PrimitivesPage", () => {
 			"primitives-buttons",
 			"primitives-forms",
 			"primitives-feedback",
+			"primitives-loading",
 			"primitives-overlays",
 		]) {
 			expect(container.querySelector(`[data-id="${id}"]`)).not.toBeNull();
@@ -74,5 +75,22 @@ describe("PrimitivesPage", () => {
 		expect(
 			await screen.findByText("Couldn't save. Try again."),
 		).toBeInTheDocument();
+	});
+
+	it("shows the loading primitives: a spinning save, skeletons, a panel bar", async () => {
+		const { container } = renderPage();
+		const save = screen.getByRole("button", { name: "Save" });
+		await userEvent.click(save);
+		expect(save).toHaveAttribute("aria-busy", "true");
+		expect(save).toHaveFocus();
+		expect(
+			container.querySelectorAll(
+				'[data-id="primitives-loading-skeleton"] [data-skeleton]',
+			).length,
+		).toBeGreaterThan(0);
+		await userEvent.click(screen.getByRole("button", { name: "Refresh" }));
+		expect(
+			container.querySelector('[data-id="primitives-loading-panel"]'),
+		).toHaveAttribute("aria-busy", "true");
 	});
 });

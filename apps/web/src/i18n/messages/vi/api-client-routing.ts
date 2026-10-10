@@ -89,6 +89,7 @@ export const apiClientRouting: Messages["apiClientRouting"] = {
 	quota: { plans: "Xem gói" },
 	settings: {
 		title: "Định tuyến",
+		loading: "Đang tải cài đặt định tuyến…",
 		defaultRoute: "Đường đi của request mới",
 		defaultHint:
 			"Auto gửi thẳng từ trình duyệt, không được thì chuyển sang proxy (CORS, header fetch không đặt được, tắt redirect). Địa chỉ local thì dùng Tunelo. Ô chọn cạnh nút Send ghi đè cho từng request.",

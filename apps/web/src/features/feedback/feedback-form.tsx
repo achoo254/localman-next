@@ -7,6 +7,7 @@ import { ModalFooter } from "../../components/ui/modal-footer";
 import { SuccessPanel } from "../../components/ui/success-panel";
 import { useT } from "../../i18n/i18n-context";
 import { reloadCurrentUser, useCurrentUser } from "../auth/use-current-user";
+import { FormSkeleton } from "../subscription/form-skeleton";
 import { type FeedbackAccount, FeedbackFormBody } from "./feedback-form-body";
 
 export interface FeedbackFormProps {
@@ -31,7 +32,6 @@ interface FeedbackContentProps {
  * what was typed and shows Turnstile.
  */
 function FeedbackContent(props: FeedbackContentProps) {
-	const t = useT();
 	const session = useCurrentUser();
 	// Once the form shows, a session re-read (expired session) keeps it
 	// mounted with the last known account, so nothing typed is lost.
@@ -40,11 +40,7 @@ function FeedbackContent(props: FeedbackContentProps) {
 		account.current = session.status === "authenticated" ? session.user : null;
 	}
 	if (account.current === undefined) {
-		return (
-			<output className="block font-mono text-muted text-sm">
-				{t("common.loading")}
-			</output>
-		);
+		return <FormSkeleton data-id="modal-feedback-loading" />;
 	}
 	return (
 		<FeedbackFormBody
@@ -96,11 +92,11 @@ export function FeedbackForm({
 				type="submit"
 				form={formId}
 				variant="primary"
-				disabled={busy}
+				loading={busy}
 				data-id="modal-feedback-submit"
 				leadingIcon={<IconSend size={16} aria-hidden="true" />}
 			>
-				{busy ? t("common.actions.sending") : t("common.actions.send")}
+				{t("common.actions.send")}
 			</Button>
 		</ModalFooter>
 	);

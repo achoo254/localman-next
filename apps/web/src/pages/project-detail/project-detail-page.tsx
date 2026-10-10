@@ -17,6 +17,7 @@ import { useSubscriptionDialogs } from "../../features/subscription/use-subscrip
 import { ProjectInboxTab } from "../../features/webhook-inbox/project-inbox-tab";
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { useAppTitle } from "../../lib/use-document-title";
 import type { Project } from "../projects/projects-api";
 import { RotateSecretModal } from "../projects/rotate-secret-modal";
@@ -27,6 +28,7 @@ import {
 	type ProjectDialog,
 } from "./project-detail-dialogs";
 import { ProjectDetailHeader } from "./project-detail-header";
+import { ProjectDetailSkeleton } from "./project-detail-skeleton";
 import { ResourcesCard, type ResourcesState } from "./resources-card";
 import { useFirstResourcePrompt } from "./use-first-resource-prompt";
 import { useProject } from "./use-project";
@@ -38,16 +40,9 @@ export function ProjectDetailPage() {
 	const { projectId = "" } = useParams();
 	const project = useProject(projectId);
 	useAppTitle(project.data?.name ?? "Project");
-	if (project.isPending) {
-		return (
-			<output
-				data-id="project-detail-loading"
-				className="block py-8 font-mono text-muted text-sm"
-			>
-				{t("projectDetail.loading")}
-			</output>
-		);
-	}
+	const skeleton = useDelayedFlag(project.isPending);
+	if (skeleton) return <ProjectDetailSkeleton />;
+	if (project.isPending) return null;
 	if (project.isError) {
 		return (
 			<div
@@ -57,7 +52,10 @@ export function ProjectDetailPage() {
 				<Alert tone="danger" title={t("projectDetail.loadFailed")}>
 					{errorMessage(project.error)}
 				</Alert>
-				<Button onClick={() => void project.refetch()}>
+				<Button
+					loading={project.isFetching}
+					onClick={() => void project.refetch()}
+				>
 					{t("common.cta.retry")}
 				</Button>
 			</div>
@@ -128,8 +126,8 @@ function ProjectDetail({ project }: { project: Project }) {
 	const state: ResourcesState = query.isPending
 		? { status: "loading" }
 		: query.isError
-			? { status: "error", error: query.error }
-			: { status: "ready", resources };
+			? { status: "error", error: query.error, retrying: query.isFetching }
+			: { status: "ready", resources, refreshing: query.isFetching };
 
 	return (
 		<section
@@ -141,6 +139,7 @@ function ProjectDetail({ project }: { project: Project }) {
 				project={project}
 				resources={resources}
 				busy={actions.busy}
+				pressed={actions.pressed}
 				onNewResource={openNew}
 				onImport={openImport}
 				onGenerateAll={() => void actions.generateAll()}

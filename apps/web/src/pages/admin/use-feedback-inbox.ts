@@ -23,8 +23,8 @@ export type InboxListState =
 
 /**
  * Inbox data: the current page for the filter, follow-up status changes
- * and deletes. Every change of filter or page shows the loading state; a
- * page left empty (its last message deleted or moved out of the filter)
+ * and deletes. A change of filter or page keeps the shown messages while
+ * the next ones load (`fetching`); a page left empty (its last message deleted or moved out of the filter)
  * moves back to the last page that has messages.
  */
 export function useFeedbackInbox() {
@@ -35,29 +35,36 @@ export function useFeedbackInbox() {
 	const [state, setState] = useState<InboxListState>({ status: "loading" });
 	const [reload, setReload] = useState(0);
 	const [forbidden, setForbidden] = useState(false);
-	const [pendingId, setPendingId] = useState<string | null>(null);
+	const [fetching, setFetching] = useState(true);
+	/** The message whose status is changing, and to what. */
+	const [pending, setPending] = useState<{
+		id: string;
+		status: MessageStatus;
+	} | null>(null);
 	const refresh = () => setReload((n) => n + 1);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: `reload` is the retry/refresh trigger, read by nothing else.
 	useEffect(() => {
 		let active = true;
-		setState({ status: "loading" });
-		fetchContactMessages(filter, page).then(
-			(value) => {
-				if (!active) return;
-				const last = Math.max(1, Math.ceil(value.total / INBOX_PAGE_SIZE));
-				if (value.items.length === 0 && page > last) {
-					setPage(last);
-					return;
-				}
-				setState({ status: "ready", page: value });
-			},
-			(error: unknown) => {
-				if (!active) return;
-				if (isForbidden(error)) setForbidden(true);
-				setState({ status: "error", error });
-			},
-		);
+		setFetching(true);
+		fetchContactMessages(filter, page)
+			.then(
+				(value) => {
+					if (!active) return;
+					const last = Math.max(1, Math.ceil(value.total / INBOX_PAGE_SIZE));
+					if (value.items.length === 0 && page > last) {
+						setPage(last);
+						return;
+					}
+					setState({ status: "ready", page: value });
+				},
+				(error: unknown) => {
+					if (!active) return;
+					if (isForbidden(error)) setForbidden(true);
+					setState({ status: "error", error });
+				},
+			)
+			.finally(() => active && setFetching(false));
 		return () => {
 			active = false;
 		};
@@ -69,7 +76,7 @@ export function useFeedbackInbox() {
 	}
 
 	async function changeStatus(item: ContactMessage, status: MessageStatus) {
-		setPendingId(item.id);
+		setPending({ id: item.id, status });
 		try {
 			const updated = await setMessageStatus(item.id, status);
 			toast.show({
@@ -98,7 +105,7 @@ export function useFeedbackInbox() {
 		} catch (error) {
 			toast.show({ tone: "error", title: errorMessage(error) });
 		} finally {
-			setPendingId(null);
+			setPending(null);
 		}
 	}
 
@@ -120,7 +127,8 @@ export function useFeedbackInbox() {
 		total,
 		state,
 		forbidden,
-		pendingId,
+		fetching,
+		pending,
 		refresh,
 		changeStatus,
 		remove,

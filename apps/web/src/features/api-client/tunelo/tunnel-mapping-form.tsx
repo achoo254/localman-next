@@ -103,7 +103,8 @@ export function TunnelMappingForm({
 				<Button
 					type="submit"
 					variant="primary"
-					disabled={busy || !domains || noDomains}
+					loading={busy}
+					disabled={!domains || noDomains}
 					data-id="tunelo-mapping-save"
 				>
 					{t("apiClientTunelo.form.add")}

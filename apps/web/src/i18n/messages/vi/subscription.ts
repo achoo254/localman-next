@@ -40,7 +40,6 @@ export const subscription: Messages["subscription"] = {
 	proInterest: {
 		title: "Liên hệ về gói Pro",
 		submit: "Gửi đăng ký",
-		submitting: "Đang gửi…",
 		successTitle: "Đã ghi nhận",
 		successText: "Chúng tôi sẽ liên hệ qua email bạn để lại: <b>{email}</b>.",
 		intro:

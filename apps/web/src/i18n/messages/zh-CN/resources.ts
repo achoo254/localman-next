@@ -50,7 +50,6 @@ export const resources: Messages["resources"] = {
 		titleEdit: "编辑 resource · {name}",
 		create: "创建 resource",
 		update: "更新",
-		saving: "正在保存…",
 		nameLabel: "Resource 名称",
 		nameHint:
 			"用作 endpoint 路径，例如 <code>/users</code>。只能包含不带声调的字母、数字、<code>-</code> 和 <code>_</code>。",
@@ -93,7 +92,6 @@ export const resources: Messages["resources"] = {
 		loadFailed: "无法加载数据",
 		jsonLabel: "{name} 的 JSON 数据",
 		update: "更新",
-		updating: "正在更新…",
 		confirmTitle: "更新数据",
 		confirmQuestion: "替换“{name}”的数据？",
 		notArray: "数据必须是一个 JSON 数组。",

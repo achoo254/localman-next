@@ -1,6 +1,11 @@
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "../../lib/cn";
-import { type ButtonVariant, buttonClassName } from "./button";
+import {
+	ButtonSpinner,
+	type ButtonVariant,
+	buttonClassName,
+	pendingButtonProps,
+} from "./button";
 
 export type IconButtonSize = "sm" | "md";
 
@@ -12,6 +17,8 @@ export interface IconButtonProps
 	icon: ReactNode;
 	variant?: ButtonVariant;
 	size?: IconButtonSize;
+	/** Spinner in place of the icon; inert and `aria-busy` meanwhile. */
+	loading?: boolean;
 }
 
 /** 32/36px squares; 40/44px on touch screens so the tap target stays large. */
@@ -20,11 +27,17 @@ const SQUARE: Record<IconButtonSize, string> = {
 	md: "size-9 pointer-coarse:size-11",
 };
 
+const SPINNER_SIZE: Record<IconButtonSize, number> = { sm: 16, md: 20 };
+
 export function IconButton({
 	label,
 	icon,
 	variant = "ghost",
 	size = "md",
+	loading = false,
+	disabled,
+	onClick,
+	"aria-disabled": ariaDisabled,
 	className,
 	type = "button",
 	...rest
@@ -34,14 +47,16 @@ export function IconButton({
 			type={type}
 			aria-label={label}
 			data-variant={variant}
+			{...pendingButtonProps({ loading, disabled, ariaDisabled, onClick })}
 			className={cn(
 				buttonClassName({ variant, size, iconOnly: true }),
 				SQUARE[size],
+				loading && "relative",
 				className,
 			)}
 			{...rest}
 		>
-			{icon}
+			{loading ? <ButtonSpinner size={SPINNER_SIZE[size]} /> : icon}
 		</button>
 	);
 }

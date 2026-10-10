@@ -62,7 +62,8 @@ export function TunnelPasteForm({
 				<Button
 					type="submit"
 					variant="secondary"
-					disabled={busy || !domains || noDomains}
+					loading={busy}
+					disabled={!domains || noDomains}
 					data-id="tunelo-paste-submit"
 				>
 					{t("apiClientTunelo.panel.pasteSubmit")}

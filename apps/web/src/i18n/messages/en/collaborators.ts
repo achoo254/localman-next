@@ -44,7 +44,6 @@ export const collaborators = {
 		hint: "No hoandat account yet? Enter their email to create a one-time invite link (valid for 7 days).",
 		placeholder: "@username or name@example.com",
 		submit: "Invite",
-		searching: "Searching…",
 		empty: "Enter a username or email.",
 		linkLabel: "Invite link for {who}",
 		linkHint: "Expires {date}. The link is shown only this once.",
@@ -56,9 +55,7 @@ export const collaborators = {
 	},
 	invitee: {
 		confirm: "Confirm invite",
-		confirming: "Inviting…",
 		createLink: "Create invite link",
-		creatingLink: "Creating link…",
 		noAccount:
 			"No account uses <b>{email}</b> yet. Create a one-time invite link (valid for 7 days) tied to this email, then send it to them yourself.",
 		unverifiedWarning:
@@ -88,7 +85,6 @@ export const collaborators = {
 		shownOnce: "The link is shown only this once. Copy it before you close.",
 		expires: "Expires {date}.",
 		copy: "Copy link",
-		creating: "Creating…",
 		create: "Create magic link",
 		regenerate: "Create new link",
 		regenerateQuestion: "Create a new magic link?",

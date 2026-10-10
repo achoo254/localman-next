@@ -56,7 +56,6 @@ export const trafficLog: Messages["trafficLog"] = {
 		ms: "{ms} ms",
 		loading: "正在加载 request…",
 		more: "加载更早的 request",
-		loadingMore: "正在加载…",
 	},
 	empty:
 		"还没有 request。调用 <code>{url}</code> 的任意路由，它会立即出现在这里。",
@@ -66,7 +65,6 @@ export const trafficLog: Messages["trafficLog"] = {
 	actions: {
 		replay: "重放",
 		replayAria: "重放 {method} {path}",
-		replaying: "正在重放…",
 		openClient: "在 API Client 中打开",
 		openClientAria: "在 API Client 中打开：{method} {path}",
 	},

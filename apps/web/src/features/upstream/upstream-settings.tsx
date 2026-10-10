@@ -1,11 +1,14 @@
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
+import { PanelProgress } from "../../components/ui/panel-progress";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import type { Project } from "../../pages/projects/projects-api";
 import { MaskedHeaders } from "./masked-headers";
 import { ReadonlyNote } from "./readonly-note";
 import { UpstreamForm } from "./upstream-form";
+import { UpstreamSkeleton } from "./upstream-skeleton";
 import { useTrafficSettings } from "./use-traffic-settings";
 
 export interface UpstreamSettingsProps {
@@ -20,6 +23,7 @@ export interface UpstreamSettingsProps {
 export function UpstreamSettings({ project }: UpstreamSettingsProps) {
 	const t = useT();
 	const query = useTrafficSettings(project.id);
+	const skeleton = useDelayedFlag(query.isPending);
 	return (
 		<div className="grid gap-6 p-6">
 			<div className="grid gap-2">
@@ -30,30 +34,37 @@ export function UpstreamSettings({ project }: UpstreamSettingsProps) {
 					{renderRich(t("upstream.intro", { baseUrl: project.mockBaseUrl }))}
 				</p>
 			</div>
-			{query.isPending ? (
-				<p className="m-0 text-muted text-sm">{t("upstream.loading")}</p>
-			) : query.isError ? (
+			{skeleton ? (
+				<UpstreamSkeleton />
+			) : query.isPending ? null : query.isError ? (
 				<Alert tone="danger" data-id="project-detail-upstream-error">
 					<p className="m-0">{t("upstream.loadFailed")}</p>
 					<Button
 						size="sm"
 						className="mt-2"
+						loading={query.isFetching}
 						onClick={() => void query.refetch()}
 					>
 						{t("common.cta.retry")}
 					</Button>
 				</Alert>
 			) : (
-				<>
-					{query.data.canManage ? null : (
-						<ReadonlyNote data-id="project-detail-upstream-readonly">
-							{t("upstream.readonly")}
-						</ReadonlyNote>
-					)}
-					<UpstreamForm projectId={project.id} settings={query.data} />
-					<p className="m-0 text-muted text-sm">{t("upstream.quotaNote")}</p>
-					<MaskedHeaders projectId={project.id} settings={query.data} />
-				</>
+				<PanelProgress
+					data-id="project-detail-upstream-panel"
+					active={query.isFetching}
+					aria-busy={query.isFetching || undefined}
+				>
+					<div className="grid gap-6">
+						{query.data.canManage ? null : (
+							<ReadonlyNote data-id="project-detail-upstream-readonly">
+								{t("upstream.readonly")}
+							</ReadonlyNote>
+						)}
+						<UpstreamForm projectId={project.id} settings={query.data} />
+						<p className="m-0 text-muted text-sm">{t("upstream.quotaNote")}</p>
+						<MaskedHeaders projectId={project.id} settings={query.data} />
+					</div>
+				</PanelProgress>
 			)}
 		</div>
 	);

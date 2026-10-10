@@ -10,8 +10,10 @@ import { useCurrentUser } from "../../features/auth/use-current-user";
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { useAppTitle } from "../../lib/use-document-title";
 import { AdminNav } from "./admin-nav";
+import { ProInterestStatsSkeleton } from "./admin-skeletons";
 import {
 	type ProInterestStats,
 	fetchStats,
@@ -68,6 +70,7 @@ function ProInterestDashboard() {
 	const t = useT();
 	const [stats, setStats] = useState<StatsState>({ status: "loading" });
 	const [forbidden, setForbidden] = useState(false);
+	const statsSkeleton = useDelayedFlag(stats.status === "loading");
 
 	const loadStats = useCallback(async () => {
 		try {
@@ -93,12 +96,10 @@ function ProInterestDashboard() {
 				<Badge tone="accent">{t("admin.ownerOnly")}</Badge>
 			</div>
 			<AdminNav />
-			{stats.status === "loading" ? (
-				<output className="block font-mono text-muted text-sm">
-					{t("admin.pro.statsLoading")}
-				</output>
+			{statsSkeleton ? (
+				<ProInterestStatsSkeleton label={t("admin.pro.statsLoading")} />
 			) : null}
-			{stats.status === "error" ? (
+			{stats.status === "error" && !statsSkeleton ? (
 				<div className="grid justify-items-start gap-3">
 					<Alert tone="danger" title={t("admin.pro.statsFailed")}>
 						{errorMessage(stats.error)}
@@ -108,7 +109,7 @@ function ProInterestDashboard() {
 					</Button>
 				</div>
 			) : null}
-			{stats.status === "ready" ? (
+			{stats.status === "ready" && !statsSkeleton ? (
 				<ProInterestStatsView stats={stats.stats} />
 			) : null}
 			<ProInterestList

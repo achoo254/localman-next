@@ -65,7 +65,6 @@ export const resourceImport = {
 		"Turn off related resources, or ask the project owner to upgrade.",
 	managePlan: "Manage plan",
 	submit: "Create resource",
-	creating: "Creating…",
 	errors: {
 		tooLarge:
 			"The file is {size} KB, over the 2 MB limit. Use a smaller file or split it.",

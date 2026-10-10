@@ -110,7 +110,7 @@ export function ProInterestFilters({
 			</span>
 			<Button
 				data-id="admin-pro-export"
-				disabled={exporting}
+				loading={exporting}
 				leadingIcon={<IconDownload size={16} aria-hidden="true" />}
 				onClick={onExport}
 			>

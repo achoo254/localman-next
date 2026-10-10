@@ -92,13 +92,18 @@ describe("bulk buttons stay busy", () => {
 		await findNode("users");
 		const generateAll = screen.getByRole("button", { name: "Generate all" });
 		await userEvent.click(generateAll);
-		await waitFor(() => expect(generateAll).toBeDisabled());
+		// The pressed button spins and stays focused; the other one waits.
+		await waitFor(() =>
+			expect(generateAll).toHaveAttribute("aria-busy", "true"),
+		);
+		expect(generateAll).toHaveAttribute("aria-disabled", "true");
 		expect(screen.getByRole("button", { name: "Reset all" })).toBeDisabled();
 		real.release({
 			body: { dryRun: false, changes: [change("users", 0, 10)] },
 		});
 		expect(await findToast("1 resource has new data.")).toBeInTheDocument();
 		expect(generateAll).toBeEnabled();
+		expect(generateAll).not.toHaveAttribute("aria-busy");
 	});
 });
 

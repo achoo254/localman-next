@@ -4,27 +4,25 @@ import { Suspense, lazy, useId, useRef, useState } from "react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
 import { EmptyState } from "../../components/ui/empty-state";
+import { PanelProgress } from "../../components/ui/panel-progress";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
-import { splitMockBaseUrl } from "../../pages/project-detail/mock-url-parts";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import type { Project } from "../../pages/projects/projects-api";
 import { ReadonlyNote } from "../upstream/readonly-note";
 import { DeleteInboxModal } from "./delete-inbox-modal";
 import { type InboxView, fetchInboxes, inboxesKey } from "./inbox-api";
 import { InboxItem } from "./inbox-item";
+import { InboxSkeleton } from "./inbox-skeleton";
+import {
+	type InboxLogFilter,
+	inboxLogFilter,
+	inboxUrlBase,
+} from "./inbox-urls";
 
 const InboxFormModal = lazy(async () => ({
 	default: (await import("./inbox-form-modal")).InboxFormModal,
 }));
-
-/** Path segment of every inbox, as the request log shows it. */
-const INBOX_SEGMENT = "/_inbox/";
-
-/** The request log filter of one inbox's requests. */
-export interface InboxLogFilter {
-	source: "inbox";
-	path: string;
-}
 
 export interface InboxTabProps {
 	project: Project;
@@ -38,16 +36,6 @@ type Dialog =
 	| { kind: "none" }
 	| { kind: "form"; inbox: InboxView | null }
 	| { kind: "delete"; inbox: InboxView };
-
-/** `https://{secret}.{mock host}/_inbox/`, outside the project prefix. */
-function inboxUrlBase(project: Project): string {
-	const url = splitMockBaseUrl(
-		project.mockBaseUrl,
-		project.secret,
-		project.prefix,
-	);
-	return `${url.scheme}${url.secret ?? ""}${url.host}${INBOX_SEGMENT}`;
-}
 
 /**
  * The Inbox tab of the endpoint card: the project's webhook inboxes with
@@ -63,24 +51,28 @@ export function InboxTab({ project, onShowLogs, onPlanLimit }: InboxTabProps) {
 		queryKey: inboxesKey(project.id),
 		queryFn: () => fetchInboxes(project.id),
 	});
+	const skeleton = useDelayedFlag(query.isPending);
 	const close = () => setDialog({ kind: "none" });
 
 	let body = null;
 	let manage = false;
-	if (query.isPending) {
-		body = (
-			<p className="m-0 text-muted text-sm">{t("webhookInbox.loading")}</p>
-		);
+	if (skeleton) {
+		body = <InboxSkeleton />;
 	} else if (query.isError) {
 		body = (
 			<Alert tone="danger">
 				{t("webhookInbox.loadFailed")}{" "}
-				<Button size="sm" variant="ghost" onClick={() => void query.refetch()}>
+				<Button
+					size="sm"
+					variant="ghost"
+					loading={query.isFetching}
+					onClick={() => void query.refetch()}
+				>
 					{t("common.cta.retry")}
 				</Button>
 			</Alert>
 		);
-	} else {
+	} else if (query.isSuccess) {
 		const { items, used, max, canManage } = query.data;
 		manage = canManage;
 		const create = () =>
@@ -109,44 +101,45 @@ export function InboxTab({ project, onShowLogs, onPlanLimit }: InboxTabProps) {
 						{t("webhookInbox.readonly")}
 					</ReadonlyNote>
 				)}
-				{items.length === 0 ? (
-					<EmptyState
-						icon={<IconWebhook size={32} aria-hidden="true" />}
-						title={t("webhookInbox.empty.title")}
-						data-id="inbox-empty"
-						action={
-							canManage ? (
-								<Button
-									variant="primary"
-									onClick={create}
-									data-id="inbox-empty-new"
-								>
-									{t("webhookInbox.create")}
-								</Button>
-							) : null
-						}
-					>
-						{t("webhookInbox.empty.body")}
-					</EmptyState>
-				) : (
-					<ul className="m-0 grid list-none gap-3 p-0" data-id="inbox-list">
-						{items.map((inbox) => (
-							<InboxItem
-								key={inbox.id}
-								inbox={inbox}
-								manage={canManage}
-								onShowLogs={() =>
-									onShowLogs({
-										source: "inbox",
-										path: `${INBOX_SEGMENT}${inbox.name}`,
-									})
-								}
-								onEdit={() => setDialog({ kind: "form", inbox })}
-								onDelete={() => setDialog({ kind: "delete", inbox })}
-							/>
-						))}
-					</ul>
-				)}
+				<PanelProgress
+					data-id="inbox-panel"
+					active={query.isFetching}
+					aria-busy={query.isFetching || undefined}
+				>
+					{items.length === 0 ? (
+						<EmptyState
+							icon={<IconWebhook size={32} aria-hidden="true" />}
+							title={t("webhookInbox.empty.title")}
+							data-id="inbox-empty"
+							action={
+								canManage ? (
+									<Button
+										variant="primary"
+										onClick={create}
+										data-id="inbox-empty-new"
+									>
+										{t("webhookInbox.create")}
+									</Button>
+								) : null
+							}
+						>
+							{t("webhookInbox.empty.body")}
+						</EmptyState>
+					) : (
+						<ul className="m-0 grid list-none gap-3 p-0" data-id="inbox-list">
+							{items.map((inbox) => (
+								<InboxItem
+									key={inbox.id}
+									inbox={inbox}
+									manage={canManage}
+									onShowLogs={() => onShowLogs(inboxLogFilter(inbox.name))}
+									onEdit={() => setDialog({ kind: "form", inbox })}
+									onDelete={() => setDialog({ kind: "delete", inbox })}
+								/>
+							))}
+						</ul>
+					)}
+				</PanelProgress>
 			</>
 		);
 	}

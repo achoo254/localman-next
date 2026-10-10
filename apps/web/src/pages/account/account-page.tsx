@@ -13,10 +13,12 @@ import {
 	fetchAccountUsage,
 } from "../../features/subscription/account-usage-api";
 import { UsageMeter } from "../../features/subscription/usage-meter";
+import { UsageMetersSkeleton } from "../../features/subscription/usage-meters-skeleton";
 import { useSubscriptionDialogs } from "../../features/subscription/use-subscription-dialogs";
 import { useI18n } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { useAppTitle } from "../../lib/use-document-title";
 
 type UsageState =
@@ -46,8 +48,11 @@ export function AccountPage() {
 	const { t, formatDate } = useI18n();
 	useAppTitle(t("account.title"));
 	const session = useCurrentUser();
+	const flags = useFeatures();
 	const user = session.status === "authenticated" ? session.user : null;
 	const [state, setState] = useState<UsageState>({ status: "loading" });
+	// Held its minimum time even when the usage comes back sooner.
+	const skeleton = useDelayedFlag(state.status === "loading");
 	const plan =
 		state.status === "ready" ? state.usage.plan : (user?.plan ?? "free");
 	const subscription = useSubscriptionDialogs(plan, "account");
@@ -116,12 +121,15 @@ export function AccountPage() {
 					</Button>
 				</div>
 			</section>
-			{state.status === "loading" ? (
-				<output className="block font-mono text-muted text-sm">
-					{t("account.usage.loading")}
-				</output>
+			{skeleton ? (
+				<UsageMetersSkeleton
+					data-id="account-meters-loading"
+					label={t("account.usage.loading")}
+					count={flags.apiClient ? 3 : 2}
+					className="grid gap-4 md:grid-cols-2"
+				/>
 			) : null}
-			{state.status === "error" ? (
+			{state.status === "error" && !skeleton ? (
 				<div
 					data-id="account-meters-error"
 					className="grid justify-items-start gap-3"
@@ -132,7 +140,9 @@ export function AccountPage() {
 					<Button onClick={() => void load()}>{t("common.cta.retry")}</Button>
 				</div>
 			) : null}
-			{state.status === "ready" ? <AccountMeters usage={state.usage} /> : null}
+			{state.status === "ready" && !skeleton ? (
+				<AccountMeters usage={state.usage} />
+			) : null}
 			{subscription.element}
 		</section>
 	);

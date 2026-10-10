@@ -36,7 +36,6 @@ export const apiClient = {
 		route: "Route",
 		routes: { auto: "Auto", direct: "Direct", proxy: "Proxy" },
 		send: "Send",
-		sending: "Sending…",
 		parts: "Parts of the request",
 		tabs: {
 			params: "Params",

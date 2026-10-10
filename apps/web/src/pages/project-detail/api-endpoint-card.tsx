@@ -9,7 +9,6 @@ import {
 import type { ReactNode } from "react";
 import { Button } from "../../components/ui/button";
 import { cardClassName } from "../../components/ui/card";
-import { Tooltip } from "../../components/ui/tooltip";
 import { useFeatures } from "../../config/features";
 import { OpenProjectInClientButton } from "../../features/api-client/open-in/open-project-in-client-button";
 import { useT } from "../../i18n/i18n-context";
@@ -17,12 +16,17 @@ import { cn } from "../../lib/cn";
 import type { Project } from "../projects/projects-api";
 import { EndpointTabs } from "./endpoint-tabs";
 import { splitMockBaseUrl } from "./mock-url-parts";
+import { UrlChip } from "./url-chip";
+import type { BulkAction } from "./use-project-actions";
 
 export interface ApiEndpointCardProps {
 	project: Project;
 	/** Resources of the project, for the tools of the MCP tab. */
 	resources: readonly MockToolNode[];
+	/** A data write runs: the bulk buttons wait for it. */
 	busy: boolean;
+	/** The bulk button whose request runs shows a spinner. */
+	pressed: BulkAction | null;
 	onNewResource: () => void;
 	/** Opens "Import resource" (released with `mockPowerUps`). */
 	onImport: () => void;
@@ -37,35 +41,6 @@ export interface ApiEndpointCardProps {
 	inbox?: ReactNode;
 }
 
-/** Tinted chip with a tooltip, focusable so keyboard users can read it. */
-function UrlChip({
-	tone,
-	tip,
-	children,
-	"data-id": dataId,
-}: {
-	tone: string;
-	tip: string;
-	children: ReactNode;
-	"data-id": string;
-}) {
-	return (
-		<Tooltip content={tip}>
-			<span
-				// biome-ignore lint/a11y/noNoninteractiveTabindex: the chip only reveals its tooltip; focus lets keyboard users reach that explanation.
-				tabIndex={0}
-				data-id={dataId}
-				className={cn(
-					"tint-soft cursor-help whitespace-nowrap rounded-sm border px-1.5 py-0.5 font-semibold text-(--tone)",
-					tone,
-				)}
-			>
-				{children}
-			</span>
-		</Tooltip>
-	);
-}
-
 /**
  * "API endpoint": the mock base URL with secret, prefix and `:endpoint`
  * coloured and explained, then New resource / Generate all / Reset all.
@@ -76,6 +51,7 @@ export function ApiEndpointCard({
 	project,
 	resources,
 	busy,
+	pressed,
 	onNewResource,
 	onImport,
 	onGenerateAll,
@@ -166,7 +142,8 @@ export function ApiEndpointCard({
 				) : null}
 				<Button
 					data-id="project-detail-generate-all"
-					disabled={busy}
+					disabled={busy && pressed !== "generateAll"}
+					loading={pressed === "generateAll"}
 					leadingIcon={<IconBolt size={20} aria-hidden="true" />}
 					onClick={onGenerateAll}
 				>
@@ -175,7 +152,8 @@ export function ApiEndpointCard({
 				<Button
 					variant="ghost"
 					data-id="project-detail-reset-all"
-					disabled={busy}
+					disabled={busy && pressed !== "resetAll"}
+					loading={pressed === "resetAll"}
 					leadingIcon={<IconRefresh size={20} aria-hidden="true" />}
 					onClick={onResetAll}
 				>

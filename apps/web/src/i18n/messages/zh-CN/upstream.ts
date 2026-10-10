@@ -36,7 +36,6 @@ export const upstream: Messages["upstream"] = {
 		blocked: "该地址指向私有网络，Localman 无法转发到这里。",
 	},
 	save: "保存 upstream",
-	saving: "正在保存…",
 	saved:
 		"已将 upstream 设为 <code>{label}</code>。mock 未覆盖的路由现在会转发到这里。",
 	saveFailed: "无法保存 upstream",

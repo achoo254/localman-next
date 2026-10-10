@@ -15,7 +15,6 @@ export const mockCallbacks = {
 	loading: "Loading callbacks…",
 	loadFailed: "Couldn't load the callbacks. Try again.",
 	save: "Save callbacks",
-	saving: "Saving…",
 	unsaved: "Unsaved changes",
 	saved: "Saved the callbacks.",
 	invalid: "A callback isn't valid. Check the marked fields.",
@@ -39,7 +38,6 @@ export const mockCallbacks = {
 	},
 	test: {
 		send: "Send test",
-		sending: "Sending…",
 		sent: "Sent a test callback to <code>{target}</code>.",
 		failed: {
 			one: "The test to <code>{target}</code> failed after {count} attempt.",

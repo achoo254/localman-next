@@ -57,8 +57,6 @@ export const webhookInbox: Messages["webhookInbox"] = {
 		target: "目标：<code>{target}</code>",
 		submitNew: "创建 inbox",
 		submitEdit: "保存 inbox",
-		creating: "正在创建…",
-		saving: "正在保存…",
 		created:
 			"已创建 inbox <code>{name}</code>。请把它的 URL 粘贴到发送方的 webhook 设置中。",
 		saved: "已保存 inbox <code>{name}</code>。",

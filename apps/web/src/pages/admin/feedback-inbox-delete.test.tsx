@@ -40,7 +40,7 @@ describe("FeedbackInboxPage deletes and paging", () => {
 		const { calls } = renderInbox(true, {
 			[`GET ${LIST_PATH}`]: ({ query }) =>
 				query.get("page") === "2"
-					? // Held a moment so the loading state is visible.
+					? // Held a moment so the refresh state is visible.
 						new Promise((resolve) =>
 							setTimeout(
 								() =>
@@ -61,7 +61,15 @@ describe("FeedbackInboxPage deletes and paging", () => {
 		});
 		await screen.findByRole("heading", { name: "Bug report · Lan" });
 		await userEvent.click(screen.getByRole("button", { name: "Next page" }));
-		expect(await screen.findByText("Loading the inbox…")).toBeInTheDocument();
+		// The shown messages stay while the next page loads.
+		await waitFor(() =>
+			expect(
+				document.querySelector('[data-id="admin-feedback-list"]'),
+			).toHaveAttribute("aria-busy", "true"),
+		);
+		expect(
+			screen.getByRole("heading", { name: "Bug report · Lan" }),
+		).toBeInTheDocument();
 		await waitFor(() => {
 			const pages = calls
 				.filter((c) => c.path === LIST_PATH)

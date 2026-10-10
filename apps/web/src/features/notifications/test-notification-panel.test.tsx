@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { type MockReply, mockFetch } from "../../test/mock-fetch";
@@ -68,9 +68,13 @@ describe("TestNotificationPanel", () => {
 		const stop = onNotificationsChanged(changed);
 		const { calls, onTelegramActivated } = renderPanel(() => held);
 
-		await userEvent.click(screen.getByRole("button", SEND));
-		const busy = await screen.findByRole("button", { name: "Sending…" });
-		expect(busy).toBeDisabled();
+		const send = screen.getByRole("button", SEND);
+		await userEvent.click(send);
+		// Spins in place: same name, still focused, a second press is ignored.
+		await waitFor(() => expect(send).toHaveAttribute("aria-busy", "true"));
+		expect(send).toHaveFocus();
+		await userEvent.click(send);
+		expect(calls.filter((c) => c.method === "POST")).toHaveLength(1);
 		expect(calls.some((c) => c.method === "POST")).toBe(true);
 
 		answer({ body: { inApp: "sent", webPush: "sent", telegram: "sent" } });

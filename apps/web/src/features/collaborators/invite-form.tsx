@@ -85,15 +85,12 @@ export function InviteForm({
 								type="submit"
 								variant="primary"
 								data-id="modal-collaborators-invite"
-								disabled={flow.checking || flow.confirming}
+								disabled={flow.confirming}
+								loading={flow.checking}
 								className="min-h-11"
 								leadingIcon={<IconPlus size={16} aria-hidden="true" />}
 							>
-								{t(
-									flow.checking
-										? "collaborators.form.searching"
-										: "collaborators.form.submit",
-								)}
+								{t("collaborators.form.submit")}
 							</Button>
 						</div>
 					</FormField>

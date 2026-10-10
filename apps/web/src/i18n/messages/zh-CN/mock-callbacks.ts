@@ -15,7 +15,6 @@ export const mockCallbacks: Messages["mockCallbacks"] = {
 	loading: "正在加载 callback…",
 	loadFailed: "无法加载 callback，请重试。",
 	save: "保存 callback",
-	saving: "正在保存…",
 	unsaved: "有未保存的更改",
 	saved: "已保存 callback。",
 	invalid: "有 callback 无效，请检查标记的字段。",
@@ -39,7 +38,6 @@ export const mockCallbacks: Messages["mockCallbacks"] = {
 	},
 	test: {
 		send: "发送测试",
-		sending: "正在发送…",
 		sent: "已向 <code>{target}</code> 发送测试 callback。",
 		failed: {
 			other: "向 <code>{target}</code> 发送测试失败，已尝试 {count} 次。",

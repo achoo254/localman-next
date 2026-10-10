@@ -27,7 +27,7 @@ describe("EventPreferencesTable", () => {
 			<EventPreferencesTable
 				events={[event("project.invitation", "Lời mời cộng tác project")]}
 				channels={CHANNELS}
-				onSave={async () => {}}
+				onToggle={() => {}}
 			/>,
 		);
 		expect(
@@ -47,7 +47,7 @@ describe("EventPreferencesTable", () => {
 			<EventPreferencesTable
 				events={[event("billing.renewal", "Plan renewal")]}
 				channels={CHANNELS}
-				onSave={async () => {}}
+				onToggle={() => {}}
 			/>,
 		);
 		expect(

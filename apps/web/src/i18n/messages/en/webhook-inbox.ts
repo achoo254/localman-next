@@ -58,8 +58,6 @@ export const webhookInbox = {
 		target: "Target: <code>{target}</code>",
 		submitNew: "Create inbox",
 		submitEdit: "Save inbox",
-		creating: "Creating…",
-		saving: "Saving…",
 		created:
 			"Created inbox <code>{name}</code>. Paste its URL into the sender's webhook settings.",
 		saved: "Saved inbox <code>{name}</code>.",

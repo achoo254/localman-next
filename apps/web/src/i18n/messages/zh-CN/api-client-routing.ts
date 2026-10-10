@@ -82,6 +82,7 @@ export const apiClientRouting: Messages["apiClientRouting"] = {
 	quota: { plans: "查看套餐" },
 	settings: {
 		title: "路由",
+		loading: "正在加载路由设置…",
 		defaultRoute: "新请求的路由",
 		defaultHint:
 			"Auto 从浏览器直接发送，无法直连时（CORS、fetch 无法设置的请求头、关闭重定向）改走代理。本地地址则使用 Tunelo。Send 旁的选项可按请求覆盖。",

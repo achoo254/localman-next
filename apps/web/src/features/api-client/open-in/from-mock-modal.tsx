@@ -1,14 +1,42 @@
 import { IconDatabase } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { Alert } from "../../../components/ui/alert";
 import { Button } from "../../../components/ui/button";
 import { Modal, ModalClose } from "../../../components/ui/modal";
 import { ModalFooter } from "../../../components/ui/modal-footer";
+import { Skeleton, SkeletonRegion } from "../../../components/ui/skeleton";
 import { useT } from "../../../i18n/i18n-context";
 import { renderRich } from "../../../i18n/rich-text";
 import { errorMessage } from "../../../lib/api-client";
+import { useDelayedFlag } from "../../../lib/use-delayed-flag";
 import { fetchProjects } from "../../../pages/projects/projects-api";
+
+const ROWS = [0, 1, 2];
+
+/** The project radios while the list loads, at the same size. */
+function ProjectChoicesSkeleton() {
+	const t = useT();
+	return (
+		<SkeletonRegion
+			data-id="modal-from-mock-loading"
+			label={t("apiClientOpen.fromMock.loading")}
+			className="grid gap-2"
+		>
+			<Skeleton className="mb-2 h-4 w-32" />
+			{ROWS.map((row) => (
+				<div
+					key={row}
+					className="flex min-h-11 items-center gap-3 rounded-md border border-border px-3 py-2"
+				>
+					<Skeleton variant="circle" className="size-4 shrink-0" />
+					<Skeleton className="size-4 shrink-0" />
+					<Skeleton className="h-4 w-40 max-w-full" />
+				</div>
+			))}
+		</SkeletonRegion>
+	);
+}
 
 export interface FromMockModalProps {
 	open: boolean;
@@ -30,6 +58,7 @@ export function FromMockModal({
 		enabled: open,
 	});
 	const [choice, setChoice] = useState<string | null>(null);
+	const skeleton = useDelayedFlag(open && projects.isPending);
 	const list = projects.data ?? [];
 	// The first project until the user picks one.
 	const picked =
@@ -41,12 +70,11 @@ export function FromMockModal({
 		onOpenChange(false);
 	};
 
-	let body = (
-		<output className="block font-mono text-muted text-sm">
-			{t("apiClientOpen.fromMock.loading")}
-		</output>
-	);
-	if (projects.isError) {
+	// Once shown, the skeleton stays its minimum time even if the list is back.
+	let body: ReactNode = null;
+	if (skeleton) {
+		body = <ProjectChoicesSkeleton />;
+	} else if (projects.isError) {
 		body = (
 			<div className="grid justify-items-start gap-3">
 				<Alert tone="danger" title={t("apiClientOpen.fromMock.loadFailed")}>

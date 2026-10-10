@@ -16,7 +16,6 @@ export const mockCallbacks: Messages["mockCallbacks"] = {
 	loading: "Đang tải callback…",
 	loadFailed: "Không tải được callback. Hãy thử lại.",
 	save: "Lưu callback",
-	saving: "Đang lưu…",
 	unsaved: "Có thay đổi chưa lưu",
 	saved: "Đã lưu callback.",
 	invalid: "Có callback chưa hợp lệ. Hãy xem các ô được đánh dấu.",
@@ -41,7 +40,6 @@ export const mockCallbacks: Messages["mockCallbacks"] = {
 	},
 	test: {
 		send: "Gửi thử",
-		sending: "Đang gửi…",
 		sent: "Đã gửi thử callback tới <code>{target}</code>.",
 		failed: {
 			other: "Gửi thử tới <code>{target}</code> thất bại sau {count} lần thử.",

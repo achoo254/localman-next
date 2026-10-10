@@ -141,12 +141,10 @@ export function InvitePreviewCard({
 						variant="primary"
 						block
 						data-id="invite-page-accept"
-						disabled={accepting}
+						loading={accepting}
 						onClick={onAccept}
 					>
-						{t(
-							accepting ? "invite.preview.accepting" : "invite.preview.accept",
-						)}
+						{t("invite.preview.accept")}
 					</Button>
 					<SwitchAccountButton variant="ghost" />
 				</>

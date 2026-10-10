@@ -85,14 +85,10 @@ export function ResourceFormModal({
 						type="submit"
 						form={formId}
 						variant="primary"
-						disabled={busy}
+						loading={busy}
 						data-id="resource-form-submit"
 					>
-						{busy
-							? t("resources.form.saving")
-							: editing
-								? t("resources.form.update")
-								: t("resources.form.create")}
+						{editing ? t("resources.form.update") : t("resources.form.create")}
 					</Button>
 				</ModalFooter>
 			}

@@ -1,6 +1,7 @@
 import {
 	type InfiniteData,
 	type UseInfiniteQueryResult,
+	keepPreviousData,
 	useInfiniteQuery,
 } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
@@ -24,6 +25,8 @@ export interface RequestLog {
  * The project's log under `filters`: pages of history (cursor) plus rows
  * arriving over the live stream while `live` is on and the page visible.
  * A stream that opens again after a gap reloads the history it missed.
+ * While a new filter loads, `history` holds the previous filter's pages
+ * (`isPlaceholderData`).
  */
 export function useRequestLog(
 	projectId: string,
@@ -37,6 +40,8 @@ export function useRequestLog(
 		queryFn: ({ pageParam }) => fetchLogPage(projectId, query, pageParam),
 		initialPageParam: FIRST_PAGE,
 		getNextPageParam: (last: LogPage) => last.nextCursor,
+		// A filter change keeps the rows on screen (dimmed) until its page arrives.
+		placeholderData: keepPreviousData,
 	});
 	const liveRows = useLiveRows(`${projectId}?${query}`);
 	const pages = history.data?.pages;

@@ -60,7 +60,6 @@ export const resources = {
 		titleEdit: "Edit resource · {name}",
 		create: "Create resource",
 		update: "Update",
-		saving: "Saving…",
 		nameLabel: "Resource name",
 		nameHint:
 			"Used as the endpoint path, for example <code>/users</code>. Only unaccented letters, numbers, <code>-</code> and <code>_</code>.",
@@ -103,7 +102,6 @@ export const resources = {
 		loadFailed: "Couldn't load the data",
 		jsonLabel: "JSON data of {name}",
 		update: "Update",
-		updating: "Updating…",
 		confirmTitle: "Update data",
 		confirmQuestion: "Replace the data of “{name}”?",
 		notArray: "The data must be a JSON array.",

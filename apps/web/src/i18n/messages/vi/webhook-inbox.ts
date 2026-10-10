@@ -57,8 +57,6 @@ export const webhookInbox: Messages["webhookInbox"] = {
 		target: "Đích: <code>{target}</code>",
 		submitNew: "Tạo inbox",
 		submitEdit: "Lưu inbox",
-		creating: "Đang tạo…",
-		saving: "Đang lưu…",
 		created:
 			"Đã tạo inbox <code>{name}</code>. Dán URL vào phần webhook của dịch vụ gửi.",
 		saved: "Đã lưu inbox <code>{name}</code>.",

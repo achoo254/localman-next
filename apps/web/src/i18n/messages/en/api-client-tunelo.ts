@@ -35,6 +35,7 @@ export const apiClientTunelo = {
 		title: "Mappings",
 		hint: "Requests to a mapped local address go through its tunnel, path and query kept. Only you see your mappings.",
 		empty: "No mapping yet.",
+		loading: "Loading mappings…",
 		use: "Use the tunnel for {key}",
 		delete: "Delete the mapping of {key}",
 	},

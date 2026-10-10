@@ -4,6 +4,7 @@ import { useEffect, useId, useState } from "react";
 import { useSearchParams } from "react-router";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
+import { PanelProgress } from "../../components/ui/panel-progress";
 import { Switch } from "../../components/ui/switch";
 import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
@@ -80,6 +81,8 @@ export function RequestLogPanel({ project }: { project: Project }) {
 	const canManage = settings.data?.canManage ?? false;
 	const history = log.history;
 	const announcement = log.live.announcement;
+	const refreshing =
+		history.isFetching && !history.isPending && !history.isFetchingNextPage;
 
 	const onCleared = () => {
 		log.live.clear();
@@ -129,38 +132,46 @@ export function RequestLogPanel({ project }: { project: Project }) {
 					<Button
 						size="sm"
 						className="mt-2"
+						loading={history.isFetching}
 						onClick={() => void history.refetch()}
 					>
 						{t("common.cta.retry")}
 					</Button>
 				</Alert>
 			) : (
-				<RequestLogTable
-					rows={log.rows}
-					loading={history.isPending}
-					filtered={filtersActive(filters)}
-					baseUrl={project.mockBaseUrl}
-					fresh={log.live.fresh}
-					selectedId={selected?.id ?? null}
-					detailId={detailId}
-					busy={actions.busy}
-					showOpen={apiClient}
-					onSelect={setSelected}
-					onAction={actions.run}
-					onClearFilters={() => setFilters(NO_FILTERS)}
-				/>
+				<PanelProgress
+					data-id="request-log-panel"
+					active={refreshing}
+					dim={history.isPlaceholderData}
+					aria-busy={refreshing || undefined}
+					className="min-w-0"
+				>
+					<RequestLogTable
+						rows={log.rows}
+						loading={history.isPending}
+						filtered={filtersActive(filters)}
+						baseUrl={project.mockBaseUrl}
+						fresh={log.live.fresh}
+						selectedId={selected?.id ?? null}
+						detailId={detailId}
+						busy={actions.busy}
+						showOpen={apiClient}
+						onSelect={setSelected}
+						onAction={actions.run}
+						onClearFilters={() => setFilters(NO_FILTERS)}
+					/>
+				</PanelProgress>
 			)}
 			{history.hasNextPage ? (
 				<Button
 					size="sm"
 					className="justify-self-start"
-					disabled={history.isFetchingNextPage}
+					disabled={history.isPlaceholderData}
+					loading={history.isFetchingNextPage}
 					onClick={() => void history.fetchNextPage()}
 					data-id="request-log-more"
 				>
-					{history.isFetchingNextPage
-						? t("trafficLog.table.loadingMore")
-						: t("trafficLog.table.more")}
+					{t("trafficLog.table.more")}
 				</Button>
 			) : null}
 			<p className="sr-only" aria-live="polite" data-id="request-log-announce">

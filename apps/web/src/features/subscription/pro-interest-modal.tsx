@@ -7,6 +7,7 @@ import { SuccessPanel } from "../../components/ui/success-panel";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
 import { useCurrentUser } from "../auth/use-current-user";
+import { FormSkeleton } from "./form-skeleton";
 import type { ProInterestSource } from "./pro-interest-options";
 
 // The form validates with the shared zod schema; load it (and zod) only
@@ -35,11 +36,7 @@ export function ProInterestModal({
 	const [sentTo, setSentTo] = useState<string | null>(null);
 	const user = session.status === "authenticated" ? session.user : null;
 
-	const loading = (
-		<output className="block font-mono text-muted text-sm">
-			{t("common.loading")}
-		</output>
-	);
+	const loading = <FormSkeleton data-id="pro-interest-loading" />;
 
 	function changeOpen(next: boolean) {
 		if (!next) setSentTo(null);
@@ -65,15 +62,11 @@ export function ProInterestModal({
 				type="submit"
 				form={formId}
 				variant="primary"
-				disabled={busy}
+				loading={busy}
 				data-id="pro-interest-submit"
 				leadingIcon={<IconSend size={16} aria-hidden="true" />}
 			>
-				{t(
-					busy
-						? "subscription.proInterest.submitting"
-						: "subscription.proInterest.submit",
-				)}
+				{t("subscription.proInterest.submit")}
 			</Button>
 		</ModalFooter>
 	);

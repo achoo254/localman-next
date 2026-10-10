@@ -9,6 +9,7 @@ import { Alert } from "../../components/ui/alert";
 import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
+import { TurnstileSkeleton } from "./form-skeleton";
 import {
 	type ProInterestConfig,
 	fetchProInterestConfig,
@@ -177,9 +178,10 @@ export function ProInterestForm({
 				/>
 			) : null}
 			{config.status === "loading" ? (
-				<output className="block font-mono text-muted text-sm">
-					{t("subscription.proInterest.preparingCheck")}
-				</output>
+				<TurnstileSkeleton
+					data-id="pro-interest-turnstile-loading"
+					label={t("subscription.proInterest.preparingCheck")}
+				/>
 			) : null}
 			{submitError ? (
 				<Alert tone="danger" data-id="pro-interest-error">

@@ -20,6 +20,9 @@ import { errorMessage } from "../../lib/api-client";
 import { toastText } from "./toast-text";
 import { useGenerateAction } from "./use-generate-action";
 
+/** A bulk button of the endpoint card. */
+export type BulkAction = "generateAll" | "resetAll";
+
 const withData = (changes: readonly DataChange[]) =>
 	changes.filter((change) => change.countBefore > 0);
 
@@ -28,7 +31,9 @@ const withData = (changes: readonly DataChange[]) =>
  * with a dry run first: when they would replace or reset existing records
  * the user confirms the listed changes, otherwise they run at once.
  * `busy` covers the dry run and the real write, so Generate all and Reset
- * all stay disabled until the request has finished.
+ * all stay disabled until the request has finished. `pressed` names the
+ * bulk button whose own request runs (its spinner); once a confirmation
+ * opens, that dialog's button spins instead.
  */
 export function useProjectActions(
 	projectId: string,
@@ -40,6 +45,7 @@ export function useProjectActions(
 	const cache = useResourceCache(projectId);
 	const generate = useGenerateAction(projectId, resources, askConfirm);
 	const [running, setRunning] = useState(0);
+	const [pressed, setPressed] = useState<BulkAction | null>(null);
 
 	async function whileBusy<T>(work: () => Promise<T>): Promise<T> {
 		setRunning((count) => count + 1);
@@ -47,6 +53,15 @@ export function useProjectActions(
 			return await work();
 		} finally {
 			setRunning((count) => count - 1);
+		}
+	}
+
+	async function whilePressed(action: BulkAction, work: () => Promise<void>) {
+		setPressed(action);
+		try {
+			await whileBusy(work);
+		} finally {
+			setPressed(null);
 		}
 	}
 
@@ -72,7 +87,7 @@ export function useProjectActions(
 	}
 
 	const generateAll = () =>
-		whileBusy(async () => {
+		whilePressed("generateAll", async () => {
 			if (resources.length === 0) {
 				toast.show({
 					tone: "info",
@@ -104,7 +119,7 @@ export function useProjectActions(
 		});
 
 	const resetAll = () =>
-		whileBusy(async () => {
+		whilePressed("resetAll", async () => {
 			const changes = await preview(() => resetAllData(projectId, true));
 			if (!changes) return;
 			if (withData(changes).length === 0) {
@@ -174,5 +189,12 @@ export function useProjectActions(
 		});
 	}
 
-	return { generate, generateAll, resetAll, move, busy: running > 0 };
+	return {
+		generate,
+		generateAll,
+		resetAll,
+		move,
+		busy: running > 0,
+		pressed,
+	};
 }

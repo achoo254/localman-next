@@ -75,6 +75,8 @@ export function ImportModal({
 	};
 	const isEnvironment = data?.format === "environment-v21";
 	const canSubmit = data !== null && (isEnvironment || selected.size > 0);
+	// The file is read or the text parsed: the button spins until it can import.
+	const processing = source.reading || source.parse.state === "detecting";
 
 	return (
 		<Modal
@@ -93,7 +95,8 @@ export function ImportModal({
 					<Button
 						variant="primary"
 						data-id="modal-import-submit"
-						disabled={!canSubmit}
+						loading={processing}
+						disabled={!canSubmit && !processing}
 						onClick={submit}
 					>
 						{isEnvironment

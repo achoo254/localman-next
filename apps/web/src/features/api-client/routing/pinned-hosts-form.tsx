@@ -20,12 +20,12 @@ export function normalizePinnedHost(input: string): string | null {
 }
 
 export interface PinnedHostsFormProps {
+	/** Shows the host at once; a refused host comes back out with a toast. */
 	onAdd: (host: string) => void;
-	busy: boolean;
 }
 
 /** Adds a host to "Always through the proxy". */
-export function PinnedHostsForm({ onAdd, busy }: PinnedHostsFormProps) {
+export function PinnedHostsForm({ onAdd }: PinnedHostsFormProps) {
 	const t = useT();
 	const [value, setValue] = useState("");
 	const [invalid, setInvalid] = useState(false);
@@ -62,7 +62,7 @@ export function PinnedHostsForm({ onAdd, busy }: PinnedHostsFormProps) {
 					}}
 				/>
 			</FormField>
-			<Button type="submit" disabled={busy} data-id="settings-routing-host-add">
+			<Button type="submit" data-id="settings-routing-host-add">
 				{t("apiClientRouting.settings.pinned.add")}
 			</Button>
 		</form>

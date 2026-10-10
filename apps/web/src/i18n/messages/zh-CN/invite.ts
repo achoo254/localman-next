@@ -42,11 +42,9 @@ export const invite: Messages["invite"] = {
 		ineligibleWrongAccount:
 			"邀请发给了 {email}。请使用受邀账号登录，或关联邮箱已验证且与之相同的 Google/GitHub。",
 		accept: "加入",
-		accepting: "正在加入…",
 	},
 	switchAccount: {
 		action: "登录其他账号",
-		busy: "正在退出登录…",
 		hint: "你将被退出登录。请用受邀账号重新登录，然后再次打开此链接。",
 	},
 	errors: {

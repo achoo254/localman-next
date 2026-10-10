@@ -61,7 +61,6 @@ export const resourceImport: Messages["resourceImport"] = {
 		"Hãy tắt resource liên quan, hoặc nhờ chủ project nâng cấp gói.",
 	managePlan: "Quản lý gói",
 	submit: "Tạo resource",
-	creating: "Đang tạo…",
 	errors: {
 		tooLarge:
 			"File nặng {size} KB, vượt giới hạn 2 MB. Hãy dùng file nhỏ hơn hoặc tách file.",

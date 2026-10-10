@@ -40,8 +40,6 @@ export function MagicLinkAction({
 }: MagicLinkActionProps) {
 	const t = useT();
 	if (status === null) return null;
-	const busyOr = (label: string) =>
-		creating ? t("collaborators.magic.creating") : label;
 	let spec: ActionSpec;
 	if (created) {
 		spec = {
@@ -52,7 +50,7 @@ export function MagicLinkAction({
 		};
 	} else if (status === "none" || status === "revoked") {
 		spec = {
-			label: busyOr(t("collaborators.magic.create")),
+			label: t("collaborators.magic.create"),
 			variant: "primary",
 			dataId: "modal-magic-link-create",
 			icon: <IconLink size={16} aria-hidden="true" />,
@@ -61,7 +59,7 @@ export function MagicLinkAction({
 	} else {
 		const active = status === "active";
 		spec = {
-			label: busyOr(t("collaborators.magic.regenerate")),
+			label: t("collaborators.magic.regenerate"),
 			variant: active ? "secondary" : "primary",
 			dataId: "modal-magic-link-regenerate",
 			run: active ? onRegenerate : onCreate,
@@ -72,7 +70,7 @@ export function MagicLinkAction({
 			ref={ref}
 			variant={spec.variant}
 			data-id={spec.dataId}
-			disabled={creating}
+			loading={creating}
 			leadingIcon={spec.icon}
 			onClick={spec.run}
 		>

@@ -106,6 +106,18 @@
 	--animate-fade-out: fade-out var(--dur-base) var(--ease-standard) both;
 	--animate-pop-in: pop-in var(--dur-base) var(--ease-decelerate) both;
 	--animate-toast-in: toast-in var(--dur-base) var(--ease-decelerate) both;
+	/* Indeterminate progress bar (PanelProgress, RouteProgress): a third-wide
+	   segment sweeping across its track. */
+	--animate-progress-sweep: progress-sweep 1.2s var(--ease-standard) infinite;
+
+	@keyframes progress-sweep {
+		from {
+			transform: translateX(-100%);
+		}
+		to {
+			transform: translateX(300%);
+		}
+	}
 
 	@keyframes modal-in {
 		from {
@@ -174,6 +186,35 @@
 		var(--tone) var(--tone-border-mix, 30%),
 		var(--c-surface)
 	);
+}
+
+/* Skeleton placeholder (components/ui/skeleton.tsx): a static muted block
+   that reads on both themes. `skeleton-shimmer` adds the moving highlight;
+   components apply it as `motion-safe:skeleton-shimmer`, so reduced motion
+   keeps the plain block. */
+@utility skeleton {
+	background-color: color-mix(in srgb, var(--c-text) 9%, var(--c-surface));
+}
+
+@utility skeleton-shimmer {
+	background-image: linear-gradient(
+		90deg,
+		transparent 0%,
+		color-mix(in srgb, var(--c-text) 7%, transparent) 50%,
+		transparent 100%
+	);
+	background-size: 200% 100%;
+	background-repeat: no-repeat;
+	animation: skeleton-shimmer 1.6s var(--ease-standard) infinite;
+}
+
+@keyframes skeleton-shimmer {
+	from {
+		background-position: 150% 0;
+	}
+	to {
+		background-position: -50% 0;
+	}
 }
 
 @layer base {

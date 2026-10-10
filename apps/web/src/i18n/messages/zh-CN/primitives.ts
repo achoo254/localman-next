@@ -54,6 +54,18 @@ export const primitives: Messages["primitives"] = {
 		toastInfo: "信息 toast",
 		toastInfoTitle: "已复制 URL。",
 	},
+	loading: {
+		title: "加载状态",
+		description:
+			"首次加载显示骨架屏，数据刷新时显示细进度条，正在保存的按钮显示旋转图标。150 毫秒内完成的加载不显示任何指示。",
+		save: "保存",
+		busy: "正在保存",
+		busyIcon: "正在刷新",
+		skeletonCaption:
+			"骨架屏与即将出现的内容形状一致；开启减少动态效果时不再闪动。",
+		refresh: "刷新",
+		panelCaption: "数据仍留在屏幕上并变暗，面板顶部显示进度条。",
+	},
 	overlays: {
 		title: "浮层",
 		description:

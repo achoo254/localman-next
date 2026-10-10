@@ -12,12 +12,14 @@ import { useToast } from "../../components/ui/toast";
 import { useI18n } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
 import { errorMessage } from "../../lib/api-client";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import type { Project } from "../../pages/projects/projects-api";
 import { MagicLinkAction } from "./magic-link-action";
 import {
 	type MagicLinkConfirm,
 	MagicLinkConfirmModal,
 } from "./magic-link-confirm";
+import { MagicLinkSkeleton } from "./magic-link-skeleton";
 import { MagicLinkStatus } from "./magic-link-status";
 import { seatsFull } from "./member-seats-gate";
 import { useMagicLink } from "./use-magic-link";
@@ -49,6 +51,7 @@ export function MagicLinkModal({
 	const copyField = useRef<CopyFieldHandle>(null);
 	const created = view.status === "ready" ? view.created : null;
 	const status = view.status === "ready" ? view.link.status : null;
+	const skeleton = useDelayedFlag(view.status === "loading");
 
 	// Focus follows the state: the main action once loaded, the copy button
 	// once a link exists (unless focus already moved somewhere else).
@@ -95,7 +98,7 @@ export function MagicLinkModal({
 					b: () => <b>{project.name}</b>,
 				})}
 			</p>
-			{seats && seatsFull(seats) && view.status === "ready" ? (
+			{seats && seatsFull(seats) && view.status === "ready" && !skeleton ? (
 				<Alert tone="warning" data-id="modal-magic-link-full">
 					{t("collaborators.magic.full", {
 						used: seats.used,
@@ -113,14 +116,7 @@ export function MagicLinkModal({
 					) : null}
 				</Alert>
 			) : null}
-			{view.status === "loading" ? (
-				<output
-					data-id="modal-magic-link-loading"
-					className="block font-mono text-muted text-sm"
-				>
-					{t("collaborators.magic.loading")}
-				</output>
-			) : null}
+			{skeleton ? <MagicLinkSkeleton /> : null}
 			{view.status === "error" ? (
 				<div className="grid justify-items-start gap-3">
 					<Alert tone="danger" data-id="modal-magic-link-error">
@@ -156,7 +152,7 @@ export function MagicLinkModal({
 					</p>
 				</div>
 			) : null}
-			{view.status === "ready" && !created ? (
+			{view.status === "ready" && !created && !skeleton ? (
 				<MagicLinkStatus
 					link={view.link}
 					onRevoke={() => setConfirm("revoke")}

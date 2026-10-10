@@ -55,9 +55,10 @@ export function HistoryItem({
 					route: routeBadgeLabel(entry.response.route, undefined, t),
 				})}
 				aria-busy={opening}
+				aria-disabled={opening || undefined}
 				title={entry.url}
-				disabled={opening}
-				onClick={onOpen}
+				// Stays focused while the entry loads; a second press does nothing.
+				onClick={() => !opening && onOpen()}
 				className="grid min-h-10 min-w-0 flex-1 cursor-pointer grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-2 border-0 bg-transparent py-1.5 pl-3 text-left font-mono text-xs focus-visible:shadow-focus-primary focus-visible:outline-none"
 			>
 				<span className={cn("font-bold", METHOD_TEXT_CLASS[entry.method])}>
@@ -90,9 +91,13 @@ export function HistoryItem({
 				})}
 				icon={<IconTrash size={14} aria-hidden="true" />}
 				data-id="sidebar-history-delete"
-				disabled={deleting}
+				loading={deleting}
 				onClick={onDelete}
-				className="opacity-0 focus-visible:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100"
+				className={
+					deleting
+						? undefined
+						: "opacity-0 focus-visible:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100"
+				}
 			/>
 		</li>
 	);

@@ -88,6 +88,7 @@ export const apiClientRouting = {
 	quota: { plans: "See plans" },
 	settings: {
 		title: "Routing",
+		loading: "Loading routing settings…",
 		defaultRoute: "Route of new requests",
 		defaultHint:
 			"Auto sends straight from the browser and switches to the proxy when it can't (CORS, a header fetch can't set, redirects off). Local addresses use Tunelo instead. The choice next to Send overrides it per request.",

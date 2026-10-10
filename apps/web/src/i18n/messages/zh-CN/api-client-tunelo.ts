@@ -34,6 +34,7 @@ export const apiClientTunelo: Messages["apiClientTunelo"] = {
 		title: "映射",
 		hint: "发往已映射本地地址的请求会经其隧道发送，路径和查询参数保持不变。只有你能看到自己的映射。",
 		empty: "还没有映射。",
+		loading: "正在加载映射…",
 		use: "为 {key} 使用隧道",
 		delete: "删除 {key} 的映射",
 	},

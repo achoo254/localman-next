@@ -1,25 +1,23 @@
-import { HTTP_METHODS, type HttpMethod } from "@localman/shared/api-client";
 import { memo, useId, useMemo, useState } from "react";
 import { Alert } from "../../../components/ui/alert";
 import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import { Select } from "../../../components/ui/select";
+import { PanelProgress } from "../../../components/ui/panel-progress";
 import { useToast } from "../../../components/ui/toast";
 import { useI18n } from "../../../i18n/i18n-context";
 import { errorMessage } from "../../../lib/api-client";
+import { useDelayedFlag } from "../../../lib/use-delayed-flag";
 import { type HistoryDetail, fetchHistoryEntry } from "./history-api";
 import { HistoryClearModal } from "./history-clear-modal";
+import { HistoryFilters, type HistoryMethodFilter } from "./history-filters";
 import { filterHistory, groupHistoryByDay } from "./history-groups";
 import { HistoryItem } from "./history-item";
+import { HistorySkeleton } from "./history-skeleton";
 import { useDeleteHistoryEntry, useHistoryList } from "./use-history";
 
 export interface HistorySidebarProps {
 	/** Opens the entry's request (as written) in a new tab. */
 	onOpen: (entry: HistoryDetail) => void;
 }
-
-const isMethod = (value: string): value is HttpMethod =>
-	HTTP_METHODS.some((method) => method === value);
 
 /** Server-side history of the signed-in user, grouped by day. */
 export const HistorySidebar = memo(function HistorySidebar({
@@ -31,9 +29,13 @@ export const HistorySidebar = memo(function HistorySidebar({
 	const list = useHistoryList();
 	const remove = useDeleteHistoryEntry();
 	const [query, setQuery] = useState("");
-	const [method, setMethod] = useState<HttpMethod | "ALL">("ALL");
+	const [method, setMethod] = useState<HistoryMethodFilter>("ALL");
 	const [openingId, setOpeningId] = useState<string | null>(null);
 	const [clearOpen, setClearOpen] = useState(false);
+	const skeleton = useDelayedFlag(list.isPending);
+	// A refetch (after a send) with the list on screen; not "Load older".
+	const refreshing =
+		list.isFetching && !list.isPending && !list.isFetchingNextPage;
 
 	const groups = useMemo(
 		() =>
@@ -95,41 +97,20 @@ export const HistorySidebar = memo(function HistorySidebar({
 					{t("apiClientTools.history.clear")}
 				</Button>
 			</header>
-			<div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 px-3 pb-2">
-				<Input
-					type="search"
-					value={query}
-					aria-label={t("apiClientTools.history.search")}
-					placeholder={t("apiClientTools.history.searchPlaceholder")}
-					data-id="sidebar-history-search"
-					className="min-h-9 text-xs"
-					onChange={(event) => setQuery(event.target.value)}
-				/>
-				<Select
-					value={method}
-					aria-label={t("apiClientTools.history.method")}
-					data-id="sidebar-history-method"
-					className="min-h-9 text-xs"
-					onChange={(event) => {
-						const next = event.target.value;
-						setMethod(isMethod(next) ? next : "ALL");
-					}}
-				>
-					<option value="ALL">{t("apiClientTools.history.allMethods")}</option>
-					{HTTP_METHODS.map((m) => (
-						<option key={m} value={m}>
-							{m}
-						</option>
-					))}
-				</Select>
-			</div>
-			<div className="min-h-0 flex-1 overflow-y-auto">
-				{list.isPending ? (
-					<output className="block px-3 py-2 text-muted text-sm">
-						{t("apiClientTools.history.loading")}
-					</output>
-				) : null}
-				{list.isError ? (
+			<HistoryFilters
+				query={query}
+				method={method}
+				onQueryChange={setQuery}
+				onMethodChange={setMethod}
+			/>
+			<PanelProgress
+				active={refreshing}
+				aria-busy={refreshing || undefined}
+				data-id="sidebar-history-list"
+				className="min-h-0 flex-1 overflow-y-auto"
+			>
+				{skeleton ? <HistorySkeleton /> : null}
+				{list.isError && !skeleton ? (
 					<Alert tone="danger" className="mx-3">
 						{t("apiClientTools.history.loadFailed")}{" "}
 						<button
@@ -141,14 +122,14 @@ export const HistorySidebar = memo(function HistorySidebar({
 						</button>
 					</Alert>
 				) : null}
-				{list.isSuccess && groups.length === 0 ? (
+				{list.isSuccess && !skeleton && groups.length === 0 ? (
 					<p className="m-0 px-3 py-2 text-muted text-sm">
 						{list.entries.length === 0
 							? t("apiClientTools.history.empty")
 							: t("apiClientTools.history.noMatch")}
 					</p>
 				) : null}
-				{groups.map((group) => (
+				{(skeleton ? [] : groups).map((group) => (
 					<section
 						key={group.day}
 						aria-label={dayLabel(group.kind, group.firstAt)}
@@ -170,25 +151,23 @@ export const HistorySidebar = memo(function HistorySidebar({
 						</ul>
 					</section>
 				))}
-				{list.hasNextPage ? (
+				{list.hasNextPage && !skeleton ? (
 					<div className="px-3 py-2">
 						<Button
 							size="sm"
 							block
 							data-id="sidebar-history-more"
-							disabled={list.isFetchingNextPage}
+							loading={list.isFetchingNextPage}
 							onClick={() => void list.fetchNextPage()}
 						>
-							{list.isFetchingNextPage
-								? t("apiClientTools.history.loading")
-								: t("apiClientTools.history.loadMore")}
+							{t("apiClientTools.history.loadMore")}
 						</Button>
 					</div>
 				) : null}
 				<p className="m-0 px-3 py-3 text-muted text-xs">
 					{t("apiClientTools.history.note")}
 				</p>
-			</div>
+			</PanelProgress>
 			<HistoryClearModal open={clearOpen} onOpenChange={setClearOpen} />
 		</section>
 	);

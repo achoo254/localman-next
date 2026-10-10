@@ -68,7 +68,9 @@ describe("ResponsePanel states and tabs", () => {
 	it("cancels a send in flight", async () => {
 		const onCancel = vi.fn();
 		renderPanel({ kind: "sending" }, onCancel);
-		expect(screen.getByRole("status")).toHaveTextContent("Sending…");
+		// The spinner waits 150 ms so quick answers never flash it.
+		expect(screen.queryByRole("status")).toBeNull();
+		expect(await screen.findByRole("status")).toHaveTextContent("Sending…");
 		await userEvent.click(
 			screen.getByRole("button", { name: "Cancel request" }),
 		);

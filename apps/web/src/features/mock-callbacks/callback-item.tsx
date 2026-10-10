@@ -165,14 +165,12 @@ export function CallbackItem({
 				<div>
 					<Button
 						size="sm"
-						disabled={sending}
+						loading={sending}
 						leadingIcon={<IconSend size={16} aria-hidden="true" />}
 						onClick={() => void test.run(draft)}
 						data-id="resource-form-callback-test"
 					>
-						{sending
-							? t("mockCallbacks.test.sending")
-							: t("mockCallbacks.test.send")}
+						{t("mockCallbacks.test.send")}
 					</Button>
 				</div>
 			) : null}

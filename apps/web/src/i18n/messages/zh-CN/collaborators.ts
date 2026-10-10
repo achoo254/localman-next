@@ -42,7 +42,6 @@ export const collaborators: Messages["collaborators"] = {
 		hint: "对方还没有 hoandat 账号？输入邮箱即可创建一次性邀请链接（7 天有效）。",
 		placeholder: "@username 或 name@example.com",
 		submit: "邀请",
-		searching: "正在查找…",
 		empty: "请输入用户名或邮箱。",
 		linkLabel: "{who} 的邀请链接",
 		linkHint: "{date} 过期。链接只显示这一次。",
@@ -53,9 +52,7 @@ export const collaborators: Messages["collaborators"] = {
 	},
 	invitee: {
 		confirm: "确认邀请",
-		confirming: "正在邀请…",
 		createLink: "创建邀请链接",
-		creatingLink: "正在创建链接…",
 		noAccount:
 			"还没有账号使用 <b>{email}</b>。创建一个绑定该邮箱的一次性邀请链接（7 天有效），然后由你自己发给对方。",
 		unverifiedWarning: "该账号尚未验证邮箱，只有在你认识此人时才邀请。",
@@ -84,7 +81,6 @@ export const collaborators: Messages["collaborators"] = {
 		shownOnce: "链接只显示这一次，请在关闭前复制。",
 		expires: "{date} 过期。",
 		copy: "复制链接",
-		creating: "正在创建…",
 		create: "创建 magic link",
 		regenerate: "创建新链接",
 		regenerateQuestion: "创建新的 magic link？",

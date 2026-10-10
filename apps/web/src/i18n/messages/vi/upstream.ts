@@ -37,7 +37,6 @@ export const upstream: Messages["upstream"] = {
 			"Địa chỉ này trỏ vào mạng nội bộ nên Localman không chuyển tiếp tới được.",
 	},
 	save: "Lưu upstream",
-	saving: "Đang lưu…",
 	saved:
 		"Đã đặt upstream là <code>{label}</code>. Route mock chưa có giờ được chuyển tới đó.",
 	saveFailed: "Không lưu được upstream",

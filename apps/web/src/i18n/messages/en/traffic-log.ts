@@ -58,7 +58,6 @@ export const trafficLog = {
 		ms: "{ms} ms",
 		loading: "Loading requests…",
 		more: "Load older requests",
-		loadingMore: "Loading…",
 	},
 	empty:
 		"No requests yet. Call any route of <code>{url}</code> and it shows up here right away.",
@@ -71,7 +70,6 @@ export const trafficLog = {
 	actions: {
 		replay: "Replay",
 		replayAria: "Replay {method} {path}",
-		replaying: "Replaying…",
 		openClient: "Open in API Client",
 		openClientAria: "Open in API Client: {method} {path}",
 	},

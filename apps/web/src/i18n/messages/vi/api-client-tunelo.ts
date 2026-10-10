@@ -36,6 +36,7 @@ export const apiClientTunelo: Messages["apiClientTunelo"] = {
 		title: "Ánh xạ",
 		hint: "Request tới địa chỉ local đã gắn sẽ đi qua tunnel của nó, giữ nguyên path và query. Chỉ bạn thấy ánh xạ của mình.",
 		empty: "Chưa có ánh xạ.",
+		loading: "Đang tải ánh xạ…",
 		use: "Dùng tunnel cho {key}",
 		delete: "Xoá ánh xạ của {key}",
 	},

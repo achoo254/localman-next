@@ -2,19 +2,25 @@ import { IconDatabase, IconFileImport, IconPlus } from "@tabler/icons-react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
 import { cardClassName } from "../../components/ui/card";
+import { PanelProgress } from "../../components/ui/panel-progress";
+import { SkeletonRegion } from "../../components/ui/skeleton";
 import { useFeatures } from "../../config/features";
 import { useOpenInApiClient } from "../../features/api-client/open-in/use-open-in-api-client";
 import type { NodeAction } from "../../features/resource-tree/node-actions";
 import { ResourceTreeCanvas } from "../../features/resource-tree/resource-tree-canvas";
+import { TreeSkeleton } from "../../features/resource-tree/tree-skeleton";
 import { resourceErrorMessage } from "../../features/resources/resource-errors";
 import type { Resource } from "../../features/resources/resource-model";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 
 export type ResourcesState =
 	| { status: "loading" }
-	| { status: "error"; error: unknown }
-	| { status: "ready"; resources: Resource[] };
+	/** `retrying`: "Try again" was pressed and the request runs. */
+	| { status: "error"; error: unknown; retrying: boolean }
+	/** `refreshing`: a refetch runs while the tree stays on screen. */
+	| { status: "ready"; resources: Resource[]; refreshing: boolean };
 
 export interface ResourcesCardProps {
 	/** Project of the resources, for "Open in API Client". */
@@ -29,7 +35,11 @@ export interface ResourcesCardProps {
 	onMove: (resource: Resource, target: Resource | null) => void;
 }
 
-/** "Resources" card: loading, error and empty states, or the tree canvas. */
+/**
+ * "Resources" card: loading, error and empty states, or the tree canvas.
+ * First load shows a tree-shaped skeleton after 150 ms; a refetch keeps
+ * the tree and runs a bar under the card header.
+ */
 export function ResourcesCard({
 	projectId,
 	state,
@@ -42,18 +52,28 @@ export function ResourcesCard({
 	const t = useT();
 	const { mockPowerUps, apiClient } = useFeatures();
 	const openInClient = useOpenInApiClient();
-	let body = (
-		<output className="block px-6 py-8 font-mono text-muted text-sm">
-			{t("projectDetail.resources.loading")}
-		</output>
-	);
-	if (state.status === "error") {
+	const skeleton = useDelayedFlag(state.status === "loading");
+	let body = null;
+	if (skeleton) {
+		body = (
+			<SkeletonRegion
+				data-id="project-detail-tree-loading"
+				label={t("projectDetail.resources.loading")}
+			>
+				<TreeSkeleton />
+			</SkeletonRegion>
+		);
+	} else if (state.status === "error") {
 		body = (
 			<div className="grid justify-items-start gap-3 p-6">
 				<Alert tone="danger" title={t("projectDetail.resources.loadFailed")}>
 					{resourceErrorMessage(state.error, t)}
 				</Alert>
-				<Button data-id="project-detail-tree-retry" onClick={onRetry}>
+				<Button
+					data-id="project-detail-tree-retry"
+					loading={state.retrying}
+					onClick={onRetry}
+				>
 					{t("common.cta.retry")}
 				</Button>
 			</div>
@@ -105,7 +125,8 @@ export function ResourcesCard({
 			/>
 		);
 	}
-	const count = state.status === "ready" ? state.resources.length : null;
+	const ready = state.status === "ready" && !skeleton ? state : null;
+	const count = ready ? ready.resources.length : null;
 	return (
 		<section
 			data-id="project-detail-tree"
@@ -125,7 +146,17 @@ export function ResourcesCard({
 					</span>
 				)}
 			</div>
-			{body}
+			{ready ? (
+				<PanelProgress
+					data-id="project-detail-tree-panel"
+					active={ready.refreshing}
+					aria-busy={ready.refreshing || undefined}
+				>
+					{body}
+				</PanelProgress>
+			) : (
+				body
+			)}
 		</section>
 	);
 }

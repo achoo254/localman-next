@@ -63,7 +63,8 @@ export function senderLabel(t: Translate, item: ContactMessage): string {
 
 export interface FeedbackInboxItemProps {
 	item: ContactMessage;
-	pending: boolean;
+	/** Status this message is being moved to; that button spins meanwhile. */
+	pendingStatus: MessageStatus | null;
 	onStatus: (item: ContactMessage, status: MessageStatus) => void;
 	onDelete: (item: ContactMessage) => void;
 }
@@ -71,7 +72,7 @@ export interface FeedbackInboxItemProps {
 /** One message: who, where from, the full text, and follow-up actions. */
 export function FeedbackInboxItem({
 	item,
-	pending,
+	pendingStatus,
 	onStatus,
 	onDelete,
 }: FeedbackInboxItemProps) {
@@ -80,6 +81,7 @@ export function FeedbackInboxItem({
 	const headingId = `${itemId}-heading`;
 	const sender = senderLabel(t, item);
 	const sourceKey = SOURCE_KEYS[item.source];
+	const pending = pendingStatus !== null;
 	return (
 		<li
 			data-id={itemId}
@@ -113,7 +115,8 @@ export function FeedbackInboxItem({
 							key={action.to}
 							size="sm"
 							variant={action.to === "new" ? "ghost" : "secondary"}
-							disabled={pending}
+							loading={pendingStatus === action.to}
+							disabled={pending && pendingStatus !== action.to}
 							aria-describedby={headingId}
 							data-id={`${itemId}-${action.to}`}
 							onClick={() => onStatus(item, action.to)}

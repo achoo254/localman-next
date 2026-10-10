@@ -19,14 +19,10 @@ export function SwitchAccountButton({ variant }: SwitchAccountButtonProps) {
 				variant={variant}
 				block
 				data-id="invite-page-switch-account"
-				disabled={session.busy}
+				loading={session.busy}
 				onClick={() => void session.logout()}
 			>
-				{t(
-					session.busy
-						? "invite.switchAccount.busy"
-						: "invite.switchAccount.action",
-				)}
+				{t("invite.switchAccount.action")}
 			</Button>
 			<p className="m-0 text-center text-muted text-[0.8125rem]">
 				{t("invite.switchAccount.hint")}

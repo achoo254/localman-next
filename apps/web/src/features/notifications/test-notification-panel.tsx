@@ -65,14 +65,11 @@ export function TestNotificationPanel({
 				<Button
 					size="sm"
 					data-id="notify-test-send"
-					disabled={sending}
-					aria-busy={sending || undefined}
+					loading={sending}
 					leadingIcon={<IconSend size={16} aria-hidden="true" />}
 					onClick={() => void send()}
 				>
-					{t(
-						sending ? "notifications.test.sending" : "notifications.test.send",
-					)}
+					{t("notifications.test.send")}
 				</Button>
 			}
 		>

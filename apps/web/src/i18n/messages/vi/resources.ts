@@ -57,7 +57,6 @@ export const resources: Messages["resources"] = {
 		titleEdit: "Sửa resource · {name}",
 		create: "Tạo resource",
 		update: "Cập nhật",
-		saving: "Đang lưu…",
 		nameLabel: "Tên resource",
 		nameHint:
 			"Dùng làm đường dẫn endpoint, ví dụ <code>/users</code>. Chỉ gồm chữ không dấu, số, <code>-</code> và <code>_</code>.",
@@ -101,7 +100,6 @@ export const resources: Messages["resources"] = {
 		loadFailed: "Không tải được dữ liệu",
 		jsonLabel: "Dữ liệu JSON của {name}",
 		update: "Cập nhật",
-		updating: "Đang cập nhật…",
 		confirmTitle: "Cập nhật dữ liệu",
 		confirmQuestion: "Thay dữ liệu của “{name}”?",
 		notArray: "Dữ liệu phải là một mảng JSON.",

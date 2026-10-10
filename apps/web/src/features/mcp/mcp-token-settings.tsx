@@ -5,11 +5,13 @@ import { flushSync } from "react-dom";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
 import type { CopyFieldHandle } from "../../components/ui/copy-field";
+import { Skeleton, SkeletonRegion } from "../../components/ui/skeleton";
 import { Switch } from "../../components/ui/switch";
 import { useToast } from "../../components/ui/toast";
 import { useI18n } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
 import { errorMessage } from "../../lib/api-client";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import type { Project } from "../../pages/projects/projects-api";
 import {
 	type McpTokenChange,
@@ -47,6 +49,7 @@ export function McpTokenSettings({
 	const rotateRef = useRef<HTMLButtonElement>(null);
 	// Where focus goes once the modal closes or the reveal is dismissed.
 	const focusAfter = useRef<FocusTarget | null>(null);
+	const skeleton = useDelayedFlag(query.isPending);
 
 	const focus = (target: FocusTarget) => {
 		if (target === "copy") copyRef.current?.focusCopyButton();
@@ -79,7 +82,7 @@ export function McpTokenSettings({
 		}
 	};
 
-	const status = query.data;
+	const status = skeleton ? undefined : query.data;
 	const titleId = `${ids}-title`;
 	const helpId = `${ids}-help`;
 	return (
@@ -92,6 +95,7 @@ export function McpTokenSettings({
 				<h3 id={titleId} className="m-0 font-mono font-semibold text-sm">
 					{t("mcp.token.title")}
 				</h3>
+				{skeleton ? <Skeleton className="h-5 w-9 rounded-full" /> : null}
 				{status ? (
 					<Switch
 						ref={switchRef}
@@ -105,15 +109,24 @@ export function McpTokenSettings({
 					/>
 				) : null}
 			</div>
-			{query.isPending ? (
-				<output className={HELP}>{t("mcp.token.loading")}</output>
+			{skeleton ? (
+				<SkeletonRegion
+					data-id="project-detail-mcp-token-loading"
+					label={t("mcp.token.loading")}
+				>
+					<Skeleton variant="text" lines={2} className="max-w-lg" />
+				</SkeletonRegion>
 			) : null}
 			{query.isError ? (
 				<div className="grid justify-items-start gap-2">
 					<Alert tone="danger" title={t("mcp.token.loadFailed")}>
 						{errorMessage(query.error)}
 					</Alert>
-					<Button size="sm" onClick={() => void query.refetch()}>
+					<Button
+						size="sm"
+						loading={query.isFetching}
+						onClick={() => void query.refetch()}
+					>
 						{t("common.cta.retry")}
 					</Button>
 				</div>

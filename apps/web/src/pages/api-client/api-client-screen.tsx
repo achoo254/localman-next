@@ -25,6 +25,8 @@ import { useT } from "../../i18n/i18n-context";
 function renderResponse(tab: WorkbenchTab) {
 	return (
 		<RoutedResponsePanel
+			// One panel per tab: a spinner held for one tab never shows on another.
+			key={tab.id}
 			tabId={tab.id}
 			response={tab.response}
 			route={tab.draft.settings.route}

@@ -5,6 +5,7 @@ import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { ReadonlyNote } from "../upstream/readonly-note";
 import { CallbackItem } from "./callback-item";
 import {
@@ -12,6 +13,7 @@ import {
 	callbacksKey,
 	fetchCallbacks,
 } from "./callbacks-api";
+import { CallbacksSkeleton } from "./callbacks-skeleton";
 import { useCallbacksEditor } from "./use-callbacks-editor";
 
 export interface CallbacksEditorProps {
@@ -37,6 +39,7 @@ export function CallbacksEditor({
 		queryKey: callbacksKey(projectId, resourceId),
 		queryFn: () => fetchCallbacks(projectId, resourceId),
 	});
+	const skeleton = useDelayedFlag(query.isPending);
 	return (
 		<section
 			aria-labelledby={titleId}
@@ -51,14 +54,15 @@ export function CallbacksEditor({
 					{t("mockCallbacks.subtitle")}
 				</span>
 			</div>
-			{query.isPending ? (
-				<p className={HELP}>{t("mockCallbacks.loading")}</p>
-			) : query.isError ? (
+			{skeleton ? (
+				<CallbacksSkeleton />
+			) : query.isPending ? null : query.isError ? (
 				<Alert tone="danger">
 					{t("mockCallbacks.loadFailed")}{" "}
 					<Button
 						size="sm"
 						variant="ghost"
+						loading={query.isFetching}
 						onClick={() => void query.refetch()}
 					>
 						{t("common.cta.retry")}
@@ -155,10 +159,10 @@ function CallbacksForm({
 					<Button
 						type="submit"
 						size="sm"
-						disabled={editor.busy}
+						loading={editor.busy}
 						data-id="resource-form-callbacks-save"
 					>
-						{editor.busy ? t("mockCallbacks.saving") : t("mockCallbacks.save")}
+						{t("mockCallbacks.save")}
 					</Button>
 					{editor.dirty ? (
 						<span

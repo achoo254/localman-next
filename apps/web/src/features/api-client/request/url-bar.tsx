@@ -83,12 +83,12 @@ export function UrlBar({ draft, update, sending, onSend }: UrlBarProps) {
 			<Button
 				data-id="request-send"
 				className="flex-1 md:flex-none"
-				disabled={sending}
+				loading={sending}
 				aria-keyshortcuts="Control+Enter Meta+Enter"
 				onClick={onSend}
 			>
 				<IconSend size={16} aria-hidden="true" />
-				{sending ? t("apiClient.request.sending") : t("apiClient.request.send")}
+				{t("apiClient.request.send")}
 			</Button>
 			<CurlImportModal
 				command={pastedCurl}

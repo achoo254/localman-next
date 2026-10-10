@@ -8,7 +8,8 @@ export interface TunnelMappingListProps {
 	mappings: readonly TunnelMapping[];
 	onToggle: (mapping: TunnelMapping) => void;
 	onDelete: (key: string) => void;
-	busy: boolean;
+	/** The mapping being deleted: its button spins until the server answers. */
+	deletingKey: string | null;
 }
 
 /** The user's mappings: local key → tunnel origin, each on or off. */
@@ -16,7 +17,7 @@ export function TunnelMappingList({
 	mappings,
 	onToggle,
 	onDelete,
-	busy,
+	deletingKey,
 }: TunnelMappingListProps) {
 	const t = useT();
 	return (
@@ -49,7 +50,6 @@ export function TunnelMappingList({
 								<div className="flex flex-none items-center gap-1">
 									<Switch
 										checked={mapping.enabled}
-										disabled={busy}
 										aria-label={t("apiClientTunelo.mappings.use", {
 											key: mapping.key,
 										})}
@@ -61,7 +61,7 @@ export function TunnelMappingList({
 									<IconButton
 										size="sm"
 										variant="ghost"
-										disabled={busy}
+										loading={deletingKey === mapping.key}
 										label={t("apiClientTunelo.mappings.delete", {
 											key: mapping.key,
 										})}

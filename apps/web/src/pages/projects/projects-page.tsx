@@ -1,6 +1,6 @@
 import { limitsFor } from "@localman/shared/constants";
 import { IconPlus } from "@tabler/icons-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { IconButton } from "../../components/ui/icon-button";
 import { useToast } from "../../components/ui/toast";
 import { useCurrentUser } from "../../features/auth/use-current-user";
@@ -18,16 +18,16 @@ import {
 	type ProjectInput,
 	cloneProject,
 	createProject,
-	fetchProjects,
 	isPlanLimitError,
 	updateProject,
 } from "./projects-api";
+import { ProjectsList, focusAfterRow } from "./projects-list";
 import {
-	ProjectsList,
-	type ProjectsState,
-	focusAfterRow,
+	projectsState,
+	useProjects,
+	useSetProjects,
 	withMemberCount,
-} from "./projects-list";
+} from "./use-projects";
 
 type Dialog =
 	| { kind: "none" }
@@ -44,38 +44,20 @@ export function ProjectsPage() {
 	const plan = session.status === "authenticated" ? session.user.plan : "free";
 	const toast = useToast();
 	const subscription = useSubscriptionDialogs(plan);
-	const [state, setState] = useState<ProjectsState>({ status: "loading" });
+	const query = useProjects();
+	const setProjects = useSetProjects();
 	const [dialog, setDialog] = useState<Dialog>(CLOSED);
 	const heading = useRef<HTMLHeadingElement>(null);
 
-	const load = useCallback(async () => {
-		setState({ status: "loading" });
-		try {
-			setState({ status: "ready", projects: await fetchProjects() });
-		} catch (error) {
-			setState({ status: "error", error });
-		}
-	}, []);
-
-	useEffect(() => {
-		void load();
-	}, [load]);
-
-	const projects = state.status === "ready" ? state.projects : [];
+	const projects = query.data ?? [];
 	const owned = projects.filter((project) => project.role === "owner").length;
 
-	function setProjects(update: (list: Project[]) => Project[]) {
-		setState((current) =>
-			current.status === "ready"
-				? { status: "ready", projects: update(current.projects) }
-				: current,
-		);
-	}
-
 	/** Members changed in the collaborators dialog: refresh the row's count. */
-	const setMemberCount = useCallback((id: string, memberCount: number) => {
-		setState((current) => withMemberCount(current, id, memberCount));
-	}, []);
+	const setMemberCount = useCallback(
+		(id: string, memberCount: number) =>
+			setProjects((list) => withMemberCount(list, id, memberCount)),
+		[setProjects],
+	);
 
 	const replaceProject = (saved: Project) =>
 		setProjects((list) => list.map((p) => (p.id === saved.id ? saved : p)));
@@ -151,8 +133,8 @@ export function ProjectsPage() {
 				/>
 			</div>
 			<ProjectsList
-				state={state}
-				onRetry={() => void load()}
+				state={projectsState(query)}
+				onRetry={() => void query.refetch()}
 				onCreate={openNew}
 				onAction={act}
 			/>

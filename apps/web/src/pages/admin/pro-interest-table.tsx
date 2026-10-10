@@ -5,7 +5,6 @@ import { ProInterestRow } from "./pro-interest-row";
 export interface ProInterestTableProps {
 	items: ProInterestItem[];
 	/** Row id whose "contacted" change is in flight. */
-	pendingId: string | null;
 	onToggleContacted: (item: ProInterestItem) => void;
 	onDelete: (item: ProInterestItem) => void;
 }
@@ -15,7 +14,6 @@ const HEAD =
 
 export function ProInterestTable({
 	items,
-	pendingId,
 	onToggleContacted,
 	onDelete,
 }: ProInterestTableProps) {
@@ -52,7 +50,6 @@ export function ProInterestTable({
 						<ProInterestRow
 							key={item.id}
 							item={item}
-							pending={pendingId === item.id}
 							onToggleContacted={onToggleContacted}
 							onDelete={onDelete}
 						/>

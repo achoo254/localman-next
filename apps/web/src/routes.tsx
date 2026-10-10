@@ -3,6 +3,7 @@ import { Navigate, type RouteObject } from "react-router";
 import { AppLayout } from "./components/layout/app-layout";
 import { AppShell, WORKBENCH_HANDLE } from "./components/layout/app-shell";
 import { PageLoading } from "./components/layout/page-loading";
+import { RouteChunkPending } from "./components/ui/route-progress";
 import { LandingPage } from "./pages/landing/landing-page";
 import { PricingPage } from "./pages/pricing/pricing-page";
 
@@ -10,7 +11,8 @@ import { PricingPage } from "./pages/pricing/pricing-page";
  * Page code split into its own chunk, loaded on first visit. The
  * prerendered pages (landing, pricing) and the shell (header, guards) stay
  * in the main chunk so the first paint and the session check do not wait
- * for a second request.
+ * for a second request. While the chunk loads, the fallback lights the
+ * window's route bar and shows the generic page skeleton.
  */
 function lazyPage<K extends string>(
 	load: () => Promise<Record<K, ComponentType>>,
@@ -21,7 +23,14 @@ function lazyPage<K extends string>(
 		return { default: page };
 	});
 	return (
-		<Suspense fallback={<PageLoading />}>
+		<Suspense
+			fallback={
+				<>
+					<RouteChunkPending />
+					<PageLoading />
+				</>
+			}
+		>
 			<Page />
 		</Suspense>
 	);

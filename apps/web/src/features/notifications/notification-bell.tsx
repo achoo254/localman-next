@@ -1,4 +1,9 @@
-import { IconAdjustments, IconBell, IconChecks } from "@tabler/icons-react";
+import {
+	IconAdjustments,
+	IconBell,
+	IconChecks,
+	IconLoader2,
+} from "@tabler/icons-react";
 import { useNavigate } from "react-router";
 import { buttonClassName } from "../../components/ui/button";
 import {
@@ -9,11 +14,14 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
+import { PanelProgress } from "../../components/ui/panel-progress";
 import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
+import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { NotificationItem } from "./notification-item";
+import { NotificationListSkeleton } from "./notification-list-skeleton";
 import { type AppNotification, inAppPath } from "./notifications-api";
 import { useNotifications } from "./use-notifications";
 
@@ -26,6 +34,11 @@ export function NotificationBell() {
 	const toast = useToast();
 	const t = useT();
 	const { unreadCount } = bell;
+	const empty = bell.items.length === 0;
+	// First page on its way: skeleton rows; with items on screen: a top bar.
+	const firstLoad = bell.loading && empty && !bell.error;
+	const skeleton = useDelayedFlag(firstLoad);
+	const refreshing = bell.loading && !empty;
 
 	function report(task: Promise<void>) {
 		task.catch((error: unknown) =>
@@ -85,18 +98,27 @@ export function NotificationBell() {
 					{t("notifications.bell.markAllRead")}
 				</DropdownMenuItem>
 				<DropdownMenuSeparator />
-				<div className="max-h-[60dvh] overflow-y-auto">
-					{bell.items.map((notification) => (
+				<PanelProgress
+					active={refreshing}
+					aria-busy={bell.loading || undefined}
+					className="max-h-[60dvh] overflow-y-auto"
+				>
+					{(skeleton ? [] : bell.items).map((notification) => (
 						<NotificationItem
 							key={notification.id}
 							notification={notification}
 							onSelect={(event) => choose(event, notification)}
 						/>
 					))}
-					{bell.items.length === 0 ? (
+					{skeleton ? <NotificationListSkeleton /> : null}
+					{empty ? (
 						<DropdownMenuLabel
 							data-id="notifications-empty"
-							className={bell.error ? "text-error" : undefined}
+							className={cn(
+								bell.error ? "text-error" : null,
+								// Screen readers still hear it; the skeleton shows it.
+								firstLoad && "sr-only",
+							)}
 						>
 							{t(
 								bell.error
@@ -110,17 +132,27 @@ export function NotificationBell() {
 					{bell.nextCursor ? (
 						<DropdownMenuItem
 							data-id="notifications-load-more"
-							disabled={bell.loading}
+							// Not disabled while loading: it keeps focus and full colour.
+							aria-busy={bell.loadingMore || undefined}
+							icon={
+								bell.loadingMore ? (
+									<IconLoader2
+										size={16}
+										aria-hidden="true"
+										className="motion-safe:animate-spin"
+									/>
+								) : undefined
+							}
 							onSelect={(event) => {
 								event.preventDefault();
-								void bell.loadMore();
+								if (!bell.loadingMore) void bell.loadMore();
 							}}
 							className="justify-center"
 						>
 							{t("notifications.bell.loadMore")}
 						</DropdownMenuItem>
 					) : null}
-				</div>
+				</PanelProgress>
 				<DropdownMenuSeparator />
 				<DropdownMenuItem
 					data-id="notifications-settings-link"

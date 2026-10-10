@@ -72,20 +72,14 @@ export function InboxFormModal({
 						type="submit"
 						form={formId}
 						variant="primary"
-						disabled={busy}
+						loading={busy}
 						data-id="modal-submit"
 					>
-						{busy
-							? t(
-									editing
-										? "webhookInbox.form.saving"
-										: "webhookInbox.form.creating",
-								)
-							: t(
-									editing
-										? "webhookInbox.form.submitEdit"
-										: "webhookInbox.form.submitNew",
-								)}
+						{t(
+							editing
+								? "webhookInbox.form.submitEdit"
+								: "webhookInbox.form.submitNew",
+						)}
 					</Button>
 				</ModalFooter>
 			}

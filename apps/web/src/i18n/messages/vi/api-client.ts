@@ -36,7 +36,6 @@ export const apiClient: Messages["apiClient"] = {
 		route: "Đường đi",
 		routes: { auto: "Auto", direct: "Trực tiếp", proxy: "Proxy" },
 		send: "Send",
-		sending: "Đang gửi…",
 		parts: "Các phần của request",
 		tabs: {
 			params: "Params",
