@@ -48,8 +48,11 @@ export function KeyValueTable<R extends KeyValueRow>(
 		const input = table.current?.querySelector<HTMLInputElement>(
 			`[data-row="${focusRow.current}"] input[type="text"]`,
 		);
+		// Another render (draft sync status…) can come before the new row's;
+		// keep asking until the row is there.
+		if (!input) return;
 		focusRow.current = null;
-		input?.focus();
+		input.focus();
 	});
 
 	const update = (next: R) =>
