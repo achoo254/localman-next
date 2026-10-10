@@ -1,4 +1,5 @@
 import type { ServerMessages } from "./en.js";
+import { trialZhCN } from "./trial-zh-cn.js";
 
 const monthName = new Intl.DateTimeFormat("zh-CN", {
 	year: "numeric",
@@ -15,6 +16,11 @@ export const zhCN: ServerMessages = {
 		"project.invitation": "Project 协作邀请",
 		"project.mockUrlChanged": "共享 project 的 mock URL 已更改",
 		"usage.quota": "每月 mock request 额度提醒",
+		"trial.ending": "Pro 试用即将结束",
+		"trial.ended": "Pro 试用已结束",
+		"trial.extension.requested": "Pro 试用延期申请（所有者）",
+		"trial.extension.approved": "Pro 试用已延期",
+		"trial.extension.declined": "Pro 试用延期被拒绝",
 		"workspace.invitation": "Workspace 邀请",
 		"element.shared": "与你共享的 collection 和 environment",
 		"access.requested": "对你的 collection 和 environment 的访问请求",
@@ -101,6 +107,7 @@ export const zhCN: ServerMessages = {
 			"该地址指向私有网络，Localman 无法向其发送 callback。请改用 Tunelo tunnel 暴露本地服务器。",
 		callbackDns: "无法解析 callback 的主机名。",
 	},
+	trial: trialZhCN,
 	ownerAlerts: {
 		suppressed: (count) => `（另有 ${count} 条因超出提醒上限未发送）`,
 		contactCategories: {

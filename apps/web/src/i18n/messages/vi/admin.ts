@@ -7,6 +7,7 @@ export const admin: Messages["admin"] = {
 		label: "Trang quản trị",
 		proInterest: "Quan tâm gói Pro",
 		feedback: "Hộp thư góp ý",
+		trialExtensions: "Gia hạn dùng thử",
 	},
 	forbidden: {
 		title: "403 · Chỉ owner xem được trang này",
@@ -92,5 +93,59 @@ export const admin: Messages["admin"] = {
 		historyEmpty: "Chưa có lịch sử gửi.",
 		notApplied: "Không áp dụng",
 		historyTeam: "Quy mô {size}",
+	},
+	trial: {
+		filterPending: "Đang chờ",
+		loading: "Đang tải yêu cầu…",
+		empty: "Chưa có yêu cầu gia hạn nào.",
+		emptyPending: "Không có yêu cầu nào đang chờ quyết định.",
+		requested: "gửi ngày {date}",
+		trialEnds: "dùng thử hết hạn {date}",
+		statuses: {
+			pending: "Đang chờ",
+			approved: "Đã duyệt",
+			declined: "Đã từ chối",
+		},
+		reason: "Lý do",
+		approve: "Duyệt",
+		decline: "Từ chối",
+		approveFor: "Duyệt yêu cầu của {user}",
+		declineFor: "Từ chối yêu cầu của {user}",
+		approveTitle: "Duyệt gia hạn",
+		approveQuestion: "Gia hạn dùng thử cho {user} thêm {days} ngày?",
+		approveBody:
+			"Số ngày tính từ hôm nay hoặc từ ngày hết hạn hiện tại, lấy ngày muộn hơn. Người dùng sẽ được thông báo.",
+		declineTitle: "Từ chối gia hạn",
+		declineQuestion: "Từ chối yêu cầu của {user}?",
+		declineBody:
+			"Lần dùng thử giữ nguyên ngày hết hạn. Người dùng sẽ được thông báo.",
+		approved: "Đã duyệt gia hạn cho {user}.",
+		declined: "Đã từ chối yêu cầu của {user}.",
+		errors: {
+			decided:
+				"Yêu cầu này đã được duyệt hoặc từ chối trước đó. Danh sách đã cập nhật trạng thái mới.",
+			noExpiry:
+				"Người dùng này có gói Pro không thời hạn nên không có lần dùng thử nào để gia hạn.",
+			requestNotFound:
+				"Yêu cầu này không còn tồn tại. Danh sách đã cập nhật các yêu cầu hiện có.",
+			userNotFound:
+				"Không có tài khoản nào có sub này. Hãy kiểm tra rồi thử lại.",
+		},
+		extend: {
+			title: "Gia hạn dùng thử cho người dùng",
+			lead: "Thêm ngày dùng thử Pro cho bất kỳ tài khoản nào, không cần yêu cầu.",
+			sub: "Sub của người dùng",
+			subHint: "ID tài khoản khi đăng nhập, hiện dưới mỗi yêu cầu.",
+			subEmpty: "Nhập sub của người dùng.",
+			days: "Số ngày",
+			daysHint: "Từ 1 tới {max}.",
+			daysInvalid: "Nhập số ngày nguyên từ 1 tới {max}.",
+			submit: "Gia hạn",
+			done: { other: "Đã gia hạn dùng thử cho {sub} thêm {count} ngày." },
+			doneUntil: {
+				other:
+					"Đã gia hạn dùng thử cho {sub} thêm {count} ngày, tới hết {date}.",
+			},
+		},
 	},
 };

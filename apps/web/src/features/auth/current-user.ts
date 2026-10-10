@@ -11,6 +11,7 @@ import {
 	expectString,
 	optionalString,
 } from "../../lib/json-guards";
+import { type TrialInfo, parseTrial } from "../subscription/trial-state";
 
 export type Plan = "free" | "pro";
 
@@ -27,6 +28,8 @@ export interface CurrentUser {
 	telegram: { linked: boolean; username: string | null };
 	/** Language saved on the account (notifications use it); "en" if never chosen. */
 	locale: Locale;
+	/** Pro trial; an API without `trial` reads as a trial still available. */
+	trial: TrialInfo;
 }
 
 export function parseCurrentUser(data: unknown): CurrentUser {
@@ -50,6 +53,7 @@ export function parseCurrentUser(data: unknown): CurrentUser {
 			username: optionalString(telegram, "username"),
 		},
 		locale: isLocale(user.locale) ? user.locale : DEFAULT_LOCALE,
+		trial: parseTrial(user.trial),
 	};
 }
 

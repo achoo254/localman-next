@@ -20,7 +20,6 @@ export const subscription: Messages["subscription"] = {
 		reachedText: "请比较下面的两个套餐。",
 		current: "当前套餐：<b>{plan}</b>。各套餐的额度见下方。",
 		proLead: "为实际使用中的 project 提供更高额度和更多成员。",
-		paymentNote: "Pro 套餐尚未开放付款。点击“联系我们”告诉我们你的需求。",
 		limit: {
 			projects: { other: "{count} 个 project" },
 			resources: { other: "{count} 个 resource" },

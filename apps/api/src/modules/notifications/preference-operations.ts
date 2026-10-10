@@ -1,9 +1,13 @@
 import { defineOperation } from "@localman/operations";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import { isOwnerSub } from "../users/owner-access.js";
 import { localeOrDefault } from "../users/user-locale.js";
 import { UserModel } from "../users/user-model.js";
-import { NOTIFICATION_EVENT_TYPES } from "./notification-events.js";
+import {
+	NOTIFICATION_EVENT_TYPES,
+	OWNER_EVENT_TYPES,
+} from "./notification-events.js";
 import {
 	type EventPreference,
 	readEventPreferences,
@@ -70,13 +74,19 @@ async function buildView(
 				botUsername: availability.telegramBotUsername,
 			},
 		},
-		events: events.map((event) => ({
-			type: event.type,
-			label: eventLabel(event.type, locale),
-			inApp: event.inApp,
-			webPush: event.webPush,
-			telegram: event.telegram,
-		})),
+		// Owner-only events (extension requests) mean nothing to others.
+		events: events
+			.filter(
+				(event) =>
+					isOwnerSub(userSub) || !OWNER_EVENT_TYPES.includes(event.type),
+			)
+			.map((event) => ({
+				type: event.type,
+				label: eventLabel(event.type, locale),
+				inApp: event.inApp,
+				webPush: event.webPush,
+				telegram: event.telegram,
+			})),
 	};
 }
 

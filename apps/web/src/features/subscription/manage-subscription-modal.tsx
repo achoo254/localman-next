@@ -1,5 +1,4 @@
 import { type PlanId, limitsFor } from "@localman/shared/constants";
-import { Link, useInRouterContext } from "react-router";
 import { Alert } from "../../components/ui/alert";
 import { Badge } from "../../components/ui/badge";
 import { Button, buttonClassName } from "../../components/ui/button";
@@ -9,8 +8,13 @@ import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
 import type { Translate } from "../../i18n/translate";
 import { cn } from "../../lib/cn";
+import { useKnownCurrentUser } from "../auth/use-current-user";
+import { AppLink } from "./app-link";
 import { PlanCard } from "./plan-card";
 import type { ProInterestSource } from "./pro-interest-options";
+import { ProTrialAction } from "./pro-trial-action";
+import { useStartTrial } from "./start-trial-dialog";
+import { AVAILABLE_TRIAL, type TrialViewer } from "./trial-state";
 
 /** Which quota sent the user here; null when opened to compare plans. */
 export type LimitReason = "projects" | "resources" | "members" | "proxy" | null;
@@ -22,7 +26,7 @@ export interface ManageSubscriptionModalProps {
 	reason: LimitReason;
 	/** Source recorded when opened without a limit (header menu, account page). */
 	manageSource?: ProInterestSource;
-	/** "Contact": opens the Pro interest form from this source. */
+	/** Secondary link of the Pro card: the Pro interest form from this source. */
 	onContact: (source: ProInterestSource) => void;
 }
 
@@ -60,29 +64,18 @@ const SOURCE: Record<Exclude<LimitReason, null>, ProInterestSource> = {
 	proxy: "plan_limit_proxy",
 };
 
-/**
- * "See pricing": the `/pricing` page, closing the dialog on the way. The
- * dialog also renders outside a router (component tests of the screens
- * that open it); a plain link still reaches the page there.
- */
-function PricingPageLink({ onNavigate }: { onNavigate: () => void }) {
-	const t = useT();
-	const props = {
-		"data-id": "modal-subscription-pricing",
-		onClick: onNavigate,
-		className: cn(buttonClassName(), "no-underline"),
-		children: t("subscription.manage.seePricing"),
-	};
-	return useInRouterContext() ? (
-		<Link to="/pricing" {...props} />
-	) : (
-		<a href="/pricing" {...props} />
-	);
+/** The session's user, or the `plan` the caller knows while it is unknown. */
+function useViewer(plan: PlanId): TrialViewer {
+	const session = useKnownCurrentUser();
+	return session.status === "authenticated"
+		? session.user
+		: { plan, trial: AVAILABLE_TRIAL };
 }
 
 /**
- * "Manage plan": why the limit was hit, the Free/Pro comparison and a link
- * to the full pricing page.
+ * "Manage plan": why the limit was hit, the Free/Pro comparison with the
+ * Pro trial by its state, and a link to the full pricing page. Starting the
+ * trial closes this dialog for the confirmation.
  */
 export function ManageSubscriptionModal({
 	open,
@@ -94,86 +87,96 @@ export function ManageSubscriptionModal({
 }: ManageSubscriptionModalProps) {
 	const t = useT();
 	const source = reason ? SOURCE[reason] : manageSource;
+	const viewer = useViewer(plan);
+	const trial = useStartTrial();
+	const close = () => onOpenChange(false);
 	const current = (
 		<Badge data-id="modal-subscription-current">
 			{t("subscription.manage.currentBadge")}
 		</Badge>
 	);
 	return (
-		<Modal
-			open={open}
-			onOpenChange={onOpenChange}
-			title={t("subscription.manage.title")}
-			size="lg"
-			initialFocusRef="dialog"
-			data-id="modal-subscription"
-			footer={
-				<ModalFooter>
-					<PricingPageLink onNavigate={() => onOpenChange(false)} />
-					<ModalClose asChild>
-						<Button data-id="modal-subscription-close">
-							{t("common.actions.close")}
-						</Button>
-					</ModalClose>
-				</ModalFooter>
-			}
-		>
-			{reason ? (
-				<Alert
-					tone="warning"
-					data-id="modal-subscription-reason"
-					title={t("subscription.manage.reachedTitle", {
-						plan: PLAN_NAME[plan],
-						limit: limitText(plan, reason, t),
-					})}
-				>
-					{t("subscription.manage.reachedText")}
-				</Alert>
-			) : (
-				<p
-					data-id="modal-subscription-reason"
-					className="m-0 text-[0.8125rem] text-muted"
-				>
-					{renderRich(
-						t("subscription.manage.current", { plan: PLAN_NAME[plan] }),
-						{ b: (chunk) => <b className="text-fg">{chunk}</b> },
-					)}
-				</p>
-			)}
-			<div
-				data-id="modal-subscription-plans"
-				className="grid gap-3 sm:grid-cols-2"
-			>
-				<PlanCard
-					data-id="modal-subscription-free"
-					name="Free"
-					limits={limitsFor("free")}
-					badge={plan === "free" ? current : null}
-				/>
-				<PlanCard
-					data-id="modal-subscription-pro"
-					name="Pro"
-					featured
-					limits={limitsFor("pro")}
-					badge={plan === "pro" ? current : null}
-					lead={t("subscription.manage.proLead")}
-					action={
-						plan === "free" ? (
-							<Button
-								variant="primary"
-								block
-								data-id="modal-subscription-pro-contact"
-								onClick={() => onContact(source)}
-							>
-								{t("common.cta.contact")}
+		<>
+			<Modal
+				open={open}
+				onOpenChange={onOpenChange}
+				title={t("subscription.manage.title")}
+				size="lg"
+				initialFocusRef="dialog"
+				data-id="modal-subscription"
+				footer={
+					<ModalFooter>
+						<AppLink
+							to="/pricing"
+							data-id="modal-subscription-pricing"
+							onClick={close}
+							className={cn(buttonClassName(), "no-underline")}
+						>
+							{t("subscription.manage.seePricing")}
+						</AppLink>
+						<ModalClose asChild>
+							<Button data-id="modal-subscription-close">
+								{t("common.actions.close")}
 							</Button>
-						) : null
-					}
-				/>
-			</div>
-			<p className="m-0 text-muted text-[0.8125rem]">
-				{t("subscription.manage.paymentNote")}
-			</p>
-		</Modal>
+						</ModalClose>
+					</ModalFooter>
+				}
+			>
+				{reason ? (
+					<Alert
+						tone="warning"
+						data-id="modal-subscription-reason"
+						title={t("subscription.manage.reachedTitle", {
+							plan: PLAN_NAME[plan],
+							limit: limitText(plan, reason, t),
+						})}
+					>
+						{t("subscription.manage.reachedText")}
+					</Alert>
+				) : (
+					<p
+						data-id="modal-subscription-reason"
+						className="m-0 text-[0.8125rem] text-muted"
+					>
+						{renderRich(
+							t("subscription.manage.current", { plan: PLAN_NAME[plan] }),
+							{ b: (chunk) => <b className="text-fg">{chunk}</b> },
+						)}
+					</p>
+				)}
+				<div
+					data-id="modal-subscription-plans"
+					className="grid gap-3 sm:grid-cols-2"
+				>
+					<PlanCard
+						data-id="modal-subscription-free"
+						name="Free"
+						limits={limitsFor("free")}
+						badge={viewer.plan === "free" ? current : null}
+					/>
+					<PlanCard
+						data-id="modal-subscription-pro"
+						name="Pro"
+						featured
+						limits={limitsFor("pro")}
+						badge={viewer.plan === "pro" ? current : null}
+						lead={t("subscription.manage.proLead")}
+						action={
+							<ProTrialAction
+								data-id="modal-subscription-pro"
+								user={viewer}
+								onStart={() => {
+									close();
+									trial.open();
+								}}
+								onTellUs={() => onContact(source)}
+								onNavigate={close}
+							/>
+						}
+					/>
+				</div>
+			</Modal>
+			{trial.element}
+		</>
 	);
 }

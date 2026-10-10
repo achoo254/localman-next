@@ -1,21 +1,25 @@
-import { type PlanId, limitsFor } from "@localman/shared/constants";
+import { TRIAL_DAYS, limitsFor } from "@localman/shared/constants";
 import { Link } from "react-router";
 import { Badge } from "../../components/ui/badge";
-import { Button, buttonClassName } from "../../components/ui/button";
+import { buttonClassName } from "../../components/ui/button";
 import { LoginLink } from "../../features/auth/login-link";
 import { PlanCard } from "../../features/subscription/plan-card";
+import { ProTrialAction } from "../../features/subscription/pro-trial-action";
+import type { TrialViewer } from "../../features/subscription/trial-state";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 
 export interface PricingTableProps {
-	/** "Contact" on the Pro card: opens the Pro interest form. */
+	/** Secondary link of the Pro card: opens the Pro interest form. */
 	onContactPro: () => void;
+	/** Main button of the Pro card for a Free user: opens the confirmation. */
+	onStartTrial: () => void;
 	/**
-	 * Plan of the signed-in user, or null for a visitor (and while the
-	 * session is unknown). A signed-in user sees "Current plan" on their
-	 * card and "Open app" instead of a sign-up invitation.
+	 * The signed-in user, or null for a visitor (and while the session is
+	 * unknown). A signed-in user sees "Current plan" on their card, "Open
+	 * app" instead of a sign-up invitation and the Pro trial by its state.
 	 */
-	plan: PlanId | null;
+	user: TrialViewer | null;
 }
 
 const FREE_ACTION_CLASS = cn(
@@ -24,12 +28,16 @@ const FREE_ACTION_CLASS = cn(
 );
 
 /**
- * Free and Pro cards rendered from `limitsFor`. Pro has no price and no
- * "not decided yet": its only action is "Contact", so interest can be
- * counted; a Pro user has nothing to ask for there.
+ * Free and Pro cards rendered from `limitsFor`. Pro has no price: it is a
+ * free trial for now, with the interest form as a secondary link.
  */
-export function PricingTable({ onContactPro, plan }: PricingTableProps) {
+export function PricingTable({
+	onContactPro,
+	onStartTrial,
+	user,
+}: PricingTableProps) {
 	const t = useT();
+	const plan = user?.plan ?? null;
 	const current = (
 		<Badge data-id="pricing-card-current">
 			{t("subscription.manage.currentBadge")}
@@ -75,21 +83,19 @@ export function PricingTable({ onContactPro, plan }: PricingTableProps) {
 					plan === "pro" ? (
 						current
 					) : (
-						<Badge tone="primary">{t("landing.pricing.proBadge")}</Badge>
+						<Badge tone="primary" data-id="pricing-card-pro-trial">
+							{t("trial.badge", { days: TRIAL_DAYS })}
+						</Badge>
 					)
 				}
-				lead={t("landing.pricing.proLead")}
+				lead={t("subscription.manage.proLead")}
 				action={
-					plan === "pro" ? null : (
-						<Button
-							variant="primary"
-							block
-							data-id="pricing-card-pro-cta"
-							onClick={onContactPro}
-						>
-							{t("common.cta.contact")}
-						</Button>
-					)
+					<ProTrialAction
+						data-id="pricing-card-pro"
+						user={user}
+						onStart={onStartTrial}
+						onTellUs={onContactPro}
+					/>
 				}
 			/>
 		</div>

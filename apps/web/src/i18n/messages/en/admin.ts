@@ -6,6 +6,7 @@ export const admin = {
 		label: "Admin pages",
 		proInterest: "Pro plan interest",
 		feedback: "Feedback inbox",
+		trialExtensions: "Trial extensions",
 	},
 	forbidden: {
 		title: "403 · Only the owner can see this page",
@@ -91,5 +92,60 @@ export const admin = {
 		historyEmpty: "No submission history yet.",
 		notApplied: "Not applied",
 		historyTeam: "Team size {size}",
+	},
+	trial: {
+		filterPending: "Pending",
+		loading: "Loading requests…",
+		empty: "No extension requests yet.",
+		emptyPending: "No requests are waiting for a decision.",
+		requested: "requested {date}",
+		trialEnds: "trial ends {date}",
+		statuses: {
+			pending: "Pending",
+			approved: "Approved",
+			declined: "Declined",
+		},
+		reason: "Reason",
+		approve: "Approve",
+		decline: "Decline",
+		approveFor: "Approve the request from {user}",
+		declineFor: "Decline the request from {user}",
+		approveTitle: "Approve extension",
+		approveQuestion: "Extend the trial of {user} by {days} days?",
+		approveBody:
+			"The days count from today or from the current end of the trial, whichever is later. They're notified.",
+		declineTitle: "Decline extension",
+		declineQuestion: "Decline the request from {user}?",
+		declineBody: "Their trial keeps its current end date. They're notified.",
+		approved: "Approved the extension for {user}.",
+		declined: "Declined the request from {user}.",
+		errors: {
+			decided:
+				"This request was already approved or declined. The list now shows its current state.",
+			noExpiry:
+				"This user has Pro without an end date, so there's no trial to extend.",
+			requestNotFound:
+				"This request no longer exists. The list now shows the current requests.",
+			userNotFound: "No account has this sub. Check it and try again.",
+		},
+		extend: {
+			title: "Extend a user's trial",
+			lead: "Adds days to the Pro trial of any account, without a request.",
+			sub: "User sub",
+			subHint: "The account ID from sign-in, shown under each request.",
+			subEmpty: "Enter the user's sub.",
+			days: "Days",
+			daysHint: "From 1 to {max}.",
+			daysInvalid: "Enter a whole number of days from 1 to {max}.",
+			submit: "Extend trial",
+			done: {
+				one: "Extended the trial of {sub} by {count} day.",
+				other: "Extended the trial of {sub} by {count} days.",
+			},
+			doneUntil: {
+				one: "Extended the trial of {sub} by {count} day, until {date}.",
+				other: "Extended the trial of {sub} by {count} days, until {date}.",
+			},
+		},
 	},
 } as const;

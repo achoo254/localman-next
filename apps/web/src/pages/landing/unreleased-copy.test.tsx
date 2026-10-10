@@ -32,7 +32,9 @@ describe("no unreleased feature in the copy while every flag is off", () => {
 			},
 		});
 		renderWithFeatures(<LandingPage />, NO_FEATURES);
-		await userEvent.click(screen.getByRole("button", { name: "Contact" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Tell us what you need from Pro" }),
+		);
 		const dialog = await screen.findByRole("dialog");
 		await within(dialog).findByRole("checkbox", { name: "Mock API" });
 		expect(unreleasedMentions(dialog)).toEqual([]);

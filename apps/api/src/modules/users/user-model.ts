@@ -22,6 +22,22 @@ const userSchema = new Schema(
 		},
 		planExpiresAt: { type: Date },
 		/**
+		 * When the user started the one Pro trial of the account; absent
+		 * until then. While it lasts `plan` is `pro` and `planExpiresAt`
+		 * is the trial's end (`modules/trial/`).
+		 */
+		trialStartedAt: { type: Date },
+		/**
+		 * Trial reminders already sent, each holding the `planExpiresAt`
+		 * it was sent for: an extension moves the end, so every reminder
+		 * is due again for the new one.
+		 */
+		trialNotices: {
+			ending7: { type: Date },
+			ending1: { type: Date },
+			ended: { type: Date },
+		},
+		/**
 		 * Interface language chosen in the web app; notifications (in-app,
 		 * Web Push, Telegram) use it. Absent until chosen: read as `en`.
 		 */
@@ -58,5 +74,10 @@ export const CASE_INSENSITIVE_COLLATION = {
 // Invite lookups by username or email (not unique: the IdP owns identity).
 userSchema.index({ username: 1 }, { collation: CASE_INSENSITIVE_COLLATION });
 userSchema.index({ email: 1 }, { collation: CASE_INSENSITIVE_COLLATION });
+// Trial reminders scan the trials ending soon or just ended.
+userSchema.index(
+	{ planExpiresAt: 1 },
+	{ partialFilterExpression: { trialStartedAt: { $exists: true } } },
+);
 
 export const UserModel = mongoose.model("User", userSchema);

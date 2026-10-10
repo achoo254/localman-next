@@ -6,6 +6,7 @@ import {
 	expectNumber,
 	expectRecord,
 	expectString,
+	isRecord,
 	optionalString,
 } from "../../lib/json-guards";
 
@@ -13,6 +14,13 @@ import {
 export interface UsageCounter {
 	used: number;
 	max: number | null;
+}
+
+/** A quota the account is above, e.g. after a Pro trial ended. */
+export interface OverLimit {
+	limit: "projects" | "resources";
+	used: number;
+	max: number;
 }
 
 export interface AccountUsage {
@@ -23,6 +31,8 @@ export interface AccountUsage {
 	projects: UsageCounter;
 	mockRequests: UsageCounter;
 	proxyRequests: UsageCounter;
+	/** Empty when within every limit (and from an API that does not send it). */
+	overLimits: OverLimit[];
 }
 
 function parseCounter(data: JsonRecord, key: string): UsageCounter {
@@ -32,6 +42,22 @@ function parseCounter(data: JsonRecord, key: string): UsageCounter {
 		throw new InvalidResponseError(`${key}.max`);
 	}
 	return { used: expectNumber(counter, "used"), max };
+}
+
+function parseOverLimit(value: unknown): OverLimit | null {
+	if (!isRecord(value)) return null;
+	const { limit, used, max } = value;
+	if (limit !== "projects" && limit !== "resources") return null;
+	if (typeof used !== "number" || typeof max !== "number") return null;
+	return { limit, used, max };
+}
+
+/** Tolerant: an unknown entry is skipped rather than failing the meters. */
+function parseOverLimits(value: unknown): OverLimit[] {
+	if (!Array.isArray(value)) return [];
+	return value
+		.map(parseOverLimit)
+		.filter((entry): entry is OverLimit => entry !== null);
 }
 
 export function parseAccountUsage(value: unknown): AccountUsage {
@@ -47,6 +73,7 @@ export function parseAccountUsage(value: unknown): AccountUsage {
 		projects: parseCounter(data, "projects"),
 		mockRequests: parseCounter(data, "mockRequests"),
 		proxyRequests: parseCounter(data, "proxyRequests"),
+		overLimits: parseOverLimits(data.overLimits),
 	};
 }
 

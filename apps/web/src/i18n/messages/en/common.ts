@@ -12,7 +12,6 @@ export const common = {
 		startFree: "Get started free",
 		start: "Get started",
 		openApp: "Open app",
-		contact: "Contact",
 		reset: "Reset",
 		retry: "Try again",
 	},

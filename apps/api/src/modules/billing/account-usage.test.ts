@@ -51,6 +51,7 @@ describe("GET /account/usage", () => {
 			projects: { used: 1, max: free.projects },
 			mockRequests: { used: 7, max: free.mockRequestsPerMonth },
 			proxyRequests: { used: 0, max: free.proxyRequestsPerMonth },
+			overLimits: [],
 		});
 	});
 

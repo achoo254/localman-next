@@ -29,6 +29,7 @@ import { resources } from "./resources";
 import { sharing } from "./sharing";
 import { subscription } from "./subscription";
 import { trafficLog } from "./traffic-log";
+import { trial } from "./trial";
 import { ui } from "./ui";
 import { upstream } from "./upstream";
 import { webhookInbox } from "./webhook-inbox";
@@ -55,6 +56,7 @@ export const vi: Messages = {
 	mcp,
 	notifications,
 	subscription,
+	trial,
 	docs,
 	feedback,
 	admin,

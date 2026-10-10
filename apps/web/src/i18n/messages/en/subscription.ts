@@ -32,8 +32,6 @@ export const subscription = {
 		reachedText: "Compare the two plans below.",
 		current: "Current plan: <b>{plan}</b>. Each plan's limits are below.",
 		proLead: "Higher limits and more members for projects in real use.",
-		paymentNote:
-			"Payment for the Pro plan isn't open yet. Click Contact to tell us what you need.",
 		/** The quota that was hit, inside `reachedTitle`. */
 		limit: {
 			projects: { one: "{count} project", other: "{count} projects" },

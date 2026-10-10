@@ -69,7 +69,7 @@ describe("/pricing", () => {
 		).toHaveAttribute("href", "/projects");
 		expect(screen.queryByRole("link", { name: /Get started/ })).toBeNull();
 		expect(
-			within(card("pro")).getByRole("button", { name: "Contact" }),
+			within(card("pro")).getByRole("button", { name: "Start 30-day trial" }),
 		).toBeVisible();
 		expect(await seriousViolations(container)).toEqual([]);
 	});
@@ -77,7 +77,11 @@ describe("/pricing", () => {
 	it("marks Pro as current for a Pro user", async () => {
 		mockFetch(signedIn("pro"));
 		renderRoutes(routes, "/pricing");
-		expect(await within(card("pro")).findByText("Current plan")).toBeVisible();
+		expect(
+			await within(card("pro")).findByText("Current plan", {
+				selector: '[data-id="pricing-card-current"]',
+			}),
+		).toBeVisible();
 		expect(within(card("free")).queryByText("Current plan")).toBeNull();
 	});
 

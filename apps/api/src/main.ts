@@ -37,6 +37,8 @@ import {
 	createNotificationService,
 } from "./modules/notifications/notification-service.js";
 import { TombstoneSweeper } from "./modules/projects/tombstone-sweeper.js";
+import { configureTrialLogger } from "./modules/trial/trial-plan.js";
+import { TrialReminderJob } from "./modules/trial/trial-reminders.js";
 
 /** Budget of the whole shutdown (`runShutdownSteps` cuts it there). */
 const SHUTDOWN_TIMEOUT_MS = 10_000;
@@ -81,6 +83,7 @@ const env = loadEnvOrExit();
 const logger: Logger = createLogger(env.LOG_LEVEL);
 configureProxyLogger(logger);
 requestLog.configure(logger);
+configureTrialLogger(logger);
 const servers: Server[] = [];
 let shuttingDown = false;
 let notifications: NotificationService | undefined;
@@ -91,6 +94,7 @@ const usageMeter = new UsageMeter({
 // Callbacks and inbox forwards count against the owners' monthly quota.
 outboundQueue.configure(logger, usageMeter);
 const tombstoneSweeper = new TombstoneSweeper(logger);
+const trialReminders = new TrialReminderJob(logger);
 const mcpHandlers = new McpHandlerRegistry();
 
 async function shutdown(reason: string, exitCode: number): Promise<void> {
@@ -110,7 +114,10 @@ async function shutdown(reason: string, exitCode: number): Promise<void> {
 		requestLog,
 		closeServers: () => Promise.all(servers.map(closeServer)).then(() => {}),
 		// Background Web Push / Telegram deliveries (owner alerts included).
-		drain: () => tombstoneSweeper.stop().then(() => notifications?.drain()),
+		drain: () =>
+			Promise.all([tombstoneSweeper.stop(), trialReminders.stop()]).then(() =>
+				notifications?.drain(),
+			),
 		disconnect: disconnectMongo,
 	});
 	const outcome = await runShutdownSteps(
@@ -192,6 +199,8 @@ try {
 	);
 	// Finishes project deletions cut off by an error or a restart.
 	tombstoneSweeper.start();
+	// Trial reminders (7 days, 1 day, ended), once per trial end.
+	trialReminders.start();
 } catch (error) {
 	logger.fatal({ err: error }, "Startup failed");
 	await shutdown("startup failure", 1);

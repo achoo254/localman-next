@@ -136,7 +136,9 @@ describe("AccountPage quota meters", () => {
 		const dialog = screen.getByRole("dialog", { name: "Manage plan" });
 		expect(within(dialog).queryByRole("alert")).toBeNull();
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Contact" }),
+			within(dialog).getByRole("button", {
+				name: "Tell us what you need from Pro",
+			}),
 		);
 		await expectProInterestSource("account");
 	});

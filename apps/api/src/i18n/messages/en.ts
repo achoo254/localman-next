@@ -1,3 +1,5 @@
+import { trialEn } from "./trial-en.js";
+
 /** Values of an invitation; `inviter` is `null` when the owner has no name. */
 export interface InvitationText {
 	readonly inviter: string | null;
@@ -71,6 +73,11 @@ export const en = {
 		"project.invitation": "Project collaboration invitations",
 		"project.mockUrlChanged": "A shared project's mock URL changed",
 		"usage.quota": "Monthly mock request quota warnings",
+		"trial.ending": "Pro trial ending soon",
+		"trial.ended": "Pro trial ended",
+		"trial.extension.requested": "Pro trial extension requests (owners)",
+		"trial.extension.approved": "Pro trial extended",
+		"trial.extension.declined": "Pro trial extension declined",
 		"workspace.invitation": "Workspace invitations",
 		"element.shared": "Collections and environments shared with you",
 		"access.requested":
@@ -171,6 +178,8 @@ export const en = {
 			"This address points to a private network, so Localman can't send callbacks to it. Expose a local server with a Tunelo tunnel instead.",
 		callbackDns: "The callback host name could not be resolved.",
 	},
+	/** The Pro trial: reminders, extension requests and decisions. */
+	trial: trialEn,
 	ownerAlerts: {
 		suppressed: (count: number): string =>
 			`(and ${count} more not sent because of the alert limit)`,

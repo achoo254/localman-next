@@ -57,11 +57,8 @@ export const landing: Messages["landing"] = {
 	pricing: {
 		eyebrow: "价格",
 		title: "免费开始，按需升级",
-		note: "Pro 套餐尚未开放付款。点击“联系我们”告诉我们你的需求。按月不限量的额度仍有每秒速率限制，以防滥用。",
 		freePrice: "免费",
-		proBadge: "接受意向登记",
-		proLead:
-			"为实际使用中的 project 提供更高额度和更多成员。留下你的需求，Pro 开放时我们会联系你。",
+		rateNote: "按月不限量的额度仍有每秒速率限制，以防滥用。",
 	},
 	modeling: {
 		title: "简单的数据建模",

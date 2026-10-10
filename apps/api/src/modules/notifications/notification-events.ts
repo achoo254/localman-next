@@ -15,6 +15,11 @@ export const NOTIFICATION_EVENT_TYPES = [
 	"project.invitation",
 	"project.mockUrlChanged",
 	"usage.quota",
+	"trial.ending",
+	"trial.ended",
+	"trial.extension.requested",
+	"trial.extension.approved",
+	"trial.extension.declined",
 	"workspace.invitation",
 	"element.shared",
 	"access.requested",
@@ -22,6 +27,14 @@ export const NOTIFICATION_EVENT_TYPES = [
 ] as const;
 
 export type NotificationEventType = (typeof NOTIFICATION_EVENT_TYPES)[number];
+
+/**
+ * Events only owners (`OWNER_SUBS`) receive: hidden from the preferences
+ * of everyone else.
+ */
+export const OWNER_EVENT_TYPES: readonly NotificationEventType[] = [
+	"trial.extension.requested",
+];
 
 /**
  * The notification a user sends themselves from the settings page to check
@@ -40,6 +53,8 @@ export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
 /** A name shown inside a sentence (project, person). */
 const name = z.string().trim().min(1).max(200);
+/** A calendar day in Asia/Saigon, `YYYY-MM-DD`. */
+const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 /**
  * What is stored with a notification, per event type. Texts are rendered
@@ -61,6 +76,16 @@ export const NOTIFICATION_PARAMS = {
 		/** `YYYYMM` of the counted month. */
 		month: z.string().regex(/^\d{4}(0[1-9]|1[0-2])$/),
 	}),
+	"trial.ending": z.object({
+		daysLeft: z.number().int().min(1).max(7),
+		endsOn: day,
+	}),
+	"trial.ended": z.object({ endsOn: day }),
+	/** To owners; `user` is the requester's name or username, never the reason. */
+	"trial.extension.requested": z.object({ user: name }),
+	"trial.extension.approved": z.object({ endsOn: day }),
+	// No values; Mongo drops an empty object, so a stored one has none.
+	"trial.extension.declined": z.object({}).optional(),
 	"workspace.invitation": z.object({
 		inviter: name.nullable(),
 		workspace: name,

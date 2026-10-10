@@ -13,6 +13,17 @@ export {
 	type PlanId,
 	type PlanLimits,
 } from "./plan-limits.js";
+export {
+	TRIAL_DAYS,
+	TRIAL_DIRECT_EXTENSION_MAX_DAYS,
+	TRIAL_EXTENSION_DAYS,
+	TRIAL_EXTENSION_GRACE_DAYS,
+	TRIAL_EXTENSION_REASON_MAX,
+	TRIAL_EXTENSION_STATUSES,
+	TRIAL_STATUSES,
+	type TrialExtensionStatus,
+	type TrialStatus,
+} from "./trial-constants.js";
 export { DEFAULT_JSON_LIMITS, FORBIDDEN_KEYS } from "./json-value.js";
 export {
 	DEFAULT_GENERATE_COUNT,

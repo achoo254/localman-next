@@ -45,6 +45,15 @@ export function reloadCurrentUser(): Promise<void> {
 	return load();
 }
 
+/**
+ * Replaces the cached user with a fresh `me` returned by an action (the
+ * trial start), without going back to "loading" and its shell skeleton.
+ */
+export function setCurrentUser(user: CurrentUser): void {
+	request = Promise.resolve();
+	setState({ status: "authenticated", user });
+}
+
 /** Forgets the cached answer without fetching (test isolation). */
 export function resetCurrentUserCache(): void {
 	request = null;

@@ -71,6 +71,44 @@ const TEMPLATES: Readonly<Record<NotificationType, Template>> = {
 				: { title: quota.warningTitle(text), body: quota.warningBody(text) };
 		},
 	),
+	"trial.ending": template(
+		NOTIFICATION_PARAMS["trial.ending"],
+		(params, { trial }) => {
+			const text = {
+				daysLeft: params.daysLeft,
+				date: trial.formatDay(params.endsOn),
+			};
+			return { title: trial.endingTitle(text), body: trial.endingBody(text) };
+		},
+	),
+	"trial.ended": template(
+		NOTIFICATION_PARAMS["trial.ended"],
+		(params, { trial }) => ({
+			title: trial.endedTitle,
+			body: trial.endedBody({ date: trial.formatDay(params.endsOn) }),
+		}),
+	),
+	"trial.extension.requested": template(
+		NOTIFICATION_PARAMS["trial.extension.requested"],
+		(params, { trial }) => ({
+			title: trial.requestedTitle,
+			body: trial.requestedBody(params),
+		}),
+	),
+	"trial.extension.approved": template(
+		NOTIFICATION_PARAMS["trial.extension.approved"],
+		(params, { trial }) => ({
+			title: trial.approvedTitle,
+			body: trial.approvedBody({ date: trial.formatDay(params.endsOn) }),
+		}),
+	),
+	"trial.extension.declined": template(
+		NOTIFICATION_PARAMS["trial.extension.declined"],
+		(_params, { trial }) => ({
+			title: trial.declinedTitle,
+			body: trial.declinedBody,
+		}),
+	),
 	"workspace.invitation": template(
 		NOTIFICATION_PARAMS["workspace.invitation"],
 		(params, { workspaceInvitation, roleNames }) => ({

@@ -84,7 +84,9 @@ describe("project dialogs", () => {
 		expect(within(dialog).getByRole("alert")).toHaveTextContent(
 			String(limitsFor("free").projects),
 		);
-		await userEvent.click(plansPart(dialog, "modal-subscription-pro-contact"));
+		await userEvent.click(
+			plansPart(dialog, "modal-subscription-pro-secondary"),
+		);
 		await expectProInterestSource("plan_limit_projects");
 	});
 

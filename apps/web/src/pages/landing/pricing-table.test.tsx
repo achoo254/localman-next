@@ -1,9 +1,11 @@
-import { type PlanId, limitsFor } from "@localman/shared/constants";
+import { limitsFor } from "@localman/shared/constants";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { NO_FEATURES } from "../../config/features";
+import type { CurrentUser } from "../../features/auth/current-user";
 import { planItems } from "../../features/subscription/plan-card";
+import { trialUser } from "../../features/subscription/trial-test-helpers";
 import { en } from "../../i18n/messages/en/dictionary";
 import { createTranslator } from "../../i18n/translate";
 import {
@@ -15,13 +17,18 @@ import { PricingTable } from "./pricing-table";
 
 const english = createTranslator("en", en).t;
 
-function renderTable(flags = NO_FEATURES, plan: PlanId | null = null) {
+function renderTable(flags = NO_FEATURES, user: CurrentUser | null = null) {
 	const onContactPro = vi.fn();
+	const onStartTrial = vi.fn();
 	const view = renderWithFeatures(
-		<PricingTable onContactPro={onContactPro} plan={plan} />,
+		<PricingTable
+			onContactPro={onContactPro}
+			onStartTrial={onStartTrial}
+			user={user}
+		/>,
 		flags,
 	);
-	return { ...view, onContactPro };
+	return { ...view, onContactPro, onStartTrial };
 }
 
 describe("PricingTable", () => {
@@ -90,15 +97,19 @@ describe("PricingTable", () => {
 		}
 	});
 
-	it("shows a price for Free only and a contact button for Pro", async () => {
+	it("shows a price for Free only and a free trial without price for Pro", async () => {
 		const { container, onContactPro } = renderTable();
 		expect(
 			container.querySelector('[data-id="pricing-card-free-price"]'),
 		).toHaveTextContent("Free");
 		const pro = container.querySelector('[data-id="pricing-card-pro"]');
 		expect(pro?.textContent).not.toMatch(/₫|đ\/|\$|chưa chốt|not decided/i);
-		expect(pro).toHaveTextContent("Interest list open");
-		await userEvent.click(screen.getByRole("button", { name: "Contact" }));
+		expect(pro).toHaveTextContent("Free 30-day trial");
+		expect(pro).toHaveTextContent("Paid plans aren't available yet.");
+		expect(screen.queryByRole("button", { name: "Contact" })).toBeNull();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Tell us what you need from Pro" }),
+		);
 		expect(onContactPro).toHaveBeenCalledTimes(1);
 	});
 
@@ -111,7 +122,7 @@ describe("PricingTable", () => {
 	});
 
 	it("marks a Free user's plan and opens the app instead of signing up", () => {
-		const { container } = renderTable(NO_FEATURES, "free");
+		const { container } = renderTable(NO_FEATURES, trialUser("available"));
 		expect(screen.queryByRole("link", { name: "Get started free" })).toBeNull();
 		expect(screen.getByRole("link", { name: "Open app" })).toHaveAttribute(
 			"href",
@@ -120,14 +131,5 @@ describe("PricingTable", () => {
 		expect(
 			container.querySelector('[data-id="pricing-card-free"]'),
 		).toHaveTextContent("Current plan");
-		expect(screen.getByRole("button", { name: "Contact" })).toBeVisible();
-	});
-
-	it("marks a Pro user's plan without asking them to contact us", () => {
-		const { container } = renderTable(NO_FEATURES, "pro");
-		const pro = container.querySelector('[data-id="pricing-card-pro"]');
-		expect(pro).toHaveTextContent("Current plan");
-		expect(pro).not.toHaveTextContent("Interest list open");
-		expect(screen.queryByRole("button", { name: "Contact" })).toBeNull();
 	});
 });

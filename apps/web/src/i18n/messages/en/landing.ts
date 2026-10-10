@@ -71,11 +71,9 @@ export const landing = {
 	pricing: {
 		eyebrow: "Pricing",
 		title: "Start free, upgrade when you need to",
-		note: "The Pro plan isn't open for payment yet. Click Contact to tell us what you need. Unlimited monthly quotas still have a per-second rate limit to prevent abuse.",
 		freePrice: "Free",
-		proBadge: "Interest list open",
-		proLead:
-			"Higher limits and more members for projects in real use. Tell us what you need and we'll contact you when Pro opens.",
+		rateNote:
+			"Unlimited monthly quotas still have a per-second rate limit to prevent abuse.",
 	},
 	modeling: {
 		title: "Simple data modeling",

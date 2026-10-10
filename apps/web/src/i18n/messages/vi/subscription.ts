@@ -20,8 +20,6 @@ export const subscription: Messages["subscription"] = {
 		reachedText: "So sánh hai gói bên dưới.",
 		current: "Gói hiện tại: <b>{plan}</b>. Hạn mức từng gói bên dưới.",
 		proLead: "Hạn mức lớn hơn cho các project chạy thật, nhiều thành viên hơn.",
-		paymentNote:
-			"Gói Pro chưa mở thanh toán. Bấm Liên hệ để cho chúng tôi biết bạn cần gì.",
 		limit: {
 			projects: { other: "{count} project" },
 			resources: { other: "{count} resource" },

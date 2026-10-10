@@ -157,7 +157,9 @@ describe("route guards", () => {
 		});
 		renderRoutes(routes, "/");
 		await userEvent.click(
-			await screen.findByRole("button", { name: "Contact" }),
+			await screen.findByRole("button", {
+				name: "Tell us what you need from Pro",
+			}),
 		);
 		await expectProInterestSource("landing");
 		expect(navigateToLogin).not.toHaveBeenCalled();

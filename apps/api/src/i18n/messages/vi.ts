@@ -1,4 +1,5 @@
 import type { ServerMessages } from "./en.js";
+import { trialVi } from "./trial-vi.js";
 
 /** Vietnamese server texts: the wording Localman used before i18n. */
 export const vi: ServerMessages = {
@@ -8,6 +9,11 @@ export const vi: ServerMessages = {
 		"project.invitation": "Lời mời cộng tác project",
 		"project.mockUrlChanged": "URL mock của project được chia sẻ đã đổi",
 		"usage.quota": "Cảnh báo hạn mức lượt gọi mock tháng",
+		"trial.ending": "Dùng thử Pro sắp kết thúc",
+		"trial.ended": "Dùng thử Pro đã kết thúc",
+		"trial.extension.requested": "Yêu cầu gia hạn dùng thử Pro (owner)",
+		"trial.extension.approved": "Dùng thử Pro được gia hạn",
+		"trial.extension.declined": "Yêu cầu gia hạn dùng thử Pro bị từ chối",
 		"workspace.invitation": "Lời mời vào workspace",
 		"element.shared": "Collection và environment được chia sẻ với bạn",
 		"access.requested": "Yêu cầu truy cập collection và environment của bạn",
@@ -96,6 +102,7 @@ export const vi: ServerMessages = {
 			"Địa chỉ này trỏ vào mạng private nên Localman không gửi callback tới được. Hãy mở server local bằng tunnel Tunelo.",
 		callbackDns: "Không phân giải được tên host của URL callback.",
 	},
+	trial: trialVi,
 	ownerAlerts: {
 		suppressed: (count) =>
 			`(và ${count} lượt khác chưa báo vì vượt giới hạn tin báo)`,

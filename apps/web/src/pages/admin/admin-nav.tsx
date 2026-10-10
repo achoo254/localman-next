@@ -5,6 +5,11 @@ import { cn } from "../../lib/cn";
 const PAGES = [
 	{ to: "/admin/pro-interest", key: "proInterest", id: "pro-interest" },
 	{ to: "/admin/feedback", key: "feedback", id: "feedback" },
+	{
+		to: "/admin/trial-extensions",
+		key: "trialExtensions",
+		id: "trial-extensions",
+	},
 ] as const;
 
 /** Links between the owner's admin pages. */

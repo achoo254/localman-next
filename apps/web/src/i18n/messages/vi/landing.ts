@@ -57,11 +57,9 @@ export const landing: Messages["landing"] = {
 	pricing: {
 		eyebrow: "Bảng giá",
 		title: "Bắt đầu miễn phí, nâng cấp khi cần",
-		note: "Gói Pro chưa mở thanh toán. Bấm Liên hệ để cho chúng tôi biết bạn cần gì. Mức không giới hạn theo tháng vẫn có giới hạn tốc độ theo giây để chống lạm dụng.",
 		freePrice: "Miễn phí",
-		proBadge: "Nhận đăng ký quan tâm",
-		proLead:
-			"Hạn mức lớn hơn cho các project chạy thật, nhiều thành viên hơn. Để lại nhu cầu, chúng tôi liên hệ khi gói Pro mở.",
+		rateNote:
+			"Mức không giới hạn theo tháng vẫn có giới hạn tốc độ theo giây để chống lạm dụng.",
 	},
 	modeling: {
 		title: "Mô hình dữ liệu đơn giản",

@@ -189,6 +189,13 @@ export const routes: RouteObject[] = [
 					"FeedbackInboxPage",
 				),
 			},
+			{
+				path: "admin/trial-extensions",
+				element: lazyPage(
+					() => import("./pages/admin/trial-extensions-page"),
+					"TrialExtensionsPage",
+				),
+			},
 		],
 	},
 ];

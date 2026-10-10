@@ -4,6 +4,8 @@ import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
 import { saigonMonth } from "../../time/saigon-time.js";
 import { ProjectModel } from "../projects/project-model.js";
+import { ResourceModel } from "../resources/resource-model.js";
+import { overLimitSchema, overLimitsOf } from "./over-limits.js";
 import { effectivePlan, storedPlanOf, toJsonLimit } from "./plan-guard.js";
 import { readUsage } from "./usage-counter-model.js";
 
@@ -19,7 +21,7 @@ export const getAccountUsage = defineOperation({
 	path: "/account/usage",
 	summary: "Get plan usage of the signed-in user",
 	description:
-		"The plan in force (an expired Pro counts as Free), owned projects against the project limit, and this month's mock and proxy requests (Asia/Saigon calendar) against the monthly limits. `max: null` means unlimited.",
+		"The plan in force (an expired Pro counts as Free), owned projects against the project limit, and this month's mock and proxy requests (Asia/Saigon calendar) against the monthly limits. `max: null` means unlimited. `overLimits` lists the project and resource limits the owned counts exceed (after a Pro trial ends nothing is deleted, but creating more is refused until back under them).",
 	input: z.object({}),
 	output: z.object({
 		plan: z.enum(["free", "pro"]),
@@ -28,6 +30,8 @@ export const getAccountUsage = defineOperation({
 		projects: meter,
 		mockRequests: meter,
 		proxyRequests: meter,
+		/** Counted limits of the plan in force that are exceeded (a lapsed trial). */
+		overLimits: z.array(overLimitSchema),
 	}),
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: true, destructive: false, idempotent: true },
@@ -36,9 +40,10 @@ export const getAccountUsage = defineOperation({
 	handler: async (ctx) => {
 		const sub = requireSubject(ctx);
 		const now = new Date();
-		const [stored, ownedProjects, usage] = await Promise.all([
+		const [stored, ownedProjects, ownedResources, usage] = await Promise.all([
 			storedPlanOf(sub),
 			ProjectModel.countDocuments({ owner: sub }),
+			ResourceModel.countDocuments({ ownerSub: sub }),
 			readUsage(sub, now),
 		]);
 		const plan = effectivePlan(stored, now);
@@ -56,6 +61,10 @@ export const getAccountUsage = defineOperation({
 				used: usage.proxyRequests,
 				max: toJsonLimit(limits.proxyRequestsPerMonth),
 			},
+			overLimits: overLimitsOf(plan, {
+				projects: ownedProjects,
+				resources: ownedResources,
+			}),
 		};
 	},
 });

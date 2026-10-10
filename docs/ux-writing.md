@@ -25,7 +25,7 @@ Checklist cho mọi chữ người dùng thấy: landing, nút, lỗi, toast, mo
 - [ ] "Sắp có" chỉ là badge trong khối "Và nhiều hơn". Không đặt "Sắp có" vào thẻ giá, và không hứa thời điểm ra mắt.
 - [ ] Không cam kết số đo chưa đo được ("chỉ mất một phút", "41 ms"); dùng "vài phút" hoặc bỏ đi.
 - [ ] Hộp thoại và trang xác nhận chỉ hứa điều hệ thống thật sự làm. Chưa có chức năng trả lời qua chuông thì không viết "phản hồi sẽ hiện trong chuông".
-- [ ] Gói Pro không ghi giá và không ghi "chưa chốt"; CTA là "Liên hệ".
+- [ ] Gói Pro không ghi giá và không ghi "chưa chốt"; CTA chính là "Dùng thử 30 ngày" (mỗi tài khoản một lần), kèm câu "Chưa mở gói trả phí"; form quan tâm chỉ là link phụ.
 
 ## 4. Số liệu
 
