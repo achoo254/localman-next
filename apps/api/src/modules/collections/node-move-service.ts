@@ -9,7 +9,6 @@ import { type ClientSession, Types } from "mongoose";
 import type { z } from "zod";
 import { inWorkspaceTransaction } from "../workspaces/workspace-lock.js";
 import { requireCollection } from "./collection-access.js";
-import { chargeRoot } from "./collection-bytes.js";
 import { CollectionNodeModel } from "./collection-node-model.js";
 import { toCollectionNode } from "./collection-view.js";
 import {
@@ -18,7 +17,14 @@ import {
 	loadOutline,
 	pathToTop,
 } from "./node-outline.js";
-import { assertParent, findNode, tooDeep } from "./node-service.js";
+import {
+	assertParent,
+	findNode,
+	nodeNotFound,
+	tooDeep,
+} from "./node-service.js";
+import { nodesRevision } from "./revision-drafts.js";
+import { chargeRoot } from "./root-change.js";
 
 export type NodeMove = z.infer<typeof nodeMoveSchema>;
 
@@ -79,10 +85,21 @@ function keyBetween(before: string | null, after: string | null): string {
 	}
 }
 
+/** The node at its new place (an example keeps its request). */
+function placed(
+	node: CollectionNode,
+	parentId: string | null,
+	order: string,
+): CollectionNode {
+	if (node.kind === "example") return { ...node, order };
+	return { ...node, parentId, order };
+}
+
 /**
  * Drops a node under `parentId` between two siblings' order keys,
- * rewriting that node (and stamping the root). A folder cannot go into
- * its own subtree, nor nest folders deeper than `COLLECTION_DEPTH_MAX`.
+ * rewriting that node (and stamping the root, with a changelog entry).
+ * A folder cannot go into its own subtree, nor nest folders deeper than
+ * `COLLECTION_DEPTH_MAX`; an example only reorders under its request.
  */
 export async function moveNode(
 	sub: string,
@@ -91,13 +108,24 @@ export async function moveNode(
 	move: NodeMove,
 ): Promise<CollectionNode> {
 	const { element, collectionId } = await requireCollection(sub, id, "edit");
-	const node = await findNode(collectionId, nodeId);
 	// Malformed or reversed keys answer 400 before anything is read.
 	keyBetween(move.beforeOrder, move.afterOrder);
-	const selfId = node._id.toHexString();
-	await inWorkspaceTransaction(element.workspaceId, async (session) => {
+	// The node as moved: a deletion committed right after must not turn a
+	// done move into 404.
+	return inWorkspaceTransaction(element.workspaceId, async (session) => {
+		// Read under the lock: a deletion or move committed meanwhile shows.
+		const node = await findNode(collectionId, nodeId, session);
+		const selfId = node._id.toHexString();
 		const outline = await loadOutline(collectionId, session);
-		assertParent(outline, move.parentId);
+		const current = node.parentId?.toHexString() ?? null;
+		if (node.kind === "example" && move.parentId !== current) {
+			throw new OperationError(
+				400,
+				"INVALID_PARENT",
+				"An example stays under its request",
+			);
+		}
+		assertParent(outline, move.parentId, node.kind);
 		if (pathToTop(outline, move.parentId).includes(selfId)) {
 			throw new OperationError(
 				400,
@@ -118,12 +146,17 @@ export async function moveNode(
 			move,
 			session,
 		);
-		await chargeRoot(collectionId, sub, session);
-		await CollectionNodeModel.updateOne(
+		const before = toCollectionNode(node);
+		const after = placed(before, move.parentId, order);
+		const result = await CollectionNodeModel.updateOne(
 			{ _id: node._id, collectionId },
 			{ $set: { parentId, order, updatedBy: sub } },
 			{ session },
 		);
+		if (result.matchedCount === 0) throw nodeNotFound();
+		await chargeRoot(collectionId, sub, session, {
+			revisions: [nodesRevision("move", after, [before], [after])],
+		});
+		return after;
 	});
-	return toCollectionNode(await findNode(collectionId, nodeId));
 }

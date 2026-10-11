@@ -19,6 +19,8 @@ export type WorkbenchAction =
 			saved?: ApiRequestDraft;
 	  }
 	| { type: "openPage"; page: PageTab }
+	/** Pages remembered from an earlier visit; added without switching. */
+	| { type: "restorePages"; pages: PageTab[] }
 	| { type: "renamePage"; id: string; name: string }
 	/** Binds (or with `null` unbinds) a tab to a collection request. */
 	| {

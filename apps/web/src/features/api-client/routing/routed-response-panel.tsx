@@ -1,5 +1,5 @@
 import type { RouteMode } from "@localman/shared/api-client";
-import { memo } from "react";
+import { type ReactNode, memo } from "react";
 import { ResponsePanel } from "../response/response-panel";
 import { TuneloPanel } from "../tunelo/tunelo-panel";
 import { useWorkbenchActions } from "../workbench/workbench-context";
@@ -14,6 +14,8 @@ export interface RoutedResponsePanelProps {
 	response: TabResponse;
 	/** The tab's route, for "Use Auto". */
 	route: RouteMode;
+	/** Buttons over a received response ("Save as example"). */
+	resultActions?: ReactNode;
 }
 
 function hasRouteNote({ routing }: SendResult): boolean {
@@ -31,6 +33,7 @@ export const RoutedResponsePanel = memo(function RoutedResponsePanel({
 	tabId,
 	response,
 	route,
+	resultActions,
 }: RoutedResponsePanelProps) {
 	const workbench = useWorkbenchActions();
 	const routing = response.kind === "failed" ? response.failure.routing : null;
@@ -90,8 +93,13 @@ export const RoutedResponsePanel = memo(function RoutedResponsePanel({
 				) : undefined
 			}
 			banner={
-				result && hasRouteNote(result) ? (
-					<RouteNote result={result} />
+				result && (resultActions || hasRouteNote(result)) ? (
+					<>
+						{resultActions ? (
+							<div className="flex justify-end">{resultActions}</div>
+						) : null}
+						{hasRouteNote(result) ? <RouteNote result={result} /> : null}
+					</>
 				) : undefined
 			}
 			errorActions={quota ? <QuotaPlansAction /> : undefined}

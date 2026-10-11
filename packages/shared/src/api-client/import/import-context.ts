@@ -1,15 +1,8 @@
 /**
  * State shared by one import run: id source, warnings (capped, tagged with
- * the item path), the request budget, and the final clamp that keeps every
- * draft inside the limits `apiRequestDraftSchema` enforces when it is saved.
+ * the item path) and the item budget. Fitting values to the server limits
+ * is in `clamp-draft.ts` and `fit-tree.ts`.
  */
-import {
-	MAX_HEADERS,
-	MAX_REQUEST_NAME_LENGTH,
-	MAX_SCRIPT_LENGTH,
-	MAX_TABLE_ROWS,
-} from "../limits.js";
-import type { ApiRequestDraft, KeyValueRow } from "../request-model.js";
 import type {
 	RequestImportParams,
 	RequestImportWarning,
@@ -77,53 +70,6 @@ export function createImportContext(
 /** `parent / child`, or `child` at the top. */
 export function joinPath(parent: string, name: string): string {
 	return parent ? `${parent} / ${name}` : name;
-}
-
-function capRows<T extends KeyValueRow>(
-	rows: T[],
-	max: number,
-	warn: () => void,
-): T[] {
-	if (rows.length <= max) return rows;
-	warn();
-	return rows.slice(0, max);
-}
-
-/** Cuts the name and the tables to what a saved draft may hold. */
-export function clampDraft(
-	draft: ApiRequestDraft,
-	ctx: ImportContext,
-	path: string,
-): ApiRequestDraft {
-	const truncated = (max: number) => () => ctx.warn("TRUNCATED", path, { max });
-	const script = (text: string): string => {
-		if (text.length <= MAX_SCRIPT_LENGTH) return text;
-		truncated(MAX_SCRIPT_LENGTH)();
-		return "";
-	};
-	return {
-		...draft,
-		name: draft.name.slice(0, MAX_REQUEST_NAME_LENGTH),
-		params: capRows(draft.params, MAX_TABLE_ROWS, truncated(MAX_TABLE_ROWS)),
-		headers: capRows(draft.headers, MAX_HEADERS, truncated(MAX_HEADERS)),
-		body: {
-			...draft.body,
-			urlencoded: capRows(
-				draft.body.urlencoded,
-				MAX_TABLE_ROWS,
-				truncated(MAX_TABLE_ROWS),
-			),
-			formData: capRows(
-				draft.body.formData,
-				MAX_TABLE_ROWS,
-				truncated(MAX_TABLE_ROWS),
-			),
-		},
-		scripts: {
-			pre: script(draft.scripts.pre),
-			post: script(draft.scripts.post),
-		},
-	};
 }
 
 /** Warns when a script was written against the `pm.*` API. */

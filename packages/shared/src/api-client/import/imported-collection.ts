@@ -6,6 +6,10 @@
  */
 import { resolveEffectiveAuth } from "../auth-headers.js";
 import type {
+	CollectionStatus,
+	ExampleResponse,
+} from "../collections/collection-model.js";
+import type {
 	ApiRequestDraft,
 	EffectiveAuth,
 	RequestAuth,
@@ -14,6 +18,14 @@ import type {
 import type { VariableEntry } from "../variable-interpolation.js";
 import type { RequestImportWarning } from "./import-error.js";
 
+/** A saved response of a request (v2.1 `response[]`). */
+export interface ImportedExample {
+	id: string;
+	name: string;
+	request: ApiRequestDraft;
+	response: ExampleResponse;
+}
+
 export interface ImportedRequest {
 	kind: "request";
 	/** Unique within one import (the picker selects by it). */
@@ -21,6 +33,8 @@ export interface ImportedRequest {
 	name: string;
 	description: string;
 	draft: ApiRequestDraft;
+	/** Saved responses, in file order. */
+	examples: ImportedExample[];
 }
 
 export interface ImportedFolder {
@@ -46,6 +60,10 @@ export interface CollectionTree {
 	variables: VariableEntry[];
 	scripts: RequestScripts;
 	items: ImportedItem[];
+	/** Tags of the collection (Localman extension), lower-case. */
+	tags: string[];
+	/** Status tag (Localman extension), `null` when none. */
+	status: CollectionStatus | null;
 }
 
 export const COLLECTION_IMPORT_FORMATS = [
@@ -126,12 +144,15 @@ export function collectionFromDrafts(
 		auth: { type: "none" },
 		variables: [],
 		scripts: { pre: "", post: "" },
+		tags: [],
+		status: null,
 		items: drafts.map(({ id, draft }) => ({
 			kind: "request",
 			id,
 			name: draft.name,
 			description: "",
 			draft,
+			examples: [],
 		})),
 	};
 }

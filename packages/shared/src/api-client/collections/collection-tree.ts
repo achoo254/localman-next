@@ -2,15 +2,17 @@
  * Converts a stored collection (root plus flat nodes) to the nested
  * `CollectionTree` that import and export use, and back. Export reads the
  * tree; creating a collection from an import or a template writes the
- * nodes.
+ * nodes. Examples are nodes under their request node in storage and the
+ * request's `examples` in the tree.
  */
 import type {
 	CollectionTree,
+	ImportedExample,
 	ImportedItem,
 } from "../import/imported-collection.js";
 import type {
 	CollectionDetail,
-	CollectionFolderNode,
+	CollectionExampleNode,
 	CollectionNode,
 } from "./collection-model.js";
 import { compareOrder, orderKeysBetween } from "./collection-order.js";
@@ -25,7 +27,7 @@ export const COLLECTION_DEPTH_MAX = 64;
 /** The root fields of a collection, as stored next to its nodes. */
 export type CollectionRootFields = Pick<
 	CollectionDetail,
-	"name" | "description" | "auth" | "scripts" | "variables"
+	"name" | "description" | "auth" | "scripts" | "variables" | "tags" | "status"
 >;
 
 /** Children of each parent (`null` for the top), sorted by order. */
@@ -50,15 +52,39 @@ export function nodesToCollectionTree(
 	detail: CollectionDetail,
 ): CollectionTree {
 	const byParent = childrenByParent(detail.nodes);
+	const examplesOf = (requestId: string): ImportedExample[] =>
+		(byParent.get(requestId) ?? []).flatMap((node) =>
+			node.kind === "example"
+				? [
+						{
+							id: node.id,
+							name: node.name,
+							request: node.request,
+							response: node.response,
+						},
+					]
+				: [],
+		);
 	const itemsOf = (parentId: string | null): ImportedItem[] =>
-		(byParent.get(parentId) ?? []).map((node): ImportedItem => {
+		(byParent.get(parentId) ?? []).flatMap((node): ImportedItem[] => {
+			if (node.kind === "example") return [];
+			const { id, name, description } = node;
 			if (node.kind === "request") {
-				const { id, name, description, draft } = node;
-				return { kind: "request", id, name, description, draft };
+				const examples = examplesOf(id);
+				return [
+					{
+						kind: "request",
+						id,
+						name,
+						description,
+						draft: node.draft,
+						examples,
+					},
+				];
 			}
-			const { id, name, description, auth, scripts } = node;
+			const { auth, scripts } = node;
 			const items = itemsOf(id);
-			return { kind: "folder", id, name, description, auth, scripts, items };
+			return [{ kind: "folder", id, name, description, auth, scripts, items }];
 		});
 	return {
 		name: detail.name,
@@ -66,8 +92,24 @@ export function nodesToCollectionTree(
 		auth: detail.auth,
 		variables: detail.variables,
 		scripts: detail.scripts,
+		tags: detail.tags,
+		status: detail.status,
 		items: itemsOf(null),
 	};
+}
+
+function orderKeys(count: number): string[] {
+	return count === 0 ? [] : orderKeysBetween(null, null, count);
+}
+
+/** Pairs each entry with its order key (the keys are as many). */
+function withOrder<T>(entries: readonly T[]): [T, string][] {
+	const keys = orderKeys(entries.length);
+	return entries.map((entry, index) => {
+		const order = keys[index];
+		if (order === undefined) throw new Error("Missing an order key");
+		return [entry, order];
+	});
 }
 
 /**
@@ -80,18 +122,32 @@ export function collectionTreeToNodes(
 	idFactory: () => string,
 ): { root: CollectionRootFields; nodes: CollectionNode[] } {
 	const nodes: CollectionNode[] = [];
+	const addExamples = (
+		examples: readonly ImportedExample[],
+		parentId: string,
+	) => {
+		for (const [example, order] of withOrder(examples)) {
+			const { name, request, response } = example;
+			const node: CollectionExampleNode = {
+				kind: "example",
+				id: idFactory(),
+				parentId,
+				order,
+				name,
+				request,
+				response,
+			};
+			nodes.push(node);
+		}
+	};
 	const addItems = (
 		items: readonly ImportedItem[],
 		parentId: string | null,
 	) => {
-		const keys = orderKeysBetween(null, null, items.length);
-		items.forEach((item, index) => {
+		for (const [item, order] of withOrder(items)) {
 			const id = idFactory();
-			const order = keys[index];
-			if (order === undefined) throw new Error("Missing an order key");
 			const { name, description } = item;
 			if (item.kind === "request") {
-				const { draft } = item;
 				nodes.push({
 					kind: "request",
 					id,
@@ -99,25 +155,29 @@ export function collectionTreeToNodes(
 					order,
 					name,
 					description,
-					draft,
+					draft: item.draft,
 				});
-				return;
+				addExamples(item.examples, id);
+				continue;
 			}
-			const folder: CollectionFolderNode = {
+			const { auth, scripts } = item;
+			nodes.push({
 				kind: "folder",
 				id,
 				parentId,
 				order,
 				name,
 				description,
-				auth: item.auth,
-				scripts: item.scripts,
-			};
-			nodes.push(folder);
+				auth,
+				scripts,
+			});
 			addItems(item.items, id);
-		});
+		}
 	};
 	addItems(tree.items, null);
-	const { name, description, auth, scripts, variables } = tree;
-	return { root: { name, description, auth, scripts, variables }, nodes };
+	const { name, description, auth, scripts, variables, tags, status } = tree;
+	return {
+		root: { name, description, auth, scripts, variables, tags, status },
+		nodes,
+	};
 }

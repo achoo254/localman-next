@@ -35,7 +35,8 @@ const rowKey = z.string().max(MAX_ROW_KEY_LENGTH);
 const rowValue = z.string().max(MAX_ROW_VALUE_LENGTH);
 const secretText = z.string().max(MAX_HEADER_VALUE_LENGTH);
 
-const keyValueRowSchema = z.object({
+/** A params, headers or url-encoded row (also example response headers). */
+export const keyValueRowSchema = z.object({
 	id: rowId,
 	key: rowKey,
 	value: rowValue,

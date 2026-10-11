@@ -52,6 +52,12 @@ export const apiClientToolsImport: Messages["apiClientTools"]["import"] = {
 		TRUNCATED: "只导入了前 {max} 项。",
 		EXTRA_URLS: "命令中还有 {count} 个 URL，只使用第一个。",
 		UNRESOLVED_REF: "无法解析引用 {ref}，已跳过。",
+		EXAMPLE_BODY_TRUNCATED: "某个 example 的 body 已被截断以符合大小限制。",
+		INVALID_METADATA: {
+			tags: "collection 的 tag 无效，已跳过。",
+			status: "collection 的状态无效，已跳过。",
+		},
+		TEXT_TRUNCATED: "某个值已被截断为 {max} 个字符。",
 		MORE_WARNINGS: "另有 {count} 条提示未列出。",
 	},
 	picker: {

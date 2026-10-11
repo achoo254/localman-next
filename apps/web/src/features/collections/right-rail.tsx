@@ -1,0 +1,127 @@
+import { IconHistory, IconInfoCircle, IconX } from "@tabler/icons-react";
+import { type KeyboardEvent, memo, useId, useRef } from "react";
+import { IconButton } from "../../components/ui/icon-button";
+import { useT } from "../../i18n/i18n-context";
+import { cn } from "../../lib/cn";
+import { ChangelogPanel } from "./changelog-panel";
+import { InfoPanel } from "./info-panel";
+import {
+	RIGHT_PANELS,
+	type RightPanel,
+	useRightPanel,
+} from "./right-panel-context";
+import { useCollection } from "./use-collections";
+import { useDrawerFocus } from "./use-drawer-focus";
+
+const ICONS = { info: IconInfoCircle, changelog: IconHistory } as const;
+
+export interface RightRailProps {
+	collectionId: string;
+	/** The folder of a folder page (its request count). */
+	folderId: string | null;
+}
+
+/**
+ * Right rail of a collection, folder, example or bound request: Info and
+ * Changelog panels about 340px wide; below 768px the panel is a drawer
+ * from the right over a backdrop, which takes the focus while open.
+ */
+export const RightRail = memo(function RightRail({
+	collectionId,
+	folderId,
+}: RightRailProps) {
+	const t = useT();
+	const panelId = useId();
+	const { panel, setPanel } = useRightPanel();
+	const panelRef = useRef<HTMLElement>(null);
+	const closeRef = useRef<HTMLButtonElement>(null);
+	useDrawerFocus(panel !== null, () => setPanel(null), panelRef, closeRef);
+	const collection = useCollection(collectionId);
+	const detail = collection.data;
+	const labels: Record<RightPanel, string> = {
+		info: t("collections.rightRail.info"),
+		changelog: t("collections.rightRail.changelog"),
+	};
+	const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+		if (event.key !== "Escape" || panel === null) return;
+		event.stopPropagation();
+		setPanel(null);
+	};
+	return (
+		<div className="flex min-h-0 flex-none" onKeyDown={onKeyDown}>
+			{panel ? (
+				<>
+					<button
+						type="button"
+						tabIndex={-1}
+						aria-label={t("collections.rightRail.backdrop")}
+						className="fixed inset-x-0 top-(--topbar-h) bottom-0 z-40 cursor-default border-0 bg-backdrop md:hidden"
+						onClick={() => setPanel(null)}
+					/>
+					<aside
+						ref={panelRef}
+						id={panelId}
+						aria-label={labels[panel]}
+						data-id={`right-panel-${panel}`}
+						className="flex w-85 min-h-0 flex-col border-border-subtle border-l bg-surface max-md:fixed max-md:top-(--topbar-h) max-md:right-0 max-md:bottom-0 max-md:z-50 max-md:max-w-[calc(100vw-3rem)] max-md:shadow-lg"
+					>
+						<header className="flex items-center gap-2 border-border-subtle border-b py-2 pr-2 pl-3">
+							<h2 className="m-0 min-w-0 flex-1 truncate font-bold font-mono text-sm">
+								{labels[panel]}
+							</h2>
+							<IconButton
+								ref={closeRef}
+								size="sm"
+								data-id="right-panel-close"
+								label={t("collections.rightRail.close")}
+								icon={<IconX size={16} aria-hidden="true" />}
+								onClick={() => setPanel(null)}
+							/>
+						</header>
+						<div className="min-h-0 flex-1 overflow-y-auto p-3">
+							{detail && panel === "info" ? (
+								<InfoPanel detail={detail} folderId={folderId} />
+							) : null}
+							{panel === "changelog" ? (
+								<ChangelogPanel
+									collectionId={collectionId}
+									canEdit={detail?.role === "editor"}
+								/>
+							) : null}
+						</div>
+					</aside>
+				</>
+			) : null}
+			<nav
+				aria-label={t("collections.rightRail.label")}
+				data-id="right-rail"
+				className="flex w-12 flex-none flex-col gap-1 border-border-subtle border-l bg-surface-subtle p-1"
+			>
+				{RIGHT_PANELS.map((id) => {
+					const Icon = ICONS[id];
+					const active = panel === id;
+					return (
+						<button
+							key={id}
+							type="button"
+							aria-expanded={active}
+							aria-controls={active ? panelId : undefined}
+							aria-label={labels[id]}
+							title={labels[id]}
+							data-id={`right-rail-${id}`}
+							className={cn(
+								"grid min-h-10 cursor-pointer place-items-center rounded-sm border-0",
+								active
+									? "bg-primary/10 text-primary"
+									: "bg-transparent text-muted hover:bg-fg/6 hover:text-fg",
+							)}
+							onClick={() => setPanel(active ? null : id)}
+						>
+							<Icon size={20} aria-hidden="true" />
+						</button>
+					);
+				})}
+			</nav>
+		</div>
+	);
+});

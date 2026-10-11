@@ -15,8 +15,8 @@ import { useWorkbenchActions } from "../api-client/workbench/workbench-context";
 import type { WorkbenchTab } from "../api-client/workbench/workbench-types";
 import { useCurrentWorkspace } from "../workspaces/current-workspace";
 import { collectionErrorMessage } from "./collection-errors";
-import { createNode } from "./collections-api";
 import { folderOptions } from "./folder-options";
+import { createNode } from "./nodes-api";
 import {
 	COLLECTIONS_KEY,
 	useCollection,

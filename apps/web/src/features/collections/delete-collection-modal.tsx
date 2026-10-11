@@ -45,6 +45,7 @@ export function DeleteCollectionModal({
 		enabled: open,
 		staleTime: 0,
 		gcTime: 0,
+		refetchOnWindowFocus: false,
 	});
 	const requests = preview.data?.requests ?? summary.requestCount;
 	const needsWord = requests > 0;

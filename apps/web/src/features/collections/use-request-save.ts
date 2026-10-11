@@ -16,7 +16,7 @@ import { ApiError } from "../../lib/api-client";
 import { useWorkbenchActions } from "../api-client/workbench/workbench-context";
 import type { WorkbenchTab } from "../api-client/workbench/workbench-types";
 import { collectionErrorMessage } from "./collection-errors";
-import { updateNode } from "./collections-api";
+import { updateNode } from "./nodes-api";
 import { COLLECTIONS_KEY, collectionKey } from "./use-collections";
 
 /** The cached collection with `node` in place of its older self. */

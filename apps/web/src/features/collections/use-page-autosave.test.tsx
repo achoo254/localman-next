@@ -58,4 +58,22 @@ describe("usePageAutosave", () => {
 		expect(api.calls[1]).toEqual({ name: "A", description: "new" });
 		expect(result.current.pending).toEqual({ name: "A", description: "new" });
 	});
+
+	it("drops unsaved edits on discard and sends nothing later", async () => {
+		const api = manualSave();
+		const { result } = renderHook(() => usePageAutosave<Fields>(api.save, 20));
+		act(() => result.current.edit({ name: "A" }));
+		let had = false;
+		act(() => {
+			had = result.current.discard();
+		});
+		expect(had).toBe(true);
+		expect(result.current.pending).toEqual({});
+		await new Promise((resolve) => setTimeout(resolve, 60));
+		expect(api.calls).toEqual([]);
+		act(() => {
+			had = result.current.discard();
+		});
+		expect(had).toBe(false);
+	});
 });

@@ -1,8 +1,18 @@
 import { limitsFor } from "@localman/shared/constants";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+	keepPreviousData,
+	useMutation,
+	useQuery,
+	useQueryClient,
+} from "@tanstack/react-query";
 import { useCurrentUser } from "../auth/use-current-user";
-import type { TrashedCollection } from "./collection-parsers";
-import { deleteTrashed, fetchTrash, restoreTrashed } from "./trash-api";
+import {
+	type TrashFilters,
+	type TrashListing,
+	deleteTrashed,
+	fetchTrash,
+	restoreTrashed,
+} from "./trash-api";
 import { COLLECTIONS_KEY, TRASH_KEY } from "./use-collections";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -23,18 +33,22 @@ export function useTrashDays(): number {
 	return limitsFor(plan).trashDays;
 }
 
-export function useTrash() {
-	return useQuery({ queryKey: TRASH_KEY, queryFn: fetchTrash });
+export function useTrash(filters: TrashFilters) {
+	return useQuery({
+		queryKey: [...TRASH_KEY, filters],
+		queryFn: () => fetchTrash(filters),
+		placeholderData: keepPreviousData,
+	});
 }
 
-type Trash = TrashedCollection[];
-
-/** Gone from the trash list (restored or deleted for good). */
+/** Gone from every trash list (restored or deleted for good). */
 function useLeaveTrash() {
 	const client = useQueryClient();
 	return (id: string): void => {
-		client.setQueryData<Trash>(TRASH_KEY, (list) =>
-			list?.filter((item) => item.id !== id),
+		client.setQueriesData<TrashListing>({ queryKey: TRASH_KEY }, (list) =>
+			list
+				? { ...list, items: list.items.filter((item) => item.id !== id) }
+				: list,
 		);
 		void client.invalidateQueries({ queryKey: TRASH_KEY });
 	};

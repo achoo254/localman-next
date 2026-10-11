@@ -1,4 +1,5 @@
 import type {
+	CollectionStatus,
 	EffectiveAuth,
 	RequestScripts,
 	VariableEntry,
@@ -27,6 +28,14 @@ const collectionSchema = new Schema(
 		updatedBy: { type: String, required: true },
 		bytes: { type: Number, default: 0 },
 		requestCount: { type: Number, default: 0 },
+		tags: { type: [String], default: [] },
+		status: { type: Schema.Types.Mixed, default: null },
+		/** `name` folded for search (`foldSearchText`). */
+		searchName: { type: String },
+		/** Last revision number, and what the changelog holds (trimmed). */
+		revisionSeq: { type: Number, default: 0 },
+		revisionCount: { type: Number, default: 0 },
+		revisionBytes: { type: Number, default: 0 },
 		deletedAt: { type: Date },
 		deletedBy: { type: String },
 		/**
@@ -78,6 +87,11 @@ export interface StoredCollection {
 	/** Missing on a record written before it existed: read as 0. */
 	readonly bytes?: number;
 	readonly requestCount?: number;
+	readonly tags?: readonly string[];
+	readonly status?: CollectionStatus | null;
+	readonly revisionSeq?: number;
+	readonly revisionCount?: number;
+	readonly revisionBytes?: number;
 	readonly deletedAt?: Date | null;
 	readonly deletedBy?: string | null;
 	readonly trashEditors?: readonly string[];

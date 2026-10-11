@@ -1,0 +1,63 @@
+/** Status, tags, the right rail (Info) and recent activity of a collection. */
+export const collectionsMeta = {
+	status: {
+		add: "Add status",
+		none: "no status",
+		label: "Status: {status}",
+		custom: "Custom status…",
+		remove: "Remove status",
+		customTitle: "Custom status",
+		name: "Name",
+		emoji: "Emoji",
+		emojiOther: "Or type one emoji",
+		save: "Save status",
+		presets: {
+			stable: "Stable",
+			inDevelopment: "In development",
+			inReview: "In review",
+			deprecated: "Deprecated",
+		},
+		problems: {
+			nameLength: "Use {min} to {max} characters.",
+			nameStart: "Start the name with a letter.",
+			nameCharacters: "The name can't contain invisible or control characters.",
+			emoji: "Pick exactly one emoji.",
+		},
+	},
+	tags: {
+		title: "Tags {count}/{max}",
+		empty: "No tags yet.",
+		input: "New tag",
+		placeholder: "Add a tag",
+		add: "Add",
+		remove: "Remove tag {tag}",
+		hint: "Up to 10 tags of 1 to {max} characters, starting and ending with a letter or digit. They are stored in lower case.",
+		tooltip: "Tags: {tags}",
+		problems: {
+			empty: "Type a tag first.",
+			tooLong: "A tag has at most {max} characters.",
+			edges: "Start and end a tag with a letter or digit.",
+			characters: "A tag can't contain invisible or control characters.",
+			tooMany: "A collection has at most 10 tags.",
+		},
+	},
+	rightRail: {
+		label: "Collection details",
+		info: "Info",
+		changelog: "Changelog",
+		close: "Close panel",
+		backdrop: "Close the details panel",
+	},
+	info: {
+		title: "Info",
+		id: "ID",
+		copyId: "Copy ID",
+		copied: "Copied the ID.",
+	},
+	activity: {
+		title: "Recent activity",
+		empty: "No activity yet.",
+		loadFailed: "We couldn't load the activity.",
+		openChangelog: "Open changelog",
+	},
+} as const;

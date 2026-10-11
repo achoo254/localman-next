@@ -186,3 +186,111 @@ Changed:
 - Shared collections tests: 15/15.
 
 The scratchpad file list is shared with another session and had picked up `apps/web` paths. Every `biome --write` run used my own list or explicit paths, so no web file was written.
+
+## Phase 12 slice B (backend)
+
+**A. Tags and status** (`packages/shared/src/api-client/collections/collection-tags.ts`, exported from the api-client index):
+- `normalizeTags(tags)` returns `{ tags, problems[] }`. Problem codes: `empty`, `too-long`, `edges`, `too-many`.
+- `validateStatus(status)` returns a problem code or `null`. Problem codes: `unknown-preset`, `name-length`, `name-start`, `emoji`.
+- Also `isSingleEmoji`, `collectionTagsSchema` (parses to the normalized list) and `collectionStatusSchema`.
+- The limit constants and the `CollectionStatus` types now live in this file. `collection-model.ts` re-exports them under the same names, which avoids a runtime import cycle.
+- One addition to the spec: besides Extended_Pictographic, a single flag or keycap also counts as an emoji.
+- 8 unit tests.
+
+**B. Tags and status on the root:**
+- The root stores `tags` and `status`. `PATCH /collections/:id` takes `tags` (normalized) and `status` (`null` clears it).
+- Both appear in `CollectionDetail`, `CollectionSummary` and trash entries.
+- The detail also gains `createdByName`, `updatedBy` and `updatedByName`.
+
+**C. Examples:**
+- A node with `kind: "example"` whose parent is a request node of the same collection. It holds `{ name, request, response }` and has no children.
+- Create through `POST …/nodes` with `kind: "example"`. Edit `name`, `request` and `response` through `PATCH`. Duplicate works through the existing node duplicate. A move only reorders it under its own request (400 `INVALID_PARENT` for another parent). It is deleted with its request.
+- Bodies above `EXAMPLE_BODY_MAX` bytes get 413 `EXAMPLE_TOO_LARGE`; the API refuses rather than cut silently, and the web cuts before sending.
+- Examples count toward the node limit and the byte budget.
+- Examples are left out of search (no `searchName`); they show under their request.
+- Deletion counts now include `examples`.
+- `collection-tree.ts` maps examples to and from `ImportedRequest.examples`, and tags and status to and from the tree root. Its test uses its own fixture, `collection-tree-fixture.ts`.
+
+**D. Changelog:**
+- Model `collection_revisions` stores `{ seq, authorId, at, entity, entityId, entityKind, entityName, action, fields, forward, inverse, touched, partial, hidden, bytes }`.
+- The JSON Patches (fast-json-patch) apply to the state document `{ root, nodes: { [id]: node } }`.
+- Every write records its revision inside its own transaction, through `chargeRoot` in `root-change.ts`:
+  - collection create (records the root only), root edit, tags and status;
+  - node create, update, move, delete, duplicate and bulk delete;
+  - trash, restore from trash (`untrash`), and restore to a change.
+- An edit or move that changes nothing records no revision.
+- `seq` comes from the root's `revisionSeq`, kept current under the workspace lock.
+- Storage limits:
+  - at most 2000 revisions per collection, and at most 20 MiB of patches (`REVISIONS_BYTES_MAX`); the oldest are trimmed in the same transaction;
+  - a revision whose patches exceed 4 MiB keeps metadata only (`partial`); nothing older than it can be restored, and its diff is unavailable.
+- Permanent delete and the purge job delete the collection's revisions.
+- Restore to a change: under the lock, it loads the current state, applies the inverse patches of every later revision newest first, and writes the difference (root fields; changed, removed and new nodes, keeping their ids). The result is recorded as one `restore` revision, and `bytes` and `requestCount` are recomputed. 409 `REVISION_UNAVAILABLE` when a later revision is partial, a patch no longer fits, or the revision was trimmed. A trimmed revision is recognised when the oldest kept revision's `seq` is above 1 and the id is dated at or before it; any other unknown id gets 404 `REVISION_NOT_FOUND`.
+- Diff: the entity's current state rewound through the later revisions that touched it (the `touched` index); `before` is that state with the revision's own inverse applied.
+
+**E. Activity:** `GET /collections/:id/activity?limit=` (1–50, default 10) returns the latest changes with `authorName`. `createdByName` and `updatedByName` are on the detail.
+
+**F. Trash filters:** `GET /trash/collections?workspaceId=&deletedBy=&q=`. `q` matches the root's new `searchName` field. The response is now `{ items, deleters }`. `deleters` lists who deleted anything in the caller's trash, narrowed by workspace only.
+
+**G. Bulk operations:**
+- `POST /collections/:id/nodes/bulk-delete { nodeIds }`: one transaction, one changelog entry per deleted subtree, 404 and nothing deleted when an id is missing.
+- `POST /workspaces/:workspaceId/collections/bulk-trash { collectionIds, confirm? }`: each collection needs the single-delete rights, all go or none, 404 for a collection of another workspace.
+- Both have dryRun and requiresConfirmation; `dryRun` is the framework's `?dryRun=true` or MCP `dry_run`, not a body field.
+
+**Not recorded in the changelog:** moving a collection to another workspace (the access layer's adapter) and the workspace-deletion cascade. Neither changes content.
+
+**Shared files:**
+- `collection-schemas.ts` (new): the zod input schemas, moved out of `collection-model.ts` (now 164 lines) and exported from the index under the same names. No file imported them by path.
+- `changelog-model.ts` (new): the changelog, diff, activity and trash-list types.
+- `request-schema.ts`: exports `keyValueRowSchema` (authorized).
+- `request-context.test.ts`: fixture fields only (authorized).
+
+**New API files:**
+- `collection-revision-model.ts`, `revision-patch.ts`, `revision-log.ts`, `revision-drafts.ts`, `revision-state.ts`
+- `root-change.ts` (`chargeRoot` moved here)
+- `changelog-service.ts`, `changelog-view.ts`, `changelog-operations.ts`, `change-restore-service.ts`
+- `collection-insert.ts`, `collection-duplicate-service.ts`
+- `node-create-input.ts`, `node-delete-service.ts`, `collection-node-batch-operations.ts`
+- `trash-list-service.ts`, `bulk-trash-service.ts`, `people.ts`
+
+**New tests:**
+- `collection-examples.test.ts`, `collection-tags-api.test.ts`, `collection-changelog.test.ts`, `collection-change-restore.test.ts`, `collection-bulk.test.ts`
+- The restore round trip covers create, edit, example, move, root edit, delete and duplicate; it restores to every state in a mixed order and compares the content exactly.
+
+**Checks:**
+- Typecheck is clean for both `apps/api` and `@localman/shared`.
+- `biome check` reports nothing on the 84 owned files.
+- `pnpm check:mcp-coverage` is OK (149 operations, 114 tools, 35 exempt).
+- Targeted run of collections, workspaces, access, operations and drafts: 33 files, 151/151.
+- Shared collections tests: 3 files, 24/24.
+
+## Slice B review fixes
+
+- **H1, move racing other writes.** `moveNode` now reads the node inside the workspace-lock transaction (`findNode(…, session)`) and builds the revision, including the example parent check, from that read. It answers 404 `NODE_NOT_FOUND` when the update matches nothing, and returns the node it wrote instead of re-reading it after the transaction. The new race test caught that last case: a move committed just before a delete was answered 404. `collection-move-races.test.ts` covers move vs delete (4 rounds: one move revision only if the move succeeded; history restorable to the first change) and move vs move (two chained revisions; every state restorable).
+- **M3, newest partial revision.** Served by the partial index `partial_by_seq` on `{collectionId, partial, seq}` (filter `partial: true`). A test checks the query plan names it.
+- **M4, `irreversible`.** Node delete, bulk delete and restore-to-change return `irreversible: boolean` on dry runs and real calls. It is computed before writing by building the revisions (prebuilt revisions can now be passed to `chargeRoot`, so they are built only once). It is true when a revision would be kept without patches. Restore-to-change now has a dry run.
+- **M2.** No change, as decided; a hidden change's diff stays `before: null, after: null`.
+- **L1, bulk delete roots.** Ids that another listed id holds in its subtree are dropped before recording, giving one revision per topmost node.
+- **L2, unknown ids.** Trimmed revisions become stubs (`trimmed: true`, no patches, bytes 0, partial index `trimmed_by_seq`); at most 2000 stubs per collection, oldest deleted first. Restoring to a stub answers 409 `REVISION_UNAVAILABLE`. An id this collection never issued answers 404 `REVISION_NOT_FOUND`, however old or from another collection. The changelog, activity and hide/show ignore stubs, and the diff of a stub is unavailable.
+- **L3, restore diffs.** The diff of a `restore` revision adds `affected: [{ nodeId, name, change: "added" | "removed" | "changed" }]`, read from its patches, with names from the patches or the current nodes.
+- **L4, tag and status text.** Tags and custom status names are NFC-normalized. Control, format and line or paragraph separator characters are refused (tag problem `characters`, status problem `name-characters`). An emoji grapheme is limited to 16 code points.
+- **L5, diff errors and bounds.** Database reads run outside the `try`, so a database error is a 500 (tested with a failing `findOne`). Only patch application can make a diff unavailable. Work per call is bounded by the changelog's own limits: at most 2000 later revisions and 20 MiB of patches, applied to one entity.
+- **L6, bulk trash.** The workspace role is checked once (`requireWorkspace`); each collection is checked only for the Editor role.
+- **L7, example status.** `response.status` must be 100–599.
+
+**Coordinator extras:**
+- `collectionTreeSchema` and `exceedsBounds` moved to shared `collection-tree-schema.ts` (exported from `@localman/shared/api-client`); `collection-schemas.ts` would have passed 200 lines.
+- The example `body` limit is now `EXAMPLE_BODY_MAX` bytes of UTF-8 in the schema (`utf8ByteLength`), so an over-limit body is always 400 `VALIDATION_ERROR`. The 413 `EXAMPLE_TOO_LARGE` path is removed.
+
+**API shape changes:**
+- `DELETE …/nodes/:nodeId` and `POST …/nodes/bulk-delete` responses gain `irreversible: boolean`.
+- `POST /collections/:id/changelog/:revisionId/restore` now accepts `?dryRun=true`. It returns `{ dryRun, restored, irreversible, collection: CollectionDetail | null }` instead of a bare `CollectionDetail`; `collection` is `null` on a dry run.
+- The diff gains an optional `affected` list for `restore` revisions.
+- Example bodies over the limit return 400 `VALIDATION_ERROR`, not 413 `EXAMPLE_TOO_LARGE`. `response.status` above 599 is a 400.
+
+**Checks:**
+- Typecheck is clean for both `apps/api` and `@localman/shared`.
+- `biome check` reports nothing on the 87 owned files.
+- `pnpm check:mcp-coverage` is OK (149 operations, 114 tools, 35 exempt).
+- Collections: 19 files, 63/63; the race test passed 3 more runs.
+- Workspaces, access, operations and drafts: 16 files, 94/94 when run apart. In the combined run, the known flaky `share-operations` notification-order test failed once and then passed on rerun.
+- Shared collections tests: 26/26.

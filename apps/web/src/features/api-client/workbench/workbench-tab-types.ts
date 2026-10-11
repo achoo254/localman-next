@@ -10,12 +10,15 @@ import type {
 	VariableEntry,
 } from "@localman/shared/api-client";
 
-/** A collection or folder open as a tab (not a request, never a draft). */
+/**
+ * A collection, folder or example open as a tab (not a request, never a
+ * draft).
+ */
 export interface PageTab {
 	id: string;
-	kind: "collection" | "folder";
+	kind: "collection" | "folder" | "example";
 	collectionId: string;
-	/** The folder; `null` for the collection itself. */
+	/** The folder or example; `null` for the collection itself. */
 	nodeId: string | null;
 	/** Shown in the tab bar until the page loads its own. */
 	name: string;

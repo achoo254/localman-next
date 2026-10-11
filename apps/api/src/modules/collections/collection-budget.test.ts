@@ -108,6 +108,7 @@ describe("collection byte budget", () => {
 			id: `r${index}`,
 			name: `R${index}`,
 			description: "",
+			examples: [],
 			draft: draftOf(`R${index}`, {
 				body: { ...emptyRequestBody(), type: "raw", raw },
 			}),
@@ -118,6 +119,8 @@ describe("collection byte budget", () => {
 			auth: { type: "none" as const },
 			variables: [],
 			scripts: { pre: "", post: "" },
+			tags: [],
+			status: null,
 			items,
 		};
 		await expect(createCollection(EVE, ws, { tree })).rejects.toMatchObject({

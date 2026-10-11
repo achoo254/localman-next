@@ -128,7 +128,12 @@ export interface SendFailure {
 export type TabResponse =
 	| { kind: "idle" }
 	| { kind: "sending" }
-	| { kind: "done"; result: SendResult }
+	| {
+			kind: "done";
+			result: SendResult;
+			/** The draft as sent, kept with its response (an example saves both). */
+			draft?: ApiRequestDraft;
+	  }
 	| { kind: "failed"; failure: SendFailure }
 	| { kind: "cancelled" };
 

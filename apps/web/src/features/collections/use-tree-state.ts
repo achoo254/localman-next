@@ -3,7 +3,7 @@
  * tab stop, the rename box, the open dialog, and the row elements so focus
  * can move by keyboard and come back after a dialog.
  */
-import { useCallback, useRef, useState } from "react";
+import { type RefObject, useCallback, useRef, useState } from "react";
 import type { TreeDialog } from "./collection-dialogs";
 
 interface DialogState {
@@ -71,5 +71,31 @@ export function useTreeState() {
 		closeDialog,
 		registerRef,
 		isRowShown,
+	};
+}
+
+/**
+ * Where focus goes when a dialog closes on a row that is gone (deleted,
+ * moved away): the tree's tab stop, else the search box. A row still
+ * shown lets the dialog return focus to its own trigger.
+ */
+export function useFocusAfterRemoval(
+	state: ReturnType<typeof useTreeState>,
+	section: RefObject<HTMLElement | null>,
+	search: RefObject<HTMLInputElement | null>,
+) {
+	return (event: Event): void => {
+		const value = state.dialog?.value;
+		const id = value
+			? value.kind === "deleteNode"
+				? value.node.id
+				: value.summary.id
+			: null;
+		if (id !== null && state.isRowShown(id)) return;
+		event.preventDefault();
+		const stop = section.current?.querySelector<HTMLElement>(
+			'[role="treeitem"][tabindex="0"]',
+		);
+		(stop ?? search.current)?.focus();
 	};
 }

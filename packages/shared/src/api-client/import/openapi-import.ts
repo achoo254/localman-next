@@ -142,6 +142,8 @@ export function openApiToTree(
 		],
 		scripts: { pre: "", post: "" },
 		items: [...orderedFolders(root, folders), ...loose],
+		tags: [],
+		status: null,
 		warnings: ctx.warnings(),
 	};
 }

@@ -149,7 +149,12 @@ describe("collections tree menus", () => {
 			"Duplicate",
 			"Delete",
 		]);
-		expect(await labels("r2")).toEqual(["Rename", "Duplicate", "Delete"]);
+		expect(await labels("r2")).toEqual([
+			"Add example",
+			"Rename",
+			"Duplicate",
+			"Delete",
+		]);
 	});
 });
 

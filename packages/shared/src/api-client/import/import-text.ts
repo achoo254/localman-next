@@ -7,6 +7,7 @@ import { collectionV21ToTree } from "./collection-v21-import.js";
 import { curlToDraft } from "./curl-parser.js";
 import { detectJsonFormat, detectTextFormat } from "./detect-format.js";
 import { environmentV21ToData } from "./environment-v21-import.js";
+import { fitTree } from "./fit-tree.js";
 import {
 	type ImportContext,
 	type RequestImportOptions,
@@ -36,10 +37,21 @@ function curlCollection(text: string, ctx: ImportContext): ImportedCollection {
 				name: draft.name,
 				description: "",
 				draft,
+				examples: [],
 			},
 		],
+		tags: [],
+		status: null,
 		warnings: ctx.warnings(),
 	};
+}
+
+/** The collection fitted to the server limits, with every warning. */
+function fitted(
+	collection: ImportedCollection,
+	ctx: ImportContext,
+): ImportedCollection {
+	return { ...fitTree(collection, ctx), warnings: ctx.warnings() };
 }
 
 /**
@@ -55,18 +67,19 @@ export function importText(
 	return runImport((): ImportedData => {
 		const ctx = createImportContext(options);
 		const trimmed = checkImportText(text);
-		if (detectTextFormat(trimmed) === "curl")
-			return curlCollection(trimmed, ctx);
+		if (detectTextFormat(trimmed) === "curl") {
+			return fitted(curlCollection(trimmed, ctx), ctx);
+		}
 		const value = parseImportJson(trimmed);
 		switch (detectJsonFormat(value)) {
 			case "collection-v21":
-				return collectionV21ToTree(value, ctx);
+				return fitted(collectionV21ToTree(value, ctx), ctx);
 			case "environment-v21":
 				return environmentV21ToData(value, ctx);
 			case "openapi":
-				return openApiToTree(isRecord(value) ? value : {}, ctx);
+				return fitted(openApiToTree(isRecord(value) ? value : {}, ctx), ctx);
 			case "curl":
-				return curlCollection(trimmed, ctx);
+				return fitted(curlCollection(trimmed, ctx), ctx);
 		}
 	});
 }

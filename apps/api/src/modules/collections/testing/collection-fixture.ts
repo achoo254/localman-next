@@ -108,3 +108,32 @@ export async function trashedCrud(): Promise<{ ws: string; id: string }> {
 	expect(res.status, JSON.stringify(res.body)).toBe(200);
 	return { ws, id };
 }
+
+/** An example body for `parentId` (a request node). */
+export const exampleNode = (name: string, parentId: string, body = "{}") => ({
+	kind: "example",
+	parentId,
+	name,
+	request: draftOf(name),
+	response: {
+		status: 200,
+		statusText: "OK",
+		headers: [],
+		body,
+		bodyLanguage: "json",
+	},
+});
+
+/** The content of a collection detail, comparable across restores. */
+export function contentOf(detail: {
+	name: string;
+	description: string;
+	tags: string[];
+	status: unknown;
+	variables: unknown[];
+	nodes: { id: string }[];
+}) {
+	const { name, description, tags, status, variables } = detail;
+	const nodes = [...detail.nodes].sort((a, b) => (a.id < b.id ? -1 : 1));
+	return { name, description, tags, status, variables, nodes };
+}

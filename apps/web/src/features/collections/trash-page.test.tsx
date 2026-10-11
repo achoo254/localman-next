@@ -31,6 +31,8 @@ function trashed(
 		deletedByName: "Minh Anh",
 		purgeAt: new Date(Date.now() + daysLeft * DAY - 60_000).toISOString(),
 		requestCount: 3,
+		tags: [],
+		status: null,
 		...overrides,
 	};
 }
@@ -71,17 +73,6 @@ describe("trash page", () => {
 		expect(
 			(legacy as HTMLElement).querySelector('[data-id="trash-item-days"]'),
 		).toHaveClass("text-warning-text");
-	});
-
-	it("searches by name", async () => {
-		const user = userEvent.setup();
-		renderTrash({ [`GET ${TRASH}`]: { body: { items: ITEMS } } });
-		await waitFor(() => expect(allById("trash-item")).toHaveLength(2));
-		await user.type(screen.getByRole("searchbox"), "legacy");
-		expect(allById("trash-item")).toHaveLength(1);
-		await user.clear(screen.getByRole("searchbox"));
-		await user.type(screen.getByRole("searchbox"), "nothing");
-		expect(screen.getByText("Nothing matches “nothing”.")).toBeVisible();
 	});
 
 	it("restores into the workspace picked in the dialog", async () => {

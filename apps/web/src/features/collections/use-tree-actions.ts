@@ -2,10 +2,7 @@
  * What the tree's menus, star, rename box and drops do: API writes with
  * toasts, and the dialogs to open.
  */
-import {
-	type CollectionDetail,
-	createRequestDraft,
-} from "@localman/shared/api-client";
+import type { CollectionDetail } from "@localman/shared/api-client";
 import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { copyText } from "../../platform/clipboard";
@@ -13,6 +10,7 @@ import { appPageUrl } from "../../platform/navigation";
 import { elementPath } from "../sharing/sharing-api";
 import type { TreeDialog } from "./collection-dialogs";
 import { collectionErrorMessage } from "./collection-errors";
+import { type NewNodeKind, newNode } from "./new-node";
 import { subtreeIds } from "./tree-drop";
 import type { TreeAction } from "./tree-row-menu";
 import type { TreeRow } from "./tree-rows";
@@ -71,25 +69,15 @@ export function useTreeActions(options: TreeActionsOptions) {
 			title: t("collections.toast.duplicated", { name }),
 		});
 
-	const add = (row: TreeRow, kind: "folder" | "request"): void => {
-		const parentId = row.kind === "collection" ? null : row.id;
-		const name = t(
-			kind === "folder"
-				? "collections.defaults.folder"
-				: "collections.defaults.request",
-		);
+	const add = (row: TreeRow, kind: NewNodeKind): void => {
+		const node = newNode(row, kind, t(`collections.defaults.${kind}`));
+		if (!node) return;
 		createNode.mutate(
+			{ collectionId: row.collectionId, node },
 			{
-				collectionId: row.collectionId,
-				node:
-					kind === "folder"
-						? { kind, parentId, name }
-						: { kind, parentId, name, draft: createRequestDraft({ name }) },
-			},
-			{
-				onSuccess: (node) => {
+				onSuccess: (created) => {
 					expand(row.id);
-					startRename(node.id);
+					startRename(created.id);
 				},
 				onError: fail,
 			},
@@ -109,8 +97,10 @@ export function useTreeActions(options: TreeActionsOptions) {
 
 	const onAction = (action: TreeAction, row: TreeRow): void => {
 		const summary = row.kind === "collection" ? row.summary : null;
-		if (action === "addRequest" || action === "addFolder") {
-			add(row, action === "addFolder" ? "folder" : "request");
+		if (action === "addRequest") add(row, "request");
+		else if (action === "addFolder") add(row, "folder");
+		else if (action === "addExample") {
+			add(row, "example");
 		} else if (action === "rename") startRename(row.id);
 		else if (action === "copyLink") void copyLink(row);
 		else if (action === "export") void exportCollection(row.id, row.name);

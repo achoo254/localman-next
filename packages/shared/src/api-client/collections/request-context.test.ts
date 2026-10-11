@@ -44,8 +44,13 @@ function collection(nodes: CollectionNode[]): CollectionDetail {
 		auth: { type: "bearer", token: "{{token}}" },
 		scripts: scripts("c-pre", "c-post"),
 		variables: [{ key: "baseUrl", value: "https://a.test" }],
+		tags: [],
+		status: null,
 		createdBy: "u1",
+		createdByName: null,
 		createdAt: "2026-10-11T00:00:00.000Z",
+		updatedBy: "u1",
+		updatedByName: null,
 		updatedAt: "2026-10-11T00:00:00.000Z",
 		nodes,
 	};

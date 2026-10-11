@@ -4,7 +4,10 @@ import {
 	elementRoleFromWorkspace,
 	strongerElementRole,
 } from "@localman/shared/access";
-import type { CollectionSummary } from "@localman/shared/api-client";
+import type {
+	CollectionStatus,
+	CollectionSummary,
+} from "@localman/shared/api-client";
 import type { Types } from "mongoose";
 import { ElementRoleModel } from "../access/element-role-model.js";
 import {
@@ -21,12 +24,21 @@ export interface ListedRoot {
 	workspaceId: Types.ObjectId;
 	name: string;
 	requestCount?: number;
+	tags?: string[];
+	status?: CollectionStatus | null;
 	updatedAt: Date;
 }
 
 /** Shares read per round when collecting what a non-member may open. */
 const SHARE_PAGE = 500;
-const PROJECTION = { workspaceId: 1, name: 1, requestCount: 1, updatedAt: 1 };
+const PROJECTION = {
+	workspaceId: 1,
+	name: 1,
+	requestCount: 1,
+	tags: 1,
+	status: 1,
+	updatedAt: 1,
+};
 
 function workspaceNotFound(): OperationError {
 	return new OperationError(404, "NOT_FOUND", "Workspace not found");
@@ -168,6 +180,8 @@ export async function listCollections(
 				name: root.name,
 				favorite: starred.has(id),
 				requestCount: root.requestCount ?? 0,
+				tags: root.tags ?? [],
+				status: root.status ?? null,
 				updatedAt: root.updatedAt.toISOString(),
 			},
 		];

@@ -1,9 +1,11 @@
 import type { AnyOperation } from "@localman/operations";
+import { changelogOperations } from "./changelog-operations.js";
 import { registerCollectionAdapter } from "./collection-adapter.js";
 import {
 	favoriteCollectionOperation,
 	unfavoriteCollectionOperation,
 } from "./collection-favorite-operations.js";
+import { collectionNodeBatchOperations } from "./collection-node-batch-operations.js";
 import { collectionNodeOperations } from "./collection-node-operations.js";
 import { collectionReadOperations } from "./collection-read-operations.js";
 import { searchCollectionsOperation } from "./collection-search-operations.js";
@@ -20,7 +22,9 @@ export const collectionOperations: readonly AnyOperation[] = [
 	searchCollectionsOperation,
 	...collectionWriteOperations,
 	...collectionNodeOperations,
+	...collectionNodeBatchOperations,
 	favoriteCollectionOperation,
 	unfavoriteCollectionOperation,
 	...collectionTrashOperations,
+	...changelogOperations,
 ];

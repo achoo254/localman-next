@@ -10,10 +10,12 @@ export const collectionsTabs: Tabs = {
 		kind: {
 			collection: "Collection",
 			folder: "Folder",
+			example: "Example",
 		},
 		nameLabel: {
 			collection: "Tên collection",
 			folder: "Tên folder",
+			example: "Tên example",
 		},
 		loadFailed: "Không tải được collection này.",
 		folderGone: "Folder này không còn nữa. Hãy đóng tab của nó.",
@@ -43,6 +45,7 @@ export const collectionsTabs: Tabs = {
 			you: "Bạn",
 			member: "Một thành viên workspace",
 			updated: "Cập nhật lần cuối",
+			updatedBy: "{time}, bởi {name}",
 			workspace: "Workspace",
 			requests: "Request",
 		},

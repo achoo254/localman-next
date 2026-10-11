@@ -13,6 +13,7 @@ import {
 import { CollectionFavoriteModel } from "./collection-favorite-model.js";
 import { CollectionModel } from "./collection-model.js";
 import { CollectionNodeModel } from "./collection-node-model.js";
+import { CollectionRevisionModel } from "./collection-revision-model.js";
 import {
 	createAs,
 	restoreAs as restore,
@@ -166,8 +167,9 @@ describe("collection trash", () => {
 			CollectionFavoriteModel.countDocuments(),
 			ElementRoleModel.countDocuments(),
 			AccessRequestModel.countDocuments(),
+			CollectionRevisionModel.countDocuments(),
 		]);
-		expect(counts).toEqual([0, 0, 0, 0, 0]);
+		expect(counts).toEqual([0, 0, 0, 0, 0, 0]);
 		expect((await as(EVE).send("delete", path)).status).toBe(404);
 	});
 });

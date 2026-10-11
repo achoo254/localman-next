@@ -4,6 +4,7 @@
  * collection variables kept. Read from untrusted JSON, own properties only.
  */
 import type { EffectiveAuth } from "../request-model.js";
+import { readCollectionExtension } from "./collection-v21-extension.js";
 import { readItems } from "./collection-v21-items.js";
 import { readAuth, readScripts } from "./collection-v21-parts.js";
 import { readVariables } from "./environment-v21-import.js";
@@ -40,6 +41,7 @@ export function collectionV21ToTree(
 		variables: readVariables(listProp(value, "variable")),
 		scripts,
 		items,
+		...readCollectionExtension(value, ctx),
 		warnings: ctx.warnings(),
 	};
 }

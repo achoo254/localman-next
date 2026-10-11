@@ -20,6 +20,8 @@ const ITEM = {
 	deletedByName: "Minh Anh",
 	purgeAt: "2026-10-31T00:00:00.000Z",
 	requestCount: 0,
+	tags: [],
+	status: null,
 };
 
 async function restoreWith(code: string, status: number) {

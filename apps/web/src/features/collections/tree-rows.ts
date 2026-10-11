@@ -5,6 +5,7 @@
  * `collection-search-results.tsx`.)
  */
 import {
+	type CollectionExampleNode,
 	type CollectionFolderNode,
 	type CollectionNode,
 	type CollectionRequestNode,
@@ -63,7 +64,9 @@ export type TreeRow =
 			expanded: boolean;
 			hasChildren: boolean;
 	  })
-	| (RowBase & { kind: "request"; node: CollectionRequestNode });
+	| (RowBase & { kind: "request"; node: CollectionRequestNode })
+	/** A saved response, always shown under its request. */
+	| (RowBase & { kind: "example"; node: CollectionExampleNode });
 
 export interface TreeRowsInput {
 	collections: readonly CollectionSummary[];
@@ -99,8 +102,20 @@ export function buildTreeRows({
 		const visit = (parentId: string | null, depth: number): void => {
 			for (const node of byParent.get(parentId) ?? []) {
 				const base = { id: node.id, collectionId: summary.id, depth };
+				if (node.kind === "example") continue;
 				if (node.kind === "request") {
 					rows.push({ ...base, kind: "request", name: node.name, node });
+					for (const child of byParent.get(node.id) ?? []) {
+						if (child.kind !== "example") continue;
+						rows.push({
+							id: child.id,
+							collectionId: summary.id,
+							depth: depth + 1,
+							kind: "example",
+							name: child.name,
+							node: child,
+						});
+					}
 					continue;
 				}
 				const folderOpen = expanded.has(node.id);
@@ -118,6 +133,13 @@ export function buildTreeRows({
 		visit(null, 1);
 	}
 	return rows;
+}
+
+export type BranchRow = Extract<TreeRow, { kind: "collection" | "folder" }>;
+
+/** A collection or folder row: it opens and closes. */
+export function isBranch(row: TreeRow): row is BranchRow {
+	return row.kind === "collection" || row.kind === "folder";
 }
 
 /** Row of the parent (collection or folder) of `row`, for ← in the tree. */

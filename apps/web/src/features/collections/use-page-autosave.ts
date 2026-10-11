@@ -5,7 +5,7 @@
  * after another, each taking what is queued when its turn comes, so
  * answers arrive in order and an older one never overwrites a newer one.
  * A failed save keeps its edits for the next try, unless newer ones
- * replaced them.
+ * replaced them. `discard` drops what is not sent yet (after a restore).
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -36,6 +36,8 @@ export function usePageAutosave<P extends object>(
 ) {
 	const [pending, setPending] = useState<Partial<P>>({});
 	const [status, setStatus] = useState<SaveStatus>({ state: "idle" });
+	const pendingRef = useRef(pending);
+	pendingRef.current = pending;
 	const queued = useRef<Partial<P>>({});
 	const timer = useRef<number | undefined>(undefined);
 	const saveRef = useRef(save);
@@ -74,8 +76,20 @@ export function usePageAutosave<P extends object>(
 		[flush, delayMs],
 	);
 
+	/** Drops edits not saved yet from the page; `true` when there were some. */
+	const discard = useCallback((): boolean => {
+		window.clearTimeout(timer.current);
+		const had =
+			Object.keys(queued.current).length > 0 ||
+			Object.keys(pendingRef.current).length > 0;
+		queued.current = {};
+		setPending({});
+		setStatus({ state: "idle" });
+		return had;
+	}, []);
+
 	// Leaving the page saves what waits.
 	useEffect(() => () => void flush(), [flush]);
 
-	return { pending, edit, flush, status };
+	return { pending, edit, flush, discard, status };
 }

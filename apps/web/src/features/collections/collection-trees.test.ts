@@ -66,6 +66,8 @@ describe("fitTree", () => {
 			description: "",
 			auth: { type: "none" },
 			scripts: { pre: "", post: "" },
+			tags: [],
+			status: null,
 			variables: [
 				{ key: " ", value: "x" },
 				{ key: "baseUrl", value: "https://a.test" },
@@ -85,6 +87,7 @@ describe("fitTree", () => {
 							name: "",
 							description: "",
 							draft: createRequestDraft({ url: "https://a.test/x" }),
+							examples: [],
 						},
 						{
 							kind: "request",
@@ -92,6 +95,7 @@ describe("fitTree", () => {
 							name: "x".repeat(300),
 							description: "",
 							draft: createRequestDraft(),
+							examples: [],
 						},
 					],
 				},

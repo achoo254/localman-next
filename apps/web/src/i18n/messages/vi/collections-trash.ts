@@ -23,6 +23,13 @@ export const collectionsTrash: Messages["collections"]["trash"] = {
 	items: {
 		other: "{count} request",
 	},
+	filters: {
+		label: "Bộ lọc",
+		workspace: "Workspace",
+		allWorkspaces: "Mọi workspace",
+		deletedBy: "Người xoá",
+		everyone: "Mọi người",
+	},
 	typeCollection: "collection",
 	deletedWorkspace: "Workspace đã xoá",
 	removedAccount: "Tài khoản đã xoá",
@@ -36,6 +43,7 @@ export const collectionsTrash: Messages["collections"]["trash"] = {
 	emptyTitle: "Thùng rác trống",
 	emptyBody: "Collection bạn xoá sẽ nằm ở đây một thời gian để bạn khôi phục.",
 	noMatch: "Không có gì khớp với “{query}”.",
+	noFilterMatch: "Không có collection đã xoá nào khớp với bộ lọc.",
 	loading: "Đang tải thùng rác…",
 	loadFailed: "Không tải được thùng rác.",
 	restoreModal: {

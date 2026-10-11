@@ -10,10 +10,12 @@ export const collectionsTabs: Tabs = {
 		kind: {
 			collection: "Collection",
 			folder: "Folder",
+			example: "Example",
 		},
 		nameLabel: {
 			collection: "Collection 名称",
 			folder: "Folder 名称",
+			example: "Example 名称",
 		},
 		loadFailed: "无法加载此 collection。",
 		folderGone: "此 folder 已不存在，请关闭它的标签页。",
@@ -43,6 +45,7 @@ export const collectionsTabs: Tabs = {
 			you: "你",
 			member: "一位 workspace 成员",
 			updated: "最近更新",
+			updatedBy: "{time}，由 {name}",
 			workspace: "Workspace",
 			requests: "Request 数",
 		},

@@ -115,8 +115,9 @@ describe("sharing.shareElement", () => {
 		expect((await as(OLLIE).get(elementPath(environment))).body.role).toBe(
 			"editor",
 		);
+		// Both notifications are sent in the background; their order is not part of the contract.
 		expect(
-			(await notificationsOf(OLLIE)).map((n) => n.params.elementType),
+			(await notificationsOf(OLLIE)).map((n) => n.params.elementType).sort(),
 		).toEqual(["collection", "environment"]);
 	});
 

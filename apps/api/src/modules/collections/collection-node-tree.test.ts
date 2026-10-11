@@ -65,6 +65,8 @@ describe("collection subtrees", () => {
 			nodeId: top.id,
 			folders: 2,
 			requests: 2,
+			examples: 0,
+			irreversible: false,
 		});
 		expect(await CollectionNodeModel.countDocuments({ collectionId: id })).toBe(
 			5,

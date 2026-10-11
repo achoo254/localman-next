@@ -20,6 +20,7 @@ function request(id: string, name: string, draft: Partial<ApiRequestDraft>) {
 		name,
 		description: "",
 		draft: createRequestDraft({ name, ...draft }),
+		examples: [],
 	};
 }
 
@@ -29,6 +30,8 @@ export const SHOP_TREE: CollectionTree = {
 	auth: { type: "bearer", token: "t" },
 	variables: [{ key: "baseUrl", value: "https://api.example.com" }],
 	scripts: { pre: "", post: "" },
+	tags: [],
+	status: null,
 	items: [
 		{
 			kind: "folder",

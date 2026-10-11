@@ -10,19 +10,21 @@ import { type ClientSession, Types } from "mongoose";
 import type { z } from "zod";
 import { inWorkspaceTransaction } from "../workspaces/workspace-lock.js";
 import { requireCollection } from "./collection-access.js";
-import { chargeRoot, nodeBytes } from "./collection-bytes.js";
+import { nodeBytes } from "./collection-bytes.js";
 import { toObjectId } from "./collection-ids.js";
 import {
 	CollectionNodeModel,
 	type StoredCollectionNode,
 } from "./collection-node-model.js";
 import {
-	assertDraftSize,
+	assertNodeSize,
 	nodesLimitReached,
 	storedNodeOf,
 } from "./collection-store.js";
 import { toCollectionNode } from "./collection-view.js";
 import { type Outline, folderDepth, loadOutline } from "./node-outline.js";
+import { nodesRevision } from "./revision-drafts.js";
+import { chargeRoot } from "./root-change.js";
 
 export type NodeCreate = z.infer<typeof nodeCreateSchema>;
 
@@ -45,27 +47,42 @@ export function tooDeep(): OperationError {
 	);
 }
 
-/** The parent's id when it is a folder of this collection (or the top). */
-export function assertParent(outline: Outline, parentId: string | null): void {
-	if (parentId === null) return;
-	if (outline.get(parentId)?.kind !== "folder") {
-		throw badRequest(
-			"INVALID_PARENT",
-			"The parent must be a folder of the same collection",
-		);
+/**
+ * The parent fits the child: a folder of this collection or the top for a
+ * folder or request, a request of this collection for an example.
+ */
+export function assertParent(
+	outline: Outline,
+	parentId: string | null,
+	childKind: CollectionNode["kind"] = "folder",
+): void {
+	const parentKind = parentId === null ? null : outline.get(parentId)?.kind;
+	if (
+		childKind === "example"
+			? parentKind === "request"
+			: parentId === null || parentKind === "folder"
+	) {
+		return;
 	}
+	throw badRequest(
+		"INVALID_PARENT",
+		childKind === "example"
+			? "An example belongs to a request of the same collection"
+			: "The parent must be a folder of the same collection",
+	);
 }
 
+/** The node of this collection; 404 `NODE_NOT_FOUND` otherwise. */
 export async function findNode(
 	collectionId: Types.ObjectId,
 	nodeId: string,
+	session?: ClientSession,
 ): Promise<StoredCollectionNode> {
 	const _id = toObjectId(nodeId);
 	const node = _id
-		? await CollectionNodeModel.findOne({
-				_id,
-				collectionId,
-			}).lean<StoredCollectionNode>()
+		? await CollectionNodeModel.findOne({ _id, collectionId })
+				.session(session ?? null)
+				.lean<StoredCollectionNode>()
 		: null;
 	if (!node) throw nodeNotFound();
 	return node;
@@ -121,6 +138,18 @@ function newNode(input: NodeCreate, order: string): CollectionNode {
 		name: input.name,
 		description: "",
 	};
+	if (input.kind === "example") {
+		const { request, response } = input;
+		return {
+			kind: "example",
+			id: base.id,
+			parentId: input.parentId,
+			order,
+			name: input.name,
+			request,
+			response,
+		};
+	}
 	if (input.kind === "request") {
 		return { kind: "request", ...base, draft: input.draft };
 	}
@@ -129,7 +158,7 @@ function newNode(input: NodeCreate, order: string): CollectionNode {
 }
 
 /**
- * Adds a folder or request (Editor), under the workspace lock so the node
+ * Adds a folder, request or example (Editor), under the workspace lock so the node
  * count, the parent checks and the collection's byte budget hold when it
  * is written.
  */
@@ -139,7 +168,6 @@ export async function createNode(
 	input: NodeCreate,
 ): Promise<CollectionNode> {
 	const { element, collectionId } = await requireCollection(sub, id, "edit");
-	if (input.kind === "request") assertDraftSize(input.draft);
 	const nodeId = await inWorkspaceTransaction(
 		element.workspaceId,
 		async (session) => {
@@ -147,15 +175,17 @@ export async function createNode(
 			if (outline.size >= COLLECTION_NODES_MAX) {
 				throw nodesLimitReached(outline.size);
 			}
-			assertParent(outline, input.parentId);
+			assertParent(outline, input.parentId, input.kind);
 			const depth = folderDepth(outline, input.parentId) + 1;
 			if (input.kind === "folder" && depth > COLLECTION_DEPTH_MAX) {
 				throw tooDeep();
 			}
 			const node = newNode(input, await newOrder(collectionId, input, session));
+			assertNodeSize(node);
 			await chargeRoot(collectionId, sub, session, {
 				bytes: nodeBytes(node),
 				requests: node.kind === "request" ? 1 : 0,
+				revisions: [nodesRevision("create", node, [], [node])],
 			});
 			await CollectionNodeModel.create(
 				[storedNodeOf(node, collectionId, sub)],

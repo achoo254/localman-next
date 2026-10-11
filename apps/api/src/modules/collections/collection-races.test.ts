@@ -10,9 +10,9 @@ import {
 	teamWorkspace,
 } from "../access/testing/access-fixture.js";
 import { collectionAdapter } from "./collection-adapter.js";
-import { chargeRoot } from "./collection-bytes.js";
 import { CollectionModel } from "./collection-model.js";
 import { COLLECTIONS_PER_WORKSPACE_MAX } from "./collection-store.js";
+import { chargeRoot } from "./root-change.js";
 import {
 	addNode,
 	createAs,

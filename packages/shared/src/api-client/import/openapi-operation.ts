@@ -10,7 +10,8 @@ import {
 	createRequestDraft,
 } from "../request-model.js";
 import { buildUrlWithParams } from "../url-params.js";
-import { type ImportContext, clampDraft } from "./import-context.js";
+import { clampDraft } from "./clamp-draft.js";
+import type { ImportContext } from "./import-context.js";
 import { paramText } from "./import-error.js";
 import {
 	type JsonRecord,
@@ -164,22 +165,27 @@ export function operationToRequest(
 		textProp(op.operation, "summary") ||
 		textProp(op.operation, "operationId") ||
 		`${op.method} ${op.path}`;
-	const draft = createRequestDraft({
-		name,
-		method: op.method,
-		url: buildUrlWithParams(`{{baseUrl}}${urlPath}`, query),
-		params: query,
-		headers,
-		auth: Array.isArray(security)
-			? authFromSecurity(root, security, ctx, path)
-			: { type: "inherit" },
-		body,
-	});
+	const draft = clampDraft(
+		createRequestDraft({
+			name,
+			method: op.method,
+			url: buildUrlWithParams(`{{baseUrl}}${urlPath}`, query),
+			params: query,
+			headers,
+			auth: Array.isArray(security)
+				? authFromSecurity(root, security, ctx, path)
+				: { type: "inherit" },
+			body,
+		}),
+		ctx,
+		path,
+	);
 	return {
 		kind: "request",
 		id: ctx.newId(),
 		name: draft.name,
 		description: descriptionOf(prop(op.operation, "description")),
-		draft: clampDraft(draft, ctx, path),
+		draft,
+		examples: [],
 	};
 }

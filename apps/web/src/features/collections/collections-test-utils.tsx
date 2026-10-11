@@ -1,9 +1,6 @@
-import {
-	type CollectionDetail,
-	type CollectionFolderNode,
-	type CollectionRequestNode,
-	type CollectionSummary,
-	createRequestDraft,
+import type {
+	CollectionDetail,
+	CollectionSummary,
 } from "@localman/shared/api-client";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -23,10 +20,13 @@ import {
 	TEAM,
 	chooseWorkspace,
 } from "../workspaces/workspaces-test-helpers";
+import { folder, request } from "./collections-fixtures";
 import { useCollectionSendContext } from "./use-send-context";
 
 export { FLAGS_ON, PERSONAL, TEAM };
 export const FLAGS_OFF = { ...NO_FEATURES, apiClient: true };
+
+export { folder, request };
 
 export const LIST_PATH = "/api/v1/workspaces/w-team/collections";
 
@@ -40,44 +40,11 @@ export function summary(
 		name: `Collection ${id}`,
 		role: "editor",
 		favorite: false,
+		tags: [],
+		status: null,
 		requestCount: 0,
 		updatedAt: "2026-10-10T01:00:00.000Z",
 		...overrides,
-	};
-}
-
-export function folder(
-	id: string,
-	parentId: string | null,
-	order: string,
-	name = `Folder ${id}`,
-): CollectionFolderNode {
-	return {
-		kind: "folder",
-		id,
-		parentId,
-		order,
-		name,
-		description: "",
-		auth: { type: "inherit" },
-		scripts: { pre: "", post: "" },
-	};
-}
-
-export function request(
-	id: string,
-	parentId: string | null,
-	order: string,
-	name = `Request ${id}`,
-): CollectionRequestNode {
-	return {
-		kind: "request",
-		id,
-		parentId,
-		order,
-		name,
-		description: "",
-		draft: createRequestDraft({ name, url: `https://api.test/${id}` }),
 	};
 }
 
@@ -95,7 +62,12 @@ export function detail(
 		auth: { type: "none" },
 		scripts: { pre: "", post: "" },
 		variables: [],
+		tags: [],
+		status: null,
 		createdBy: "user-1",
+		createdByName: "Minh Anh",
+		updatedBy: "user-1",
+		updatedByName: "Minh Anh",
 		createdAt: "2026-10-01T01:00:00.000Z",
 		updatedAt: "2026-10-10T01:00:00.000Z",
 		nodes,
@@ -126,16 +98,25 @@ const WORKBENCH: Record<string, MockRoute> = {
 
 /**
  * The API client page at `/api-client` (a stand-in at `/trash`) with the
- * team workspace chosen; `role` is the caller's role there.
+ * team workspace chosen; `role` is the caller's role there, `storage`
+ * what this browser kept from an earlier visit.
  */
 export function renderWorkbenchPage(
 	routes: Record<string, MockRoute>,
 	{
 		flags = FLAGS_ON,
 		role = "admin",
-	}: { flags?: typeof FLAGS_ON; role?: Workspace["role"] } = {},
+		storage = {},
+	}: {
+		flags?: typeof FLAGS_ON;
+		role?: Workspace["role"];
+		storage?: Record<string, string>;
+	} = {},
 ) {
 	chooseWorkspace(TEAM.id);
+	for (const [key, value] of Object.entries(storage)) {
+		window.localStorage.setItem(key, value);
+	}
 	const api = mockFetch({
 		"GET /api/v1/users/me": { body: makeUser() },
 		"GET /api/v1/workspaces": {

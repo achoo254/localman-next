@@ -114,6 +114,19 @@ export function workbenchReducer(
 			const pages = known ? state.pages : [...state.pages, action.page];
 			return { ...state, pages, activeTabId: action.page.id };
 		}
+		case "restorePages": {
+			const known = new Set(state.pages.map((page) => page.id));
+			const added = action.pages.filter((page) => !known.has(page.id));
+			if (added.length === 0) return state;
+			// Restored after the request tabs: a page shows only when no
+			// tab is active, so the one active before the reload stays.
+			const pages = [...state.pages, ...added];
+			return {
+				...state,
+				pages,
+				activeTabId: state.activeTabId ?? pages[0]?.id ?? null,
+			};
+		}
 		case "renamePage":
 			return {
 				...state,

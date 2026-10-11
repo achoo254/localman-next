@@ -19,11 +19,14 @@ import { AuthForm } from "../api-client/request/auth-form";
 import { ScriptsEditor } from "../api-client/scripts/scripts-tab";
 import type { PageTab } from "../api-client/workbench/workbench-tab-types";
 import { ShareDialog } from "../sharing/share-dialog";
+import { CollectionActivity } from "./collection-activity";
 import { collectionErrorMessage } from "./collection-errors";
+import { CollectionTags } from "./collection-tags";
 import { PageHeader } from "./page-header";
 import { PageOverview } from "./page-overview";
 import { PageVariables } from "./page-variables";
-import { usePageModel } from "./use-page-model";
+import { StatusMenu } from "./status-menu";
+import { type PageFields, usePageModel } from "./use-page-model";
 
 const SECTIONS = ["overview", "authorization", "scripts", "variables"] as const;
 /** A collection never inherits: it is the top. */
@@ -69,6 +72,11 @@ export function CollectionPage({ page }: { page: PageTab }) {
 	const sections = page.kind === "collection" ? SECTIONS : SECTIONS.slice(0, 3);
 	const readOnly = !model.canEdit;
 	const setAuth = (auth: RequestAuth) => model.edit({ auth });
+	const saveNow = (patch: Partial<PageFields>) => {
+		model.edit(patch);
+		void model.flush();
+	};
+	const isCollection = page.kind === "collection";
 
 	return (
 		<div data-id={`${page.kind}-page`} className="flex min-w-0 flex-col">
@@ -81,6 +89,15 @@ export function CollectionPage({ page }: { page: PageTab }) {
 				onRename={(name) => model.edit({ name })}
 				onRetry={() => void model.flush()}
 				onShare={() => setSharing(true)}
+				extra={
+					isCollection ? (
+						<StatusMenu
+							status={fields.status}
+							canEdit={model.canEdit}
+							onChange={(status) => saveNow({ status })}
+						/>
+					) : null
+				}
 			/>
 			<div className="grid gap-3 p-4">
 				{readOnly ? (
@@ -98,6 +115,18 @@ export function CollectionPage({ page }: { page: PageTab }) {
 						<PageOverview
 							detail={detail}
 							folderId={page.nodeId}
+							aside={
+								isCollection ? (
+									<>
+										<CollectionTags
+											tags={fields.tags}
+											canEdit={model.canEdit}
+											onChange={(tags) => saveNow({ tags })}
+										/>
+										<CollectionActivity collectionId={detail.id} />
+									</>
+								) : null
+							}
 							description={fields.description}
 							canEdit={model.canEdit}
 							onSave={(description) => {

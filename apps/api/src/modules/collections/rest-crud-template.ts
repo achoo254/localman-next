@@ -43,6 +43,7 @@ function request(
 			headers: withBody ? [JSON_HEADER] : [],
 			body: withBody ? jsonBody(raw) : emptyRequestBody(),
 		}),
+		examples: [],
 	};
 }
 
@@ -62,6 +63,8 @@ export function restCrudTemplate(name = "REST CRUD"): CollectionTree {
 			{ key: "itemId", value: "1" },
 		],
 		scripts: { pre: "", post: "" },
+		tags: [],
+		status: null,
 		items: [
 			{
 				kind: "folder",

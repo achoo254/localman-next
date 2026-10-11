@@ -1,9 +1,12 @@
 import { DndContext, DragOverlay, closestCenter } from "@dnd-kit/core";
 import type { KeyboardEvent } from "react";
 import { useT } from "../../i18n/i18n-context";
+import type { PickMode } from "./open-row";
+import { treeDndAccessibility } from "./tree-dnd-a11y";
+import { treeKeyHandler } from "./tree-keys";
 import { TreeRowView } from "./tree-row";
 import type { TreeAction, TreePermissions } from "./tree-row-menu";
-import { type TreeRow, parentRowId } from "./tree-rows";
+import type { TreeRow } from "./tree-rows";
 import { TreeStatusRow } from "./tree-status-row";
 import type { DetailState } from "./use-collections";
 import type { useTreeDnd } from "./use-tree-dnd";
@@ -18,7 +21,14 @@ export interface CollectionTreeProps {
 	permissionsOf: (collectionId: string) => TreePermissions;
 	dnd: ReturnType<typeof useTreeDnd>;
 	onFocusRow: (id: string) => void;
-	onActivate: (row: TreeRow) => void;
+	onActivate: (row: TreeRow, mode?: PickMode) => void;
+	/** Rows picked for a bulk delete. */
+	selectedIds: ReadonlySet<string>;
+	onClearSelection: () => void;
+	/** Some rows may be picked (`aria-multiselectable`). */
+	multiSelectable: boolean;
+	/** The row whose tab is the active one (`aria-current`). */
+	openedId: string | null;
 	onExpand: (row: TreeRow, expanded: boolean) => void;
 	onStartRename: (row: TreeRow) => void;
 	onFavorite: (row: TreeRow) => void;
@@ -41,50 +51,7 @@ export function CollectionTree(props: CollectionTreeProps) {
 			: (rows[0]?.id ?? null);
 	const dragged = rows.find((row) => row.id === dnd.activeId);
 
-	const onTreeKey = (event: KeyboardEvent<HTMLElement>, row: TreeRow) => {
-		if (dnd.activeId !== null) return false;
-		const index = rows.indexOf(row);
-		const go = (next: TreeRow | undefined) => {
-			if (next) props.onFocusRow(next.id);
-		};
-		const branch = row.kind !== "request";
-		switch (event.key) {
-			case "ArrowDown":
-				go(rows[index + 1]);
-				break;
-			case "ArrowUp":
-				go(rows[index - 1]);
-				break;
-			case "Home":
-				go(rows[0]);
-				break;
-			case "End":
-				go(rows[rows.length - 1]);
-				break;
-			case "ArrowRight":
-				if (branch && !row.expanded) props.onExpand(row, true);
-				else if (branch && rows[index + 1]?.depth === row.depth + 1) {
-					go(rows[index + 1]);
-				}
-				break;
-			case "ArrowLeft": {
-				if (branch && row.expanded) props.onExpand(row, false);
-				else go(rows.find((item) => item.id === parentRowId(row)));
-				break;
-			}
-			case "Enter":
-				props.onActivate(row);
-				break;
-			case "F2":
-				if (!props.permissionsOf(row.collectionId).edit) return false;
-				props.onStartRename(row);
-				break;
-			default:
-				return false;
-		}
-		event.preventDefault();
-		return true;
-	};
+	const onTreeKey = treeKeyHandler(props, rows, dnd.activeId !== null);
 
 	return (
 		<DndContext
@@ -95,27 +62,11 @@ export function CollectionTree(props: CollectionTreeProps) {
 			onDragOver={dnd.onDragOver}
 			onDragEnd={dnd.onDragEnd}
 			onDragCancel={dnd.onDragCancel}
-			accessibility={{
-				screenReaderInstructions: {
-					draggable: t("collections.dnd.instructions"),
-				},
-				announcements: {
-					onDragStart: ({ active }) =>
-						t("collections.dnd.picked", { name: nameOf(rows, active.id) }),
-					onDragOver: ({ over }) =>
-						over
-							? t("collections.dnd.over", { target: nameOf(rows, over.id) })
-							: undefined,
-					onDragMove: () => undefined,
-					onDragEnd: ({ active }) =>
-						t("collections.dnd.dropped", { name: nameOf(rows, active.id) }),
-					onDragCancel: ({ active }) =>
-						t("collections.dnd.cancelled", { name: nameOf(rows, active.id) }),
-				},
-			}}
+			accessibility={treeDndAccessibility(rows, t)}
 		>
 			<ul
 				role="tree"
+				aria-multiselectable={props.multiSelectable || undefined}
 				aria-labelledby={props.labelledBy}
 				data-id="sidebar-tree"
 				className="m-0 grid list-none gap-px px-1 py-1"
@@ -143,10 +94,6 @@ export function CollectionTree(props: CollectionTreeProps) {
 	);
 }
 
-function nameOf(rows: readonly TreeRow[], id: string | number): string {
-	return rows.find((row) => row.id === String(id))?.name ?? "";
-}
-
 type TreeEntryProps = CollectionTreeProps & {
 	row: TreeRow;
 	/** The row the user last moved to or opened (none at first). */
@@ -163,6 +110,9 @@ function TreeEntry({ row, ...props }: TreeEntryProps) {
 		<>
 			<TreeRowView
 				row={row}
+				picked={props.selectedIds.has(row.id)}
+				multiSelectable={props.multiSelectable}
+				opened={props.openedId === row.id}
 				focused={props.focusId === row.id}
 				selected={props.selectedId === row.id}
 				renaming={props.renamingId === row.id}

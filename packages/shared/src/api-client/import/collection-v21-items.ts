@@ -1,25 +1,15 @@
+import { clampDraft } from "./clamp-draft.js";
 /**
  * Items of a v2.1 collection: folders (with their own auth and scripts)
  * and requests, in file order. A request without auth inherits; a folder
- * without auth passes its parent's on. Saved responses (`response[]`) are
- * not read yet.
+ * without auth passes its parent's on. Saved responses (`response[]`)
+ * become the request's examples.
  */
-import {
-	HTTP_METHODS,
-	type HttpMethod,
-	createRequestDraft,
-} from "../request-model.js";
-import { readBody } from "./collection-v21-body.js";
+import { readExamples } from "./collection-v21-examples.js";
 import { readSettings } from "./collection-v21-extension.js";
-import {
-	readAuth,
-	readHeaders,
-	readParams,
-	readScripts,
-	readUrl,
-} from "./collection-v21-parts.js";
-import { type ImportContext, clampDraft, joinPath } from "./import-context.js";
-import { paramText } from "./import-error.js";
+import { readAuth, readScripts } from "./collection-v21-parts.js";
+import { readRequestDraft } from "./collection-v21-request.js";
+import { type ImportContext, joinPath } from "./import-context.js";
 import {
 	descriptionOf,
 	isRecord,
@@ -29,18 +19,6 @@ import {
 } from "./import-json.js";
 import type { ImportedItem, ImportedRequest } from "./imported-collection.js";
 
-function readMethod(
-	request: unknown,
-	ctx: ImportContext,
-	path: string,
-): HttpMethod {
-	const text = textProp(request, "method", "GET").toUpperCase();
-	const known = HTTP_METHODS.find((method) => method === text);
-	if (known) return known;
-	ctx.warn("UNSUPPORTED_METHOD", path, { method: paramText(text) });
-	return "GET";
-}
-
 function readRequestItem(
 	item: unknown,
 	name: string,
@@ -48,20 +26,15 @@ function readRequestItem(
 	path: string,
 ): ImportedRequest {
 	const request = prop(item, "request");
-	const urlValue = typeof request === "string" ? request : prop(request, "url");
-	const url = readUrl(urlValue);
-	const headers = readHeaders(prop(request, "header"), ctx);
-	const draft = createRequestDraft({
-		name: name || url,
-		method: readMethod(request, ctx, path),
-		url,
-		params: readParams(urlValue, url, ctx),
-		headers,
-		auth: readAuth(prop(request, "auth"), ctx, path) ?? { type: "inherit" },
-		body: readBody(prop(request, "body"), headers, ctx, path),
-		scripts: readScripts(listProp(item, "event"), ctx, path),
-		settings: readSettings(item),
-	});
+	const draft = clampDraft(
+		{
+			...readRequestDraft(request, name, ctx, path),
+			scripts: readScripts(listProp(item, "event"), ctx, path),
+			settings: readSettings(item),
+		},
+		ctx,
+		path,
+	);
 	return {
 		kind: "request",
 		id: ctx.newId(),
@@ -69,7 +42,8 @@ function readRequestItem(
 		description:
 			descriptionOf(prop(request, "description")) ||
 			descriptionOf(prop(item, "description")),
-		draft: clampDraft(draft, ctx, path),
+		draft,
+		examples: readExamples(listProp(item, "response"), request, ctx, path),
 	};
 }
 

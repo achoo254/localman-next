@@ -85,6 +85,16 @@ export function importWarningText(
 			return t("apiClientTools.import.warnings.UNRESOLVED_REF", {
 				ref: text(params, "ref"),
 			});
+		case "EXAMPLE_BODY_TRUNCATED":
+			return t("apiClientTools.import.warnings.EXAMPLE_BODY_TRUNCATED");
+		case "INVALID_METADATA":
+			return text(params, "field") === "status"
+				? t("apiClientTools.import.warnings.INVALID_METADATA.status")
+				: t("apiClientTools.import.warnings.INVALID_METADATA.tags");
+		case "TEXT_TRUNCATED":
+			return t("apiClientTools.import.warnings.TEXT_TRUNCATED", {
+				max: text(params, "max"),
+			});
 		case "MORE_WARNINGS":
 			return t("apiClientTools.import.warnings.MORE_WARNINGS", {
 				count: text(params, "count"),

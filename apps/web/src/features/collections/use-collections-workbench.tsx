@@ -6,7 +6,7 @@
  */
 import type { CollectionDetail } from "@localman/shared/api-client";
 import { useQueryClient } from "@tanstack/react-query";
-import { type ReactNode, useCallback, useRef, useState } from "react";
+import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
 import {
 	AuthInheritContext,
 	type InheritNoteOf,
@@ -19,13 +19,22 @@ import type { PageTab } from "../api-client/workbench/workbench-tab-types";
 import type { WorkbenchTab } from "../api-client/workbench/workbench-types";
 import { BoundSavedSync } from "./bound-saved-sync";
 import { CollectionPage } from "./collection-page";
+import { ExamplePage } from "./example-page";
 import { InheritSourceNote } from "./inherit-source-note";
 import { type OpenNode, useOpenCollectionNode } from "./open-node";
-import { PageSaveContext, type RegisterPageSave } from "./page-save-context";
+import {
+	PageSaveContext,
+	type PageSaveEntry,
+	type PageSaves,
+} from "./page-save-context";
 import { RequestBreadcrumb } from "./request-breadcrumb";
+import { ResponseWithExample } from "./response-with-example";
+import { type RightPanel, RightPanelContext } from "./right-panel-context";
+import { RightRail } from "./right-rail";
 import { SaveRequestButton } from "./save-request-button";
 import { SaveToCollectionModal } from "./save-to-collection-modal";
 import { collectionKey } from "./use-collections";
+import { usePagePersistence } from "./use-page-persistence";
 import { useRequestSave } from "./use-request-save";
 
 export interface CollectionsWorkbench {
@@ -33,34 +42,50 @@ export interface CollectionsWorkbench {
 	onSave?: (tabId: string | null) => boolean;
 	renderPage?: (page: PageTab) => ReactNode;
 	renderAboveRequest?: (tab: WorkbenchTab) => ReactNode;
+	/** Response area with "Save as example" for bound tabs. */
+	renderResponse?: (tab: WorkbenchTab) => ReactNode;
 	saveButton: (tab: WorkbenchTab) => ReactNode;
 	/** Wraps the workbench with the contexts pages and the auth pane read. */
 	wrap: (children: ReactNode) => ReactNode;
 	/** The save dialog and the restored-tab sync. */
 	extras: ReactNode;
+	/** Info and Changelog of the active tab's collection, if any. */
+	rightRail?: ReactNode;
 }
 
 export function useCollectionsWorkbench(
 	enabled: boolean,
 ): CollectionsWorkbench {
 	const openNode = useOpenCollectionNode();
+	usePagePersistence(enabled);
 	const client = useQueryClient();
 	const { currentTabs } = useWorkbenchActions();
-	const { tabs } = useWorkbenchState();
+	const { tabs, activeTab, activePage } = useWorkbenchState();
+	const [panel, setPanel] = useState<RightPanel | null>(null);
+	const railCollection =
+		activePage?.collectionId ?? activeTab?.source?.collectionId;
 	const [askTabId, setAskTabId] = useState<string | null>(null);
 	const saveRequest = useRequestSave(setAskTabId);
-	const pageSaves = useRef(new Map<string, () => void>());
-
-	const registerPageSave = useCallback<RegisterPageSave>((pageId, flush) => {
-		if (flush) pageSaves.current.set(pageId, flush);
-		else pageSaves.current.delete(pageId);
-	}, []);
+	const pageSaves = useRef(new Map<string, PageSaveEntry>());
+	const openPages = useMemo<PageSaves>(
+		() => ({
+			register: (pageId, entry) => {
+				if (entry) pageSaves.current.set(pageId, entry);
+				else pageSaves.current.delete(pageId);
+			},
+			discard: (collectionId) =>
+				[...pageSaves.current.values()].filter(
+					(entry) => entry.collectionId === collectionId && entry.discard(),
+				).length,
+		}),
+		[],
+	);
 	const onSave = useCallback(
 		(tabId: string | null) => {
 			if (!tabId) return false;
-			const flushPage = pageSaves.current.get(tabId);
-			if (flushPage) {
-				flushPage();
+			const openPage = pageSaves.current.get(tabId);
+			if (openPage) {
+				openPage.flush();
 				return true;
 			}
 			const tab = currentTabs().find((item) => item.id === tabId);
@@ -85,6 +110,7 @@ export function useCollectionsWorkbench(
 		[openNode],
 	);
 	const askTab = tabs.find((tab) => tab.id === askTabId) ?? null;
+	const rightPanel = useMemo(() => ({ panel, setPanel }), [panel]);
 
 	if (!enabled) {
 		return {
@@ -97,16 +123,38 @@ export function useCollectionsWorkbench(
 	return {
 		openNode,
 		onSave,
-		renderPage: (page) => <CollectionPage key={page.id} page={page} />,
+		renderPage: (page) =>
+			page.kind === "example" ? (
+				<ExamplePage key={page.id} page={page} onOpen={openNode} />
+			) : (
+				<CollectionPage key={page.id} page={page} />
+			),
+		renderResponse: (tab) => (
+			<ResponseWithExample
+				key={tab.id}
+				tabId={tab.id}
+				response={tab.response}
+				route={tab.draft.settings.route}
+				source={tab.source}
+			/>
+		),
 		renderAboveRequest: (tab) =>
 			tab.source ? <RequestBreadcrumb tab={tab} onOpen={openNode} /> : null,
 		saveButton: (tab) => <SaveRequestButton tab={tab} onSave={saveRequest} />,
+		rightRail: railCollection ? (
+			<RightRail
+				collectionId={railCollection}
+				folderId={activePage?.kind === "folder" ? activePage.nodeId : null}
+			/>
+		) : null,
 		wrap: (children) => (
-			<PageSaveContext value={registerPageSave}>
-				<AuthInheritContext value={inheritNoteOf}>
-					{children}
-				</AuthInheritContext>
-			</PageSaveContext>
+			<RightPanelContext value={rightPanel}>
+				<PageSaveContext value={openPages}>
+					<AuthInheritContext value={inheritNoteOf}>
+						{children}
+					</AuthInheritContext>
+				</PageSaveContext>
+			</RightPanelContext>
 		),
 		extras: (
 			<>

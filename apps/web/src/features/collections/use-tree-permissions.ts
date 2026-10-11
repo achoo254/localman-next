@@ -6,6 +6,7 @@ import {
 import type { CollectionSummary } from "@localman/shared/api-client";
 import { useCallback, useMemo } from "react";
 import type { TreePermissions } from "./tree-row-menu";
+import type { TreeRow } from "./tree-rows";
 
 /**
  * What the caller may do in the tree: add collections (workspace role),
@@ -35,5 +36,13 @@ export function useTreePermissions(
 		}),
 		[roles, canManage, canAdd],
 	);
-	return { canAdd, permissionsOf };
+	/** Rows one may pick for a bulk delete: the same rights as one delete. */
+	const canPick = useCallback(
+		(row: TreeRow): boolean => {
+			const can = permissionsOf(row.collectionId);
+			return row.kind === "collection" ? can.edit && can.manage : can.edit;
+		},
+		[permissionsOf],
+	);
+	return { canAdd, permissionsOf, canPick };
 }

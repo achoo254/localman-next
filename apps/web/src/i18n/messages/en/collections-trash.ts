@@ -24,6 +24,13 @@ export const collectionsTrash = {
 		one: "{count} request",
 		other: "{count} requests",
 	},
+	filters: {
+		label: "Filters",
+		workspace: "Workspace",
+		allWorkspaces: "All workspaces",
+		deletedBy: "Deleted by",
+		everyone: "Everyone",
+	},
 	typeCollection: "collection",
 	deletedWorkspace: "Deleted workspace",
 	removedAccount: "Removed account",
@@ -39,6 +46,7 @@ export const collectionsTrash = {
 	emptyBody:
 		"Collections you delete stay here for a while, so you can restore them.",
 	noMatch: "Nothing matches “{query}”.",
+	noFilterMatch: "No deleted collection matches these filters.",
 	loading: "Loading the Trash…",
 	loadFailed: "We couldn't load the Trash.",
 	restoreModal: {

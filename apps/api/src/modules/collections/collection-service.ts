@@ -12,23 +12,21 @@ import { elementNotFound } from "../access/access-policy.js";
 import { inWorkspaceTransaction } from "../workspaces/workspace-lock.js";
 import { requireWorkspace } from "../workspaces/workspace-roles.js";
 import { requireCollection } from "./collection-access.js";
-import { chargeRoot, rootBytes } from "./collection-bytes.js";
+import { rootBytes } from "./collection-bytes.js";
+import { type NewCollection, insertCollection } from "./collection-insert.js";
 import {
 	CollectionModel,
 	LIVE_COLLECTION,
 	type StoredCollection,
 } from "./collection-model.js";
-import {
-	type NewCollection,
-	assertDraftSize,
-	insertCollection,
-	loadCollectionDetail,
-	newNodeId,
-} from "./collection-store.js";
+import { loadCollectionDetail, newNodeId } from "./collection-store.js";
 import {
 	type CollectionTemplate,
 	restCrudTemplate,
 } from "./rest-crud-template.js";
+import { rootRevision, rootStateOf } from "./revision-drafts.js";
+import { chargeRoot } from "./root-change.js";
+import { foldSearchText } from "./search-text.js";
 
 /** What a new collection starts from: exactly one of them. */
 export interface CollectionSource {
@@ -44,6 +42,8 @@ function emptyTree(name: string): CollectionTree {
 		auth: { type: "none" },
 		variables: [],
 		scripts: { pre: "", post: "" },
+		tags: [],
+		status: null,
 		items: [],
 	};
 }
@@ -68,7 +68,9 @@ function treeOf(source: CollectionSource): CollectionTree {
 	);
 }
 
-async function insertAndLoad(input: NewCollection): Promise<CollectionDetail> {
+export async function insertAndLoad(
+	input: NewCollection,
+): Promise<CollectionDetail> {
 	const id = await inWorkspaceTransaction(input.workspaceId, (session) =>
 		insertCollection(input, session),
 	);
@@ -87,17 +89,15 @@ export async function createCollection(
 ): Promise<CollectionDetail> {
 	const { workspace } = await requireWorkspace(sub, "addElements", workspaceId);
 	const { root, nodes } = collectionTreeToNodes(treeOf(source), newNodeId);
-	for (const node of nodes) {
-		if (node.kind === "request") assertDraftSize(node.draft);
-	}
 	return insertAndLoad({ workspaceId: workspace._id, root, nodes, sub });
 }
 
 export type CollectionUpdate = z.infer<typeof collectionUpdateSchema>;
 
 /**
- * Edits the root (name, description, auth, scripts, variables) under the
- * workspace lock, within the collection's byte budget.
+ * Edits the root (name, description, auth, scripts, variables, tags,
+ * status) under the workspace lock, within the collection's byte budget,
+ * with a changelog entry.
  */
 export async function updateCollection(
 	sub: string,
@@ -113,6 +113,7 @@ export async function updateCollection(
 	for (const [key, value] of Object.entries(update)) {
 		if (value !== undefined) set[key] = value;
 	}
+	if (update.name !== undefined) set.searchName = foldSearchText(update.name);
 	await inWorkspaceTransaction(element.workspaceId, async (session) => {
 		const root = await CollectionModel.findOne({
 			_id: collectionId,
@@ -121,57 +122,30 @@ export async function updateCollection(
 			.session(session)
 			.lean<StoredCollection>();
 		if (!root) throw elementNotFound();
-		const { name, description, auth, scripts, variables } = root;
-		const before = { name, description, auth, scripts, variables };
-		const bytes = rootBytes({ ...before, ...update }) - rootBytes(before);
-		await chargeRoot(collectionId, sub, session, { bytes, set });
+		const before = rootStateOf(root);
+		const after = { ...before, ...definedOf(update) };
+		const bytes = rootBytes(after) - rootBytes(before);
+		const revision = rootRevision(
+			"update",
+			element.id,
+			after.name,
+			before,
+			after,
+		);
+		await chargeRoot(collectionId, sub, session, {
+			bytes,
+			set,
+			revisions: [revision],
+		});
 	});
 	return loadCollectionDetail(collectionId, role);
 }
 
-const COPY_SUFFIX = " Copy";
-
-/** "<name> Copy", cut so it stays within the name limit. */
-export function copyName(name: string): string {
-	return `${name.slice(0, COLLECTION_NAME_MAX - COPY_SUFFIX.length)}${COPY_SUFFIX}`;
-}
-
-/**
- * Copies a collection the caller can view into a workspace where they add
- * elements (its own by default), with new node ids.
- */
-export async function duplicateCollection(
-	sub: string,
-	id: string,
-	targetWorkspaceId: string | undefined,
-): Promise<CollectionDetail> {
-	const { element, collectionId, role } = await requireCollection(
-		sub,
-		id,
-		"view",
+/** The fields of `update` that were sent (absent ones stay). */
+function definedOf(update: CollectionUpdate): CollectionUpdate {
+	return Object.fromEntries(
+		Object.entries(update).filter(([, value]) => value !== undefined),
 	);
-	const { workspace } = await requireWorkspace(
-		sub,
-		"addElements",
-		targetWorkspaceId ?? element.workspaceId.toHexString(),
-	);
-	const source = await loadCollectionDetail(collectionId, role);
-	const ids = new Map(source.nodes.map((node) => [node.id, newNodeId()]));
-	const nodes = source.nodes.map((node): CollectionNode => {
-		const parentId = node.parentId === null ? null : ids.get(node.parentId);
-		return {
-			...node,
-			id: ids.get(node.id) ?? newNodeId(),
-			parentId: parentId ?? null,
-		};
-	});
-	const { name, description, auth, scripts, variables } = source;
-	return insertAndLoad({
-		workspaceId: workspace._id,
-		root: { name: copyName(name), description, auth, scripts, variables },
-		nodes,
-		sub,
-	});
 }
 
 /** The collection as served by `GET /collections/:id` (any role). */

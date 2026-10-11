@@ -125,7 +125,33 @@
 								},
 								"description": "Hands the order to the carrier."
 							},
-							"response": []
+							"response": [
+								{
+									"name": "Accepted",
+									"status": "Accepted",
+									"code": 202,
+									"_postman_previewlanguage": "Text",
+									"header": [
+										{ "key": "Content-Type", "value": "text/plain" },
+										{
+											"key": "Retry-After",
+											"value": "5",
+											"disabled": true,
+											"description": "Seconds"
+										}
+									],
+									"cookie": [
+										{
+											"domain": "store.example.com",
+											"path": "/",
+											"name": "sid",
+											"value": "x"
+										}
+									],
+									"responseTime": 42,
+									"body": "queued"
+								}
+							]
 						},
 						{
 							"name": "Refunds",

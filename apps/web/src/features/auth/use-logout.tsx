@@ -1,5 +1,6 @@
 import { type ReactNode, useRef, useState } from "react";
 import { logoutUrl } from "../../lib/api-url";
+import { forgetSavedPages } from "../collections/page-storage";
 import { releasePushSubscriptionForLogout } from "../notifications/release-push-on-logout";
 
 export interface Logout {
@@ -12,8 +13,9 @@ export interface Logout {
 
 /**
  * Logout as the header and the invite page do it: detach this browser's
- * Web Push first (best effort), then POST `/auth/logout`, which ends the
- * session (and the IdP's) and redirects. Repeated calls are ignored.
+ * Web Push first (best effort) and forget the open collection pages, then
+ * POST `/auth/logout`, which ends the session (and the IdP's) and
+ * redirects. Repeated calls are ignored.
  */
 export function useLogout(formDataId: string): Logout {
 	const formRef = useRef<HTMLFormElement>(null);
@@ -25,6 +27,7 @@ export function useLogout(formDataId: string): Logout {
 		started.current = true;
 		setBusy(true);
 		await releasePushSubscriptionForLogout();
+		forgetSavedPages();
 		formRef.current?.submit();
 	}
 

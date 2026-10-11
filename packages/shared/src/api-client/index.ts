@@ -56,3 +56,7 @@ export * from "./collections/collection-model.js";
 export * from "./collections/request-context.js";
 export * from "./collections/collection-order.js";
 export * from "./collections/collection-tree.js";
+export * from "./collections/collection-tags.js";
+export * from "./collections/changelog-model.js";
+export * from "./collections/collection-schemas.js";
+export * from "./collections/collection-tree-schema.js";

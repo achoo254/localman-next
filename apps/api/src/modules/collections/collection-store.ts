@@ -6,6 +6,7 @@ import {
 	type CollectionDetail,
 	type CollectionNode,
 	type CollectionRootFields,
+	EXAMPLE_BODY_MAX,
 } from "@localman/shared/api-client";
 import { type ClientSession, Types } from "mongoose";
 import { elementNotFound } from "../access/access-policy.js";
@@ -14,12 +15,7 @@ import {
 	draftBytes,
 	draftTooLarge,
 } from "../api-client/draft-size.js";
-import {
-	COLLECTION_BYTES_MAX,
-	collectionTooLarge,
-	nodeBytes,
-	rootBytes,
-} from "./collection-bytes.js";
+import type { NodePayload } from "./collection-bytes.js";
 import {
 	CollectionModel,
 	LIVE_COLLECTION,
@@ -30,6 +26,7 @@ import {
 	type StoredCollectionNode,
 } from "./collection-node-model.js";
 import { toCollectionDetail } from "./collection-view.js";
+import { displayNames } from "./people.js";
 import { foldSearchText } from "./search-text.js";
 
 /**
@@ -89,7 +86,11 @@ export async function loadCollectionDetail(
 ): Promise<CollectionDetail> {
 	const root = await findLiveCollection(collectionId);
 	if (!root) throw elementNotFound();
-	return toCollectionDetail(root, await findNodes(collectionId), role);
+	const [nodes, names] = await Promise.all([
+		findNodes(collectionId),
+		displayNames([root.createdBy, root.updatedBy]),
+	]);
+	return toCollectionDetail(root, nodes, role, names);
 }
 
 /** 409 `COLLECTION_LIMIT_REACHED` when the workspace is full. */
@@ -111,7 +112,10 @@ export async function assertWorkspaceRoom(
 	}
 }
 
-/** The stored form of a node; its ids must be 24 hex digits. */
+/**
+ * The stored form of a node; its ids must be 24 hex digits. Examples are
+ * left out of search (no `searchName`): they show under their request.
+ */
 export function storedNodeOf(
 	node: CollectionNode,
 	collectionId: Types.ObjectId,
@@ -124,59 +128,27 @@ export function storedNodeOf(
 		kind: node.kind,
 		order: node.order,
 		name: node.name,
-		searchName: foldSearchText(node.name),
-		description: node.description,
 		updatedBy: sub,
 	};
+	if (node.kind === "example") {
+		return { ...base, request: node.request, response: node.response };
+	}
+	const searchable = {
+		...base,
+		searchName: foldSearchText(node.name),
+		description: node.description,
+	};
 	return node.kind === "request"
-		? { ...base, draft: node.draft }
-		: { ...base, auth: node.auth, scripts: node.scripts };
-}
-
-export interface NewCollection {
-	readonly workspaceId: Types.ObjectId;
-	readonly root: CollectionRootFields;
-	/** Ids from `newNodeId`, parents listed before their children or not. */
-	readonly nodes: readonly CollectionNode[];
-	readonly sub: string;
+		? { ...searchable, draft: node.draft }
+		: { ...searchable, auth: node.auth, scripts: node.scripts };
 }
 
 /**
- * Writes a new collection and its nodes in the caller's transaction
- * (which holds the target workspace's lock). Returns its id.
+ * 413 `DRAFT_TOO_LARGE` for a request draft (of a request or an example)
+ * above the saved-draft cap. Example bodies are bounded by their schema
+ * (`EXAMPLE_BODY_MAX` bytes, 400 otherwise).
  */
-export async function insertCollection(
-	input: NewCollection,
-	session: ClientSession,
-): Promise<Types.ObjectId> {
-	if (input.nodes.length > COLLECTION_NODES_MAX) {
-		throw nodesLimitReached(input.nodes.length);
-	}
-	let bytes = rootBytes(input.root);
-	for (const node of input.nodes) bytes += nodeBytes(node);
-	if (bytes > COLLECTION_BYTES_MAX) throw collectionTooLarge(bytes);
-	const requestCount = input.nodes.filter((n) => n.kind === "request").length;
-	await assertWorkspaceRoom(input.workspaceId, session);
-	const _id = new Types.ObjectId();
-	await CollectionModel.create(
-		[
-			{
-				_id,
-				workspaceId: input.workspaceId,
-				...input.root,
-				bytes,
-				requestCount,
-				createdBy: input.sub,
-				updatedBy: input.sub,
-			},
-		],
-		{ session },
-	);
-	if (input.nodes.length > 0) {
-		await CollectionNodeModel.insertMany(
-			input.nodes.map((node) => storedNodeOf(node, _id, input.sub)),
-			{ session },
-		);
-	}
-	return _id;
+export function assertNodeSize(node: NodePayload): void {
+	if (node.kind === "request") assertDraftSize(node.draft);
+	if (node.kind === "example") assertDraftSize(node.request);
 }

@@ -410,6 +410,10 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Thùng rác (review backend đợt A chứng minh người xoá bị loại khỏi team vẫn mang được collection sang workspace riêng): quyền restore và xoá vĩnh viễn theo vai trò hiện tại. Khi workspace gốc còn, chỉ Admin hoặc Editor hiện tại của nó làm được; restore sang workspace khác phải qua luật move. Khi workspace gốc đã xoá, người xoá hoặc Admin/Editor cũ làm được. User chốt; Jev chia đôi: người xoá luôn có quyền 0.59, theo vai trò hiện tại 0.41.
 - Kỹ thuật: codec v2.1 đặt ở `packages/shared` để web import/export dùng chung; kiểm bằng JSON Schema chính thức v2.1 (draft-04, `ajv` + `ajv-draft-04` chỉ trong test). Thùng rác dùng `deletedAt` (khác tombstone `deletingAt` của project, vốn chỉ để xoá dây chuyền). Template "Từ project mock" dùng hàm thuần `mockRequestsOf` của web, tạo collection qua cùng đường import.
 
+### Vòng 33: sau đợt A của phase 12 (2026-10-11, user chốt)
+- Đợt A đã commit (`8f099c0`). Bước tiếp theo: làm đợt B, chưa push và chưa deploy; khi đợt B xong mới deploy và bật cờ `workspaces`. User chốt; Jev phân vân: làm tiếp đợt B 0.40, deploy và bật cờ 0.31, deploy giữ cờ tắt 0.29.
+- Changelog: "Hide diff" chỉ để giảm nhiễu, chỉ ẩn diff của chính thay đổi đó và UI ghi rõ thao tác này không xoá dữ liệu khỏi lịch sử (Jev 0.89; ẩn cả ở diff liền kề 0.09; thêm thao tác purge 0.02). Thay đổi có patch vượt 4 MiB chỉ lưu metadata; dry run và hộp thoại xác nhận báo `irreversible` (Jev 0.80; lưu nghịch đảo riêng 0.14; chặn hẳn 0.06).
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 

@@ -58,6 +58,13 @@ export const apiClientToolsImport: Messages["apiClientTools"]["import"] = {
 		TRUNCATED: "Chỉ {max} mục đầu được import.",
 		EXTRA_URLS: "Lệnh có thêm {count} URL; chỉ dùng URL đầu tiên.",
 		UNRESOLVED_REF: "Không phân giải được tham chiếu {ref} nên đã bỏ qua.",
+		EXAMPLE_BODY_TRUNCATED:
+			"Body của một example đã bị cắt cho vừa giới hạn dung lượng.",
+		INVALID_METADATA: {
+			tags: "Tag của collection không hợp lệ nên đã bị bỏ qua.",
+			status: "Trạng thái của collection không hợp lệ nên đã bị bỏ qua.",
+		},
+		TEXT_TRUNCATED: "Một giá trị đã bị cắt còn {max} ký tự.",
 		MORE_WARNINGS: "Còn {count} lưu ý khác không liệt kê.",
 	},
 	picker: {

@@ -1,18 +1,35 @@
+/**
+ * The zod schema of a `CollectionTree` sent to create a collection (an
+ * import, or the "From mock project" template), with its bounds checked
+ * before the recursive schema runs. The API validates request bodies with
+ * it; tests validate imported fixtures against it.
+ */
+import { z } from "zod";
+import type {
+	CollectionTree,
+	ImportedItem,
+} from "../import/imported-collection.js";
 import {
-	COLLECTION_DEPTH_MAX,
-	COLLECTION_DESCRIPTION_MAX,
-	COLLECTION_NAME_MAX,
-	COLLECTION_NODES_MAX,
-	COLLECTION_VARIABLES_MAX,
-	type CollectionTree,
-	type ImportedItem,
 	apiRequestDraftSchema,
 	effectiveAuthSchema,
 	requestAuthSchema,
 	requestScriptsSchema,
+} from "../request-schema.js";
+import {
+	COLLECTION_DESCRIPTION_MAX,
+	COLLECTION_NAME_MAX,
+	COLLECTION_NODES_MAX,
+	COLLECTION_VARIABLES_MAX,
+} from "./collection-model.js";
+import {
+	exampleResponseSchema,
 	variableEntrySchema,
-} from "@localman/shared/api-client";
-import { z } from "zod";
+} from "./collection-schemas.js";
+import {
+	collectionStatusSchema,
+	collectionTagsSchema,
+} from "./collection-tags.js";
+import { COLLECTION_DEPTH_MAX } from "./collection-tree.js";
 
 const name = z.string().trim().min(1).max(COLLECTION_NAME_MAX);
 const description = z.string().max(COLLECTION_DESCRIPTION_MAX);
@@ -27,6 +44,17 @@ const itemSchema: z.ZodType<ImportedItem> = z.lazy(() =>
 			name,
 			description,
 			draft: apiRequestDraftSchema,
+			examples: z
+				.array(
+					z.object({
+						id: itemId,
+						name,
+						request: apiRequestDraftSchema,
+						response: exampleResponseSchema,
+					}),
+				)
+				.max(COLLECTION_NODES_MAX)
+				.default([]),
 		}),
 		z.object({
 			kind: z.literal("folder"),
@@ -58,11 +86,12 @@ function childItems(value: unknown): unknown[] {
  * recursive schema runs, so a hostile body cannot exhaust the call stack
  * of the validator.
  */
-function exceedsBounds(tree: unknown): "depth" | "size" | null {
+export function exceedsBounds(tree: unknown): "depth" | "size" | null {
 	const stack = childItems(tree).map((item) => ({ item, depth: 1 }));
 	let count = 0;
 	for (let next = stack.pop(); next; next = stack.pop()) {
-		count += 1;
+		const examples = field(next.item, "examples");
+		count += 1 + (Array.isArray(examples) ? examples.length : 0);
 		if (count > COLLECTION_NODES_MAX) return "size";
 		if (field(next.item, "kind") !== "folder") continue;
 		if (next.depth > COLLECTION_DEPTH_MAX) return "depth";
@@ -100,5 +129,7 @@ export const collectionTreeSchema: z.ZodType<CollectionTree> = z.preprocess(
 		variables: z.array(variableEntrySchema).max(COLLECTION_VARIABLES_MAX),
 		scripts: requestScriptsSchema,
 		items: z.array(itemSchema).max(COLLECTION_NODES_MAX),
+		tags: collectionTagsSchema.default([]),
+		status: collectionStatusSchema.nullable().default(null),
 	}),
 );

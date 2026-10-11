@@ -60,6 +60,12 @@ export const apiClientToolsImport = {
 		TRUNCATED: "Only the first {max} items were imported.",
 		EXTRA_URLS: "The command names {count} more URLs; only the first is used.",
 		UNRESOLVED_REF: "Reference {ref} couldn't be resolved and was skipped.",
+		EXAMPLE_BODY_TRUNCATED: "An example body was cut to fit the size limit.",
+		INVALID_METADATA: {
+			tags: "The collection's tags weren't valid and were skipped.",
+			status: "The collection's status wasn't valid and was skipped.",
+		},
+		TEXT_TRUNCATED: "A value was cut to {max} characters.",
 		MORE_WARNINGS: "{count} more notes are not listed.",
 	},
 	picker: {

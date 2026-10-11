@@ -4,23 +4,20 @@ import {
 	COLLECTION_NODES_MAX,
 	DELETE_CONFIRMATION,
 	MAX_IMPORT_BYTES,
+	collectionTreeSchema,
 	collectionUpdateSchema,
 } from "@localman/shared/api-client";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import { duplicateCollection } from "./collection-duplicate-service.js";
 import {
 	ACCESS_NOTE,
 	COLLECTION_PATH,
 	collectionIdSchema,
 	workspaceIdSchema,
 } from "./collection-read-operations.js";
-import {
-	createCollection,
-	duplicateCollection,
-	updateCollection,
-} from "./collection-service.js";
+import { createCollection, updateCollection } from "./collection-service.js";
 import { COLLECTIONS_PER_WORKSPACE_MAX } from "./collection-store.js";
-import { collectionTreeSchema } from "./collection-tree-input.js";
 import { collectionDetailView } from "./collection-view.js";
 import { COLLECTION_TEMPLATES } from "./rest-crud-template.js";
 import { trashCollection } from "./trash-service.js";

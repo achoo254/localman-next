@@ -1,5 +1,6 @@
 import {
 	IconArrowsTransferUp,
+	IconBookmarkPlus,
 	IconCopy,
 	IconDots,
 	IconDownload,
@@ -24,6 +25,7 @@ import type { TreeRow } from "./tree-rows";
 export const TREE_ACTIONS = [
 	"addRequest",
 	"addFolder",
+	"addExample",
 	"rename",
 	"duplicate",
 	"share",
@@ -42,7 +44,8 @@ const MENUS: Record<TreeRow["kind"], readonly (readonly TreeAction[])[]> = {
 		["export", "delete"],
 	],
 	folder: [["addRequest", "addFolder", "rename", "duplicate"], ["delete"]],
-	request: [["rename", "duplicate"], ["delete"]],
+	request: [["addExample", "rename", "duplicate"], ["delete"]],
+	example: [["rename", "duplicate"], ["delete"]],
 };
 
 /** What a Viewer (no `edit` on the collection) still sees. */
@@ -88,6 +91,7 @@ export function menuActions(
 const ICONS: Record<TreeAction, ReactNode> = {
 	addRequest: <IconPlus size={16} aria-hidden="true" />,
 	addFolder: <IconFolderPlus size={16} aria-hidden="true" />,
+	addExample: <IconBookmarkPlus size={16} aria-hidden="true" />,
 	rename: <IconPencil size={16} aria-hidden="true" />,
 	duplicate: <IconCopy size={16} aria-hidden="true" />,
 	share: <IconShare size={16} aria-hidden="true" />,
@@ -100,6 +104,7 @@ const ICONS: Record<TreeAction, ReactNode> = {
 const DATA_IDS: Record<TreeAction, string> = {
 	addRequest: "node-menu-add-request",
 	addFolder: "node-menu-add-folder",
+	addExample: "node-menu-add-example",
 	rename: "node-menu-rename",
 	duplicate: "node-menu-duplicate",
 	share: "node-menu-share",

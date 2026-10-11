@@ -5,15 +5,10 @@ import type {
 } from "../import/collection-v21-types.js";
 import {
 	importCollection,
-	readFixture,
 	withBlankSecrets,
 	withoutIds,
 } from "../import/import-test-utils.js";
-import {
-	type CollectionTree,
-	type ImportedCollection,
-	flattenImportedRequests,
-} from "../import/imported-collection.js";
+import { flattenImportedRequests } from "../import/imported-collection.js";
 import {
 	type EffectiveAuth,
 	createRequestDraft,
@@ -21,22 +16,12 @@ import {
 } from "../request-model.js";
 import { exportCollectionV21 } from "./collection-v21-export.js";
 import { RICH_TREE } from "./round-trip-fixtures.js";
-import { v21SchemaErrors } from "./v21-schema-test-utils.js";
-
-function treeOf(imported: ImportedCollection): CollectionTree {
-	const { format: _format, warnings: _warnings, ...tree } = imported;
-	return tree;
-}
-
-/** Exports `tree`, failing on any official schema error, as JSON text. */
-function exportChecked(tree: CollectionTree): string {
-	const document = exportCollectionV21(tree);
-	expect(v21SchemaErrors(document)).toEqual([]);
-	return JSON.stringify(document);
-}
-
-const roundTrip = (tree: CollectionTree): ImportedCollection =>
-	importCollection(exportChecked(tree));
+import {
+	exportChecked,
+	roundTrip,
+	treeOf,
+	v21SchemaErrors,
+} from "./v21-schema-test-utils.js";
 
 function folderAt(
 	items: readonly CollectionV21Item[],
@@ -130,7 +115,14 @@ describe("Collection v2.1 lossless round trip", () => {
 		const text = exportChecked({
 			...RICH_TREE,
 			items: [
-				{ kind: "request", id: "b", name: "Bin", description: "", draft },
+				{
+					kind: "request",
+					id: "b",
+					name: "Bin",
+					description: "",
+					draft,
+					examples: [],
+				},
 			],
 		});
 		expect(text).toContain('"file":{"src":"a.bin"}');
@@ -146,38 +138,5 @@ describe("Collection v2.1 lossless round trip", () => {
 			importCollection(JSON.stringify({ ...document, item })),
 		);
 		expect(back.at(-1)?.draft.settings).toEqual(createRequestDraft().settings);
-	});
-});
-
-describe("Postman export round trip", () => {
-	const fixture = readFixture("collection-v21-nested.json");
-	const first = importCollection(fixture);
-
-	it("starts from a valid v2.1 document", () => {
-		expect(v21SchemaErrors(JSON.parse(fixture))).toEqual([]);
-	});
-
-	it("keeps three folder levels and skips saved responses", () => {
-		const flat = flattenImportedRequests(first);
-		expect(flat.map((r) => [r.folderPath.join("/"), r.name])).toEqual([
-			["Orders", "List orders"],
-			["Orders/Fulfilment", "Ship order"],
-			["Orders/Fulfilment/Refunds", "Refund order"],
-			["Orders/Fulfilment/Refunds", "Refund status"],
-			["", "Upload catalog"],
-		]);
-		expect(flat[3]?.inheritedAuth).toEqual({ type: "none" });
-		expect(flat[1]?.draft.url).toBe("{{baseUrl}}/orders/42/ship");
-	});
-
-	it("imports, exports and imports to the same tree", () => {
-		const second = roundTrip(first);
-		expect(withoutIds(treeOf(second))).toEqual(withoutIds(treeOf(first)));
-	});
-
-	it("exports the same document on every pass", () => {
-		const once = exportChecked(first);
-		const twice = exportChecked(importCollection(once));
-		expect(JSON.parse(twice)).toEqual(JSON.parse(once));
 	});
 });

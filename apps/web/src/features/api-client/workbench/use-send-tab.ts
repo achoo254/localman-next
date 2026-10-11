@@ -99,7 +99,12 @@ export function useSendTab(
 			}
 			if (controllers.current.get(tabId) !== controller) return;
 			controllers.current.delete(tabId);
-			dispatch({ type: "setResponse", id: tabId, response: settled });
+			dispatch({
+				type: "setResponse",
+				id: tabId,
+				response:
+					settled.kind === "done" ? { ...settled, draft: tab.draft } : settled,
+			});
 			// History gets the tab's draft as typed: inherited credentials stay out.
 			if (!(await recordSend(tab.draft, settled, queryClient))) {
 				toast.show({

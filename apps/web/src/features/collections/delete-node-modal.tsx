@@ -2,7 +2,9 @@ import type { CollectionNode } from "@localman/shared/api-client";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
 import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
+import { previewNodeDelete } from "./bulk-api";
 import { translatedError } from "./collection-errors";
+import { IrreversibleNote, useIrreversible } from "./irreversible-note";
 import { useDeleteNode } from "./use-node-mutations";
 
 export interface DeleteNodeModalProps {
@@ -15,7 +17,7 @@ export interface DeleteNodeModalProps {
 	onCloseAutoFocus?: (event: Event) => void;
 }
 
-/** Deletes a folder (with everything inside) or a request, for good. */
+/** Deletes a folder (with everything inside), a request or an example, for good. */
 export function DeleteNodeModal({
 	collectionId,
 	node,
@@ -28,6 +30,11 @@ export function DeleteNodeModal({
 	const toast = useToast();
 	const remove = useDeleteNode();
 	const folder = node.kind === "folder";
+	const preview = useIrreversible(
+		["node-delete", collectionId, node.id],
+		() => previewNodeDelete(collectionId, node.id),
+		open,
+	);
 
 	const confirm = async (): Promise<void> => {
 		try {
@@ -45,22 +52,22 @@ export function DeleteNodeModal({
 		<ConfirmModal
 			open={open}
 			onOpenChange={onOpenChange}
-			title={t(
-				folder
-					? "collections.deleteNode.folderTitle"
-					: "collections.deleteNode.requestTitle",
-			)}
+			title={t(`collections.deleteNode.${node.kind}Title`)}
 			question={t("collections.deleteNode.question", { name: node.name })}
 			confirmLabel={t("collections.deleteNode.confirm")}
 			onConfirm={confirm}
+			confirmDisabled={preview.pending}
 			onCloseAutoFocus={onCloseAutoFocus}
 			data-id="modal-delete-node"
 		>
 			<p className="m-0">
 				{folder
 					? t("collections.deleteNode.folderBody", { count: requestCount })
-					: t("collections.deleteNode.requestBody")}
+					: t(
+							`collections.deleteNode.${node.kind === "example" ? "example" : "request"}Body`,
+						)}
 			</p>
+			<IrreversibleNote show={preview.irreversible} />
 		</ConfirmModal>
 	);
 }

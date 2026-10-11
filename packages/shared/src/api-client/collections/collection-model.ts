@@ -6,22 +6,18 @@
  * one record. `collection-tree.ts` converts it to and from the
  * `CollectionTree` that import and export use.
  */
-import { z } from "zod";
 import type { ElementRole } from "../../access-permissions.js";
 import type {
 	ApiRequestDraft,
 	EffectiveAuth,
 	HttpMethod,
+	KeyValueRow,
+	RawLanguage,
 	RequestAuth,
 	RequestScripts,
 } from "../request-model.js";
-import {
-	apiRequestDraftSchema,
-	effectiveAuthSchema,
-	requestAuthSchema,
-	requestScriptsSchema,
-} from "../request-schema.js";
 import type { VariableEntry } from "../variable-interpolation.js";
+import type { CollectionStatus } from "./collection-tags.js";
 
 export const COLLECTION_NAME_MAX = 200;
 export const COLLECTION_DESCRIPTION_MAX = 20_000;
@@ -55,7 +51,45 @@ export interface CollectionRequestNode {
 	draft: ApiRequestDraft;
 }
 
-export type CollectionNode = CollectionFolderNode | CollectionRequestNode;
+/** Body of a saved example response; larger bodies are cut when saved. */
+export const EXAMPLE_BODY_MAX = 512 * 1024;
+
+/** A saved response of a request (Postman "example"). */
+export interface ExampleResponse {
+	status: number;
+	statusText: string;
+	headers: KeyValueRow[];
+	body: string;
+	bodyLanguage: RawLanguage;
+}
+
+/**
+ * An example: a child of a request node holding the request as it was sent
+ * and the response saved from it (or written by hand).
+ */
+export interface CollectionExampleNode {
+	kind: "example";
+	id: string;
+	/** The request node it belongs to. */
+	parentId: string;
+	order: string;
+	name: string;
+	request: ApiRequestDraft;
+	response: ExampleResponse;
+}
+
+export type CollectionNode =
+	| CollectionFolderNode
+	| CollectionRequestNode
+	| CollectionExampleNode;
+
+export {
+	COLLECTION_STATUS_PRESETS,
+	COLLECTION_TAG_MAX_LENGTH,
+	COLLECTION_TAGS_MAX,
+	type CollectionStatus,
+	type CollectionStatusPreset,
+} from "./collection-tags.js";
 
 /** One collection with every node, as `GET /collections/:id` serves it. */
 export interface CollectionDetail {
@@ -69,8 +103,16 @@ export interface CollectionDetail {
 	auth: EffectiveAuth;
 	scripts: RequestScripts;
 	variables: VariableEntry[];
+	/** Lower-case, at most `COLLECTION_TAGS_MAX`. */
+	tags: string[];
+	status: CollectionStatus | null;
 	createdBy: string;
+	/** Name (else username) of the creator; `null` for a removed account. */
+	createdByName: string | null;
 	createdAt: string;
+	/** Who changed it last (root or any node). */
+	updatedBy: string;
+	updatedByName: string | null;
 	updatedAt: string;
 	nodes: CollectionNode[];
 }
@@ -85,77 +127,16 @@ export interface CollectionSummary {
 	/** Favorites of the caller come first in the sidebar. */
 	favorite: boolean;
 	requestCount: number;
+	tags: string[];
+	status: CollectionStatus | null;
 	updatedAt: string;
 }
-
-const name = z.string().trim().min(1).max(COLLECTION_NAME_MAX);
-const description = z.string().max(COLLECTION_DESCRIPTION_MAX);
-export const variableEntrySchema: z.ZodType<VariableEntry> = z.object({
-	key: z.string().trim().min(1).max(200),
-	value: z.string().max(10_000),
-	secret: z.boolean().optional(),
-	enabled: z.boolean().optional(),
-});
-const orderKey = z.string().min(1).max(200);
-
-/** Body of `PATCH /collections/:id`: the root's editable fields. */
-export const collectionUpdateSchema = z
-	.object({
-		name,
-		description,
-		auth: effectiveAuthSchema,
-		scripts: requestScriptsSchema,
-		variables: z.array(variableEntrySchema).max(COLLECTION_VARIABLES_MAX),
-	})
-	.partial();
-
-/** Body of `POST /collections/:id/nodes`: a new folder or request. */
-export const nodeCreateSchema = z.discriminatedUnion("kind", [
-	z.object({
-		kind: z.literal("folder"),
-		parentId: z.string().nullable(),
-		name,
-		/** Insert after this sibling; at the end when absent. */
-		afterId: z.string().nullable().optional(),
-	}),
-	z.object({
-		kind: z.literal("request"),
-		parentId: z.string().nullable(),
-		name,
-		draft: apiRequestDraftSchema,
-		afterId: z.string().nullable().optional(),
-	}),
-]);
-
-/** Body of `PATCH /collections/:id/nodes/:nodeId`: fields of that kind only. */
-export const nodeUpdateSchema = z
-	.object({
-		name,
-		description,
-		auth: requestAuthSchema,
-		scripts: requestScriptsSchema,
-		draft: apiRequestDraftSchema,
-	})
-	.partial();
-
-/** Body of `POST /collections/:id/nodes/:nodeId/move`: a drop. */
-export const nodeMoveSchema = z.object({
-	parentId: z.string().nullable(),
-	/** Neighbours at the drop position (`null` at either end). */
-	beforeOrder: orderKey.nullable(),
-	afterOrder: orderKey.nullable(),
-});
 
 /** Binds an API client tab to the request node it edits. */
 export interface TabSource {
 	collectionId: string;
 	nodeId: string;
 }
-
-export const tabSourceSchema: z.ZodType<TabSource> = z.object({
-	collectionId: z.string().min(1).max(64),
-	nodeId: z.string().min(1).max(64),
-});
 
 /** Longest search text and most matches of one collection search. */
 export const COLLECTION_SEARCH_QUERY_MAX = 100;

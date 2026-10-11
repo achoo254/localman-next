@@ -14,6 +14,7 @@ import type {
 	MockRequest,
 	MockResourceUrls,
 } from "../api-client/open-in/mock-requests";
+import { fitExampleResponse } from "./example-body";
 
 /** Names the API would refuse when blank, in the language on screen. */
 export interface FallbackNames {
@@ -38,7 +39,13 @@ function fitItems(
 		const description = fitDescription(item.description);
 		if (item.kind === "request") {
 			const fallback = item.draft.url.trim() || names.request;
-			return { ...item, name: fitName(item.name, fallback), description };
+			const examples = item.examples.map((example) => ({
+				...example,
+				name: fitName(example.name, String(example.response.status)),
+				response: fitExampleResponse(example.response).response,
+			}));
+			const name = fitName(item.name, fallback);
+			return { ...item, name, description, examples };
 		}
 		return {
 			...item,
@@ -60,6 +67,8 @@ export function fitTree(
 		auth: tree.auth,
 		scripts: tree.scripts,
 		variables: tree.variables.filter((v) => v.key.trim() !== ""),
+		tags: tree.tags,
+		status: tree.status,
 		items: fitItems(tree.items, names),
 	};
 }
@@ -92,6 +101,7 @@ export function mockProjectTree(
 					name: request.draft.name,
 					description: "",
 					draft: request.draft,
+					examples: [],
 				})),
 		};
 		folders.set(resource.id, folder);
@@ -106,6 +116,8 @@ export function mockProjectTree(
 		auth: { type: "none" },
 		variables: [],
 		scripts: { pre: "", post: "" },
+		tags: [],
+		status: null,
 		items: top,
 	};
 }

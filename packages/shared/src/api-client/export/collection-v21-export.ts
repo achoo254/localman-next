@@ -5,7 +5,8 @@
  * and scripts; auth left out for `inherit`; scripts as `prerequest`/`test`
  * events; disabled rows flagged; `followRedirects: false` kept. Secret
  * variables and the settings v2.1 has no field for go under `_localman`.
- * Picked files are exported by name only.
+ * Saved examples become `response[]`, tags and status the collection's
+ * `_localman`. Picked files are exported by name only.
  *
  * The file may be shared, so secret variables keep their key and flag but
  * are written with an empty value, as environment exports do.
@@ -13,11 +14,13 @@
  * Not kept: secret values, the file bytes and picked-file references, line
  * endings of scripts (CRLF comes back as LF) and blank scripts.
  */
-import { settingsExtension } from "../import/collection-v21-extension.js";
+import {
+	collectionExtension,
+	settingsExtension,
+} from "../import/collection-v21-extension.js";
 import {
 	COLLECTION_V21_SCHEMA,
 	type CollectionV21,
-	type CollectionV21Auth,
 	type CollectionV21Event,
 	type CollectionV21Folder,
 	type CollectionV21Item,
@@ -27,45 +30,14 @@ import {
 import type {
 	CollectionTree,
 	ImportedItem,
+	ImportedRequest,
 } from "../import/imported-collection.js";
-import type {
-	ApiRequestDraft,
-	RequestAuth,
-	RequestScripts,
-} from "../request-model.js";
-import { bodyToV21, rowsToV21 } from "./collection-v21-body-export.js";
-import { collectionV21Url } from "./collection-v21-url.js";
-
-const attribute = (key: string, value: string) =>
-	({ key, value, type: "string" }) as const;
-
-function authToV21(auth: RequestAuth): CollectionV21Auth | undefined {
-	switch (auth.type) {
-		case "inherit":
-			return undefined;
-		case "none":
-			return { type: "noauth" };
-		case "bearer":
-			return { type: "bearer", bearer: [attribute("token", auth.token)] };
-		case "basic":
-			return {
-				type: "basic",
-				basic: [
-					attribute("username", auth.username),
-					attribute("password", auth.password),
-				],
-			};
-		case "apikey":
-			return {
-				type: "apikey",
-				apikey: [
-					attribute("key", auth.key),
-					attribute("value", auth.value),
-					attribute("in", auth.in),
-				],
-			};
-	}
-}
+import type { RequestScripts } from "../request-model.js";
+import {
+	authToV21,
+	examplesToV21,
+	requestObjectToV21,
+} from "./collection-v21-request-export.js";
 
 function eventsToV21(
 	scripts: RequestScripts,
@@ -81,38 +53,27 @@ function eventsToV21(
 	return events.length > 0 ? events : undefined;
 }
 
-function requestToV21(
-	name: string,
-	description: string,
-	draft: ApiRequestDraft,
-): CollectionV21RequestItem {
-	const item: CollectionV21RequestItem = {
-		name,
-		request: {
-			method: draft.method,
-			header: rowsToV21(draft.headers),
-			url: collectionV21Url(draft.url, rowsToV21(draft.params)),
-		},
+function requestToV21(item: ImportedRequest): CollectionV21RequestItem {
+	const { draft } = item;
+	const out: CollectionV21RequestItem = {
+		name: item.name,
+		request: requestObjectToV21(draft, item.description),
 	};
-	const body = bodyToV21(draft.body);
-	const auth = authToV21(draft.auth);
 	const events = eventsToV21(draft.scripts);
-	if (body) item.request.body = body;
-	if (auth) item.request.auth = auth;
-	if (description) item.request.description = description;
-	if (events) item.event = events;
+	if (events) out.event = events;
 	if (!draft.settings.followRedirects) {
-		item.protocolProfileBehavior = { followRedirects: false };
+		out.protocolProfileBehavior = { followRedirects: false };
 	}
 	const settings = settingsExtension(draft.settings);
-	if (settings) item._localman = settings;
-	return item;
+	if (settings) out._localman = settings;
+	if (item.examples.length > 0) out.response = examplesToV21(item.examples);
+	return out;
 }
 
 function itemsToV21(items: readonly ImportedItem[]): CollectionV21Item[] {
 	return items.map((item) => {
 		if (item.kind === "request") {
-			return requestToV21(item.name, item.description, item.draft);
+			return requestToV21(item);
 		}
 		const folder: CollectionV21Folder = {
 			name: item.name,
@@ -137,6 +98,8 @@ export function exportCollectionV21(tree: CollectionTree): CollectionV21 {
 	if (tree.auth.type !== "none") out.auth = authToV21(tree.auth);
 	const events = eventsToV21(tree.scripts);
 	if (events) out.event = events;
+	const extension = collectionExtension(tree);
+	if (extension) out._localman = extension;
 	if (tree.variables.length > 0) {
 		out.variable = tree.variables.map((variable) => {
 			const entry: CollectionV21Variable = {

@@ -18,7 +18,12 @@ import type { PageTab } from "../api-client/workbench/workbench-tab-types";
 
 export type OpenNodeTarget =
 	| { kind: "collection"; collectionId: string; name: string }
-	| { kind: "folder"; collectionId: string; nodeId: string; name: string }
+	| {
+			kind: "folder" | "example";
+			collectionId: string;
+			nodeId: string;
+			name: string;
+	  }
 	| {
 			kind: "request";
 			collection: CollectionDetail;
@@ -47,8 +52,8 @@ export function useOpenCollectionNode(): OpenNode {
 	const { openTab, openPage, activateTab, currentTabs } = useWorkbenchActions();
 	return useCallback(
 		(target: OpenNodeTarget) => {
-			if (target.kind === "collection" || target.kind === "folder") {
-				const nodeId = target.kind === "folder" ? target.nodeId : null;
+			if (target.kind !== "request") {
+				const nodeId = target.kind === "collection" ? null : target.nodeId;
 				openPage({
 					id: pageId(target.kind, nodeId ?? target.collectionId),
 					kind: target.kind,

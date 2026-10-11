@@ -3,44 +3,60 @@ import type {
 	CollectionNode,
 	nodeUpdateSchema,
 } from "@localman/shared/api-client";
-import { Types } from "mongoose";
 import type { z } from "zod";
 import { inWorkspaceTransaction } from "../workspaces/workspace-lock.js";
 import { requireCollection } from "./collection-access.js";
-import { type NodePayload, chargeRoot, nodeBytes } from "./collection-bytes.js";
+import { nodeBytes } from "./collection-bytes.js";
 import {
 	CollectionNodeModel,
 	type StoredCollectionNode,
 } from "./collection-node-model.js";
-import { assertDraftSize } from "./collection-store.js";
+import { assertNodeSize } from "./collection-store.js";
 import { toCollectionNode } from "./collection-view.js";
-import { countKinds, loadOutline, subtreeIds } from "./node-outline.js";
 import { findNode, nodeNotFound } from "./node-service.js";
+import { nodesRevision } from "./revision-drafts.js";
+import { chargeRoot } from "./root-change.js";
 import { foldSearchText } from "./search-text.js";
 
 export type NodeUpdate = z.infer<typeof nodeUpdateSchema>;
+type UpdateField = keyof NodeUpdate;
 
-const FOLDER_ONLY = ["auth", "scripts"] as const;
-const REQUEST_ONLY = ["draft"] as const;
+/** What each kind of node may change. */
+const FIELDS: Record<CollectionNode["kind"], readonly UpdateField[]> = {
+	folder: ["name", "description", "auth", "scripts"],
+	request: ["name", "description", "draft"],
+	example: ["name", "request", "response"],
+};
 
-/** The node's content once `update` is applied. */
-function updatedPayload(
-	node: StoredCollectionNode,
-	update: NodeUpdate,
-): NodePayload {
+const UPDATE_FIELDS: readonly UpdateField[] = [
+	"name",
+	"description",
+	"auth",
+	"scripts",
+	"draft",
+	"request",
+	"response",
+];
+
+/** The node once `update` is applied (fields of its kind only). */
+function updatedNode(node: CollectionNode, update: NodeUpdate): CollectionNode {
 	const name = update.name ?? node.name;
+	if (node.kind === "example") {
+		const request = update.request ?? node.request;
+		return {
+			...node,
+			name,
+			request,
+			response: update.response ?? node.response,
+		};
+	}
 	const description = update.description ?? node.description;
 	if (node.kind === "request") {
-		return {
-			kind: "request",
-			name,
-			description,
-			draft: update.draft ?? node.draft,
-		};
+		return { ...node, name, description, draft: update.draft ?? node.draft };
 	}
 	const auth = update.auth ?? node.auth;
 	return {
-		kind: "folder",
+		...node,
 		name,
 		description,
 		auth,
@@ -48,21 +64,11 @@ function updatedPayload(
 	};
 }
 
-/**
- * Edits a node's own fields (Editor). A folder takes `auth` and `scripts`,
- * a request its `draft`; a field of the other kind answers 400. Runs under
- * the workspace lock with the byte budget of the collection.
- */
-export async function updateNode(
-	sub: string,
-	id: string,
-	nodeId: string,
-	update: NodeUpdate,
-): Promise<CollectionNode> {
-	const { element, collectionId } = await requireCollection(sub, id, "edit");
-	const kind = (await findNode(collectionId, nodeId)).kind;
-	const foreign = kind === "folder" ? REQUEST_ONLY : FOLDER_ONLY;
-	const sent = foreign.filter((key) => update[key] !== undefined);
+/** 400 `INVALID_NODE_FIELDS` for a field of another kind. */
+function assertFields(kind: CollectionNode["kind"], update: NodeUpdate): void {
+	const sent = UPDATE_FIELDS.filter(
+		(key) => update[key] !== undefined && !FIELDS[kind].includes(key),
+	);
 	if (sent.length > 0) {
 		throw new OperationError(
 			400,
@@ -71,82 +77,43 @@ export async function updateNode(
 			{ fields: sent.join(",") },
 		);
 	}
-	if (update.draft) assertDraftSize(update.draft);
-	const $set: Record<string, unknown> = { updatedBy: sub };
-	for (const [key, value] of Object.entries(update)) {
-		if (value !== undefined) $set[key] = value;
-	}
-	if (update.name !== undefined) $set.searchName = foldSearchText(update.name);
-	await inWorkspaceTransaction(element.workspaceId, async (session) => {
-		const node = await CollectionNodeModel.findOne({
-			_id: toNodeId(nodeId),
-			collectionId,
-		})
-			.session(session)
-			.lean<StoredCollectionNode>();
-		if (!node) throw nodeNotFound();
-		const bytes = nodeBytes(updatedPayload(node, update)) - nodeBytes(node);
-		await chargeRoot(collectionId, sub, session, { bytes });
-		await CollectionNodeModel.updateOne(
-			{ _id: node._id },
-			{ $set },
-			{ session },
-		);
-	});
-	return toCollectionNode(await findNode(collectionId, nodeId));
 }
 
-/** `findNode` already accepted the id, so it is 24 hex digits. */
-const toNodeId = (nodeId: string) => new Types.ObjectId(nodeId);
-
-export interface NodeDeletion {
-	readonly dryRun: boolean;
-	readonly deleted: boolean;
-	readonly nodeId: string;
-	readonly folders: number;
-	readonly requests: number;
-}
-
-/** Deletes a node with everything under it (Editor); dry run counts them. */
-export async function deleteNode(
+/**
+ * Edits a node's own fields (Editor): a folder its name, description,
+ * auth and scripts, a request its name, description and draft, an
+ * example its name, request and response. Runs under the workspace lock
+ * with the collection's byte budget and a changelog entry.
+ */
+export async function updateNode(
 	sub: string,
 	id: string,
 	nodeId: string,
-	dryRun: boolean,
-): Promise<NodeDeletion> {
+	update: NodeUpdate,
+): Promise<CollectionNode> {
 	const { element, collectionId } = await requireCollection(sub, id, "edit");
-	const node = await findNode(collectionId, nodeId);
-	const selfId = node._id.toHexString();
-	const counts = await inWorkspaceTransaction(
-		element.workspaceId,
-		async (session) => {
-			const outline = await loadOutline(collectionId, session);
-			if (!outline.has(selfId)) throw nodeNotFound();
-			const ids = subtreeIds(outline, selfId).map(
-				(at) => new Types.ObjectId(at),
-			);
-			const counts = countKinds(
-				outline,
-				ids.map((at) => at.toHexString()),
-			);
-			if (dryRun) return counts;
-			const gone = await CollectionNodeModel.find({
-				collectionId,
-				_id: { $in: ids },
-			})
-				.session(session)
-				.lean<StoredCollectionNode[]>();
-			const bytes = gone.reduce((sum, at) => sum + nodeBytes(at), 0);
-			await chargeRoot(collectionId, sub, session, {
-				bytes: -bytes,
-				requests: -counts.requests,
-			});
-			await CollectionNodeModel.deleteMany(
-				{ collectionId, _id: { $in: ids } },
-				{ session },
-			);
-			return counts;
-		},
-	);
-	return { dryRun, deleted: !dryRun, nodeId, ...counts };
+	const _id = (await findNode(collectionId, nodeId))._id;
+	await inWorkspaceTransaction(element.workspaceId, async (session) => {
+		const stored = await CollectionNodeModel.findOne({ _id, collectionId })
+			.session(session)
+			.lean<StoredCollectionNode>();
+		if (!stored) throw nodeNotFound();
+		const before = toCollectionNode(stored);
+		assertFields(before.kind, update);
+		const after = updatedNode(before, update);
+		assertNodeSize(after);
+		const $set: Record<string, unknown> = { updatedBy: sub };
+		for (const key of FIELDS[before.kind]) {
+			if (update[key] !== undefined) $set[key] = update[key];
+		}
+		if (update.name !== undefined && before.kind !== "example") {
+			$set.searchName = foldSearchText(update.name);
+		}
+		await chargeRoot(collectionId, sub, session, {
+			bytes: nodeBytes(after) - nodeBytes(before),
+			revisions: [nodesRevision("update", after, [before], [after])],
+		});
+		await CollectionNodeModel.updateOne({ _id }, { $set }, { session });
+	});
+	return toCollectionNode(await findNode(collectionId, nodeId));
 }

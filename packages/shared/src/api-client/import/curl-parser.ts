@@ -16,6 +16,7 @@ import {
 	emptyRequestBody,
 } from "../request-model.js";
 import { parseQueryFromUrl } from "../url-params.js";
+import { clampDraft } from "./clamp-draft.js";
 import { bodyFromData, formDataRows, removeHeader } from "./curl-body.js";
 import type { CurlParts } from "./curl-option-table.js";
 import { readCurlOptions } from "./curl-options.js";
@@ -23,7 +24,6 @@ import { tokenizeCommand } from "./curl-tokenizer.js";
 import {
 	type ImportContext,
 	type RequestImportOptions,
-	clampDraft,
 	createImportContext,
 } from "./import-context.js";
 import {

@@ -6,21 +6,18 @@
 import type {
 	CollectionDetail,
 	CollectionFolderNode,
+	CollectionStatus,
 	EffectiveAuth,
 	RequestAuth,
 	RequestScripts,
 	VariableEntry,
 } from "@localman/shared/api-client";
 import { useQueryClient } from "@tanstack/react-query";
-import { useContext, useEffect } from "react";
 import { useWorkbenchActions } from "../api-client/workbench/workbench-context";
 import type { PageTab } from "../api-client/workbench/workbench-tab-types";
-import {
-	type CollectionPatch,
-	updateCollection,
-	updateNode,
-} from "./collections-api";
-import { PageSaveContext } from "./page-save-context";
+import { type CollectionPatch, updateCollection } from "./collections-api";
+import { updateNode } from "./nodes-api";
+import { useRegisterPageSave } from "./page-save-context";
 import {
 	COLLECTIONS_KEY,
 	collectionKey,
@@ -36,6 +33,9 @@ export interface PageFields {
 	scripts: RequestScripts;
 	/** Collections only; a folder keeps none. */
 	variables: VariableEntry[];
+	/** Collections only. */
+	tags: string[];
+	status: CollectionStatus | null;
 }
 
 function isEffective(auth: RequestAuth): auth is EffectiveAuth {
@@ -53,16 +53,20 @@ function storedFields(
 ): PageFields {
 	if (folder) {
 		const { name, description, auth, scripts } = folder;
-		return { name, description, auth, scripts, variables: [] };
+		return {
+			...{ name, description, auth, scripts },
+			variables: [],
+			tags: [],
+			status: null,
+		};
 	}
-	const { name, description, auth, scripts, variables } = detail;
-	return { name, description, auth, scripts, variables };
+	const { name, description, auth, scripts, variables, tags, status } = detail;
+	return { name, description, auth, scripts, variables, tags, status };
 }
 
 export function usePageModel(page: PageTab) {
 	const client = useQueryClient();
 	const { renamePage } = useWorkbenchActions();
-	const register = useContext(PageSaveContext);
 	const query = useCollection(page.collectionId);
 	const detail = query.data;
 	const folder = detail?.nodes.find(
@@ -80,7 +84,8 @@ export function usePageModel(page: PageTab) {
 			);
 			client.setQueryData(key, next);
 		} else if (page.nodeId) {
-			const { variables: _variables, ...fields } = patch;
+			const { name, description, auth, scripts } = patch;
+			const fields = { name, description, auth, scripts };
 			const node = await updateNode(page.collectionId, page.nodeId, fields);
 			client.setQueryData<CollectionDetail>(key, (d) => withNode(d, node));
 		}
@@ -90,11 +95,7 @@ export function usePageModel(page: PageTab) {
 	const autosave = usePageAutosave<PageFields>(save);
 	const { flush } = autosave;
 
-	useEffect(() => {
-		if (!register) return;
-		register(page.id, () => void flush());
-		return () => register(page.id, null);
-	}, [register, page.id, flush]);
+	useRegisterPageSave(page.id, page.collectionId, autosave);
 
 	const fields =
 		detail && !missing

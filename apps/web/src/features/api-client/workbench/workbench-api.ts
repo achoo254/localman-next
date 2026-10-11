@@ -28,6 +28,10 @@ export interface WorkbenchActions {
 	/** Opens (or shows again) a collection or folder page. */
 	openPage: (page: PageTab) => void;
 	renamePage: (pageId: string, name: string) => void;
+	/** Pages from an earlier visit, added after the open ones. */
+	restorePages: (pages: PageTab[]) => void;
+	/** The pages right now, for a one-off read. */
+	currentPages: () => readonly PageTab[];
 	activateTab: (tabId: string) => void;
 	/** Closes without asking (the tab bar asks first for a dirty tab). */
 	closeTab: (tabId: string) => void;

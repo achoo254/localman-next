@@ -4,10 +4,12 @@ export const collectionsTabs = {
 		kind: {
 			collection: "Collection",
 			folder: "Folder",
+			example: "Example",
 		},
 		nameLabel: {
 			collection: "Collection name",
 			folder: "Folder name",
+			example: "Example name",
 		},
 		loadFailed: "We couldn't load this collection.",
 		folderGone: "This folder no longer exists. Close its tab.",
@@ -37,6 +39,7 @@ export const collectionsTabs = {
 			you: "You",
 			member: "A workspace member",
 			updated: "Last updated",
+			updatedBy: "{time} by {name}",
 			workspace: "Workspace",
 			requests: "Requests",
 		},

@@ -1,9 +1,11 @@
 import { ELEMENT_ROLES, type ElementRole } from "@localman/shared/access";
 import {
+	COLLECTION_STATUS_PRESETS,
 	type CollectionDetail,
 	type CollectionNode,
 	apiRequestDraftSchema,
 	effectiveAuthSchema,
+	exampleResponseSchema,
 	requestAuthSchema,
 	requestScriptsSchema,
 	variableEntrySchema,
@@ -32,7 +34,32 @@ export const collectionNodeView = z.discriminatedUnion("kind", [
 		...nodeBase,
 		draft: apiRequestDraftSchema,
 	}),
+	z.object({
+		kind: z.literal("example"),
+		id: z.string(),
+		parentId: z.string(),
+		order: z.string(),
+		name: z.string(),
+		request: apiRequestDraftSchema,
+		response: exampleResponseSchema,
+	}),
 ]);
+
+/** Output form of tags and status (input parsing normalizes them). */
+export const tagsView = z.array(z.string());
+export const statusView = z
+	.discriminatedUnion("kind", [
+		z.object({
+			kind: z.literal("preset"),
+			preset: z.enum(COLLECTION_STATUS_PRESETS),
+		}),
+		z.object({
+			kind: z.literal("custom"),
+			name: z.string(),
+			emoji: z.string(),
+		}),
+	])
+	.nullable();
 
 const roleView = z.enum(ELEMENT_ROLES);
 
@@ -45,8 +72,13 @@ export const collectionDetailView = z.object({
 	auth: effectiveAuthSchema,
 	scripts: requestScriptsSchema,
 	variables: z.array(variableEntrySchema),
+	tags: tagsView,
+	status: statusView,
 	createdBy: z.string(),
+	createdByName: z.string().nullable(),
 	createdAt: z.string(),
+	updatedBy: z.string(),
+	updatedByName: z.string().nullable(),
 	updatedAt: z.string(),
 	nodes: z.array(collectionNodeView),
 });
@@ -58,10 +90,25 @@ export const collectionSummaryView = z.object({
 	name: z.string(),
 	favorite: z.boolean(),
 	requestCount: z.number().int(),
+	tags: tagsView,
+	status: statusView,
 	updatedAt: z.string(),
 });
 
 export function toCollectionNode(node: StoredCollectionNode): CollectionNode {
+	if (node.kind === "example") {
+		const { name, order, request, response } = node;
+		const parentId = node.parentId.toHexString();
+		return {
+			kind: "example",
+			id: node._id.toHexString(),
+			parentId,
+			order,
+			name,
+			request,
+			response,
+		};
+	}
 	const base = {
 		id: node._id.toHexString(),
 		parentId: node.parentId ? node.parentId.toHexString() : null,
@@ -88,6 +135,7 @@ export function toCollectionDetail(
 	root: StoredCollection,
 	nodes: readonly StoredCollectionNode[],
 	role: ElementRole,
+	names: ReadonlyMap<string, string>,
 ): CollectionDetail {
 	return {
 		id: root._id.toHexString(),
@@ -98,8 +146,13 @@ export function toCollectionDetail(
 		auth: root.auth,
 		scripts: root.scripts,
 		variables: root.variables,
+		tags: [...(root.tags ?? [])],
+		status: root.status ?? null,
 		createdBy: root.createdBy,
+		createdByName: names.get(root.createdBy) ?? null,
 		createdAt: root.createdAt.toISOString(),
+		updatedBy: root.updatedBy,
+		updatedByName: names.get(root.updatedBy) ?? null,
 		updatedAt: root.updatedAt.toISOString(),
 		nodes: nodes.map(toCollectionNode),
 	};

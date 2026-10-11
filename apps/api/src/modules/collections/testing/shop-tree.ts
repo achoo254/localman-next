@@ -8,6 +8,8 @@ export const SHOP_TREE_FOR_TESTS: CollectionTree = {
 	auth: { type: "bearer", token: "{{token}}" },
 	variables: [{ key: "baseUrl", value: "https://shop.example.com" }],
 	scripts: { pre: "console.log('collection')", post: "" },
+	tags: ["shop"],
+	status: { kind: "custom", name: "Beta", emoji: "🧪" },
 	items: [
 		{
 			kind: "folder",
@@ -31,6 +33,7 @@ export const SHOP_TREE_FOR_TESTS: CollectionTree = {
 							name: "List admins",
 							description: "",
 							draft: draftOf("List admins", { auth: { type: "inherit" } }),
+							examples: [],
 						},
 					],
 				},
@@ -40,6 +43,20 @@ export const SHOP_TREE_FOR_TESTS: CollectionTree = {
 					name: "Get user",
 					description: "One user",
 					draft: draftOf("Get user"),
+					examples: [
+						{
+							id: "ok",
+							name: "200",
+							request: draftOf("Get user"),
+							response: {
+								status: 200,
+								statusText: "OK",
+								headers: [],
+								body: '{"id":1}',
+								bodyLanguage: "json",
+							},
+						},
+					],
 				},
 			],
 		},
@@ -49,6 +66,7 @@ export const SHOP_TREE_FOR_TESTS: CollectionTree = {
 			name: "Health",
 			description: "",
 			draft: draftOf("Health", { method: "HEAD" }),
+			examples: [],
 		},
 	],
 };

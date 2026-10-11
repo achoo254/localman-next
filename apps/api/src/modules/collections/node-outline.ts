@@ -4,7 +4,7 @@ import { CollectionNodeModel } from "./collection-node-model.js";
 
 /** Where a node sits, without its content. */
 export interface OutlineNode {
-	readonly kind: "folder" | "request";
+	readonly kind: "folder" | "request" | "example";
 	readonly parentId: string | null;
 }
 
@@ -95,12 +95,23 @@ export function folderHeight(outline: Outline, id: string): number {
 	return height;
 }
 
-/** Folders and requests among `ids`. */
+export interface KindCounts {
+	folders: number;
+	requests: number;
+	examples: number;
+}
+
+/** Folders, requests and examples among `ids`. */
 export function countKinds(
 	outline: Outline,
 	ids: readonly string[],
-): { folders: number; requests: number } {
-	let folders = 0;
-	for (const id of ids) if (outline.get(id)?.kind === "folder") folders += 1;
-	return { folders, requests: ids.length - folders };
+): KindCounts {
+	const counts = { folders: 0, requests: 0, examples: 0 };
+	for (const id of ids) {
+		const kind = outline.get(id)?.kind;
+		if (kind === "folder") counts.folders += 1;
+		else if (kind === "request") counts.requests += 1;
+		else if (kind === "example") counts.examples += 1;
+	}
+	return counts;
 }

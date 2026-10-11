@@ -6,12 +6,12 @@ import {
 import { type ClientSession, Types } from "mongoose";
 import { inWorkspaceTransaction } from "../workspaces/workspace-lock.js";
 import { requireCollection } from "./collection-access.js";
-import { chargeRoot, nodeBytes } from "./collection-bytes.js";
+import { nodeBytes } from "./collection-bytes.js";
+import { copyName } from "./collection-duplicate-service.js";
 import {
 	CollectionNodeModel,
 	type StoredCollectionNode,
 } from "./collection-node-model.js";
-import { copyName } from "./collection-service.js";
 import {
 	newNodeId,
 	nodesLimitReached,
@@ -20,6 +20,8 @@ import {
 import { toCollectionNode } from "./collection-view.js";
 import { loadOutline, subtreeIds } from "./node-outline.js";
 import { findNode, nodeNotFound } from "./node-service.js";
+import { nodesRevision } from "./revision-drafts.js";
+import { chargeRoot } from "./root-change.js";
 
 /** The key right after `source` among its siblings. */
 async function keyAfter(
@@ -76,18 +78,22 @@ export async function duplicateNode(
 			const doc = byId.get(at);
 			if (!doc) return [];
 			const node = toCollectionNode(doc);
-			const copy = { ...node, id: newIds.get(at) ?? newNodeId() };
-			if (at !== source._id.toHexString()) {
-				// Below the source: its parent is in the subtree, copied too.
-				const parentId =
-					node.parentId === null ? null : (newIds.get(node.parentId) ?? null);
-				return [{ ...copy, parentId }];
+			const id = newIds.get(at) ?? newNodeId();
+			if (at === source._id.toHexString()) {
+				return [{ ...node, id, order, name: copyName(node.name) }];
 			}
-			return [{ ...copy, order, name: copyName(node.name) }];
+			// Below the source: its parent is in the subtree, copied too.
+			const parentId =
+				node.parentId === null ? null : (newIds.get(node.parentId) ?? null);
+			if (node.kind !== "example") return [{ ...node, id, parentId }];
+			return parentId === null ? [] : [{ ...node, id, parentId }];
 		});
+		const [top] = copies;
+		if (!top) throw nodeNotFound();
 		await chargeRoot(collectionId, sub, session, {
 			bytes: copies.reduce((sum, node) => sum + nodeBytes(node), 0),
 			requests: copies.filter((node) => node.kind === "request").length,
+			revisions: [nodesRevision("create", top, [], copies)],
 		});
 		await CollectionNodeModel.insertMany(
 			copies.map((node) => storedNodeOf(node, collectionId, sub)),

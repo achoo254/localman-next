@@ -3,17 +3,29 @@
  * The official v2.1.0 schema allows unknown properties, so a file with it
  * still validates and other tools ignore it. Request items carry the
  * settings v2.1 lacks (timeout, client IP headers, route); variables carry
- * `secret`, which the schema's variable `type` does not list. Read from
- * untrusted JSON: a wrong value keeps the default.
+ * `secret`, which the schema's variable `type` does not list; the
+ * collection carries its tags and status. Read from untrusted JSON: a
+ * wrong setting keeps the default, invalid tags or status are dropped
+ * with a warning.
  */
+import {
+	COLLECTION_TAGS_MAX,
+	collectionStatusSchema,
+	normalizeTags,
+} from "../collections/collection-tags.js";
 import { MAX_TIMEOUT_MS, MIN_TIMEOUT_MS } from "../limits.js";
 import {
 	DEFAULT_REQUEST_SETTINGS,
 	ROUTE_MODES,
 	type RequestSettings,
 } from "../request-model.js";
-import type { CollectionV21SettingsExtension } from "./collection-v21-types.js";
+import type {
+	CollectionV21CollectionExtension,
+	CollectionV21SettingsExtension,
+} from "./collection-v21-types.js";
+import type { ImportContext } from "./import-context.js";
 import { prop, recordProp, textProp } from "./import-json.js";
+import type { CollectionTree } from "./imported-collection.js";
 
 const EXTENSION = "_localman";
 
@@ -67,4 +79,45 @@ export function readSettings(item: unknown): RequestSettings {
 export function isSecretVariable(entry: unknown): boolean {
 	if (textProp(entry, "type") === "secret") return true;
 	return prop(recordProp(entry, EXTENSION), "secret") === true;
+}
+
+/** Tags and status of the collection; `undefined` when it has neither. */
+export function collectionExtension(
+	tree: Pick<CollectionTree, "tags" | "status">,
+): CollectionV21CollectionExtension | undefined {
+	const out: CollectionV21CollectionExtension = {};
+	if (tree.tags.length > 0) out.tags = [...tree.tags];
+	if (tree.status) out.status = tree.status;
+	return Object.keys(out).length > 0 ? out : undefined;
+}
+
+/** Valid tags, normalized (lower-case, unique); `invalid` when any was dropped. */
+function readTags(value: unknown): { tags: string[]; invalid: boolean } {
+	if (value === undefined) return { tags: [], invalid: false };
+	const list: readonly unknown[] = Array.isArray(value) ? value : [value];
+	const strings = list.filter((tag): tag is string => typeof tag === "string");
+	const { tags, problems } = normalizeTags(strings);
+	const bad = new Set(problems.map((problem) => problem.tag));
+	const valid = tags.filter((tag) => !bad.has(tag));
+	return {
+		tags: valid.slice(0, COLLECTION_TAGS_MAX),
+		invalid: problems.length > 0 || strings.length < list.length,
+	};
+}
+
+/** Tags and status from the collection's `_localman`. */
+export function readCollectionExtension(
+	collection: unknown,
+	ctx: ImportContext,
+): Pick<CollectionTree, "tags" | "status"> {
+	const extension = recordProp(collection, EXTENSION);
+	const { tags, invalid } = readTags(prop(extension, "tags"));
+	if (invalid) ctx.warn("INVALID_METADATA", "", { field: "tags" });
+	const statusValue = prop(extension, "status");
+	if (statusValue === undefined || statusValue === null) {
+		return { tags, status: null };
+	}
+	const status = collectionStatusSchema.safeParse(statusValue);
+	if (!status.success) ctx.warn("INVALID_METADATA", "", { field: "status" });
+	return { tags, status: status.success ? status.data : null };
 }

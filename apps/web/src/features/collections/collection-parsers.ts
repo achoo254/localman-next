@@ -6,9 +6,13 @@
 import {
 	type CollectionDetail,
 	type CollectionNode,
+	type CollectionStatus,
 	type CollectionSummary,
+	type TrashedCollectionSummary,
 	apiRequestDraftSchema,
+	collectionStatusSchema,
 	effectiveAuthSchema,
+	exampleResponseSchema,
 	requestAuthSchema,
 	requestScriptsSchema,
 	variableEntrySchema,
@@ -35,6 +39,20 @@ function parseWith<T>(schema: SafeParser<T>, value: unknown, what: string): T {
 	return parsed.data;
 }
 
+export function parseTags(value: unknown): string[] {
+	if (!Array.isArray(value)) throw new InvalidResponseError("tags");
+	return value.map((tag) => {
+		if (typeof tag !== "string") throw new InvalidResponseError("tag");
+		return tag;
+	});
+}
+
+export function parseStatus(value: unknown): CollectionStatus | null {
+	return value === null || value === undefined
+		? null
+		: parseWith(collectionStatusSchema, value, "status");
+}
+
 export function parseSummary(value: unknown): CollectionSummary {
 	const data = expectRecord(value, "collection");
 	return {
@@ -44,12 +62,33 @@ export function parseSummary(value: unknown): CollectionSummary {
 		role: parseElementRole(data.role, "collection role"),
 		favorite: expectBoolean(data, "favorite"),
 		requestCount: expectNumber(data, "requestCount"),
+		tags: parseTags(data.tags ?? []),
+		status: parseStatus(data.status),
 		updatedAt: expectString(data, "updatedAt"),
 	};
 }
 
 export function parseNode(value: unknown): CollectionNode {
 	const data = expectRecord(value, "collection node");
+	if (data.kind === "example") {
+		return {
+			kind: "example",
+			id: expectString(data, "id"),
+			parentId: expectString(data, "parentId"),
+			order: expectString(data, "order"),
+			name: expectString(data, "name"),
+			request: parseWith(
+				apiRequestDraftSchema,
+				data.request,
+				"example request",
+			),
+			response: parseWith(
+				exampleResponseSchema,
+				data.response,
+				"example response",
+			),
+		};
+	}
 	const base = {
 		id: expectString(data, "id"),
 		parentId: optionalString(data, "parentId"),
@@ -83,28 +122,20 @@ export function parseDetail(value: unknown): CollectionDetail {
 		variables: expectArray(data, "variables").map((item) =>
 			parseWith(variableEntrySchema, item, "variable"),
 		),
+		tags: parseTags(data.tags ?? []),
+		status: parseStatus(data.status),
 		createdBy: expectString(data, "createdBy"),
+		createdByName: optionalString(data, "createdByName"),
 		createdAt: expectString(data, "createdAt"),
+		updatedBy: expectString(data, "updatedBy"),
+		updatedByName: optionalString(data, "updatedByName"),
 		updatedAt: expectString(data, "updatedAt"),
 		nodes: expectArray(data, "nodes").map(parseNode),
 	};
 }
 
 /** A collection in the trash (`client.listTrashedCollections`). */
-export interface TrashedCollection {
-	id: string;
-	name: string;
-	/** The workspace it was deleted from. */
-	workspaceId: string;
-	/** `null` once that workspace is gone too. */
-	workspaceName: string | null;
-	deletedAt: string;
-	deletedBy: string;
-	/** `null` for a removed account. */
-	deletedByName: string | null;
-	purgeAt: string;
-	requestCount: number;
-}
+export type TrashedCollection = TrashedCollectionSummary;
 
 export function parseTrashed(value: unknown): TrashedCollection {
 	const data = expectRecord(value, "trashed collection");
@@ -113,10 +144,12 @@ export function parseTrashed(value: unknown): TrashedCollection {
 		name: expectString(data, "name"),
 		workspaceId: expectString(data, "workspaceId"),
 		workspaceName: optionalString(data, "workspaceName"),
+		requestCount: expectNumber(data, "requestCount"),
+		tags: parseTags(data.tags ?? []),
+		status: parseStatus(data.status),
 		deletedAt: expectString(data, "deletedAt"),
 		deletedBy: expectString(data, "deletedBy"),
 		deletedByName: optionalString(data, "deletedByName"),
 		purgeAt: expectString(data, "purgeAt"),
-		requestCount: expectNumber(data, "requestCount"),
 	};
 }

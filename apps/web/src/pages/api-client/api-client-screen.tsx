@@ -45,7 +45,10 @@ export function ApiClientScreen() {
 	const t = useT();
 	const toast = useToast();
 	const actions = useWorkbenchActions();
-	const { tabs, activeTab } = useWorkbenchState();
+	const { tabs, activeTab, activePage } = useWorkbenchState();
+	const openedId = activePage
+		? (activePage.nodeId ?? activePage.collectionId)
+		: (activeTab?.source?.nodeId ?? null);
 	const [importOpen, setImportOpen] = useState(false);
 	const [importMode, setImportMode] = useState<ImportMode>("tabs");
 	const workspacesOn = useWorkspacesEnabled();
@@ -107,9 +110,10 @@ export function ApiClientScreen() {
 				<CollectionsSidebar
 					onOpenNode={openCollectionNode}
 					onImport={() => openImport("collection")}
+					openedId={openedId}
 				/>
 			) : undefined,
-		[workspacesOn, openCollectionNode, openImport],
+		[workspacesOn, openCollectionNode, openImport, openedId],
 	);
 	const Import = workspacesOn ? CollectionsImportModal : ImportModal;
 
@@ -136,6 +140,7 @@ export function ApiClientScreen() {
 				renderPage={bound.renderPage}
 				renderAboveRequest={bound.renderAboveRequest}
 				onSave={bound.onSave}
+				rightRail={bound.rightRail}
 				renderHeadActions={(tab) => (
 					<>
 						{bound.saveButton(tab)}
@@ -152,7 +157,7 @@ export function ApiClientScreen() {
 						</Button>
 					</>
 				)}
-				renderResponse={renderResponse}
+				renderResponse={bound.renderResponse ?? renderResponse}
 				emptyActions={
 					<>
 						{importButton("editor-empty-import")}

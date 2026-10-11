@@ -2,70 +2,18 @@
  * A tree using every field a collection stores, for the v2.1 round trip:
  * folders three levels deep, auth and scripts at every level, secret and
  * disabled variables, every body type (with content in inactive kinds),
- * disabled rows with descriptions, non-default settings. No picked files:
- * only their names are exported.
+ * disabled rows with descriptions, non-default settings, saved examples,
+ * tags and a status. No picked files: only their names are exported.
  */
-import type {
-	CollectionTree,
-	ImportedFolder,
-	ImportedItem,
-	ImportedRequest,
-} from "../import/imported-collection.js";
+import type { CollectionTree } from "../import/imported-collection.js";
+import { DEFAULT_REQUEST_SETTINGS } from "../request-model.js";
 import {
-	type ApiRequestDraft,
-	DEFAULT_REQUEST_SETTINGS,
-	type KeyValueRow,
-	type RequestBody,
-	createRequestDraft,
-	emptyRequestBody,
-} from "../request-model.js";
-
-let counter = 0;
-const nextId = (): string => `x${++counter}`;
-
-function row(
-	key: string,
-	value: string,
-	extra: Partial<KeyValueRow> = {},
-): KeyValueRow {
-	return { id: nextId(), key, value, enabled: true, ...extra };
-}
-
-const body = (fields: Partial<RequestBody>): RequestBody => ({
-	...emptyRequestBody(),
-	...fields,
-});
-
-function request(
-	name: string,
-	draft: Partial<ApiRequestDraft>,
-	description = "",
-): ImportedRequest {
-	return {
-		kind: "request",
-		id: nextId(),
-		name,
-		description,
-		draft: createRequestDraft({ name, auth: { type: "inherit" }, ...draft }),
-	};
-}
-
-function folder(
-	name: string,
-	fields: Partial<ImportedFolder>,
-	items: ImportedItem[],
-): ImportedFolder {
-	return {
-		kind: "folder",
-		id: nextId(),
-		name,
-		description: "",
-		auth: { type: "inherit" },
-		scripts: { pre: "", post: "" },
-		...fields,
-		items,
-	};
-}
+	body,
+	example,
+	folder,
+	request,
+	row,
+} from "./tree-builders-test-utils.js";
 
 const deepest = folder(
 	"Audit",
@@ -97,27 +45,72 @@ const admin = folder(
 		scripts: { pre: "", post: "lm.test('admin', () => {});" },
 	},
 	[
-		request("Create user", {
-			method: "POST",
-			url: "{{baseUrl}}/admin/users",
-			headers: [row("Content-Type", "application/json")],
-			body: body({
-				type: "raw",
-				rawLanguage: "json",
-				raw: '{\n  "name": "Ann"\n}',
-				urlencoded: [row("left", "over")],
-			}),
-			scripts: { pre: "const a = 1;\nconst b = 2;", post: "lm.done();" },
-			settings: {
-				followRedirects: false,
-				timeoutMs: 5_000,
-				sendClientIp: false,
-				route: "proxy",
+		request(
+			"Create user",
+			{
+				method: "POST",
+				url: "{{baseUrl}}/admin/users",
+				headers: [row("Content-Type", "application/json")],
+				body: body({
+					type: "raw",
+					rawLanguage: "json",
+					raw: '{\n  "name": "Ann"\n}',
+					urlencoded: [row("left", "over")],
+				}),
+				scripts: { pre: "const a = 1;\nconst b = 2;", post: "lm.done();" },
+				settings: {
+					followRedirects: false,
+					timeoutMs: 5_000,
+					sendClientIp: false,
+					route: "proxy",
+				},
 			},
-		}),
+			{
+				examples: [
+					example(
+						"Created as XML",
+						{
+							method: "POST",
+							url: "{{baseUrl}}/admin/users",
+							auth: { type: "inherit" },
+							body: body({ type: "raw", rawLanguage: "xml", raw: "<a/>" }),
+						},
+						{ status: 201, statusText: "Created", body: "<user/>" },
+					),
+				],
+			},
+		),
 		deepest,
 	],
 );
+
+const LIST_EXAMPLES = [
+	example(
+		"Two users",
+		{
+			url: "{{baseUrl}}/users?page=1",
+			params: [row("page", "1"), row("sort", "", { enabled: false })],
+			headers: [row("Accept", "application/json")],
+		},
+		{
+			headers: [
+				row("Content-Type", "application/json"),
+				row("X-Cache", "HIT", { enabled: false, description: "CDN" }),
+			],
+			body: '[{"id":1},{"id":2}]',
+			bodyLanguage: "json",
+		},
+	),
+	example(
+		"Missing",
+		{ url: "{{baseUrl}}/users?page=9", params: [row("page", "9")] },
+		{
+			status: 404,
+			statusText: "Not Found",
+			body: "no such page",
+		},
+	),
+];
 
 const users = folder(
 	"Users",
@@ -140,7 +133,7 @@ const users = folder(
 					row("X-Debug", "1", { enabled: false, description: "Tracing" }),
 				],
 			},
-			"Lists users, paged.",
+			{ description: "Lists users, paged.", examples: LIST_EXAMPLES },
 		),
 		admin,
 		request("Login", {
@@ -168,6 +161,8 @@ export const RICH_TREE: CollectionTree = {
 		{ key: "old", value: "1", secret: false, enabled: false },
 	],
 	scripts: { pre: "lm.variables.set('level', 0);", post: "lm.log('done');" },
+	tags: ["billing", "v2"],
+	status: { kind: "custom", name: "Beta test", emoji: "🚧" },
 	items: [
 		users,
 		request("Avatar", {

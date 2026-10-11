@@ -40,6 +40,8 @@ export interface WorkbenchLayoutProps {
 	 * the drafts are saved as before.
 	 */
 	onSave?: (tabId: string | null) => boolean;
+	/** Right of the editor: the collection's Info and Changelog rail. */
+	rightRail?: ReactNode;
 }
 
 function isMod(event: KeyboardEvent): boolean {
@@ -160,6 +162,7 @@ export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 						)}
 					</div>
 				</div>
+				{restoring || skeleton ? null : props.rightRail}
 			</div>
 			<StatusBar />
 		</div>

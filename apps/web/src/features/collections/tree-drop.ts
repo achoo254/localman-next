@@ -9,11 +9,11 @@ import {
 	childrenByParent,
 	orderKeyBetween,
 } from "@localman/shared/api-client";
-import type { NodeMove } from "./collections-api";
+import type { NodeMove } from "./nodes-api";
 
 export type DropPosition = "before" | "after" | "inside";
 
-export type DropTargetKind = "collection" | "folder" | "request";
+export type DropTargetKind = "collection" | "folder" | "request" | "example";
 
 /**
  * Position of a drop at height `y` over a row: a collection only takes
@@ -112,6 +112,14 @@ export function planMove(
 	const dragged = nodes.find((node) => node.id === draggedId);
 	if (!dragged) return null;
 	if (target.kind === "node" && target.nodeId === draggedId) return null;
+	// Examples stay under their request, and nothing drops among them.
+	if (dragged.kind === "example") return null;
+	if (
+		target.kind === "node" &&
+		nodes.find((node) => node.id === target.nodeId)?.kind === "example"
+	) {
+		return null;
+	}
 	const slot = slotOf(nodes, target, position);
 	if (!slot) return null;
 	if (slot.parentId !== null && isInSubtree(nodes, draggedId, slot.parentId)) {
@@ -153,6 +161,8 @@ export function applyMove(
 		return [...nodes];
 	}
 	return nodes.map((node) =>
-		node.id === nodeId ? { ...node, parentId: move.parentId, order } : node,
+		node.id === nodeId && node.kind !== "example"
+			? { ...node, parentId: move.parentId, order }
+			: node,
 	);
 }

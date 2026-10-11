@@ -1,5 +1,6 @@
 import type {
 	ApiRequestDraft,
+	ExampleResponse,
 	RequestAuth,
 	RequestScripts,
 } from "@localman/shared/api-client";
@@ -9,7 +10,8 @@ import mongoose, { Schema, type Types } from "mongoose";
  * A folder or request of a collection, one record each, so a drag and
  * drop rewrites one record: `parentId` (`null` at the top) and `order`, a
  * fractional index key compared as a string within the parent. Folders
- * hold `auth` and `scripts`; requests hold `draft` (validated by the
+ * hold `auth` and `scripts`; requests hold `draft`; examples, children of
+ * a request node, hold `request` and `response` (all validated by the
  * shared schemas when written). Nodes follow their collection into the
  * trash and out of it; they have no trash state of their own.
  */
@@ -17,7 +19,11 @@ const collectionNodeSchema = new Schema(
 	{
 		collectionId: { type: Schema.Types.ObjectId, required: true },
 		parentId: { type: Schema.Types.ObjectId, default: null },
-		kind: { type: String, enum: ["folder", "request"], required: true },
+		kind: {
+			type: String,
+			enum: ["folder", "request", "example"],
+			required: true,
+		},
 		order: { type: String, required: true },
 		name: { type: String, required: true },
 		/** `name` folded for search (`foldSearchText`), kept with it. */
@@ -26,6 +32,8 @@ const collectionNodeSchema = new Schema(
 		auth: { type: Schema.Types.Mixed },
 		scripts: { type: Schema.Types.Mixed },
 		draft: { type: Schema.Types.Mixed },
+		request: { type: Schema.Types.Mixed },
+		response: { type: Schema.Types.Mixed },
 		updatedBy: { type: String, required: true },
 	},
 	{
@@ -67,4 +75,14 @@ export interface StoredRequestNode extends StoredNodeBase {
 	readonly draft: ApiRequestDraft;
 }
 
-export type StoredCollectionNode = StoredFolderNode | StoredRequestNode;
+export interface StoredExampleNode extends StoredNodeBase {
+	readonly kind: "example";
+	readonly parentId: Types.ObjectId;
+	readonly request: ApiRequestDraft;
+	readonly response: ExampleResponse;
+}
+
+export type StoredCollectionNode =
+	| StoredFolderNode
+	| StoredRequestNode
+	| StoredExampleNode;

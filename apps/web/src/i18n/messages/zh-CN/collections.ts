@@ -1,4 +1,7 @@
 import type { Messages } from "../../message-types";
+import { collectionsChangelog } from "./collections-changelog";
+import { collectionsExamples } from "./collections-examples";
+import { collectionsMeta } from "./collections-meta";
 import { collectionsTabs } from "./collections-tabs";
 import { collectionsTrash } from "./collections-trash";
 
@@ -51,6 +54,7 @@ export const collections: Messages["collections"] = {
 		collection: "新 collection",
 		folder: "新 folder",
 		request: "新 request",
+		example: "新 example",
 		importedCollection: "导入的 collection",
 		importedFolder: "Folder",
 		importedRequest: "Request",
@@ -72,6 +76,7 @@ export const collections: Messages["collections"] = {
 	menu: {
 		addRequest: "添加 request",
 		addFolder: "添加 folder",
+		addExample: "添加 example",
 		rename: "重命名",
 		duplicate: "复制",
 		share: "共享",
@@ -113,6 +118,8 @@ export const collections: Messages["collections"] = {
 			other: "该 folder 及其中的 {count} 个 request 将被永久删除，无法撤销。",
 		},
 		requestBody: "该 request 将被永久删除，无法撤销。",
+		exampleTitle: "删除 example",
+		exampleBody: "该 example 将被永久删除，无法撤销。",
 		confirm: "删除",
 	},
 	move: {
@@ -159,4 +166,7 @@ export const collections: Messages["collections"] = {
 	},
 	trash: collectionsTrash,
 	...collectionsTabs,
+	...collectionsExamples,
+	...collectionsMeta,
+	...collectionsChangelog,
 };

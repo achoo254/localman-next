@@ -1,24 +1,25 @@
 import { IconArrowLeft, IconTrash } from "@tabler/icons-react";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Link, Navigate } from "react-router";
 import { Alert } from "../../components/ui/alert";
 import { Button, buttonClassName } from "../../components/ui/button";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
 import { EmptyState } from "../../components/ui/empty-state";
-import { Input } from "../../components/ui/input";
 import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { useAppTitle } from "../../lib/use-document-title";
+import { useWorkspaces } from "../workspaces/current-workspace";
 import { useWorkspacesEnabled } from "../workspaces/use-workspaces-enabled";
 import { collectionErrorMessage, translatedError } from "./collection-errors";
 import type { TrashedCollection } from "./collection-parsers";
 import { RestoreModal } from "./restore-modal";
+import { TrashFilters } from "./trash-filters";
 import { TrashSkeleton } from "./trash-skeleton";
 import { TrashTable } from "./trash-table";
-import { matches } from "./tree-search";
 import { useDeleteTrashed, useTrash, useTrashDays } from "./use-trash";
+import { useDropUnknownFilters, useTrashFilters } from "./use-trash-filters";
 
 type TrashDialog = { kind: "restore" | "purge"; item: TrashedCollection };
 
@@ -27,19 +28,25 @@ function Trash() {
 	useAppTitle(t("collections.trash.pageTitle"));
 	const toast = useToast();
 	const days = useTrashDays();
-	const trash = useTrash();
+	const trashFilters = useTrashFilters();
+	const { filters, text, setText, set } = trashFilters;
+	const trash = useTrash(filters);
+	const workspaces = useWorkspaces().data;
+	useDropUnknownFilters(
+		trashFilters,
+		workspaces?.map((workspace) => workspace.id),
+		trash.isPlaceholderData
+			? undefined
+			: trash.data?.deleters.map((person) => person.id),
+	);
 	const purge = useDeleteTrashed();
 	const searchRef = useRef<HTMLInputElement>(null);
-	const [query, setQuery] = useState("");
 	const [dialog, setDialog] = useState<TrashDialog | null>(null);
 	const [open, setOpen] = useState(false);
 	const skeleton = useDelayedFlag(trash.isPending);
-	const items = useMemo(
-		() =>
-			(trash.data ?? []).filter(
-				(item) => query.trim() === "" || matches(item.name, query),
-			),
-		[trash.data, query],
+	const items = trash.data?.items ?? [];
+	const filtered = Boolean(
+		filters.workspaceId || filters.deletedBy || filters.q,
 	);
 	const show = (kind: TrashDialog["kind"], item: TrashedCollection) => {
 		setDialog({ kind, item });
@@ -48,7 +55,7 @@ function Trash() {
 	// The row is gone after a restore or delete: focus the search box.
 	const focusAfter = (event: Event): void => {
 		const id = dialog?.item.id;
-		if (id && trash.data?.some((item) => item.id === id)) return;
+		if (id && items.some((item) => item.id === id)) return;
 		event.preventDefault();
 		searchRef.current?.focus();
 	};
@@ -66,7 +73,7 @@ function Trash() {
 				</Button>
 			</div>
 		);
-	} else if (trash.isSuccess && trash.data.length === 0) {
+	} else if (trash.isSuccess && items.length === 0 && !filtered) {
 		body = (
 			<EmptyState
 				data-id="trash-empty"
@@ -79,7 +86,9 @@ function Trash() {
 	} else if (trash.isSuccess && items.length === 0) {
 		body = (
 			<p className="m-0 text-muted text-sm">
-				{t("collections.trash.noMatch", { query: query.trim() })}
+				{filters.q
+					? t("collections.trash.noMatch", { query: filters.q })
+					: t("collections.trash.noFilterMatch")}
 			</p>
 		);
 	} else if (trash.isSuccess) {
@@ -113,15 +122,13 @@ function Trash() {
 					{t("collections.trash.back")}
 				</Link>
 			</header>
-			<Input
-				ref={searchRef}
-				type="search"
-				value={query}
-				aria-label={t("collections.trash.search")}
-				placeholder={t("collections.trash.searchPlaceholder")}
-				data-id="trash-search"
-				className="max-w-sm"
-				onChange={(event) => setQuery(event.target.value)}
+			<TrashFilters
+				filters={filters}
+				text={text}
+				deleters={trash.data?.deleters ?? []}
+				searchRef={searchRef}
+				onText={setText}
+				onChange={set}
 			/>
 			{body}
 			{dialog?.kind === "restore" ? (

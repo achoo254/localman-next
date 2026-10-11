@@ -1,4 +1,7 @@
 import type { Messages } from "../../message-types";
+import { collectionsChangelog } from "./collections-changelog";
+import { collectionsExamples } from "./collections-examples";
+import { collectionsMeta } from "./collections-meta";
 import { collectionsTabs } from "./collections-tabs";
 import { collectionsTrash } from "./collections-trash";
 
@@ -51,6 +54,7 @@ export const collections: Messages["collections"] = {
 		collection: "Collection mới",
 		folder: "Folder mới",
 		request: "Request mới",
+		example: "Example mới",
 		importedCollection: "Collection đã import",
 		importedFolder: "Folder",
 		importedRequest: "Request",
@@ -72,6 +76,7 @@ export const collections: Messages["collections"] = {
 	menu: {
 		addRequest: "Thêm request",
 		addFolder: "Thêm folder",
+		addExample: "Thêm example",
 		rename: "Đổi tên",
 		duplicate: "Nhân bản",
 		share: "Chia sẻ",
@@ -115,6 +120,8 @@ export const collections: Messages["collections"] = {
 				"Folder và {count} request bên trong bị xoá vĩnh viễn. Không hoàn tác được.",
 		},
 		requestBody: "Request bị xoá vĩnh viễn. Không hoàn tác được.",
+		exampleTitle: "Xoá example",
+		exampleBody: "Example bị xoá vĩnh viễn. Không hoàn tác được.",
 		confirm: "Xoá",
 	},
 	move: {
@@ -167,4 +174,7 @@ export const collections: Messages["collections"] = {
 	},
 	trash: collectionsTrash,
 	...collectionsTabs,
+	...collectionsExamples,
+	...collectionsMeta,
+	...collectionsChangelog,
 };

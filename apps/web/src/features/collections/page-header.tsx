@@ -6,7 +6,7 @@ import {
 	IconShare,
 	IconStack2,
 } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { Button } from "../../components/ui/button";
 import {
 	DropdownMenu,
@@ -21,6 +21,7 @@ import { copyText } from "../../platform/clipboard";
 import { appPageUrl } from "../../platform/navigation";
 import type { PageTab } from "../api-client/workbench/workbench-tab-types";
 import { elementPath } from "../sharing/sharing-api";
+import { EditableName } from "./editable-name";
 import { PageSaveState } from "./page-save-state";
 import { useExportCollection } from "./use-export-collection";
 import type { SaveStatus } from "./use-page-autosave";
@@ -34,6 +35,8 @@ export interface PageHeaderProps {
 	onRename: (name: string) => void;
 	onRetry: () => void;
 	onShare: () => void;
+	/** After the name (a collection's status). */
+	extra?: ReactNode;
 }
 
 /** Icon, name (editable by Editors), save state, Share and "…". */
@@ -42,12 +45,6 @@ export function PageHeader(props: PageHeaderProps) {
 	const toast = useToast();
 	const exportCollection = useExportCollection();
 	const { page } = props;
-	const [name, setName] = useState(props.name);
-	// A save or refetch elsewhere shows here unless the box is being edited.
-	const [editing, setEditing] = useState(false);
-	useEffect(() => {
-		if (!editing) setName(props.name);
-	}, [props.name, editing]);
 	const Icon = page.kind === "collection" ? IconStack2 : IconFolder;
 	const copyLink = async () => {
 		const ok = await copyText(
@@ -70,25 +67,14 @@ export function PageHeader(props: PageHeaderProps) {
 				aria-hidden="true"
 				className="flex-none text-icon-muted"
 			/>
-			<input
-				type="text"
-				value={name}
+			<EditableName
+				name={props.name}
+				label={t(`collections.page.nameLabel.${page.kind}`)}
 				readOnly={!props.canEdit}
-				aria-label={t(`collections.page.nameLabel.${page.kind}`)}
 				data-id="collection-name"
-				maxLength={200}
-				className="min-h-9 min-w-0 flex-1 truncate rounded-sm border border-transparent bg-transparent px-2 font-bold font-mono text-base read-only:cursor-default hover:border-border read-only:hover:border-transparent focus:border-primary focus:outline-none"
-				onFocus={() => setEditing(true)}
-				onBlur={() => {
-					setEditing(false);
-					setName(props.name);
-				}}
-				onChange={(event) => {
-					setName(event.target.value);
-					const next = event.target.value.trim();
-					if (next) props.onRename(next);
-				}}
+				onRename={props.onRename}
 			/>
+			{props.extra}
 			<PageSaveState status={props.status} onRetry={props.onRetry} />
 			<Button
 				size="sm"

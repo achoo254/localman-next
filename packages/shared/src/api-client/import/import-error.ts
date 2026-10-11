@@ -48,6 +48,12 @@ export const REQUEST_IMPORT_WARNING_CODES = [
 	"EXTRA_URLS",
 	/** `{ ref }`: a `$ref` that is external, missing or cyclic; skipped. */
 	"UNRESOLVED_REF",
+	/** `{ max }` UTF-8 bytes: a saved example's body was cut to fit. */
+	"EXAMPLE_BODY_TRUNCATED",
+	/** `{ max }` characters: a name, description, URL or value was cut. */
+	"TEXT_TRUNCATED",
+	/** `{ field }` (`tags` or `status`): an invalid collection tag or status, dropped. */
+	"INVALID_METADATA",
 	/** `{ count }`: warnings past the cap, not listed. */
 	"MORE_WARNINGS",
 ] as const;

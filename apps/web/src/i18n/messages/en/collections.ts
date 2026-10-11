@@ -1,3 +1,6 @@
+import { collectionsChangelog } from "./collections-changelog";
+import { collectionsExamples } from "./collections-examples";
+import { collectionsMeta } from "./collections-meta";
 import { collectionsTabs } from "./collections-tabs";
 import { collectionsTrash } from "./collections-trash";
 
@@ -53,6 +56,7 @@ export const collections = {
 		collection: "New collection",
 		folder: "New folder",
 		request: "New request",
+		example: "New example",
 		importedCollection: "Imported collection",
 		importedFolder: "Folder",
 		importedRequest: "Request",
@@ -74,6 +78,7 @@ export const collections = {
 	menu: {
 		addRequest: "Add request",
 		addFolder: "Add folder",
+		addExample: "Add example",
 		rename: "Rename",
 		duplicate: "Duplicate",
 		share: "Share",
@@ -120,6 +125,8 @@ export const collections = {
 				"The folder and the {count} requests inside it are deleted for good. This can't be undone.",
 		},
 		requestBody: "The request is deleted for good. This can't be undone.",
+		exampleTitle: "Delete example",
+		exampleBody: "The example is deleted for good. This can't be undone.",
 		confirm: "Delete",
 	},
 	move: {
@@ -169,4 +176,7 @@ export const collections = {
 	},
 	trash: collectionsTrash,
 	...collectionsTabs,
+	...collectionsExamples,
+	...collectionsMeta,
+	...collectionsChangelog,
 } as const;

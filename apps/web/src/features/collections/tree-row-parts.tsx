@@ -1,4 +1,5 @@
 import {
+	IconBookmark,
 	IconChevronRight,
 	IconFolder,
 	IconStack2,
@@ -8,7 +9,7 @@ import {
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import { METHOD_TEXT_CLASS, methodShortLabel } from "../../lib/method-tone";
-import type { TreeRow } from "./tree-rows";
+import { type TreeRow, isBranch } from "./tree-rows";
 
 /** Star and ⋯ of a row: 24px, 36px on touch screens. */
 export const ROW_BUTTON =
@@ -22,9 +23,7 @@ export function RowLead({ row }: { row: TreeRow }) {
 	const icon = "flex-none text-icon-muted";
 	return (
 		<>
-			{row.kind === "request" ? (
-				<span className="w-3.5 flex-none" aria-hidden="true" />
-			) : (
+			{isBranch(row) ? (
 				<IconChevronRight
 					size={14}
 					aria-hidden="true"
@@ -33,7 +32,21 @@ export function RowLead({ row }: { row: TreeRow }) {
 						row.expanded && "rotate-90",
 					)}
 				/>
+			) : (
+				<span className="w-3.5 flex-none" aria-hidden="true" />
 			)}
+			{row.kind === "example" ? (
+				<>
+					<IconBookmark
+						size={14}
+						aria-hidden="true"
+						className="flex-none text-viz-cyan"
+					/>
+					<span className="flex-none font-mono text-[0.625rem] text-muted">
+						{`${row.node.response.status} · `}
+					</span>
+				</>
+			) : null}
 			{row.kind === "collection" ? (
 				<IconStack2 size={16} aria-hidden="true" className={icon} />
 			) : null}

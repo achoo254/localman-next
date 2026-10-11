@@ -101,6 +101,8 @@ export function WorkbenchProvider({
 			openTab,
 			openPage: (page) => dispatch({ type: "openPage", page }),
 			renamePage: (id, name) => dispatch({ type: "renamePage", id, name }),
+			restorePages: (pages) => dispatch({ type: "restorePages", pages }),
+			currentPages: () => latest.current.pages,
 			activateTab: (id) => dispatch({ type: "activate", id }),
 			closeTab,
 			updateDraft: (id, update) => dispatch({ type: "editDraft", id, update }),

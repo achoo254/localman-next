@@ -15,6 +15,7 @@ export function useRenameSync(): (row: TreeRow, name: string) => void {
 	return useCallback(
 		(row: TreeRow, name: string) => {
 			if (row.kind !== "request") {
+				// An example page shares the node's id like a folder page.
 				renamePage(pageId(row.kind, row.id), name);
 				return;
 			}

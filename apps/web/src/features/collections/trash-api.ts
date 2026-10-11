@@ -3,7 +3,13 @@
  * caller may restore or delete for good.
  */
 import { apiRequest, withDryRun } from "../../lib/api-client";
-import { expectArray, expectNumber, expectRecord } from "../../lib/json-guards";
+import {
+	expectArray,
+	expectNumber,
+	expectRecord,
+	expectString,
+	optionalString,
+} from "../../lib/json-guards";
 import { type TrashedCollection, parseTrashed } from "./collection-parsers";
 import { collectionPath } from "./collections-api";
 
@@ -38,13 +44,41 @@ export async function trashCollection(
 const trashPath = (id: string): string =>
 	`/api/v1/trash/collections/${encodeURIComponent(id)}`;
 
-/** Newest first. */
-export async function fetchTrash(): Promise<TrashedCollection[]> {
+/** Narrows the trash: original workspace, who deleted it, part of the name. */
+export interface TrashFilters {
+	workspaceId: string;
+	deletedBy: string;
+	q: string;
+}
+
+export interface TrashListing {
+	items: TrashedCollection[];
+	/** Everyone who deleted something there, for the "Deleted by" filter. */
+	deleters: { id: string; name: string | null }[];
+}
+
+/** Newest first; empty filters are left out. */
+export async function fetchTrash(filters: TrashFilters): Promise<TrashListing> {
+	const query = new URLSearchParams();
+	if (filters.workspaceId) query.set("workspaceId", filters.workspaceId);
+	if (filters.deletedBy) query.set("deletedBy", filters.deletedBy);
+	if (filters.q.trim()) query.set("q", filters.q.trim().slice(0, 100));
+	const search = query.toString();
 	const data = expectRecord(
-		await apiRequest("/api/v1/trash/collections"),
+		await apiRequest(`/api/v1/trash/collections${search ? `?${search}` : ""}`),
 		"trash list",
 	);
-	return expectArray(data, "items").map(parseTrashed);
+	const deleters = Array.isArray(data.deleters) ? data.deleters : [];
+	return {
+		items: expectArray(data, "items").map(parseTrashed),
+		deleters: deleters.map((value) => {
+			const person = expectRecord(value, "deleter");
+			return {
+				id: expectString(person, "id"),
+				name: optionalString(person, "name"),
+			};
+		}),
+	};
 }
 
 export async function restoreTrashed(

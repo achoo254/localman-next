@@ -9,7 +9,8 @@
  * allows unknown properties. What Localman stores and v2.1 has no place
  * for goes under `_localman` (`collection-v21-extension.ts`).
  */
-import type { RouteMode } from "../request-model.js";
+import type { CollectionStatus } from "../collections/collection-model.js";
+import type { RawLanguage, RouteMode } from "../request-model.js";
 
 export const COLLECTION_V21_SCHEMA =
 	"https://schema.getpostman.com/json/collection/v2.1.0/collection.json";
@@ -97,6 +98,17 @@ export interface CollectionV21SettingsExtension {
 	route?: RouteMode;
 }
 
+/** A saved example (`response[]` entry); cookies and timings not written. */
+export interface CollectionV21Response {
+	name: string;
+	originalRequest: CollectionV21Request;
+	status: string;
+	code: number;
+	header: CollectionV21KeyValue[];
+	body: string;
+	_postman_previewlanguage: RawLanguage;
+}
+
 export interface CollectionV21RequestItem {
 	name: string;
 	request: CollectionV21Request;
@@ -104,6 +116,7 @@ export interface CollectionV21RequestItem {
 	/** Only `followRedirects: false` is written (true is the default). */
 	protocolProfileBehavior?: { followRedirects: boolean };
 	_localman?: CollectionV21SettingsExtension;
+	response?: CollectionV21Response[];
 }
 
 export interface CollectionV21Folder {
@@ -129,10 +142,17 @@ export interface CollectionV21Variable {
 	_localman?: { secret: true };
 }
 
+/** Tags (lower-case) and status of the collection; Localman only. */
+export interface CollectionV21CollectionExtension {
+	tags?: string[];
+	status?: CollectionStatus;
+}
+
 export interface CollectionV21 {
 	info: { name: string; description?: string; schema: string };
 	item: CollectionV21Item[];
 	auth?: CollectionV21Auth;
 	event?: CollectionV21Event[];
 	variable?: CollectionV21Variable[];
+	_localman?: CollectionV21CollectionExtension;
 }

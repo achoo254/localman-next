@@ -22,6 +22,13 @@ export const collectionsTrash: Messages["collections"]["trash"] = {
 	items: {
 		other: "{count} 个 request",
 	},
+	filters: {
+		label: "筛选",
+		workspace: "Workspace",
+		allWorkspaces: "全部 workspace",
+		deletedBy: "删除者",
+		everyone: "所有人",
+	},
 	typeCollection: "collection",
 	deletedWorkspace: "已删除的 workspace",
 	removedAccount: "已删除的账号",
@@ -35,6 +42,7 @@ export const collectionsTrash: Messages["collections"]["trash"] = {
 	emptyTitle: "回收站是空的",
 	emptyBody: "你删除的 collection 会在这里保留一段时间，方便恢复。",
 	noMatch: "没有与“{query}”匹配的内容。",
+	noFilterMatch: "没有符合这些筛选条件的已删除 collection。",
 	loading: "正在加载回收站…",
 	loadFailed: "无法加载回收站。",
 	restoreModal: {

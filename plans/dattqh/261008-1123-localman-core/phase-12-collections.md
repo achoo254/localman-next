@@ -1,7 +1,7 @@
 ---
 phase: 12
 title: "Collections tương đương 100% Postman"
-status: in-progress
+status: completed
 priority: P1
 effort: "L"
 dependencies: [11]
@@ -72,26 +72,30 @@ Nguồn tham chiếu: [Manage collections](https://learning.postman.com/docs/use
 | T11 | Review cuối phase, ưu tiên merge revision, xoá vĩnh viễn và round-trip không mất field | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 State và `data-id` của collection, settings, changelog và trash đã chốt theo prototype
-- [ ] T2 Ba model và adapter `collection` xong
+- [x] T1 State và `data-id` của collection, settings, changelog và trash đã chốt theo prototype
+- [x] T2 Ba model và adapter `collection` xong
 - [x] T3 Codec v2.1 và round-trip xong
 - [x] T4 Service, operation cây và template xong
-- [ ] T5 Tag, status, favorite, sort, search, xoá hàng loạt và thiết lập kế thừa xong
-- [ ] T6 Changelog và trash xong
-- [ ] T7 Sidebar, dialog xoá và Overview xong
-- [ ] T8 Tab thiết lập, example, tag, status và thanh bên phải xong
-- [ ] T9 Changelog panel và trang trash xong
-- [ ] T10 Unit, integration và E2E pass
-- [ ] T11 Review không còn finding chặn
-- [ ] Verification: `postman-v21-codec` round-trip pass với JSON Schema chính thức v2.1; validator tag và status tag đúng từng luật
-- [ ] Verification: integration CRUD, kéo thả, restore-to-change, trash/restore/xoá vĩnh viễn và quyền theo phase 11 pass
-- [ ] Verification: import collection Postman thật lồng 3 cấp, chạy 1 request, export thì JSON tương đương bản gốc
-- [ ] Verification: mọi dòng trong ma trận tương đương có test hoặc kịch bản E2E pass
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
-- [ ] `pnpm check:mcp-coverage` pass
+- [x] T5 Tag, status, favorite, sort, search, xoá hàng loạt và thiết lập kế thừa xong
+- [x] T6 Changelog và trash xong
+- [x] T7 Sidebar, dialog xoá và Overview xong
+- [x] T8 Tab thiết lập, example, tag, status và thanh bên phải xong
+- [x] T9 Changelog panel và trang trash xong
+- [x] T10 Unit, integration và E2E pass
+- [x] T11 Review không còn finding chặn
+- [x] Verification: `postman-v21-codec` round-trip pass với JSON Schema chính thức v2.1; validator tag và status tag đúng từng luật
+- [x] Verification: integration CRUD, kéo thả, restore-to-change, trash/restore/xoá vĩnh viễn và quyền theo phase 11 pass
+- [x] Verification: import collection Postman thật lồng 3 cấp, chạy 1 request, export thì JSON tương đương bản gốc
+- [x] Verification: mọi dòng trong ma trận tương đương có test hoặc kịch bản E2E pass
+- [x] `pnpm lint && pnpm typecheck && pnpm test` sạch
+- [x] `pnpm check:mcp-coverage` pass
 
 ### Đợt A (11/10/2026, Vòng 32)
 Xong: cây collection CRUD, kéo thả ghi 1 node, favorite, sort, tìm kiếm phía server, nhân bản cả cây con; template REST CRUD và "From mock project"; import lưu thành collection; export v2.1 round-trip kiểm bằng JSON Schema chính thức (giá trị secret để trống); tab collection/folder (Overview Markdown, Authorization, Scripts, Variables); tab gắn với request, lưu bằng Ctrl/Cmd+S và "Save to collection"; khi gửi: auth kế thừa, script theo thứ tự collection → folder → request, biến collection; Share/Move/Copy link; xoá collection phải gõ `delete`; thùng rác (restore chọn workspace, xoá vĩnh viễn, job dọn sau `trashDays`, quyền theo vai trò hiện tại); xoá workspace team thì collection vào thùng rác; giới hạn 2000 node, 20 MiB, sâu 64 cấp.
 Kiểm: lint, typecheck, 539 file / 3979 test, `check:mcp-coverage`, `check:tokens`, E2E 32/32 (gồm `collections.spec.ts`: import collection Postman lồng 3 cấp, gửi request với auth kế thừa, export so JSON). Review backend (2 High, 4 Medium) và web (6 Medium) đã sửa hết.
 Còn cho đợt B: model revision và changelog có diff, restore-to-change; tag và status tag; example; trang trash có lọc; chọn nhiều; "Hoạt động gần đây"; tab Changelog ở thanh bên phải; tên người tạo; script đọc biến collection; khôi phục tab collection/folder sau khi tải lại.
+
+### Đợt B (11/10/2026, Vòng 33)
+Xong: changelog có diff (revision JSON Patch xuôi và ngược, gom session 5 phút, ẩn/hiện diff cho Editor, "Restore to this change" ghi thành revision mới), cờ `irreversible` trên dry run của các thay đổi quá lớn; tag và status tag; example (lưu từ response, sửa, nhân bản, round-trip v2.1 `response[]`); trang trash có lọc theo workspace, người xoá và tên; chọn nhiều và xoá hàng loạt; hoạt động gần đây cùng tên người tạo và người cập nhật; rail phải Info/Changelog; khôi phục tab collection/folder/example sau khi tải lại.
+Kiểm: lint, typecheck, 567 file / 4087 test, `check:mcp-coverage`, `check:tokens`, E2E 33/33 (thêm `collections-changelog.spec.ts`). Review backend (1 High, 4 Medium) và web (5 Medium) đã sửa hết.
 

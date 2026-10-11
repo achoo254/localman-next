@@ -1,5 +1,5 @@
 /**
- * Validation against the official Collection v2.1.0 JSON Schema (draft-04),
+ * Export test helpers. Validation against the official Collection v2.1.0 JSON Schema (draft-04),
  * for tests only. The schema in `__fixtures__/collection-v2.1.0.schema.json`
  * is copied from
  * https://schema.postman.com/json/collection/v2.1.0/collection.json
@@ -7,6 +7,13 @@
  */
 import { readFileSync } from "node:fs";
 import ajvDraft04 from "ajv-draft-04";
+import { expect } from "vitest";
+import { importCollection } from "../import/import-test-utils.js";
+import type {
+	CollectionTree,
+	ImportedCollection,
+} from "../import/imported-collection.js";
+import { exportCollectionV21 } from "./collection-v21-export.js";
 
 // A CommonJS package: under NodeNext its default import is `module.exports`,
 // which carries the class as `default`.
@@ -36,3 +43,19 @@ export function v21SchemaErrors(document: unknown): string[] {
 		(error) => `${error.instancePath || "/"} ${error.message ?? ""}`,
 	);
 }
+
+/** The tree part of an import (no format, no warnings). */
+export function treeOf(imported: ImportedCollection): CollectionTree {
+	const { format: _format, warnings: _warnings, ...tree } = imported;
+	return tree;
+}
+
+/** Exports `tree`, failing on any official schema error, as JSON text. */
+export function exportChecked(tree: CollectionTree): string {
+	const document = exportCollectionV21(tree);
+	expect(v21SchemaErrors(document)).toEqual([]);
+	return JSON.stringify(document);
+}
+
+export const roundTrip = (tree: CollectionTree): ImportedCollection =>
+	importCollection(exportChecked(tree));

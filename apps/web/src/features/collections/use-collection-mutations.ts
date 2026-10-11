@@ -37,6 +37,8 @@ function summaryOf(detail: CollectionDetail): CollectionSummary {
 		name: detail.name,
 		role: detail.role,
 		favorite: false,
+		tags: detail.tags,
+		status: detail.status,
 		requestCount: detail.nodes.filter((node) => node.kind === "request").length,
 		updatedAt: detail.updatedAt,
 	};

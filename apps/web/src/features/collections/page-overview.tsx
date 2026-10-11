@@ -3,14 +3,12 @@ import {
 	type CollectionDetail,
 } from "@localman/shared/api-client";
 import { IconPencil } from "@tabler/icons-react";
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
 import { useI18n } from "../../i18n/i18n-context";
-import { useCurrentUser } from "../auth/use-current-user";
-import { useWorkspaces } from "../workspaces/current-workspace";
+import { CollectionMeta } from "./collection-meta";
 import { MarkdownView } from "./markdown-view";
-import { subtreeIds } from "./tree-drop";
 
 export interface PageOverviewProps {
 	detail: CollectionDetail;
@@ -20,28 +18,16 @@ export interface PageOverviewProps {
 	canEdit: boolean;
 	/** Saves the description now. */
 	onSave: (description: string) => void;
-}
-
-function requestCount(
-	detail: CollectionDetail,
-	folderId: string | null,
-): number {
-	const inside = folderId ? subtreeIds(detail.nodes, folderId) : null;
-	return detail.nodes.filter(
-		(node) => node.kind === "request" && (!inside || inside.has(node.id)),
-	).length;
+	/** Under the details: tags and recent activity of a collection. */
+	aside?: ReactNode;
 }
 
 /** Markdown description (Edit, Save) beside the collection's details. */
 export function PageOverview(props: PageOverviewProps) {
-	const { t, formatDate } = useI18n();
-	const session = useCurrentUser();
-	const workspaces = useWorkspaces().data ?? [];
+	const { t } = useI18n();
 	const [draft, setDraft] = useState<string | null>(null);
 	const editButton = useRef<HTMLButtonElement>(null);
 	const { detail } = props;
-	const me = session.status === "authenticated" ? session.user.sub : null;
-	const workspace = workspaces.find((w) => w.id === detail.workspaceId);
 	const stop = (save: boolean) => {
 		if (save && draft !== null) props.onSave(draft);
 		setDraft(null);
@@ -126,30 +112,8 @@ export function PageOverview(props: PageOverviewProps) {
 				<h3 id="collection-details-title" className="m-0 font-semibold text-sm">
 					{t("collections.page.overview.details")}
 				</h3>
-				<dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-2 text-sm">
-					<dt className="text-muted">
-						{t("collections.page.overview.createdBy")}
-					</dt>
-					<dd className="m-0">
-						{detail.createdBy === me
-							? t("collections.page.overview.you")
-							: t("collections.page.overview.member")}
-					</dd>
-					<dt className="text-muted">
-						{t("collections.page.overview.updated")}
-					</dt>
-					<dd className="m-0">{formatDate(detail.updatedAt)}</dd>
-					<dt className="text-muted">
-						{t("collections.page.overview.workspace")}
-					</dt>
-					<dd className="m-0 truncate">{workspace?.name ?? "—"}</dd>
-					<dt className="text-muted">
-						{t("collections.page.overview.requests")}
-					</dt>
-					<dd className="m-0" data-id="collection-request-count">
-						{requestCount(detail, props.folderId)}
-					</dd>
-				</dl>
+				<CollectionMeta detail={detail} folderId={props.folderId} />
+				{props.aside}
 			</section>
 		</div>
 	);

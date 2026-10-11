@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { SHOP_TREE } from "../export/export-test-fixtures.js";
 import type {
 	CollectionTree,
 	ImportedItem,
@@ -11,6 +10,7 @@ import {
 	orderKeyBetween,
 	orderKeysBetween,
 } from "./collection-order.js";
+import { SHOP_TREE } from "./collection-tree-fixture.js";
 import {
 	collectionTreeToNodes,
 	nodesToCollectionTree,
@@ -29,7 +29,10 @@ function detailOf(tree: CollectionTree): CollectionDetail {
 		role: "editor",
 		...root,
 		createdBy: "u1",
+		createdByName: "Ada",
 		createdAt: "2026-10-11T00:00:00.000Z",
+		updatedBy: "u1",
+		updatedByName: "Ada",
 		updatedAt: "2026-10-11T00:00:00.000Z",
 		nodes,
 	};
@@ -38,10 +41,15 @@ function detailOf(tree: CollectionTree): CollectionDetail {
 /** Item ids are regenerated on the way in; compare everything else. */
 function withoutIds(items: readonly ImportedItem[]): unknown[] {
 	return items.map((item) => {
+		if (item.kind === "folder") {
+			const { id: _id, ...rest } = item;
+			return { ...rest, items: withoutIds(item.items) };
+		}
 		const { id: _id, ...rest } = item;
-		return item.kind === "folder"
-			? { ...rest, items: withoutIds(item.items) }
-			: rest;
+		const examples = item.examples.map(
+			({ id: _example, ...example }) => example,
+		);
+		return { ...rest, examples };
 	});
 }
 
@@ -86,12 +94,28 @@ describe("collection tree conversion", () => {
 		});
 	});
 
+	it("stores examples as ordered children of their request", () => {
+		const { root, nodes } = collectionTreeToNodes(SHOP_TREE, counter());
+		expect(root).toMatchObject({
+			tags: ["shop", "v2"],
+			status: { kind: "preset", preset: "stable" },
+		});
+		const request = nodes.find((node) => node.name === "Get user");
+		const examples = nodes.filter((node) => node.parentId === request?.id);
+		expect(examples.map((node) => [node.kind, node.name])).toEqual([
+			["example", "200 OK"],
+			["example", "404"],
+		]);
+	});
+
 	it("links nodes by parent and orders siblings", () => {
 		const { root, nodes } = collectionTreeToNodes(SHOP_TREE, counter());
 		expect(root.name).toBe("Shop");
 		const folder = nodes.find((node) => node.kind === "folder");
 		if (!folder) throw new Error("no folder");
-		const children = nodes.filter((node) => node.parentId === folder.id);
+		const children = nodes.filter(
+			(node) => node.parentId === folder.id && node.kind !== "example",
+		);
 		expect(children.map((node) => node.name)).toEqual([
 			"Get user",
 			"Create user",

@@ -92,4 +92,17 @@ describe("workbench pages and bound tabs", () => {
 		});
 		expect(state.tabs[0]?.dirty).toBe(false);
 	});
+
+	it("brings pages back without taking the active tab from requests", () => {
+		let state = run(
+			{ type: "restore", tabs: [{ id: "a", draft: SAVED }] },
+			{ type: "restorePages", pages: [page("p1")] },
+		);
+		expect(state.activeTabId).toBe("a");
+		state = run(open("b"), { type: "restorePages", pages: [page("p1")] });
+		expect(state.activeTabId).toBe("b");
+		// With no request tab, the first page shows.
+		state = run({ type: "restorePages", pages: [page("p1"), page("p2")] });
+		expect(state.activeTabId).toBe("p1");
+	});
 });

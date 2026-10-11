@@ -1,7 +1,9 @@
+import type { TrashedCollectionSummary } from "@localman/shared/api-client";
 import type { Types } from "mongoose";
 import { z } from "zod";
-import { UserModel } from "../users/user-model.js";
 import { WorkspaceModel } from "../workspaces/workspace-model.js";
+import { statusView, tagsView } from "./collection-view.js";
+import { displayNames } from "./people.js";
 import { type TrashedCollection, purgeAtOf } from "./trash-access.js";
 
 export const trashedView = z.object({
@@ -13,36 +15,35 @@ export const trashedView = z.object({
 	workspaceName: z.string().nullable(),
 	/** Requests it holds (what the delete dialog of the trash shows). */
 	requestCount: z.number().int(),
+	tags: tagsView,
+	status: statusView,
 	deletedAt: z.string(),
 	deletedBy: z.string(),
 	/** Name (else username) of who deleted it; `null` for a removed account. */
 	deletedByName: z.string().nullable(),
 	purgeAt: z.string(),
 });
-export type TrashedView = z.infer<typeof trashedView>;
+
+export const trashListView = z.object({
+	items: z.array(trashedView),
+	deleters: z.array(z.object({ id: z.string(), name: z.string().nullable() })),
+});
 
 /** Trash rows with their workspace and deleter names, in the same order. */
 export async function toTrashedViews(
 	rows: readonly TrashedCollection[],
-): Promise<TrashedView[]> {
+): Promise<TrashedCollectionSummary[]> {
 	const workspaceIds = [
 		...new Set(rows.map((row) => row.workspaceId.toHexString())),
 	];
-	const deleters = [...new Set(rows.map((row) => row.deletedBy))];
-	const [workspaces, users] = await Promise.all([
+	const [workspaces, names] = await Promise.all([
 		WorkspaceModel.find({ _id: { $in: workspaceIds } }, { name: 1 }).lean<
 			{ _id: Types.ObjectId; name: string }[]
 		>(),
-		UserModel.find(
-			{ sub: { $in: deleters } },
-			{ sub: 1, username: 1, name: 1 },
-		).lean<{ sub: string; username: string; name?: string | null }[]>(),
+		displayNames(rows.map((row) => row.deletedBy)),
 	]);
 	const workspaceNames = new Map(
 		workspaces.map((ws) => [ws._id.toHexString(), ws.name]),
-	);
-	const userNames = new Map(
-		users.map((user) => [user.sub, user.name || user.username]),
 	);
 	return rows.map((row) => ({
 		id: row._id.toHexString(),
@@ -50,9 +51,11 @@ export async function toTrashedViews(
 		workspaceId: row.workspaceId.toHexString(),
 		workspaceName: workspaceNames.get(row.workspaceId.toHexString()) ?? null,
 		requestCount: row.requestCount ?? 0,
+		tags: [...(row.tags ?? [])],
+		status: row.status ?? null,
 		deletedAt: row.deletedAt.toISOString(),
 		deletedBy: row.deletedBy,
-		deletedByName: userNames.get(row.deletedBy) ?? null,
+		deletedByName: names.get(row.deletedBy) ?? null,
 		purgeAt: purgeAtOf(row.deletedAt).toISOString(),
 	}));
 }

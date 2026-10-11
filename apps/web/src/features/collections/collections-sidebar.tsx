@@ -2,13 +2,20 @@ import { memo, useId, useMemo, useRef, useState } from "react";
 import { PanelProgress } from "../../components/ui/panel-progress";
 import { useDebouncedValue } from "../../lib/use-debounced-value";
 import { useCurrentWorkspace } from "../workspaces/current-workspace";
+import { BulkBar } from "./bulk-bar";
 import { CollectionDialogs } from "./collection-dialogs";
 import { CollectionSearchBar } from "./collection-search-bar";
 import { CollectionSearchResults } from "./collection-search-results";
 import { CollectionsBody } from "./collections-body";
 import { CollectionsHead } from "./collections-head";
 import type { OpenNode } from "./open-node";
-import { type TreeRow, buildTreeRows, sortCollections } from "./tree-rows";
+import { type PickMode, openRow } from "./open-row";
+import {
+	type TreeRow,
+	buildTreeRows,
+	isBranch,
+	sortCollections,
+} from "./tree-rows";
 import { useCollectionCreate } from "./use-collection-create";
 import { SEARCH_DEBOUNCE_MS } from "./use-collection-search";
 import { useCollectionSort } from "./use-collection-sort";
@@ -16,19 +23,23 @@ import { useCollectionDetails, useCollectionList } from "./use-collections";
 import { useTreeActions } from "./use-tree-actions";
 import { useTreeDnd } from "./use-tree-dnd";
 import { useTreePermissions } from "./use-tree-permissions";
-import { useTreeState } from "./use-tree-state";
+import { useTreeSelection } from "./use-tree-selection";
+import { useFocusAfterRemoval, useTreeState } from "./use-tree-state";
 
 export interface CollectionsSidebarProps {
 	/** Opens a request, folder or collection (round 2 wires tabs to it). */
 	onOpenNode: OpenNode;
 	/** Opens the import dialog on "Save as collection". */
 	onImport: () => void;
+	/** Node or collection of the active tab, marked in the tree. */
+	openedId?: string | null;
 }
 
 /** Collections of the current workspace as a tree (workspaces flag on). */
 export const CollectionsSidebar = memo(function CollectionsSidebar({
 	onOpenNode,
 	onImport,
+	openedId = null,
 }: CollectionsSidebarProps) {
 	const titleId = useId();
 	const searchRef = useRef<HTMLInputElement>(null);
@@ -39,7 +50,7 @@ export const CollectionsSidebar = memo(function CollectionsSidebar({
 	const [query, setQuery] = useState("");
 	const [sort, setSort] = useCollectionSort();
 	const state = useTreeState();
-	const { canAdd, permissionsOf } = useTreePermissions(
+	const { canAdd, permissionsOf, canPick } = useTreePermissions(
 		current?.role ?? null,
 		list.data,
 	);
@@ -81,46 +92,20 @@ export const CollectionsSidebar = memo(function CollectionsSidebar({
 	});
 	const dnd = useTreeDnd({ rows, details, onMove: actions.onMove });
 
-	const activate = (row: TreeRow): void => {
-		state.focusRow(row.id);
-		if (row.kind === "request") {
-			const item = details.get(row.collectionId);
-			if (item?.status === "ready") {
-				onOpenNode({
-					kind: "request",
-					collection: item.detail,
-					node: row.node,
-				});
-			}
+	const selection = useTreeSelection(rows, canPick);
+	const activate = (row: TreeRow, mode: PickMode = "open"): void => {
+		// Viewers do not pick rows to delete them.
+		if (mode !== "open" && canPick(row)) {
+			if (mode === "toggle") selection.toggle(row.id);
+			else selection.extend(row.id);
 			return;
 		}
-		state.setOpen(row.id, !row.expanded);
-		onOpenNode(
-			row.kind === "collection"
-				? { kind: "collection", collectionId: row.id, name: row.name }
-				: {
-						kind: "folder",
-						collectionId: row.collectionId,
-						nodeId: row.id,
-						name: row.name,
-					},
-		);
+		state.focusRow(row.id);
+		if (isBranch(row)) state.setOpen(row.id, !row.expanded);
+		openRow(row, details, onOpenNode);
 	};
 
-	const dialogRowId = (): string | null => {
-		const value = state.dialog?.value;
-		if (!value) return null;
-		return value.kind === "deleteNode" ? value.node.id : value.summary.id;
-	};
-	const focusAfterRemoval = (event: Event): void => {
-		const id = dialogRowId();
-		if (id !== null && state.isRowShown(id)) return;
-		event.preventDefault();
-		const stop = sectionRef.current?.querySelector<HTMLElement>(
-			'[role="treeitem"][tabindex="0"]',
-		);
-		(stop ?? searchRef.current)?.focus();
-	};
+	const focusAfterRemoval = useFocusAfterRemoval(state, sectionRef, searchRef);
 
 	return (
 		<section
@@ -146,6 +131,13 @@ export const CollectionsSidebar = memo(function CollectionsSidebar({
 				active={list.isFetching && !list.isPending}
 				className="min-h-0 flex-1 overflow-y-auto"
 			>
+				{!searching && selection.picked.length > 0 ? (
+					<BulkBar
+						workspaceId={workspaceId ?? ""}
+						picked={selection.picked}
+						onClear={selection.clear}
+					/>
+				) : null}
 				{searching ? (
 					<CollectionSearchResults
 						workspaceId={workspaceId}
@@ -170,6 +162,10 @@ export const CollectionsSidebar = memo(function CollectionsSidebar({
 							dnd,
 							onFocusRow: state.focusRow,
 							onActivate: activate,
+							selectedIds: selection.selected,
+							multiSelectable: rows.some(canPick),
+							openedId,
+							onClearSelection: selection.clear,
 							onExpand: (row, open) => state.setOpen(row.id, open),
 							onStartRename: (row) => state.setRenamingId(row.id),
 							onFavorite: actions.onFavorite,

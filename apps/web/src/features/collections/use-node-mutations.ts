@@ -16,7 +16,7 @@ import {
 	duplicateNode,
 	moveNode,
 	updateNode,
-} from "./collections-api";
+} from "./nodes-api";
 import { applyMove, subtreeIds } from "./tree-drop";
 import { COLLECTIONS_KEY, collectionKey } from "./use-collections";
 
