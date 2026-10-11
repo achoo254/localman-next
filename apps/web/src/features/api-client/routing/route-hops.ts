@@ -86,7 +86,6 @@ async function viaProxyHop(
 	}
 	if (why === "cors") deps.corsCache.remember(target.origin);
 	return finishSend(
-		input.draft,
 		{ ...ready, prepared },
 		{
 			response: hop.response,

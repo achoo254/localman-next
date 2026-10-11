@@ -16,6 +16,7 @@ import {
 } from "../workbench/workbench-context";
 import type { WorkbenchTab } from "../workbench/workbench-types";
 import { CloseTabModal } from "./close-tab-modal";
+import { PageTabItem } from "./page-tab-item";
 import { TabItem, tabDomId } from "./tab-item";
 import { tabLabel } from "./tab-label";
 
@@ -44,13 +45,15 @@ export interface TabBarProps {
 /** Open requests as tabs (←/→, Home/End, Delete to close) plus "New". */
 export function TabBar({ panelId, leading }: TabBarProps) {
 	const t = useT();
-	const { tabs, activeTabId, canOpenTab } = useWorkbenchState();
+	const { tabs, pages, activeTabId, canOpenTab } = useWorkbenchState();
 	const { activateTab, closeTab, openTab } = useWorkbenchActions();
 	const [closing, setClosing] = useState<WorkbenchTab | null>(null);
 	const refocus = useRef(false);
 	// Handlers read the tabs here, so they stay the same for memoized tabs.
 	const latestTabs = useRef(tabs);
 	latestTabs.current = tabs;
+	const latestIds = useRef<string[]>([]);
+	latestIds.current = [...tabs, ...pages].map((item) => item.id);
 
 	// After a keyboard switch or a close, focus follows the active tab.
 	useEffect(() => {
@@ -69,25 +72,26 @@ export function TabBar({ panelId, leading }: TabBarProps) {
 
 	const onKeyDown = useCallback(
 		(event: KeyboardEvent<HTMLButtonElement>, tabId: string) => {
-			const all = latestTabs.current;
-			const index = all.findIndex((item) => item.id === tabId);
-			const tab = all[index];
-			if (!tab) return;
-			const target = targetIndex(event.key, index, all.length - 1);
+			const ids = latestIds.current;
+			const index = ids.indexOf(tabId);
+			if (index === -1) return;
+			const target = targetIndex(event.key, index, ids.length - 1);
+			const tab = latestTabs.current.find((item) => item.id === tabId);
 			if (target !== null) {
 				event.preventDefault();
-				const next = all[target];
+				const next = ids[target];
 				if (next) {
 					refocus.current = true;
-					activateTab(next.id);
+					activateTab(next);
 				}
 			} else if (event.key === "Delete") {
 				event.preventDefault();
-				refocus.current = !tab.dirty;
-				requestClose(tab);
+				refocus.current = !tab?.dirty;
+				if (tab) requestClose(tab);
+				else closeTab(tabId);
 			}
 		},
-		[activateTab, requestClose],
+		[activateTab, requestClose, closeTab],
 	);
 
 	const limit = t("apiClient.tabs.limit", { max: DRAFT_MAX_TABS });
@@ -97,7 +101,7 @@ export function TabBar({ panelId, leading }: TabBarProps) {
 			className="flex min-w-0 items-stretch border-border-subtle border-b bg-surface-subtle"
 		>
 			{leading}
-			{tabs.length > 0 ? (
+			{tabs.length + pages.length > 0 ? (
 				<div
 					role="tablist"
 					aria-label={t("apiClient.tabs.label")}
@@ -112,6 +116,17 @@ export function TabBar({ panelId, leading }: TabBarProps) {
 							panelId={panelId}
 							onSelect={activateTab}
 							onClose={requestClose}
+							onKeyDown={onKeyDown}
+						/>
+					))}
+					{pages.map((page) => (
+						<PageTabItem
+							key={page.id}
+							page={page}
+							active={page.id === activeTabId}
+							panelId={panelId}
+							onSelect={activateTab}
+							onClose={closeTab}
 							onKeyDown={onKeyDown}
 						/>
 					))}

@@ -41,6 +41,8 @@ test("a finished send is listed in History and opens a new tab", async ({
 	await send(page);
 	await expect(page.getByTestId("response-status")).toContainText("200");
 
+	// Collections is the first section when workspaces are on; History is a click away.
+	await page.getByTestId("sidebar-rail-history").click();
 	await expect(page.getByTestId("sidebar-history-item")).toHaveCount(1);
 	await newRequestTab(page);
 	await page.getByTestId("sidebar-history-item").first().click();

@@ -129,6 +129,17 @@ Bảng quyền nằm ở `@localman/shared/access` (`packages/shared/src/access-
 - **Project mock** không có workspace: `project-access.ts` quyết định theo `MOCK_PROJECT_PERMISSIONS` (owner là Editor có quyền quản lý, collaborator là Editor không quản lý).
 - **Thông báo mới:** `workspace.invitation`, `element.shared`, `access.requested`, `access.resolved`. Item thông báo `access.requested` có `accessRequest: { id, status, role }`.
 
+## Collections của API client
+
+Module `apps/api/src/modules/collections/`, operation `client.*` (toolset MCP `client`). Kiểu, schema và hàm chuyển đổi nằm ở `@localman/shared/api-client` (`collections/`). Cờ web `workspaces` (cùng `apiClient`) bật UI.
+
+- **Lưu trữ:** gốc collection (`collections`: workspace, mô tả Markdown, auth, scripts, variables) và từng folder/request là một bản ghi (`collection_nodes`) có `parentId` và `order` là khoá fractional index trong folder cha. Kéo thả chỉ ghi lại node bị kéo. Các thao tác ghi node chạy dưới khoá workspace, để hai lượt move chéo nhau không lách được kiểm tra vòng. Giới hạn: 2000 node và 20 MiB mỗi collection (đếm dồn trên gốc, trả 413 `COLLECTION_TOO_LARGE`), folder sâu tối đa 64 cấp, 1000 collection còn sống mỗi workspace.
+- **Quyền:** mọi route đi qua `requireElement("collection", …)` theo `COLLECTION_PERMISSIONS`. Tạo collection cần `addElements` của workspace. Adapter `collection` của phase 11 giúp share, request access và move hoạt động với collection thật.
+- **Kế thừa khi gửi:** `requestContext` trả auth gần nhất (folder rồi collection), danh sách script theo thứ tự collection, folder ngoài vào trong, request, cùng biến của collection.
+- **Import/export Collection v2.1:** round-trip không mất field với mọi thứ đợt A lưu. Kiểm bằng JSON Schema chính thức v2.1.0 (fixture trong `packages/shared/src/api-client/export/__fixtures__`). Thiết lập v2.1 không có chỗ (`timeoutMs`, `sendClientIp`, `route`) đi trong khoá `_localman`. Export luôn để trống giá trị biến secret. Qua API, ai xem được collection đều nhận giá trị biến và credential của auth; cờ `secret` chỉ để che trên UI, còn việc để trống chỉ áp cho file rời khỏi Localman.
+- **Thùng rác:** xoá collection (có request thì phải gửi `confirm: "delete"`) đặt `deletedAt` và `deletedBy`. Xoá workspace team cũng chuyển mọi collection trong đó vào thùng rác, trong cùng transaction. Quyền restore và xoá vĩnh viễn theo vai trò hiện tại. Khi workspace gốc còn, chỉ Admin hoặc Editor hiện tại của nó làm được; restore sang workspace khác phải qua luật move. Khi workspace gốc đã xoá, người xoá hoặc những người là Admin/Editor lúc xoá (danh sách ghi lại lúc chuyển vào thùng rác) làm được. Xoá vĩnh viễn xoá luôn node, favorite, `element_roles` và `access_requests`. Job dọn xoá vĩnh viễn sau `trashDays` (30 ngày cho mọi gói).
+- **Tab gắn với request:** draft của tab (`client_drafts`) có `source { collectionId, nodeId }`; gửi `null` để bỏ liên kết.
+
 ## Resources và dữ liệu mock
 
 Module `apps/api/src/modules/resources/`, operation `mock.*` dưới `/api/v1/projects/:projectId/resources` (cộng `GET /api/v1/faker-methods`). Zod, whitelist Faker và template nằm ở `packages/shared`, web và api dùng chung. Hằng của resource (`resource-constants.ts`) tách khỏi các module zod (`resource-schema.ts`, `resource-templates.ts` re-export lại), để web đọc qua `@localman/shared/constants` mà không kéo zod và catalog Faker vào trang; catalog chỉ nằm trong chunk modal resource.

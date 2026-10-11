@@ -2,23 +2,29 @@ import { describe, expect, it } from "vitest";
 import {
 	importCollection,
 	readFixture,
+	withBlankSecrets,
 	withoutIds,
 } from "../import/import-test-utils.js";
 import { importText } from "../import/import-text.js";
 import { collectionFromDrafts } from "../import/imported-collection.js";
 import { createRequestDraft } from "../request-model.js";
 import { exportCollectionV21 } from "./collection-v21-export.js";
+import { v21SchemaErrors } from "./v21-schema-test-utils.js";
 
 const fixture = readFixture("collection-v21-sample.json");
 
 describe("Collection v2.1 round trip", () => {
 	it("imports its own export to the same tree", () => {
 		const first = importCollection(fixture);
-		const exported = JSON.stringify(exportCollectionV21(first));
+		const document = exportCollectionV21(first);
+		expect(v21SchemaErrors(document)).toEqual([]);
+		const exported = JSON.stringify(document);
 		const second = importCollection(exported);
 		const { warnings: _a, ...firstTree } = first;
 		const { warnings: _b, ...secondTree } = second;
-		expect(withoutIds(secondTree)).toEqual(withoutIds(firstTree));
+		expect(withoutIds(secondTree)).toEqual(
+			withoutIds(withBlankSecrets(firstTree)),
+		);
 	});
 
 	it("exports open tabs as a flat collection", () => {
@@ -29,6 +35,7 @@ describe("Collection v2.1 round trip", () => {
 		const exported = exportCollectionV21(
 			collectionFromDrafts("Tabs", [{ id: "t1", draft }]),
 		);
+		expect(v21SchemaErrors(exported)).toEqual([]);
 		expect(exported.info.schema).toContain("/collection/v2.1.0/");
 		expect(exported.auth).toBeUndefined();
 		expect(exported.item).toEqual([

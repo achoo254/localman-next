@@ -399,6 +399,17 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Chia sẻ riêng một phần tử cho người ngoài workspace không chiếm ghế thành viên (Jev noul 0.12).
 - Move cần quyền `moveDeleteElements` ở workspace nguồn (Admin hoặc Editor của workspace), không chỉ share Editor, vì Localman tách chia sẻ phần tử khỏi tư cách thành viên. Approve phải nêu vai trò người duyệt đã thấy; yêu cầu đổi vai trò sau đó thì trả 409 `REQUEST_CHANGED`.
 
+### Vòng 31: sau phase 11 (2026-10-11, user: "gửi model jev quyết định")
+- Thứ tự ghi trong plan đặt phase 16 ngay sau 11, nhưng 16 cần 12, 13 và 14. Việc tiếp theo là phase 12 Collections (Jev 0.83; tạm dừng plan để tập trung thu hút người dùng 0.17; làm 16 theo đúng thứ tự 0.0; nhảy sang extension 0.0).
+- Khi phase 12 xong và qua review, nghiêng về bật cờ `workspaces` trên prod (Jev noul 0.6). Deploy vẫn chờ user yêu cầu tường minh.
+
+### Vòng 32: khi cook phase 12 (2026-10-11, Jev quyết)
+- Phase 12 chia 2 đợt (Jev 0.99). Đợt A đủ để bật cờ cho người dùng: cây collection CRUD và kéo thả, lưu request từ tab vào collection, auth/scripts/variables kế thừa, import/export v2.1 round-trip, Share/Move, Overview, xoá phải gõ "delete", thùng rác cơ bản (restore chọn workspace, xoá vĩnh viễn, job dọn sau `trashDays`). Đợt B: changelog có diff và restore-to-change, tag và status tag, example, trang trash có lọc, chọn nhiều. Revision bắt đầu ghi từ đợt B, trước khi bật cờ cho người dùng.
+- Xoá workspace team thì collection bên trong vào thùng rác, người có quyền restore về workspace khác (Jev 0.92; chặn xoá khi còn collection 0.08; xoá vĩnh viễn 0.0).
+- Export collection để trống giá trị biến secret (Jev 0.98). Qua API, ai xem được collection đều nhận giá trị biến và credential của auth; cờ secret chỉ để che trên UI (Jev 1.0).
+- Thùng rác (review backend đợt A chứng minh người xoá bị loại khỏi team vẫn mang được collection sang workspace riêng): quyền restore và xoá vĩnh viễn theo vai trò hiện tại. Khi workspace gốc còn, chỉ Admin hoặc Editor hiện tại của nó làm được; restore sang workspace khác phải qua luật move. Khi workspace gốc đã xoá, người xoá hoặc Admin/Editor cũ làm được. User chốt; Jev chia đôi: người xoá luôn có quyền 0.59, theo vai trò hiện tại 0.41.
+- Kỹ thuật: codec v2.1 đặt ở `packages/shared` để web import/export dùng chung; kiểm bằng JSON Schema chính thức v2.1 (draft-04, `ajv` + `ajv-draft-04` chỉ trong test). Thùng rác dùng `deletedAt` (khác tombstone `deletingAt` của project, vốn chỉ để xoá dây chuyền). Template "Từ project mock" dùng hàm thuần `mockRequestsOf` của web, tạo collection qua cùng đường import.
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 

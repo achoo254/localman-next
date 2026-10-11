@@ -1,7 +1,8 @@
 /**
  * Body of a v2.1 request: raw (with its language), url-encoded, form-data
  * (file fields kept as empty file rows), GraphQL (sent as its JSON body)
- * and file (binary, the file is picked again).
+ * and file (binary, the file is picked again: only its name is in the
+ * file, and it is not kept).
  */
 import type {
 	FormDataRow,
@@ -27,9 +28,15 @@ import {
 	textProp,
 } from "./import-json.js";
 
+/**
+ * Language of the raw text: the declared one; for a raw body that is sent
+ * and declares none, guessed from the Content-Type header, else `text`;
+ * otherwise the editor default (`json`), which the exporter leaves out.
+ */
 function rawLanguage(
 	body: unknown,
 	headers: readonly KeyValueRow[],
+	guess: boolean,
 ): RawLanguage {
 	const declared = textProp(
 		prop(recordProp(body, "options"), "raw"),
@@ -37,6 +44,7 @@ function rawLanguage(
 	);
 	const known = RAW_LANGUAGES.find((language) => language === declared);
 	if (known) return known;
+	if (!guess) return emptyRequestBody().rawLanguage;
 	const type = headers.find(
 		(h) => h.enabled && h.key.toLowerCase() === "content-type",
 	);
@@ -73,35 +81,35 @@ function graphqlJson(value: unknown): string {
 	});
 }
 
+/**
+ * Every kind the body holds is read, not only the one `mode` sends, so a
+ * Localman export (which keeps the others) comes back whole. `disabled`
+ * or an unknown mode: nothing is sent (`none`), the content is kept.
+ */
 export function readBody(
 	value: unknown,
 	headers: readonly KeyValueRow[],
 	ctx: ImportContext,
 	path: string,
 ): RequestBody {
-	const body = emptyRequestBody();
-	if (!isRecord(value) || prop(value, "disabled") === true) return body;
+	if (!isRecord(value)) return emptyRequestBody();
 	const mode = textProp(value, "mode", "raw");
+	const disabled = prop(value, "disabled") === true;
+	const body: RequestBody = {
+		...emptyRequestBody(),
+		raw: textProp(value, "raw"),
+		rawLanguage: rawLanguage(value, headers, mode === "raw" && !disabled),
+		urlencoded: readRows(listProp(value, "urlencoded"), ctx),
+		formData: formRows(listProp(value, "formdata"), ctx, path),
+	};
+	if (disabled) return body;
 	switch (mode) {
 		case "raw":
-			return {
-				...body,
-				type: "raw",
-				raw: textProp(value, "raw"),
-				rawLanguage: rawLanguage(value, headers),
-			};
+			return { ...body, type: "raw" };
 		case "urlencoded":
-			return {
-				...body,
-				type: "urlencoded",
-				urlencoded: readRows(listProp(value, "urlencoded"), ctx),
-			};
+			return { ...body, type: "urlencoded" };
 		case "formdata":
-			return {
-				...body,
-				type: "formdata",
-				formData: formRows(listProp(value, "formdata"), ctx, path),
-			};
+			return { ...body, type: "formdata" };
 		case "graphql":
 			return {
 				...body,

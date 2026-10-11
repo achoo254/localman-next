@@ -1,19 +1,26 @@
 /**
- * A collection tree (imported, or the open tabs) to Collection v2.1 JSON.
- * Writes what `collectionV21ToTree` reads back: auth left out for
- * `inherit`, scripts as `prerequest`/`test` events, disabled rows and
- * secret variables flagged, `followRedirects: false` kept. Only the
- * active body kind is written; picked files are exported by name only.
+ * A collection tree (imported, or the open tabs) to Collection v2.1 JSON
+ * that validates against the official v2.1.0 schema. Writes what
+ * `collectionV21ToTree` reads back: folders with their description, auth
+ * and scripts; auth left out for `inherit`; scripts as `prerequest`/`test`
+ * events; disabled rows flagged; `followRedirects: false` kept. Secret
+ * variables and the settings v2.1 has no field for go under `_localman`.
+ * Picked files are exported by name only.
+ *
+ * The file may be shared, so secret variables keep their key and flag but
+ * are written with an empty value, as environment exports do.
+ *
+ * Not kept: secret values, the file bytes and picked-file references, line
+ * endings of scripts (CRLF comes back as LF) and blank scripts.
  */
+import { settingsExtension } from "../import/collection-v21-extension.js";
 import {
 	COLLECTION_V21_SCHEMA,
 	type CollectionV21,
 	type CollectionV21Auth,
-	type CollectionV21Body,
 	type CollectionV21Event,
 	type CollectionV21Folder,
 	type CollectionV21Item,
-	type CollectionV21KeyValue,
 	type CollectionV21RequestItem,
 	type CollectionV21Variable,
 } from "../import/collection-v21-types.js";
@@ -23,11 +30,10 @@ import type {
 } from "../import/imported-collection.js";
 import type {
 	ApiRequestDraft,
-	KeyValueRow,
 	RequestAuth,
-	RequestBody,
 	RequestScripts,
 } from "../request-model.js";
+import { bodyToV21, rowsToV21 } from "./collection-v21-body-export.js";
 import { collectionV21Url } from "./collection-v21-url.js";
 
 const attribute = (key: string, value: string) =>
@@ -75,47 +81,6 @@ function eventsToV21(
 	return events.length > 0 ? events : undefined;
 }
 
-function rowToV21(row: KeyValueRow): CollectionV21KeyValue {
-	const out: CollectionV21KeyValue = { key: row.key, value: row.value };
-	if (!row.enabled) out.disabled = true;
-	if (row.description) out.description = row.description;
-	return out;
-}
-
-const rowsToV21 = (rows: readonly KeyValueRow[]): CollectionV21KeyValue[] =>
-	rows.map(rowToV21);
-
-function bodyToV21(body: RequestBody): CollectionV21Body | undefined {
-	switch (body.type) {
-		case "none":
-			return undefined;
-		case "raw":
-			return {
-				mode: "raw",
-				raw: body.raw,
-				options: { raw: { language: body.rawLanguage } },
-			};
-		case "urlencoded":
-			return { mode: "urlencoded", urlencoded: rowsToV21(body.urlencoded) };
-		case "formdata":
-			return {
-				mode: "formdata",
-				formdata: body.formData.map((row) =>
-					row.kind === "text"
-						? { ...rowToV21(row), type: "text" }
-						: {
-								...rowToV21(row),
-								value: "",
-								type: "file",
-								src: row.file?.name ?? "",
-							},
-				),
-			};
-		case "binary":
-			return { mode: "file", file: { src: body.binary?.name ?? "" } };
-	}
-}
-
 function requestToV21(
 	name: string,
 	description: string,
@@ -139,6 +104,8 @@ function requestToV21(
 	if (!draft.settings.followRedirects) {
 		item.protocolProfileBehavior = { followRedirects: false };
 	}
+	const settings = settingsExtension(draft.settings);
+	if (settings) item._localman = settings;
 	return item;
 }
 
@@ -174,10 +141,11 @@ export function exportCollectionV21(tree: CollectionTree): CollectionV21 {
 		out.variable = tree.variables.map((variable) => {
 			const entry: CollectionV21Variable = {
 				key: variable.key,
-				value: variable.value,
-				type: variable.secret ? "secret" : "string",
+				value: variable.secret ? "" : variable.value,
+				type: "string",
 			};
 			if (variable.enabled === false) entry.disabled = true;
+			if (variable.secret) entry._localman = { secret: true };
 			return entry;
 		});
 	}

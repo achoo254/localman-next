@@ -17,17 +17,29 @@ import { StatusBar } from "./status-bar";
 import { useWorkbench } from "./workbench-context";
 import { WorkbenchSidebar } from "./workbench-sidebar";
 import { WorkbenchSkeleton } from "./workbench-skeleton";
+import type { PageTab } from "./workbench-tab-types";
 import type { WorkbenchTab } from "./workbench-types";
 
 export interface WorkbenchLayoutProps {
 	/** History section of the left sidebar (Tunelo and Routing are built in). */
 	sidebar: ReactNode;
+	/** Collections section, first in the rail (workspaces flag only). */
+	collections?: ReactNode;
 	/** Response area of the active tab. */
 	renderResponse: (tab: WorkbenchTab) => ReactNode;
 	/** Buttons in the request head (code snippet…). */
 	renderHeadActions?: (tab: WorkbenchTab) => ReactNode;
 	/** More ways to start from the empty editor (import, from mock). */
 	emptyActions?: ReactNode;
+	/** Above the request head of a tab (the collection breadcrumb). */
+	renderAboveRequest?: (tab: WorkbenchTab) => ReactNode;
+	/** A collection or folder page (workspaces flag). */
+	renderPage?: (page: PageTab) => ReactNode;
+	/**
+	 * Ctrl/Cmd+S on the active tab; `true` when it handled the save, else
+	 * the drafts are saved as before.
+	 */
+	onSave?: (tabId: string | null) => boolean;
 }
 
 function isMod(event: KeyboardEvent): boolean {
@@ -43,7 +55,7 @@ function isMod(event: KeyboardEvent): boolean {
 export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 	const t = useT();
 	const workbench = useWorkbench();
-	const { activeTab } = workbench;
+	const { activeTab, activePage } = workbench;
 	// Saved drafts still on their way: no empty editor that would flash first.
 	const restoring =
 		workbench.syncStatus.state === "loading" && workbench.tabs.length === 0;
@@ -51,7 +63,7 @@ export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 	const [drawerOpen, setDrawerOpen] = useState(false);
 	const drawerId = useId();
 	// Opening a request (from history, a new tab) brings the editor back.
-	const activeTabId = activeTab?.id;
+	const { activeTabId } = workbench;
 	useEffect(() => {
 		if (activeTabId) setDrawerOpen(false);
 	}, [activeTabId]);
@@ -66,7 +78,7 @@ export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 		} else if (event.key.toLowerCase() === "s") {
 			event.preventDefault();
 			event.stopPropagation();
-			workbench.saveDrafts();
+			if (!props.onSave?.(workbench.activeTabId)) workbench.saveDrafts();
 		}
 	};
 
@@ -80,6 +92,7 @@ export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 			<div className="flex min-h-0 flex-1">
 				<WorkbenchSidebar
 					history={props.sidebar}
+					collections={props.collections}
 					drawerId={drawerId}
 					drawerOpen={drawerOpen}
 					onDrawerClose={() => setDrawerOpen(false)}
@@ -110,14 +123,18 @@ export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 					<div
 						id={panelId}
 						data-id="editor"
-						{...(activeTab
-							? { role: "tabpanel", "aria-labelledby": tabDomId(activeTab.id) }
+						{...(workbench.activeTabId && (activeTab || activePage)
+							? {
+									role: "tabpanel",
+									"aria-labelledby": tabDomId(workbench.activeTabId),
+								}
 							: {})}
 						className="flex min-h-0 flex-1 flex-col overflow-y-auto"
 					>
 						{activeTab ? (
 							<>
 								<div className="min-w-0 flex-none">
+									{props.renderAboveRequest?.(activeTab)}
 									<RequestEditor
 										key={activeTab.id}
 										tab={activeTab}
@@ -132,6 +149,8 @@ export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 									{props.renderResponse(activeTab)}
 								</section>
 							</>
+						) : activePage && props.renderPage ? (
+							props.renderPage(activePage)
 						) : (
 							<EmptyEditor
 								canOpen={workbench.canOpenTab}

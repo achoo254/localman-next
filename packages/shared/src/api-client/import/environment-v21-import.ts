@@ -4,6 +4,7 @@
  * variables can be applied to imported requests.
  */
 import type { VariableEntry } from "../variable-interpolation.js";
+import { isSecretVariable } from "./collection-v21-extension.js";
 import type { ImportContext } from "./import-context.js";
 import { RequestImportFailure } from "./import-error.js";
 import { listProp, prop, textOf, textProp } from "./import-json.js";
@@ -16,7 +17,7 @@ export function readVariables(list: readonly unknown[]): VariableEntry[] {
 		.map((entry) => ({
 			key: textProp(entry, "key"),
 			value: textProp(entry, "value"),
-			secret: textProp(entry, "type") === "secret",
+			secret: isSecretVariable(entry),
 			enabled:
 				prop(entry, "enabled") !== false && prop(entry, "disabled") !== true,
 		}));

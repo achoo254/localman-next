@@ -1,0 +1,247 @@
+{
+	"info": {
+		"_postman_id": "0b7e4c1d-58a2-4f6e-9a3c-2d1f8e6b9c70",
+		"name": "Store API",
+		"description": "Orders, refunds and catalog of the sample store.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "7654321",
+		"_collection_link": "https://example.postman.co/workspace/collection/7654321"
+	},
+	"item": [
+		{
+			"name": "Orders",
+			"description": "Order lifecycle",
+			"item": [
+				{
+					"name": "List orders",
+					"id": "a1",
+					"protocolProfileBehavior": { "disableBodyPruning": true },
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json", "type": "text" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/orders?status=open&limit=50",
+							"host": ["{{baseUrl}}"],
+							"path": ["orders"],
+							"query": [
+								{ "key": "status", "value": "open" },
+								{ "key": "limit", "value": "50" },
+								{
+									"key": "cursor",
+									"value": "",
+									"disabled": true,
+									"description": "Next page token"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"id": "ex1",
+							"name": "Two open orders",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/orders?status=open",
+									"host": ["{{baseUrl}}"],
+									"path": ["orders"],
+									"query": [{ "key": "status", "value": "open" }]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{ "key": "Content-Type", "value": "application/json" }
+							],
+							"cookie": [],
+							"body": "[{\"id\": 1}, {\"id\": 2}]"
+						}
+					]
+				},
+				{
+					"name": "Fulfilment",
+					"description": "Second level",
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{warehouseToken}}",
+								"type": "string"
+							}
+						]
+					},
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "s2",
+								"type": "text/javascript",
+								"packages": {},
+								"exec": ["pm.variables.set(\"warehouse\", \"eu-1\");"]
+							}
+						}
+					],
+					"item": [
+						{
+							"name": "Ship order",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"shipped\", () => {",
+											"    pm.response.to.have.status(202);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{ "key": "Content-Type", "value": "application/json" },
+									{
+										"key": "Idempotency-Key",
+										"value": "{{$guid}}",
+										"description": "Retries are safe"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"carrier\": \"dhl\"\n}",
+									"options": { "raw": { "language": "json" } }
+								},
+								"url": {
+									"raw": "{{baseUrl}}/orders/:orderId/ship",
+									"host": ["{{baseUrl}}"],
+									"path": ["orders", ":orderId", "ship"],
+									"variable": [{ "key": "orderId", "value": "42" }]
+								},
+								"description": "Hands the order to the carrier."
+							},
+							"response": []
+						},
+						{
+							"name": "Refunds",
+							"description": "Third level",
+							"auth": { "type": "noauth" },
+							"item": [
+								{
+									"name": "Refund order",
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "username",
+													"value": "finance",
+													"type": "string"
+												},
+												{
+													"key": "password",
+													"value": "{{financePass}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "urlencoded",
+											"urlencoded": [
+												{ "key": "amount", "value": "10.00", "type": "text" },
+												{
+													"key": "reason",
+													"value": "",
+													"type": "text",
+													"disabled": true
+												}
+											]
+										},
+										"url": {
+											"raw": "{{baseUrl}}/orders/42/refunds",
+											"host": ["{{baseUrl}}"],
+											"path": ["orders", "42", "refunds"]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Refund status",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/refunds/7",
+											"host": ["{{baseUrl}}"],
+											"path": ["refunds", "7"]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Upload catalog",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{ "key": "format", "value": "csv", "type": "text" },
+						{ "key": "file", "type": "file", "src": "/Users/me/catalog.csv" }
+					]
+				},
+				"url": {
+					"raw": "https://upload.example.com:8443/v2/catalog",
+					"protocol": "https",
+					"host": ["upload", "example", "com"],
+					"port": "8443",
+					"path": ["v2", "catalog"]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{ "key": "value", "value": "{{apiKey}}", "type": "string" },
+			{ "key": "key", "value": "X-Api-Key", "type": "string" },
+			{ "key": "in", "value": "header", "type": "string" }
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": ["console.log('collection pre');"]
+			}
+		},
+		{
+			"listen": "test",
+			"script": { "type": "text/javascript", "exec": [""] }
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://store.example.com",
+			"type": "string"
+		},
+		{ "key": "apiKey", "value": "k-1", "type": "string" },
+		{ "key": "legacy", "value": "1", "type": "string", "disabled": true }
+	]
+}

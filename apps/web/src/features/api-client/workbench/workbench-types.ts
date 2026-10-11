@@ -8,12 +8,14 @@ import type {
 	ClientResponse,
 	HttpMethod,
 	RouteMode,
+	TabSource,
 } from "@localman/shared/api-client";
 import type {
 	ScriptError,
 	ScriptLogEntry,
 	ScriptTestResult,
 } from "@localman/shared/api-client/script-sandbox";
+import type { SendContext } from "./workbench-tab-types";
 
 /**
  * Where a request went. The proxy-only sender always uses the proxy; the
@@ -156,6 +158,10 @@ export interface WorkbenchTab {
 	routeChosen: boolean;
 	/** Opened from a history entry whose credentials were hidden. */
 	redacted: boolean;
+	/** The collection request this tab edits; `null` for a loose request. */
+	source: TabSource | null;
+	/** That request's draft as last saved or loaded; `dirty` compares to it. */
+	saved: ApiRequestDraft | null;
 }
 
 /** One-off choices for a single send (retry buttons of the response). */
@@ -173,6 +179,8 @@ export interface SendInput {
 	options?: SendOptions;
 	/** `WorkbenchTab.routeChosen`; `options.route` counts as chosen too. */
 	routeChosen?: boolean;
+	/** Auth, scripts and variables from the collection of a bound tab. */
+	context?: SendContext;
 }
 
 /**
@@ -180,21 +188,3 @@ export interface SendInput {
  * back as `{ kind: "failed" }`, an abort as `{ kind: "cancelled" }`.
  */
 export type RequestSender = (input: SendInput) => Promise<SettledResponse>;
-
-/** State of saving drafts to the server, for the status bar. */
-export type DraftSyncStatus =
-	| { state: "loading" }
-	| { state: "idle" }
-	| { state: "saving" }
-	| { state: "saved" }
-	/** `message` is the whole sentence to show, in the language on screen. */
-	| { state: "error"; message: string };
-
-export interface OpenTabOptions {
-	/** Files the draft's `FileRef`s point to (an import with attachments). */
-	files?: ReadonlyMap<string, File>;
-	/** Switch to the new tab (default true). */
-	activate?: boolean;
-	/** The draft comes from history with its credentials hidden. */
-	redacted?: boolean;
-}

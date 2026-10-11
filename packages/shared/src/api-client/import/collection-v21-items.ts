@@ -1,7 +1,8 @@
 /**
  * Items of a v2.1 collection: folders (with their own auth and scripts)
  * and requests, in file order. A request without auth inherits; a folder
- * without auth passes its parent's on.
+ * without auth passes its parent's on. Saved responses (`response[]`) are
+ * not read yet.
  */
 import {
 	HTTP_METHODS,
@@ -9,6 +10,7 @@ import {
 	createRequestDraft,
 } from "../request-model.js";
 import { readBody } from "./collection-v21-body.js";
+import { readSettings } from "./collection-v21-extension.js";
 import {
 	readAuth,
 	readHeaders,
@@ -23,7 +25,6 @@ import {
 	isRecord,
 	listProp,
 	prop,
-	recordProp,
 	textProp,
 } from "./import-json.js";
 import type { ImportedItem, ImportedRequest } from "./imported-collection.js";
@@ -59,16 +60,15 @@ function readRequestItem(
 		auth: readAuth(prop(request, "auth"), ctx, path) ?? { type: "inherit" },
 		body: readBody(prop(request, "body"), headers, ctx, path),
 		scripts: readScripts(listProp(item, "event"), ctx, path),
+		settings: readSettings(item),
 	});
-	const behavior = recordProp(item, "protocolProfileBehavior");
-	if (prop(behavior, "followRedirects") === false) {
-		draft.settings.followRedirects = false;
-	}
 	return {
 		kind: "request",
 		id: ctx.newId(),
 		name: draft.name,
-		description: descriptionOf(prop(request, "description")),
+		description:
+			descriptionOf(prop(request, "description")) ||
+			descriptionOf(prop(item, "description")),
 		draft: clampDraft(draft, ctx, path),
 	};
 }

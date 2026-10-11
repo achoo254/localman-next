@@ -1,0 +1,64 @@
+import mongoose, { type Types } from "mongoose";
+import { AccessRequestModel } from "../access/access-request-model.js";
+import { ElementRoleModel } from "../access/element-role-model.js";
+import { CollectionFavoriteModel } from "./collection-favorite-model.js";
+import { CollectionModel } from "./collection-model.js";
+import { CollectionNodeModel } from "./collection-node-model.js";
+import { IN_TRASH, notInTrash, requireTrashed } from "./trash-access.js";
+import { type TrashedView, toTrashedViews } from "./trash-view.js";
+
+/**
+ * Deletes a trashed collection for good, with its nodes, favorites,
+ * shares and access requests, in one transaction. `trashed` narrows which
+ * trashed state still qualifies (the job passes its age cutoff), so a
+ * collection restored meanwhile is left alone. `false` when nothing
+ * matched.
+ */
+export async function purgeCollection(
+	collectionId: Types.ObjectId,
+	trashed: Record<string, unknown> = IN_TRASH,
+): Promise<boolean> {
+	return mongoose.connection.transaction(async (session) => {
+		const root = await CollectionModel.deleteOne(
+			{ ...trashed, _id: collectionId },
+			{ session },
+		);
+		if (root.deletedCount === 0) return false;
+		const element = {
+			elementType: "collection" as const,
+			elementId: collectionId.toHexString(),
+		};
+		await CollectionNodeModel.deleteMany({ collectionId }, { session });
+		await CollectionFavoriteModel.deleteMany({ collectionId }, { session });
+		await ElementRoleModel.deleteMany(element, { session });
+		await AccessRequestModel.deleteMany(element, { session });
+		return true;
+	});
+}
+
+export interface PermanentDeletion {
+	readonly dryRun: boolean;
+	readonly deleted: boolean;
+	readonly collection: TrashedView;
+	readonly nodes: number;
+}
+
+/**
+ * Deletes a trashed collection for good (whoever may restore it); the dry
+ * run shows it and how many folders and requests go with it.
+ */
+export async function deletePermanently(
+	sub: string,
+	id: string,
+	dryRun: boolean,
+): Promise<PermanentDeletion> {
+	const { trashed } = await requireTrashed(sub, id);
+	const [[collection], nodes] = await Promise.all([
+		toTrashedViews([trashed]),
+		CollectionNodeModel.countDocuments({ collectionId: trashed._id }),
+	]);
+	if (!collection) throw new Error("Trashed collection has no view");
+	// Restored or purged since it was read: say so instead of claiming it.
+	if (!dryRun && !(await purgeCollection(trashed._id))) throw notInTrash();
+	return { dryRun, deleted: !dryRun, collection, nodes };
+}

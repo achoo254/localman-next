@@ -20,53 +20,16 @@ import {
 	useRef,
 } from "react";
 import { useDraftSync } from "./use-draft-sync";
-import { useSendTab } from "./use-send-tab";
+import { type SendContextOf, useSendTab } from "./use-send-tab";
+import type {
+	Workbench,
+	WorkbenchActions,
+	WorkbenchState,
+} from "./workbench-api";
 import { newId } from "./workbench-ids";
 import { INITIAL_WORKBENCH, workbenchReducer } from "./workbench-reducer";
-import type {
-	DraftSyncStatus,
-	OpenTabOptions,
-	RequestSender,
-	SendOptions,
-	WorkbenchTab,
-} from "./workbench-types";
-
-export interface WorkbenchState {
-	tabs: readonly WorkbenchTab[];
-	activeTabId: string | null;
-	activeTab: WorkbenchTab | null;
-	syncStatus: DraftSyncStatus;
-	/** False at `DRAFT_MAX_TABS` open tabs. */
-	canOpenTab: boolean;
-}
-
-/** Stable for the provider's life: safe as props of memoized panels. */
-export interface WorkbenchActions {
-	/** Opens a tab (a blank request by default); `null` when at the cap. */
-	openTab: (draft?: ApiRequestDraft, options?: OpenTabOptions) => string | null;
-	activateTab: (tabId: string) => void;
-	/** Closes without asking (the tab bar asks first for a dirty tab). */
-	closeTab: (tabId: string) => void;
-	/** `update` must be pure and return the same object when nothing changed. */
-	updateDraft: (
-		tabId: string,
-		update: (draft: ApiRequestDraft) => ApiRequestDraft,
-	) => void;
-	/** Keeps (or with `null` forgets) the bytes behind a `FileRef.fileId`. */
-	setFile: (tabId: string, fileId: string, file: File | null) => void;
-	/**
-	 * Sends the tab's request; ignored while that tab is already sending.
-	 * `options` apply to this send only (a retry through the proxy).
-	 */
-	send: (tabId: string, options?: SendOptions) => void;
-	cancelSend: (tabId: string) => void;
-	/** Saves pending drafts to the server now. */
-	saveDrafts: () => void;
-	/** The tabs right now, for a one-off read (export) without subscribing. */
-	currentTabs: () => readonly WorkbenchTab[];
-}
-
-export type Workbench = WorkbenchState & WorkbenchActions;
+import type { OpenTabOptions } from "./workbench-tab-types";
+import type { RequestSender } from "./workbench-types";
 
 const StateContext = createContext<WorkbenchState | null>(null);
 const ActionsContext = createContext<WorkbenchActions | null>(null);
@@ -81,6 +44,8 @@ export interface WorkbenchProviderProps {
 	saveDelayMs?: number;
 	/** Waits between tries of a failed draft write (tests shorten them). */
 	retryDelaysMs?: readonly number[];
+	/** What a bound tab inherits from its collection when it is sent. */
+	sendContext?: SendContextOf;
 }
 
 export function WorkbenchProvider({
@@ -89,6 +54,7 @@ export function WorkbenchProvider({
 	newDraft,
 	saveDelayMs,
 	retryDelaysMs,
+	sendContext,
 }: WorkbenchProviderProps) {
 	const [state, dispatch] = useReducer(workbenchReducer, INITIAL_WORKBENCH);
 	const latest = useRef(state);
@@ -101,7 +67,7 @@ export function WorkbenchProvider({
 		send: sendTab,
 		cancel: cancelSend,
 		abort,
-	} = useSendTab(latest, dispatch, sender);
+	} = useSendTab(latest, dispatch, sender, sendContext);
 
 	const openTab = useCallback(
 		(draft?: ApiRequestDraft, options: OpenTabOptions = {}) => {
@@ -114,6 +80,8 @@ export function WorkbenchProvider({
 				files: options.files ?? new Map(),
 				activate: options.activate ?? true,
 				redacted: options.redacted ?? false,
+				source: options.source,
+				saved: options.saved,
 			});
 			return id;
 		},
@@ -131,9 +99,14 @@ export function WorkbenchProvider({
 	const actions = useMemo<WorkbenchActions>(
 		() => ({
 			openTab,
+			openPage: (page) => dispatch({ type: "openPage", page }),
+			renamePage: (id, name) => dispatch({ type: "renamePage", id, name }),
 			activateTab: (id) => dispatch({ type: "activate", id }),
 			closeTab,
 			updateDraft: (id, update) => dispatch({ type: "editDraft", id, update }),
+			bindTab: (id, source, saved) =>
+				dispatch({ type: "bind", id, source, saved }),
+			setSaved: (id, saved) => dispatch({ type: "setSaved", id, saved }),
 			setFile: (id, fileId, file) =>
 				dispatch({ type: "setFile", id, fileId, file }),
 			send: (id, options) => void sendTab(id, options),
@@ -147,8 +120,11 @@ export function WorkbenchProvider({
 	const value = useMemo<WorkbenchState>(
 		() => ({
 			tabs: state.tabs,
+			pages: state.pages,
 			activeTabId: state.activeTabId,
 			activeTab: state.tabs.find((tab) => tab.id === state.activeTabId) ?? null,
+			activePage:
+				state.pages.find((page) => page.id === state.activeTabId) ?? null,
 			syncStatus: sync.status,
 			canOpenTab: state.tabs.length < DRAFT_MAX_TABS,
 		}),

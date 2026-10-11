@@ -2,6 +2,7 @@ import { defineOperation } from "@localman/operations";
 import {
 	DRAFT_MAX_TABS,
 	apiRequestDraftSchema,
+	tabSourceSchema,
 } from "@localman/shared/api-client";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
@@ -25,6 +26,7 @@ const draftView = z.object({
 	tabId: z.string(),
 	order: z.number().int(),
 	draft: apiRequestDraftSchema,
+	source: tabSourceSchema.optional(),
 	updatedAt: z.string(),
 });
 const draftList = z.object({ items: z.array(draftView) });
@@ -49,11 +51,12 @@ export const saveDraft = defineOperation({
 	method: "PUT",
 	path: "/client/drafts/:tabId",
 	summary: "Save the unsaved request of one API client tab",
-	description: `Creates or replaces the tab's draft, {{var}} placeholders kept. At most ${DRAFT_MAX_BYTES} bytes of JSON (413 DRAFT_TOO_LARGE) and ${DRAFT_MAX_TABS} tabs (409 DRAFT_LIMIT_REACHED). A new tab without \`order\` goes last.`,
+	description: `Creates or replaces the tab's draft, {{var}} placeholders kept. At most ${DRAFT_MAX_BYTES} bytes of JSON (413 DRAFT_TOO_LARGE) and ${DRAFT_MAX_TABS} tabs (409 DRAFT_LIMIT_REACHED). A new tab without \`order\` goes last. \`source\` binds the tab to the collection request it edits (\`collectionId\`, \`nodeId\`); \`null\` unbinds it, leaving it out keeps the binding.`,
 	input: z.object({
 		tabId,
 		draft: apiRequestDraftSchema,
 		order: order.optional(),
+		source: tabSourceSchema.nullable().optional(),
 	}),
 	output: draftView,
 	scopes: [USER_SCOPE],

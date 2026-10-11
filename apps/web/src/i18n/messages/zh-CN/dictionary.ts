@@ -8,6 +8,7 @@ import { apiClientTools } from "./api-client-tools";
 import { apiClientTunelo } from "./api-client-tunelo";
 import { auth } from "./auth";
 import { collaborators } from "./collaborators";
+import { collections } from "./collections";
 import { common } from "./common";
 import { docs } from "./docs";
 import { feedback } from "./feedback";
@@ -72,4 +73,5 @@ export const zhCN: Messages = {
 	mockCallbacks,
 	workspaces,
 	sharing,
+	collections,
 };

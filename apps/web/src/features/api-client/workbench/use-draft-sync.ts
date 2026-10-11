@@ -2,10 +2,10 @@
  * Keeps the server's drafts in step with the open tabs: restores them on
  * mount, saves a tab's draft once it has stopped changing for `delayMs`
  * (with its position as `order`), deletes it when the tab closes. Writes
- * of one tab run one after another, so a late save cannot revive a tab
- * that was just closed. A write failing for a passing reason is tried
- * again (`draft-retry.ts`); leaving the page sends what waits with
- * `keepalive`, so the last edits survive the tab closing.
+ * of one tab run in turn, so a late save cannot revive a closed tab. A
+ * write failing for a passing reason is tried again (`draft-retry.ts`);
+ * leaving the page sends what waits with `keepalive`. A tab's collection
+ * binding goes with its saves (`use-binding-writes.ts`).
  */
 import type { ApiRequestDraft } from "@localman/shared/api-client";
 import { type Dispatch, useCallback, useEffect, useRef, useState } from "react";
@@ -24,8 +24,10 @@ import {
 	isTransientError,
 	withRetries,
 } from "./draft-retry";
-import type { WorkbenchAction, WorkbenchState } from "./workbench-reducer";
-import type { DraftSyncStatus } from "./workbench-types";
+import { useBindingWrites } from "./use-binding-writes";
+import type { WorkbenchAction } from "./workbench-action";
+import type { WorkbenchState } from "./workbench-reducer";
+import type { DraftSyncStatus } from "./workbench-tab-types";
 
 export const DRAFT_SAVE_DELAY_MS = 800;
 
@@ -55,6 +57,7 @@ export function useDraftSync(
 	latest.current = state;
 	/** Draft object last handed to the server (or restored from it), by tab. */
 	const seen = useRef(new Map<string, ApiRequestDraft>());
+	const binding = useBindingWrites();
 	const timers = useRef(new Map<string, number>());
 	const queues = useRef(new Map<string, Promise<void>>());
 	const running = useRef(0);
@@ -93,9 +96,10 @@ export function useDraftSync(
 			const order = latest.current.tabs.findIndex((tab) => tab.id === tabId);
 			const tab = latest.current.tabs[order];
 			if (!tab) return;
-			enqueue(tabId, () => saveDraft(tabId, tab.draft, order));
+			const source = binding.write(tabId, tab.source);
+			enqueue(tabId, () => saveDraft(tabId, tab.draft, order, source));
 		},
-		[enqueue],
+		[enqueue, binding],
 	);
 
 	const flush = useCallback(() => {
@@ -113,14 +117,16 @@ export function useDraftSync(
 			const order = latest.current.tabs.findIndex((tab) => tab.id === tabId);
 			const tab = latest.current.tabs[order];
 			if (!tab) continue;
-			const body = draftSaveBody(tab.draft, order);
+			const source = binding.peek(tabId, tab.source);
+			const body = draftSaveBody(tab.draft, order, source);
 			if (body.bytes > budget) continue;
+			binding.write(tabId, tab.source);
 			budget -= body.bytes;
 			window.clearTimeout(timers.current.get(tabId));
 			timers.current.delete(tabId);
 			enqueue(tabId, () => saveDraftOnLeave(tabId, body.json));
 		}
-	}, [enqueue]);
+	}, [enqueue, binding]);
 
 	// Restore once; tabs opened meanwhile keep their place after these.
 	useEffect(() => {
@@ -128,10 +134,13 @@ export function useDraftSync(
 		listDrafts()
 			.then((items) => {
 				if (!active) return;
-				for (const item of items) seen.current.set(item.tabId, item.draft);
+				for (const item of items) {
+					seen.current.set(item.tabId, item.draft);
+					binding.restored(item.tabId, item.source ?? null);
+				}
 				dispatch({
 					type: "restore",
-					tabs: items.map(({ tabId, draft }) => ({ id: tabId, draft })),
+					tabs: items.map((item) => ({ ...item, id: item.tabId })),
 				});
 				setStatus((current) =>
 					current.state === "loading" ? { state: "idle" } : current,
@@ -147,13 +156,14 @@ export function useDraftSync(
 		return () => {
 			active = false;
 		};
-	}, [dispatch]);
+	}, [dispatch, binding]);
 
 	useEffect(() => {
 		const open = new Set<string>();
 		for (const tab of state.tabs) {
 			open.add(tab.id);
-			if (seen.current.get(tab.id) === tab.draft) continue;
+			const rebound = binding.changed(tab.id, tab.source);
+			if (seen.current.get(tab.id) === tab.draft && !rebound) continue;
 			seen.current.set(tab.id, tab.draft);
 			window.clearTimeout(timers.current.get(tab.id));
 			timers.current.set(
@@ -164,11 +174,12 @@ export function useDraftSync(
 		for (const tabId of [...seen.current.keys()]) {
 			if (open.has(tabId)) continue;
 			seen.current.delete(tabId);
+			binding.forget(tabId);
 			window.clearTimeout(timers.current.get(tabId));
 			timers.current.delete(tabId);
 			enqueue(tabId, () => deleteDraft(tabId));
 		}
-	}, [state.tabs, delayMs, saveNow, enqueue]);
+	}, [state.tabs, delayMs, saveNow, enqueue, binding]);
 
 	// Leaving the page (or the tab going to the background) saves what waits.
 	useEffect(() => {

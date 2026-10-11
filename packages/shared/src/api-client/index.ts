@@ -52,3 +52,7 @@ export { importText } from "./import/import-text.js";
 export * from "./import/imported-collection.js";
 export type { SnippetRequest } from "./snippets/snippet-input.js";
 export * from "./snippets/snippet-registry.js";
+export * from "./collections/collection-model.js";
+export * from "./collections/request-context.js";
+export * from "./collections/collection-order.js";
+export * from "./collections/collection-tree.js";

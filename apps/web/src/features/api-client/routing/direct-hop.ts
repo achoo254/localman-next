@@ -70,7 +70,6 @@ export async function viaDirect(
 			return directFailed(ctx, outcome.kind);
 		case "response":
 			return finishSend(
-				input.draft,
 				ready,
 				{
 					response: outcome.response,

@@ -26,6 +26,6 @@ export function createProxySender(
 			return failed({ ...hop.failure, preScript: ready.preScript });
 		}
 		const delivered = { response: hop.response, route: "proxy" as const };
-		return finishSend(input.draft, ready, delivered, scripts);
+		return finishSend(ready, delivered, scripts);
 	};
 }

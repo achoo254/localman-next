@@ -42,7 +42,9 @@ export interface FromMockModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	/** The picked project; the caller opens its requests. */
-	onPick: (projectId: string) => void;
+	onPick: (projectId: string, projectName: string) => void;
+	/** Wording when the project becomes something else than tabs (a collection). */
+	copy?: { title: string; intro: string; submit: string };
 }
 
 /** Picks one of the user's mock projects to open as tabs. */
@@ -50,6 +52,7 @@ export function FromMockModal({
 	open,
 	onOpenChange,
 	onPick,
+	copy,
 }: FromMockModalProps) {
 	const t = useT();
 	const projects = useQuery({
@@ -61,12 +64,12 @@ export function FromMockModal({
 	const skeleton = useDelayedFlag(open && projects.isPending);
 	const list = projects.data ?? [];
 	// The first project until the user picks one.
-	const picked =
-		list.find((project) => project.id === choice)?.id ?? list[0]?.id ?? null;
+	const project = list.find((item) => item.id === choice) ?? list[0] ?? null;
+	const picked = project?.id ?? null;
 
 	const submit = (): void => {
-		if (picked === null) return;
-		onPick(picked);
+		if (project === null) return;
+		onPick(project.id, project.name);
 		onOpenChange(false);
 	};
 
@@ -129,9 +132,9 @@ export function FromMockModal({
 		<Modal
 			open={open}
 			onOpenChange={onOpenChange}
-			title={t("apiClientOpen.fromMock.title")}
+			title={copy?.title ?? t("apiClientOpen.fromMock.title")}
 			description={renderRich(
-				t("apiClientOpen.fromMock.intro", { example: "{{id}}" }),
+				copy?.intro ?? t("apiClientOpen.fromMock.intro", { example: "{{id}}" }),
 			)}
 			size="md"
 			data-id="modal-from-mock"
@@ -146,7 +149,7 @@ export function FromMockModal({
 						disabled={picked === null || !projects.isSuccess}
 						onClick={submit}
 					>
-						{t("apiClientOpen.fromMock.submit")}
+						{copy?.submit ?? t("apiClientOpen.fromMock.submit")}
 					</Button>
 				</ModalFooter>
 			}

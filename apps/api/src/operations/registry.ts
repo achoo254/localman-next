@@ -6,6 +6,7 @@ import { getAccountUsage } from "../modules/billing/usage-operations.js";
 import { collaboratorOperations } from "../modules/collaborators/collaborator-operations.js";
 import { inviteOperations } from "../modules/collaborators/invite-operations.js";
 import { magicLinkOperations } from "../modules/collaborators/magic-link-operations.js";
+import { collectionOperations } from "../modules/collections/collection-operations.js";
 import { contactMessageAdminOperations } from "../modules/feedback/contact-message-admin-operations.js";
 import { submitContactMessage } from "../modules/feedback/contact-message-operations.js";
 import { proInterestAdminOperations } from "../modules/feedback/pro-interest-admin-operations.js";
@@ -79,6 +80,7 @@ export const operations: readonly AnyOperation[] = [
 	...clientStoreOperations,
 	...workspaceOperations,
 	...accessOperations,
+	...collectionOperations,
 	...resourceTreeOperations,
 	...resourceDataOperations,
 	getMockUrls,

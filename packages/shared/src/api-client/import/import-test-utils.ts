@@ -1,7 +1,10 @@
 /** Helpers shared by the import and export tests. */
 import { readFileSync } from "node:fs";
 import { importText } from "./import-text.js";
-import type { ImportedCollection } from "./imported-collection.js";
+import type {
+	CollectionTree,
+	ImportedCollection,
+} from "./imported-collection.js";
 
 /** Text of a file in `import/__fixtures__/`. */
 export function readFixture(name: string): string {
@@ -30,4 +33,12 @@ export function withoutIds(value: unknown): unknown {
 			.filter(([key]) => key !== "id")
 			.map(([key, item]) => [key, withoutIds(item)]),
 	);
+}
+
+/** The tree as an export brings it back: secret variable values empty. */
+export function withBlankSecrets<T extends CollectionTree>(tree: T): T {
+	const variables = tree.variables.map((variable) =>
+		variable.secret ? { ...variable, value: "" } : variable,
+	);
+	return { ...tree, variables };
 }

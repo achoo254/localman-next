@@ -2,6 +2,7 @@ import { OperationError } from "@localman/operations";
 import {
 	type ApiRequestDraft,
 	DRAFT_MAX_TABS,
+	type TabSource,
 } from "@localman/shared/api-client";
 import { isDuplicateKeyError } from "../../db/mongo-errors.js";
 import { DraftModel, type StoredDraft } from "./draft-model.js";
@@ -11,6 +12,8 @@ export interface DraftView {
 	tabId: string;
 	order: number;
 	draft: ApiRequestDraft;
+	/** The collection request the tab edits; absent for a loose tab. */
+	source?: TabSource;
 	updatedAt: string;
 }
 
@@ -19,6 +22,8 @@ export interface SaveDraftInput {
 	readonly draft: ApiRequestDraft;
 	/** Position in the tab bar; a new tab without one goes last. */
 	readonly order?: number;
+	/** Binds the tab to a collection request; `null` unbinds, absent keeps. */
+	readonly source?: TabSource | null;
 }
 
 function toDraftView(doc: StoredDraft): DraftView {
@@ -26,6 +31,7 @@ function toDraftView(doc: StoredDraft): DraftView {
 		tabId: doc.tabId,
 		order: doc.order,
 		draft: doc.draft,
+		...(doc.source ? { source: doc.source } : {}),
 		updatedAt: doc.updatedAt.toISOString(),
 	};
 }
@@ -48,7 +54,9 @@ async function updateExisting(
 			$set: {
 				draft: input.draft,
 				...(input.order === undefined ? {} : { order: input.order }),
+				...(input.source ? { source: input.source } : {}),
 			},
+			...(input.source === null ? { $unset: { source: 1 } } : {}),
 		},
 		{ returnDocument: "after" },
 	).lean<StoredDraft>();
@@ -80,6 +88,7 @@ async function createDraft(
 		tabId: input.tabId,
 		order: input.order ?? (last ? last.order + 1 : 0),
 		draft: input.draft,
+		...(input.source ? { source: input.source } : {}),
 	});
 	// Concurrent new tabs may all pass the count above: undo the extra one.
 	if ((await DraftModel.countDocuments({ userSub })) > DRAFT_MAX_TABS) {

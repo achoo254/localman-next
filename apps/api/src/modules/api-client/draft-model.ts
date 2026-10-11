@@ -1,4 +1,4 @@
-import type { ApiRequestDraft } from "@localman/shared/api-client";
+import type { ApiRequestDraft, TabSource } from "@localman/shared/api-client";
 import mongoose, { Schema, type Types } from "mongoose";
 
 /**
@@ -6,6 +6,7 @@ import mongoose, { Schema, type Types } from "mongoose";
  * (`client_drafts`), one record per tab and user. `tabId` is chosen by the
  * browser; `order` is the tab's position in the tab bar. Like history,
  * `draft` keeps `{{var}}` placeholders and only the name of a picked file.
+ * `source` names the collection request the tab edits, when it has one.
  */
 const draftSchema = new Schema(
 	{
@@ -13,6 +14,7 @@ const draftSchema = new Schema(
 		tabId: { type: String, required: true },
 		order: { type: Number, required: true },
 		draft: { type: Schema.Types.Mixed, required: true },
+		source: { type: Schema.Types.Mixed },
 	},
 	{
 		collection: "client_drafts",
@@ -33,5 +35,7 @@ export interface StoredDraft {
 	tabId: string;
 	order: number;
 	draft: ApiRequestDraft;
+	/** Passed `tabSourceSchema` when written. */
+	source?: TabSource | null;
 	updatedAt: Date;
 }

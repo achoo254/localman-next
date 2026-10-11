@@ -3,9 +3,9 @@ import {
 	createRequestDraft,
 } from "@localman/shared/api-client";
 import { describe, expect, it } from "vitest";
+import type { WorkbenchAction } from "./workbench-action";
 import {
 	INITIAL_WORKBENCH,
-	type WorkbenchAction,
 	type WorkbenchState,
 	isBlankDraft,
 	workbenchReducer,
@@ -53,7 +53,7 @@ describe("workbenchReducer", () => {
 		state = workbenchReducer(state, { type: "close", id: "c" });
 		expect(state.activeTabId).toBe("a");
 		state = workbenchReducer(state, { type: "close", id: "a" });
-		expect(state).toEqual({ tabs: [], activeTabId: null });
+		expect(state).toEqual({ tabs: [], pages: [], activeTabId: null });
 	});
 
 	it("marks a tab dirty on edit, and not when the update changes nothing", () => {

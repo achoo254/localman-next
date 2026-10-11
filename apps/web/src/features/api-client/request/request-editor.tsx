@@ -1,5 +1,5 @@
 import { IconLock } from "@tabler/icons-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useContext } from "react";
 import { Badge } from "../../../components/ui/badge";
 import {
 	Tabs,
@@ -12,6 +12,7 @@ import { hasBlankedSecrets } from "../history/redact-draft";
 import { ScriptsTab } from "../scripts/scripts-tab";
 import { useWorkbenchActions } from "../workbench/workbench-context";
 import type { WorkbenchTab } from "../workbench/workbench-types";
+import { AuthInheritContext } from "./auth-inherit-context";
 import { AuthTab } from "./auth-tab";
 import { BodyTab } from "./body-tab";
 import type { DraftPaneProps } from "./draft-pane";
@@ -40,6 +41,7 @@ export interface RequestEditorProps {
 export function RequestEditor({ tab, headActions }: RequestEditorProps) {
 	const t = useT();
 	const workbench = useWorkbenchActions();
+	const inheritNoteOf = useContext(AuthInheritContext);
 	const { draft } = tab;
 	const pane: DraftPaneProps = {
 		draft,
@@ -114,7 +116,7 @@ export function RequestEditor({ tab, headActions }: RequestEditorProps) {
 					<ParamsTab {...pane} />
 				</TabsContent>
 				<TabsContent value="auth" data-id="request-pane-auth" className="pt-3">
-					<AuthTab {...pane} />
+					<AuthTab {...pane} inheritNote={inheritNoteOf?.(tab) ?? undefined} />
 				</TabsContent>
 				<TabsContent
 					value="headers"

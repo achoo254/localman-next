@@ -4,7 +4,9 @@
  */
 import {
 	type ApiRequestDraft,
+	type TabSource,
 	apiRequestDraftSchema,
+	tabSourceSchema,
 } from "@localman/shared/api-client";
 import { activeTranslator } from "../../../i18n/active-translator";
 import { ApiError, apiRequest } from "../../../lib/api-client";
@@ -20,7 +22,15 @@ export interface SavedDraft {
 	tabId: string;
 	order: number;
 	draft: ApiRequestDraft;
+	/** The collection request the tab edits, when bound. */
+	source?: TabSource;
 }
+
+/**
+ * `source` of a save: the binding, `null` to unbind, `undefined` to keep
+ * what the server has (and send nothing).
+ */
+export type SourceWrite = TabSource | null | undefined;
 
 const draftPath = (tabId: string) =>
 	`/api/v1/client/drafts/${encodeURIComponent(tabId)}`;
@@ -33,10 +43,13 @@ function parseItem(value: unknown): SavedDraft | null {
 	const item = expectRecord(value, "draft");
 	const parsed = apiRequestDraftSchema.safeParse(item.draft);
 	if (!parsed.success) return null;
+	// A binding the client cannot read is dropped; the draft stays.
+	const source = tabSourceSchema.safeParse(item.source);
 	return {
 		tabId: expectString(item, "tabId"),
 		order: expectNumber(item, "order"),
 		draft: parsed.data,
+		...(source.success ? { source: source.data } : {}),
 	};
 }
 
@@ -52,14 +65,21 @@ export async function listDrafts(): Promise<SavedDraft[]> {
 		.sort((a, b) => a.order - b.order);
 }
 
+const saveBody = (
+	draft: ApiRequestDraft,
+	order: number,
+	source: SourceWrite,
+) => (source === undefined ? { draft, order } : { draft, order, source });
+
 export async function saveDraft(
 	tabId: string,
 	draft: ApiRequestDraft,
 	order: number,
+	source?: SourceWrite,
 ): Promise<void> {
 	await apiRequest(draftPath(tabId), {
 		method: "PUT",
-		body: { draft, order },
+		body: saveBody(draft, order, source),
 	});
 }
 
@@ -73,8 +93,9 @@ export const KEEPALIVE_MAX_BYTES = 64 * 1024;
 export function draftSaveBody(
 	draft: ApiRequestDraft,
 	order: number,
+	source?: SourceWrite,
 ): { json: string; bytes: number } {
-	const json = JSON.stringify({ draft, order });
+	const json = JSON.stringify(saveBody(draft, order, source));
 	return { json, bytes: new TextEncoder().encode(json).byteLength };
 }
 

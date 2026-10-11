@@ -14,12 +14,8 @@ import type { ScriptRunner } from "@localman/shared/api-client/script-sandbox";
 import { activeTranslator } from "../../../i18n/active-translator";
 import { readFileBytes } from "../../../platform/file-read";
 import { withVerbatimQuery } from "../request/params-sync";
-import {
-	applyScriptRequest,
-	scriptOutcome,
-	scriptVariableScope,
-	toScriptRequest,
-} from "./script-steps";
+import { nonBlankScripts, runPostScripts, runPreScripts } from "./script-chain";
+import { scriptVariableScope } from "./script-steps";
 import { prepareErrorMessage, scriptErrorMessage } from "./send-messages";
 import { newId } from "./workbench-ids";
 import type {
@@ -51,6 +47,8 @@ export interface ReadySend {
 	prepared: PreparedRequest;
 	variables: Record<string, string>;
 	preScript: ScriptOutcome | null;
+	/** Post-response scripts in run order (collection first). */
+	postScripts: string[];
 }
 
 export type PrepareOutcome =
@@ -76,42 +74,50 @@ async function bodyFiles(
 	return bytes;
 }
 
-/** Runs the pre-request script, then fills `{{var}}`, auth and the body. */
+/**
+ * Runs the pre-request scripts, then fills `{{var}}`, auth and the body.
+ * A tab bound to a collection request (`context`) runs the collection's
+ * and folders' scripts around its own, takes the inherited auth for
+ * `inherit`, and resolves `{{var}}` from, lowest to highest: collection
+ * variables, then `lm.variables` set by the scripts.
+ */
 export async function prepareSend(
-	{ draft, files, signal }: SendInput,
+	{ draft, files, signal, context }: SendInput,
 	scripts: ScriptRunner,
 ): Promise<PrepareOutcome> {
 	const { t } = activeTranslator();
-	let preScript: ScriptOutcome | null = null;
-	let toSend = draft;
-	let variables: Record<string, string> = {};
-	if (draft.scripts.pre.trim()) {
-		const result = await scripts.run({
-			phase: "pre",
-			script: draft.scripts.pre,
-			request: toScriptRequest(draft),
-			environment: {},
-			variables: {},
+	const base: ApiRequestDraft =
+		context && draft.auth.type === "inherit"
+			? { ...draft, auth: context.inheritedAuth }
+			: draft;
+	const pre = context
+		? nonBlankScripts(context.preScripts)
+		: nonBlankScripts([draft.scripts.pre]);
+	const postScripts = context
+		? nonBlankScripts(context.postScripts)
+		: nonBlankScripts([draft.scripts.post]);
+	const chain = await runPreScripts(pre, base, scripts, newId);
+	const preScript = chain.outcome;
+	if (chain.error) {
+		const message = t("apiClient.send.preScriptFailed", {
+			reason: scriptErrorMessage(chain.error),
 		});
-		preScript = scriptOutcome(result);
-		if (result.error) {
-			const message = t("apiClient.send.preScriptFailed", {
-				reason: scriptErrorMessage(result.error),
-			});
-			const code = result.error.code;
-			return { ok: false, settled: failed({ code, message, preScript }) };
-		}
-		toSend = applyScriptRequest(draft, result.request, newId);
-		variables = result.variables;
+		const code = chain.error.code;
+		return { ok: false, settled: failed({ code, message, preScript }) };
 	}
+	const { toSend, variables } = chain;
 	if (signal.aborted) return { ok: false, settled: CANCELLED };
 
+	const scopes = [
+		...(context ? [{ name: "collection", variables: context.variables }] : []),
+		scriptVariableScope(variables),
+	];
 	try {
 		const prepared = prepareRequest(withVerbatimQuery(toSend), {
-			variables: { scopes: [scriptVariableScope(variables)] },
+			variables: { scopes },
 			files: await bodyFiles(toSend, files),
 		});
-		return { ok: true, toSend, prepared, variables, preScript };
+		return { ok: true, toSend, prepared, variables, preScript, postScripts };
 	} catch (error) {
 		if (error instanceof RequestPrepareError) {
 			const message = prepareErrorMessage(error);
@@ -134,26 +140,20 @@ export interface Delivered {
 	routing?: RouteInfo;
 }
 
-/** Runs the post-response script and builds the tab's result. */
+/** Runs the post-response scripts and builds the tab's result. */
 export async function finishSend(
-	draft: ApiRequestDraft,
 	ready: ReadySend,
 	delivered: Delivered,
 	scripts: ScriptRunner,
 ): Promise<SettledResponse> {
 	const { toSend, prepared, variables, preScript } = ready;
-	let postScript: ScriptOutcome | null = null;
-	if (draft.scripts.post.trim()) {
-		const result = await scripts.run({
-			phase: "post",
-			script: draft.scripts.post,
-			request: toScriptRequest(toSend),
-			environment: {},
-			variables,
-			response: delivered.response,
-		});
-		postScript = scriptOutcome(result);
-	}
+	const postScript = await runPostScripts(
+		ready.postScripts,
+		toSend,
+		variables,
+		delivered.response,
+		scripts,
+	);
 	return {
 		kind: "done",
 		result: {

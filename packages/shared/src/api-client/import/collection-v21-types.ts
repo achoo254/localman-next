@@ -4,7 +4,12 @@
  * types, and also accepts v2.0 files (same shape, older auth attributes).
  * The UI calls the format "Collection v2.1"; vendor names stay in this
  * package.
+ *
+ * Every export validates against the official v2.1.0 JSON Schema, which
+ * allows unknown properties. What Localman stores and v2.1 has no place
+ * for goes under `_localman` (`collection-v21-extension.ts`).
  */
+import type { RouteMode } from "../request-model.js";
 
 export const COLLECTION_V21_SCHEMA =
 	"https://schema.getpostman.com/json/collection/v2.1.0/collection.json";
@@ -57,8 +62,13 @@ export const COLLECTION_V21_RAW_LANGUAGES = [
 	"xml",
 ] as const;
 
+/**
+ * `mode` is the kind that is sent; the other kinds are kept so switching
+ * back loses nothing. No `mode` and `disabled: true`: no body is sent.
+ */
 export interface CollectionV21Body {
-	mode: "raw" | "urlencoded" | "formdata" | "file";
+	mode?: "raw" | "urlencoded" | "formdata" | "file";
+	disabled?: boolean;
 	raw?: string;
 	options?: { raw: { language: string } };
 	urlencoded?: CollectionV21KeyValue[];
@@ -80,12 +90,20 @@ export interface CollectionV21Request {
 	description?: string;
 }
 
+/** Request settings v2.1 has no field for; only non-default ones. */
+export interface CollectionV21SettingsExtension {
+	timeoutMs?: number;
+	sendClientIp?: boolean;
+	route?: RouteMode;
+}
+
 export interface CollectionV21RequestItem {
 	name: string;
 	request: CollectionV21Request;
 	event?: CollectionV21Event[];
 	/** Only `followRedirects: false` is written (true is the default). */
 	protocolProfileBehavior?: { followRedirects: boolean };
+	_localman?: CollectionV21SettingsExtension;
 }
 
 export interface CollectionV21Folder {
@@ -98,11 +116,17 @@ export interface CollectionV21Folder {
 
 export type CollectionV21Item = CollectionV21RequestItem | CollectionV21Folder;
 
+/**
+ * The v2.1.0 schema has no `secret` type, so a secret variable is written
+ * as `string` with `_localman.secret` and an empty value (exports may be
+ * shared); the importer reads both forms.
+ */
 export interface CollectionV21Variable {
 	key: string;
 	value: string;
-	type: "string" | "secret";
+	type: "string";
 	disabled?: boolean;
+	_localman?: { secret: true };
 }
 
 export interface CollectionV21 {

@@ -114,13 +114,14 @@ export const deleteWorkspaceOperation = defineOperation({
 	method: "DELETE",
 	path: PATH,
 	summary: "Delete a team workspace",
-	description: `Admins only. Removes the team workspace with its members and pending invitations; everyone loses access at once. A personal workspace cannot be deleted (409 PERSONAL_WORKSPACE). Call with dryRun to see the workspace and its member count first. ${MEMBER_ONLY}`,
+	description: `Admins only. Removes the team workspace with its members and pending invitations; everyone loses access at once. Its collections go to the trash, deleted by the caller, who can restore them into another workspace (\`collections\` counts them). A personal workspace cannot be deleted (409 PERSONAL_WORKSPACE). Call with dryRun to see the workspace, its member and collection counts first. ${MEMBER_ONLY}`,
 	input: z.object({ workspaceId: workspaceIdSchema }),
 	output: z.object({
 		dryRun: z.boolean(),
 		deleted: z.boolean(),
 		workspace: workspaceView,
 		members: z.number().int(),
+		collections: z.number().int(),
 	}),
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: false, destructive: true, idempotent: true },
@@ -135,8 +136,8 @@ export const deleteWorkspaceOperation = defineOperation({
 			input.workspaceId,
 		);
 		const workspace = await viewOfWorkspace(access.workspace, access.role);
-		const members = await deleteTeamWorkspace(access.workspace, ctx.dryRun);
-		return { dryRun: ctx.dryRun, deleted: !ctx.dryRun, workspace, members };
+		const counts = await deleteTeamWorkspace(access.workspace, ctx.dryRun, sub);
+		return { dryRun: ctx.dryRun, deleted: !ctx.dryRun, workspace, ...counts };
 	},
 });
 

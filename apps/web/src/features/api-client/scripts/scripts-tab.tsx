@@ -1,26 +1,52 @@
-import { useState } from "react";
+import type { RequestScripts } from "@localman/shared/api-client";
+import { type ReactNode, useState } from "react";
 import { CodeEditor } from "../../../components/ui/code-editor";
 import { SegmentedControl } from "../../../components/ui/segmented-control";
 import { useT } from "../../../i18n/i18n-context";
 import type { DraftPaneProps } from "../request/draft-pane";
 import { SCRIPT_SNIPPETS, appendSnippet } from "./script-snippets";
 
-type ScriptPhase = "pre" | "post";
+export type ScriptPhase = "pre" | "post";
+
+/** Scripts of a request (its draft). */
+export function ScriptsTab({ draft, update }: DraftPaneProps) {
+	return (
+		<ScriptsEditor
+			scripts={draft.scripts}
+			onChange={(phase, text) =>
+				update((current) =>
+					current.scripts[phase] === text
+						? current
+						: { ...current, scripts: { ...current.scripts, [phase]: text } },
+				)
+			}
+		/>
+	);
+}
+
+export interface ScriptsEditorProps {
+	scripts: RequestScripts;
+	onChange: (phase: ScriptPhase, text: string) => void;
+	readOnly?: boolean;
+	/** Under the editor, before the phase hint (run order of a collection). */
+	note?: ReactNode;
+}
 
 /**
  * Pre-request and post-response JavaScript, run in a QuickJS sandbox on
- * send. The sandbox loads only when a script is not empty.
+ * send (requests, folders and collections). The sandbox loads only when a
+ * script is not empty.
  */
-export function ScriptsTab({ draft, update }: DraftPaneProps) {
+export function ScriptsEditor({
+	scripts,
+	onChange,
+	readOnly = false,
+	note,
+}: ScriptsEditorProps) {
 	const t = useT();
 	const [phase, setPhase] = useState<ScriptPhase>("pre");
-	const script = draft.scripts[phase];
-	const setScript = (text: string) =>
-		update((current) =>
-			current.scripts[phase] === text
-				? current
-				: { ...current, scripts: { ...current.scripts, [phase]: text } },
-		);
+	const script = scripts[phase];
+	const setScript = (text: string) => onChange(phase, text);
 
 	return (
 		<div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_14rem]">
@@ -55,10 +81,12 @@ export function ScriptsTab({ draft, update }: DraftPaneProps) {
 					)}
 					placeholder={t("apiClient.scripts.placeholder")}
 					lineNumbers
+					readOnly={readOnly}
 					className="min-h-56"
 					data-id="request-scripts-editor"
 					onChange={setScript}
 				/>
+				{note}
 				<p className="text-muted text-xs">
 					{phase === "pre"
 						? t("apiClient.scripts.preHint", { variable: "{{name}}" })
@@ -79,6 +107,7 @@ export function ScriptsTab({ draft, update }: DraftPaneProps) {
 					<button
 						key={snippet.id}
 						type="button"
+						disabled={readOnly}
 						data-id="request-scripts-snippet"
 						className="min-h-9 cursor-pointer rounded-sm border-0 bg-transparent px-2 py-1 text-left text-muted text-sm transition-colors hover:bg-fg/6 hover:text-fg"
 						onClick={() => setScript(appendSnippet(script, snippet.code))}

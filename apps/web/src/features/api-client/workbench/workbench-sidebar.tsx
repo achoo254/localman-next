@@ -10,11 +10,20 @@ import { useT } from "../../../i18n/i18n-context";
 import { cn } from "../../../lib/cn";
 import { RoutingSettings } from "../routing/routing-settings";
 import { TuneloSidebar } from "../tunelo/tunelo-sidebar";
-import { SidebarRail, type SidebarSection } from "./sidebar-rail";
+import {
+	SIDEBAR_SECTIONS,
+	SidebarRail,
+	type SidebarSection,
+} from "./sidebar-rail";
 
 export interface WorkbenchSidebarProps {
 	/** History section (Tunelo and Routing are built in). */
 	history: ReactNode;
+	/**
+	 * Collections section, first in the rail with a Trash link at its foot;
+	 * absent (workspaces flag off) leaves History first.
+	 */
+	collections?: ReactNode;
 	/** Id of the drawer, for the menu button that opens it on narrow screens. */
 	drawerId: string;
 	/** Below 768px rail and sidebar are a drawer over the editor. */
@@ -28,6 +37,7 @@ export interface WorkbenchSidebarProps {
  */
 export function WorkbenchSidebar({
 	history,
+	collections,
 	drawerId,
 	drawerOpen,
 	onDrawerClose,
@@ -39,7 +49,15 @@ export function WorkbenchSidebar({
 			typeof window.matchMedia !== "function" ||
 			window.matchMedia("(min-width: 64rem)").matches,
 	);
-	const [section, setSection] = useState<SidebarSection>("history");
+	const hasCollections = collections !== undefined;
+	const sections: readonly SidebarSection[] = hasCollections
+		? SIDEBAR_SECTIONS
+		: SIDEBAR_SECTIONS.filter((id) => id !== "collections");
+	const [chosen, setSection] = useState<SidebarSection | null>(null);
+	const section =
+		chosen !== null && sections.includes(chosen)
+			? chosen
+			: (sections[0] ?? "history");
 	const sidebarId = useId();
 	const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -86,6 +104,8 @@ export function WorkbenchSidebar({
 				onKeyDown={onKeyDown}
 			>
 				<SidebarRail
+					sections={sections}
+					trash={hasCollections}
 					section={section}
 					open={sidebarOpen}
 					sidebarId={sidebarId}
@@ -99,9 +119,12 @@ export function WorkbenchSidebar({
 					data-section={section}
 					className={cn(
 						"min-h-0 flex-none overflow-y-auto border-border-subtle border-r bg-surface-subtle max-md:max-w-[calc(100vw-5rem)]",
-						section === "history" ? "w-72" : "w-80",
+						section === "history" || section === "collections"
+							? "w-72"
+							: "w-80",
 					)}
 				>
+					{section === "collections" ? collections : null}
 					{section === "history" ? history : null}
 					{section === "tunelo" ? <TuneloSidebar /> : null}
 					{section === "routing" ? <RoutingSettings /> : null}

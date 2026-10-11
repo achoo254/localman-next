@@ -4,15 +4,22 @@ import {
 	flattenImportedRequests,
 } from "@localman/shared/api-client";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { Alert } from "../../../components/ui/alert";
 import { Button } from "../../../components/ui/button";
 import { Modal, ModalClose } from "../../../components/ui/modal";
 import { ModalFooter } from "../../../components/ui/modal-footer";
 import { useT } from "../../../i18n/i18n-context";
+import { errorMessage } from "../../../lib/api-client";
 import {
 	CollectionOpenPicker,
 	defaultSelection,
 } from "./collection-open-picker";
 import { ImportDetection } from "./import-detection";
+import {
+	type CollectionSaveTarget,
+	type ImportMode,
+	ImportModeChoice,
+} from "./import-save-mode";
 import { ImportSource } from "./import-source";
 import { type ImportSelection, toRequestsSelection } from "./open-imported";
 import { useImportSource } from "./use-import-source";
@@ -24,6 +31,10 @@ export interface ImportModalProps {
 	onImport: (selection: ImportSelection) => void;
 	/** Most requests that may open (tabs left); defaults to the tab cap. */
 	maxRequests?: number;
+	/** Offers "Save as collection" (workspaces flag on). */
+	saveCollection?: CollectionSaveTarget | null;
+	/** Choice picked when the dialog opens. */
+	initialMode?: ImportMode;
 }
 
 /**
@@ -36,6 +47,8 @@ export function ImportModal({
 	onOpenChange,
 	onImport,
 	maxRequests = DRAFT_MAX_TABS,
+	saveCollection = null,
+	initialMode = "tabs",
 }: ImportModalProps) {
 	const t = useT();
 	const detectionId = useId();
@@ -57,12 +70,42 @@ export function ImportModal({
 		setSelected(defaultSelection(requests, maxRequests));
 	}, [requests, maxRequests]);
 
+	const [mode, setMode] = useState<ImportMode>(initialMode);
+	const [saving, setSaving] = useState(false);
+	const [saveError, setSaveError] = useState<unknown>(null);
+	useEffect(() => {
+		if (open) setMode(initialMode);
+	}, [open, initialMode]);
+	const saveTarget =
+		saveCollection && mode === "collection" ? saveCollection : null;
+
 	const changeOpen = (next: boolean): void => {
-		if (!next) source.reset();
+		if (saving) return;
+		if (!next) {
+			source.reset();
+			setSaveError(null);
+		}
 		onOpenChange(next);
+	};
+	const save = async (target: CollectionSaveTarget): Promise<void> => {
+		if (!data || data.format === "environment-v21") return;
+		setSaving(true);
+		setSaveError(null);
+		try {
+			await target.save(data);
+			setSaving(false);
+			changeOpen(false);
+		} catch (error) {
+			setSaving(false);
+			setSaveError(error);
+		}
 	};
 	const submit = (): void => {
 		if (!data) return;
+		if (saveTarget) {
+			void save(saveTarget);
+			return;
+		}
 		onImport(
 			data.format === "environment-v21"
 				? { kind: "environment", environment: data }
@@ -74,9 +117,19 @@ export function ImportModal({
 		changeOpen(false);
 	};
 	const isEnvironment = data?.format === "environment-v21";
-	const canSubmit = data !== null && (isEnvironment || selected.size > 0);
+	const canSubmit =
+		data !== null &&
+		(saveTarget ? !isEnvironment : isEnvironment || selected.size > 0);
 	// The file is read or the text parsed: the button spins until it can import.
-	const processing = source.reading || source.parse.state === "detecting";
+	const processing =
+		saving || source.reading || source.parse.state === "detecting";
+	let submitLabel = t("apiClientTools.import.submitRequests", {
+		count: selected.size,
+	});
+	if (saveTarget) submitLabel = t("collections.import.submit");
+	else if (isEnvironment) {
+		submitLabel = t("apiClientTools.import.submitEnvironment");
+	}
 
 	return (
 		<Modal
@@ -99,11 +152,7 @@ export function ImportModal({
 						disabled={!canSubmit && !processing}
 						onClick={submit}
 					>
-						{isEnvironment
-							? t("apiClientTools.import.submitEnvironment")
-							: t("apiClientTools.import.submitRequests", {
-									count: selected.size,
-								})}
+						{submitLabel}
 					</Button>
 				</ModalFooter>
 			}
@@ -119,7 +168,17 @@ export function ImportModal({
 				textRef={textBox}
 			/>
 			<ImportDetection id={detectionId} parse={source.parse} />
-			{requests.length > 1 ? (
+			{saveCollection && !isEnvironment ? (
+				<ImportModeChoice
+					mode={mode}
+					onChange={setMode}
+					workspaceName={saveCollection.workspaceName}
+				/>
+			) : null}
+			{saveError ? (
+				<Alert tone="danger">{errorMessage(saveError)}</Alert>
+			) : null}
+			{requests.length > 1 && !saveTarget ? (
 				<CollectionOpenPicker
 					requests={requests}
 					selected={selected}

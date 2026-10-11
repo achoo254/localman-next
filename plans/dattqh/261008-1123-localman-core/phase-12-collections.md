@@ -1,7 +1,7 @@
 ---
 phase: 12
 title: "Collections tương đương 100% Postman"
-status: pending
+status: in-progress
 priority: P1
 effort: "L"
 dependencies: [11]
@@ -74,8 +74,8 @@ Nguồn tham chiếu: [Manage collections](https://learning.postman.com/docs/use
 ### Checklist
 - [ ] T1 State và `data-id` của collection, settings, changelog và trash đã chốt theo prototype
 - [ ] T2 Ba model và adapter `collection` xong
-- [ ] T3 Codec v2.1 và round-trip xong
-- [ ] T4 Service, operation cây và template xong
+- [x] T3 Codec v2.1 và round-trip xong
+- [x] T4 Service, operation cây và template xong
 - [ ] T5 Tag, status, favorite, sort, search, xoá hàng loạt và thiết lập kế thừa xong
 - [ ] T6 Changelog và trash xong
 - [ ] T7 Sidebar, dialog xoá và Overview xong
@@ -89,3 +89,9 @@ Nguồn tham chiếu: [Manage collections](https://learning.postman.com/docs/use
 - [ ] Verification: mọi dòng trong ma trận tương đương có test hoặc kịch bản E2E pass
 - [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
 - [ ] `pnpm check:mcp-coverage` pass
+
+### Đợt A (11/10/2026, Vòng 32)
+Xong: cây collection CRUD, kéo thả ghi 1 node, favorite, sort, tìm kiếm phía server, nhân bản cả cây con; template REST CRUD và "From mock project"; import lưu thành collection; export v2.1 round-trip kiểm bằng JSON Schema chính thức (giá trị secret để trống); tab collection/folder (Overview Markdown, Authorization, Scripts, Variables); tab gắn với request, lưu bằng Ctrl/Cmd+S và "Save to collection"; khi gửi: auth kế thừa, script theo thứ tự collection → folder → request, biến collection; Share/Move/Copy link; xoá collection phải gõ `delete`; thùng rác (restore chọn workspace, xoá vĩnh viễn, job dọn sau `trashDays`, quyền theo vai trò hiện tại); xoá workspace team thì collection vào thùng rác; giới hạn 2000 node, 20 MiB, sâu 64 cấp.
+Kiểm: lint, typecheck, 539 file / 3979 test, `check:mcp-coverage`, `check:tokens`, E2E 32/32 (gồm `collections.spec.ts`: import collection Postman lồng 3 cấp, gửi request với auth kế thừa, export so JSON). Review backend (2 High, 4 Medium) và web (6 Medium) đã sửa hết.
+Còn cho đợt B: model revision và changelog có diff, restore-to-change; tag và status tag; example; trang trash có lọc; chọn nhiều; "Hoạt động gần đây"; tab Changelog ở thanh bên phải; tên người tạo; script đọc biến collection; khôi phục tab collection/folder sau khi tải lại.
+

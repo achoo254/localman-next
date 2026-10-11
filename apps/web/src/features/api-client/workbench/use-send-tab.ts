@@ -8,12 +8,26 @@ import { useToast } from "../../../components/ui/toast";
 import { activeTranslator } from "../../../i18n/active-translator";
 import { useT } from "../../../i18n/i18n-context";
 import { recordSend } from "./record-send";
-import type { WorkbenchAction, WorkbenchState } from "./workbench-reducer";
+import { failed } from "./send-steps";
+import type { WorkbenchAction } from "./workbench-action";
+import type { WorkbenchState } from "./workbench-reducer";
+import type { SendContext } from "./workbench-tab-types";
 import type {
 	RequestSender,
 	SendOptions,
 	SettledResponse,
+	WorkbenchTab,
 } from "./workbench-types";
+
+/**
+ * What a tab bound to a collection request inherits when sent. When its
+ * collection (or the request in it) cannot be read, the send fails with
+ * `unavailable`, the reason to show: sending it as a loose request would
+ * drop its auth and scripts without a word.
+ */
+export type SendContextOf = (
+	tab: WorkbenchTab,
+) => Promise<{ context: SendContext } | { unavailable: string }>;
 
 export interface SendTab {
 	send: (tabId: string, options?: SendOptions) => Promise<void>;
@@ -34,11 +48,15 @@ export function useSendTab(
 	latest: RefObject<WorkbenchState>,
 	dispatch: Dispatch<WorkbenchAction>,
 	sender: RequestSender,
+	sendContext?: SendContextOf,
 ): SendTab {
 	const t = useT();
 	const toast = useToast();
 	const queryClient = useQueryClient();
 	const controllers = useRef(new Map<string, AbortController>());
+	// Read at send time, so a new function does not change `send`.
+	const contextOf = useRef(sendContext);
+	contextOf.current = sendContext;
 
 	const abort = useCallback((tabId: string) => {
 		controllers.current.get(tabId)?.abort();
@@ -59,13 +77,22 @@ export function useSendTab(
 			let settled: SettledResponse;
 			try {
 				const { draft, files, routeChosen } = tab;
-				settled = await sender({
-					draft,
-					files,
-					signal: controller.signal,
-					routeChosen,
-					...(options ? { options } : {}),
-				});
+				const resolve = contextOf.current;
+				const found = tab.source && resolve ? await resolve(tab) : null;
+				settled =
+					found && "unavailable" in found
+						? failed({
+								code: "COLLECTION_UNAVAILABLE",
+								message: found.unavailable,
+							})
+						: await sender({
+								draft,
+								files,
+								signal: controller.signal,
+								routeChosen,
+								...(options ? { options } : {}),
+								...(found ? { context: found.context } : {}),
+							});
 			} catch {
 				// Senders never reject; a bug in one must not leave the tab spinning.
 				settled = senderBug();
@@ -73,6 +100,7 @@ export function useSendTab(
 			if (controllers.current.get(tabId) !== controller) return;
 			controllers.current.delete(tabId);
 			dispatch({ type: "setResponse", id: tabId, response: settled });
+			// History gets the tab's draft as typed: inherited credentials stay out.
 			if (!(await recordSend(tab.draft, settled, queryClient))) {
 				toast.show({
 					tone: "error",
