@@ -19,7 +19,7 @@ describe("ProInterestPage list details", () => {
 		renderAdmin(true, {});
 		const toggle = await screen.findByRole("button", { name: "History (2)" });
 		expect(toggle).toHaveAttribute("aria-expanded", "false");
-		expect(screen.getAllByText("Email matches account")).toHaveLength(1);
+		expect(await screen.findAllByText("Email matches account")).toHaveLength(1);
 		await userEvent.click(toggle);
 		expect(toggle).toHaveAttribute("aria-expanded", "true");
 		const history = document.querySelector(

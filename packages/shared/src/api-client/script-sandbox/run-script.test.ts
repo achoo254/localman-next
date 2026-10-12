@@ -70,7 +70,9 @@ describe("script limits", () => {
 
 	it("stops a script that allocates past the memory cap", async () => {
 		const result = await runPre(
-			"const keep = []; while (true) keep.push(new Array(10000).fill(1));",
+			// 1 MiB buffers reach the cap in milliseconds (small arrays took
+			// seconds), far from the time limit even on a slow machine.
+			"const keep = []; while (true) keep.push(new ArrayBuffer(1 << 20));",
 		);
 		expect(result.error?.code).toBe("SCRIPT_MEMORY_LIMIT");
 	});

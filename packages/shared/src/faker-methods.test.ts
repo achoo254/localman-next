@@ -102,5 +102,6 @@ describe("Faker whitelist", () => {
 			}
 			expect(largest, id).toBeLessThanOrEqual(fakerMethodMaxBytes(id));
 		}
-	});
+		// 300 seeds of every method: this bounds sizes, not speed.
+	}, 30_000);
 });

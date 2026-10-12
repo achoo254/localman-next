@@ -21,7 +21,10 @@ describe("FeedbackInboxPage deletes and paging", () => {
 		const [remove] = await screen.findAllByRole("button", { name: "Delete" });
 		if (!remove) throw new Error("no delete button");
 		await userEvent.click(remove);
-		const dialog = screen.getByRole("dialog", { name: "Delete message" });
+		// The dialog opens once the dry run answers.
+		const dialog = await screen.findByRole("dialog", {
+			name: "Delete message",
+		});
 		expect(dialog).toHaveTextContent("Delete the message from Lan?");
 		await userEvent.click(
 			within(dialog).getByRole("button", { name: "Delete permanently" }),
