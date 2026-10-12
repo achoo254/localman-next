@@ -1,6 +1,14 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterEach } from "vitest";
+
+/*
+ * GitHub's shared runners can take longer than Testing Library's default
+ * second to show UI that appears after a request or a timer. On CI (CI is
+ * set there) findBy* and waitFor wait up to 5 s; what they assert is the
+ * same, they only wait longer before failing.
+ */
+configure({ asyncUtilTimeout: process.env.CI ? 5_000 : 1_000 });
 
 /*
  * React Router's data router builds a `Request` (Node/undici) with an

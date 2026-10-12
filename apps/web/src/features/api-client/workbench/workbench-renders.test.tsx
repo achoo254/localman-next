@@ -1,5 +1,5 @@
 import { createRequestDraft } from "@localman/shared/api-client";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ResponsePanelProps } from "../response/response-panel";
@@ -50,7 +50,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe("workbench renders", () => {
 	it("re-renders only the edited tab on a keystroke, not history, response or other tabs", async () => {
-		stubClientApi(
+		const calls = stubClientApi(
 			["a", "b", "c"].map((id) => ({
 				tabId: id,
 				draft: createRequestDraft({ url: `https://api.test/${id}` }),
@@ -61,6 +61,18 @@ describe("workbench renders", () => {
 		await screen.findByRole("tablist", { name: "Open requests" });
 		await user.click(byDataId("request-send"));
 		await screen.findByText("echo GET https://api.test/a");
+		// The send records history and refetches it; let that finish first,
+		// or a slow machine counts its render as one of the keystrokes'.
+		await waitFor(() =>
+			expect(
+				calls.filter(
+					(c) => c.method === "GET" && c.path === "/api/v1/client/history",
+				).length,
+			).toBeGreaterThanOrEqual(2),
+		);
+		await waitFor(() =>
+			expect(byDataId("sidebar-history-list")).not.toHaveAttribute("aria-busy"),
+		);
 		const name = screen.getByRole("textbox", { name: "Request name" });
 		await user.click(name);
 		renders.history = 0;
