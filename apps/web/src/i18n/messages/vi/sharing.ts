@@ -93,6 +93,16 @@ export const sharing: Messages["sharing"] = {
 			"Chỉ editor của mục mới xem được yêu cầu truy cập, và yêu cầu có thể đã không còn.",
 		loadFailed: "Không tải được yêu cầu.",
 	},
+	requestEdit: {
+		button: "Xin quyền sửa",
+		title: "Xin quyền sửa",
+		description:
+			"Xin vai trò Editor từ các editor của {name}. Họ sẽ nhận được thông báo.",
+		message: "Lời nhắn (tuỳ chọn)",
+		send: "Gửi yêu cầu",
+		sent: "Đã gửi yêu cầu. Bạn sẽ nhận thông báo khi có trả lời.",
+		already: "Bạn đã có quyền sửa mục này.",
+	},
 	errors: {
 		personal: "Chuyển nó sang workspace team để chia sẻ.",
 		workspaceMissing: "Workspace của mục này không còn nên không chia sẻ được.",

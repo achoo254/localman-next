@@ -18,7 +18,11 @@ import {
 	environmentScope,
 } from "./environment-model.js";
 import { toEnvironmentDetail } from "./environment-view.js";
-import { resealLocalValues } from "./local-reseal.js";
+import {
+	alignLocalSealing,
+	assertCanSeal,
+	typeChanges,
+} from "./local-reseal.js";
 import {
 	type StoredVariable,
 	secretKeysOf,
@@ -104,7 +108,7 @@ export async function updateEnvironment(
 /**
  * Editors replace the variables (definitions and shared values) in
  * order. Local values follow names, so a variable turning secret (or back)
- * reseals everyone's local values of that name.
+ * reseals everyone's local values of that name, after the write.
  */
 export async function setEnvironmentVariables(
 	sub: string,
@@ -115,15 +119,14 @@ export async function setEnvironmentVariables(
 	const current = await loadEnvironment(environmentId);
 	const scope = environmentScope(environmentId);
 	const next = toStoredVariables(variables, current.variables, scope);
-	await resealLocalValues(
-		scope,
-		secretKeysOf(current.variables),
-		secretKeysOf(next),
-	);
+	const secrets = secretKeysOf(next);
+	const types = typeChanges(secretKeysOf(current.variables), secrets);
+	await assertCanSeal(scope, types.newlySecret);
 	await EnvironmentModel.updateOne(
 		{ _id: environmentId },
 		{ $set: { variables: next, updatedBy: sub } },
 	);
+	await alignLocalSealing(scope, types.changed, secrets);
 	return toEnvironmentDetail(
 		sub,
 		await loadEnvironment(environmentId),

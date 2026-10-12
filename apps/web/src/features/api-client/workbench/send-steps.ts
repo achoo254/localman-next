@@ -8,6 +8,7 @@ import {
 	type ClientResponse,
 	type PreparedRequest,
 	RequestPrepareError,
+	type VariableScope,
 	prepareRequest,
 } from "@localman/shared/api-client";
 import type { ScriptRunner } from "@localman/shared/api-client/script-sandbox";
@@ -17,6 +18,7 @@ import { withVerbatimQuery } from "../request/params-sync";
 import { nonBlankScripts, runPostScripts, runPreScripts } from "./script-chain";
 import { scriptVariableScope } from "./script-steps";
 import { prepareErrorMessage, scriptErrorMessage } from "./send-messages";
+import { variableScopes, withheldUsed } from "./send-variables";
 import { newId } from "./workbench-ids";
 import type {
 	RouteInfo,
@@ -78,13 +80,15 @@ async function bodyFiles(
  * Runs the pre-request scripts, then fills `{{var}}`, auth and the body.
  * A tab bound to a collection request (`context`) runs the collection's
  * and folders' scripts around its own, takes the inherited auth for
- * `inherit`, and resolves `{{var}}` from, lowest to highest: collection
- * variables, then `lm.variables` set by the scripts.
+ * `inherit`, and resolves `{{var}}` from, lowest to highest: globals,
+ * collection and environment variables (each with the caller's local
+ * values), then `lm.variables` set by the scripts.
  */
 export async function prepareSend(
-	{ draft, files, signal, context }: SendInput,
+	input: SendInput,
 	scripts: ScriptRunner,
 ): Promise<PrepareOutcome> {
+	const { draft, files, signal, context } = input;
 	const { t } = activeTranslator();
 	const base: ApiRequestDraft =
 		context && draft.auth.type === "inherit"
@@ -108,8 +112,16 @@ export async function prepareSend(
 	const { toSend, variables } = chain;
 	if (signal.aborted) return { ok: false, settled: CANCELLED };
 
-	const scopes = [
-		...(context ? [{ name: "collection", variables: context.variables }] : []),
+	const withheld = withheldUsed(input.variables, toSend, variables);
+	if (withheld) {
+		const message = t("apiClient.send.secretWithheld", { name: withheld });
+		return {
+			ok: false,
+			settled: failed({ code: "SECRET_WITHHELD", message, preScript }),
+		};
+	}
+	const scopes: VariableScope[] = [
+		...variableScopes(input.variables, context),
 		scriptVariableScope(variables),
 	];
 	try {

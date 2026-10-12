@@ -11,13 +11,18 @@ import type {
 } from "@localman/shared/api-client";
 import type { Types } from "mongoose";
 import { inWorkspaceTransaction } from "../workspaces/workspace-lock.js";
+import { WorkspaceModel } from "../workspaces/workspace-model.js";
 import { requireWorkspace } from "../workspaces/workspace-roles.js";
 import {
 	GlobalVariablesModel,
 	type StoredGlobals,
 	globalsScope,
 } from "./global-variables-model.js";
-import { resealLocalValues } from "./local-reseal.js";
+import {
+	alignLocalSealing,
+	assertCanSeal,
+	typeChanges,
+} from "./local-reseal.js";
 import { patchLocalValues, readLocalValues } from "./local-values.js";
 import {
 	secretKeysOf,
@@ -99,7 +104,9 @@ export async function setGlobals(
 	}).lean<StoredGlobals>();
 	const previous = current?.variables ?? [];
 	const next = toStoredVariables(variables, previous, scope);
-	await resealLocalValues(scope, secretKeysOf(previous), secretKeysOf(next));
+	const secrets = secretKeysOf(next);
+	const types = typeChanges(secretKeysOf(previous), secrets);
+	await assertCanSeal(scope, types.newlySecret);
 	// Under the workspace lock, so a save racing its deletion cannot revive it.
 	await inWorkspaceTransaction(access.workspaceId, (session) =>
 		GlobalVariablesModel.updateOne(
@@ -108,6 +115,7 @@ export async function setGlobals(
 			{ upsert: true, session },
 		),
 	);
+	await alignLocalSealing(scope, types.changed, secrets);
 	return toGlobalsDetail(sub, access);
 }
 
@@ -118,14 +126,22 @@ export async function patchGlobalsLocalValues(
 	patch: LocalValuesPatch,
 ): Promise<LocalValue[]> {
 	const access = await requireGlobals(sub, workspaceId);
-	const stored = await GlobalVariablesModel.findOne(
-		{ workspaceId: access.workspaceId },
-		{ variables: 1 },
-	).lean<Pick<StoredGlobals, "variables">>();
 	return patchLocalValues(
 		sub,
 		globalsScope(access.workspaceId),
 		patch,
-		secretKeysOf(stored?.variables ?? []),
+		async () => {
+			const [workspace, stored] = await Promise.all([
+				WorkspaceModel.exists({ _id: access.workspaceId }),
+				GlobalVariablesModel.findOne(
+					{ workspaceId: access.workspaceId },
+					{ variables: 1 },
+				).lean<Pick<StoredGlobals, "variables">>(),
+			]);
+			return {
+				exists: workspace !== null,
+				secretKeys: secretKeysOf(stored?.variables ?? []),
+			};
+		},
 	);
 }

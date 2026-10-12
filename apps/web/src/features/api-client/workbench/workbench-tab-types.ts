@@ -14,7 +14,7 @@ import type {
  * A collection, folder or example open as a tab (not a request, never a
  * draft).
  */
-export interface PageTab {
+export interface CollectionPageTab {
 	id: string;
 	kind: "collection" | "folder" | "example";
 	collectionId: string;
@@ -22,6 +22,22 @@ export interface PageTab {
 	nodeId: string | null;
 	/** Shown in the tab bar until the page loads its own. */
 	name: string;
+}
+
+/** An environment, or a workspace's globals, open as a tab. */
+export interface VariablesPageTab {
+	id: string;
+	kind: "environment" | "globals";
+	/** The environment's id, or the workspace's for its globals. */
+	targetId: string;
+	name: string;
+}
+
+/** A page in the tab bar: it saves itself, so it is never a draft. */
+export type PageTab = CollectionPageTab | VariablesPageTab;
+
+export function isCollectionPage(page: PageTab): page is CollectionPageTab {
+	return page.kind !== "environment" && page.kind !== "globals";
 }
 
 /**

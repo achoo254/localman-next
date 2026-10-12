@@ -2,6 +2,9 @@ import type { Messages } from "../../message-types";
 
 export const apiClientSend: Messages["apiClient"]["send"] = {
 	preScriptFailed: "未发送：pre-request script 已停止。{reason}",
+	secretWithheld:
+		"未发送：它使用了 {name}，这是只有 Editor 能查看的 secret。请在 environment 中为它设置你自己的本地值，然后重新发送。",
+	variablesUnavailable: "未发送：无法加载 environment 变量，请检查网络后重试。",
 	fileUnreadable: "无法读取 body 中的文件，请重新选择。",
 	prepare: {
 		invalidUrl:

@@ -7,6 +7,7 @@ import type {
 import type { Types } from "mongoose";
 import { requireCollection } from "../collections/collection-access.js";
 import { toObjectId } from "../collections/collection-ids.js";
+import { CollectionModel } from "../collections/collection-model.js";
 import { ActiveEnvironmentModel } from "./active-environment-model.js";
 import { requireEnvironment } from "./environment-access.js";
 import {
@@ -28,14 +29,19 @@ export async function patchEnvironmentLocalValues(
 		id,
 		"editLocalValues",
 	);
-	const stored = await EnvironmentModel.findById(environmentId, {
-		variables: 1,
-	}).lean<Pick<StoredEnvironment, "variables">>();
 	return patchLocalValues(
 		sub,
 		environmentScope(environmentId),
 		patch,
-		secretKeysOf(stored?.variables ?? []),
+		async () => {
+			const stored = await EnvironmentModel.findById(environmentId, {
+				variables: 1,
+			}).lean<Pick<StoredEnvironment, "variables">>();
+			return {
+				exists: stored !== null,
+				secretKeys: secretKeysOf(stored?.variables ?? []),
+			};
+		},
 	);
 }
 
@@ -62,7 +68,15 @@ export async function patchCollectionLocalValues(
 	patch: LocalValuesPatch,
 ): Promise<LocalValue[]> {
 	const { collectionId } = await requireCollection(sub, id, "view");
-	return patchLocalValues(sub, collectionScope(collectionId), patch, new Set());
+	return patchLocalValues(
+		sub,
+		collectionScope(collectionId),
+		patch,
+		async () => ({
+			exists: (await CollectionModel.exists({ _id: collectionId })) !== null,
+			secretKeys: new Set<string>(),
+		}),
+	);
 }
 
 /**

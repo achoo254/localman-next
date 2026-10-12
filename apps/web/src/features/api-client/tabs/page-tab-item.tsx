@@ -1,9 +1,27 @@
-import { IconFolder, IconStack2, IconX } from "@tabler/icons-react";
+import {
+	IconBookmark,
+	IconFolder,
+	IconStack2,
+	IconVariable,
+	IconWorld,
+	IconX,
+} from "@tabler/icons-react";
 import { type KeyboardEvent, memo } from "react";
 import { useT } from "../../../i18n/i18n-context";
 import { cn } from "../../../lib/cn";
-import type { PageTab } from "../workbench/workbench-tab-types";
+import {
+	type PageTab,
+	isCollectionPage,
+} from "../workbench/workbench-tab-types";
 import { tabDomId } from "./tab-item";
+
+const ICONS = {
+	collection: IconStack2,
+	folder: IconFolder,
+	example: IconBookmark,
+	environment: IconVariable,
+	globals: IconWorld,
+} as const;
 
 export interface PageTabItemProps {
 	page: PageTab;
@@ -14,7 +32,7 @@ export interface PageTabItemProps {
 	onKeyDown: (event: KeyboardEvent<HTMLButtonElement>, tabId: string) => void;
 }
 
-/** A collection or folder in the tab bar; it saves itself, so it closes at once. */
+/** A page (collection, folder, example, environment, globals) in the tab bar; it saves itself, so it closes at once. */
 export const PageTabItem = memo(function PageTabItem({
 	page,
 	active,
@@ -24,7 +42,10 @@ export const PageTabItem = memo(function PageTabItem({
 	onKeyDown,
 }: PageTabItemProps) {
 	const t = useT();
-	const Icon = page.kind === "collection" ? IconStack2 : IconFolder;
+	const Icon = ICONS[page.kind];
+	const kindLabel = isCollectionPage(page)
+		? t(`collections.page.kind.${page.kind}`)
+		: t(`environments.page.kind.${page.kind}`);
 	return (
 		<div
 			role="presentation"
@@ -59,9 +80,7 @@ export const PageTabItem = memo(function PageTabItem({
 					aria-hidden="true"
 					className="flex-none text-icon-muted"
 				/>
-				<span className="sr-only">
-					{t(`collections.page.kind.${page.kind}`)}
-				</span>
+				<span className="sr-only">{kindLabel}</span>
 				<span className="min-w-0 flex-1 truncate">{page.name}</span>
 			</button>
 			{/* biome-ignore lint/a11y/useKeyWithClickEvents: pointer shortcut only; the tab itself closes with Delete (aria-keyshortcuts). */}

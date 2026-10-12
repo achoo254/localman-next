@@ -25,6 +25,10 @@ export interface WorkbenchLayoutProps {
 	sidebar: ReactNode;
 	/** Collections section, first in the rail (workspaces flag only). */
 	collections?: ReactNode;
+	/** Environments section, after Collections (environments flag only). */
+	environments?: ReactNode;
+	/** At the far end of the tab bar (the active environment). */
+	tabBarEnd?: ReactNode;
 	/** Response area of the active tab. */
 	renderResponse: (tab: WorkbenchTab) => ReactNode;
 	/** Buttons in the request head (code snippet…). */
@@ -95,6 +99,7 @@ export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 				<WorkbenchSidebar
 					history={props.sidebar}
 					collections={props.collections}
+					environments={props.environments}
 					drawerId={drawerId}
 					drawerOpen={drawerOpen}
 					onDrawerClose={() => setDrawerOpen(false)}
@@ -109,6 +114,7 @@ export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 				>
 					<TabBar
 						panelId={panelId}
+						trailing={props.tabBarEnd}
 						leading={
 							<IconButton
 								size="sm"

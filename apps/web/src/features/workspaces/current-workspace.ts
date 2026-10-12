@@ -71,12 +71,13 @@ export function useSelectWorkspace(): (workspaceId: string) => void {
 	);
 }
 
-/** The caller's workspaces (cached for the whole app). */
-export function useWorkspaces() {
+/** The caller's workspaces (cached for the whole app); `enabled` gates the fetch. */
+export function useWorkspaces(enabled = true) {
 	return useQuery({
 		queryKey: WORKSPACES_KEY,
 		queryFn: fetchWorkspaces,
 		staleTime: 30_000,
+		enabled,
 	});
 }
 
@@ -99,8 +100,8 @@ export function resolveCurrent(
  * the fallback is never saved, so a list fetched a moment later (just
  * after joining a workspace) still finds the saved choice.
  */
-export function useCurrentWorkspace() {
-	const query = useWorkspaces();
+export function useCurrentWorkspace(enabled = true) {
+	const query = useWorkspaces(enabled);
 	const sub = useAccountSub();
 	const select = useSelectWorkspace();
 	const savedId = useSyncExternalStore(

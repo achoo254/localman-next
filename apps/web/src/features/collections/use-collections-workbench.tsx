@@ -15,7 +15,10 @@ import {
 	useWorkbenchActions,
 	useWorkbenchState,
 } from "../api-client/workbench/workbench-context";
-import type { PageTab } from "../api-client/workbench/workbench-tab-types";
+import {
+	type PageTab,
+	isCollectionPage,
+} from "../api-client/workbench/workbench-tab-types";
 import type { WorkbenchTab } from "../api-client/workbench/workbench-types";
 import { BoundSavedSync } from "./bound-saved-sync";
 import { CollectionPage } from "./collection-page";
@@ -62,8 +65,10 @@ export function useCollectionsWorkbench(
 	const { currentTabs } = useWorkbenchActions();
 	const { tabs, activeTab, activePage } = useWorkbenchState();
 	const [panel, setPanel] = useState<RightPanel | null>(null);
+	const collectionPage =
+		activePage && isCollectionPage(activePage) ? activePage : null;
 	const railCollection =
-		activePage?.collectionId ?? activeTab?.source?.collectionId;
+		collectionPage?.collectionId ?? activeTab?.source?.collectionId;
 	const [askTabId, setAskTabId] = useState<string | null>(null);
 	const saveRequest = useRequestSave(setAskTabId);
 	const pageSaves = useRef(new Map<string, PageSaveEntry>());
@@ -124,7 +129,7 @@ export function useCollectionsWorkbench(
 		openNode,
 		onSave,
 		renderPage: (page) =>
-			page.kind === "example" ? (
+			!isCollectionPage(page) ? null : page.kind === "example" ? (
 				<ExamplePage key={page.id} page={page} onOpen={openNode} />
 			) : (
 				<CollectionPage key={page.id} page={page} />
@@ -144,7 +149,9 @@ export function useCollectionsWorkbench(
 		rightRail: railCollection ? (
 			<RightRail
 				collectionId={railCollection}
-				folderId={activePage?.kind === "folder" ? activePage.nodeId : null}
+				folderId={
+					collectionPage?.kind === "folder" ? collectionPage.nodeId : null
+				}
 			/>
 		) : null,
 		wrap: (children) => (

@@ -40,10 +40,12 @@ export interface TabBarProps {
 	panelId: string;
 	/** Control before the tabs (the sidebar drawer button on narrow screens). */
 	leading?: ReactNode;
+	/** Controls at the far end (the active environment). */
+	trailing?: ReactNode;
 }
 
 /** Open requests as tabs (←/→, Home/End, Delete to close) plus "New". */
-export function TabBar({ panelId, leading }: TabBarProps) {
+export function TabBar({ panelId, leading, trailing }: TabBarProps) {
 	const t = useT();
 	const { tabs, pages, activeTabId, canOpenTab } = useWorkbenchState();
 	const { activateTab, closeTab, openTab } = useWorkbenchActions();
@@ -145,6 +147,11 @@ export function TabBar({ panelId, leading }: TabBarProps) {
 					openTab();
 				}}
 			/>
+			{trailing ? (
+				<div className="ml-auto flex flex-none items-center px-1">
+					{trailing}
+				</div>
+			) : null}
 			<CloseTabModal
 				tabName={
 					closing

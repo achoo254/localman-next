@@ -2,6 +2,7 @@
  * Sending for the workbench: one request in flight per tab, cancellable,
  * its outcome stored as the tab's response, then recorded in history.
  */
+import type { ResolverLayer } from "@localman/shared/api-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { type Dispatch, type RefObject, useCallback, useRef } from "react";
 import { useToast } from "../../../components/ui/toast";
@@ -29,12 +30,24 @@ export type SendContextOf = (
 	tab: WorkbenchTab,
 ) => Promise<{ context: SendContext } | { unavailable: string }>;
 
+/**
+ * The variable scopes a send resolves `{{name}}` from: globals, the
+ * bound tab's collection and the active environment, each with the
+ * caller's local values. `undefined` keeps the collection variables only.
+ */
+export type VariablesOf = (
+	tab: WorkbenchTab,
+	context: SendContext | null,
+) => Promise<readonly ResolverLayer[] | undefined>;
+
 export interface SendTab {
 	send: (tabId: string, options?: SendOptions) => Promise<void>;
 	cancel: (tabId: string) => void;
 	/** Stops a send without a response update (the tab is closing). */
 	abort: (tabId: string) => void;
 }
+
+const UNAVAILABLE = Symbol("variables unavailable");
 
 function senderBug(): SettledResponse {
 	const message = activeTranslator().t("common.errors.server");
@@ -49,6 +62,7 @@ export function useSendTab(
 	dispatch: Dispatch<WorkbenchAction>,
 	sender: RequestSender,
 	sendContext?: SendContextOf,
+	variablesOf?: VariablesOf,
 ): SendTab {
 	const t = useT();
 	const toast = useToast();
@@ -57,6 +71,19 @@ export function useSendTab(
 	// Read at send time, so a new function does not change `send`.
 	const contextOf = useRef(sendContext);
 	contextOf.current = sendContext;
+	const layersOf = useRef(variablesOf);
+	layersOf.current = variablesOf;
+	// The variables could not be read: the send stops and says why.
+	const variablesFor = useCallback(
+		async (tab: WorkbenchTab, context: SendContext | null) => {
+			try {
+				return await layersOf.current?.(tab, context);
+			} catch {
+				return UNAVAILABLE;
+			}
+		},
+		[],
+	);
 
 	const abort = useCallback((tabId: string) => {
 		controllers.current.get(tabId)?.abort();
@@ -79,20 +106,28 @@ export function useSendTab(
 				const { draft, files, routeChosen } = tab;
 				const resolve = contextOf.current;
 				const found = tab.source && resolve ? await resolve(tab) : null;
+				const context = found && "context" in found ? found.context : null;
+				const variables = await variablesFor(tab, context);
 				settled =
 					found && "unavailable" in found
 						? failed({
 								code: "COLLECTION_UNAVAILABLE",
 								message: found.unavailable,
 							})
-						: await sender({
-								draft,
-								files,
-								signal: controller.signal,
-								routeChosen,
-								...(options ? { options } : {}),
-								...(found ? { context: found.context } : {}),
-							});
+						: variables === UNAVAILABLE
+							? failed({
+									code: "VARIABLES_UNAVAILABLE",
+									message: t("apiClient.send.variablesUnavailable"),
+								})
+							: await sender({
+									draft,
+									files,
+									signal: controller.signal,
+									routeChosen,
+									...(options ? { options } : {}),
+									...(context ? { context } : {}),
+									...(variables ? { variables } : {}),
+								});
 			} catch {
 				// Senders never reject; a bug in one must not leave the tab spinning.
 				settled = senderBug();
@@ -113,7 +148,7 @@ export function useSendTab(
 				});
 			}
 		},
-		[latest, dispatch, sender, queryClient, toast, t],
+		[latest, dispatch, sender, variablesFor, queryClient, toast, t],
 	);
 
 	const cancel = useCallback(

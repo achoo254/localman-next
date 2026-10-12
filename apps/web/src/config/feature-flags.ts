@@ -4,8 +4,9 @@
  * (API client, proxy and Tunelo), `liveMockSync`, `mockMcp`, `directMode`
  * (requests sent straight from the browser), `hybridMock` and
  * `mockPowerUps` (resource import, type export, chaos, conditional rules
- * and Faker suggestions) and `workspaces` (workspaces, sharing and access
- * requests of the API client).
+ * and Faker suggestions), `workspaces` (workspaces, sharing and access
+ * requests of the API client) and `environments` (environments, globals
+ * and local values of variables; needs `workspaces`).
  *
  * Set at build time in `VITE_FEATURES`, a comma-separated list such as
  * `apiClient,mockMcp`. Everything is off by default. No React here:
@@ -19,6 +20,7 @@ export interface FeatureFlags {
 	readonly hybridMock: boolean;
 	readonly mockPowerUps: boolean;
 	readonly workspaces: boolean;
+	readonly environments: boolean;
 }
 
 export type FeatureName = keyof FeatureFlags;
@@ -31,6 +33,7 @@ export const NO_FEATURES: FeatureFlags = Object.freeze({
 	hybridMock: false,
 	mockPowerUps: false,
 	workspaces: false,
+	environments: false,
 });
 
 function isFeatureName(value: string): value is FeatureName {

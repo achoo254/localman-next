@@ -14,6 +14,7 @@ export const ALL_FEATURES: FeatureFlags = Object.freeze({
 	hybridMock: true,
 	mockPowerUps: true,
 	workspaces: true,
+	environments: true,
 });
 
 /** Renders `element` at `/` under the app providers and the given flags. */

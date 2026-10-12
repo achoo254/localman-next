@@ -37,21 +37,30 @@ export const variableInputSchema = z.object({
 });
 export type VariableInput = z.infer<typeof variableInputSchema>;
 
-/** Every variable of a scope, in order; names are unique (case kept). */
+/** Every variable of a scope, in order; names and ids are unique (case kept). */
 export const variableListSchema = z
 	.array(variableInputSchema)
 	.max(ENVIRONMENT_VARIABLES_MAX)
 	.superRefine((variables, ctx) => {
-		const seen = new Set<string>();
+		const names = new Set<string>();
+		const ids = new Set<string>();
 		variables.forEach((variable, index) => {
-			if (seen.has(variable.key)) {
+			if (names.has(variable.key)) {
 				ctx.addIssue({
 					code: "custom",
 					path: [index, "key"],
 					message: `Duplicate variable name "${variable.key}"`,
 				});
 			}
-			seen.add(variable.key);
+			if (variable.id !== undefined && ids.has(variable.id)) {
+				ctx.addIssue({
+					code: "custom",
+					path: [index, "id"],
+					message: `Duplicate variable id "${variable.id}"`,
+				});
+			}
+			names.add(variable.key);
+			if (variable.id !== undefined) ids.add(variable.id);
 		});
 	});
 

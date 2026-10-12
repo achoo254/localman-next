@@ -86,9 +86,9 @@ describe("environments", () => {
 		const env = await createEnvironmentAs(EVE, ws);
 		const res = await as(EVE).send("patch", `/environments/${env.id}`, {
 			name: "QA",
-			color: "purple",
+			color: "violet",
 		});
-		expect(res.body).toMatchObject({ name: "QA", color: "purple" });
+		expect(res.body).toMatchObject({ name: "QA", color: "violet" });
 	});
 
 	it("duplicates, withholding secrets a Viewer could not see", async () => {

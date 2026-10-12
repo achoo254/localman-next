@@ -94,6 +94,16 @@ export const sharing = {
 			"Only editors of the item can see its access requests, and the request may be gone.",
 		loadFailed: "Couldn't load the request.",
 	},
+	requestEdit: {
+		button: "Request to edit",
+		title: "Request to edit",
+		description:
+			"Ask the Editors of {name} for the Editor role. They get a notification.",
+		message: "Message (optional)",
+		send: "Send request",
+		sent: "Request sent. You'll be notified when it's answered.",
+		already: "You can already edit this.",
+	},
 	errors: {
 		personal: "Move it to a team workspace to share it.",
 		workspaceMissing: "Its workspace no longer exists, so it can't be shared.",

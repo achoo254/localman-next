@@ -7,7 +7,7 @@ import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import { METHOD_TEXT_CLASS } from "../../lib/method-tone";
 import { useDelayedFlag } from "../../lib/use-delayed-flag";
-import type { PageTab } from "../api-client/workbench/workbench-tab-types";
+import type { CollectionPageTab } from "../api-client/workbench/workbench-tab-types";
 import { collectionErrorMessage } from "./collection-errors";
 import { EditableName } from "./editable-name";
 import { ExampleResponseForm } from "./example-response-form";
@@ -20,7 +20,7 @@ import { useDuplicateNode } from "./use-node-mutations";
 export function ExamplePage({
 	page,
 	onOpen,
-}: { page: PageTab; onOpen: OpenNode }) {
+}: { page: CollectionPageTab; onOpen: OpenNode }) {
 	const t = useT();
 	const toast = useToast();
 	const model = useExampleModel(page);

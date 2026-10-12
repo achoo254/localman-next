@@ -5,6 +5,8 @@ import {
 	type LocalValuesPatch,
 } from "@localman/shared/api-client";
 import type { ClientSession } from "mongoose";
+import { elementNotFound } from "../access/access-policy.js";
+import { alignLocalSealing } from "./local-reseal.js";
 import {
 	LocalVariableValueModel,
 	type StoredLocalValue,
@@ -43,17 +45,27 @@ function limitReached(count: number): OperationError {
 	);
 }
 
+/** What a scope is right now: still there, and which names are secrets. */
+export interface ScopeState {
+	readonly exists: boolean;
+	readonly secretKeys: ReadonlySet<string>;
+}
+
 /**
  * Sets and removes (`value: null`) the caller's local values by name;
- * names not listed keep theirs. Values of `secretKeys` are sealed. 409
- * `LOCAL_VALUES_LIMIT` when the scope would hold more than the cap.
+ * names not listed keep theirs. Values of secret names are sealed. The
+ * scope is read again after writing: sealing is aligned with a variable
+ * changed meanwhile, and values written into a scope deleted meanwhile
+ * are removed (404). 409 `LOCAL_VALUES_LIMIT` past the cap.
  */
 export async function patchLocalValues(
 	userId: string,
 	scope: string,
 	patch: LocalValuesPatch,
-	secretKeys: ReadonlySet<string>,
+	stateOf: () => Promise<ScopeState>,
 ): Promise<LocalValue[]> {
+	const { exists, secretKeys } = await stateOf();
+	if (!exists) throw elementNotFound();
 	const last = new Map(patch.map((entry) => [entry.key, entry.value]));
 	const removed = [...last].flatMap(([key, value]) =>
 		value === null ? [key] : [],
@@ -92,6 +104,16 @@ export async function patchLocalValues(
 		});
 	}
 	if (writes.length > 0) await LocalVariableValueModel.bulkWrite(writes);
+	const after = await stateOf();
+	if (!after.exists) {
+		await deleteScopeLocalValues([scope]);
+		throw elementNotFound();
+	}
+	await alignLocalSealing(
+		scope,
+		set.map((entry) => entry.key),
+		after.secretKeys,
+	);
 	return readLocalValues(userId, scope);
 }
 

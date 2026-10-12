@@ -12,7 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { useWorkbenchActions } from "../api-client/workbench/workbench-context";
-import type { PageTab } from "../api-client/workbench/workbench-tab-types";
+import type { CollectionPageTab } from "../api-client/workbench/workbench-tab-types";
 import { fitExampleResponse } from "./example-body";
 import { updateNode } from "./nodes-api";
 import { useRegisterPageSave } from "./page-save-context";
@@ -25,7 +25,7 @@ export interface ExampleFields {
 	response: ExampleResponse;
 }
 
-export function useExampleModel(page: PageTab) {
+export function useExampleModel(page: CollectionPageTab) {
 	const t = useT();
 	const toast = useToast();
 	const client = useQueryClient();

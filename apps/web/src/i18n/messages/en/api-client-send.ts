@@ -1,6 +1,10 @@
 /** Errors a send of the API client stops on before the network. */
 export const apiClientSend = {
 	preScriptFailed: "Not sent: the pre-request script stopped. {reason}",
+	secretWithheld:
+		"Not sent: it uses {name}, a secret only Editors can see. Set your own local value for it in the environment, then send again.",
+	variablesUnavailable:
+		"Not sent: we couldn't load your environment variables. Check your connection and try again.",
 	fileUnreadable: "A file of the body could not be read. Choose it again.",
 	prepare: {
 		invalidUrl:

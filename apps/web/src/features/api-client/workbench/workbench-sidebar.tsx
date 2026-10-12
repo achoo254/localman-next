@@ -24,6 +24,8 @@ export interface WorkbenchSidebarProps {
 	 * absent (workspaces flag off) leaves History first.
 	 */
 	collections?: ReactNode;
+	/** Environments section, after Collections; absent (flag off) hides it. */
+	environments?: ReactNode;
 	/** Id of the drawer, for the menu button that opens it on narrow screens. */
 	drawerId: string;
 	/** Below 768px rail and sidebar are a drawer over the editor. */
@@ -38,6 +40,7 @@ export interface WorkbenchSidebarProps {
 export function WorkbenchSidebar({
 	history,
 	collections,
+	environments,
 	drawerId,
 	drawerOpen,
 	onDrawerClose,
@@ -50,9 +53,11 @@ export function WorkbenchSidebar({
 			window.matchMedia("(min-width: 64rem)").matches,
 	);
 	const hasCollections = collections !== undefined;
-	const sections: readonly SidebarSection[] = hasCollections
-		? SIDEBAR_SECTIONS
-		: SIDEBAR_SECTIONS.filter((id) => id !== "collections");
+	const sections: readonly SidebarSection[] = SIDEBAR_SECTIONS.filter(
+		(id) =>
+			(id !== "collections" || hasCollections) &&
+			(id !== "environments" || environments !== undefined),
+	);
 	const [chosen, setSection] = useState<SidebarSection | null>(null);
 	const section =
 		chosen !== null && sections.includes(chosen)
@@ -119,12 +124,15 @@ export function WorkbenchSidebar({
 					data-section={section}
 					className={cn(
 						"min-h-0 flex-none overflow-y-auto border-border-subtle border-r bg-surface-subtle max-md:max-w-[calc(100vw-5rem)]",
-						section === "history" || section === "collections"
+						section === "history" ||
+							section === "collections" ||
+							section === "environments"
 							? "w-72"
 							: "w-80",
 					)}
 				>
 					{section === "collections" ? collections : null}
+					{section === "environments" ? environments : null}
 					{section === "history" ? history : null}
 					{section === "tunelo" ? <TuneloSidebar /> : null}
 					{section === "routing" ? <RoutingSettings /> : null}

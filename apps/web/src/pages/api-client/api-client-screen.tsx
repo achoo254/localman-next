@@ -21,10 +21,12 @@ import {
 	useWorkbenchState,
 } from "../../features/api-client/workbench/workbench-context";
 import { WorkbenchLayout } from "../../features/api-client/workbench/workbench-layout";
+import { isCollectionPage } from "../../features/api-client/workbench/workbench-tab-types";
 import type { WorkbenchTab } from "../../features/api-client/workbench/workbench-types";
 import { CollectionsImportModal } from "../../features/collections/collections-import-modal";
 import { CollectionsSidebar } from "../../features/collections/collections-sidebar";
 import { useCollectionsWorkbench } from "../../features/collections/use-collections-workbench";
+import { useEnvironmentsWorkbench } from "../../features/environments/use-environments-workbench";
 import { useWorkspacesEnabled } from "../../features/workspaces/use-workspaces-enabled";
 import { useT } from "../../i18n/i18n-context";
 
@@ -46,13 +48,15 @@ export function ApiClientScreen() {
 	const toast = useToast();
 	const actions = useWorkbenchActions();
 	const { tabs, activeTab, activePage } = useWorkbenchState();
-	const openedId = activePage
-		? (activePage.nodeId ?? activePage.collectionId)
-		: (activeTab?.source?.nodeId ?? null);
+	const openedId =
+		activePage && isCollectionPage(activePage)
+			? (activePage.nodeId ?? activePage.collectionId)
+			: (activeTab?.source?.nodeId ?? null);
 	const [importOpen, setImportOpen] = useState(false);
 	const [importMode, setImportMode] = useState<ImportMode>("tabs");
 	const workspacesOn = useWorkspacesEnabled();
 	const bound = useCollectionsWorkbench(workspacesOn);
+	const variables = useEnvironmentsWorkbench();
 	const openCollectionNode = bound.openNode;
 	const openImport = useCallback((mode: ImportMode) => {
 		setImportMode(mode);
@@ -137,7 +141,9 @@ export function ApiClientScreen() {
 					<HistorySidebar onOpen={openFromHistory} tools={historyTools} />
 				}
 				collections={collections}
-				renderPage={bound.renderPage}
+				environments={variables.sidebar}
+				tabBarEnd={variables.tabBarEnd}
+				renderPage={(page) => variables.renderPage(page, bound.renderPage)}
 				renderAboveRequest={bound.renderAboveRequest}
 				onSave={bound.onSave}
 				rightRail={bound.rightRail}

@@ -14,7 +14,7 @@ import type {
 } from "@localman/shared/api-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useWorkbenchActions } from "../api-client/workbench/workbench-context";
-import type { PageTab } from "../api-client/workbench/workbench-tab-types";
+import type { CollectionPageTab } from "../api-client/workbench/workbench-tab-types";
 import { type CollectionPatch, updateCollection } from "./collections-api";
 import { updateNode } from "./nodes-api";
 import { useRegisterPageSave } from "./page-save-context";
@@ -64,7 +64,7 @@ function storedFields(
 	return { name, description, auth, scripts, variables, tags, status };
 }
 
-export function usePageModel(page: PageTab) {
+export function usePageModel(page: CollectionPageTab) {
 	const client = useQueryClient();
 	const { renamePage } = useWorkbenchActions();
 	const query = useCollection(page.collectionId);

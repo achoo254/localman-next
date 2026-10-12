@@ -92,6 +92,15 @@ export const sharing: Messages["sharing"] = {
 		notFoundText: "只有该项的 Editor 可以查看访问申请，申请也可能已不存在。",
 		loadFailed: "无法加载申请。",
 	},
+	requestEdit: {
+		button: "申请编辑权限",
+		title: "申请编辑权限",
+		description: "向 {name} 的 Editor 申请 Editor 角色，他们会收到通知。",
+		message: "留言（可选）",
+		send: "发送申请",
+		sent: "已发送申请，有答复时你会收到通知。",
+		already: "你已经可以编辑此项。",
+	},
 	errors: {
 		personal: "请将其移到团队 workspace 后再共享。",
 		workspaceMissing: "其所在的 workspace 已不存在，无法共享。",

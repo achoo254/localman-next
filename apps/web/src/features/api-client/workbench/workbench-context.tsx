@@ -20,7 +20,11 @@ import {
 	useRef,
 } from "react";
 import { useDraftSync } from "./use-draft-sync";
-import { type SendContextOf, useSendTab } from "./use-send-tab";
+import {
+	type SendContextOf,
+	type VariablesOf,
+	useSendTab,
+} from "./use-send-tab";
 import type {
 	Workbench,
 	WorkbenchActions,
@@ -46,6 +50,8 @@ export interface WorkbenchProviderProps {
 	retryDelaysMs?: readonly number[];
 	/** What a bound tab inherits from its collection when it is sent. */
 	sendContext?: SendContextOf;
+	/** Globals and environment variables a send resolves (flag on). */
+	variablesOf?: VariablesOf;
 }
 
 export function WorkbenchProvider({
@@ -55,6 +61,7 @@ export function WorkbenchProvider({
 	saveDelayMs,
 	retryDelaysMs,
 	sendContext,
+	variablesOf,
 }: WorkbenchProviderProps) {
 	const [state, dispatch] = useReducer(workbenchReducer, INITIAL_WORKBENCH);
 	const latest = useRef(state);
@@ -67,7 +74,7 @@ export function WorkbenchProvider({
 		send: sendTab,
 		cancel: cancelSend,
 		abort,
-	} = useSendTab(latest, dispatch, sender, sendContext);
+	} = useSendTab(latest, dispatch, sender, sendContext, variablesOf);
 
 	const openTab = useCallback(
 		(draft?: ApiRequestDraft, options: OpenTabOptions = {}) => {

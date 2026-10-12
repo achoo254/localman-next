@@ -19,7 +19,7 @@ import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { copyText } from "../../platform/clipboard";
 import { appPageUrl } from "../../platform/navigation";
-import type { PageTab } from "../api-client/workbench/workbench-tab-types";
+import type { CollectionPageTab } from "../api-client/workbench/workbench-tab-types";
 import { elementPath } from "../sharing/sharing-api";
 import { EditableName } from "./editable-name";
 import { PageSaveState } from "./page-save-state";
@@ -27,7 +27,7 @@ import { useExportCollection } from "./use-export-collection";
 import type { SaveStatus } from "./use-page-autosave";
 
 export interface PageHeaderProps {
-	page: PageTab;
+	page: CollectionPageTab;
 	name: string;
 	collectionName: string;
 	canEdit: boolean;

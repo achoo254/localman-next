@@ -7,6 +7,7 @@ import type {
 	ApiRequestDraft,
 	ClientResponse,
 	HttpMethod,
+	ResolverLayer,
 	RouteMode,
 	TabSource,
 } from "@localman/shared/api-client";
@@ -186,6 +187,8 @@ export interface SendInput {
 	routeChosen?: boolean;
 	/** Auth, scripts and variables from the collection of a bound tab. */
 	context?: SendContext;
+	/** Globals, collection and environment with local values (flag on). */
+	variables?: readonly ResolverLayer[];
 }
 
 /**

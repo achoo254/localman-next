@@ -2,7 +2,7 @@ import type {
 	CollectionNode,
 	CollectionSummary,
 } from "@localman/shared/api-client";
-import { ShareDialog } from "../sharing/share-dialog";
+import { CollectionShareDialog } from "./collection-share-dialog";
 import { DeleteCollectionModal } from "./delete-collection-modal";
 import { DeleteNodeModal } from "./delete-node-modal";
 import { MoveCollectionModal } from "./move-collection-modal";
@@ -43,10 +43,10 @@ export function CollectionDialogs({
 	switch (dialog.kind) {
 		case "share":
 			return (
-				<ShareDialog
+				<CollectionShareDialog
 					open={open}
 					onOpenChange={onOpenChange}
-					elementType="collection"
+					workspaceId={dialog.summary.workspaceId}
 					elementId={dialog.summary.id}
 					elementName={dialog.summary.name}
 				/>

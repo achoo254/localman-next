@@ -33,21 +33,40 @@ export const storedVariableSchema = new Schema(
 	{ _id: false },
 );
 
+/** A sealed shared value the server cannot open now (its key is missing). */
+function unreadable(variable: StoredVariable, scope: string): boolean {
+	return variable.sealed && sharedValueOf(variable, scope) === null;
+}
+
 /**
  * The variables an Editor sent, ready to store in `scope`: listed ids are
  * kept when they exist, others get a new one; secret values are sealed.
+ * A secret whose value cannot be opened now reads as hidden to everyone,
+ * so a `null` sent back for it keeps the stored value instead of erasing
+ * it until the key returns.
  */
 export function toStoredVariables(
 	inputs: readonly VariableInput[],
 	previous: readonly StoredVariable[],
 	scope: string,
 ): StoredVariable[] {
-	const known = new Set(previous.map((variable) => variable.id));
+	const known = new Map(previous.map((variable) => [variable.id, variable]));
 	return inputs.map((input): StoredVariable => {
-		const id =
-			input.id && known.has(input.id)
-				? input.id
-				: new Types.ObjectId().toHexString();
+		const before = input.id ? known.get(input.id) : undefined;
+		const id = before?.id ?? new Types.ObjectId().toHexString();
+		if (
+			before &&
+			input.type === "secret" &&
+			input.sharedValue === null &&
+			unreadable(before, scope)
+		) {
+			return {
+				...before,
+				key: input.key,
+				enabled: input.enabled,
+				description: input.description,
+			};
+		}
 		const secret = input.type === "secret" && input.sharedValue !== null;
 		return {
 			id,
@@ -85,7 +104,10 @@ export function toVariableViews(
 ): VariableView[] {
 	return stored.map((variable) => {
 		const withheld =
-			variable.type === "secret" && variable.value !== null && !revealSecrets;
+			(variable.type === "secret" &&
+				variable.value !== null &&
+				!revealSecrets) ||
+			unreadable(variable, scope);
 		return {
 			id: variable.id,
 			key: variable.key,

@@ -11,6 +11,7 @@ import { collaborators } from "./collaborators";
 import { collections } from "./collections";
 import { common } from "./common";
 import { docs } from "./docs";
+import { environments } from "./environments";
 import { feedback } from "./feedback";
 import { invite } from "./invite";
 import { landing } from "./landing";
@@ -73,5 +74,6 @@ export const vi: Messages = {
 	mockCallbacks,
 	workspaces,
 	sharing,
+	environments,
 	collections,
 };

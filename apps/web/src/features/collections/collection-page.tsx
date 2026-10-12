@@ -17,10 +17,10 @@ import { useT } from "../../i18n/i18n-context";
 import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { AuthForm } from "../api-client/request/auth-form";
 import { ScriptsEditor } from "../api-client/scripts/scripts-tab";
-import type { PageTab } from "../api-client/workbench/workbench-tab-types";
-import { ShareDialog } from "../sharing/share-dialog";
+import type { CollectionPageTab } from "../api-client/workbench/workbench-tab-types";
 import { CollectionActivity } from "./collection-activity";
 import { collectionErrorMessage } from "./collection-errors";
+import { CollectionShareDialog } from "./collection-share-dialog";
 import { CollectionTags } from "./collection-tags";
 import { PageHeader } from "./page-header";
 import { PageOverview } from "./page-overview";
@@ -35,7 +35,7 @@ const COLLECTION_AUTH: readonly AuthType[] = AUTH_TYPES.filter(
 );
 
 /** Tab of a collection or folder: Overview, Authorization, Scripts (Variables). */
-export function CollectionPage({ page }: { page: PageTab }) {
+export function CollectionPage({ page }: { page: CollectionPageTab }) {
 	const t = useT();
 	const model = usePageModel(page);
 	const [sharing, setSharing] = useState(false);
@@ -172,10 +172,10 @@ export function CollectionPage({ page }: { page: PageTab }) {
 					) : null}
 				</Tabs>
 			</div>
-			<ShareDialog
+			<CollectionShareDialog
 				open={sharing}
 				onOpenChange={setSharing}
-				elementType="collection"
+				workspaceId={detail.workspaceId}
 				elementId={detail.id}
 				elementName={detail.name}
 			/>

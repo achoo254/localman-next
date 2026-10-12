@@ -1,7 +1,7 @@
 ---
 phase: 13
 title: "Environments và biến tương đương 100% Postman"
-status: pending
+status: in-progress
 priority: P1
 effort: "L"
 dependencies: [11, 12]
@@ -75,20 +75,32 @@ Nguồn tham chiếu: [Managing environments](https://learning.postman.com/docs/
 | T12 | Review cuối phase | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 Spec component và trạng thái Viewer/Editor đã chốt theo prototype
+- [x] T1 Spec component và trạng thái Viewer/Editor đã chốt theo prototype (2026-10-12): dùng đúng `data-id` của prototype (`environment-header*`, `environment-editor`, `environment-filter`, `var-table*`, `globals-editor`, `environment-viewer-note`); `vars-quick*`, `var-tooltip*`, `var-suggest*`, `modal-set-variable-*` làm ở đợt B
 - [ ] T2 `variable-resolver` và `dynamic-variables` có test bảng đủ tổ hợp
-- [ ] T3 `secret-cipher` có test round-trip và key sai
-- [ ] T4 Model và operation environment, globals, active environment qua registry
+  - [x] T2a `packages/shared/src/api-client/environments/variable-resolver.ts` (2026-10-12): global < collection < environment < temporary, local thắng shared, trả scope thắng và danh sách bị ghi đè, secret bị giấu vẫn thắng và không bị tầng dưới điền thay; 13 test bảng
+  - [ ] T2b `dynamic-variables` mở rộng nhóm `$random*` theo whitelist Faker (đợt B)
+- [x] T3 `secret-cipher` có test round-trip và key sai (2026-10-12): dùng lại `TokenCipher`, keyring `VARIABLE_ENCRYPTION_KEY` không bắt buộc (thiếu thì 503), slot làm associated data; 5 test gồm round-trip, sai slot, sai khoá, khoá đã xoay, thiếu keyring
+- [x] T4 Model và operation environment, globals, active environment qua registry (2026-10-12, commit `9198c6a`): 15 operation toolset `client` có MCP; xoá vĩnh viễn có dry run; xoá workspace dọn environment và globals; danh sách đếm biến bằng `$size`
 - [ ] T5 Share/update/reset/unshare (đơn và all), revision, import/export Postman
+  - [x] T5a Thao tác đơn từng biến trên UI (2026-10-12): Share value, Update shared value, Reset value, Unshare, Copy value; Viewer sửa shared nhận 403
+  - [ ] T5b Bản "all" dạng batch có revision, import/export environment JSON (đợt B)
 - [ ] T6 Resolver nối vào preparer và đường gửi thẳng; `pm.*` trong sandbox ghi local
+  - [x] T6a Phía web (2026-10-12): `useVariableLayers` dựng globals, collection (kèm giá trị local) và environment đang active cho `prepareSend`; request dùng secret bị giấu dừng với `SECRET_WITHHELD` (Jev 0.92 dời phần server điền sang đợt B)
+  - [ ] T6b Server điền secret bị giấu khi proxy; `lm.environment`/`lm.collectionVariables`/`lm.globals` ghi giá trị local (giữ `lm.*`, Vòng 27) (đợt B)
 - [ ] T7 UI environment đủ cột và menu More theo ma trận
+  - [x] T7a (2026-10-12): sidebar Environments (tạo, Globals, set active, duplicate, xoá), ô chọn environment ở cuối thanh tab, trang environment (màu, đổi tên, Read only, Request to edit, Set active, Share, More) và Globals, bảng đủ cột Name, Value (local), Shared value, Description, Type, Enabled, trạng thái Edited/Synced, More từng dòng, lọc theo tên; Share của collection có "include environment" thật
+  - [ ] T7b Pane Variables, thanh phải Info, menu "all" (đợt B)
 - [ ] T8 Highlighter, tooltip, gợi ý `{{`, "Set as variable"
-- [ ] T9 Integration A/B và test không lộ secret pass
+- [x] T9 Integration A/B và test không lộ secret pass (2026-10-12): `environment-values.test.ts`, `environment-crud.test.ts`, `environment-lifecycle.test.ts`, `variable-scopes.test.ts` (26 test)
 - [ ] T10 E2E environment pass
+  - [x] T10a (2026-10-12): `e2e/specs/environments-and-variables.spec.ts` gửi `{{baseUrl}}/users` tới mock, đổi environment active thì request đổi theo, giá trị local thắng shared
+  - [ ] T10b Hover thấy đúng scope (đợt B, cùng highlighter)
 - [ ] T11 Staging đã deploy sau khi user xác nhận
 - [ ] T12 Review không còn finding mức high
+  - [x] T12a Review đợt A (2026-10-12): `plans/dattqh/reports/code-reviewer-261012-0935-phase-13-slice-a.md` 3 High, 4 Medium, 8 Low; đã sửa hết, mỗi High/Medium có test tái hiện (mục "Xử lý" của report)
+  - [ ] T12b Review đợt B
 - [ ] Verification: unit `variable-resolver` (bảng), biến động và `secret-cipher` pass
-- [ ] Verification: integration A Editor/B Viewer (share, local riêng, 403, reset) pass
+- [x] Verification: integration A Editor/B Viewer (share, local riêng, 403, reset) pass (2026-10-12)
 - [ ] Verification: E2E `{{baseUrl}}/users`, đổi environment active, hover đúng scope pass
 - [ ] Mọi dòng ma trận tương đương có test hoặc kịch bản E2E tương ứng
 - [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch

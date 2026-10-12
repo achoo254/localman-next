@@ -4,6 +4,7 @@ import {
 	IconRoute,
 	IconStack2,
 	IconTrash,
+	IconVariable,
 } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { useT } from "../../../i18n/i18n-context";
@@ -11,6 +12,7 @@ import { cn } from "../../../lib/cn";
 
 export const SIDEBAR_SECTIONS = [
 	"collections",
+	"environments",
 	"history",
 	"tunelo",
 	"routing",
@@ -33,6 +35,7 @@ export interface SidebarRailProps {
 
 const ICONS = {
 	collections: IconStack2,
+	environments: IconVariable,
 	history: IconHistory,
 	tunelo: IconPlugConnected,
 	routing: IconRoute,
@@ -42,7 +45,7 @@ const RAIL_BUTTON =
 	"grid min-h-11 min-w-14 cursor-pointer justify-items-center gap-0.5 rounded-sm border-0 px-1 py-1.5 font-semibold text-[0.625rem]";
 const IDLE = "bg-transparent text-muted hover:bg-fg/6 hover:text-fg";
 
-/** Narrow strip of sidebar sections: Collections, History, Tunelo, Routing. */
+/** Narrow strip of sidebar sections: Collections, Environments, History, Tunelo, Routing. */
 export function SidebarRail({
 	sections,
 	section,
@@ -54,6 +57,7 @@ export function SidebarRail({
 	const t = useT();
 	const labels: Record<SidebarSection, string> = {
 		collections: t("collections.rail.collections"),
+		environments: t("environments.rail"),
 		history: t("apiClient.sidebar.history"),
 		tunelo: t("apiClientTunelo.rail"),
 		routing: t("apiClientRouting.rail.routing"),

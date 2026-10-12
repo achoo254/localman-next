@@ -20,13 +20,14 @@ export const LOCAL_VALUES_MAX = 500;
 /** Environments one workspace may hold, so its list is one bounded query. */
 export const ENVIRONMENTS_PER_WORKSPACE_MAX = 200;
 
+/** Named after the `--c-viz-*` tokens they show with. */
 export const ENVIRONMENT_COLORS = [
 	"grey",
 	"green",
 	"blue",
-	"sky",
+	"cyan",
 	"amber",
-	"purple",
+	"violet",
 	"red",
 ] as const;
 export type EnvironmentColor = (typeof ENVIRONMENT_COLORS)[number];
@@ -60,8 +61,9 @@ export interface SharedVariable {
 export interface VariableView extends SharedVariable {
 	/**
 	 * A secret's shared value exists but is withheld from the caller (a
-	 * Viewer): `sharedValue` is `null`, and a send through the proxy fills
-	 * it in on the server.
+	 * Viewer, or anyone while the server cannot decrypt it): `sharedValue`
+	 * is `null`, and a send using it stops until the caller sets a local
+	 * value.
 	 */
 	sharedHidden: boolean;
 }
