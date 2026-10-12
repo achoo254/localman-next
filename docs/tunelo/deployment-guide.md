@@ -117,18 +117,19 @@ Moved on 2026-10-12: the three lab tunnel clients (`onedash-s3` on lab .171 via
 (`VL_INGEST_ENDPOINT`). The `ods3lab` tunnel and the `office.tunnel.inetdev.io.vn`
 vhost were retired the same day (configs kept in `/root/nginx-bak/`).
 
+Also moved on 2026-10-12: every lab machine runs `tunelo@1.7.0` from npmjs (the
+old `@dattqh/tunelo` package removed), and `server-tools.conf` (`cloudpanel-dev.inet.vn`)
+sends `Host onedash-staging.tunnel.hoandat.com` after OneDash learned that alias
+(commit `50f03783c`: MCP public base, backend OAuth issuer, client host lists).
+
 Still on the old domain; requests show up in
 `/var/log/nginx/tunnel-old-domain.access.log` (host, request, source IP):
 
-- `server-tools.conf` (`cloudpanel-dev.inet.vn`) keeps
-  `Host onedash-staging.tunnel.inetdev.io.vn`: OneDash checks that exact host
-  (MCP public base, backend OAuth issuer allowlist, client utils), and switching
-  it broke MCP OAuth discovery. This proxy talks to `127.0.0.1:3001` directly, so
-  it needs only the name in `TUNNEL_DOMAINS`, not DNS or a certificate.
-- The OneDash dev setup, `onedash-dev.tunnel.inetdev.io.vn`
-  (`.env.dattqh_lab` and the same host lists), and its agent on lab .178.
+- The OneDash dev setup, `onedash-dev.tunnel.inetdev.io.vn` (`.env.dattqh_lab` and
+  the dev entries of the same host lists), and its agent on lab .178.
 
-Kept for good: `mail.tunnel.inetdev.io.vn`, the OneMail dev tunnel
+Kept for now: `mail.tunnel.inetdev.io.vn`, the OneMail dev tunnel (OneMail is moving
+to `mail.tunnel.hoandat.com`; remove these blocks once it has)
 (`tunelo http 8011 -s mail`; workspace-application uses it as its origin for
 cookies, passkeys and WOPI). It has its own DNS A record (DNS only), its own
 certificate (`certbot --cert-name mail.tunnel.inetdev.io.vn`, credential
