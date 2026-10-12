@@ -432,6 +432,12 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Deploy release `20261012-031014-e9751e0e2a0f-dirty` lên prod, cờ `environments` vẫn tắt; backup trước đó `localman-20261012-101006`. `setup-server.sh` thêm `VARIABLE_ENCRYPTION_KEY` vào `/opt/localman/.env`.
 - DAST đạt cho API environments và nginx (`plans/dattqh/reports/security-261012-1016-phase-13-environments-dast.md`): 15 endpoint mới đòi đăng nhập, kiểm Origin, body 200 KB tới API không còn 413 (lỗi collections trên prod đã hết), trần 16m và zone rate limit có hiệu lực, secret mã hoá khi lưu trên Mongo prod, đổi kiểu biến seal lại đúng, IDOR trả 404, xoá dọn sạch. UI chưa kiểm trên prod vì cờ tắt.
 
+### Vòng 37: chưa thương mại, gỡ giao diện gói và giá (2026-10-12, user yêu cầu, Jev quyết phần kỹ thuật)
+- User: gỡ sạch bảng giá, thanh toán… khỏi web, giữ backend; mọi tài khoản chưa từng dùng thử (cũ và mới) tự được Pro 30 ngày rồi về Free; gia hạn hay nâng lại gói do quản trị quyết; trang tài khoản hiện usage và ngày hạn mức mở rộng kết thúc. Kế hoạch: `plans/dattqh/261012-1105-hide-commercial-ui/plan.md`; ADR-0002.
+- Jev: gia hạn chỉ admin làm, bỏ form trên web, giữ endpoint (0,98); nhắc hạn vẫn gửi, câu trung tính (0,90); chạm giới hạn thì một câu nêu giới hạn và gợi ý góp ý, không link gói (0,74).
+- Tự cấp Pro chạy lúc đăng nhập và mỗi lần làm mới phiên (`syncUserFromUserInfo`), không ở `GET /users/me`, để route đọc nóng nhất không có lượt ghi.
+- Sau review, Jev: admin hạ về Free một tài khoản chưa từng dùng thử thì chấp nhận việc tự cấp lại, chỉ ghi tài liệu (0,89, `mark_used` 0,11); `/pricing` chuyển bằng 302 thay vì 301 (1,0); chữ hạn mức resource sửa cho khớp server, tính tổng trên mọi project (0,88, giữ "mỗi project" 0,12, đổi server 0,00).
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 
