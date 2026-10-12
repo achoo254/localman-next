@@ -64,7 +64,10 @@ describe("docs pages", () => {
 			expect(
 				await screen.findByRole("heading", { level: 1, name: titleOf(page) }),
 			).toBeInTheDocument();
-			expect(document.title).toBe(`${titleOf(page)} · Localman docs`);
+			// The title is set in an effect, after the heading paints.
+			await waitFor(() =>
+				expect(document.title).toBe(`${titleOf(page)} · Localman docs`),
+			);
 
 			const links = within(toc()).getAllByRole("link");
 			expect(links.map((link) => link.getAttribute("href"))).toEqual(

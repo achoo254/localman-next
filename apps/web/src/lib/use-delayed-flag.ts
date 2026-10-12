@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 export interface DelayedFlagOptions {
 	/** Milliseconds `active` must last before the flag turns on. */
@@ -27,11 +27,20 @@ export function useDelayedFlag(
 ): boolean {
 	const [shown, setShown] = useState(false);
 	const shownAt = useRef(0);
+	// Synced at commit, before any timer can run: on a slow machine the delay
+	// timer can fire after `active` has ended but before the passive effect
+	// below clears it, which would show the indicator over content that is
+	// already on screen (and remount that content when it hides again).
+	const activeNow = useRef(active);
+	useLayoutEffect(() => {
+		activeNow.current = active;
+	}, [active]);
 
 	useEffect(() => {
 		if (active) {
 			if (shown) return;
 			const timer = window.setTimeout(() => {
+				if (!activeNow.current) return;
 				shownAt.current = Date.now();
 				setShown(true);
 			}, delay);

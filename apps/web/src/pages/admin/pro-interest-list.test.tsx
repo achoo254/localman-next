@@ -17,12 +17,14 @@ describe("ProInterestPage list details", () => {
 
 	it("expands the submission history of a row", async () => {
 		renderAdmin(true, {});
-		const toggle = await screen.findByRole("button", { name: "History (2)" });
-		expect(toggle).toHaveAttribute("aria-expanded", "false");
+		// Re-queried each time: a slow first render can replace the row's button.
+		const toggle = () => screen.getByRole("button", { name: "History (2)" });
+		await screen.findByRole("button", { name: "History (2)" });
+		expect(toggle()).toHaveAttribute("aria-expanded", "false");
 		expect(await screen.findAllByText("Email matches account")).toHaveLength(1);
-		await userEvent.click(toggle);
+		await userEvent.click(toggle());
 		await waitFor(() =>
-			expect(toggle).toHaveAttribute("aria-expanded", "true"),
+			expect(toggle()).toHaveAttribute("aria-expanded", "true"),
 		);
 		const history = document.querySelector(
 			'[data-id="admin-pro-row-a1-history"]',

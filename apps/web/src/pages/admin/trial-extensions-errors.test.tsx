@@ -30,9 +30,10 @@ describe("TrialExtensionsPage refusals", () => {
 				},
 			},
 		});
-		expect(
-			await screen.findByRole("heading", { name: "sub-gone" }),
-		).toBeVisible();
+		// Re-queried: the row can render again once the page settles.
+		await waitFor(() =>
+			expect(screen.getByRole("heading", { name: "sub-gone" })).toBeVisible(),
+		);
 		// The row's actions may render after its heading on a slow machine.
 		await waitFor(() =>
 			expect(
