@@ -421,6 +421,13 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Xoá environment là xoá vĩnh viễn cùng biến và giá trị local, có dry run và hộp thoại xác nhận nêu số biến (Jev 0.98; thùng rác 0.02).
 - Biến collection giữ quyết định Vòng 32: không mã hoá, cờ secret chỉ che UI; phase 13 chỉ thêm giá trị local riêng từng user cho biến collection (Jev 0.81; mã hoá cả biến collection 0.19).
 
+### Vòng 35: sau đợt A của phase 13 (2026-10-12, Jev quyết)
+- Phần server điền secret bị giấu khi gửi qua proxy dời sang đợt B (Jev 0.92; làm ngay 0.08). Đợt A dừng request dùng secret bị giấu với `SECRET_WITHHELD`.
+- CI chập chờn sửa gốc ngay thay vì bật retry (Jev 0.95; retry 0.01; để sau 0.04): 7 test phụ thuộc tốc độ runner đã sửa qua ba lượt.
+- Review độc lập đợt A: 3 High, 4 Medium, 8 Low, sửa hết kèm test tái hiện (`plans/dattqh/reports/code-reviewer-261012-0935-phase-13-slice-a.md`). SAST đạt trước và sau bản sửa.
+- Prod chạy release `20261011-084333-217f3064cb16` (workspaces và collections đã lên), nên giới hạn body 128k của nginx đang làm import và lưu collection lớn hơn 128 KB trả 413 cho người dùng. Bản sửa ở `origin/main`, chờ deploy.
+- Deploy: Jev khuyên deploy ngay với cờ `environments` vẫn tắt (0.93; chờ đợt B 0.07; bật cờ luôn 0.0), để sửa lỗi 413 và chạy DAST thật trên API environments. Deploy chờ user yêu cầu tường minh.
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 
