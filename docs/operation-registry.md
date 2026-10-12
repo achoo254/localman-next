@@ -94,7 +94,7 @@ Một số route nói giao thức (OpenID Connect, OAuth metadata, MCP) với tr
 
 | Route | Lý do miễn MCP |
 |---|---|
-| `GET /auth/login?returnTo=&prompt=create` | luồng redirect OIDC trên trình duyệt |
+| `GET /auth/login?returnTo=&prompt=create\|none` | luồng redirect OIDC trên trình duyệt |
 | `GET /auth/callback` | luồng redirect OIDC trên trình duyệt |
 | `POST /auth/logout` | luồng redirect OIDC trên trình duyệt |
 | `POST /auth/backchannel-logout` | IdP gọi server-to-server (OIDC Back-Channel Logout), không phải thao tác của user; miễn kiểm CSRF vì logout token đã ký là bằng chứng xác thực |

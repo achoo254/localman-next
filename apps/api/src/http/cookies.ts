@@ -14,7 +14,7 @@ export interface CookieSpec {
 export function cookieSpec(
 	publicUrl: string,
 	baseName: string,
-	options: Pick<CookieOptions, "sameSite" | "maxAge">,
+	options: Pick<CookieOptions, "sameSite" | "maxAge" | "httpOnly">,
 ): CookieSpec {
 	const secure = new URL(publicUrl).protocol === "https:";
 	return {

@@ -1,6 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { ApiError } from "../../lib/api-client";
 import { type CurrentUser, fetchCurrentUser } from "./current-user";
+import { trySilentSignIn } from "./silent-sign-in";
 
 export type CurrentUserState =
 	| { status: "loading" }
@@ -28,12 +29,15 @@ function load(): Promise<void> {
 		// pass through a successful /users/me (another API keeps answering 401),
 		// so only its 60-second window or a manual retry clears it.
 		(user) => setState({ status: "authenticated", user }),
-		(error: unknown) =>
-			setState(
-				error instanceof ApiError && error.status === 401
-					? { status: "anonymous" }
-					: { status: "error", error },
-			),
+		(error: unknown) => {
+			if (!(error instanceof ApiError && error.status === 401)) {
+				setState({ status: "error", error });
+				return;
+			}
+			// Leaving for a silent sign-in: stay "loading" rather than flash
+			// the guest view before the page unloads.
+			if (!trySilentSignIn()) setState({ status: "anonymous" });
+		},
 	);
 	return request;
 }

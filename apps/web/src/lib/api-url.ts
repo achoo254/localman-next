@@ -15,8 +15,11 @@ export function apiUrl(path: string): string {
 export interface LoginOptions {
 	/** In-app path to come back to after sign-in. */
 	returnTo?: string;
-	/** `create` opens the IdP sign-up screen instead of sign-in. */
-	prompt?: "create";
+	/**
+	 * `create` opens the IdP sign-up screen instead of sign-in; `none` signs
+	 * in silently, only if the IdP already has a session.
+	 */
+	prompt?: "create" | "none";
 	/** Language the IdP pages should use (sent on as `ui_locales`). */
 	locale?: Locale;
 }

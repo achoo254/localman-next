@@ -3,7 +3,11 @@ import { apiRequest } from "../../lib/api-client";
 import { navigateToLogin } from "../../platform/navigation";
 import { makeUser } from "../../test/fixtures";
 import { UNAUTHENTICATED, mockFetch } from "../../test/mock-fetch";
-import { reloadCurrentUser, resetCurrentUserCache } from "./use-current-user";
+import {
+	peekCurrentUser,
+	reloadCurrentUser,
+	resetCurrentUserCache,
+} from "./use-current-user";
 
 vi.mock("../../platform/navigation", async (importOriginal) => ({
 	...(await importOriginal<typeof import("../../platform/navigation")>()),
@@ -36,5 +40,31 @@ describe("current user and the login redirect loop", () => {
 				window.sessionStorage.getItem("localman-login-redirects") ?? "",
 			),
 		).toMatchObject({ count: 2 });
+	});
+});
+
+describe("current user and silent sign-in", () => {
+	beforeEach(() => resetCurrentUserCache());
+	afterEach(() => {
+		document.cookie = "lm_sso_hint=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+		vi.unstubAllGlobals();
+		vi.mocked(navigateToLogin).mockClear();
+	});
+
+	it("is a guest at once when this browser never signed in", async () => {
+		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
+		await reloadCurrentUser();
+		expect(peekCurrentUser()).toEqual({ status: "anonymous" });
+		expect(navigateToLogin).not.toHaveBeenCalled();
+	});
+
+	it("stays loading while it leaves for a silent sign-in", async () => {
+		document.cookie = "lm_sso_hint=1";
+		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
+		await reloadCurrentUser();
+		expect(peekCurrentUser()).toEqual({ status: "loading" });
+		expect(navigateToLogin).toHaveBeenCalledWith(
+			expect.objectContaining({ prompt: "none" }),
+		);
 	});
 });

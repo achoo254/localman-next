@@ -1,6 +1,5 @@
 import { isLocale } from "@localman/shared";
-import { type RequestHandler, type Response, Router } from "express";
-import { rateLimit } from "express-rate-limit";
+import { Router } from "express";
 import * as oidcLib from "openid-client";
 import { asyncHandler } from "../../http/async-handler.js";
 import { readCookie } from "../../http/cookies.js";
@@ -9,6 +8,11 @@ import type { Logger } from "../../logger.js";
 import { AUTH_PATHS } from "../../operations/protocol-routes.js";
 import { syncUserFromUserInfo } from "../users/user-sync.js";
 import { type AuthCookies, clearCookie } from "./auth-cookies.js";
+import {
+	loginRateLimit,
+	redirectAfterFailedSignIn,
+	redirectWithError,
+} from "./auth-redirects.js";
 import { registerBackchannelLogout } from "./backchannel-logout-route.js";
 import {
 	consumeLoginTransaction,
@@ -32,34 +36,9 @@ export interface AuthRoutesOptions {
 	readonly serverLimitPerMinute?: number;
 }
 
-/**
- * Sign-in starts are cheap to request but each stores a transaction and
- * may hit the IdP's discovery, and each callback consumes one: cap both
- * per client IP (`trust proxy` makes that the real client behind nginx).
- */
-function loginRateLimit(limit: number): RequestHandler {
-	return rateLimit({
-		windowMs: 60_000,
-		limit,
-		standardHeaders: "draft-8",
-		legacyHeaders: false,
-		// A browser navigation: send it back to the app, which explains.
-		handler: (_req, res) => {
-			redirectWithError(res, "rate_limited");
-		},
-	});
-}
-
-/** Codes the web app reads from `/?authError=` after a failed sign-in. */
-type AuthErrorCode =
-	| "access_denied"
-	| "login_expired"
-	| "login_failed"
-	| "idp_unavailable"
-	| "rate_limited";
-
-function redirectWithError(res: Response, code: AuthErrorCode): void {
-	res.redirect(303, `/?authError=${code}`);
+/** The `prompt` a browser may ask `/auth/login` for. */
+function requestedPrompt(value: unknown): "create" | "none" | undefined {
+	return value === "create" || value === "none" ? value : undefined;
 }
 
 /**
@@ -75,19 +54,32 @@ export function createAuthRouter(options: AuthRoutesOptions): Router {
 		noStore,
 		loginRateLimit(options.loginLimitPerMinute ?? 20),
 		asyncHandler(async (req, res) => {
-			const transaction = newLoginTransaction(safeReturnTo(req.query.returnTo));
+			const prompt = requestedPrompt(req.query.prompt);
+			const silent = prompt === "none";
+			const returnTo = safeReturnTo(req.query.returnTo);
+			if (silent) {
+				// At most one silent attempt a minute, marked before anything
+				// can fail: a signed-out IdP or an IdP that is down must not
+				// bounce the browser back here in a loop.
+				if (readCookie(req, cookies.ssoTried.name)) {
+					res.redirect(303, returnTo);
+					return;
+				}
+				res.cookie(cookies.ssoTried.name, "1", cookies.ssoTried.options);
+			}
+			const transaction = newLoginTransaction(returnTo, silent);
 			let url: URL;
 			try {
 				url = await oidc.authorizationUrl({
 					...transaction,
-					promptCreate: req.query.prompt === "create",
+					prompt,
 					uiLocale: isLocale(req.query.locale) ? req.query.locale : undefined,
 				});
 			} catch (error) {
 				if (!(error instanceof IdpUnavailableError)) throw error;
 				// A browser navigation: send it somewhere that can explain.
 				logger.warn("IdP unavailable at sign-in");
-				redirectWithError(res, "idp_unavailable");
+				redirectAfterFailedSignIn(res, transaction, "idp_unavailable");
 				return;
 			}
 			await saveLoginTransaction(transaction);
@@ -124,18 +116,20 @@ export function createAuthRouter(options: AuthRoutesOptions): Router {
 				);
 			} catch (error) {
 				if (error instanceof oidcLib.AuthorizationResponseError) {
-					redirectWithError(
+					// Includes `login_required` and the like for a silent sign-in.
+					redirectAfterFailedSignIn(
 						res,
+						transaction,
 						error.error === "access_denied" ? "access_denied" : "login_failed",
 					);
 					return;
 				}
 				if (error instanceof IdpUnavailableError) {
-					redirectWithError(res, "idp_unavailable");
+					redirectAfterFailedSignIn(res, transaction, "idp_unavailable");
 					return;
 				}
 				logger.warn({ err: error }, "Authorization code exchange failed");
-				redirectWithError(res, "login_failed");
+				redirectAfterFailedSignIn(res, transaction, "login_failed");
 				return;
 			}
 			const sub = tokens.claims?.sub;
@@ -148,7 +142,7 @@ export function createAuthRouter(options: AuthRoutesOptions): Router {
 				);
 			} catch (error) {
 				logger.warn({ err: error }, "Userinfo at sign-in failed");
-				redirectWithError(res, "login_failed");
+				redirectAfterFailedSignIn(res, transaction, "login_failed");
 				return;
 			}
 
@@ -169,6 +163,7 @@ export function createAuthRouter(options: AuthRoutesOptions): Router {
 				accessTokenExpiresAt: tokens.accessTokenExpiresAt,
 			});
 			res.cookie(cookies.session.name, cookieValue, cookies.session.options);
+			res.cookie(cookies.ssoHint.name, "1", cookies.ssoHint.options);
 			res.redirect(303, transaction.returnTo);
 		}),
 	);
@@ -181,6 +176,8 @@ export function createAuthRouter(options: AuthRoutesOptions): Router {
 			const session = raw ? await sessions.findByCookie(raw) : null;
 			if (session) await sessions.destroyById(session.id);
 			clearCookie(res, cookies.session);
+			// Signed out on purpose: no silent sign-in on the next visit.
+			clearCookie(res, cookies.ssoHint);
 			let target = "/";
 			try {
 				const url = await oidc.endSessionUrl(session?.tokens.idToken);

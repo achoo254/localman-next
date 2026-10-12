@@ -1,6 +1,7 @@
 import { type JWTVerifyGetKey, createRemoteJWKSet } from "jose";
 import * as oidc from "openid-client";
 import { IdpUnavailableError } from "./oidc-errors.js";
+import { type TokenSet, toTokenSet } from "./token-set.js";
 
 /**
  * `telegram` releases the linked chat at userinfo. No `offline_access` (the
@@ -11,8 +12,6 @@ import { IdpUnavailableError } from "./oidc-errors.js";
 export const LOGIN_SCOPE = "openid profile email telegram";
 export const CALLBACK_PATH = "/auth/callback";
 const DISCOVERY_TIMEOUT_SECONDS = 10;
-/** Used when the token response omits `expires_in`; refreshes early. */
-const FALLBACK_TOKEN_TTL_SECONDS = 60;
 
 export interface OidcClientSettings {
 	readonly issuer: string;
@@ -22,21 +21,15 @@ export interface OidcClientSettings {
 	readonly publicUrl: string;
 }
 
-export interface TokenSet {
-	readonly accessToken: string;
-	readonly refreshToken?: string;
-	readonly idToken?: string;
-	readonly accessTokenExpiresAt: Date;
-	/** Validated ID token claims, when the response carried an ID token. */
-	readonly claims?: oidc.IDToken;
-}
-
 export interface AuthorizationRequest {
 	readonly state: string;
 	readonly nonce: string;
 	readonly codeVerifier: string;
-	/** Ask the IdP to open its sign-up page (only if it advertises `create`). */
-	readonly promptCreate: boolean;
+	/**
+	 * `create` opens the IdP's sign-up page (only if it advertises it);
+	 * `none` is a silent sign-in, answered at once or with `login_required`.
+	 */
+	readonly prompt?: "create" | "none";
 	/** Web language (a checked `Locale`), sent as `ui_locales` to the IdP. */
 	readonly uiLocale?: string;
 }
@@ -44,19 +37,6 @@ export interface AuthorizationRequest {
 interface Discovered {
 	readonly config: oidc.Configuration;
 	readonly jwks: JWTVerifyGetKey;
-}
-
-function toTokenSet(
-	response: oidc.TokenEndpointResponse & oidc.TokenEndpointResponseHelpers,
-): TokenSet {
-	const ttl = response.expiresIn() ?? FALLBACK_TOKEN_TTL_SECONDS;
-	return {
-		accessToken: response.access_token,
-		refreshToken: response.refresh_token,
-		idToken: response.id_token,
-		accessTokenExpiresAt: new Date(Date.now() + ttl * 1000),
-		claims: response.claims(),
-	};
 }
 
 /**
@@ -117,7 +97,7 @@ export class OidcClient {
 
 	async authorizationUrl(request: AuthorizationRequest): Promise<URL> {
 		const { config } = await this.load();
-		const prompts = config.serverMetadata().prompt_values_supported;
+		const supported = config.serverMetadata().prompt_values_supported;
 		const params: Record<string, string> = {
 			redirect_uri: this.redirectUri,
 			scope: LOGIN_SCOPE,
@@ -128,12 +108,14 @@ export class OidcClient {
 			state: request.state,
 			nonce: request.nonce,
 		};
+		const { prompt } = request;
 		if (
-			request.promptCreate &&
-			Array.isArray(prompts) &&
-			prompts.includes("create")
+			prompt === "none" ||
+			(prompt === "create" &&
+				Array.isArray(supported) &&
+				supported.includes("create"))
 		) {
-			params.prompt = "create";
+			params.prompt = prompt;
 		}
 		if (request.uiLocale) params.ui_locales = request.uiLocale;
 		return oidc.buildAuthorizationUrl(config, params);

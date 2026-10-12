@@ -18,6 +18,7 @@ const loginTransactionSchema = new Schema(
 		nonce: { type: String, required: true },
 		codeVerifier: { type: String, required: true },
 		returnTo: { type: String, required: true },
+		silent: { type: Boolean, default: false },
 		expiresAt: { type: Date, required: true, expires: 0 },
 	},
 	{ collection: "login_transactions", versionKey: false },
@@ -33,11 +34,14 @@ export interface LoginTransaction {
 	readonly nonce: string;
 	readonly codeVerifier: string;
 	readonly returnTo: string;
+	/** `prompt=none`: a refusal sends the browser back without an error. */
+	readonly silent: boolean;
 }
 
 /** A new pending sign-in, not stored yet (see `saveLoginTransaction`). */
 export function newLoginTransaction(
 	returnTo: string,
+	silent: boolean,
 ): LoginTransaction & { cookieValue: string } {
 	return {
 		cookieValue: randomBytes(32).toString("base64url"),
@@ -45,6 +49,7 @@ export function newLoginTransaction(
 		nonce: oidc.randomNonce(),
 		codeVerifier: oidc.randomPKCECodeVerifier(),
 		returnTo,
+		silent,
 	};
 }
 
@@ -81,5 +86,6 @@ export async function consumeLoginTransaction(
 		nonce: found.nonce,
 		codeVerifier: found.codeVerifier,
 		returnTo: found.returnTo,
+		silent: found.silent === true,
 	};
 }
