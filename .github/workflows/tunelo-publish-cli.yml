@@ -8,7 +8,9 @@
 # The tag must match packages/tunelo-cli/package.json version, and a version
 # already on npmjs cannot be published again — always bump before tagging.
 #
-# Secret: NPM_TOKEN — npm granular access token with publish rights on `tunelo`.
+# Auth: npm trusted publishing (OIDC), no token. npmjs.com > tunelo > Settings >
+# Trusted Publisher: user achoo254, repo localman-next, workflow tunelo-publish-cli.yml,
+# with `npm publish` allowed. GitHub-hosted runners only.
 name: tunelo-publish-cli
 
 on:
@@ -17,6 +19,8 @@ on:
 
 permissions:
   contents: read
+  # npm trusted publishing: the publish step signs in with this job's OIDC token.
+  id-token: write
 
 jobs:
   publish:
@@ -46,8 +50,8 @@ jobs:
 
       # build:tunelo-cli emits a self-contained package.json in packages/tunelo-cli/dist
       # (explicit `files` list), so publish from there.
-      - name: Publish to npmjs
+      # Trusted publishing needs npm CLI 11.5.1+ (Node 22 ships npm 10).
+      - run: npm install -g npm@11
+      - name: Publish to npmjs (trusted publishing, no token)
         working-directory: packages/tunelo-cli/dist
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

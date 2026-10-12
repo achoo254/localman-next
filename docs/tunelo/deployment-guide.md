@@ -18,11 +18,14 @@ Quy trình phát hành:
 ```bash
 npm version <patch|minor|major> --workspace tunelo --no-git-tag-version   # bump packages/tunelo-cli
 # đặt cùng version vào packages/tunelo-cli/src/version.ts (VERSION) — test version.test.ts kiểm tra khớp
-git commit -am "chore(release): X.Y.Z" && git tag vX.Y.Z && git push && git push --tags
+git commit -am "chore(tunelo): release X.Y.Z" && git tag tunelo-vX.Y.Z && git push && git push --tags
 ```
 
-- Secret `NPM_TOKEN` (Settings → Secrets and variables → Actions): npm granular
-  access token có quyền publish gói `tunelo`.
+- Xác thực bằng npm trusted publishing (OIDC), không token: npmjs.com → gói `tunelo` →
+  Settings → Trusted Publisher (user `achoo254`, repo `localman-next`, workflow
+  `tunelo-publish-cli.yml`, cho phép `npm publish`). Workflow có `id-token: write` và
+  nâng npm lên 11 (cần ≥ 11.5.1). Recovery code 2FA của npm nằm ở iCloud
+  `ENV production/npmjs/`.
 - Một version đã lên npm không publish lại được — luôn bump version trước khi tag.
 - Người dùng cài bằng `npm install -g tunelo`, cập nhật bằng `tunelo update`
   (xem `README.md`). Bản cũ `@dattqh/tunelo` từng phát hành trên GitLab registry
