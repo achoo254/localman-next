@@ -74,12 +74,15 @@ describe("API client tabs", () => {
 		fireEvent.change(screen.getByRole("textbox", { name: "URL" }), {
 			target: { value: "https://a.test/x?id=1" },
 		});
-		await waitFor(() => expect(saved(calls, "PUT").length).toBeGreaterThan(0));
-		const last = saved(calls, "PUT").at(-1);
-		expect(last?.body).toMatchObject({
-			order: 0,
-			draft: { url: "https://a.test/x?id=1" },
-		});
+		// Wait for the save of the typed URL itself: on a slow runner the blank
+		// new tab is saved first, and a save still pending at the end of the
+		// test would land in the next test's calls.
+		await waitFor(() =>
+			expect(saved(calls, "PUT").at(-1)?.body).toMatchObject({
+				order: 0,
+				draft: { url: "https://a.test/x?id=1" },
+			}),
+		);
 		expect(screen.getByRole("tab", { name: /a\.test\/x/ })).toBeInTheDocument();
 		expect(byDataId("tabbar-tab-dirty")).toBeInTheDocument();
 	});
