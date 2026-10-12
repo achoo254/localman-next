@@ -34,4 +34,4 @@ Backup trước deploy: `localman-20261012-135233.archive.gz` trên server. Rele
 - Trình duyệt dùng để kiểm chưa đăng nhập, và không đăng nhập thay user: trang tài khoản, menu tài khoản, nhãn ở trang Notification channels và thông báo chạm giới hạn chưa xem trên prod. Các phần này có test (web 1229, API 1222, kể cả test chặn chữ thương mại trong nhãn thông báo) và E2E 36/36.
 - Prod chỉ có một tài khoản và tài khoản đó không đủ điều kiện, nên việc tự cấp Pro chưa xảy ra thật trên prod; đã kiểm bằng test tích hợp và E2E (tài khoản mới đăng nhập được cấp, `set-user-plan` đưa về Free).
 - Không có máy quét DAST tự động (ZAP, nuclei); các phép thử làm tay bằng curl, trình duyệt và truy vấn Mongo chỉ đọc.
-- Còn kiểm số restart của `localman-api` sau 15 phút theo §6 của skill vận hành.
+- Kiểm 15 phút sau deploy (14:12): `localman-api` online, uptime 19 phút, restart vẫn 27 (không tăng sau lần reload của deploy); `/healthz` cổng 4000 và 4100 `db: connected`; 500 dòng log cuối không có mức error/fatal và không có lỗi tự cấp Pro; site trả 200.
