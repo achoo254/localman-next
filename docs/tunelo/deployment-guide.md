@@ -109,11 +109,22 @@ Still on the old domain; requests show up in
 - The OneDash dev setup, `onedash-dev.tunnel.inetdev.io.vn`
   (`.env.dattqh_lab` and the same host lists), and its agent on lab .178.
 
-When that log stays empty: drop `tunnel.inetdev.io.vn` from `TUNNEL_DOMAINS`
-(Tunelo and Localman), delete its 443 block, log and port 80 names in
-`tunelo.conf`, delete the
-DNS records `tunnel` and `*.tunnel` in zone `inetdev.io.vn`, and
-`certbot delete --cert-name tunnel.inetdev.io.vn`.
+Kept for good: `mail.tunnel.inetdev.io.vn`, the OneMail dev tunnel
+(`tunelo http 8011 -s mail`; workspace-application uses it as its origin for
+cookies, passkeys and WOPI). It has its own DNS A record (DNS only), its own
+certificate (`certbot --cert-name mail.tunnel.inetdev.io.vn`, credential
+`/root/.secrets/cloudflare.ini` for zone `inetdev.io.vn`) and its own server block
+in `tunelo.conf`; `Host` passes through unchanged, so `tunnel.inetdev.io.vn` stays in
+Tunelo's `TUNNEL_DOMAINS` as an internal alias (the `cloudpanel-dev` proxy needs it
+too). Its requests are not counted in the old-domain log.
+
+When that log stays empty: delete the old domain's public 443 block, log and port
+80 names in `tunelo.conf` (not the `mail` blocks), delete the DNS records `tunnel`
+and `*.tunnel` in zone `inetdev.io.vn` (keep `mail.tunnel`), and
+`certbot delete --cert-name tunnel.inetdev.io.vn`. Keep `tunnel.inetdev.io.vn` in
+`TUNNEL_DOMAINS`. CLIs that start the `mail` tunnel must then connect with
+`--server wss://tunnel.hoandat.com` (or `TUNELO_SERVER`), since CLI 1.6.x defaults
+to the old apex.
 
 ## MongoDB Setup (v0.3+)
 
