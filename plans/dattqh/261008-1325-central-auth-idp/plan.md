@@ -1,7 +1,7 @@
 ---
 title: "Xác thực tập trung auth.hoandat.com (OIDC IdP) cho Localman và Tunelo"
 description: "Một nơi đăng nhập duy nhất cho mọi sản phẩm cá nhân: IdP OpenID Connect tự host, không dùng email, phục vụ Localman web, Localman MCP, Tunelo CLI và Tunelo web."
-status: pending
+status: in-progress
 priority: P1
 effort: "L (3 phase: 2×M, 1×L)"
 branch: ""

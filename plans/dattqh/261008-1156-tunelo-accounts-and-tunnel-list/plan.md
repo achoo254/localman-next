@@ -1,7 +1,7 @@
 ---
 title: "Tunelo: tài khoản qua auth.hoandat.com và API liệt kê tunnel (trong monorepo localman-next)"
 description: "Tunelo CLI và server dùng IdP chung để đăng nhập một lần; token gắn với tài khoản; Localman liệt kê tunnel theo tài khoản, giữ `tunelo link` cho máy chưa gắn tài khoản."
-status: pending
+status: in-progress
 priority: P1
 effort: "L (3 phase: 1×L, 1×M, 1×S)"
 branch: ""

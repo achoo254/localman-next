@@ -1,7 +1,7 @@
 ---
 title: "Localman web — mô phỏng 100% mockapi.io và 100% quản lý Collections/Environments (kèm share) của Postman"
 description: "Xây SaaS mock REST API độc lập, giống mockapi.io về IA, luồng, tương tác, hạn mức gói và hợp đồng API, với design system riêng. Sản phẩm tại localman.hoandat.com."
-status: pending
+status: in-progress
 priority: P2
 effort: "XL (23 phase: 13×M, 9×L, 1×XL)"
 branch: ""
@@ -68,27 +68,26 @@ Dashboard và mock runtime là hai process riêng. Lý do: runtime công khai c�
 
 | # | Phase | Tier | Phụ thuộc | Trạng thái |
 |---|---|---|---|---|
-| 01 | [Scaffold monorepo và nền tảng brand](phase-01-scaffold-and-brand-foundation.md) | M | — | pending |
-| 02 | [Auth: email/password, Google, GitHub, reset password](phase-02-auth.md) | M | 01 | pending |
-| 03 | [Projects và giới hạn gói](phase-03-projects-and-plan-limits.md) | M | 02 | pending |
-| 04 | [Resources, schema, sinh dữ liệu](phase-04-resources-schema-and-data-generation.md) | L | 03 | pending |
-| 05 | [Mock runtime công khai](phase-05-mock-runtime.md) | L | 04 | pending |
-| 06 | [UI Project detail: canvas cây resource và các modal](phase-06-project-detail-ui.md) | L | 04 (05 để test end-to-end) | pending |
-| 07 | [Collaboration và magic link](phase-07-collaboration-and-magic-link.md) | M | 03 | pending |
-| 08 | [Landing, pricing, account](phase-08-landing-pricing-account.md) | M | 03, 06 | pending |
-| 09 | [Hardening, E2E, deploy](phase-09-hardening-e2e-deploy.md) | M | 05–08 | pending |
-| 10 | [API Client: lõi gửi request và proxy (port từ localman)](phase-10-api-client.md) | L | 09 | pending |
-| 11 | [Workspace, vai trò và chia sẻ phần tử](phase-11-workspaces-and-sharing.md) | L | 10 | pending |
-| 12 | [Collections tương đương 100% Postman](phase-12-collections.md) | L | 11 | pending |
+| 01 | [Scaffold monorepo và nền tảng brand](phase-01-scaffold-and-brand-foundation.md) | M | — | in-progress |
+| 02 | [Auth: email/password, Google, GitHub, reset password](phase-02-auth.md) | M | 01 | completed |
+| 03 | [Projects và giới hạn gói](phase-03-projects-and-plan-limits.md) | M | 02 | completed |
+| 04 | [Resources, schema, sinh dữ liệu](phase-04-resources-schema-and-data-generation.md) | L | 03 | completed |
+| 05 | [Mock runtime công khai](phase-05-mock-runtime.md) | L | 04 | completed |
+| 06 | [UI Project detail: canvas cây resource và các modal](phase-06-project-detail-ui.md) | L | 04 (05 để test end-to-end) | completed |
+| 07 | [Collaboration và magic link](phase-07-collaboration-and-magic-link.md) | M | 03 | completed |
+| 08 | [Landing, pricing, account](phase-08-landing-pricing-account.md) | M | 03, 06 | completed |
+| 09 | [Hardening, E2E, deploy](phase-09-hardening-e2e-deploy.md) | M | 05–08 | completed |
+| 10 | [API Client: lõi gửi request và proxy (port từ localman)](phase-10-api-client.md) | L | 09 | in-progress |
+| 11 | [Workspace, vai trò và chia sẻ phần tử](phase-11-workspaces-and-sharing.md) | L | 10 | completed |
+| 12 | [Collections tương đương 100% Postman](phase-12-collections.md) | L | 11 | completed |
 | 13 | [Environments và biến tương đương 100% Postman](phase-13-environments-and-variables.md) | L | 11, 12 | pending |
 | 14 | [Fork, merge, pull request, comment, watch](phase-14-fork-merge-comments-watch.md) | XL | 12, 13 | pending |
 | 15 | [Chia sẻ công khai: public workspace, guest, nút Run, access key](phase-15-public-sharing.md) | M | 11, 12, 13, 14 | pending |
 | 16 | [Live Mock Sync: mock luôn đồng bộ với collection và environment](phase-16-live-mock-sync.md) | M | 12, 13, 14 | pending |
-| 17 | [Nền tảng MCP (toolsets, dry-run, coverage) cùng Mock MCP tức thì](phase-17-mock-mcp.md) — **chạy ngay sau 09, trước 10** | M | 5, 9 | pending |
+| 17 | [Nền tảng MCP (toolsets, dry-run, coverage) cùng Mock MCP tức thì](phase-17-mock-mcp.md) — **chạy ngay sau 09, trước 10** | M | 5, 9 | in-progress |
 | 18 | [Localman MCP: đủ toolset cho API client, chia sẻ, cộng tác, đồng bộ, traffic](phase-18-localman-mcp-client-tools.md) | M | 16, 17, 19, 20, 21 | pending |
-
-| 19 | [Mock power-ups: Faker thông minh, tạo resource từ JSON/OpenAPI/CSV, xuất type, chaos, response theo điều kiện](phase-19-mock-power-ups.md) | M | 4, 5, 6 | pending |
-| 20 | [Mock lai localhost, log request có replay, webhook inbox về localhost, mock callback](phase-20-mock-traffic-and-hybrid-localhost.md) | L | 5, 10 | pending |
+| 19 | [Mock power-ups: Faker thông minh, tạo resource từ JSON/OpenAPI/CSV, xuất type, chaos, response theo điều kiện](phase-19-mock-power-ups.md) | M | 4, 5, 6 | in-progress |
+| 20 | [Mock lai localhost, log request có replay, webhook inbox về localhost, mock callback](phase-20-mock-traffic-and-hybrid-localhost.md) | L | 5, 10 | completed |
 | 21 | [Client power-ups: secret local không rời trình duyệt, nối request không cần script, docs tự sinh](phase-21-client-power-ups.md) | M | 10, 13, 16 | pending |
 | 22 | [Browser extension: gửi request vượt CORS, cùng bộ công cụ cookie, storage, network, performance cho tab đang mở](phase-22-browser-extension.md) | L | 10 | pending |
 | 23 | [Extension: tiện ích mở rộng (cache/SW, console, tạm tắt CORS, giả lập thiết bị, sửa header, xem JSON, thay response bằng mock)](phase-23-extension-utilities.md) | M | 22 | pending |
