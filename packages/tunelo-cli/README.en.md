@@ -6,7 +6,7 @@ Self-hosted tunnel proxy that exposes local services via public HTTPS wildcard s
 
 ```
 npx tunelo http 3000
-# => https://myapp.tunnel.inetdev.io.vn
+# => https://myapp.tunnel.hoandat.com
 ```
 
 ## Why Tunelo?
@@ -48,7 +48,7 @@ Browser → nginx (TLS, wildcard cert) → Tunnel Server (WS) → Client CLI →
 ```
 
 1. Client CLI connects to tunnel server via WebSocket
-2. Server assigns a public subdomain (e.g. `myapp.tunnel.inetdev.io.vn`)
+2. Server assigns a public subdomain (e.g. `myapp.tunnel.hoandat.com`)
 3. HTTP requests to that subdomain are relayed through the WS connection to your local service
 
 ### Performance
@@ -137,7 +137,7 @@ npx tunelo http 3000 --subdomain myapp --key tk_your_secret_key
 ### Save Config (avoid repeating flags)
 
 ```bash
-npx tunelo config --key tk_your_secret_key --server wss://tunnel.inetdev.io.vn
+npx tunelo config --key tk_your_secret_key --server wss://tunnel.hoandat.com
 npx tunelo http 3000   # uses saved config
 ```
 
@@ -147,7 +147,7 @@ npx tunelo http 3000   # uses saved config
 tunelo http <port>              Create HTTP tunnel to local port
   -s, --subdomain <name>        Request specific subdomain
   -k, --key <apikey>            API key
-  --server <url>                Server URL (default: wss://tunnel.inetdev.io.vn)
+  --server <url>                Server URL (default: wss://tunnel.hoandat.com)
 
 tunelo tcp <port>               Create TCP tunnel to local port
   --remote-port <port>          Request specific remote port
@@ -192,7 +192,7 @@ pnpm lint                # Lint (biome)
 
 See `docs/tunelo/deployment-guide.md` in the monorepo for full instructions. Quick summary:
 
-1. Setup DNS: `A *.tunnel.inetdev.io.vn → VPS_IP`
+1. Setup DNS: `A tunnel.hoandat.com` and `A *.tunnel.hoandat.com → VPS_IP` (DNS only)
 2. Get wildcard SSL: `bash infra/certbot-setup.sh`
 3. Configure nginx: `cp infra/nginx.conf /etc/nginx/sites-available/tunelo`
 4. Deploy: `bash infra/deploy.sh`

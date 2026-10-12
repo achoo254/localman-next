@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Docs, ADR, phát hành tunelo-v1.7.0, deploy, ngày chặn token ẩn danh"
-status: pending
+status: in-progress
 priority: P2
 effort: "S"
 dependencies: [1, 2]
@@ -52,9 +52,9 @@ dependencies: [1, 2]
 ### Checklist
 - [ ] T1 ADR 0004 và `system-architecture.md` đã cập nhật
 - [ ] T2 README VI/EN, changelog và bảng mã lỗi trong `CLAUDE.md` đã cập nhật
-- [ ] T3 nginx và `certbot-setup.sh` dùng domain mới, Option B mặc định
+- [x] T3 nginx và `certbot-setup.sh` dùng domain mới, Option B mặc định
 - [ ] T4 Workflow publish đúng tag và thư mục
-- [ ] T5 DNS và cert wildcard `*.tunnel.hoandat.com` đã có sau khi user xác nhận, timer gia hạn bật
+- [x] T5 DNS và cert wildcard `*.tunnel.hoandat.com` đã có sau khi user xác nhận, timer gia hạn bật
 - [ ] T6 Server chạy `AUTH_MODE=hybrid` với cutoff và 2 domain sau khi user xác nhận
 - [ ] T7 `tunelo@1.7.0` có trên npm sau khi user xác nhận
 - [ ] T8 Kiểm sau deploy pass
