@@ -145,8 +145,9 @@ export function renderWorkbench(
 		retryDelaysMs?: readonly number[];
 	} = {},
 ) {
-	return render(
-		<QueryClientProvider client={createTestQueryClient()}>
+	const client = createTestQueryClient();
+	const view = render(
+		<QueryClientProvider client={client}>
 			<TooltipProvider>
 				<ToastProvider>
 					<WorkbenchProvider
@@ -160,6 +161,8 @@ export function renderWorkbench(
 			</TooltipProvider>
 		</QueryClientProvider>,
 	);
+	// The client too: a test can wait until no query is fetching.
+	return { ...view, client };
 }
 
 /** `data-id` lookup inside the document; throws when missing. */

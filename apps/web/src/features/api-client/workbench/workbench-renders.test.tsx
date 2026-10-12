@@ -57,7 +57,7 @@ describe("workbench renders", () => {
 			})),
 		);
 		const user = userEvent.setup();
-		renderWorkbench();
+		const { client } = renderWorkbench();
 		await screen.findByRole("tablist", { name: "Open requests" });
 		await user.click(byDataId("request-send"));
 		await screen.findByText("echo GET https://api.test/a");
@@ -73,6 +73,9 @@ describe("workbench renders", () => {
 		await waitFor(() =>
 			expect(byDataId("sidebar-history-list")).not.toHaveAttribute("aria-busy"),
 		);
+		// A refetch counts once its answer is in: on a slow runner the second
+		// history response used to land during the keystrokes.
+		await waitFor(() => expect(client.isFetching()).toBe(0));
 		const name = screen.getByRole("textbox", { name: "Request name" });
 		await user.click(name);
 		renders.history = 0;
