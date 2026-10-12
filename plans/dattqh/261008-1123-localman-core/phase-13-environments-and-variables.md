@@ -48,7 +48,7 @@ Nguồn tham chiếu: [Managing environments](https://learning.postman.com/docs/
 1. Viết `variable-resolver` trước, có test đủ mọi tổ hợp scope, biến tắt và giá trị local hoặc shared bị thiếu.
 2. Giá trị dùng khi gửi request là: local nếu user đã có local, ngược lại là shared. Đúng như Postman: "Requests and scripts use the active environment's local values".
 3. Secret: không bao giờ trả plaintext cho Viewer qua API list; chỉ giải mã ở bước proxy. UI che giá trị và có nút hiện cho chính chủ hoặc Editor.
-4. Thao tác share, update, reset, unshare đều có bản "all" dạng batch, và ghi revision giống changelog của phase 12.
+4. Thao tác share, update, reset, unshare đều có bản "all" dạng batch (không ghi revision cho environment, Vòng 38).
 5. Import/export dùng định dạng environment JSON của Postman. Export chỉ xuất giá trị shared, không xuất local và secret.
 
 ## Verification
@@ -65,7 +65,7 @@ Nguồn tham chiếu: [Managing environments](https://learning.postman.com/docs/
 | T2 | Viết `variable-resolver` (thứ tự global < collection < environment < local, trả scope thắng và danh sách bị ghi đè) cùng `dynamic-variables` dùng whitelist Faker, kèm test dạng bảng cho mọi tổ hợp scope, biến tắt, thiếu local hoặc shared | fullstack-developer | với T1, T3 | `packages/shared/src/variable-resolver.ts`, `packages/shared/src/dynamic-variables.ts` |
 | T3 | Viết `secret-cipher` AES-256-GCM, key lấy từ env, có key id để xoay vòng; unit test mã hoá đi rồi về và key sai thì lỗi | fullstack-developer | với T1, T2 | `apps/api/src/modules/environments/secret-cipher.ts` |
 | T4 | Tạo model environment, global variables, local value, active environment; khai báo operation qua registry (toolset `client`) cho tạo, đổi tên, duplicate, delete, đặt màu, set active, globals; quyền qua `access-policy` của phase 11; API list không trả plaintext secret cho Viewer | fullstack-developer | — | `apps/api/src/modules/environments/` (model, routes, service) |
-| T5 | Làm thao tác share/update/reset/unshare đơn lẻ và bản "all" dạng batch, ghi revision như changelog phase 12; Viewer chỉ ghi local (sửa shared nhận 403). Làm import/export environment JSON định dạng Postman, chỉ xuất giá trị shared, không xuất local hay secret | fullstack-developer | — | `apps/api/src/modules/environments/` (service, codec import/export) |
+| T5 | Làm thao tác share/update/reset/unshare đơn lẻ và bản "all" dạng batch (không revision, Vòng 38); Viewer chỉ ghi local (sửa shared nhận 403). Làm import/export environment JSON định dạng Postman, chỉ xuất giá trị shared, không xuất local hay secret | fullstack-developer | — | `apps/api/src/modules/environments/` (service, codec import/export) |
 | T6 | Nối `variable-resolver` vào request preparer phía server và đường gửi thẳng từ trình duyệt (dùng local nếu có, không thì shared; secret chỉ giải mã ở bước proxy). Thêm API `pm.environment`, `pm.collectionVariables`, `pm.globals`, `pm.variables` (`get`, `set`, `unset`, `has`, `toObject`, `clear`) vào sandbox, script ghi vào giá trị local | fullstack-developer | — | `apps/api/src/modules/api-client/`, `apps/web/src/features/api-client/scripts/` |
 | T7 | Làm UI environment: `environment-selector`, `environment-editor` (cột Name, Value, Shared Value, Description, Type, Enabled và menu More), `value-sync-indicator`, `color-picker`, `globals-editor`, `variables-pane`, thanh phải Info (tab Forks và Pull requests để trống cho phase 14) | fullstack-developer | với T8 | `apps/web/src/features/environments/` |
 | T8 | Làm CodeMirror extension `variable-highlighter` (tô màu, tô đỏ biến chưa khai báo, tooltip giá trị và scope, gạch ngang giá trị bị ghi đè, gợi ý khi gõ `{{`) và `set-as-variable-menu` ("Set as variable", "Add to" chọn scope, biến tạm) | fullstack-developer | với T7 | `apps/web/src/features/variables/` |
@@ -76,34 +76,37 @@ Nguồn tham chiếu: [Managing environments](https://learning.postman.com/docs/
 
 ### Checklist
 - [x] T1 Spec component và trạng thái Viewer/Editor đã chốt theo prototype (2026-10-12): dùng đúng `data-id` của prototype (`environment-header*`, `environment-editor`, `environment-filter`, `var-table*`, `globals-editor`, `environment-viewer-note`); `vars-quick*`, `var-tooltip*`, `var-suggest*`, `modal-set-variable-*` làm ở đợt B
-- [ ] T2 `variable-resolver` và `dynamic-variables` có test bảng đủ tổ hợp
+- [x] T2 `variable-resolver` và `dynamic-variables` có test bảng đủ tổ hợp
   - [x] T2a `packages/shared/src/api-client/environments/variable-resolver.ts` (2026-10-12): global < collection < environment < temporary, local thắng shared, trả scope thắng và danh sách bị ghi đè, secret bị giấu vẫn thắng và không bị tầng dưới điền thay; 13 test bảng
-  - [ ] T2b `dynamic-variables` mở rộng nhóm `$random*` theo whitelist Faker (đợt B)
+  - [x] T2b (2026-10-12): 109 tên `$random*` map sang whitelist Faker, web tải chunk Faker riêng khi request cần (Jev 1,0); `DYNAMIC_VARIABLES` cho gợi ý
 - [x] T3 `secret-cipher` có test round-trip và key sai (2026-10-12): dùng lại `TokenCipher`, keyring `VARIABLE_ENCRYPTION_KEY` không bắt buộc (thiếu thì 503), slot làm associated data; 5 test gồm round-trip, sai slot, sai khoá, khoá đã xoay, thiếu keyring
 - [x] T4 Model và operation environment, globals, active environment qua registry (2026-10-12, commit `9198c6a`): 15 operation toolset `client` có MCP; xoá vĩnh viễn có dry run; xoá workspace dọn environment và globals; danh sách đếm biến bằng `$size`
-- [ ] T5 Share/update/reset/unshare (đơn và all), revision, import/export Postman
+- [x] T5 Share/update/reset/unshare (đơn và all), import/export Postman (không revision cho environment, Vòng 38)
   - [x] T5a Thao tác đơn từng biến trên UI (2026-10-12): Share value, Update shared value, Reset value, Unshare, Copy value; Viewer sửa shared nhận 403
-  - [ ] T5b Bản "all" dạng batch có revision, import/export environment JSON (đợt B)
-- [ ] T6 Resolver nối vào preparer và đường gửi thẳng; `pm.*` trong sandbox ghi local
+  - [x] T5b (2026-10-12): Share all, Update all shared values, Reset all, Unshare all (shared lưu trước, local chỉ reset sau khi shared thành công); `client.exportEnvironment`/`client.importEnvironment` định dạng Postman, round-trip giữ trạng thái không share
+- [x] T6 Resolver nối vào preparer và đường gửi thẳng; `lm.*` trong sandbox ghi local
   - [x] T6a Phía web (2026-10-12): `useVariableLayers` dựng globals, collection (kèm giá trị local) và environment đang active cho `prepareSend`; request dùng secret bị giấu dừng với `SECRET_WITHHELD` (Jev 0.92 dời phần server điền sang đợt B)
-  - [ ] T6b Server điền secret bị giấu khi proxy; `lm.environment`/`lm.collectionVariables`/`lm.globals` ghi giá trị local (giữ `lm.*`, Vòng 27) (đợt B)
-- [ ] T7 UI environment đủ cột và menu More theo ma trận
+  - [x] T6b (2026-10-12): `lm.globals`/`lm.collectionVariables`/`lm.environment` đọc giá trị scope và ghi giá trị local (đích chốt lúc gửi, lưu cả khi request lỗi/huỷ); server **không** điền secret bị giấu (Jev 0,99, Vòng 38)
+- [x] T7 UI environment đủ cột và menu More theo ma trận
   - [x] T7a (2026-10-12): sidebar Environments (tạo, Globals, set active, duplicate, xoá), ô chọn environment ở cuối thanh tab, trang environment (màu, đổi tên, Read only, Request to edit, Set active, Share, More) và Globals, bảng đủ cột Name, Value (local), Shared value, Description, Type, Enabled, trạng thái Edited/Synced, More từng dòng, lọc theo tên; Share của collection có "include environment" thật
-  - [ ] T7b Pane Variables, thanh phải Info, menu "all" (đợt B)
-- [ ] T8 Highlighter, tooltip, gợi ý `{{`, "Set as variable"
+  - [x] T7b (2026-10-12): pane Variables (kèm biến tạm của tab), Info (ID, người tạo, ngày, collection đang dùng, active cho bạn, badge Shared with you), menu "all", tạo nhanh ở ô chọn, Copy link/Share/Rename trong menu
+- [x] T8 (2026-10-12): highlighter, tooltip (scope thắng, giá trị bị ghi đè), gợi ý `{{` (ARIA combobox), "Set as variable"/"Add to" (Editor ghi shared kèm cảnh báo trùng tên và reset local; Viewer chỉ biến tạm), biến tạm theo tab
 - [x] T9 Integration A/B và test không lộ secret pass (2026-10-12): `environment-values.test.ts`, `environment-crud.test.ts`, `environment-lifecycle.test.ts`, `variable-scopes.test.ts` (26 test)
-- [ ] T10 E2E environment pass
+- [x] T10 E2E environment pass
   - [x] T10a (2026-10-12): `e2e/specs/environments-and-variables.spec.ts` gửi `{{baseUrl}}/users` tới mock, đổi environment active thì request đổi theo, giá trị local thắng shared
-  - [ ] T10b Hover thấy đúng scope (đợt B, cùng highlighter)
+  - [x] T10b (2026-10-12): hover thấy đúng giá trị và scope
 - [ ] T11 Staging đã deploy sau khi user xác nhận
   - [x] T11a Đợt A lên prod với cờ `environments` tắt (2026-10-12, user chốt), DAST API và nginx đạt
   - [ ] T11b Bật cờ `environments` sau đợt B và review
-- [ ] T12 Review không còn finding mức high
+- [x] T12 Review không còn finding mức high (kiểm lại `reports/code-reviewer-261012-1630-phase-13-slice-b-fix-verification.md`: 0 High; Medium mới N1 đã sửa)
   - [x] T12a Review đợt A (2026-10-12): `plans/dattqh/reports/code-reviewer-261012-0935-phase-13-slice-a.md` 3 High, 4 Medium, 8 Low; đã sửa hết, mỗi High/Medium có test tái hiện (mục "Xử lý" của report)
-  - [ ] T12b Review đợt B
-- [ ] Verification: unit `variable-resolver` (bảng), biến động và `secret-cipher` pass
+  - [x] T12b Review đợt B: `reports/code-reviewer-261012-1535-phase-13-slice-b-{backend,web}.md` (0 Critical; 2 High, 10 Medium đã sửa có test); kiểm lại bản sửa ở `reports/code-reviewer-261012-1630-phase-13-slice-b-fix-verification.md`
+- [x] Verification: unit `variable-resolver` (bảng), biến động và `secret-cipher` pass
 - [x] Verification: integration A Editor/B Viewer (share, local riêng, 403, reset) pass (2026-10-12)
-- [ ] Verification: E2E `{{baseUrl}}/users`, đổi environment active, hover đúng scope pass
-- [ ] Mọi dòng ma trận tương đương có test hoặc kịch bản E2E tương ứng
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
-- [ ] `pnpm check:mcp-coverage` pass
+- [x] Verification: E2E `{{baseUrl}}/users`, đổi environment active, hover đúng scope pass
+- [x] Mọi dòng ma trận tương đương có test hoặc kịch bản E2E tương ứng (trừ dòng thuộc phase 11/14: Move environment (Jev 0,09), Fork/Merge; Vault và scope `data` đã loại từ trước)
+- [x] `pnpm lint && pnpm typecheck && pnpm test` sạch (2026-10-12: web 1404, api 1259, shared 1638, operations 61, scripts 34; E2E 39/39)
+- [x] `pnpm check:mcp-coverage` pass (167 operation, 132 tool)
+
+### Đợt B (12/10/2026, Vòng 38)
+Xong theo checklist trên, kèm vá ma trận phase 12 theo `reports/code-reviewer-261012-1430-collections-environments-parity-audit.md` (liên kết mock project/environment, kéo example, changelog: diff ẩn cho Editor, session cửa sổ 5 phút lưu `sessionStartSeq`, local value biến collection, import environment từ modal, statusbar Trash/Globals, Copy link cho node, link phần tử mở đúng chỗ kể cả người ngoài workspace). SAST: `reports/security-261012-1610-phase-13-slice-b-sast.md` (đạt). Cờ `environments` thêm vào `infra/localman/released-features`. Còn T11b: deploy (user yêu cầu) rồi DAST.
