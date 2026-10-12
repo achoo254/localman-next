@@ -1,11 +1,9 @@
-import { screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FeaturesContext, NO_FEATURES } from "../../config/features";
 import { resetCurrentUserCache } from "../../features/auth/use-current-user";
 import { makeUser } from "../../test/fixtures";
 import { mockFetch } from "../../test/mock-fetch";
-import { expectProInterestSource } from "../../test/pro-interest";
 import { renderRoutes } from "../../test/render-app";
 import { unreleasedMentions } from "../../test/unreleased-copy";
 import { AccountPage } from "./account-page";
@@ -69,7 +67,6 @@ describe("AccountPage quota meters", () => {
 			"Counts every REST request to the mock. Resets on Jan 1, 2027.",
 		);
 		expect(unreleasedMentions(document.body)).toEqual([]);
-		expect(screen.getByText(/up to 3 members per project\./)).toBeVisible();
 	});
 
 	it("shows the proxy meter and the MCP note once the flags are on", async () => {
@@ -122,24 +119,22 @@ describe("AccountPage quota meters", () => {
 		expect(mock).toHaveTextContent("Unlimited");
 		expect(mock).toHaveAttribute("data-state", "ok");
 		// Asia/Saigon: 17:30Z on the 31st is already 1 January.
-		expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
-			"Pro plan · expires Jan 1, 2027",
+		expect(meter("account-limits-until")).toHaveTextContent(
+			"Your extended limits last until Jan 1, 2027.",
 		);
 	});
 
-	it("links to notification settings and opens the plans modal", async () => {
+	it("links to notification settings and names no plan or price", async () => {
 		renderAccount(usage());
 		expect(
 			await screen.findByRole("link", { name: "Notification channels" }),
 		).toHaveAttribute("href", "/account/notifications");
-		await userEvent.click(screen.getByRole("button", { name: "Manage plan" }));
-		const dialog = screen.getByRole("dialog", { name: "Manage plan" });
-		expect(within(dialog).queryByRole("alert")).toBeNull();
-		await userEvent.click(
-			within(dialog).getByRole("button", {
-				name: "Tell us what you need from Pro",
-			}),
+		expect(
+			document.querySelector('[data-id="account-limits-until"]'),
+		).toBeNull();
+		expect(screen.queryByRole("button", { name: /plan|pro/i })).toBeNull();
+		expect(document.body).not.toHaveTextContent(
+			/\b(plan|pricing|upgrade|Pro)\b/i,
 		);
-		await expectProInterestSource("account");
 	});
 });

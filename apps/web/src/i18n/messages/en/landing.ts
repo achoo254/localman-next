@@ -1,26 +1,18 @@
 /**
  * Public landing (`pages/landing`). `meta` is also the static copy of
- * `apps/web/index.html` (title, description) for crawlers;
- * `pricingDescription` is the one of the prerendered `/pricing`
- * (`src/prerender.tsx`).
+ * `apps/web/index.html` (title, description) for crawlers.
  */
 export const landing = {
 	meta: {
 		titleMock: "Localman · Stateful mock REST APIs with relations and Faker",
 		titleLocalhost: "Localman · Test localhost APIs right in your browser",
 		description:
-			"Spin up a stateful mock REST API in minutes: declare resources, generate data with Faker.js, nest relations and get CRUD endpoints right away. Free plan with {projects} projects.",
-		pricingDescription:
-			"Compare Localman plans: Free with {projects} projects, and Pro with higher limits and more members for projects in real use.",
+			"Spin up a stateful mock REST API in minutes: declare resources, generate data with Faker.js, nest relations and get CRUD endpoints right away.",
 	},
 	hero: {
 		badgeMock: "Mock REST API for developers",
 		badgeLocalhost: "Localhost right in your browser",
-		titleMock: {
-			one: "Stateful <code>mock</code> REST APIs with relations and Faker, {count} project on the Free plan",
-			other:
-				"Stateful <code>mock</code> REST APIs with relations and Faker, {count} projects on the Free plan",
-		},
+		titleMock: "Stateful <code>mock</code> REST APIs with relations and Faker",
 		titleLocalhost: "Test <code>localhost</code> APIs right in your browser",
 		subMock:
 			"Declare resources, generate fake data in one click and get full CRUD endpoints right away. Your frontend no longer waits for the backend.",
@@ -28,9 +20,9 @@ export const landing = {
 			"<b>No app or extension to install, just one Tunelo command.</b> Run <code>tunelo http 3000</code> and Localman picks up the tunnel by port, then sends requests to <code>localhost</code> or machines on your LAN. Stateful mock REST APIs included, so the frontend never waits for the backend.",
 		howItWorks: "See how it works",
 		noteMock:
-			"No credit card needed. The Free plan includes {projects} projects, {resources} resources per project and free custom responses.",
+			"Sign in and start right away: {projects} projects, {resources} resources in total and custom responses included.",
 		noteLocalhost:
-			"No credit card needed. The Free plan includes {projects} mock projects, {resources} resources per project and {proxy} proxy requests per month.",
+			"Sign in and start right away: {projects} mock projects, {resources} resources in total and {proxy} proxy requests per month.",
 	},
 	preview: {
 		viaTunelo: "via Tunelo",
@@ -67,13 +59,6 @@ export const landing = {
 		},
 		toolsHelp:
 			"Nested resources like <code>posts</code> also take <code>parentId</code>. Records created over MCP show up in <code>GET /users</code> right away.",
-	},
-	pricing: {
-		eyebrow: "Pricing",
-		title: "Start free, upgrade when you need to",
-		freePrice: "Free",
-		rateNote:
-			"Unlimited monthly quotas still have a per-second rate limit to prevent abuse.",
 	},
 	modeling: {
 		title: "Simple data modeling",

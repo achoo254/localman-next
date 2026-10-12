@@ -9,7 +9,6 @@ const ORDER = new Set([
 	"landing-hero",
 	"landing-live-sync",
 	"landing-mock-mcp",
-	"landing-pricing",
 ]);
 
 describe("landing block 'Instant Mock MCP'", () => {
@@ -36,7 +35,6 @@ describe("landing block 'Instant Mock MCP'", () => {
 			"landing-hero",
 			"landing-live-sync",
 			"landing-mock-mcp",
-			"landing-pricing",
 		]);
 		expect(
 			container.querySelector('[data-id="landing-mock-mcp-snippet"] code'),

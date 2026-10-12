@@ -6,7 +6,7 @@ import { IconButton } from "../../components/ui/icon-button";
 import { useToast } from "../../components/ui/toast";
 import { useCurrentUser } from "../../features/auth/use-current-user";
 import { ProjectMemberDialogs } from "../../features/collaborators/project-member-dialogs";
-import { useSubscriptionDialogs } from "../../features/subscription/use-subscription-dialogs";
+import { useLimitNotice } from "../../features/subscription/use-limit-notice";
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { useAppTitle } from "../../lib/use-document-title";
@@ -47,7 +47,7 @@ export function ProjectsPage() {
 	const plan = session.status === "authenticated" ? session.user.plan : "free";
 	const toast = useToast();
 	const navigate = useNavigate();
-	const subscription = useSubscriptionDialogs(plan);
+	const limitNotice = useLimitNotice();
 	const query = useProjects();
 	const setProjects = useSetProjects();
 	const [dialog, setDialog] = useState<Dialog>(CLOSED);
@@ -68,7 +68,7 @@ export function ProjectsPage() {
 
 	function hitLimit() {
 		setDialog(CLOSED);
-		subscription.openPlans("projects");
+		limitNotice("projects");
 	}
 
 	function openNew() {
@@ -177,9 +177,7 @@ export function ProjectsPage() {
 				<ProjectMemberDialogs
 					kind={dialog.kind}
 					project={dialog.project}
-					plan={plan}
 					onClose={() => setDialog(CLOSED)}
-					onPlans={() => subscription.openPlans("members")}
 					onMemberCount={setMemberCount}
 					onProjectChange={replaceProject}
 					onLeft={(gone) => {
@@ -189,7 +187,6 @@ export function ProjectsPage() {
 					focusAfterLeave={() => focusAfterRow(dialog.project.id, heading)}
 				/>
 			) : null}
-			{subscription.element}
 		</section>
 	);
 }

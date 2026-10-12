@@ -31,7 +31,7 @@ export function StartCta({ "data-id": dataId }: { "data-id": string }) {
 					className={cn(LABEL_CELL, signedIn && "invisible")}
 					aria-hidden={signedIn ? true : undefined}
 				>
-					{t("common.cta.startFree")}
+					{t("common.cta.startNow")}
 				</span>
 				<span
 					className={cn(LABEL_CELL, !signedIn && "invisible")}

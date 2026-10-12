@@ -30,7 +30,7 @@ export const mcp = {
 		loading: "Loading token settings…",
 		loadFailed: "Couldn't load token settings",
 		helpOff:
-			"By default it works like REST: anyone who knows the MCP URL can call it. Turn this on to require the project's own Bearer token, available on every plan.",
+			"By default it works like REST: anyone who knows the MCP URL can call it. Turn this on to require the project's own Bearer token.",
 		helpOn:
 			"Calls without the header <code>Authorization: Bearer …</code> get a 401. The token is shown only once when it's created; if you lose it, rotate to a new one.",
 		hint: "Token lmmcp_…{last4} · created {created}",

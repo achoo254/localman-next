@@ -50,7 +50,7 @@ export const docsReference = {
 			"Sending too fast (limits per IP and per project). Wait the number of seconds in the <code>Retry-After</code> header, then send again.",
 		monthlyQuota: "The project owner has used up the monthly request quota.",
 		monthlyQuotaFree:
-			"The project owner has used up the monthly request quota (Free plan: {requests} mock requests per month, shared across all their projects).",
+			"The project owner has used up the monthly request quota ({requests} mock requests per month by default, shared across all their projects).",
 		chaosError:
 			"Error injected by the endpoint's chaos settings (its error rate). The status is the one picked there.",
 		chaosTimeout:

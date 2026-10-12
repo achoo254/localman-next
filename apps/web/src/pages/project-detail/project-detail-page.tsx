@@ -2,14 +2,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useToast } from "../../components/ui/toast";
-import { useCurrentUser } from "../../features/auth/use-current-user";
 import {
 	type MemberDialogKind,
 	ProjectMemberDialogs,
 } from "../../features/collaborators/project-member-dialogs";
 import type { Resource } from "../../features/resources/resource-model";
 import { useResources } from "../../features/resources/use-resources";
-import { useSubscriptionDialogs } from "../../features/subscription/use-subscription-dialogs";
+import { useLimitNotice } from "../../features/subscription/use-limit-notice";
 import { ProjectInboxTab } from "../../features/webhook-inbox/project-inbox-tab";
 import { useT } from "../../i18n/i18n-context";
 import { useDelayedFlag } from "../../lib/use-delayed-flag";
@@ -53,9 +52,7 @@ export function ProjectDetailPage() {
 
 function ProjectDetail({ project }: { project: Project }) {
 	const t = useT();
-	const session = useCurrentUser();
-	const plan = session.status === "authenticated" ? session.user.plan : "free";
-	const subscription = useSubscriptionDialogs(plan);
+	const limitNotice = useLimitNotice();
 	const toast = useToast();
 	const query = useResources(project.id);
 	const resources = query.data ?? [];
@@ -132,11 +129,10 @@ function ProjectDetail({ project }: { project: Project }) {
 				dialog={dialog}
 				resources={resources}
 				onClose={() => setDialog(NO_DIALOG)}
-				isOwner={isOwner}
 				onPlanLimit={() => {
 					setDialog(NO_DIALOG);
-					// The owner's plan applies; a collaborator cannot upgrade it.
-					if (isOwner) subscription.openPlans("resources");
+					// The owner's limits apply; a collaborator only learns of them.
+					if (isOwner) limitNotice("resources");
 					else
 						toast.show({ tone: "info", title: t("projectDetail.planLimit") });
 				}}
@@ -151,16 +147,13 @@ function ProjectDetail({ project }: { project: Project }) {
 			<ProjectMemberDialogs
 				kind={members}
 				project={project}
-				plan={plan}
 				onClose={() => setMembers(null)}
-				onPlans={() => subscription.openPlans("members")}
 				onMemberCount={setMemberCount}
 				// The rotated project is already in the query cache.
 				onProjectChange={() => {}}
 				onLeft={() => navigate("/projects", { replace: true })}
 				focusAfterLeave={() => null}
 			/>
-			{subscription.element}
 		</section>
 	);
 }

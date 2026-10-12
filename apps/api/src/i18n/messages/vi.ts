@@ -9,11 +9,11 @@ export const vi: ServerMessages = {
 		"project.invitation": "Lời mời cộng tác project",
 		"project.mockUrlChanged": "URL mock của project được chia sẻ đã đổi",
 		"usage.quota": "Cảnh báo hạn mức lượt gọi mock tháng",
-		"trial.ending": "Dùng thử Pro sắp kết thúc",
-		"trial.ended": "Dùng thử Pro đã kết thúc",
+		"trial.ending": "Hạn mức mở rộng sắp kết thúc",
+		"trial.ended": "Hạn mức mở rộng đã kết thúc",
 		"trial.extension.requested": "Yêu cầu gia hạn dùng thử Pro (owner)",
-		"trial.extension.approved": "Dùng thử Pro được gia hạn",
-		"trial.extension.declined": "Yêu cầu gia hạn dùng thử Pro bị từ chối",
+		"trial.extension.approved": "Hạn mức mở rộng được gia hạn",
+		"trial.extension.declined": "Hạn mức mở rộng không được gia hạn",
 		"workspace.invitation": "Lời mời vào workspace",
 		"element.shared": "Collection và environment được chia sẻ với bạn",
 		"access.requested": "Yêu cầu truy cập collection và environment của bạn",
@@ -57,7 +57,7 @@ export const vi: ServerMessages = {
 	quota: {
 		usedUpTitle: "Đã hết lượt gọi mock API tháng này",
 		usedUpBody: (p) =>
-			`Các project của bạn đã dùng hết ${p.limit} lượt gọi mock API của tháng ${p.month}. Mock API trả 429 cho tới đầu tháng sau hoặc khi bạn nâng cấp Pro.`,
+			`Các project của bạn đã dùng hết ${p.limit} lượt gọi mock API của tháng ${p.month}. Mock API trả 429 cho tới đầu tháng sau.`,
 		warningTitle: (p) => `Đã dùng ${p.threshold}% lượt gọi mock API tháng này`,
 		warningBody: (p) =>
 			`Các project của bạn đã dùng ${p.used}/${p.limit} lượt gọi mock API của tháng ${p.month}.`,

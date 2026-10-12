@@ -55,11 +55,10 @@ export const resourceImport: Messages["resourceImport"] = {
 	nameLabel: "Tên resource",
 	planRoom: {
 		other:
-			"Thao tác này tạo {count} resource, nhưng gói của chủ project chỉ còn chỗ cho {left} resource.",
+			"Thao tác này tạo {count} resource, nhưng project chỉ còn chỗ cho {left} resource.",
 	},
-	planRoomCollaborator:
-		"Hãy tắt resource liên quan, hoặc nhờ chủ project nâng cấp gói.",
-	managePlan: "Quản lý gói",
+	planRoomHint:
+		"Hãy tắt resource liên quan, hoặc xoá các resource không còn dùng.",
 	submit: "Tạo resource",
 	errors: {
 		tooLarge:

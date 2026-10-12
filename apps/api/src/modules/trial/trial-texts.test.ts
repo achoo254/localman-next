@@ -38,6 +38,6 @@ describe("trial texts", () => {
 			"2026年11月9日",
 		);
 		const one = renderNotification("trial.ending", SAMPLES[1][1], "en");
-		expect(one?.title).toBe("Your Pro trial ends in 1 day");
+		expect(one?.title).toBe("Your extended limits end in 1 day");
 	});
 });

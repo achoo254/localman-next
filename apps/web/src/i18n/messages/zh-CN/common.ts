@@ -8,7 +8,7 @@ export const common: Messages["common"] = {
 		saveFailed: "未能将语言保存到账号。当前浏览器仍会使用所选语言。",
 	},
 	cta: {
-		startFree: "免费开始",
+		startNow: "立即开始",
 		start: "开始",
 		openApp: "打开应用",
 		reset: "重置",

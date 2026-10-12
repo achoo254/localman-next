@@ -57,7 +57,7 @@ function GuestPair({ live, returnTo }: { live: boolean; returnTo: string }) {
 	const signUp = (
 		<>
 			<span className="sm:hidden">{t("common.cta.start")}</span>
-			<span className="max-sm:hidden">{t("common.cta.startFree")}</span>
+			<span className="max-sm:hidden">{t("common.cta.startNow")}</span>
 		</>
 	);
 	if (!live) {
@@ -81,7 +81,7 @@ function GuestPair({ live, returnTo }: { live: boolean; returnTo: string }) {
 				returnTo={returnTo}
 				prompt="create"
 				data-id="topbar-signup"
-				aria-label={t("common.cta.startFree")}
+				aria-label={t("common.cta.startNow")}
 				className={PRIMARY_SM}
 			>
 				{signUp}

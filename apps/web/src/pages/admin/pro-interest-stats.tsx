@@ -1,14 +1,14 @@
 import { cardClassName } from "../../components/ui/card";
+import { useI18n } from "../../i18n/i18n-context";
+import { cn } from "../../lib/cn";
+import { BarList } from "./bar-list";
+import type { CountBy, ProInterestStats } from "./pro-interest-admin-api";
 import {
 	type Choice,
 	choiceLabel,
 	proNeeds,
 	proSources,
-} from "../../features/subscription/pro-interest-options";
-import { useI18n } from "../../i18n/i18n-context";
-import { cn } from "../../lib/cn";
-import { BarList } from "./bar-list";
-import type { CountBy, ProInterestStats } from "./pro-interest-admin-api";
+} from "./pro-interest-options";
 
 function toBars(list: CountBy[], labels: readonly Choice[]) {
 	return [...list]

@@ -35,7 +35,7 @@ export const primitives: Messages["primitives"] = {
 			"Badge chữ mono in hoa, alert và toast dùng nền tint theo tông.",
 		badges: {
 			draft: "Nháp",
-			pro: "Pro",
+			shared: "Đã chia sẻ",
 			fresh: "Mới",
 			beta: "Beta",
 			running: "Đang chạy",
@@ -47,7 +47,7 @@ export const primitives: Messages["primitives"] = {
 		connectedTitle: "Đã kết nối",
 		connectedBody: "Mock server đang phục vụ project này.",
 		limitTitle: "Sắp chạm hạn mức",
-		limitBody: "Bạn đã dùng 9/10 resource của gói Free.",
+		limitBody: "Bạn đã dùng 9/10 resource.",
 		deleteFailedTitle: "Không xoá được",
 		deleteFailedBody: "Resource đang được endpoint khác tham chiếu.",
 		toastSuccess: "Toast thành công",

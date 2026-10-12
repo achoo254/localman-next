@@ -75,7 +75,7 @@ describe("landing at / by session", () => {
 		expect(bar.queryByRole("link", { name: "Open app" })).toBeNull();
 		for (const id of ["landing-hero-cta", "landing-cta-button"]) {
 			expect(byDataId(id)).toHaveAttribute("href", SIGN_UP_HREF);
-			expect(byDataId(id)).toHaveAccessibleName("Get started free");
+			expect(byDataId(id)).toHaveAccessibleName("Get started now");
 		}
 	});
 
@@ -91,7 +91,7 @@ describe("landing at / by session", () => {
 			within(topbar()).getByRole("link", { name: "Sign in" }),
 		).toBeVisible();
 		expect(byDataId("landing-hero-cta")).toHaveAccessibleName(
-			"Get started free",
+			"Get started now",
 		);
 	});
 
@@ -103,26 +103,22 @@ describe("landing at / by session", () => {
 	});
 });
 
-describe("links back to the landing and to pricing", () => {
-	it("keeps the app wordmark on Projects and offers home and pricing in the account menu", async () => {
+describe("links back to the landing, never to pricing", () => {
+	it("keeps the app wordmark on Projects and offers home in the account menu", async () => {
 		mockFetch(SIGNED_IN);
 		const { router } = renderRoutes(routes, "/projects");
 		await screen.findByRole("heading", { name: "Projects" });
 		expect(byDataId("topbar-home")).toHaveAttribute("href", "/projects");
 
-		const openMenu = () =>
-			userEvent.click(
-				within(topbar()).getByRole("button", { name: "Minh Anh · Account" }),
-			);
-		await openMenu();
 		await userEvent.click(
-			await screen.findByRole("menuitem", { name: "Pricing" }),
+			within(topbar()).getByRole("button", { name: "Minh Anh · Account" }),
 		);
-		expect(router.state.location.pathname).toBe("/pricing");
-
-		await openMenu();
-		await userEvent.click(
+		expect(
 			await screen.findByRole("menuitem", { name: "Localman home" }),
+		).toBeVisible();
+		expect(screen.queryByRole("menuitem", { name: "Pricing" })).toBeNull();
+		await userEvent.click(
+			screen.getByRole("menuitem", { name: "Localman home" }),
 		);
 		expect(router.state.location.pathname).toBe("/");
 	});
@@ -131,7 +127,7 @@ describe("links back to the landing and to pricing", () => {
 		["/", { "GET /api/v1/users/me": UNAUTHENTICATED }],
 		["/projects", SIGNED_IN],
 	])(
-		"puts Localman home and Pricing in the footer on %s",
+		"puts Localman home, and no pricing, in the footer on %s",
 		async (path, api) => {
 			mockFetch(api);
 			renderRoutes(routes, path);
@@ -139,10 +135,7 @@ describe("links back to the landing and to pricing", () => {
 			expect(
 				await footer.findByRole("link", { name: "Localman home" }),
 			).toHaveAttribute("href", "/");
-			expect(footer.getByRole("link", { name: "Pricing" })).toHaveAttribute(
-				"href",
-				"/pricing",
-			);
+			expect(footer.queryByRole("link", { name: "Pricing" })).toBeNull();
 		},
 	);
 });

@@ -36,7 +36,7 @@ export const apiClientToolsErrors: Messages["apiClientTools"]["errors"] = {
 	},
 	quotaExceeded: {
 		title: "Đã hết request qua proxy của tháng",
-		hint: "Bạn đã dùng hết request qua proxy của tháng này. Hãy gửi thẳng, hoặc xem các gói để có thêm.",
+		hint: "Bạn đã dùng hết request qua proxy của tháng này. Hãy gửi thẳng, hoặc chờ hạn mức của tháng sau.",
 	},
 	proxyBusy: {
 		title: "Quá nhiều request qua proxy cùng lúc",

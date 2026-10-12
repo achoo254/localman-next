@@ -85,7 +85,6 @@ export const apiClientRouting = {
 		blockedBody: "The request carries {parts}. Nothing was sent.",
 		reopen: "Send through proxy…",
 	},
-	quota: { plans: "See plans" },
 	settings: {
 		title: "Routing",
 		loading: "Loading routing settings…",

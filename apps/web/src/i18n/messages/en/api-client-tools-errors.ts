@@ -43,7 +43,7 @@ export const apiClientToolsErrors = {
 	},
 	quotaExceeded: {
 		title: "Monthly proxy requests used up",
-		hint: "You used every proxy request of this month. Send directly, or see the plans for more.",
+		hint: "You used every proxy request of this month. Send directly, or wait for next month's quota.",
 	},
 	network: {
 		title: "Couldn't reach Localman",

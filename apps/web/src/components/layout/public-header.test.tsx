@@ -24,7 +24,7 @@ describe("public top bar and skip link", () => {
 		vi.restoreAllMocks();
 	});
 
-	it("offers Features, Pricing, Docs, sign-in and sign-up on /", async () => {
+	it("offers Features, Docs, sign-in and sign-up on /, and no pricing", async () => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		renderRoutes(routes, "/");
 		await screen.findByRole("heading", { level: 1 });
@@ -35,10 +35,8 @@ describe("public top bar and skip link", () => {
 			within(nav)
 				.getAllByRole("link")
 				.map((link) => [link.textContent, link.getAttribute("href")]),
-		).toEqual([
-			["Features", "#features"],
-			["Pricing", "/pricing"],
-		]);
+		).toEqual([["Features", "#features"]]);
+		expect(screen.queryByRole("link", { name: "Pricing" })).toBeNull();
 		expect(document.getElementById("features")).not.toBeNull();
 		const bar = within(topbar());
 		expect(bar.getByRole("link", { name: "Docs" })).toHaveAttribute(
@@ -49,7 +47,7 @@ describe("public top bar and skip link", () => {
 			"href",
 			"/auth/login?returnTo=%2Fprojects",
 		);
-		expect(bar.getByRole("link", { name: "Get started free" })).toHaveAttribute(
+		expect(bar.getByRole("link", { name: "Get started now" })).toHaveAttribute(
 			"href",
 			"/auth/login?returnTo=%2Fprojects&prompt=create",
 		);

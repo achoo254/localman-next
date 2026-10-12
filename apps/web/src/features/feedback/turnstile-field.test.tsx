@@ -1,3 +1,4 @@
+import { TURNSTILE_ACTIONS } from "@localman/shared/constants";
 import { render, waitFor } from "@testing-library/react";
 import { StrictMode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -20,6 +21,8 @@ describe("TurnstileField", () => {
 					siteKey="site-key"
 					onTokenChange={onTokenChange}
 					errorId="ts-error"
+					action={TURNSTILE_ACTIONS.contact}
+					dataId="modal-feedback-turnstile"
 				/>
 			</StrictMode>,
 		);

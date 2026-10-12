@@ -11,16 +11,16 @@ export const docsMcp: Messages["docs"]["mcp"] = {
 		resources:
 			"Hai MCP resource mô tả mock: <code>mock://schema</code> (cây resource, route lồng, schema, endpoint và tool của từng resource) và <code>mock://openapi</code> (OpenAPI 3.1 của các endpoint đang bật).",
 		token:
-			"Giống REST, ai có URL đều gọi được endpoint này. Chủ project có thể bật yêu cầu token cho MCP trong tab MCP, ở mọi gói: khi đó lời gọi cần <code>Authorization: Bearer lmmcp_…</code>, thiếu hoặc sai token nhận 401. Token chỉ hiện một lần, lúc tạo.",
+			"Giống REST, ai có URL đều gọi được endpoint này. Chủ project có thể bật yêu cầu token cho MCP trong tab MCP: khi đó lời gọi cần <code>Authorization: Bearer lmmcp_…</code>, thiếu hoặc sai token nhận 401. Token chỉ hiện một lần, lúc tạo.",
 		limits:
 			"Mỗi lần gọi tool tính 1 request vào hạn mức mock hằng tháng của chủ project và qua cùng rate limit như REST; vượt giới hạn thì tool trả lỗi <code>RATE_LIMITED</code> hoặc <code>MONTHLY_QUOTA_EXCEEDED</code>. Custom response không áp dụng cho kết quả MCP.",
 		limitsFree:
-			"Mỗi lần gọi tool tính 1 request vào hạn mức mock hằng tháng của chủ project (gói Free: {requests} request mỗi tháng) và qua cùng rate limit như REST; vượt giới hạn thì tool trả lỗi <code>RATE_LIMITED</code> hoặc <code>MONTHLY_QUOTA_EXCEEDED</code>. Custom response không áp dụng cho kết quả MCP.",
+			"Mỗi lần gọi tool tính 1 request vào hạn mức mock hằng tháng của chủ project (mặc định {requests} request mỗi tháng) và qua cùng rate limit như REST; vượt giới hạn thì tool trả lỗi <code>RATE_LIMITED</code> hoặc <code>MONTHLY_QUOTA_EXCEEDED</code>. Custom response không áp dụng cho kết quả MCP.",
 	},
 	localman: {
 		title: "Localman MCP",
 		intro:
-			"Localman MCP ở <code>{url}</code> cho agent quản lý project và resource của bạn: tạo project, thêm resource từ kiểu TypeScript, OpenAPI hoặc JSON Schema, sinh dữ liệu và lấy URL mock. Agent hành động thay bạn, với cùng quyền và hạn mức gói như trên web.",
+			"Localman MCP ở <code>{url}</code> cho agent quản lý project và resource của bạn: tạo project, thêm resource từ kiểu TypeScript, OpenAPI hoặc JSON Schema, sinh dữ liệu và lấy URL mock. Agent hành động thay bạn, với cùng quyền và hạn mức như trên web.",
 		signIn:
 			"Agent đăng nhập bằng OAuth qua tài khoản hoandat ở <code>{idp}</code>: client tự đăng ký và mở trình duyệt để bạn cho phép truy cập. <code>mock:read</code> cho đọc project, resource, dữ liệu và URL mock (kể cả secret); <code>mock:write</code> cho thay đổi chúng. Tool tạo credential xin thêm <code>credentials:write</code>.",
 		claudeAfter:

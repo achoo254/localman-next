@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isDuplicateKeyError } from "../../db/mongo-errors.js";
+import { autoStartTrial } from "../trial/trial-plan.js";
 import { UserModel } from "./user-model.js";
 
 /** A malformed optional claim is dropped instead of failing the sign-in. */
@@ -90,6 +91,9 @@ export async function syncUserFromUserInfo(
 		if (!isDuplicateKeyError(error)) throw error;
 		await upsert();
 	}
+	// Sign-in and every session refresh: the 30 days of Pro start on their
+	// own for an account that never had them (no-op otherwise).
+	await autoStartTrial(info.sub);
 }
 
 /**

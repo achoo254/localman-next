@@ -7,7 +7,6 @@ import { useDocumentTitle } from "../../lib/use-document-title";
 import { DataModelingDemo } from "./data-modeling-demo";
 import { HeroSection } from "./hero-section";
 import { MoreFeaturesSection } from "./more-features-section";
-import { PricingSection } from "./pricing-section";
 import { RelationsDemo } from "./relations-demo";
 import { StartCta } from "./start-cta";
 
@@ -21,7 +20,7 @@ const MockMcpSection = lazy(async () => ({
 }));
 
 /**
- * Public landing: hero, flagged feature blocks, pricing, schema,
+ * Public landing: hero, flagged feature blocks, schema,
  * relations, "And more" and the closing call to action. The footer comes
  * from `AppLayout`. The tab title follows the hero message; `index.html`
  * carries the English one statically for crawlers (checked by a test).
@@ -51,7 +50,6 @@ export function LandingPage() {
 					<MockMcpSection />
 				</Suspense>
 			) : null}
-			<PricingSection />
 			<DataModelingDemo />
 			<RelationsDemo />
 			<MoreFeaturesSection />

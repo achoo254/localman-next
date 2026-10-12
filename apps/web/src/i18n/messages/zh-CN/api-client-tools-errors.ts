@@ -36,7 +36,7 @@ export const apiClientToolsErrors: Messages["apiClientTools"]["errors"] = {
 	},
 	quotaExceeded: {
 		title: "本月 proxy request 已用完",
-		hint: "你已用完本月所有经 proxy 的 request。请改用直连，或查看套餐获取更多额度。",
+		hint: "你已用完本月所有经 proxy 的 request。请改用直连，或等待下月额度。",
 	},
 	proxyBusy: {
 		title: "同时经 proxy 发送的 request 过多",

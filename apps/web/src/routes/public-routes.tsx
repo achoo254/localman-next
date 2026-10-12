@@ -1,14 +1,14 @@
 import { Navigate, type RouteObject } from "react-router";
 import { LandingPage } from "../pages/landing/landing-page";
-import { PricingPage } from "../pages/pricing/pricing-page";
 import { lazyPage } from "./lazy-page";
 
-/** Pages of the public layout (landing, pricing, invitations, docs). */
+/** Pages of the public layout (landing, invitations, docs). */
 export const publicRoutes: RouteObject[] = [
-	// The landing stays reachable once signed in: its header, hero and
-	// pricing turn into "Open app" instead of moving the user away.
+	// The landing stays reachable once signed in: its header and hero
+	// turn into "Open app" instead of moving the user away.
 	{ index: true, element: <LandingPage /> },
-	{ path: "pricing", element: <PricingPage /> },
+	// No pricing while the product is not sold; old links land home.
+	{ path: "pricing", element: <Navigate to="/" replace /> },
 	// Public on purpose: anonymous visitors choose sign-in or sign-up
 	// and come back here (the shell's guard would go straight to sign-in).
 	{

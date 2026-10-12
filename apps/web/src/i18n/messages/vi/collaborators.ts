@@ -5,7 +5,6 @@ export const collaborators: Messages["collaborators"] = {
 		title: "Cộng tác viên · {project}",
 		done: "Xong",
 		leave: "Rời project",
-		seePlans: "Xem gói",
 	},
 	list: {
 		label: "Danh sách cộng tác viên",
@@ -37,7 +36,6 @@ export const collaborators: Messages["collaborators"] = {
 	seats: {
 		count: "{seats} thành viên (tính cả owner và lời mời đang chờ)",
 		full: { other: "Đã đủ {count} thành viên" },
-		nextNeedsPro: "Thành viên thứ {count} cần gói Pro.",
 		removeToInvite: "Xoá bớt thành viên hoặc lời mời để mời thêm.",
 	},
 	form: {
@@ -113,6 +111,7 @@ export const collaborators: Messages["collaborators"] = {
 		invalid: "Nhập username hoặc email hợp lệ.",
 		rateLimited:
 			"Bạn đã tra cứu hoặc mời quá nhiều lần. Hãy thử lại sau ít phút.",
+		full: "Project đã hết chỗ. Hãy xoá bớt thành viên hoặc huỷ một lời mời trước.",
 		conflict: "Danh sách thành viên vừa thay đổi. Hãy thử lại.",
 		fallback: "Không mời được lúc này. Hãy thử lại sau.",
 	},

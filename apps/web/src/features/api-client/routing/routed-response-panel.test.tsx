@@ -1,5 +1,5 @@
 import { createRequestDraft } from "@localman/shared/api-client";
-import { screen, within } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -171,12 +171,11 @@ describe("RoutedResponsePanel", () => {
 		expect(inputs).toHaveLength(2);
 	});
 
-	it("links a used-up proxy quota to the plans", async () => {
-		const { user } = await start([
-			failed({ code: "MONTHLY_QUOTA_EXCEEDED", status: 429 }),
-		]);
-		await user.click(await screen.findByRole("button", { name: "See plans" }));
-		const dialog = await screen.findByRole("dialog");
-		expect(within(dialog).getAllByText(/proxy/i).length).toBeGreaterThan(0);
+	it("explains a used-up proxy quota without linking to plans", async () => {
+		await start([failed({ code: "MONTHLY_QUOTA_EXCEEDED", status: 429 })]);
+		expect(
+			await screen.findByText(/wait for next month's quota/),
+		).toBeVisible();
+		expect(screen.queryByRole("button", { name: /plans/i })).toBeNull();
 	});
 });

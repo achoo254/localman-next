@@ -1,11 +1,9 @@
-import { screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NO_FEATURES } from "../../config/features";
 import { resetCurrentUserCache } from "../../features/auth/use-current-user";
-import { ManageSubscriptionModal } from "../../features/subscription/manage-subscription-modal";
 import { makeUser } from "../../test/fixtures";
-import { UNAUTHENTICATED, mockFetch } from "../../test/mock-fetch";
+import { mockFetch } from "../../test/mock-fetch";
 import { unreleasedMentions } from "../../test/unreleased-copy";
 import { AccountPage } from "../account/account-page";
 import { LandingPage } from "./landing-page";
@@ -22,36 +20,6 @@ describe("no unreleased feature in the copy while every flag is off", () => {
 		expect(unreleasedMentions(container)).toEqual([]);
 		const webhook = container.querySelector('[data-id="feature-webhooks"]');
 		expect(webhook).toHaveTextContent("Coming soon");
-	});
-
-	it("Pro interest form opened from the landing", async () => {
-		mockFetch({
-			"GET /api/v1/users/me": UNAUTHENTICATED,
-			"GET /api/v1/feedback/pro-interest/config": {
-				body: { turnstileSiteKey: null },
-			},
-		});
-		renderWithFeatures(<LandingPage />, NO_FEATURES);
-		await userEvent.click(
-			screen.getByRole("button", { name: "Tell us what you need from Pro" }),
-		);
-		const dialog = await screen.findByRole("dialog");
-		await within(dialog).findByRole("checkbox", { name: "Mock API" });
-		expect(unreleasedMentions(dialog)).toEqual([]);
-	});
-
-	it("plans modal", () => {
-		renderWithFeatures(
-			<ManageSubscriptionModal
-				open
-				onOpenChange={() => undefined}
-				plan="free"
-				reason={null}
-				onContact={() => undefined}
-			/>,
-			NO_FEATURES,
-		);
-		expect(unreleasedMentions(screen.getByRole("dialog"))).toEqual([]);
 	});
 
 	it("account page with its meters", async () => {

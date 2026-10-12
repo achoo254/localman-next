@@ -47,10 +47,8 @@ export interface ProjectDetailDialogsProps {
 	dialog: ProjectDialog;
 	resources: readonly Resource[];
 	onClose: () => void;
-	/** The owner's plan has no room for another resource. */
+	/** The project has no room for another resource. */
 	onPlanLimit: () => void;
-	/** Owners may open the plans from the import's "no room" warning. */
-	isOwner: boolean;
 }
 
 const importButton = () =>
@@ -64,7 +62,6 @@ export function ProjectDetailDialogs({
 	resources,
 	onClose,
 	onPlanLimit,
-	isOwner,
 }: ProjectDetailDialogsProps) {
 	const t = useT();
 	const toast = useToast();
@@ -106,7 +103,6 @@ export function ProjectDetailDialogs({
 					<ImportResourceDialog
 						projectId={projectId}
 						resources={resources}
-						onManagePlan={isOwner ? onPlanLimit : null}
 						onOpenChange={closeOnFalse}
 						onPlanLimit={onPlanLimit}
 						fallbackFocus={importButton}

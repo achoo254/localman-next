@@ -3,7 +3,7 @@ export const docsQuickStart = {
 	lead: "Create a mock REST API with realistic data for your frontend or tests to call, without building a backend.",
 	createProject: {
 		title: "1. Create a project",
-		body: "On the Projects page, click Create project, give it a name and, if you like, an API prefix such as <code>/api/v1</code>. Each project has its own secret right in the mock URL; the API endpoint card on the project page shows the full URL. The Free plan includes {projects} projects with {resources} resources each.",
+		body: "On the Projects page, click Create project, give it a name and, if you like, an API prefix such as <code>/api/v1</code>. Each project has its own secret right in the mock URL; the API endpoint card on the project page shows the full URL. Every account has room for at least {projects} projects and {resources} resources in total.",
 	},
 	mockUrl: {
 		title: "2. Mock API URL",

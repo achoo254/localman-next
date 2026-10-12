@@ -1,4 +1,3 @@
-import type { PlanId } from "@localman/shared/constants";
 import { useEffect, useRef, useState } from "react";
 import { Modal } from "../../components/ui/modal";
 import { useToast } from "../../components/ui/toast";
@@ -19,11 +18,7 @@ import { useRowFocus } from "./use-row-focus";
 
 export interface CollaboratorsModalProps {
 	project: Project;
-	/** Plan of the signed-in user: the owner's plan when they manage. */
-	plan: PlanId;
 	onOpenChange: (open: boolean) => void;
-	/** Opens "Manage plan" for the member limit. */
-	onPlans: () => void;
 	/** Owner plus accepted members, whenever the list changes (keep stable). */
 	onMemberCount: (projectId: string, count: number) => void;
 	/** The collaborator left: the caller closes the dialog and moves on. */
@@ -37,9 +32,7 @@ export interface CollaboratorsModalProps {
 /** Members of a project: the owner invites and removes, a collaborator may leave. */
 export function CollaboratorsModal({
 	project,
-	plan,
 	onOpenChange,
-	onPlans,
 	onMemberCount,
 	onLeft,
 	onProjectChange,
@@ -135,12 +128,7 @@ export function CollaboratorsModal({
 				/>
 			}
 		>
-			<MemberSeatsGate
-				seats={ready?.seats ?? null}
-				plan={plan}
-				canManage={canManage}
-				onPlans={onPlans}
-			/>
+			<MemberSeatsGate seats={ready?.seats ?? null} canManage={canManage} />
 			{canManage && ready ? (
 				<InviteForm
 					projectId={project.id}
@@ -151,9 +139,8 @@ export function CollaboratorsModal({
 						setAnnouncement(message);
 					}}
 					onPlanLimit={() => {
-						// Keep the list, the form and a link shown once on screen.
+						// Refresh the seats so the form locks with the reason shown.
 						void members.load({ background: true });
-						if (plan === "free") onPlans();
 					}}
 				/>
 			) : null}

@@ -5,17 +5,12 @@ export const landing: Messages["landing"] = {
 		titleMock: "Localman · Mock REST API có trạng thái, quan hệ và Faker",
 		titleLocalhost: "Localman · Test API localhost ngay trên trình duyệt",
 		description:
-			"Dựng mock REST API có trạng thái trong vài phút: khai báo resource, sinh dữ liệu bằng Faker.js, lồng quan hệ và có ngay endpoint CRUD. Gói Free {projects} project.",
-		pricingDescription:
-			"So sánh các gói của Localman: Free với {projects} project, Pro với hạn mức lớn hơn và nhiều thành viên hơn cho các project chạy thật.",
+			"Dựng mock REST API có trạng thái trong vài phút: khai báo resource, sinh dữ liệu bằng Faker.js, lồng quan hệ và có ngay endpoint CRUD.",
 	},
 	hero: {
 		badgeMock: "Mock REST API cho developer",
 		badgeLocalhost: "Localhost ngay trên trình duyệt",
-		titleMock: {
-			other:
-				"<code>Mock</code> REST API có trạng thái, quan hệ và Faker, gói Free {count} project",
-		},
+		titleMock: "<code>Mock</code> REST API có trạng thái, quan hệ và Faker",
 		titleLocalhost: "Test API <code>localhost</code> ngay trên trình duyệt",
 		subMock:
 			"Khai báo resource, sinh dữ liệu giả bằng một click và có ngay endpoint CRUD đầy đủ. Frontend không phải chờ backend nữa.",
@@ -23,9 +18,9 @@ export const landing: Messages["landing"] = {
 			"<b>Không cần cài app hay extension, chỉ một lệnh Tunelo.</b> Chạy <code>tunelo http 3000</code>, Localman tự nhận tunnel theo port và gửi request tới <code>localhost</code> hay máy trong mạng LAN. Kèm mock REST API có trạng thái để frontend không phải chờ backend.",
 		howItWorks: "Xem cách hoạt động",
 		noteMock:
-			"Không cần thẻ thanh toán. Gói Free gồm {projects} project, {resources} resource mỗi project, custom response miễn phí.",
+			"Đăng nhập là dùng được ngay: {projects} project, tổng cộng {resources} resource, có sẵn custom response.",
 		noteLocalhost:
-			"Không cần thẻ thanh toán. Gói Free gồm {projects} project mock, {resources} resource mỗi project, {proxy} request qua proxy mỗi tháng.",
+			"Đăng nhập là dùng được ngay: {projects} project mock, tổng cộng {resources} resource, {proxy} request qua proxy mỗi tháng.",
 	},
 	preview: {
 		viaTunelo: "qua Tunelo",
@@ -53,13 +48,6 @@ export const landing: Messages["landing"] = {
 		toolsBadge: { other: "{count} tool mỗi resource" },
 		toolsHelp:
 			"Resource lồng như <code>posts</code> nhận thêm <code>parentId</code>. Tạo bản ghi qua MCP thì <code>GET /users</code> thấy ngay.",
-	},
-	pricing: {
-		eyebrow: "Bảng giá",
-		title: "Bắt đầu miễn phí, nâng cấp khi cần",
-		freePrice: "Miễn phí",
-		rateNote:
-			"Mức không giới hạn theo tháng vẫn có giới hạn tốc độ theo giây để chống lạm dụng.",
 	},
 	modeling: {
 		title: "Mô hình dữ liệu đơn giản",

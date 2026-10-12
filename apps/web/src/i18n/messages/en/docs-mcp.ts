@@ -14,16 +14,16 @@ export const docsMcp = {
 		resources:
 			"Two MCP resources describe the mock: <code>mock://schema</code> (the resource tree, nested routes, schemas, endpoints and the tools of each resource) and <code>mock://openapi</code> (OpenAPI 3.1 of the endpoints that are on).",
 		token:
-			"Like REST, the endpoint is open to anyone with the URL. The project owner can require a token for MCP in the MCP tab, on any plan: calls then need <code>Authorization: Bearer lmmcp_…</code>, and a missing or wrong token gets 401. The token is shown only once, when it's created.",
+			"Like REST, the endpoint is open to anyone with the URL. The project owner can require a token for MCP in the MCP tab: calls then need <code>Authorization: Bearer lmmcp_…</code>, and a missing or wrong token gets 401. The token is shown only once, when it's created.",
 		limits:
 			"Each tool call counts as 1 request toward the project owner's monthly mock quota and goes through the same rate limits as REST; over a limit, the tool returns the error <code>RATE_LIMITED</code> or <code>MONTHLY_QUOTA_EXCEEDED</code>. Custom responses don't apply to MCP results.",
 		limitsFree:
-			"Each tool call counts as 1 request toward the project owner's monthly mock quota (Free plan: {requests} requests per month) and goes through the same rate limits as REST; over a limit, the tool returns the error <code>RATE_LIMITED</code> or <code>MONTHLY_QUOTA_EXCEEDED</code>. Custom responses don't apply to MCP results.",
+			"Each tool call counts as 1 request toward the project owner's monthly mock quota ({requests} requests per month by default) and goes through the same rate limits as REST; over a limit, the tool returns the error <code>RATE_LIMITED</code> or <code>MONTHLY_QUOTA_EXCEEDED</code>. Custom responses don't apply to MCP results.",
 	},
 	localman: {
 		title: "Localman MCP",
 		intro:
-			"Localman MCP at <code>{url}</code> lets an agent manage your projects and resources: create projects, add resources from a TypeScript, OpenAPI or JSON Schema type, generate data and read the mock URLs. It acts as you, with the same permissions and plan limits as the web app.",
+			"Localman MCP at <code>{url}</code> lets an agent manage your projects and resources: create projects, add resources from a TypeScript, OpenAPI or JSON Schema type, generate data and read the mock URLs. It acts as you, with the same permissions and limits as the web app.",
 		signIn:
 			"Agents sign in with OAuth through your hoandat account at <code>{idp}</code>: the client registers itself and opens the browser for you to approve access. <code>mock:read</code> lets it read projects, resources, data and mock URLs (secrets included); <code>mock:write</code> lets it change them. Tools that create a credential also ask for <code>credentials:write</code>.",
 		claudeAfter:

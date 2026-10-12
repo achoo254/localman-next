@@ -117,7 +117,7 @@ describe("/workspace-invite/:token", () => {
 			[PREVIEW]: preview({ eligible: false, reason: "MEMBER_LIMIT" }),
 		});
 		expect(await screen.findByRole("alert")).toHaveTextContent(
-			"The workspace already has as many members as its owner's plan allows.",
+			"The workspace has no free seats.",
 		);
 		expect(screen.queryByRole("button", { name: "Join workspace" })).toBeNull();
 	});
@@ -131,7 +131,7 @@ describe("/workspace-invite/:token", () => {
 			await screen.findByRole("button", { name: "Join workspace" }),
 		);
 		expect(await screen.findByRole("alert")).toHaveTextContent(
-			"Ask a workspace Admin to free a seat.",
+			"Ask a workspace Admin to free one.",
 		);
 	});
 

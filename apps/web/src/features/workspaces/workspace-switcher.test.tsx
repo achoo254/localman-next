@@ -164,7 +164,7 @@ describe("workspace switcher", () => {
 		expect(savedWorkspace()).toBe("w-new");
 	});
 
-	it("explains the team workspace limit and links to the plans", async () => {
+	it("explains the team workspace limit, without plans", async () => {
 		renderWithWorkspaces(
 			{
 				"POST /api/v1/workspaces": apiError(403, "PLAN_LIMIT_REACHED", {
@@ -185,15 +185,15 @@ describe("workspace switcher", () => {
 			within(dialog).getByRole("button", { name: "Create workspace" }),
 		);
 		const card = await waitFor(() => {
-			const found = byId("modal-create-workspace-pro");
+			const found = byId("modal-create-workspace-limit");
 			if (!found) throw new Error("no limit card");
 			return found;
 		});
-		expect(card).toHaveTextContent("Requires Pro");
-		expect(card).toHaveTextContent("Your plan includes 1 team workspace.");
-		expect(
-			within(card).getByRole("link", { name: "View plans" }),
-		).toHaveAttribute("href", "/pricing");
+		expect(card).toHaveTextContent(
+			"This account can't create more team workspaces.",
+		);
+		expect(card).not.toHaveTextContent(/plan|Pro/);
+		expect(within(card).queryByRole("link")).toBeNull();
 		expect(savedWorkspace()).toBeNull();
 	});
 });

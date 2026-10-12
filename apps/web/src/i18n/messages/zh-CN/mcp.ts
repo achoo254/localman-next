@@ -30,7 +30,7 @@ export const mcp: Messages["mcp"] = {
 		loading: "正在加载 token 设置…",
 		loadFailed: "无法加载 token 设置",
 		helpOff:
-			"默认与 REST 相同：知道 MCP URL 的人都能调用。开启后必须使用该 project 专属的 Bearer token，所有套餐均可使用。",
+			"默认与 REST 相同：知道 MCP URL 的人都能调用。开启后必须使用该 project 专属的 Bearer token。",
 		helpOn:
 			"缺少 header <code>Authorization: Bearer …</code> 的调用会收到 401。Token 只在创建时显示一次；丢失后请轮换新 token。",
 		hint: "Token lmmcp_…{last4} · 创建于 {created}",

@@ -1,11 +1,11 @@
+import type { Translate } from "../../i18n/translate";
 import {
 	choiceLabel,
 	priceHints,
 	proNeeds,
 	proSources,
 	teamSizes,
-} from "../../features/subscription/pro-interest-options";
-import type { Translate } from "../../i18n/translate";
+} from "./pro-interest-options";
 
 /** `minhanh@example.com` → `mi***@example.com`; the CSV keeps the full address. */
 export function maskEmail(email: string): string {

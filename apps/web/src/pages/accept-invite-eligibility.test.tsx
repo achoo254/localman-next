@@ -58,9 +58,7 @@ describe("/invite/:token eligibility", () => {
 			[PREVIEW]: preview({ eligible: false, reason: "MEMBER_LIMIT" }),
 		});
 		expect(
-			await screen.findByText(
-				/The project already has as many members as the owner's plan allows/,
-			),
+			await screen.findByText(/The project has no free seats/),
 		).toBeInTheDocument();
 		expect(screen.queryByRole("button", { name: "Join" })).toBeNull();
 		expect(screen.queryByRole("button", { name: "See plans" })).toBeNull();

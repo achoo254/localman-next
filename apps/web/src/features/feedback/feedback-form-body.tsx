@@ -13,8 +13,6 @@ import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
-import { TurnstileSkeleton } from "../subscription/form-skeleton";
-import { TurnstileField } from "../subscription/turnstile-field";
 import {
 	SESSION_LOST,
 	type SubmitProblem,
@@ -32,6 +30,8 @@ import {
 	validateFeedback,
 } from "./feedback-draft";
 import { FeedbackFields, feedbackErrorText } from "./feedback-fields";
+import { TurnstileSkeleton } from "./form-skeleton";
+import { TurnstileField } from "./turnstile-field";
 import { useTurnstileConfig } from "./use-turnstile-config";
 
 export interface FeedbackAccount {

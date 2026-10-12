@@ -13,13 +13,11 @@
 		     follows the landing hero while the API client flag is off; switch it
 		     to the "localhost" wording in the same change that turns the flag on.
 		     No canonical/og:url here: this file serves every SPA route, and a
-		     fixed "/" would tell crawlers that /docs pages are the landing.
-		     The prerendered pricing.html swaps title and descriptions for its
-		     own (src/prerender.tsx). -->
+		     fixed "/" would tell crawlers that /docs pages are the landing. -->
 		<title>Localman · Stateful mock REST APIs with relations and Faker</title>
 		<meta
 			name="description"
-			content="Spin up a stateful mock REST API in minutes: declare resources, generate data with Faker.js, nest relations and get CRUD endpoints right away. Free plan with 3 projects."
+			content="Spin up a stateful mock REST API in minutes: declare resources, generate data with Faker.js, nest relations and get CRUD endpoints right away."
 		/>
 		<meta property="og:type" content="website" />
 		<meta property="og:site_name" content="Localman" />
@@ -32,7 +30,7 @@
 		/>
 		<meta
 			property="og:description"
-			content="Spin up a stateful mock REST API in minutes: declare resources, generate data with Faker.js, nest relations and get CRUD endpoints right away. Free plan with 3 projects."
+			content="Spin up a stateful mock REST API in minutes: declare resources, generate data with Faker.js, nest relations and get CRUD endpoints right away."
 		/>
 		<meta name="twitter:card" content="summary" />
 		<script>
@@ -47,9 +45,8 @@
 	<body>
 		<div id="app"></div>
 		<script>
-			// The build prerenders public pages into #app (this file for "/",
-			// pricing.html for "/pricing"; src/prerender.tsx), marked with their
-			// path. Every other SPA path gets index.html: drop the markup unless
+			// The build prerenders public pages into #app (this file for "/";
+			// src/prerender.tsx), marked with their path. Every other SPA path gets index.html: drop the markup unless
 			// it belongs to this path, so other pages do not flash the landing
 			// (main.tsx then renders instead of hydrating). Same script in every
 			// prerendered file, so the CSP hashes it once (csp-hashes.mjs).

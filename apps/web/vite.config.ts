@@ -56,7 +56,7 @@ const MODULE_PRELOAD =
 
 /**
  * Replaces the entry `<script>` and its `modulepreload` links with a small
- * loader. On a prerendered page ("/", "/pricing") the markup is already
+ * loader. On a prerendered page (the landing "/") the markup is already
  * readable (its sign-in links are plain anchors), so the app (about
  * 185 kB) starts downloading after its first contentful paint (or 3 s, for
  * background tabs and browsers without paint timing) and leaves the
@@ -97,7 +97,7 @@ function isFileList(
 
 /**
  * After `vite build`, renders the public pages of `src/prerender.tsx` (the
- * landing into `dist/index.html`, `/pricing` into `dist/pricing.html`;
+ * landing into `dist/index.html`;
  * anonymous visitor, this build's flags), so their first paint does not
  * wait for JavaScript or `/users/me` and crawlers read them. `main.tsx`
  * hydrates that markup. Never runs in dev; a failure fails the build.

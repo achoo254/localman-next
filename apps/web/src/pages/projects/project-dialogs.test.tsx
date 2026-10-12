@@ -4,14 +4,8 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetCurrentUserCache } from "../../features/auth/use-current-user";
 import { makeProject } from "../../test/fixtures";
-import { expectProInterestSource } from "../../test/pro-interest";
-import {
-	PLAN_LIMIT,
-	findPlansDialog,
-	openMenu,
-	plansPart,
-	renderPage,
-} from "./projects-test-helpers";
+import { findToast } from "../../test/toast";
+import { PLAN_LIMIT, openMenu, renderPage } from "./projects-test-helpers";
 
 describe("project dialogs", () => {
 	beforeEach(() => resetCurrentUserCache());
@@ -73,21 +67,18 @@ describe("project dialogs", () => {
 		expect(names[1]).toContain("Project p1 (copy)");
 	});
 
-	it("opens the plans modal when the server reports PLAN_LIMIT_REACHED", async () => {
+	it("names the project limit when the server reports PLAN_LIMIT_REACHED", async () => {
 		renderPage({
 			"GET /api/v1/projects": { body: { items: [makeProject("p1")] } },
 			"POST /api/v1/projects/p1/clone": PLAN_LIMIT,
 		});
 		await openMenu("Project p1");
 		await userEvent.click(screen.getByRole("menuitem", { name: "Duplicate" }));
-		const dialog = await findPlansDialog();
-		expect(within(dialog).getByRole("alert")).toHaveTextContent(
-			String(limitsFor("free").projects),
+		const notice = await findToast(
+			`You've reached the limit of ${limitsFor("free").projects} projects on this account.`,
 		);
-		await userEvent.click(
-			plansPart(dialog, "modal-subscription-pro-secondary"),
-		);
-		await expectProInterestSource("plan_limit_projects");
+		expect(notice).toHaveTextContent("Tell us with the feedback form.");
+		expect(notice).not.toHaveTextContent(/plan|Pro/);
 	});
 
 	it("skips the form when the plan is already full", async () => {
@@ -98,7 +89,7 @@ describe("project dialogs", () => {
 		await userEvent.click(
 			await screen.findByRole("button", { name: "Create a new project" }),
 		);
-		expect(await findPlansDialog()).toBeInTheDocument();
+		expect(await findToast("You've reached the limit of")).toBeInTheDocument();
 		expect(screen.queryByRole("dialog", { name: "New project" })).toBeNull();
 	});
 
@@ -123,17 +114,5 @@ describe("project dialogs", () => {
 			).toBeNull(),
 		);
 		expect(dialog).toHaveTextContent("can't be undone.");
-	});
-
-	it("focuses the plans dialog itself", async () => {
-		renderPage({
-			"GET /api/v1/projects": { body: { items: [makeProject("p1")] } },
-			"POST /api/v1/projects/p1/clone": PLAN_LIMIT,
-		});
-		await openMenu("Project p1");
-		await userEvent.click(screen.getByRole("menuitem", { name: "Duplicate" }));
-		const dialog = await findPlansDialog();
-		await waitFor(() => expect(dialog).toHaveFocus());
-		expect(plansPart(dialog, "modal-subscription-pro")).toBeVisible();
 	});
 });

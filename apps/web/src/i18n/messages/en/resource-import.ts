@@ -57,13 +57,12 @@ export const resourceImport = {
 	},
 	nameLabel: "Resource name",
 	planRoom: {
-		one: "This creates {count} resource, but the project has room for {left} more on its owner's plan.",
+		one: "This creates {count} resource, but the project has room for {left} more.",
 		other:
-			"This creates {count} resources, but the project has room for {left} more on its owner's plan.",
+			"This creates {count} resources, but the project has room for {left} more.",
 	},
-	planRoomCollaborator:
-		"Turn off related resources, or ask the project owner to upgrade.",
-	managePlan: "Manage plan",
+	planRoomHint:
+		"Turn off related resources, or remove resources you no longer need.",
 	submit: "Create resource",
 	errors: {
 		tooLarge:

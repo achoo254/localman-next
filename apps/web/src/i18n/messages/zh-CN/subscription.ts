@@ -1,33 +1,6 @@
 import type { Messages } from "../../message-types";
 
 export const subscription: Messages["subscription"] = {
-	plan: {
-		projects: { other: "{count} 个 project" },
-		resources: { other: "每个 project {count} 个 resource" },
-		customResponse: "Custom response 和 object template",
-		members: { other: "每个 project 最多 {count} 位成员（含你自己）" },
-		mockRequests: { other: "每月 {count} 次 mock request" },
-		mockRequestsUnlimited: "每月 mock request 不限次数",
-		proxyRequests: { other: "每月 {count} 次 proxy request" },
-		proxyRequestsUnlimited: "每月 proxy request 不限次数",
-		notIncluded: "不包含：",
-	},
-	manage: {
-		title: "管理套餐",
-		currentBadge: "当前套餐",
-		seePricing: "查看价格",
-		reachedTitle: "你已达到 {plan} 套餐的上限：{limit}",
-		reachedText: "请比较下面的两个套餐。",
-		current: "当前套餐：<b>{plan}</b>。各套餐的额度见下方。",
-		proLead: "为实际使用中的 project 提供更高额度和更多成员。",
-		limit: {
-			projects: { other: "{count} 个 project" },
-			resources: { other: "{count} 个 resource" },
-			members: { other: "每个 project {count} 位成员" },
-			proxy: { other: "每月 {count} 次 proxy request" },
-			proxyAny: "proxy request",
-		},
-	},
 	usage: {
 		unlimited: "本月<b>不限次数</b>，仅有每秒速率限制。",
 		valueText: "{used} / {max}",
@@ -35,29 +8,6 @@ export const subscription: Messages["subscription"] = {
 		usedPercent: "已使用 {percent}%。",
 	},
 	proInterest: {
-		title: "咨询 Pro 套餐",
-		submit: "提交申请",
-		successTitle: "已收到",
-		successText: "我们会通过你留下的邮箱联系你：<b>{email}</b>。",
-		intro:
-			"Pro 套餐尚未开放付款。告诉我们你的需求，Pro 套餐就绪后我们会联系你。",
-		formFailed: "无法打开表单",
-		preparingCheck: "正在准备验证步骤…",
-		turnstileFailed: "无法加载验证步骤。请检查网络连接，然后重新打开表单。",
-		fields: {
-			email: "邮箱",
-			emailHintPrefilled: "取自你的账号，可修改。",
-			emailHint: "仅用于就 Pro 套餐联系你。",
-			name: "姓名",
-			needs: "你需要 Pro 套餐做什么？",
-			needsHint: "可多选",
-			team: "团队规模",
-			price: "愿意支付的价格",
-			note: "备注",
-			notePlaceholder: "例如：QA 团队需要 30 个 project，每小时运行一次 CI",
-			honeypot: "请勿填写此项",
-			consent: "我同意 Localman 保存我的邮箱，用于就 Pro 套餐联系我",
-		},
 		needs: {
 			mock: "Mock API",
 			apiClient: "API client",
@@ -90,22 +40,6 @@ export const subscription: Messages["subscription"] = {
 			devops: "DevOps",
 			account: "账号",
 			elsewhere: "其他",
-		},
-		errors: {
-			emailEmpty: "请输入邮箱，方便我们联系你。",
-			emailInvalid: "邮箱格式不正确。",
-			name: "请输入姓名，方便我们称呼你。",
-			needs: "请至少选择一项需求。",
-			teamSize: "请选择团队规模。",
-			note: "备注太长，请精简。",
-			consent: "需要你同意 Localman 保存邮箱并联系你。",
-			turnstile: "请先完成验证再提交。",
-		},
-		submitErrors: {
-			validation: "部分信息无效，请检查各项后重新提交。",
-			turnstileFailed: "验证未通过，请重新完成验证。",
-			turnstileUnavailable: "暂时无法检查验证步骤，请几分钟后重试。",
-			rateLimited: "你提交的次数过多，请稍等片刻后重试。",
 		},
 	},
 };

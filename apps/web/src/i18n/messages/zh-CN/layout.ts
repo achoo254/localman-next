@@ -6,7 +6,6 @@ export const layout: Messages["layout"] = {
 	docs: "文档",
 	projects: "Projects",
 	home: "Localman 首页",
-	pricing: "价格",
 	publicHeader: {
 		home: "Localman，返回首页",
 		nav: "主导航",
@@ -18,14 +17,9 @@ export const layout: Messages["layout"] = {
 		nav: "产品",
 		mocks: "Mock API",
 	},
-	plan: {
-		free: "Free 套餐",
-		pro: "Pro 套餐",
-	},
 	accountMenu: {
 		trigger: "{name} · 账号",
 		account: "账号与额度",
-		plan: "管理套餐",
 		notifications: "通知渠道",
 		adminProInterest: "管理 · Pro 意向",
 		adminFeedback: "管理 · 反馈收件箱",

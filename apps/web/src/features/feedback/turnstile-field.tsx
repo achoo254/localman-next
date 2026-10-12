@@ -1,7 +1,4 @@
-import {
-	TURNSTILE_ACTIONS,
-	type TurnstileAction,
-} from "@localman/shared/constants";
+import type { TurnstileAction } from "@localman/shared/constants";
 import { useEffect, useRef, useState } from "react";
 import { useT } from "../../i18n/i18n-context";
 import { loadTurnstile } from "../../platform/turnstile";
@@ -13,9 +10,9 @@ export interface TurnstileFieldProps {
 	error?: string;
 	errorId: string;
 	/** Form the token is for; the API refuses it on another form. */
-	action?: TurnstileAction;
+	action: TurnstileAction;
 	/** `data-id` of the widget block. */
-	dataId?: string;
+	dataId: string;
 }
 
 /**
@@ -28,8 +25,8 @@ export function TurnstileField({
 	onTokenChange,
 	error,
 	errorId,
-	action = TURNSTILE_ACTIONS.proInterest,
-	dataId = "pro-interest-turnstile",
+	action,
+	dataId,
 }: TurnstileFieldProps) {
 	const t = useT();
 	const container = useRef<HTMLDivElement>(null);
@@ -68,7 +65,7 @@ export function TurnstileField({
 			<div ref={container} aria-describedby={error ? errorId : undefined} />
 			{failed ? (
 				<p className="text-[0.8125rem] text-error">
-					{t("subscription.proInterest.turnstileFailed")}
+					{t("feedback.turnstileLoadFailed")}
 				</p>
 			) : null}
 			{error ? (

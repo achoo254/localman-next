@@ -23,28 +23,29 @@ export function dayAsUtc(day: string): Date {
 }
 
 /**
- * English texts of the Pro trial (notifications and the owner alert);
- * the source of the shape the other languages fill.
+ * English texts of the 30 days of Pro (notifications and the owner
+ * alert); the source of the shape the other languages fill. What users
+ * read names no plan, trial or price: the product is not sold yet.
  */
 export const trialEn = {
 	/** `YYYY-MM-DD` (Asia/Saigon) as a day, e.g. "October 10, 2026". */
 	formatDay: (day: string): string => longDate.format(dayAsUtc(day)),
 	endingTitle: (p: TrialEndingText): string =>
-		`Your Pro trial ends in ${p.daysLeft} ${p.daysLeft === 1 ? "day" : "days"}`,
+		`Your extended limits end in ${p.daysLeft} ${p.daysLeft === 1 ? "day" : "days"}`,
 	endingBody: (p: TrialEndingText): string =>
-		`Your Pro trial ends on ${p.date}. Then your account is on Free again: everything you made stays, but creating more above the Free limits is blocked. You can ask for an extension on your account page.`,
-	endedTitle: "Your Pro trial has ended",
+		`On ${p.date} your account goes back to the basic limits. Everything you made stays, but creating more above those limits is blocked.`,
+	endedTitle: "Your extended limits have ended",
 	endedBody: (p: { readonly date: string }): string =>
-		`Your Pro trial ended on ${p.date} and your account is on Free again. Your projects, resources and data are all kept; creating more above the Free limits is blocked. You can ask for an extension on your account page within 7 days.`,
+		`Since ${p.date} your account has the basic limits again. Your projects, resources and data are all kept; creating more above those limits is blocked.`,
 	requestedTitle: "Pro trial extension request",
 	requestedBody: (p: { readonly user: string }): string =>
 		`${p.user} asked to extend their Pro trial. Approve or decline it on the admin page.`,
-	approvedTitle: "Your Pro trial was extended",
+	approvedTitle: "Your extended limits last longer",
 	approvedBody: (p: { readonly date: string }): string =>
-		`Your Pro trial now runs until ${p.date}.`,
-	declinedTitle: "Pro trial extension declined",
+		`Your extended limits now run until ${p.date}.`,
+	declinedTitle: "Your request was not approved",
 	declinedBody:
-		"Your request to extend the Pro trial was declined. The trial keeps its current end date.",
+		"Your request was not approved. Your extended limits keep their current end date.",
 	ownerAlert: (p: TrialExtensionAlertText): string =>
 		[
 			"Pro trial extension request",

@@ -32,7 +32,7 @@ export const invite: Messages["invite"] = {
 		signedInAs: "Bạn đang đăng nhập bằng <b>{account}</b>",
 		alreadyMember: "Bạn đã là thành viên của {project}.",
 		openProject: "Mở project",
-		full: "Project đã đủ thành viên theo gói của chủ project. Nhờ chủ project xoá bớt thành viên.",
+		full: "Project đã hết chỗ cho thành viên. Nhờ chủ project xoá bớt thành viên.",
 		removed:
 			"Chủ project đã gỡ bạn khỏi project này. Liên hệ chủ project nếu cần tham gia lại.",
 		ineligibleTitle: "Tài khoản này không nhận được lời mời",

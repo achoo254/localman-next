@@ -5,7 +5,6 @@ export const layout = {
 	docs: "Docs",
 	projects: "Projects",
 	home: "Localman home",
-	pricing: "Pricing",
 	publicHeader: {
 		home: "Localman, home",
 		nav: "Main navigation",
@@ -17,14 +16,9 @@ export const layout = {
 		nav: "Products",
 		mocks: "Mock API",
 	},
-	plan: {
-		free: "Free plan",
-		pro: "Pro plan",
-	},
 	accountMenu: {
 		trigger: "{name} · Account",
 		account: "Account and limits",
-		plan: "Manage plan",
 		notifications: "Notification channels",
 		adminProInterest: "Admin · Pro interest",
 		adminFeedback: "Admin · Feedback inbox",

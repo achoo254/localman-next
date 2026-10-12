@@ -1,14 +1,12 @@
 import {
 	IconBell,
 	IconBook,
-	IconBox,
 	IconChartBar,
 	IconChevronDown,
 	IconGauge,
 	IconHome,
 	IconInbox,
 	IconLogout,
-	IconTag,
 } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router";
@@ -40,7 +38,6 @@ export interface AccountMenuProps {
 	user: CurrentUser;
 	logoutBusy: boolean;
 	onLogout: () => void;
-	onManagePlan: () => void;
 	/** Avatar and chevron only: the name stays in the menu and the label. */
 	compact?: boolean;
 }
@@ -63,7 +60,6 @@ export function AccountMenu({
 	user,
 	logoutBusy,
 	onLogout,
-	onManagePlan,
 	compact = false,
 }: AccountMenuProps) {
 	const navigate = useNavigate();
@@ -109,7 +105,6 @@ export function AccountMenu({
 				<DropdownMenuLabel className="grid gap-0.5">
 					<span className="truncate font-semibold text-fg">{name}</span>
 					{user.email ? <span className="truncate">{user.email}</span> : null}
-					<span>{t(`layout.plan.${user.plan}`)}</span>
 				</DropdownMenuLabel>
 				<DropdownMenuSeparator />
 				{item(
@@ -117,12 +112,6 @@ export function AccountMenu({
 					<IconGauge {...ICON} />,
 					t("layout.accountMenu.account"),
 					() => navigate("/account"),
-				)}
-				{item(
-					"account-menu-plan",
-					<IconBox {...ICON} />,
-					t("layout.accountMenu.plan"),
-					onManagePlan,
 				)}
 				{item(
 					"account-menu-notifications",
@@ -136,12 +125,6 @@ export function AccountMenu({
 					t("layout.docs"),
 					() => navigate("/docs"),
 					"sm:hidden",
-				)}
-				{item(
-					"account-menu-pricing",
-					<IconTag {...ICON} />,
-					t("layout.pricing"),
-					() => navigate("/pricing"),
 				)}
 				{item(
 					"account-menu-home",

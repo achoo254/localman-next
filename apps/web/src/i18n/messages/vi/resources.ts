@@ -17,7 +17,7 @@ export const resources: Messages["resources"] = {
 			"Không thể lồng resource vào chính nó hoặc vào resource con của nó.",
 		fieldConflict:
 			"Thay đổi này làm một field trùng tên với field sinh tự động (ví dụ userId). Đổi tên hoặc xoá field đó trước.",
-		planLimit: "Bạn đã dùng hết số resource gói hiện tại cho phép.",
+		planLimit: "Bạn đã dùng hết số resource tài khoản này cho phép.",
 		forbidden: "Bạn chỉ có quyền xem project này.",
 		requestTooLarge: "Dữ liệu gửi lên quá lớn (tối đa 2 MB mỗi resource).",
 		recordTooLarge:

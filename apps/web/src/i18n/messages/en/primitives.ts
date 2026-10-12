@@ -34,7 +34,7 @@ export const primitives = {
 			"Mono uppercase badges; alerts and toasts use a tinted background per tone.",
 		badges: {
 			draft: "Draft",
-			pro: "Pro",
+			shared: "Shared",
 			fresh: "New",
 			beta: "Beta",
 			running: "Running",
@@ -46,7 +46,7 @@ export const primitives = {
 		connectedTitle: "Connected",
 		connectedBody: "The mock server is serving this project.",
 		limitTitle: "Close to the limit",
-		limitBody: "You've used 9/10 resources of the Free plan.",
+		limitBody: "You've used 9/10 resources.",
 		deleteFailedTitle: "Couldn't delete",
 		deleteFailedBody: "Another endpoint still references this resource.",
 		toastSuccess: "Success toast",

@@ -52,11 +52,9 @@ export const resourceImport: Messages["resourceImport"] = {
 	},
 	nameLabel: "Resource 名称",
 	planRoom: {
-		other:
-			"这会创建 {count} 个 resource，但 project 所有者的套餐只剩 {left} 个名额。",
+		other: "这会创建 {count} 个 resource，但 project 只剩 {left} 个名额。",
 	},
-	planRoomCollaborator: "请关闭相关 resource，或请 project 所有者升级套餐。",
-	managePlan: "管理套餐",
+	planRoomHint: "请关闭相关 resource，或删除不再使用的 resource。",
 	submit: "创建 resource",
 	errors: {
 		tooLarge:

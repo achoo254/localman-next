@@ -4,7 +4,7 @@ import { RouteChunkPending } from "../components/ui/route-progress";
 
 /**
  * Page code split into its own chunk, loaded on first visit. The
- * prerendered pages (landing, pricing) and the shell (header, guards) stay
+ * prerendered landing and the shell (header, guards) stay
  * in the main chunk so the first paint and the session check do not wait
  * for a second request. While the chunk loads, the fallback lights the
  * window's route bar and shows the generic page skeleton.

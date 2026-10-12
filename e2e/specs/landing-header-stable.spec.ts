@@ -44,7 +44,7 @@ for (const locale of ["en", "vi"] as const) {
 
 		const bar = page.getByTestId("topbar");
 		const language = bar.getByTestId("topbar-language");
-		const pricing = bar.getByTestId("topbar-pricing");
+		const docs = bar.getByTestId("topbar-docs");
 		// Session still loading: the page shows its sign-in pair, in `locale`.
 		await expect(
 			bar.getByRole("link", { name: SIGN_IN_LABEL[locale], exact: true }),
@@ -52,7 +52,7 @@ for (const locale of ["en", "vi"] as const) {
 		await page.evaluate(() => document.fonts.ready);
 		const before = {
 			language: await leftEdge(language),
-			pricing: await leftEdge(pricing),
+			docs: await leftEdge(docs),
 		};
 
 		release();
@@ -60,11 +60,11 @@ for (const locale of ["en", "vi"] as const) {
 		await expect(bar.getByTestId("topbar-account")).toBeVisible();
 		const after = {
 			language: await leftEdge(language),
-			pricing: await leftEdge(pricing),
+			docs: await leftEdge(docs),
 		};
 
 		console.log(
-			`[${locale}] language switch x: ${before.language} -> ${after.language}; pricing link x: ${before.pricing} -> ${after.pricing}`,
+			`[${locale}] language switch x: ${before.language} -> ${after.language}; docs link x: ${before.docs} -> ${after.docs}`,
 		);
 		expect(after).toEqual(before);
 	});

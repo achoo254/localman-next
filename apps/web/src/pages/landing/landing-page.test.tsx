@@ -1,13 +1,11 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { FREE_LIMITS } from "@localman/shared/constants";
 import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NO_FEATURES } from "../../config/features";
 import { DEMO_USERS, DEMO_USER_SCHEMA } from "../../content/landing-samples";
 import { en } from "../../i18n/messages/en/dictionary";
-import { createTranslator } from "../../i18n/translate";
 import { seriousViolations } from "../../test/axe";
 import {
 	UNRELEASED_WORDS,
@@ -20,7 +18,6 @@ import { ALL_FEATURES, renderWithFeatures } from "./landing-test-helpers";
 const BLOCKS = new Set([
 	"landing-hero",
 	"landing-live-sync",
-	"landing-pricing",
 	"landing-modeling",
 	"landing-relations",
 	"landing-features",
@@ -49,7 +46,6 @@ describe("LandingPage", () => {
 		const { container } = renderWithFeatures(<LandingPage />);
 		expect(sectionOrder(container)).toEqual([
 			"landing-hero",
-			"landing-pricing",
 			"landing-modeling",
 			"landing-relations",
 			"landing-features",
@@ -61,7 +57,7 @@ describe("LandingPage", () => {
 				level: 1,
 				name: /Stateful mock REST APIs/,
 			}),
-		).toHaveTextContent(`${FREE_LIMITS.projects} projects on the Free plan`);
+		).not.toHaveTextContent(/plan|pricing/i);
 		expect(
 			screen.getByRole("link", { name: "See how it works" }),
 		).toHaveAttribute("href", "#relations");
@@ -118,11 +114,8 @@ describe("index.html SEO", () => {
 	const here = dirname(fileURLToPath(import.meta.url));
 	const html = readFileSync(resolve(here, "../../../index.html"), "utf8");
 
-	it("carries the English landing copy with the project count from plan-limits", () => {
-		const { t } = createTranslator("en", en);
-		const description = t("landing.meta.description", {
-			projects: FREE_LIMITS.projects,
-		});
+	it("carries the English landing copy", () => {
+		const description = en.landing.meta.description;
 		const title = en.landing.meta.titleMock;
 		const flat = html.replace(/\s+/g, " ");
 		expect(flat).toContain('<html lang="en">');

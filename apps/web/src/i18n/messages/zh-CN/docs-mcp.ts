@@ -11,16 +11,16 @@ export const docsMcp: Messages["docs"]["mcp"] = {
 		resources:
 			"两个 MCP resource 描述了 mock：<code>mock://schema</code>（resource 树、嵌套路由、schema、endpoint 以及每个 resource 的工具）和 <code>mock://openapi</code>（已开启 endpoint 的 OpenAPI 3.1）。",
 		token:
-			"和 REST 一样，拿到 URL 的人都能调用这个 endpoint。Project 所有者可以在 MCP 标签页中要求 MCP 使用 token，所有套餐均可：开启后调用需要 <code>Authorization: Bearer lmmcp_…</code>，token 缺失或错误返回 401。Token 只在创建时显示一次。",
+			"和 REST 一样，拿到 URL 的人都能调用这个 endpoint。Project 所有者可以在 MCP 标签页中要求 MCP 使用 token：开启后调用需要 <code>Authorization: Bearer lmmcp_…</code>，token 缺失或错误返回 401。Token 只在创建时显示一次。",
 		limits:
 			"每次工具调用计为 project 所有者每月 mock 额度中的 1 次 request，并与 REST 共用速率限制；超出限制时工具返回错误 <code>RATE_LIMITED</code> 或 <code>MONTHLY_QUOTA_EXCEEDED</code>。Custom response 不适用于 MCP 结果。",
 		limitsFree:
-			"每次工具调用计为 project 所有者每月 mock 额度中的 1 次 request（Free 套餐：每月 {requests} 次 request），并与 REST 共用速率限制；超出限制时工具返回错误 <code>RATE_LIMITED</code> 或 <code>MONTHLY_QUOTA_EXCEEDED</code>。Custom response 不适用于 MCP 结果。",
+			"每次工具调用计为 project 所有者每月 mock 额度中的 1 次 request（默认每月 {requests} 次 request），并与 REST 共用速率限制；超出限制时工具返回错误 <code>RATE_LIMITED</code> 或 <code>MONTHLY_QUOTA_EXCEEDED</code>。Custom response 不适用于 MCP 结果。",
 	},
 	localman: {
 		title: "Localman MCP",
 		intro:
-			"Localman MCP 的地址是 <code>{url}</code>，agent 可以用它管理你的 project 和 resource：创建 project，从 TypeScript、OpenAPI 或 JSON Schema 类型添加 resource，生成数据，读取 mock URL。它以你的身份操作，权限和套餐限制与网页版相同。",
+			"Localman MCP 的地址是 <code>{url}</code>，agent 可以用它管理你的 project 和 resource：创建 project，从 TypeScript、OpenAPI 或 JSON Schema 类型添加 resource，生成数据，读取 mock URL。它以你的身份操作，权限和额度限制与网页版相同。",
 		signIn:
 			"Agent 通过 OAuth 使用你在 <code>{idp}</code> 的 hoandat 账号登录：客户端会自动注册，并打开浏览器让你授权。<code>mock:read</code> 允许读取 project、resource、数据和 mock URL（包括 secret）；<code>mock:write</code> 允许修改它们。创建凭据的工具还会请求 <code>credentials:write</code>。",
 		claudeAfter:

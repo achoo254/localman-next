@@ -18,6 +18,7 @@ const DIALOG_KEYS: ErrorKeys = {
 	VALIDATION_ERROR: "collaborators.errors.invalid",
 	RATE_LIMITED: "collaborators.errors.rateLimited",
 	CONFLICT: "collaborators.errors.conflict",
+	PLAN_LIMIT_REACHED: "collaborators.errors.full",
 };
 
 /** Message keys of `/invite/:token` errors that are not a state of their own. */

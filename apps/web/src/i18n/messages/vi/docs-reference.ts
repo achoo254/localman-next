@@ -51,7 +51,7 @@ export const docsReference: Messages["docs"]["reference"] = {
 			"Gửi quá nhanh (giới hạn theo IP và theo project). Chờ số giây trong header <code>Retry-After</code> rồi gửi lại.",
 		monthlyQuota: "Chủ project đã dùng hết hạn mức request tháng.",
 		monthlyQuotaFree:
-			"Chủ project đã dùng hết hạn mức request tháng (gói Free: {requests} request tới mock mỗi tháng, tính chung cho mọi project của họ).",
+			"Chủ project đã dùng hết hạn mức request tháng (mặc định {requests} request tới mock mỗi tháng, tính chung cho mọi project của họ).",
 		chaosError:
 			"Lỗi do cài đặt chaos của endpoint tạo ra (theo tỉ lệ lỗi). Mã trạng thái là mã đã chọn ở đó.",
 		chaosTimeout:

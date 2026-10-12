@@ -9,8 +9,6 @@ export const docsCustomResponses: Messages["docs"]["customResponses"] = {
 	edit: {
 		title: "Sửa template",
 		body: "Bấm Sửa trên resource. Mục Endpoints liệt kê năm endpoint, mỗi cái có công tắc bật tắt và ô Response template nhận JSON. Bấm Cập nhật để lưu; request kế tiếp dùng template mới ngay.",
-		bodyWithFree:
-			"Bấm Sửa trên resource. Mục Endpoints liệt kê năm endpoint, mỗi cái có công tắc bật tắt và ô Response template nhận JSON. Bấm Cập nhật để lưu; request kế tiếp dùng template mới ngay. Custom response dùng được ở mọi gói, kể cả Free.",
 	},
 	variables: {
 		title: "Biến trong template",

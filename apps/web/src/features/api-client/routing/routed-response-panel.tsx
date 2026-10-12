@@ -4,7 +4,6 @@ import { ResponsePanel } from "../response/response-panel";
 import { TuneloPanel } from "../tunelo/tunelo-panel";
 import { useWorkbenchActions } from "../workbench/workbench-context";
 import type { SendResult, TabResponse } from "../workbench/workbench-types";
-import { QuotaPlansAction } from "./quota-plans-action";
 import { RouteBadge } from "./route-badge";
 import { ConsentBlockedView, DirectFailView } from "./route-failure-views";
 import { RouteNote } from "./route-note";
@@ -80,9 +79,6 @@ export const RoutedResponsePanel = memo(function RoutedResponsePanel({
 	}
 
 	const result = response.kind === "done" ? response.result : null;
-	const quota =
-		response.kind === "failed" &&
-		response.failure.code === "MONTHLY_QUOTA_EXCEEDED";
 	return (
 		<ResponsePanel
 			response={response}
@@ -102,7 +98,6 @@ export const RoutedResponsePanel = memo(function RoutedResponsePanel({
 					</>
 				) : undefined
 			}
-			errorActions={quota ? <QuotaPlansAction /> : undefined}
 		/>
 	);
 });

@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { copyText } from "../../platform/clipboard";
@@ -121,8 +121,8 @@ describe("inviting again and racing the member limit", () => {
 		const before = gets();
 		await invite(dialog, "@bob");
 		expect(
-			await screen.findByRole("dialog", { name: "Manage plan" }),
-		).toBeInTheDocument();
+			await within(dialog).findByText(/no free seat in this project/),
+		).toBeVisible();
 		await waitFor(() => expect(gets()).toBeGreaterThan(before));
 		expect(link).toBeInTheDocument();
 		expect(

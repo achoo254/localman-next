@@ -1,4 +1,3 @@
-import { FREE_LIMITS } from "@localman/shared/constants";
 import { prerender } from "react-dom/static";
 import {
 	StaticRouterProvider,
@@ -6,10 +5,7 @@ import {
 	createStaticRouter,
 } from "react-router";
 import { AppProviders } from "./app-providers";
-import { en } from "./i18n/messages/en/dictionary";
-import { createTranslator } from "./i18n/translate";
 import { createQueryClient } from "./lib/query-client";
-import { appTitle } from "./lib/use-document-title";
 import { routes } from "./routes";
 
 /** English head of a prerendered page, for crawlers and link previews. */
@@ -28,20 +24,7 @@ export interface PrerenderedPage {
 
 /** Public pages written as HTML at build time, so crawlers read them without JS. */
 export function prerenderedPages(): PrerenderedPage[] {
-	const { t } = createTranslator("en", en);
-	return [
-		{ path: "/", file: "index.html", head: null },
-		{
-			path: "/pricing",
-			file: "pricing.html",
-			head: {
-				title: appTitle(t("layout.pricing")),
-				description: t("landing.meta.pricingDescription", {
-					projects: FREE_LIMITS.projects,
-				}),
-			},
-		},
-	];
+	return [{ path: "/", file: "index.html", head: null }];
 }
 
 /**

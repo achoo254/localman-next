@@ -1,4 +1,4 @@
-import { MAX_RESOURCE_BYTES, limitsFor } from "@localman/shared/constants";
+import { MAX_RESOURCE_BYTES } from "@localman/shared/constants";
 import { CodeBlock } from "../../components/ui/code-block";
 import { useT } from "../../i18n/i18n-context";
 import {
@@ -58,11 +58,7 @@ export function CustomResponsesPage() {
 			</DocsSection>
 
 			<DocsSection id="edit" title={t("docs.customResponses.edit.title")}>
-				<Prose>
-					{limitsFor("free").customResponse
-						? t("docs.customResponses.edit.bodyWithFree")
-						: t("docs.customResponses.edit.body")}
-				</Prose>
+				<Prose>{t("docs.customResponses.edit.body")}</Prose>
 			</DocsSection>
 
 			<DocsSection

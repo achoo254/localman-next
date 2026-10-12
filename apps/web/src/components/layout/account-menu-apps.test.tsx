@@ -25,7 +25,6 @@ async function openMenu(flags: FeatureFlags) {
 							user={makeUser()}
 							logoutBusy={false}
 							onLogout={() => undefined}
-							onManagePlan={() => undefined}
 						/>
 					</FeaturesContext>
 				),

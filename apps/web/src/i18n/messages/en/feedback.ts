@@ -12,7 +12,7 @@ export const feedback = {
 				"What were you doing when it went wrong, and what did you see?",
 		},
 		planQuestion: {
-			label: "Plan question",
+			label: "Question about limits",
 			placeholder: "Which limits or features do you need?",
 		},
 	},
@@ -50,6 +50,8 @@ export const feedback = {
 	},
 	openFailed: "Couldn't open the form",
 	preparing: "Preparing verification…",
+	turnstileLoadFailed:
+		"Couldn't load the verification step. Check your connection, then reopen the form.",
 	noteSignedIn:
 		"Feedback is sent with your account and the area you have open (for example Projects), not the page address.",
 	noteVisitor:

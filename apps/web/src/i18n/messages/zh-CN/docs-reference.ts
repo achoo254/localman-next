@@ -51,7 +51,7 @@ export const docsReference: Messages["docs"]["reference"] = {
 			"发送过快（按 IP 和按 project 限制）。等待 <code>Retry-After</code> header 中的秒数后再发送。",
 		monthlyQuota: "Project 所有者已用完本月的 request 额度。",
 		monthlyQuotaFree:
-			"Project 所有者已用完本月的 request 额度（Free 套餐：每月 {requests} 次 mock request，由其所有 project 共享）。",
+			"Project 所有者已用完本月的 request 额度（默认每月 {requests} 次 mock request，由其所有 project 共享）。",
 		chaosError:
 			"由 endpoint 的 chaos 设置（错误率）注入的错误，状态码为该设置中选择的状态码。",
 		chaosTimeout:

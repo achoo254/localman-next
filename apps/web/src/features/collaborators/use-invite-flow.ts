@@ -57,7 +57,7 @@ export function useInviteFlow({
 
 	function fail(cause: unknown) {
 		if (isPlanLimitError(cause)) onPlanLimit();
-		else setError(inviteErrorMessage(cause, t));
+		setError(inviteErrorMessage(cause, t));
 	}
 
 	async function look() {

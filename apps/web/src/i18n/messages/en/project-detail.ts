@@ -28,7 +28,7 @@ export const projectDetail = {
 			"No resources yet. A resource is a data table with its own CRUD endpoints.",
 		count: { one: "{count} resource", other: "{count} resources" },
 	},
-	planLimit: "This project has reached the resource limit on its owner's plan.",
+	planLimit: "This project has reached its owner's resource limit.",
 	toast: {
 		created: "Created resource <code>{name}</code>.",
 		imported: {

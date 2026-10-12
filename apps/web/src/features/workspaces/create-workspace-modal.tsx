@@ -1,4 +1,3 @@
-import { limitsFor } from "@localman/shared/constants";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { Alert } from "../../components/ui/alert";
@@ -12,7 +11,6 @@ import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { WORKSPACES_KEY, useSelectWorkspace } from "./current-workspace";
 import { planLimitOf, workspaceErrorMessage } from "./workspace-errors";
-import { WorkspacePlanLimit } from "./workspace-plan-limit";
 import { type Workspace, createWorkspace } from "./workspaces-api";
 
 const FORM_ID = "create-workspace-form";
@@ -145,12 +143,13 @@ export function CreateWorkspaceModal({
 				</FormField>
 			</form>
 			{limited ? (
-				<WorkspacePlanLimit
-					data-id="modal-create-workspace-pro"
-					text={t("workspaces.create.limit", {
-						count: limitsFor("free").teamWorkspaces,
-					})}
-				/>
+				<Alert
+					tone="info"
+					data-id="modal-create-workspace-limit"
+					title={t("limits.reached.teamWorkspaces")}
+				>
+					{t("limits.feedback")}
+				</Alert>
 			) : create.error ? (
 				<Alert tone="danger" data-id="modal-create-workspace-error">
 					{workspaceErrorMessage(create.error, t)}

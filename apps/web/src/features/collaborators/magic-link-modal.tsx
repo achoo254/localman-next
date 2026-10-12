@@ -1,4 +1,3 @@
-import type { PlanId } from "@localman/shared/constants";
 import { useEffect, useRef, useState } from "react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
@@ -26,22 +25,14 @@ import { useMagicLink } from "./use-magic-link";
 
 export interface MagicLinkModalProps {
 	project: Project;
-	/** The owner's plan (only owners open this dialog). */
-	plan: PlanId;
 	onOpenChange: (open: boolean) => void;
-	onPlans: () => void;
 }
 
 /**
  * The project's reusable invite link: create, replace or revoke it. The
  * link itself is shown only right after creating it.
  */
-export function MagicLinkModal({
-	project,
-	plan,
-	onOpenChange,
-	onPlans,
-}: MagicLinkModalProps) {
+export function MagicLinkModal({ project, onOpenChange }: MagicLinkModalProps) {
 	const toast = useToast();
 	const { t, formatDate } = useI18n();
 	const magic = useMagicLink(project.id);
@@ -104,16 +95,6 @@ export function MagicLinkModal({
 						used: seats.used,
 						max: seats.max ?? "∞",
 					})}
-					{plan === "free" ? (
-						<Button
-							size="sm"
-							data-id="modal-magic-link-plans"
-							className="mt-2 flex"
-							onClick={onPlans}
-						>
-							{t("collaborators.modal.seePlans")}
-						</Button>
-					) : null}
 				</Alert>
 			) : null}
 			{skeleton ? <MagicLinkSkeleton /> : null}

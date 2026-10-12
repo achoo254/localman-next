@@ -1,5 +1,4 @@
 import type { WorkspaceRole } from "@localman/shared/access";
-import { type PlanId, limitsFor } from "@localman/shared/constants";
 import type { Translate } from "../../i18n/translate";
 import type {
 	WorkspaceInvitation,
@@ -31,19 +30,6 @@ export function invitationLabel(
 ): string {
 	if (invitation.username) return `@${invitation.username}`;
 	return invitation.email ?? t("workspaces.members.inviteLinkItem");
-}
-
-const PLANS: readonly PlanId[] = ["free", "pro"];
-
-/**
- * Plan of the workspace owner, recognised by its seat cap (the API sends
- * the cap, not the plan). null when no plan has that cap.
- */
-export function ownerPlanOf(max: number | null): PlanId | null {
-	if (max === null) return null;
-	return (
-		PLANS.find((plan) => limitsFor(plan).membersPerWorkspace === max) ?? null
-	);
 }
 
 /** `max` null means no cap. */

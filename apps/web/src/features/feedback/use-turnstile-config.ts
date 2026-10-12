@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import {
-	type ProInterestConfig,
-	fetchProInterestConfig,
-} from "../subscription/pro-interest-api";
+	type TurnstileConfig,
+	fetchTurnstileConfig,
+} from "./turnstile-config-api";
 
 export type TurnstileConfigState =
 	| { status: "loading" }
-	| { status: "ready"; config: ProInterestConfig }
+	| { status: "ready"; config: TurnstileConfig }
 	| { status: "error"; error: unknown };
 
 const NO_CHECK: TurnstileConfigState = {
@@ -38,7 +38,7 @@ export function useTurnstileConfig(signedIn: boolean): {
 			current.status === "loading" ? current : { status: "loading" },
 		);
 		let active = true;
-		fetchProInterestConfig().then(
+		fetchTurnstileConfig().then(
 			(config) => active && setState({ status: "ready", config }),
 			(error: unknown) => active && setState({ status: "error", error }),
 		);

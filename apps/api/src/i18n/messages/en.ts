@@ -73,11 +73,11 @@ export const en = {
 		"project.invitation": "Project collaboration invitations",
 		"project.mockUrlChanged": "A shared project's mock URL changed",
 		"usage.quota": "Monthly mock request quota warnings",
-		"trial.ending": "Pro trial ending soon",
-		"trial.ended": "Pro trial ended",
+		"trial.ending": "Extended limits ending soon",
+		"trial.ended": "Extended limits ended",
 		"trial.extension.requested": "Pro trial extension requests (owners)",
-		"trial.extension.approved": "Pro trial extended",
-		"trial.extension.declined": "Pro trial extension declined",
+		"trial.extension.approved": "Extended limits renewed",
+		"trial.extension.declined": "Extended limits not renewed",
 		"workspace.invitation": "Workspace invitations",
 		"element.shared": "Collections and environments shared with you",
 		"access.requested":
@@ -122,7 +122,7 @@ export const en = {
 	quota: {
 		usedUpTitle: "This month's mock API requests are used up",
 		usedUpBody: (p: QuotaText): string =>
-			`Your projects have used all ${p.limit} mock API requests of ${p.month}. The mock API returns 429 until the start of next month or until you upgrade to Pro.`,
+			`Your projects have used all ${p.limit} mock API requests of ${p.month}. The mock API returns 429 until the start of next month.`,
 		warningTitle: (p: QuotaText): string =>
 			`You have used ${p.threshold}% of this month's mock API requests`,
 		warningBody: (p: QuotaText): string =>

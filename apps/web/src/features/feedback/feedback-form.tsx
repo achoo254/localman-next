@@ -7,8 +7,8 @@ import { ModalFooter } from "../../components/ui/modal-footer";
 import { SuccessPanel } from "../../components/ui/success-panel";
 import { useT } from "../../i18n/i18n-context";
 import { reloadCurrentUser, useCurrentUser } from "../auth/use-current-user";
-import { FormSkeleton } from "../subscription/form-skeleton";
 import { type FeedbackAccount, FeedbackFormBody } from "./feedback-form-body";
+import { FormSkeleton } from "./form-skeleton";
 
 export interface FeedbackFormProps {
 	open: boolean;

@@ -28,13 +28,12 @@ export function LiveStatus({ state }: { state: LiveState }) {
 	);
 }
 
-/** How long lines are kept on the owner's plan, what is always masked. */
+/** How long lines are kept for the owner, what is always masked. */
 export function RetentionNote({ settings }: { settings: TrafficSettings }) {
 	const t = useT();
-	const plan = settings.plan === "pro" ? "Pro" : "Free";
 	return (
 		<p data-id="request-log-retention" className="m-0 text-muted text-sm">
-			{t("trafficLog.retention", { count: settings.logDays, plan })}{" "}
+			{t("trafficLog.retention", { count: settings.logDays })}{" "}
 			{renderRich(
 				t("trafficLog.alwaysMasked", {
 					headers: settings.defaultRedactedHeaders.join(", "),

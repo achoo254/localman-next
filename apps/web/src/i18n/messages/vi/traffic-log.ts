@@ -93,7 +93,7 @@ export const trafficLog: Messages["trafficLog"] = {
 		truncated: "Chỉ giữ 64 KB đầu trong {size} byte.",
 		cutNote: "Body lớn hơn 64 KB bị cắt khi lưu.",
 	},
-	retention: { other: "Log lưu {count} ngày ở gói {plan}." },
+	retention: { other: "Log lưu {count} ngày." },
 	alwaysMasked: "Luôn bị che: <code>{headers}</code>.",
 	replayNote: "Replay gửi lại đúng request vào mock và tính vào hạn mức.",
 };

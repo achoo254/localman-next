@@ -128,7 +128,7 @@ describe("magic link dialog", () => {
 		);
 	});
 
-	it("warns when the project is full and offers the plans on Free", async () => {
+	it("warns when the project is full, with no plans to open", async () => {
 		const { dialog } = await open({
 			[`GET ${MEMBERS}`]: listBody([member("an"), member("binh")]),
 			[`GET ${MAGIC}`]: { body: NONE },
@@ -139,12 +139,7 @@ describe("magic link dialog", () => {
 			return node;
 		});
 		expect(full).toHaveTextContent("The project already has 3/3 members.");
-		await userEvent.click(
-			within(dialog).getByRole("button", { name: "See plans" }),
-		);
-		expect(
-			await screen.findByRole("dialog", { name: "Manage plan" }),
-		).toHaveTextContent("3 members per project");
+		expect(full.querySelector("button")).toBeNull();
 	});
 
 	it("shows load errors with a retry", async () => {

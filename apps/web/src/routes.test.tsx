@@ -6,7 +6,6 @@ import { navigateToLogin } from "./platform/navigation";
 import { routes } from "./routes";
 import { makeUser } from "./test/fixtures";
 import { UNAUTHENTICATED, mockFetch } from "./test/mock-fetch";
-import { expectProInterestSource } from "./test/pro-interest";
 import { renderRoutes } from "./test/render-app";
 
 vi.mock("./platform/navigation", async (importOriginal) => ({
@@ -53,13 +52,12 @@ describe("route guards", () => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		renderRoutes(routes, "/");
 		const login = await screen.findByRole("link", { name: "Sign in" });
-		const signUps = screen.getAllByRole("link", { name: "Get started free" });
-		// Top bar, hero, Free plan card and closing band all sign up the same way.
+		const signUps = screen.getAllByRole("link", { name: "Get started now" });
+		// Top bar, hero and closing band all sign up the same way.
 		expect(login).toHaveAttribute("data-id", "topbar-login");
 		expect(signUps.map((link) => link.getAttribute("data-id"))).toEqual([
 			"topbar-signup",
 			"landing-hero-cta",
-			"pricing-card-free-cta",
 			"landing-cta-button",
 		]);
 		for (const link of signUps) {
@@ -148,20 +146,11 @@ describe("route guards", () => {
 		},
 	);
 
-	it("lets visitors open the Pro interest form from the landing", async () => {
-		mockFetch({
-			"GET /api/v1/users/me": UNAUTHENTICATED,
-			"GET /api/v1/feedback/pro-interest/config": {
-				body: { turnstileSiteKey: null },
-			},
-		});
-		renderRoutes(routes, "/");
-		await userEvent.click(
-			await screen.findByRole("button", {
-				name: "Tell us what you need from Pro",
-			}),
-		);
-		await expectProInterestSource("landing");
-		expect(navigateToLogin).not.toHaveBeenCalled();
+	it("sends old /pricing links to the landing", async () => {
+		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
+		const { router } = renderRoutes(routes, "/pricing");
+		await screen.findByRole("heading", { level: 1 });
+		expect(router.state.location.pathname).toBe("/");
+		expect(document.body).not.toHaveTextContent(/pricing|Pro plan/i);
 	});
 });

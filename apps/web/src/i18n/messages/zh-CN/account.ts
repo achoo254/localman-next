@@ -2,16 +2,8 @@ import type { Messages } from "../../message-types";
 
 export const account: Messages["account"] = {
 	title: "账号",
-	plan: {
-		name: "{plan} 套餐",
-		nameExpires: "{plan} 套餐 · {date} 到期",
-		limits: "{projects}，{resources}，{members}。",
-		projects: { other: "{count} 个 project" },
-		resources: { other: "每个 project {count} 个 resource" },
-		members: { other: "每个 project 最多 {count} 位成员" },
-		notificationChannels: "通知渠道",
-		manage: "管理套餐",
-	},
+	limitsUntil: "你的扩展额度有效期至 {date}。",
+	notificationChannels: "通知渠道",
 	usage: {
 		loading: "正在加载额度…",
 		loadFailed: "无法加载额度",

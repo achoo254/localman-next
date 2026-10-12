@@ -79,7 +79,6 @@ export const apiClientRouting: Messages["apiClientRouting"] = {
 		blockedBody: "请求带有 {parts}。没有发送任何内容。",
 		reopen: "经代理发送…",
 	},
-	quota: { plans: "查看套餐" },
 	settings: {
 		title: "路由",
 		loading: "正在加载路由设置…",

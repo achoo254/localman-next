@@ -44,7 +44,7 @@ describe("workspace settings · members", () => {
 		);
 		const pane = await findMembersPane();
 		expect(byId("ws-settings-member-count")).toHaveTextContent(
-			"4/10 members (pending invitations included) · Pro plan",
+			"4/10 members (pending invitations included)",
 		);
 		const rows = allById("ws-settings-member");
 		expect(rows).toHaveLength(2);

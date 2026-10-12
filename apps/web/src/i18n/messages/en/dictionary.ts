@@ -15,6 +15,7 @@ import { feedback } from "./feedback";
 import { invite } from "./invite";
 import { landing } from "./landing";
 import { layout } from "./layout";
+import { limits } from "./limits";
 import { mcp } from "./mcp";
 import { mockCallbacks } from "./mock-callbacks";
 import { notifications } from "./notifications";
@@ -44,6 +45,7 @@ export const en = {
 	common,
 	auth,
 	layout,
+	limits,
 	landing,
 	ui,
 	projects,

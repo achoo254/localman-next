@@ -1,33 +1,6 @@
 import type { Messages } from "../../message-types";
 
 export const subscription: Messages["subscription"] = {
-	plan: {
-		projects: { other: "{count} project" },
-		resources: { other: "{count} resource mỗi project" },
-		customResponse: "Custom response và object template",
-		members: { other: "Tối đa {count} thành viên mỗi project, tính cả bạn" },
-		mockRequests: { other: "{count} request tới mock mỗi tháng" },
-		mockRequestsUnlimited: "Không giới hạn request tới mock mỗi tháng",
-		proxyRequests: { other: "{count} request qua proxy mỗi tháng" },
-		proxyRequestsUnlimited: "Không giới hạn request qua proxy mỗi tháng",
-		notIncluded: "Không có:",
-	},
-	manage: {
-		title: "Quản lý gói",
-		currentBadge: "Gói hiện tại",
-		seePricing: "Xem bảng giá",
-		reachedTitle: "Bạn đã đạt giới hạn gói {plan}: {limit}",
-		reachedText: "So sánh hai gói bên dưới.",
-		current: "Gói hiện tại: <b>{plan}</b>. Hạn mức từng gói bên dưới.",
-		proLead: "Hạn mức lớn hơn cho các project chạy thật, nhiều thành viên hơn.",
-		limit: {
-			projects: { other: "{count} project" },
-			resources: { other: "{count} resource" },
-			members: { other: "{count} thành viên mỗi project" },
-			proxy: { other: "{count} request qua proxy mỗi tháng" },
-			proxyAny: "request qua proxy",
-		},
-	},
 	usage: {
 		unlimited:
 			"<b>Không giới hạn</b> trong tháng, chỉ có rate-limit theo giây.",
@@ -36,30 +9,6 @@ export const subscription: Messages["subscription"] = {
 		usedPercent: "Đã dùng {percent}%.",
 	},
 	proInterest: {
-		title: "Liên hệ về gói Pro",
-		submit: "Gửi đăng ký",
-		successTitle: "Đã ghi nhận",
-		successText: "Chúng tôi sẽ liên hệ qua email bạn để lại: <b>{email}</b>.",
-		intro:
-			"Gói Pro chưa mở thanh toán. Cho chúng tôi biết bạn cần gì, chúng tôi sẽ liên hệ khi gói Pro sẵn sàng.",
-		formFailed: "Không mở được form",
-		preparingCheck: "Đang chuẩn bị bước xác minh…",
-		turnstileFailed:
-			"Không tải được bước xác minh. Kiểm tra kết nối rồi mở lại form.",
-		fields: {
-			email: "Email",
-			emailHintPrefilled: "Lấy từ tài khoản của bạn, sửa được.",
-			emailHint: "Chỉ dùng để liên hệ về gói Pro.",
-			name: "Tên",
-			needs: "Bạn cần gói Pro cho việc gì?",
-			needsHint: "Chọn một hoặc nhiều",
-			team: "Quy mô team",
-			price: "Mức giá sẵn sàng trả",
-			note: "Ghi chú",
-			notePlaceholder: "Ví dụ: team QA cần 30 project, chạy CI mỗi giờ",
-			honeypot: "Không điền ô này",
-			consent: "Tôi đồng ý cho Localman lưu email để liên hệ về gói Pro",
-		},
 		needs: {
 			mock: "Mock API",
 			apiClient: "API Client",
@@ -92,23 +41,6 @@ export const subscription: Messages["subscription"] = {
 			devops: "DevOps",
 			account: "Tài khoản",
 			elsewhere: "Khác",
-		},
-		errors: {
-			emailEmpty: "Nhập email để chúng tôi liên hệ.",
-			emailInvalid: "Email chưa đúng định dạng.",
-			name: "Nhập tên để chúng tôi biết cách xưng hô.",
-			needs: "Chọn ít nhất một nhu cầu.",
-			teamSize: "Chọn quy mô team.",
-			note: "Ghi chú quá dài, rút gọn bớt.",
-			consent: "Cần bạn đồng ý để Localman lưu email và liên hệ.",
-			turnstile: "Hoàn tất xác minh trước khi gửi.",
-		},
-		submitErrors: {
-			validation: "Thông tin chưa hợp lệ, kiểm tra lại các ô rồi gửi lại.",
-			turnstileFailed: "Xác minh không thành công, làm lại bước xác minh.",
-			turnstileUnavailable:
-				"Chưa kiểm tra được bước xác minh lúc này, thử lại sau ít phút.",
-			rateLimited: "Bạn gửi quá nhiều lần, đợi một lát rồi thử lại.",
 		},
 	},
 };

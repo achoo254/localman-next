@@ -27,7 +27,7 @@ export const projectDetail: Messages["projectDetail"] = {
 		empty: "还没有 resource。Resource 是一张拥有独立 CRUD endpoint 的数据表。",
 		count: { other: "{count} 个 resource" },
 	},
-	planLimit: "此 project 已达到其所有者套餐的 resource 上限。",
+	planLimit: "此 project 已达到其所有者的 resource 上限。",
 	toast: {
 		created: "已创建 resource <code>{name}</code>。",
 		imported: {

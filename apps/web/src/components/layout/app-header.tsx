@@ -10,7 +10,6 @@ import { useT } from "../../i18n/i18n-context";
 import { LanguageSwitcher } from "../../i18n/language-switcher";
 import { cn } from "../../lib/cn";
 import { Wordmark } from "../brand/wordmark";
-import { Badge } from "../ui/badge";
 import { buttonClassName } from "../ui/button";
 import { AccountControls } from "./account-controls";
 
@@ -90,13 +89,6 @@ export function AppHeader({
 						<LanguageSwitcher data-id="topbar-language" compact />
 					</div>
 					<NotificationBell />
-					<Badge
-						data-id="topbar-plan"
-						tone={user.plan === "pro" ? "accent" : "neutral"}
-						className="max-sm:hidden"
-					>
-						{t(`layout.plan.${user.plan}`)}
-					</Badge>
 					<AccountControls user={user} />
 				</div>
 			</div>

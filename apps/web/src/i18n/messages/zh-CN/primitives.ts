@@ -32,7 +32,7 @@ export const primitives: Messages["primitives"] = {
 		description: "徽章使用等宽大写字体；提示框和 toast 按色调使用浅色背景。",
 		badges: {
 			draft: "草稿",
-			pro: "Pro",
+			shared: "已共享",
 			fresh: "新",
 			beta: "Beta",
 			running: "运行中",
@@ -44,7 +44,7 @@ export const primitives: Messages["primitives"] = {
 		connectedTitle: "已连接",
 		connectedBody: "Mock 服务器正在为此 project 提供服务。",
 		limitTitle: "即将达到额度",
-		limitBody: "你已使用 Free 套餐 10 个 resource 中的 9 个。",
+		limitBody: "你已使用 10 个 resource 中的 9 个。",
 		deleteFailedTitle: "无法删除",
 		deleteFailedBody: "该 resource 仍被其他 endpoint 引用。",
 		toastSuccess: "成功 toast",

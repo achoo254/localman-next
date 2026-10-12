@@ -183,7 +183,7 @@ describe("request log, rows", () => {
 		await screen.findByText("/users/a");
 		await waitFor(() =>
 			expect(byId("request-log-retention")).toHaveTextContent(
-				"Logs are kept for 30 days on the Pro plan.",
+				"Logs are kept for 30 days.",
 			),
 		);
 		expect(screen.queryByRole("button", { name: "Clear log" })).toBeNull();

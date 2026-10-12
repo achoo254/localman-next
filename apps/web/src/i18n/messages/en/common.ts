@@ -9,7 +9,7 @@ export const common = {
 			"Couldn't save the language to your account. It still applies in this browser.",
 	},
 	cta: {
-		startFree: "Get started free",
+		startNow: "Get started now",
 		start: "Get started",
 		openApp: "Open app",
 		reset: "Reset",

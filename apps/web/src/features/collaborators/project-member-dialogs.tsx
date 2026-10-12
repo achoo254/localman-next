@@ -1,4 +1,3 @@
-import type { PlanId } from "@localman/shared/constants";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRef } from "react";
 import type { Project } from "../../pages/projects/projects-api";
@@ -10,10 +9,7 @@ export type MemberDialogKind = "collaborators" | "magic-link";
 export interface ProjectMemberDialogsProps {
 	kind: MemberDialogKind | null;
 	project: Project;
-	plan: PlanId;
 	onClose: () => void;
-	/** Opens "Quản lý gói" for the member limit. */
-	onPlans: () => void;
 	/** Owner plus accepted members (keep stable). */
 	onMemberCount: (projectId: string, count: number) => void;
 	onProjectChange: (project: Project) => void;
@@ -30,9 +26,7 @@ export interface ProjectMemberDialogsProps {
 export function ProjectMemberDialogs({
 	kind,
 	project,
-	plan,
 	onClose,
-	onPlans,
 	onMemberCount,
 	onProjectChange,
 	onLeft,
@@ -44,9 +38,7 @@ export function ProjectMemberDialogs({
 		return (
 			<MagicLinkModal
 				project={project}
-				plan={plan}
 				onOpenChange={(open) => !open && onClose()}
-				onPlans={onPlans}
 			/>
 		);
 	}
@@ -54,9 +46,7 @@ export function ProjectMemberDialogs({
 	return (
 		<CollaboratorsModal
 			project={project}
-			plan={plan}
 			onOpenChange={(open) => !open && onClose()}
-			onPlans={onPlans}
 			onMemberCount={onMemberCount}
 			onProjectChange={onProjectChange}
 			onLeft={(gone) => {

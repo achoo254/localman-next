@@ -81,7 +81,7 @@ SSH_TARGET=<alias> [SSH_OPTS="-F ssh_config"] [VITE_FEATURES=...] bash infra/loc
 
 1. Build `@localman/api` và `@localman/web`; cố định `VITE_*` để `.env.local` của dev không lọt vào bản production.
 2. Dựng `package.json` và `pnpm-lock.yaml` runtime: `pnpm --filter @localman/api deploy --prod` cho phiên bản đã khoá theo lockfile của workspace, [`runtime-manifest.mjs`](../infra/localman/runtime-manifest.mjs) bỏ package `@localman/*` (đã bundle), `pnpm install --lockfile-only` tỉa lockfile mà giữ nguyên mọi phiên bản, rồi kiểm lại bằng `--frozen-lockfile`.
-3. Điền vào CSP hash các script inline của `apps/web/dist/*.html` (`index.html` và trang prerender `pricing.html`, [`csp-hashes.mjs`](../infra/localman/csp-hashes.mjs)).
+3. Điền vào CSP hash các script inline của `apps/web/dist/*.html` (`index.html`, trang prerender duy nhất, [`csp-hashes.mjs`](../infra/localman/csp-hashes.mjs)).
 4. rsync `-rlptz` (openrsync của macOS không có `--chown`; file thuộc root) `infra/localman` và thư mục release mới lên server.
 5. Gọi `activate-release.sh` trên server:
    - `setup-server.sh`;

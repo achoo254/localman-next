@@ -15,7 +15,7 @@ export const resources: Messages["resources"] = {
 		treeCycle: "无法将 resource 嵌套到它自身或它的子 resource 中。",
 		fieldConflict:
 			"此更改会让某个 field 与自动生成的 field 重名（例如 userId）。请先重命名或删除该 field。",
-		planLimit: "你已用完当前套餐允许的 resource 数量。",
+		planLimit: "你已用完此账户允许的 resource 数量。",
 		forbidden: "你只能查看此 project。",
 		requestTooLarge: "提交的数据过大（每个 resource 最多 2 MB）。",
 		recordTooLarge: "数据中有超过 32 KB 的记录。请精简记录或 template。",

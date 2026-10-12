@@ -29,7 +29,7 @@ export const projectDetail: Messages["projectDetail"] = {
 			"Chưa có resource nào. Resource là một bảng dữ liệu có endpoint CRUD riêng.",
 		count: { other: "{count} resource" },
 	},
-	planLimit: "Project đã đạt giới hạn resource theo gói của chủ project.",
+	planLimit: "Project đã đạt giới hạn resource của chủ project.",
 	toast: {
 		created: "Đã tạo resource <code>{name}</code>.",
 		imported: {

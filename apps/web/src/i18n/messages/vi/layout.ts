@@ -6,7 +6,6 @@ export const layout: Messages["layout"] = {
 	docs: "Docs",
 	projects: "Projects",
 	home: "Trang chủ Localman",
-	pricing: "Bảng giá",
 	publicHeader: {
 		home: "Localman, về trang chủ",
 		nav: "Điều hướng chính",
@@ -18,14 +17,9 @@ export const layout: Messages["layout"] = {
 		nav: "Sản phẩm",
 		mocks: "Mock API",
 	},
-	plan: {
-		free: "Gói Free",
-		pro: "Gói Pro",
-	},
 	accountMenu: {
 		trigger: "{name} · Tài khoản",
 		account: "Tài khoản và hạn mức",
-		plan: "Quản lý gói",
 		notifications: "Kênh thông báo",
 		adminProInterest: "Quản trị · Quan tâm gói Pro",
 		adminFeedback: "Quản trị · Hộp thư góp ý",

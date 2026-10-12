@@ -8,13 +8,13 @@ import { ThemeToggle } from "../theme/theme-toggle";
 import { GHOST_SM, PublicAccountSlot } from "./public-account-slot";
 
 /**
- * Top bar of public pages (landing, pricing, invite, docs). Signed-in
+ * Top bar of public pages (landing, invite, docs). Signed-in
  * visitors get "Open app" and their account menu instead of the sign-in
  * pair, in a slot that keeps its size when they swap (PublicAccountSlot).
  * At 375px only the wordmark, "Sign in" and "Get started" fit; Docs, the
  * language and theme switches return from 640px (all are in the footer
  * below that). The
- * landing's navigation (Features anchor, Pricing page) needs 1024px: at
+ * landing's navigation (Features anchor) needs 1024px: at
  * 768px it would push the bar past its width.
  */
 export function PublicHeader() {
@@ -47,9 +47,6 @@ export function PublicHeader() {
 						<a href="#features" data-id="topbar-features" className={GHOST_SM}>
 							{t("layout.publicHeader.features")}
 						</a>
-						<Link to="/pricing" data-id="topbar-pricing" className={GHOST_SM}>
-							{t("layout.pricing")}
-						</Link>
 					</nav>
 				) : null}
 				<div className="flex items-center gap-2">

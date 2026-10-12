@@ -6,7 +6,7 @@ import { publicRoutes } from "./routes/public-routes";
 
 /**
  * Route table shared by the browser router and route tests. The
- * prerendered pages (landing, pricing) and the shell (header, guards) stay
+ * prerendered landing and the shell (header, guards) stay
  * in the main chunk; every other page is split (`routes/lazy-page.tsx`).
  */
 export const routes: RouteObject[] = [

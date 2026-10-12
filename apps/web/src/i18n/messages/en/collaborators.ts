@@ -4,7 +4,6 @@ export const collaborators = {
 		title: "Collaborators · {project}",
 		done: "Done",
 		leave: "Leave project",
-		seePlans: "See plans",
 	},
 	list: {
 		label: "Collaborator list",
@@ -35,7 +34,6 @@ export const collaborators = {
 			one: "Limit of {count} member reached",
 			other: "Limit of {count} members reached",
 		},
-		nextNeedsPro: "Member #{count} requires the Pro plan.",
 		removeToInvite: "Remove a member or an invitation to invite more people.",
 	},
 	form: {
@@ -113,6 +111,7 @@ export const collaborators = {
 		invalid: "Enter a valid username or email.",
 		rateLimited:
 			"You've looked up or invited people too many times. Try again in a few minutes.",
+		full: "There's no free seat in this project. Remove a member or cancel an invitation first.",
 		conflict: "The member list just changed. Please try again.",
 		fallback: "Couldn't send the invitation right now. Try again later.",
 	},

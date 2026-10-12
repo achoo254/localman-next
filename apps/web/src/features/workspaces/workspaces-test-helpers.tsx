@@ -135,7 +135,6 @@ export function renderWithWorkspaces(
 			path: "/api-client",
 			element: <FeaturesContext value={flags}>{workbench}</FeaturesContext>,
 		},
-		{ path: "/pricing", element: <p>Pricing page</p> },
 	].filter((route) => route.path !== path);
 	const view = renderRoutes(
 		[

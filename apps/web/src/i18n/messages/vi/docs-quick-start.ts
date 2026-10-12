@@ -4,7 +4,7 @@ export const docsQuickStart: Messages["docs"]["quickStart"] = {
 	lead: "Tạo một mock REST API có dữ liệu thật để frontend hoặc test gọi vào, không cần dựng backend.",
 	createProject: {
 		title: "1. Tạo project",
-		body: "Ở trang Projects, bấm Tạo project, đặt tên và nếu muốn thì thêm API Prefix như <code>/api/v1</code>. Mỗi project có một secret riêng nằm ngay trong URL của mock; thẻ API endpoint trong trang project hiện sẵn URL đầy đủ. Gói Free có {projects} project, {resources} resource mỗi project.",
+		body: "Ở trang Projects, bấm Tạo project, đặt tên và nếu muốn thì thêm API Prefix như <code>/api/v1</code>. Mỗi project có một secret riêng nằm ngay trong URL của mock; thẻ API endpoint trong trang project hiện sẵn URL đầy đủ. Mỗi tài khoản có chỗ cho ít nhất {projects} project và tổng cộng {resources} resource.",
 	},
 	mockUrl: {
 		title: "2. URL của mock API",

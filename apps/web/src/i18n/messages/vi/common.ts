@@ -10,7 +10,7 @@ export const common: Messages["common"] = {
 			"Không lưu được ngôn ngữ vào tài khoản. Trình duyệt này vẫn dùng ngôn ngữ vừa chọn.",
 	},
 	cta: {
-		startFree: "Bắt đầu miễn phí",
+		startNow: "Bắt đầu ngay",
 		start: "Bắt đầu",
 		openApp: "Mở ứng dụng",
 		reset: "Đặt lại",

@@ -86,7 +86,6 @@ export const apiClientRouting: Messages["apiClientRouting"] = {
 		blockedBody: "Request mang {parts}. Chưa có gì được gửi.",
 		reopen: "Gửi qua proxy…",
 	},
-	quota: { plans: "Xem gói" },
 	settings: {
 		title: "Định tuyến",
 		loading: "Đang tải cài đặt định tuyến…",

@@ -9,13 +9,13 @@ export type CountedLimit =
 	| "members"
 	| "teamWorkspaces";
 
-/** 403 `PLAN_LIMIT_REACHED` with the numbers the upgrade dialog shows. */
+/** 403 `PLAN_LIMIT_REACHED` with the numbers the web shows in plain words. */
 export class PlanLimitError extends OperationError {
 	constructor(limit: CountedLimit, max: number, used: number) {
 		super(
 			403,
 			"PLAN_LIMIT_REACHED",
-			`Your plan allows ${max} ${limit}; upgrade to create more`,
+			`Limit reached: at most ${max} ${limit} on this account`,
 			{ limit, max, used },
 		);
 		this.name = "PlanLimitError";

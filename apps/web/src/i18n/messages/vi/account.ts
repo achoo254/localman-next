@@ -2,16 +2,8 @@ import type { Messages } from "../../message-types";
 
 export const account: Messages["account"] = {
 	title: "Tài khoản",
-	plan: {
-		name: "Gói {plan}",
-		nameExpires: "Gói {plan} · hết hạn {date}",
-		limits: "{projects}, {resources}, {members}.",
-		projects: { other: "{count} project" },
-		resources: { other: "{count} resource mỗi project" },
-		members: { other: "tối đa {count} thành viên mỗi project" },
-		notificationChannels: "Kênh thông báo",
-		manage: "Quản lý gói",
-	},
+	limitsUntil: "Hạn mức mở rộng của bạn kéo dài tới {date}.",
+	notificationChannels: "Kênh thông báo",
 	usage: {
 		loading: "Đang tải hạn mức…",
 		loadFailed: "Không tải được hạn mức",

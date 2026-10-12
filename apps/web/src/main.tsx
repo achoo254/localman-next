@@ -8,7 +8,7 @@ if (!container) {
 	throw new Error("Missing #app mount point in index.html");
 }
 
-// The build prerenders public pages (landing, pricing) into #app; an inline
+// The build prerenders the public landing into #app; an inline
 // script in index.html empties it on any path the markup does not belong
 // to. Markup left here is this page (in English), so hydrate it instead of
 // painting it a second time; the provider then switches to the visitor's

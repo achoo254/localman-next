@@ -5,7 +5,6 @@ export const collaborators: Messages["collaborators"] = {
 		title: "协作者 · {project}",
 		done: "完成",
 		leave: "退出 project",
-		seePlans: "查看套餐",
 	},
 	list: {
 		label: "协作者列表",
@@ -33,7 +32,6 @@ export const collaborators: Messages["collaborators"] = {
 	seats: {
 		count: "{seats} 位成员（含所有者和等待中的邀请）",
 		full: { other: "已达 {count} 位成员上限" },
-		nextNeedsPro: "第 {count} 位成员需要 Pro 套餐。",
 		removeToInvite: "移除部分成员或邀请后才能继续邀请。",
 	},
 	form: {
@@ -103,6 +101,7 @@ export const collaborators: Messages["collaborators"] = {
 		ambiguousUsername: "有多个账号使用该用户名，请改用邮箱邀请。",
 		invalid: "请输入有效的用户名或邮箱。",
 		rateLimited: "你查找或邀请的次数过多，请几分钟后重试。",
+		full: "此 project 已没有空余名额。请先移除成员或取消邀请。",
 		conflict: "成员列表刚刚发生变化，请重试。",
 		fallback: "暂时无法发送邀请，请稍后重试。",
 	},

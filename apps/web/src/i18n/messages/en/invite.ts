@@ -33,7 +33,7 @@ export const invite = {
 		signedInAs: "You're signed in as <b>{account}</b>",
 		alreadyMember: "You're already a member of {project}.",
 		openProject: "Open project",
-		full: "The project already has as many members as the owner's plan allows. Ask the project owner to remove some members.",
+		full: "The project has no free seats. Ask the project owner to remove some members.",
 		removed:
 			"The project owner removed you from this project. Contact the project owner if you need to join again.",
 		ineligibleTitle: "This account can't accept the invitation",

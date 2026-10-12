@@ -3,13 +3,9 @@ import { Button } from "../../components/ui/button";
 import { FormField } from "../../components/ui/form-field";
 import { Input } from "../../components/ui/input";
 import { Select } from "../../components/ui/select";
-import {
-	type Choice,
-	proNeeds,
-	proSources,
-} from "../../features/subscription/pro-interest-options";
 import { useT } from "../../i18n/i18n-context";
 import type { ProInterestFilter } from "./pro-interest-admin-api";
+import { type Choice, proNeeds, proSources } from "./pro-interest-options";
 
 export interface ProInterestFiltersProps {
 	filter: ProInterestFilter;

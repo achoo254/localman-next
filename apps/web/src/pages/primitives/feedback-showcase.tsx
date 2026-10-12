@@ -10,7 +10,7 @@ type BadgeKey = keyof Messages["primitives"]["feedback"]["badges"];
 
 const BADGE_TONES: ReadonlyArray<{ tone: BadgeTone; key: BadgeKey }> = [
 	{ tone: "neutral", key: "draft" },
-	{ tone: "primary", key: "pro" },
+	{ tone: "primary", key: "shared" },
 	{ tone: "accent", key: "fresh" },
 	{ tone: "info", key: "beta" },
 	{ tone: "success", key: "running" },

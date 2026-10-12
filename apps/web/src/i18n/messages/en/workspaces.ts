@@ -15,10 +15,6 @@ export const workspaces = {
 		editor: "Editor",
 		viewer: "Viewer",
 	},
-	limit: {
-		requiresPro: "Requires Pro",
-		viewPlans: "View plans",
-	},
 	create: {
 		title: "Create workspace",
 		intro:
@@ -29,11 +25,6 @@ export const workspaces = {
 		description: "Description",
 		submit: "Create workspace",
 		created: "Created workspace {name}",
-		limit: {
-			one: "Your plan includes {count} team workspace. Upgrade to Pro for more.",
-			other:
-				"Your plan includes {count} team workspaces. Upgrade to Pro for more.",
-		},
 	},
 	settings: {
 		title: "Workspace settings",
@@ -63,13 +54,7 @@ export const workspaces = {
 		createTeam: "Create team workspace",
 		seats: "{used}/{max} members (pending invitations included)",
 		seatsNoCap: "{used} members (pending invitations included)",
-		fullFree: {
-			one: "The Free plan allows {count} member per workspace, pending invitations included.",
-			other:
-				"The Free plan allows {count} members per workspace, pending invitations included.",
-		},
-		fullOther:
-			"Every seat is taken. Remove a member or cancel an invitation to invite someone else.",
+		full: "Every seat is taken. Remove a member or cancel an invitation to invite someone else.",
 		list: "Members",
 		you: "{name} (you)",
 		roleOf: "Role of {name}",
@@ -146,7 +131,7 @@ export const workspaces = {
 			"A personal workspace has no members. Create a team workspace to collaborate.",
 		membersLimit:
 			"There's no free seat in this workspace. Remove a member or cancel an invitation first.",
-		workspacesLimit: "Your plan has no room for another team workspace.",
+		workspacesLimit: "This account has no room for another team workspace.",
 		forbidden: "Only workspace Admins can do this.",
 		notFound: "This workspace or member no longer exists. Reload the page.",
 		fallback: "Something went wrong. Try again later.",
@@ -161,7 +146,7 @@ export const workspaces = {
 		oneUse: "One-use link · expires {date}",
 		alreadyMember: "You're already a member of {workspace}.",
 		open: "Open workspace",
-		full: "The workspace already has as many members as its owner's plan allows. Ask a workspace Admin to free a seat.",
+		full: "The workspace has no free seats. Ask a workspace Admin to free one.",
 		accept: "Join workspace",
 		joined: "Joined {workspace}",
 		alreadyJoined: "You're already a member of {workspace}",

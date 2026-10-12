@@ -30,7 +30,7 @@ export const mcp: Messages["mcp"] = {
 		loading: "Đang tải cài đặt token…",
 		loadFailed: "Không tải được cài đặt token",
 		helpOff:
-			"Mặc định giống REST: ai biết URL MCP đều gọi được. Bật để bắt buộc Bearer token riêng của project, dùng được ở mọi gói.",
+			"Mặc định giống REST: ai biết URL MCP đều gọi được. Bật để bắt buộc Bearer token riêng của project.",
 		helpOn:
 			"Gọi thiếu header <code>Authorization: Bearer …</code> nhận 401. Token chỉ hiện một lần lúc tạo; mất token thì xoay token mới.",
 		hint: "Token lmmcp_…{last4} · tạo {created}",

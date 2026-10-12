@@ -84,14 +84,15 @@ describe("sign-in through the IdP", () => {
 			emailVerified: false,
 			name: "Hoan Dat",
 			picture: null,
-			plan: "free",
+			// The first sign-in starts the 30 days of Pro on its own.
+			plan: "pro",
 			isOwner: false,
 			telegram: { linked: true, username: "dat_tg" },
 			locale: "en",
 			trial: {
-				status: "available",
-				startedAt: null,
-				endsAt: null,
+				status: "active",
+				startedAt: expect.any(String),
+				endsAt: expect.stringMatching(/T16:59:59\.999Z$/),
 				extensionRequest: null,
 			},
 		});

@@ -9,8 +9,6 @@ export const docsCustomResponses: Messages["docs"]["customResponses"] = {
 	edit: {
 		title: "编辑 template",
 		body: "在 resource 上点击“编辑”。Endpoints 部分列出五个 endpoint，每个都有开关和接收 JSON 的 Response template 输入框。点击“更新”保存；下一个 request 立即使用新 template。",
-		bodyWithFree:
-			"在 resource 上点击“编辑”。Endpoints 部分列出五个 endpoint，每个都有开关和接收 JSON 的 Response template 输入框。点击“更新”保存；下一个 request 立即使用新 template。所有套餐（包括 Free）都可使用 custom response。",
 	},
 	variables: {
 		title: "Template 变量",

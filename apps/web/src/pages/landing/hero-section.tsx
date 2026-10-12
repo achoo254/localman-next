@@ -45,7 +45,7 @@ export function HeroSection({ howItWorksHref }: { howItWorksHref: string }) {
 					{renderRich(
 						apiClient
 							? t("landing.hero.titleLocalhost")
-							: t("landing.hero.titleMock", { count: free.projects }),
+							: t("landing.hero.titleMock"),
 						{ code: codeWord },
 					)}
 				</h1>

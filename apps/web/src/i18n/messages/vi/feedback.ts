@@ -12,7 +12,7 @@ export const feedback: Messages["feedback"] = {
 			placeholder: "Bạn đang làm gì thì gặp lỗi, và lỗi hiện ra thế nào?",
 		},
 		planQuestion: {
-			label: "Hỏi về gói",
+			label: "Hỏi về hạn mức",
 			placeholder: "Bạn cần hạn mức hay tính năng nào?",
 		},
 	},
@@ -49,6 +49,8 @@ export const feedback: Messages["feedback"] = {
 	},
 	openFailed: "Không mở được form",
 	preparing: "Đang chuẩn bị bước xác minh…",
+	turnstileLoadFailed:
+		"Không tải được bước xác minh. Kiểm tra kết nối rồi mở lại form.",
 	noteSignedIn:
 		"Góp ý gửi kèm tài khoản của bạn và khu vực bạn đang mở (ví dụ Projects), không kèm đường dẫn.",
 	noteVisitor:

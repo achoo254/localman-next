@@ -64,7 +64,7 @@ function limitReached(max: number, used: number): OperationError {
 	return new OperationError(
 		403,
 		"PLAN_LIMIT_REACHED",
-		`Your plan allows ${max} webhook inboxes per project; upgrade to create more`,
+		`Limit reached: at most ${max} webhook inboxes per project`,
 		{ limit: "webhookInboxes", max, used },
 	);
 }

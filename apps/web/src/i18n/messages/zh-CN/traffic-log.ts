@@ -93,7 +93,7 @@ export const trafficLog: Messages["trafficLog"] = {
 		truncated: "仅保留了 {size} 字节中的前 64 KB。",
 		cutNote: "超过 64 KB 的 body 在保存时会被截断。",
 	},
-	retention: { other: "{plan} 套餐的 log 保留 {count} 天。" },
+	retention: { other: "log 保留 {count} 天。" },
 	alwaysMasked: "始终遮盖：<code>{headers}</code>。",
 	replayNote: "重放会把同样的 request 再次发送到 mock，并计入额度。",
 };

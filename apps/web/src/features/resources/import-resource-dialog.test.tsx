@@ -170,7 +170,7 @@ describe("Import resource dialog", () => {
 		});
 	});
 
-	it("asks a collaborator to talk to the owner instead", async () => {
+	it("tells a collaborator how to make room, with no plans", async () => {
 		const { dialog } = await openImport(
 			importRoute(() => ({ body: importJson({ resourcesLeft: 0 }) })),
 			makeProject(PROJECT_ID, { role: "collaborator" }),
@@ -178,7 +178,7 @@ describe("Import resource dialog", () => {
 		setEditorText(importTab(dialog, "json"), SAMPLE_JSON);
 		await previewReady();
 		expect(
-			within(dialog).getByText(/ask the project owner to upgrade/),
+			within(dialog).getByText(/remove resources you no longer need/),
 		).toBeInTheDocument();
 		expect(
 			within(dialog).queryByRole("button", { name: "Manage plan" }),

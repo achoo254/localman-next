@@ -28,14 +28,14 @@ afterAll(async () => {
 beforeEach(clearCollections);
 
 describe("syncUserFromUserInfo", () => {
-	it("creates a free user from the claims, without any credential", async () => {
+	it("creates a user from the claims, without any credential, with its 30 days of Pro", async () => {
 		await syncUserFromUserInfo(claims, SUB);
 		const user = await UserModel.findOne({ sub: SUB }).lean();
 		expect(user).toMatchObject({
 			username: "dat",
 			email: "dat@example.com",
 			emailVerified: true,
-			plan: "free",
+			plan: "pro",
 			telegram: { chatId: "100", username: "dat_tg" },
 		});
 		// Only profile, plan and chat: credentials stay at the IdP.
@@ -47,8 +47,10 @@ describe("syncUserFromUserInfo", () => {
 			"name",
 			"picture",
 			"plan",
+			"planExpiresAt",
 			"sub",
 			"telegram",
+			"trialStartedAt",
 			"updatedAt",
 			"username",
 		]);

@@ -30,8 +30,6 @@ export interface ImportResourceDialogProps {
 	projectId: string;
 	/** Resources of the project: imported roots must not reuse a root name. */
 	resources: readonly Resource[];
-	/** Owner only: open the plans from the "no room" warning. */
-	onManagePlan: (() => void) | null;
 	onOpenChange: (open: boolean) => void;
 	/** Created resources (the root first). */
 	onImported: (result: Preview) => void;
@@ -46,7 +44,6 @@ const TABS: readonly ImportTab[] = ["json", "openapi", "file"];
 export function ImportResourceDialog({
 	projectId,
 	resources,
-	onManagePlan,
 	onOpenChange,
 	onImported,
 	onPlanLimit,
@@ -189,7 +186,6 @@ export function ImportResourceDialog({
 						names={sources.names}
 						nameErrors={nameErrors}
 						onRename={sources.rename}
-						onManagePlan={onManagePlan}
 					/>
 				)}
 				{submitError ? <Alert tone="danger">{submitError}</Alert> : null}

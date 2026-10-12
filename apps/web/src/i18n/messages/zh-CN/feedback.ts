@@ -12,7 +12,7 @@ export const feedback: Messages["feedback"] = {
 			placeholder: "出错时你在做什么？问题是怎样表现的？",
 		},
 		planQuestion: {
-			label: "套餐咨询",
+			label: "额度咨询",
 			placeholder: "你需要哪些额度或功能？",
 		},
 	},
@@ -45,6 +45,7 @@ export const feedback: Messages["feedback"] = {
 	},
 	openFailed: "无法打开表单",
 	preparing: "正在准备验证…",
+	turnstileLoadFailed: "无法加载验证步骤。请检查网络连接，然后重新打开表单。",
 	noteSignedIn:
 		"反馈会附带你的账号和当前所在区域（例如 Projects），不包含页面地址。",
 	noteVisitor: "反馈会附带你当前所在区域（例如首页），不包含页面地址。",

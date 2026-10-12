@@ -62,7 +62,6 @@ describe("landing prerender", () => {
 		for (const id of [
 			"topbar-signup",
 			"landing-hero",
-			"landing-pricing",
 			"landing-relations",
 			"landing-cta",
 			"app-footer",
@@ -93,8 +92,8 @@ describe("landing prerender", () => {
 	it("is written in English", async () => {
 		const html = await renderPageHtml("/");
 		expect(html).toContain("REST APIs with relations and Faker");
-		expect(html).toContain("Get started free");
-		expect(html).not.toMatch(/Bắt đầu miễn phí|免费开始/);
+		expect(html).toContain("Get started now");
+		expect(html).not.toMatch(/Bắt đầu ngay|立即开始/);
 	});
 
 	it("hydrates in English, then switches to the saved language without a mismatch", async () => {
@@ -132,29 +131,9 @@ describe("landing prerender", () => {
 		expect(openApp.map((link) => link.getAttribute("data-id"))).toEqual([
 			"topbar-projects",
 			"landing-hero-cta",
-			"pricing-card-free-cta",
 			"landing-cta-button",
 		]);
 		expect(router.state.location.pathname).toBe("/");
 		expect(recoverable).toEqual([]);
-	});
-
-	it("hydrates the prerendered pricing page without a mismatch", async () => {
-		const consoleError = vi.spyOn(console, "error");
-		const { html, recoverable } = await hydrateLanding(
-			UNAUTHENTICATED,
-			"/pricing",
-			"/pricing",
-		);
-		expect(html).toContain('data-id="pricing-card-free-cta"');
-		expect(html).not.toContain('data-id="landing-hero"');
-		expect(
-			await screen.findByRole("heading", { level: 1, name: /Start free/ }),
-		).toBeInTheDocument();
-		expect(recoverable).toEqual([]);
-		const errors = consoleError.mock.calls
-			.map((args) => args.map(String).join(" "))
-			.filter((text) => !text.includes("multiple renderers concurrently"));
-		expect(errors).toEqual([]);
 	});
 });

@@ -94,7 +94,7 @@ describe("account slot of the public top bar", () => {
 		]);
 		// A spacer carries the same words as the version it stands for.
 		expect(layers().map((layer) => layer.textContent)).toEqual([
-			"Sign inGet startedGet started free",
+			"Sign inGet startedGet started now",
 			"Open app",
 		]);
 	});

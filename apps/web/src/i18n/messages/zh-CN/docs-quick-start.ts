@@ -4,7 +4,7 @@ export const docsQuickStart: Messages["docs"]["quickStart"] = {
 	lead: "创建一个带真实数据的 mock REST API，供前端或测试调用，无需搭建后端。",
 	createProject: {
 		title: "1. 创建 project",
-		body: "在 Projects 页面点击“创建 project”，填写名称，需要的话再加上 API prefix，例如 <code>/api/v1</code>。每个 project 都有自己的 secret，直接写在 mock URL 里；project 页面的 API endpoint 卡片会显示完整 URL。Free 套餐包含 {projects} 个 project，每个 project {resources} 个 resource。",
+		body: "在 Projects 页面点击“创建 project”，填写名称，需要的话再加上 API prefix，例如 <code>/api/v1</code>。每个 project 都有自己的 secret，直接写在 mock URL 里；project 页面的 API endpoint 卡片会显示完整 URL。每个账户至少可创建 {projects} 个 project，合计 {resources} 个 resource。",
 	},
 	mockUrl: {
 		title: "2. Mock API 的 URL",

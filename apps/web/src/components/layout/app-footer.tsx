@@ -10,7 +10,7 @@ const FOOTER_LINK =
 	"inline-flex min-h-11 cursor-pointer items-center rounded-sm font-mono font-semibold text-primary underline-offset-4 hover:underline";
 
 /**
- * Page footer: the landing ("Localman home"), Pricing, Docs, the
+ * Page footer: the landing ("Localman home"), Docs, the
  * "Feedback / Contact" form (in place of a contact email) and the language
  * switcher.
  */
@@ -34,13 +34,6 @@ export function AppFooter() {
 				<div className="flex flex-wrap items-center gap-4">
 					<Link to="/" data-id="app-footer-home" className={FOOTER_LINK}>
 						{t("layout.home")}
-					</Link>
-					<Link
-						to="/pricing"
-						data-id="app-footer-pricing"
-						className={FOOTER_LINK}
-					>
-						{t("layout.pricing")}
 					</Link>
 					<Link to="/docs" data-id="app-footer-docs" className={FOOTER_LINK}>
 						{t("layout.docs")}

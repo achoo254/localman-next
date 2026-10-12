@@ -99,8 +99,8 @@ export const trafficLog = {
 		cutNote: "Bodies larger than 64 KB are cut when stored.",
 	},
 	retention: {
-		one: "Logs are kept for {count} day on the {plan} plan.",
-		other: "Logs are kept for {count} days on the {plan} plan.",
+		one: "Logs are kept for {count} day.",
+		other: "Logs are kept for {count} days.",
 	},
 	alwaysMasked: "Always masked: <code>{headers}</code>.",
 	replayNote:

@@ -8,8 +8,6 @@ export const docsCustomResponses = {
 	edit: {
 		title: "Edit a template",
 		body: "Click Edit on the resource. The Endpoints section lists the five endpoints, each with an on/off switch and a Response template box that takes JSON. Click Update to save; the next request uses the new template right away.",
-		bodyWithFree:
-			"Click Edit on the resource. The Endpoints section lists the five endpoints, each with an on/off switch and a Response template box that takes JSON. Click Update to save; the next request uses the new template right away. Custom responses work on every plan, Free included.",
 	},
 	variables: {
 		title: "Template variables",

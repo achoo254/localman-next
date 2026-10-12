@@ -16,10 +16,6 @@ export const workspaces: Messages["workspaces"] = {
 		editor: "Editor",
 		viewer: "Viewer",
 	},
-	limit: {
-		requiresPro: "Cần gói Pro",
-		viewPlans: "Xem các gói",
-	},
 	create: {
 		title: "Tạo workspace",
 		intro:
@@ -30,9 +26,6 @@ export const workspaces: Messages["workspaces"] = {
 		description: "Mô tả",
 		submit: "Tạo workspace",
 		created: "Đã tạo workspace {name}",
-		limit: {
-			other: "Gói của bạn có {count} workspace team. Nâng lên Pro để tạo thêm.",
-		},
 	},
 	settings: {
 		title: "Cài đặt workspace",
@@ -62,12 +55,7 @@ export const workspaces: Messages["workspaces"] = {
 		createTeam: "Tạo workspace team",
 		seats: "{used}/{max} thành viên (tính cả lời mời đang chờ)",
 		seatsNoCap: "{used} thành viên (tính cả lời mời đang chờ)",
-		fullFree: {
-			other:
-				"Gói Free cho phép {count} thành viên mỗi workspace, tính cả lời mời đang chờ.",
-		},
-		fullOther:
-			"Đã hết chỗ. Gỡ một thành viên hoặc huỷ một lời mời để mời người khác.",
+		full: "Đã hết chỗ. Gỡ một thành viên hoặc huỷ một lời mời để mời người khác.",
 		list: "Thành viên",
 		you: "{name} (bạn)",
 		roleOf: "Vai trò của {name}",
@@ -144,7 +132,7 @@ export const workspaces: Messages["workspaces"] = {
 			"Workspace cá nhân không có thành viên. Tạo workspace team để cộng tác.",
 		membersLimit:
 			"Workspace đã hết chỗ. Gỡ một thành viên hoặc huỷ một lời mời trước.",
-		workspacesLimit: "Gói của bạn không còn chỗ cho workspace team mới.",
+		workspacesLimit: "Tài khoản này không còn chỗ cho workspace team mới.",
 		forbidden: "Chỉ Admin của workspace làm được việc này.",
 		notFound: "Workspace hoặc thành viên này không còn nữa. Hãy tải lại trang.",
 		fallback: "Đã có lỗi xảy ra. Thử lại sau.",
@@ -159,7 +147,7 @@ export const workspaces: Messages["workspaces"] = {
 		oneUse: "Link dùng một lần · hết hạn {date}",
 		alreadyMember: "Bạn đã là thành viên của {workspace}.",
 		open: "Mở workspace",
-		full: "Workspace đã đủ số thành viên mà gói của chủ sở hữu cho phép. Hãy nhờ Admin của workspace giải phóng một chỗ.",
+		full: "Workspace đã hết chỗ. Hãy nhờ Admin của workspace giải phóng một chỗ.",
 		accept: "Tham gia workspace",
 		joined: "Đã tham gia {workspace}",
 		alreadyJoined: "Bạn đã là thành viên của {workspace}",

@@ -26,7 +26,7 @@ const CASES: [string, Record<string, MockRoute>, () => Promise<unknown>][] = [
 	[
 		"/",
 		{ "GET /api/v1/users/me": UNAUTHENTICATED },
-		() => screen.findAllByRole("link", { name: "Get started free" }),
+		() => screen.findAllByRole("link", { name: "Get started now" }),
 	],
 	[
 		"/docs/quick-start",

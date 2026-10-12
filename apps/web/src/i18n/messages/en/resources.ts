@@ -19,7 +19,7 @@ export const resources = {
 			"Can't nest a resource into itself or into one of its child resources.",
 		fieldConflict:
 			"This change gives a field the same name as a generated field (for example userId). Rename or remove that field first.",
-		planLimit: "You've used all the resources your current plan allows.",
+		planLimit: "You've used all the resources this account allows.",
 		forbidden: "You can only view this project.",
 		requestTooLarge: "The submitted data is too large (2 MB max per resource).",
 		recordTooLarge:

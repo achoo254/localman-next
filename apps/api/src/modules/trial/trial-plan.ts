@@ -65,6 +65,38 @@ export async function startTrial(sub: string, now: Date): Promise<Date> {
 }
 
 /**
+ * Gives an account its 30 days of Pro without asking: once, and only when
+ * it never had a trial and is not Pro already (an admin grant, or a Pro
+ * that has not ended). One conditional write, so repeated or concurrent
+ * calls start it at most once. `null` when nothing changed. Never throws:
+ * a failed write must not fail the sign-in, and the next refresh retries.
+ */
+export async function autoStartTrial(
+	sub: string,
+	now = new Date(),
+): Promise<Date | null> {
+	const endsAt = saigonDayEndAfter(now, TRIAL_DAYS);
+	let modifiedCount: number;
+	try {
+		({ modifiedCount } = await UserModel.updateOne(
+			{
+				sub,
+				trialStartedAt: null,
+				// Not Pro now: Free, or a Pro whose end has passed.
+				$or: [{ plan: { $ne: "pro" } }, { planExpiresAt: { $lte: now } }],
+			},
+			{ $set: { trialStartedAt: now, plan: "pro", planExpiresAt: endsAt } },
+		));
+	} catch (error) {
+		trialLog().warn({ err: error, sub }, "Automatic Pro period not started");
+		return null;
+	}
+	if (modifiedCount === 0) return null;
+	trialLog().info({ sub, endsAt }, "Pro period started automatically");
+	return endsAt;
+}
+
+/**
  * Makes the user Pro until the end of the Saigon day `days` days after
  * the later of `now` and their current Pro end. Throws 404 `NOT_FOUND`
  * for an unknown user and 409 `PLAN_HAS_NO_EXPIRY` for a Pro without end

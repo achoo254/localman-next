@@ -117,7 +117,7 @@ describe("workspace settings · inviting", () => {
 		);
 	});
 
-	it("locks inviting when the Free plan is full and links to the plans", async () => {
+	it("locks inviting when every seat is taken, without plans", async () => {
 		renderSettings(
 			{
 				[`GET ${MEMBERS}`]: membersBody([ME, LAN], [invitation("i1")], 3),
@@ -126,16 +126,14 @@ describe("workspace settings · inviting", () => {
 		);
 		await findMembersPane();
 		expect(byId("ws-settings-member-count")).toHaveTextContent(
-			"3/3 members (pending invitations included) · Free plan",
+			"3/3 members (pending invitations included)",
 		);
 		const card = byId("ws-settings-members-full") as HTMLElement;
-		expect(card).toHaveTextContent("Requires Pro");
 		expect(card).toHaveTextContent(
-			"The Free plan allows 3 members per workspace, pending invitations included.",
+			"Every seat is taken. Remove a member or cancel an invitation to invite someone else.",
 		);
-		expect(
-			within(card).getByRole("link", { name: "View plans" }),
-		).toHaveAttribute("href", "/pricing");
+		expect(card).not.toHaveTextContent(/plan|Pro/);
+		expect(within(card).queryByRole("link")).toBeNull();
 		expect(screen.getByLabelText("Username or email")).toBeDisabled();
 		expect(screen.getByRole("button", { name: "Invite" })).toBeDisabled();
 	});
@@ -163,7 +161,7 @@ describe("workspace settings · inviting", () => {
 		).toBeInTheDocument();
 		await waitFor(() =>
 			expect(byId("ws-settings-members-full")).toHaveTextContent(
-				"Requires Pro",
+				"Every seat is taken.",
 			),
 		);
 	});

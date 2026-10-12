@@ -8,21 +8,21 @@ export const trialVi: TrialMessages = {
 		const pad = (value: number) => String(value).padStart(2, "0");
 		return `${pad(date.getUTCDate())}/${pad(date.getUTCMonth() + 1)}/${date.getUTCFullYear()}`;
 	},
-	endingTitle: (p) => `Gói dùng thử Pro còn ${p.daysLeft} ngày`,
+	endingTitle: (p) => `Hạn mức mở rộng còn ${p.daysLeft} ngày`,
 	endingBody: (p) =>
-		`Gói dùng thử Pro của bạn kết thúc ngày ${p.date}. Sau đó tài khoản về gói Free: mọi thứ bạn đã tạo vẫn giữ nguyên, nhưng không tạo thêm được khi đang vượt hạn mức Free. Bạn có thể xin gia hạn ở trang tài khoản.`,
-	endedTitle: "Gói dùng thử Pro đã kết thúc",
+		`Ngày ${p.date} tài khoản của bạn về hạn mức cơ bản. Mọi thứ bạn đã tạo vẫn giữ nguyên, nhưng không tạo thêm được khi đang vượt hạn mức đó.`,
+	endedTitle: "Hạn mức mở rộng đã kết thúc",
 	endedBody: (p) =>
-		`Gói dùng thử Pro của bạn đã kết thúc ngày ${p.date} và tài khoản đã về gói Free. Project, resource và dữ liệu vẫn được giữ nguyên; không tạo thêm được khi đang vượt hạn mức Free. Bạn có thể xin gia hạn ở trang tài khoản trong vòng 7 ngày.`,
+		`Từ ngày ${p.date} tài khoản của bạn về hạn mức cơ bản. Project, resource và dữ liệu vẫn được giữ nguyên; không tạo thêm được khi đang vượt hạn mức đó.`,
 	requestedTitle: "Yêu cầu gia hạn dùng thử Pro",
 	requestedBody: (p) =>
 		`${p.user} xin gia hạn gói dùng thử Pro. Duyệt hoặc từ chối ở trang quản trị.`,
-	approvedTitle: "Gói dùng thử Pro đã được gia hạn",
+	approvedTitle: "Hạn mức mở rộng đã được kéo dài",
 	approvedBody: (p) =>
-		`Gói dùng thử Pro của bạn được dùng tới hết ngày ${p.date}.`,
-	declinedTitle: "Yêu cầu gia hạn dùng thử Pro bị từ chối",
+		`Hạn mức mở rộng của bạn được dùng tới hết ngày ${p.date}.`,
+	declinedTitle: "Yêu cầu chưa được duyệt",
 	declinedBody:
-		"Yêu cầu gia hạn gói dùng thử Pro của bạn đã bị từ chối. Gói dùng thử giữ nguyên ngày kết thúc hiện tại.",
+		"Yêu cầu của bạn chưa được duyệt. Hạn mức mở rộng giữ nguyên ngày kết thúc hiện tại.",
 	ownerAlert: (p) =>
 		[
 			"Yêu cầu gia hạn dùng thử Pro",

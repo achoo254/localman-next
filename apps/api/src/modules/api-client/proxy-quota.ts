@@ -17,7 +17,7 @@ function monthlyQuotaExceeded(max: number): OperationError {
 	return new OperationError(
 		429,
 		"MONTHLY_QUOTA_EXCEEDED",
-		`Your plan allows ${max} proxied requests a month; upgrade or wait for next month`,
+		`Limit reached: at most ${max} proxied requests a month; wait for next month`,
 		{ limit: "proxyRequests", max, used: max },
 	);
 }

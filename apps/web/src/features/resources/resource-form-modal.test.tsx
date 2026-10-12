@@ -10,10 +10,7 @@ import {
 	resourceJson,
 	sampleTree,
 } from "../../pages/project-detail/project-detail-test-helpers";
-import {
-	findPlansDialog,
-	plansPart,
-} from "../../pages/projects/projects-test-helpers";
+import {} from "../../pages/projects/projects-test-helpers";
 import { blurEditor, setEditorText } from "../../test/code-mirror";
 import { findToast } from "../../test/toast";
 import { resetCurrentUserCache } from "../auth/use-current-user";
@@ -82,7 +79,7 @@ describe("Resource form", () => {
 		expect(calls.some((c) => c.method === "POST")).toBe(false);
 	});
 
-	it("opens the plan dialog when the resource quota is used up", async () => {
+	it("names the resource limit when the quota is used up", async () => {
 		renderDetail({
 			[`GET ${RESOURCES_PATH}`]: { body: { items: sampleTree() } },
 			[`POST ${RESOURCES_PATH}`]: apiError(403, "PLAN_LIMIT_REACHED", {
@@ -99,10 +96,12 @@ describe("Resource form", () => {
 		await userEvent.click(
 			within(dialog).getByRole("button", { name: "Create resource" }),
 		);
-		const plans = await findPlansDialog();
-		expect(plansPart(plans, "modal-subscription-reason")).toHaveTextContent(
-			"10",
+		const notice = await findToast(
+			"Your projects have reached their limit of 10 resources in total.",
 		);
+		expect(notice).toHaveTextContent("Tell us with the feedback form.");
+		expect(notice).not.toHaveTextContent(/plan|Pro/);
+		expect(document.querySelector('[data-id="modal-subscription"]')).toBeNull();
 		expect(screen.queryByRole("dialog", { name: "New resource" })).toBeNull();
 	});
 

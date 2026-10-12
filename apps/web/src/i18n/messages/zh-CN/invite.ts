@@ -32,7 +32,7 @@ export const invite: Messages["invite"] = {
 		signedInAs: "你当前登录的账号是 <b>{account}</b>",
 		alreadyMember: "你已经是 {project} 的成员。",
 		openProject: "打开 project",
-		full: "按照 project 所有者的套餐，成员已满。请让 project 所有者移除部分成员。",
+		full: "此 project 的成员名额已满。请让 project 所有者移除部分成员。",
 		removed:
 			"Project 所有者已将你移出此 project。如需重新加入，请联系 project 所有者。",
 		ineligibleTitle: "此账号无法接受邀请",

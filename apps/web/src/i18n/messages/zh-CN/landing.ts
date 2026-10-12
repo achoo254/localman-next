@@ -5,17 +5,12 @@ export const landing: Messages["landing"] = {
 		titleMock: "Localman · 带状态、关联和 Faker 的 mock REST API",
 		titleLocalhost: "Localman · 直接在浏览器中测试 localhost API",
 		description:
-			"几分钟内搭建带状态的 mock REST API：声明 resource，用 Faker.js 生成数据，嵌套关联，立即获得 CRUD endpoint。Free 套餐含 {projects} 个 project。",
-		pricingDescription:
-			"比较 Localman 套餐：Free 含 {projects} 个 project，Pro 为实际使用中的 project 提供更高额度和更多成员。",
+			"几分钟内搭建带状态的 mock REST API：声明 resource，用 Faker.js 生成数据，嵌套关联，立即获得 CRUD endpoint。",
 	},
 	hero: {
 		badgeMock: "面向开发者的 mock REST API",
 		badgeLocalhost: "直接在浏览器中访问 localhost",
-		titleMock: {
-			other:
-				"带状态、关联和 Faker 的 <code>mock</code> REST API，Free 套餐含 {count} 个 project",
-		},
+		titleMock: "带状态、关联和 Faker 的 <code>mock</code> REST API",
 		titleLocalhost: "直接在浏览器中测试 <code>localhost</code> API",
 		subMock:
 			"声明 resource，一键生成模拟数据，立即获得完整的 CRUD endpoint。前端不必再等后端。",
@@ -23,9 +18,9 @@ export const landing: Messages["landing"] = {
 			"<b>无需安装应用或扩展，只要一条 Tunelo 命令。</b>运行 <code>tunelo http 3000</code>，Localman 会按端口自动识别 tunnel，并把 request 发到 <code>localhost</code> 或局域网内的机器。还附带带状态的 mock REST API，前端不必等后端。",
 		howItWorks: "了解工作原理",
 		noteMock:
-			"无需信用卡。Free 套餐包含 {projects} 个 project、每个 project {resources} 个 resource，custom response 免费使用。",
+			"登录即可开始使用：{projects} 个 project、合计 {resources} 个 resource，并支持 custom response。",
 		noteLocalhost:
-			"无需信用卡。Free 套餐包含 {projects} 个 mock project、每个 project {resources} 个 resource、每月 {proxy} 次 proxy request。",
+			"登录即可开始使用：{projects} 个 mock project、合计 {resources} 个 resource、每月 {proxy} 次 proxy request。",
 	},
 	preview: {
 		viaTunelo: "经由 Tunelo",
@@ -53,12 +48,6 @@ export const landing: Messages["landing"] = {
 		toolsBadge: { other: "每个 resource {count} 个工具" },
 		toolsHelp:
 			"像 <code>posts</code> 这样的嵌套 resource 还会接收 <code>parentId</code>。通过 MCP 创建的记录，<code>GET /users</code> 立即可见。",
-	},
-	pricing: {
-		eyebrow: "价格",
-		title: "免费开始，按需升级",
-		freePrice: "免费",
-		rateNote: "按月不限量的额度仍有每秒速率限制，以防滥用。",
 	},
 	modeling: {
 		title: "简单的数据建模",

@@ -41,15 +41,14 @@ describe("AppHeader", () => {
 		vi.restoreAllMocks();
 	});
 
-	it("shows the wordmark, bell, plan and account trigger", () => {
+	it("shows the wordmark, bell and account trigger, and no plan", () => {
 		const { container } = renderHeader(makeUser({ plan: "pro" }));
 		expect(
 			screen.getByRole("link", { name: "Localman, go to Projects" }),
 		).toHaveAttribute("href", "/projects");
 		expect(screen.getByRole("button", { name: "Notifications" })).toBeVisible();
-		expect(
-			container.querySelector('[data-id="topbar-plan"]'),
-		).toHaveTextContent("Pro plan");
+		expect(container.querySelector('[data-id="topbar-plan"]')).toBeNull();
+		expect(container).not.toHaveTextContent(/plan/i);
 	});
 
 	it.each([
@@ -86,10 +85,8 @@ describe("AppHeader", () => {
 		);
 		expect(items).toEqual([
 			"account-menu-account",
-			"account-menu-plan",
 			"account-menu-notifications",
 			"account-menu-docs",
-			"account-menu-pricing",
 			"account-menu-home",
 			"account-menu-email",
 			"account-menu-idp",
@@ -163,11 +160,11 @@ describe("AppHeader", () => {
 		).toBeNull();
 	});
 
-	it("falls back to the username and shows the plan in the menu", async () => {
+	it("falls back to the username and names no plan in the menu", async () => {
 		renderHeader(makeUser({ name: null }));
 		await openAccountMenu("minhanh");
 		const menu = await screen.findByRole("menu");
-		expect(menu).toHaveTextContent("Free plan");
+		expect(menu).not.toHaveTextContent(/plan|pricing/i);
 		expect(menu).toHaveTextContent("minhanh@example.com");
 	});
 
@@ -181,18 +178,12 @@ describe("AppHeader", () => {
 		expect(router.state.location.pathname).toBe(path);
 	});
 
-	it("hides the admin entry from other users and opens the plans modal", async () => {
+	it("hides the admin entry from other users", async () => {
 		renderHeader();
 		await openAccountMenu("Minh Anh");
 		expect(
 			await screen.findByRole("menuitem", { name: "Account and limits" }),
 		).toBeVisible();
 		expect(screen.queryByRole("menuitem", { name: /^Admin/ })).toBeNull();
-		await userEvent.click(
-			screen.getByRole("menuitem", { name: "Manage plan" }),
-		);
-		expect(
-			await screen.findByRole("dialog", { name: "Manage plan" }),
-		).toBeInTheDocument();
 	});
 });

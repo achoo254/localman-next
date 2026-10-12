@@ -16,11 +16,11 @@ export const zhCN: ServerMessages = {
 		"project.invitation": "Project 协作邀请",
 		"project.mockUrlChanged": "共享 project 的 mock URL 已更改",
 		"usage.quota": "每月 mock request 额度提醒",
-		"trial.ending": "Pro 试用即将结束",
-		"trial.ended": "Pro 试用已结束",
+		"trial.ending": "扩展额度即将结束",
+		"trial.ended": "扩展额度已结束",
 		"trial.extension.requested": "Pro 试用延期申请（所有者）",
-		"trial.extension.approved": "Pro 试用已延期",
-		"trial.extension.declined": "Pro 试用延期被拒绝",
+		"trial.extension.approved": "扩展额度已延长",
+		"trial.extension.declined": "扩展额度未获延长",
 		"workspace.invitation": "Workspace 邀请",
 		"element.shared": "与你共享的 collection 和 environment",
 		"access.requested": "对你的 collection 和 environment 的访问请求",
@@ -64,7 +64,7 @@ export const zhCN: ServerMessages = {
 	quota: {
 		usedUpTitle: "本月 mock API request 次数已用完",
 		usedUpBody: (p) =>
-			`你的 project 已用完 ${p.month}的全部 ${p.limit} 次 mock API request。在下月初或升级到 Pro 之前，mock API 将返回 429。`,
+			`你的 project 已用完 ${p.month}的全部 ${p.limit} 次 mock API request。在下月初之前，mock API 将返回 429。`,
 		warningTitle: (p) => `本月 mock API request 次数已使用 ${p.threshold}%`,
 		warningBody: (p) =>
 			`你的 project 已使用 ${p.month}的 ${p.used}/${p.limit} 次 mock API request。`,

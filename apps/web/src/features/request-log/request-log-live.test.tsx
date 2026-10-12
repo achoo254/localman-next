@@ -184,7 +184,7 @@ describe("request log, live", () => {
 		);
 		await screen.findByText("Request headers", { selector: "h3" });
 		expect(byId("request-log-retention")).toHaveTextContent(
-			"Logs are kept for 7 days on the Free plan.",
+			"Logs are kept for 7 days.",
 		);
 		expect(await seriousViolations(container)).toEqual([]);
 	});

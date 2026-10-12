@@ -166,14 +166,15 @@ describe("Import sources, errors and plan room", () => {
 		).toBeInTheDocument();
 	});
 
-	it("blocks the import when the owner's plan has no room", async () => {
+	it("blocks the import when the project has no room", async () => {
 		const { dialog } = await openImport(
 			importRoute(() => ({ body: importJson({ resourcesLeft: 0 }) })),
 		);
 		setEditorText(importTab(dialog, "json"), SAMPLE_JSON);
 		await previewReady();
-		const plan = within(dialog).getByText(/room for 0 more/);
-		expect(plan.closest('[role="alert"]')).toHaveTextContent("Manage plan");
+		const room = within(dialog).getByText(/room for 0 more/);
+		expect(room.closest('[role="alert"]')).not.toHaveTextContent(/plan/i);
+		expect(within(dialog).queryByRole("button", { name: /plan/i })).toBeNull();
 		expect(
 			within(dialog).getByRole("button", { name: "Create resource" }),
 		).toBeDisabled();

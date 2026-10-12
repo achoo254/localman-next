@@ -36,7 +36,7 @@ describe("resourceErrorMessage", () => {
 		[
 			403,
 			"PLAN_LIMIT_REACHED",
-			"You've used all the resources your current plan allows.",
+			"You've used all the resources this account allows.",
 		],
 		[403, "FORBIDDEN", "You can only view this project."],
 		[400, "VALIDATION_ERROR", "The submitted data is invalid."],

@@ -1,6 +1,5 @@
 import type { CurrentUser } from "../features/auth/current-user";
 import type { AppNotification } from "../features/notifications/notifications-api";
-import { AVAILABLE_TRIAL } from "../features/subscription/trial-state";
 import type { Project } from "../pages/projects/projects-api";
 
 export function makeUser(overrides: Partial<CurrentUser> = {}): CurrentUser {
@@ -15,7 +14,6 @@ export function makeUser(overrides: Partial<CurrentUser> = {}): CurrentUser {
 		isOwner: false,
 		telegram: { linked: false, username: null },
 		locale: "en",
-		trial: AVAILABLE_TRIAL,
 		...overrides,
 	};
 }

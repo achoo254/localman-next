@@ -5,7 +5,6 @@ import {
 import { useId } from "react";
 import { Alert } from "../../components/ui/alert";
 import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
 import { PanelProgress } from "../../components/ui/panel-progress";
 import { useT } from "../../i18n/i18n-context";
 import { useDelayedFlag } from "../../lib/use-delayed-flag";
@@ -22,11 +21,9 @@ export interface ImportPreviewProps {
 	names: Readonly<Record<string, string>>;
 	nameErrors: Readonly<Record<string, string>>;
 	onRename: (key: string, name: string) => void;
-	/** The owner can open the plans; a collaborator can only ask. */
-	onManagePlan: (() => void) | null;
 }
 
-/** Room left on the owner's plan when the import needs more, else -1. */
+/** Room left in the project when the import needs more, else -1. */
 export function overPlan(preview: Preview): number {
 	const left = preview.resourcesLeft;
 	return left !== null && preview.resources.length > left ? left : -1;
@@ -41,7 +38,6 @@ export function ImportPreview({
 	names,
 	nameErrors,
 	onRename,
-	onManagePlan,
 }: ImportPreviewProps) {
 	const t = useT();
 	const titleId = useId();
@@ -137,16 +133,7 @@ export function ImportPreview({
 									count: preview.resources.length,
 									left,
 								})}{" "}
-								{onManagePlan ? null : t("resourceImport.planRoomCollaborator")}
-								{onManagePlan ? (
-									<Button
-										size="sm"
-										className="mt-2 flex"
-										onClick={onManagePlan}
-									>
-										{t("resourceImport.managePlan")}
-									</Button>
-								) : null}
+								{t("resourceImport.planRoomHint")}
 							</Alert>
 						) : null}
 						<ImportNotes notes={preview?.warnings ?? []} />

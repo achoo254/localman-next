@@ -2,7 +2,6 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { copyText } from "../../platform/clipboard";
-import { expectProInterestSource } from "../../test/pro-interest";
 import { resetCurrentUserCache } from "../auth/use-current-user";
 import {
 	LOOKUP,
@@ -27,7 +26,7 @@ describe("member limit of the invite dialog", () => {
 		vi.restoreAllMocks();
 	});
 
-	it("shows the full Free project and opens the plans modal for members", async () => {
+	it("shows the full project and how to free a seat, without plans", async () => {
 		const { dialog } = await openFromMenu({
 			[`GET ${MEMBERS}`]: listBody([member("an"), member("binh")]),
 		});
@@ -37,22 +36,15 @@ describe("member limit of the invite dialog", () => {
 			return node;
 		});
 		expect(full).toHaveTextContent("Limit of 3 members reached");
-		expect(full).toHaveTextContent("Member #4 requires the Pro plan.");
+		expect(full).toHaveTextContent(
+			"Remove a member or an invitation to invite more people.",
+		);
+		expect(full).not.toHaveTextContent(/plan|Pro/);
 		expect(within(dialog).getByLabelText("Username or email")).toBeDisabled();
-		await userEvent.click(
-			within(dialog).getByRole("button", { name: "See plans" }),
-		);
-		const plans = await screen.findByRole("dialog", { name: "Manage plan" });
-		expect(plans).toHaveTextContent("3 members per project");
-		await userEvent.click(
-			within(plans).getByRole("button", {
-				name: "Tell us what you need from Pro",
-			}),
-		);
-		await expectProInterestSource("plan_limit_members");
+		expect(within(dialog).queryByRole("button", { name: /plans/i })).toBeNull();
 	});
 
-	it("reloads and opens the plans modal on PLAN_LIMIT_REACHED", async () => {
+	it("reloads and says the project is full on PLAN_LIMIT_REACHED", async () => {
 		const { calls, dialog } = await openFromMenu({
 			[`GET ${MEMBERS}`]: listBody([member("an")]),
 			[LOOKUP]: {
@@ -78,8 +70,11 @@ describe("member limit of the invite dialog", () => {
 			within(dialog).getByRole("button", { name: "Confirm invite" }),
 		);
 		expect(
-			await screen.findByRole("dialog", { name: "Manage plan" }),
-		).toHaveTextContent("3 members per project");
+			await within(dialog).findByText(
+				"There's no free seat in this project. Remove a member or cancel an invitation first.",
+			),
+		).toBeVisible();
+		expect(screen.getAllByRole("dialog")).toHaveLength(1);
 		expect(
 			calls.filter((c) => c.method === "GET" && c.path === MEMBERS),
 		).toHaveLength(2);

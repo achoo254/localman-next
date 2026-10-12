@@ -16,10 +16,6 @@ export const workspaces: Messages["workspaces"] = {
 		editor: "Editor",
 		viewer: "Viewer",
 	},
-	limit: {
-		requiresPro: "需要 Pro",
-		viewPlans: "查看套餐",
-	},
 	create: {
 		title: "创建 workspace",
 		intro:
@@ -30,9 +26,6 @@ export const workspaces: Messages["workspaces"] = {
 		description: "描述",
 		submit: "创建 workspace",
 		created: "已创建 workspace {name}",
-		limit: {
-			other: "你的套餐包含 {count} 个团队 workspace。升级到 Pro 可创建更多。",
-		},
 	},
 	settings: {
 		title: "Workspace 设置",
@@ -62,10 +55,7 @@ export const workspaces: Messages["workspaces"] = {
 		createTeam: "创建团队 workspace",
 		seats: "{used}/{max} 名成员（含待接受的邀请）",
 		seatsNoCap: "{used} 名成员（含待接受的邀请）",
-		fullFree: {
-			other: "Free 套餐每个 workspace 最多 {count} 名成员，含待接受的邀请。",
-		},
-		fullOther: "名额已满。移除一名成员或取消一个邀请后才能邀请其他人。",
+		full: "名额已满。移除一名成员或取消一个邀请后才能邀请其他人。",
 		list: "成员",
 		you: "{name}（你）",
 		roleOf: "{name} 的角色",
@@ -136,7 +126,7 @@ export const workspaces: Messages["workspaces"] = {
 		personal: "个人 workspace 没有成员。创建团队 workspace 以便协作。",
 		membersLimit:
 			"此 workspace 已没有空余名额。请先移除一名成员或取消一个邀请。",
-		workspacesLimit: "你的套餐已无法再创建团队 workspace。",
+		workspacesLimit: "此账户已无法再创建团队 workspace。",
 		forbidden: "只有 workspace 的 Admin 可以执行此操作。",
 		notFound: "此 workspace 或成员已不存在。请重新加载页面。",
 		fallback: "出错了，请稍后重试。",
@@ -150,7 +140,7 @@ export const workspaces: Messages["workspaces"] = {
 		oneUse: "一次性链接 · {date} 过期",
 		alreadyMember: "你已经是 {workspace} 的成员。",
 		open: "打开 workspace",
-		full: "此 workspace 的成员数已达到所有者套餐的上限。请联系 workspace 的 Admin 腾出名额。",
+		full: "此 workspace 已没有空余名额。请联系 workspace 的 Admin 腾出名额。",
 		accept: "加入 workspace",
 		joined: "已加入 {workspace}",
 		alreadyJoined: "你已经是 {workspace} 的成员",
