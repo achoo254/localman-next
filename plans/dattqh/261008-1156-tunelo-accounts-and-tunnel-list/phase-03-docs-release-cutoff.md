@@ -53,10 +53,10 @@ dependencies: [1, 2]
 - [ ] T1 ADR 0004 và `system-architecture.md` đã cập nhật
 - [ ] T2 README VI/EN, changelog và bảng mã lỗi trong `CLAUDE.md` đã cập nhật
 - [x] T3 nginx và `certbot-setup.sh` dùng domain mới, Option B mặc định
-- [ ] T4 Workflow publish đúng tag và thư mục
+- [x] T4 Workflow publish đúng tag và thư mục
 - [x] T5 DNS và cert wildcard `*.tunnel.hoandat.com` đã có sau khi user xác nhận, timer gia hạn bật
 - [ ] T6 Server chạy `AUTH_MODE=hybrid` với cutoff và 2 domain sau khi user xác nhận
-- [ ] T7 `tunelo@1.7.0` có trên npm sau khi user xác nhận
+- [x] T7 `tunelo@1.7.0` có trên npm sau khi user xác nhận
 - [ ] T8 Kiểm sau deploy pass
 - [ ] T9 Domain cũ đã gỡ sau khi user xác nhận (theo dõi tới khi lưu lượng cũ không đáng kể)
 - [ ] T10 `tunelo-v2.0.0` phát hành sau khi user xác nhận (theo dõi tới ngày cutoff)
@@ -64,3 +64,10 @@ dependencies: [1, 2]
 - [ ] Verification: sau deploy CLI 1.6.x vẫn chạy trước cutoff, CLI 1.7.0 `login`/`http`/`whoami` đúng, Localman staging nhận tunnel theo tài khoản
 - [ ] lint/typecheck/test sạch: `biome check`, `tsc --noEmit`, `pnpm --filter @tunelo/server test`, `pnpm --filter tunelo test`
 - [ ] `pnpm check:mcp-coverage` pass
+
+## Phát hành 1.7.0 (2026-10-12)
+- Tag `tunelo-v1.7.0` (commit `b004214`); workflow `tunelo-publish-cli.yml` chạy biome, test Tunelo, e2e, build rồi
+  publish bằng npm trusted publishing (OIDC, không token; token npm cũ trong kho bị npm từ chối 401). Lần đầu lỗi E404 vì
+  kết nối Trusted Publisher chưa được tạo; tạo xong, chạy lại job thì `+ tunelo@1.7.0`, registry hiện `latest=1.7.0`
+  lúc 03:59 UTC; `npx tunelo@1.7.0 --version` = 1.7.0.
+- Còn: T2 (changelog, bảng mã lỗi `CLAUDE.md`), T6 (`LEGACY_TOKEN_CUTOFF` đang trống, chờ user), T9 gỡ domain cũ, T10 2.0.0.
