@@ -116,6 +116,8 @@ Moved on 2026-10-12: the three lab tunnel clients (`onedash-s3` on lab .171 via
 `onedash-s3.conf` and `miu-staging.conf` proxies, and OneDash staging log shipping
 (`VL_INGEST_ENDPOINT`). The `ods3lab` tunnel and the `office.tunnel.inetdev.io.vn`
 vhost were retired the same day (configs kept in `/root/nginx-bak/`).
+Miu staging (`miu-staging` tunnel on .176, `miu-staging.conf` on .65, DNS
+`miu-staging.hoandat.com`) was removed later that day; only Miu production remains.
 
 Also moved on 2026-10-12: every lab machine runs `tunelo@1.7.0` from npmjs (the
 old `@dattqh/tunelo` package removed), and `server-tools.conf` (`cloudpanel-dev.inet.vn`)
