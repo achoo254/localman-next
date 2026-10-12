@@ -13,6 +13,12 @@ const doc = (schemas: object) => ({
 	components: { schemas },
 });
 const PET = doc({ Pet: { properties: { name: { type: "string" } } } });
+/**
+ * Ceiling for walks that would take minutes without their guards (10^12
+ * paths, 60 000 x 19 000 merges). It also covers parsing the input, so it
+ * leaves room for a shared CI runner rather than timing the happy path.
+ */
+const FAST_MS = 1000;
 
 describe("schemaFromOpenApi on unsafe input", () => {
 	it("rejects cycles, external refs and bad references", () => {
@@ -79,7 +85,7 @@ describe("schemaFromOpenApi on unsafe input", () => {
 		const started = performance.now();
 		const result = schemaFromOpenApi(doc(fanOut), { schema: "L12" });
 		expect(result.ok && result.fields).toEqual([{ name: "a", type: "String" }]);
-		expect(performance.now() - started).toBeLessThan(200);
+		expect(performance.now() - started).toBeLessThan(FAST_MS);
 	});
 
 	it.each([
@@ -101,7 +107,7 @@ describe("schemaFromOpenApi on unsafe input", () => {
 			expect(errorOf(schemaFromOpenApi(text, { schema: "A" }))).toBe(
 				"TOO_COMPLEX",
 			);
-			expect(performance.now() - started).toBeLessThan(200);
+			expect(performance.now() - started).toBeLessThan(FAST_MS);
 		},
 	);
 

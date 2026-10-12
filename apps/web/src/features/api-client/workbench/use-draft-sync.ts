@@ -1,11 +1,12 @@
 /**
- * Keeps the server's drafts in step with the open tabs: restores them on
- * mount, saves a tab's draft once it has stopped changing for `delayMs`
- * (with its position as `order`), deletes it when the tab closes. Writes
- * of one tab run in turn, so a late save cannot revive a closed tab. A
- * write failing for a passing reason is tried again (`draft-retry.ts`);
- * leaving the page sends what waits with `keepalive`. A tab's collection
- * binding goes with its saves (`use-binding-writes.ts`).
+ * Keeps the server's drafts in step with the open tabs: saves a tab's
+ * draft once it has stopped changing for `delayMs` (with its position as
+ * `order`), deletes it when the tab closes. Writes of one tab run in turn,
+ * so a late save cannot revive a closed tab. A write failing for a passing
+ * reason is tried again (`draft-retry.ts`); leaving the page sends what
+ * waits with `keepalive`. A tab's collection binding goes with its saves
+ * (`use-binding-writes.ts`); the drafts come back on mount
+ * (`use-draft-restore.ts`).
  */
 import type { ApiRequestDraft } from "@localman/shared/api-client";
 import { type Dispatch, useCallback, useEffect, useRef, useState } from "react";
@@ -15,7 +16,6 @@ import {
 	KEEPALIVE_MAX_BYTES,
 	deleteDraft,
 	draftSaveBody,
-	listDrafts,
 	saveDraft,
 	saveDraftOnLeave,
 } from "../api/draft-api";
@@ -25,6 +25,7 @@ import {
 	withRetries,
 } from "./draft-retry";
 import { useBindingWrites } from "./use-binding-writes";
+import { useDraftRestore } from "./use-draft-restore";
 import type { WorkbenchAction } from "./workbench-action";
 import type { WorkbenchState } from "./workbench-reducer";
 import type { DraftSyncStatus } from "./workbench-tab-types";
@@ -61,6 +62,8 @@ export function useDraftSync(
 	const timers = useRef(new Map<string, number>());
 	const queues = useRef(new Map<string, Promise<void>>());
 	const running = useRef(0);
+	// Writes outlive an unmount (`flush`); their status then has nowhere to go.
+	const mounted = useRef(true);
 
 	// Stays "saving" while a write is tried again; "error" once it gives up.
 	const enqueue = useCallback(
@@ -72,9 +75,11 @@ export function useDraftSync(
 				try {
 					await withRetries(write, retryDelaysMs);
 					running.current -= 1;
-					if (running.current === 0) setStatus({ state: "saved" });
+					if (running.current === 0 && mounted.current)
+						setStatus({ state: "saved" });
 				} catch (error) {
 					running.current -= 1;
+					if (!mounted.current) return;
 					// Still open: its next change of tabs schedules the save again.
 					const open = latest.current.tabs.some((tab) => tab.id === tabId);
 					if (open && isTransientError(error)) seen.current.delete(tabId);
@@ -128,35 +133,7 @@ export function useDraftSync(
 		}
 	}, [enqueue, binding]);
 
-	// Restore once; tabs opened meanwhile keep their place after these.
-	useEffect(() => {
-		let active = true;
-		listDrafts()
-			.then((items) => {
-				if (!active) return;
-				for (const item of items) {
-					seen.current.set(item.tabId, item.draft);
-					binding.restored(item.tabId, item.source ?? null);
-				}
-				dispatch({
-					type: "restore",
-					tabs: items.map((item) => ({ ...item, id: item.tabId })),
-				});
-				setStatus((current) =>
-					current.state === "loading" ? { state: "idle" } : current,
-				);
-			})
-			.catch((error: unknown) => {
-				if (!active) return;
-				const message = activeTranslator().t("apiClient.status.loadError", {
-					message: errorMessage(error),
-				});
-				setStatus({ state: "error", message });
-			});
-		return () => {
-			active = false;
-		};
-	}, [dispatch, binding]);
+	useDraftRestore(dispatch, seen, binding, setStatus);
 
 	useEffect(() => {
 		const open = new Set<string>();
@@ -183,6 +160,7 @@ export function useDraftSync(
 
 	// Leaving the page (or the tab going to the background) saves what waits.
 	useEffect(() => {
+		mounted.current = true;
 		const onHide = () => {
 			if (document.visibilityState === "hidden") flushOnLeave();
 		};
@@ -192,6 +170,7 @@ export function useDraftSync(
 			window.removeEventListener("pagehide", flushOnLeave);
 			document.removeEventListener("visibilitychange", onHide);
 			flush();
+			mounted.current = false;
 		};
 	}, [flush, flushOnLeave]);
 
