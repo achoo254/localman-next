@@ -437,6 +437,7 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Jev: gia hạn chỉ admin làm, bỏ form trên web, giữ endpoint (0,98); nhắc hạn vẫn gửi, câu trung tính (0,90); chạm giới hạn thì một câu nêu giới hạn và gợi ý góp ý, không link gói (0,74).
 - Tự cấp Pro chạy lúc đăng nhập và mỗi lần làm mới phiên (`syncUserFromUserInfo`), không ở `GET /users/me`, để route đọc nóng nhất không có lượt ghi.
 - Sau review, Jev: admin hạ về Free một tài khoản chưa từng dùng thử thì chấp nhận việc tự cấp lại, chỉ ghi tài liệu (0,89, `mark_used` 0,11); `/pricing` chuyển bằng 302 thay vì 301 (1,0); chữ hạn mức resource sửa cho khớp server, tính tổng trên mọi project (0,88, giữ "mỗi project" 0,12, đổi server 0,00).
+- Deploy (user: "chờ CI xanh rồi deploy"): release `20261012-065240-61c4601aa3c8`, backup `localman-20261012-135233`; DAST đạt phần từ ngoài và phía server (`plans/dattqh/reports/security-261012-1355-hide-commercial-ui-dast.md`).
 
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.

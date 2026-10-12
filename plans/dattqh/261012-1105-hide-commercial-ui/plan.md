@@ -1,6 +1,6 @@
 ---
 title: "Hide every commercial surface; Pro becomes an automatic 30-day period"
-status: in-progress
+status: done
 created: 2026-10-12
 tier: L
 ---
@@ -46,4 +46,6 @@ Localman is not commercial yet. The web app shows no pricing, plans, payment, tr
 - Implementation done (uncommitted): API auto-start + neutral copy; web commercial surfaces removed; `/pricing` → `/` (nginx 301, SPA redirect, no `pricing.html`); docs (`system-architecture.md`, `i18n.md`, `deployment-guide.md`, `ux-writing.md`) and ADR-0002; E2E helper `e2e/support/user-plan.ts` ends the automatic Pro so the Free-limit spec still tests Free.
 - Verification (2026-10-12): `pnpm lint` exit 0 (biome + check:i18n); `pnpm typecheck` exit 0; web vitest 255 files / 1232 tests pass; api vitest 213 files / 1218 tests pass; `check:mcp-coverage` and `check:tokens` exit 0; Playwright E2E 36/36 pass.
 - SAST: PASS, `plans/dattqh/reports/security-261012-1205-hide-commercial-ui-sast.md`.
-- Pending: independent review, commit, user-requested deploy, DAST.
+- Review: 2 High, 5 Medium fixed (`plans/dattqh/reports/code-reviewer-261012-1215-hide-commercial-ui.md`); commits `bc09367`, `cc2465e`, CI flake fix `61c4601` (CI green).
+- Deployed 2026-10-12 at the user's request ("chờ CI xanh rồi deploy"): release `20261012-065240-61c4601aa3c8`, backup `localman-20261012-135233`.
+- DAST: PASS for external and server-side checks, `plans/dattqh/reports/security-261012-1355-hide-commercial-ui-dast.md`; signed-in pages not checked on prod (no sign-in on the user's behalf).
