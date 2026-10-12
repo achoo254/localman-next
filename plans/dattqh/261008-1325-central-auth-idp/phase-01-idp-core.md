@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "IdP lõi: OIDC, client, key, deploy"
-status: pending
+status: in-progress
 priority: P1
 effort: "M"
 dependencies: []
@@ -11,6 +11,9 @@ dependencies: []
 
 ## Goal
 Dựng `auth.hoandat.com` chạy `oidc-provider` trên Express 5 với Mongo adapter: có discovery, JWKS, authorization code + PKCE, device flow, refresh xoay vòng, revocation, introspection và RP-initiated logout. Đăng ký sẵn 4 client, deploy bằng Docker Compose trên VPS, DNS và TLS qua Cloudflare.
+
+## Trạng thái (2026-10-12)
+Xong T1–T10 và T12; IdP chạy production trên .65 bằng pm2 (không Docker Compose, không có staging riêng, xem Vòng 2 của Validation Log trong `plan.md`). Còn mở duy nhất T11: bộ conformance của OpenID chưa chạy lần nào. Cách chạy đã chốt (Jev 0.82, 2026-10-12, user giao Jev quyết): **Config OP chạy thẳng trên production** (chỉ đọc discovery và JWKS, không cần client); **Basic OP chạy trên instance riêng, không chạm production.** Nơi chạy (Jev 0.99, cùng ngày): bản IdP thử chạy trên máy dev bằng harness e2e (Mongo trong bộ nhớ, khoá ký vứt đi, Google/GitHub giả, client thử chỉ trong `e2e/`), công khai qua Tunelo HTTPS trong lúc chạy, dùng bộ kiểm host sẵn ở certification.openid.net; không cần Docker. Đã loại Docker trên máy lab (0.01: lab chỉ vào qua VPN, máy nào cũng đang có vai trò) và OAuth Google/GitHub thật cho bản thử (0.00). Đã loại: bỏ hẳn (0.01), chỉ Config OP (0.10), Basic OP trên production bằng client thử tạm thời (0.07, vì hai lần ghi prod và client thử sống trên prod).
 
 Repo riêng: `achoo254/hoandat-auth` (private; tạo bằng `gh repo create` khi bắt đầu plan này; thư mục local `$WORKSPACE/hoandat-auth`; pnpm, TypeScript strict, ESM). Plan này nằm trong `localman-next` để quản lý chung với các plan khác.
 
@@ -76,8 +79,10 @@ Repo riêng: `achoo254/hoandat-auth` (private; tạo bằng `gh repo create` khi
 - [x] T8 Đóng gói: trên .65 chạy bằng pm2 theo quy ước của server thay cho Docker Compose (Jev 1.00, xem Validation Log); healthcheck `/healthz` xanh. Dockerfile và compose vẫn giữ cho môi trường khác, chưa build vì máy dev không có Docker
 - [x] T9 `auth.hoandat.com` phân giải qua Cloudflare và có TLS hợp lệ
 - [x] T10 Production chạy trên .65 (user chỉ định .65 cho cả app và DB; không có môi trường staging riêng), key ký sinh trên server và nằm ngoài repo
-- [ ] T11 Conformance Basic OP và Config OP pass trên staging
+- [x] T11 Conformance Config OP pass trên production (plan `l4pE9nbnLX6y0`. Lần 1 ngày 2026-10-12: 37 đạt, 1 lỗi vì discovery thiếu RS256 cho ID token. Đã sửa theo ADR 0005 của `hoandat-auth`, commit `b964281`, deploy cùng ngày, thêm khoá RSA trên server. Lần 2: PASSED, 38 đạt, 0 lỗi, 6 thông tin về tính năng tuỳ chọn)
+- [ ] T11 Conformance Basic OP pass trên bản IdP thử (harness e2e + Tunelo + bộ kiểm host sẵn)
 - [x] T12 Review không còn finding mức high
-- [ ] Verification: Code + PKCE, device flow, refresh xoay vòng và từ chối `aud` sai đều pass bằng `openid-client`; conformance suite pass trên staging
+- [x] Verification: Code + PKCE, device flow, refresh xoay vòng và từ chối `aud` sai đều pass bằng `openid-client`
+- [ ] Verification: conformance suite pass (theo T11)
 - [x] lint/typecheck/test sạch: `pnpm lint` (Biome), `tsc --noEmit`, `pnpm test`
 - [x] `pnpm check:mcp-coverage`: N/A (repo `hoandat-auth` không dùng operation registry của Localman)

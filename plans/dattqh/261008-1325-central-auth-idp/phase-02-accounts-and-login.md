@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Tài khoản và đăng nhập không dùng email"
-status: pending
+status: completed
 priority: P1
 effort: "L"
 dependencies: [1]
@@ -11,6 +11,8 @@ dependencies: [1]
 
 ## Goal
 Làm các trang tương tác của IdP: đăng nhập, đăng ký, consent, duyệt thiết bị và logout. Có email/password, Google và GitHub. Phục hồi tài khoản không dùng email: mã khôi phục, Telegram, hoặc OAuth đã liên kết. Có trang quản lý tài khoản: phiên, thiết bị, ứng dụng đã cấp quyền, Telegram.
+
+> **Cập nhật 2026-10-10: ADR 0004 (repo `hoandat-auth`) thay một phần phase này.** Đăng nhập và đăng ký giờ **chỉ** bằng Google/GitHub. Đã xoá hẳn (code, route, test): email/password, mã khôi phục, quên mật khẩu (cả 3 đường), link đặt lại qua Telegram, khoá đăng nhập theo username/email, đổi mật khẩu và tạo lại mã khôi phục ở `/account`. Telegram chỉ còn để nhận thông báo. Không huỷ được provider cuối cùng còn đăng nhập được. Dữ liệu mật khẩu cũ để nguyên trong MongoDB nhưng không code nào đọc. Nội dung Goal, Files, Tasks và bảng giao việc bên dưới giữ nguyên làm lịch sử của lần làm đầu; nguồn đúng hiện tại là ADR 0004 và `CLAUDE.md` của repo `hoandat-auth`.
 
 Phần này **chuyển từ phase 02 cũ của Localman** sang. Quyết định do Jev chọn, user chốt "không có mail server".
 
@@ -58,13 +60,13 @@ Phần này **chuyển từ phase 02 cũ của Localman** sang. Quyết định 
 
 ### Checklist
 - [x] T1 OAuth app Google (project `hoandat-auth`, đã publish production), GitHub (OAuth App id 3916221) và bot Telegram `@auth_hoandat_bot` đã tạo và bật trên .65 ngày 2026-10-09; secret nằm trong `.env` trên server và thư mục iCloud `auth-hoandat`, không commit
-- [x] T2 Model tài khoản, argon2id, mã khôi phục và claim `email_verified` đúng luật
+- [x] T2 Model tài khoản, argon2id, mã khôi phục và claim `email_verified` đúng luật (argon2id và mã khôi phục đã gỡ theo ADR 0004)
 - [x] T3 Đăng nhập Google/GitHub và 3 nhánh liên kết chạy đúng
-- [x] T4 Liên kết Telegram, webhook và link reset qua bot chạy đúng TTL, dùng một lần
+- [x] T4 Liên kết Telegram, webhook và link reset qua bot chạy đúng TTL, dùng một lần (link reset đã gỡ theo ADR 0004; Telegram chỉ còn thông báo)
 - [x] T5 Layout server render khớp prototype IdP, `pnpm check:tokens` sạch
-- [x] T6 Đăng nhập, đăng ký, logout có CSRF, rate-limit và khoá tạm
-- [x] T7 Consent, duyệt thiết bị và quên mật khẩu (3 đường) chạy đúng
-- [x] T8 Trang `/account` đủ mục, thu hồi được phiên và ứng dụng
+- [x] T6 Đăng nhập, đăng ký, logout có CSRF, rate-limit và khoá tạm (theo ADR 0004 chỉ còn nút Google/GitHub; khoá tạm đã gỡ cùng mật khẩu)
+- [x] T7 Consent, duyệt thiết bị và quên mật khẩu (3 đường) chạy đúng (quên mật khẩu đã gỡ theo ADR 0004)
+- [x] T8 Trang `/account` đủ mục, thu hồi được phiên và ứng dụng (mục mật khẩu và mã khôi phục đã gỡ theo ADR 0004; thêm mục "Cách đăng nhập" `#account-sign-in`)
 - [x] T9 Unit test pass
 - [x] T10 Playwright pass
 - [x] T11 Bản phase 02 đã chạy trên .65 (production duy nhất)

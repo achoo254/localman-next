@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Tích hợp Localman, Tunelo, MCP"
-status: pending
+status: in-progress
 priority: P1
 effort: "M"
 dependencies: [2]
@@ -10,7 +10,10 @@ dependencies: [2]
 # Phase 03: Tích hợp
 
 ## Goal
-Nối 4 client vào IdP và mô tả rõ phần việc mỗi repo phải làm. Code của Localman và Tunelo nằm trong plan của chính repo đó; phase này lo phía IdP và hợp đồng giữa các bên.
+Nối 4 client vào IdP và mô tả rõ phần việc mỗi repo phải làm.
+
+## Trạng thái (2026-10-12)
+Xong T1–T6 và T8. Còn mở T7 (E2E 3 dịch vụ). Không có staging nên T7 chạy trên production. Localman và Tunelo đều đã nối IdP ở production (log IdP ngày 12/10 có đăng nhập `tunelo-web`, duyệt thiết bị `tunelo-cli` và grant mới của `localman-web`). Điều kiện "đăng nhập IdP một lần rồi vào thẳng Localman" cần thêm đăng nhập im lặng (`prompt=none`) ở Localman: code đã xong ở `localman-next` ngày 12/10, chưa commit và chưa deploy. IdP không cần đổi gì vì đã hỗ trợ `prompt=none`. Code của Localman và Tunelo nằm trong plan của chính repo đó; phase này lo phía IdP và hợp đồng giữa các bên.
 
 ## Hợp đồng tích hợp
 
@@ -63,8 +66,9 @@ Nối 4 client vào IdP và mô tả rõ phần việc mỗi repo phải làm. C
 - [x] T4 `docs/integration-guide.md` đủ mục cho Localman, Tunelo và client MCP
 - [x] T5 Test token exchange và bộ test cũ pass
 - [x] T6 Production đã chạy `dist/seed-clients.mjs` (chỉ đọc, client tĩnh nằm trong code): 4 client hợp lệ, 0 client DCR, discovery khớp
-- [ ] T7 E2E 3 dịch vụ pass (theo dõi mở cho tới khi Localman phase 02 và Tunelo phase 02 lên staging)
+- [ ] T7 E2E 3 dịch vụ pass trên production (chờ Localman deploy đăng nhập im lặng)
 - [x] T8 Review không còn finding mức high
-- [ ] Verification: token exchange bị từ chối đúng 2 trường hợp; E2E đăng nhập một lần, tự nhận tunnel và back-channel logout pass trên staging
+- [x] Verification: token exchange bị từ chối đúng 2 trường hợp (T5)
+- [ ] Verification: E2E đăng nhập một lần, tự nhận tunnel và back-channel logout pass trên production (theo T7)
 - [x] lint/typecheck/test sạch: `pnpm lint` (Biome), `tsc --noEmit`, `pnpm test`
 - [x] `pnpm check:mcp-coverage`: N/A (repo `hoandat-auth` không dùng operation registry của Localman)

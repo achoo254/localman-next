@@ -27,7 +27,7 @@ User đăng nhập **một lần** tại `auth.hoandat.com` là vào được Lo
 | IdP có được dùng dịch vụ gửi mail miễn phí của bên thứ ba không | Jev nói **có** (0.71), nhưng **không áp dụng**, vì trái quy tắc "không có mail server, chuyển sang kênh thông báo" user vừa đặt. Ghi lại thành câu hỏi mở cho user | — |
 
 Các quyết định không dùng email đã có cũng chuyển về IdP (Jev, 2026-10-08):
-- Quên mật khẩu: mã khôi phục, link reset qua Telegram, hoặc đăng nhập Google/GitHub đã liên kết.
+- Quên mật khẩu: mã khôi phục, link reset qua Telegram, hoặc đăng nhập Google/GitHub đã liên kết. (Đã bỏ 2026-10-10 theo ADR 0004: không còn mật khẩu, khôi phục tài khoản dựa vào provider thứ hai đã liên kết.)
 - Email là tên đăng nhập nhưng "chưa xác minh" nếu không đến từ Google/GitHub.
 
 **Thư viện:** [`oidc-provider`](https://github.com/panva/node-oidc-provider) của panva. Thư viện này được OpenID Foundation chứng nhận, hỗ trợ sẵn Device Authorization Grant (RFC 8628), PKCE, Dynamic Client Registration, revocation, introspection, RP-initiated logout và resource indicators (RFC 8707, cần cho audience riêng của Tunelo và Localman MCP). Chọn thư viện có chứng nhận thay vì tự viết giao thức là quyết định kỹ thuật, AI tự quyết.
@@ -37,7 +37,7 @@ Các quyết định không dùng email đã có cũng chuyển về IdP (Jev, 2
 ```
 auth.hoandat.com  (repo riêng `achoo254/hoandat-auth`, tạo khi bắt đầu plan này, Express 5 + oidc-provider + Mongo)
 ├─ /.well-known/openid-configuration, /jwks, /authorize, /token, /userinfo, /device, /token/revocation, /token/introspection, /reg (đường dẫn thật lấy từ discovery)
-├─ UI: đăng nhập (email/password, Google, GitHub), đăng ký, mã khôi phục, liên kết Telegram, quản lý phiên và ứng dụng đã cấp quyền
+├─ UI: đăng nhập và đăng ký chỉ bằng Google/GitHub (ADR 0004), liên kết Telegram (chỉ thông báo), quản lý phiên và ứng dụng đã cấp quyền, trang `/apps`
 └─ Client:
    ├─ localman-web     confidential, Authorization Code + PKCE, scope openid profile email
    ├─ localman-mcp     resource server; client MCP đăng ký động (DCR) hoặc dùng Client ID Metadata Document
@@ -49,11 +49,11 @@ Access token là JWT ngắn hạn (15 phút), ký bằng ES256, có `aud` theo t
 
 ## Phases
 
-| # | Phase | Tier | Phụ thuộc |
-|---|---|---|---|
-| 01 | [IdP lõi: OIDC, client, key, deploy](phase-01-idp-core.md) | M | — |
-| 02 | [Tài khoản và đăng nhập không dùng email](phase-02-accounts-and-login.md) | L | 01 |
-| 03 | [Tích hợp Localman, Tunelo, MCP](phase-03-integrations.md) | M | 02 |
+| # | Phase | Tier | Phụ thuộc | Trạng thái (2026-10-12) |
+|---|---|---|---|---|
+| 01 | [IdP lõi: OIDC, client, key, deploy](phase-01-idp-core.md) | M | — | in-progress: còn T11 conformance |
+| 02 | [Tài khoản và đăng nhập không dùng email](phase-02-accounts-and-login.md) | L | 01 | completed; phần mật khẩu đã gỡ theo ADR 0004 |
+| 03 | [Tích hợp Localman, Tunelo, MCP](phase-03-integrations.md) | M | 02 | in-progress: còn T7 E2E 3 dịch vụ trên production |
 
 **Thứ tự với các plan khác:** plan này chạy **trước** phase 02 của Localman và **trước** plan Tunelo. Localman phase 02 thu gọn lại thành "OIDC client và thông báo".
 
@@ -94,6 +94,16 @@ Lúc chuyển: Localman chưa có user thật nên đổi thẳng. Tunelo giữ 
 - Bot Telegram `@auth_hoandat_bot` do user tạo; đã bật webhook có secret. Google/GitHub chờ user tạo OAuth app.
 - Backup database `auth` hằng ngày 02:30, giữ 14 ngày.
 - 2026-10-09: chặn MongoDB 27017 từ Internet theo yêu cầu của user. iptables (lưu ở `/etc/sysconfig/iptables`, đã backup) chỉ còn cho `127.0.0.1`, chính server `103.72.98.65`, mạng Docker `172.16.0.0/12` và hai IP mạng công ty `123.25.21.12`, `103.57.222.248`; mọi nguồn khác bị DROP. Trước đó log cho thấy nhiều IP lạ quét và thử đăng nhập. Rule cũ cho `113.190.138.121` truy cập mọi cổng vẫn giữ nguyên.
+
+### Vòng 3: sau khi lên production (2026-10-10 → 2026-10-12)
+- Chỉ đăng nhập và đăng ký bằng Google/GitHub, bỏ hẳn mật khẩu (ADR 0004 của repo `hoandat-auth`, Jev 0.94 "remove_fully"). Thay một phần phase 02.
+- Giao diện IdP có tiếng Anh, Trung, Việt; bot Telegram nhắn theo ngôn ngữ của trang tài khoản.
+- Trang `/apps` liệt kê các app đăng nhập bằng tài khoản hoandat.
+- Refresh token của `tunelo-web` gắn với phiên IdP như `localman-web`. Thiết bị `tunelo-cli` không có trần 90 ngày, còn refresh là còn đăng nhập.
+- Backup chỉ nằm trên chính máy .65, có rotate 14 ngày: quyết định cuối của user (2026-10-12), không đề xuất chép ra ngoài nữa.
+- RS256 cho ID token (ADR 0005 của `hoandat-auth`, Jev 0.98, user duyệt ghi khoá prod): ES256 vẫn mặc định; Config OP trên production PASSED 38/38 sau khi thêm.
+- Bộ conformance của OpenID: Config OP chạy trên production, Basic OP chạy trên bản IdP thử từ harness e2e, công khai qua Tunelo, dùng bộ kiểm host sẵn, không Docker, không chạm production (Jev 0.82 và 0.99; user giao Jev quyết).
+- Localman thêm đăng nhập im lặng (`prompt=none`) để đáp ứng Acceptance 1; code xong ở `localman-next`, chưa commit và chưa deploy. Phía IdP không đổi.
 
 ## Câu hỏi mở
 - Nếu sau này muốn có xác minh email hoặc reset mật khẩu qua email, có thể cắm một dịch vụ gửi mail miễn phí (ví dụ Brevo, Resend) vào IdP mà không đổi app nào. Jev nghiêng về có (0.71), nhưng plan giữ quy tắc "không gửi mail" cho tới khi user đồng ý.
