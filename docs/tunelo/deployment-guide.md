@@ -51,7 +51,7 @@ trong file này, nếu thiếu process crash-loop lúc khởi động. Set tối
 
 ```bash
 TUNNEL_PORT=3001
-TUNNEL_DOMAIN=tunnel.inetdev.io.vn
+TUNNEL_DOMAINS=tunnel.hoandat.com,tunnel.inetdev.io.vn   # primary first; the rest still accepted
 MONGO_URI=mongodb://<user>:<pass>@localhost:27017/<db>   # required
 JWT_SECRET=<openssl rand -base64 48>                     # required
 ADMIN_EMAILS=you@example.com                             # optional
@@ -61,7 +61,7 @@ NODE_ENV=production
 ## Prerequisites
 
 - VPS: Ubuntu 22.04+, 2-4 vCPU, 4-8GB RAM
-- Domain: `*.tunnel.inetdev.io.vn` with DNS access
+- Domain: `tunnel.hoandat.com` + `*.tunnel.hoandat.com` (Cloudflare zone `hoandat.com`)
 - Node.js 20+ installed on VPS
 - pnpm installed on VPS
 - MongoDB 5.0+ (v0.3: can run on same VPS or remote host)
@@ -69,35 +69,51 @@ NODE_ENV=production
 
 ## DNS Setup
 
-Add wildcard A record:
+Cloudflare zone `hoandat.com`, both records **DNS only** (grey cloud): the
+Universal SSL cert does not cover `*.tunnel.hoandat.com`, and tunnels need long
+WebSockets and their own TCP ports.
 ```
-*.tunnel.inetdev.io.vn  →  <VPS_IP>
-tunnel.inetdev.io.vn    →  <VPS_IP>
+tunnel.hoandat.com      A  103.72.98.65   (DNS only)
+*.tunnel.hoandat.com    A  103.72.98.65   (DNS only)
 ```
 
 ## SSL Certificate (Let's Encrypt)
 
-Wildcard certs require DNS-01 challenge:
+Wildcard cert by DNS-01 through the Cloudflare plugin, reusing the token that
+already renews `localman.hoandat.com` (`Zone:DNS:Edit` on `hoandat.com`, only
+usable from 103.72.98.65): `bash infra/tunelo/certbot-setup.sh` on the server.
+Cert: `/etc/letsencrypt/live/tunnel.hoandat.com/`; `certbot-renew.timer` renews
+it and reloads nginx.
 
-```bash
-# Install certbot
-sudo apt install certbot
+## Domain move from `tunnel.inetdev.io.vn` (in progress)
 
-# Request wildcard cert (manual DNS verification)
-sudo certbot certonly \
-  --manual \
-  --preferred-challenges dns \
-  -d tunnel.inetdev.io.vn \
-  -d "*.tunnel.inetdev.io.vn"
+Since 2026-10-12 the server answers both domains: `TUNNEL_DOMAINS=tunnel.hoandat.com,tunnel.inetdev.io.vn`,
+so every URL it hands out uses `tunnel.hoandat.com`, and nginx has one 443 block
+per domain (`infra/tunelo/nginx.conf`).
 
-# Follow prompts to add TXT record:
-# _acme-challenge.tunnel.inetdev.io.vn → <provided-value>
+Moved on 2026-10-12: the three lab tunnel clients (`onedash-s3` on lab .171 via
+`/root/.tunelo/config.json`; `onedash-staging` on .174, same file; `miu-staging` on
+.176 via `TUNELO_SERVER` in `miu-tunnel.service`), the `Host` header of the
+`onedash-s3.conf` and `miu-staging.conf` proxies, and OneDash staging log shipping
+(`VL_INGEST_ENDPOINT`). The `ods3lab` tunnel and the `office.tunnel.inetdev.io.vn`
+vhost were retired the same day (configs kept in `/root/nginx-bak/`).
 
-# Auto-renewal cron (runs twice daily)
-# Certbot installs this automatically
-```
+Still on the old domain; requests show up in
+`/var/log/nginx/tunnel-old-domain.access.log` (host, request, source IP):
 
-Cert location: `/etc/letsencrypt/live/tunnel.inetdev.io.vn/`
+- `server-tools.conf` (`cloudpanel-dev.inet.vn`) keeps
+  `Host onedash-staging.tunnel.inetdev.io.vn`: OneDash checks that exact host
+  (MCP public base, backend OAuth issuer allowlist, client utils), and switching
+  it broke MCP OAuth discovery. This proxy talks to `127.0.0.1:3001` directly, so
+  it needs only the name in `TUNNEL_DOMAINS`, not DNS or a certificate.
+- The OneDash dev setup, `onedash-dev.tunnel.inetdev.io.vn`
+  (`.env.dattqh_lab` and the same host lists), and its agent on lab .178.
+
+When that log stays empty: drop `tunnel.inetdev.io.vn` from `TUNNEL_DOMAINS`
+(Tunelo and Localman), delete its 443 block, log and port 80 names in
+`tunelo.conf`, delete the
+DNS records `tunnel` and `*.tunnel` in zone `inetdev.io.vn`, and
+`certbot delete --cert-name tunnel.inetdev.io.vn`.
 
 ## MongoDB Setup (v0.3+)
 
@@ -148,59 +164,9 @@ Server will auto-create collections and indexes on startup via Mongoose schemas.
 
 ## nginx Configuration
 
-```nginx
-server {
-    listen 443 ssl;
-    server_name ~^(?<subdomain>.+)\.tunnel\.inetdev\.io\.vn$;
-
-    ssl_certificate /etc/letsencrypt/live/tunnel.inetdev.io.vn/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/tunnel.inetdev.io.vn/privkey.pem;
-
-    location / {
-        proxy_pass http://127.0.0.1:3001;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Subdomain $subdomain;
-        proxy_read_timeout 86400s;
-        proxy_send_timeout 86400s;
-    }
-}
-
-# Redirect HTTP to HTTPS
-server {
-    listen 80;
-    server_name *.tunnel.inetdev.io.vn tunnel.inetdev.io.vn;
-    return 301 https://$host$request_uri;
-}
-
-# Tunnel server WS endpoint (control plane)
-server {
-    listen 443 ssl;
-    server_name tunnel.inetdev.io.vn;
-
-    ssl_certificate /etc/letsencrypt/live/tunnel.inetdev.io.vn/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/tunnel.inetdev.io.vn/privkey.pem;
-
-    location /tunnel {
-        proxy_pass http://127.0.0.1:3001;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_read_timeout 86400s;
-    }
-
-    location /health {
-        proxy_pass http://127.0.0.1:3001/health;
-    }
-}
-```
+The deployed file is `infra/tunelo/nginx.conf`, installed as
+`/etc/nginx/conf.d/tunelo.conf`. Back the old one up, copy, `nginx -t`, then
+`systemctl reload nginx` (the server is shared: never reload on a failed test).
 
 ## PM2 Setup
 
@@ -244,7 +210,7 @@ module.exports = {
       ADMIN_EMAILS: 'admin@example.com,dev@example.com',
 
       // Tunnel config
-      TUNNEL_DOMAIN: 'tunnel.inetdev.io.vn'
+      TUNNEL_DOMAINS: 'tunnel.hoandat.com,tunnel.inetdev.io.vn'
     }
   }]
 };
@@ -258,7 +224,7 @@ module.exports = {
 | `JWT_SECRET` | String | 32+ random chars | Used to sign access tokens (24h) |
 | `JWT_REFRESH_SECRET` | String | 32+ random chars | Used to sign refresh tokens (7d) |
 | `ADMIN_EMAILS` | String | `admin@ex.com,dev@ex.com` | Comma-separated emails with admin access |
-| `TUNNEL_DOMAIN` | String | `tunnel.inetdev.io.vn` | Used in URLs + wildcard cert validation |
+| `TUNNEL_DOMAINS` | String | `tunnel.hoandat.com,tunnel.inetdev.io.vn` | Primary first (used in every URL handed out); others still accepted. `TUNNEL_DOMAIN` is read only when this is unset |
 | `NODE_ENV` | String | `production` | Controls logging, error details |
 
 **Generate secure secrets:**
@@ -313,7 +279,7 @@ curl -i -N \
   -H "Connection: Upgrade" \
   -H "Upgrade: websocket" \
   -H "Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==" \
-  https://tunnel.inetdev.io.vn/tunnel
+  https://tunnel.hoandat.com/tunnel
 
 # Should upgrade connection successfully
 ```
@@ -335,7 +301,7 @@ curl -i -N \
 | `JWT_SECRET` | Yes | String | (32+ random chars) | Sign access tokens (24h expiry) |
 | `JWT_REFRESH_SECRET` | Yes | String | (32+ random chars) | Sign refresh tokens (7d expiry) |
 | `ADMIN_EMAILS` | No | String | `admin@ex.com,dev@ex.com` | Comma-separated admin emails |
-| `TUNNEL_DOMAIN` | No | String | `tunnel.inetdev.io.vn` | Base domain for tunnels |
+| `TUNNEL_DOMAINS` | Yes | String | `tunnel.hoandat.com,tunnel.inetdev.io.vn` | Tunnel domains, primary first |
 
 ### Response Cache (Valkey — optional, dev-first)
 
@@ -379,5 +345,5 @@ JWT_REFRESH_SECRET=your-32-char-secret-here-generate-new
 ADMIN_EMAILS=admin@example.com
 
 # Tunnel config
-TUNNEL_DOMAIN=tunnel.inetdev.io.vn
+TUNNEL_DOMAINS=tunnel.hoandat.com,tunnel.inetdev.io.vn
 ```

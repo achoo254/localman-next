@@ -1,31 +1,24 @@
 #!/bin/bash
-# Setup Let's Encrypt wildcard cert for *.tunnel.inetdev.io.vn
-# Requires DNS-01 challenge
-set -e
+# Let's Encrypt wildcard cert for tunnel.hoandat.com + *.tunnel.hoandat.com,
+# by DNS-01 through the Cloudflare plugin. Run on the server as root.
+# The credential file holds a token with Zone:DNS:Edit on hoandat.com that
+# only works from this server's IP; it also renews localman.hoandat.com.
+set -euo pipefail
 
-DOMAIN="tunnel.inetdev.io.vn"
+DOMAIN="tunnel.hoandat.com"
+CREDENTIALS="${CLOUDFLARE_CREDENTIALS:-/etc/letsencrypt/cloudflare-localman.ini}"
 
 echo "=== Tunelo SSL Certificate Setup ==="
 echo "Domain: $DOMAIN + *.$DOMAIN"
-echo ""
 
-# Option A: Manual DNS challenge (interactive)
-sudo certbot certonly \
-  --manual \
-  --preferred-challenges dns-01 \
+certbot certonly \
+  --non-interactive \
+  --dns-cloudflare \
+  --dns-cloudflare-credentials "$CREDENTIALS" \
+  --dns-cloudflare-propagation-seconds 30 \
+  --cert-name "$DOMAIN" \
   -d "$DOMAIN" \
-  -d "*.$DOMAIN"
+  -d "*.$DOMAIN" \
+  --deploy-hook "systemctl reload nginx"
 
-# Option B: Cloudflare DNS plugin (automated) — uncomment if using Cloudflare
-# sudo apt install -y python3-certbot-dns-cloudflare
-# sudo certbot certonly \
-#   --dns-cloudflare \
-#   --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini \
-#   -d "$DOMAIN" \
-#   -d "*.$DOMAIN"
-
-# Auto-reload nginx after cert renewal
-echo 'deploy-hook = systemctl reload nginx' | \
-  sudo tee -a "/etc/letsencrypt/renewal/$DOMAIN.conf"
-
-echo "SSL setup complete. Verify: sudo systemctl list-timers | grep certbot"
+echo "Cert: /etc/letsencrypt/live/$DOMAIN/ (renewed by certbot-renew.timer)"
