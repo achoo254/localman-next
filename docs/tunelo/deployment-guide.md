@@ -85,6 +85,22 @@ usable from 103.72.98.65): `bash infra/tunelo/certbot-setup.sh` on the server.
 Cert: `/etc/letsencrypt/live/tunnel.hoandat.com/`; `certbot-renew.timer` renews
 it and reloads nginx.
 
+## Web console (tunnel.hoandat.com)
+
+The apex `https://tunnel.hoandat.com/` serves the web console (sign-in through
+`auth.hoandat.com` with client `tunelo-web`, live tunnels of the account). It is on
+when `/var/www/tunelo/.env` has `TUNELO_WEB_CLIENT_SECRET` (the same value as
+`TUNELO_WEB_CLIENT_SECRET` in `/var/www/hoandat-auth/.env`) and `WEB_SESSION_KEY`
+(32 random bytes, base64url; changing it signs everyone out), plus
+`TUNELO_WEB_CLIENT_ID=tunelo-web` and `TUNELO_WEB_PUBLIC_URL`; see
+`apps/tunelo-server/.env.example`. Copies live in iCloud `ENV production/tunelo/.env`.
+Missing or invalid values only turn the console off (log line names the variables);
+the API, relay and WebSockets keep running. Startup logs `Web console enabled`.
+Sessions are in the `web_sessions` collection (TTL); refresh tokens are bound to the
+IdP session, so signing out at `auth.hoandat.com` ends console sessions.
+Rollback: remove the two variables and restart `tunelo`, or restore
+`server.mjs.bak-pre-web-console` and `package.json.bak-pre-web-console`.
+
 ## Domain move from `tunnel.inetdev.io.vn` (in progress)
 
 Since 2026-10-12 the server answers both domains: `TUNNEL_DOMAINS=tunnel.hoandat.com,tunnel.inetdev.io.vn`,
