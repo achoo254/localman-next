@@ -54,6 +54,17 @@ const envSchema = z
 				(value) => parseKeyring(value) !== null,
 				"must be `kid:base64key[,kid:base64key…]` with 32-byte keys",
 			),
+		/**
+		 * Keyring of secret environment and global variables at rest, same
+		 * format; without it secret values cannot be saved (503).
+		 */
+		VARIABLE_ENCRYPTION_KEY: z
+			.string()
+			.refine(
+				(value) => parseKeyring(value) !== null,
+				"must be `kid:base64key[,kid:base64key…]` with 32-byte keys",
+			)
+			.optional(),
 		VAPID_PUBLIC_KEY: z.string().min(1).optional(),
 		VAPID_PRIVATE_KEY: z.string().min(1).optional(),
 		VAPID_SUBJECT: z

@@ -2,6 +2,8 @@ import type { TrashedCollectionSummary } from "@localman/shared/api-client";
 import mongoose, { type Types } from "mongoose";
 import { AccessRequestModel } from "../access/access-request-model.js";
 import { ElementRoleModel } from "../access/element-role-model.js";
+import { deleteScopeLocalValues } from "../environments/local-values.js";
+import { collectionScope } from "../environments/scope-local-service.js";
 import { CollectionFavoriteModel } from "./collection-favorite-model.js";
 import { CollectionModel } from "./collection-model.js";
 import { CollectionNodeModel } from "./collection-node-model.js";
@@ -11,7 +13,8 @@ import { toTrashedViews } from "./trash-view.js";
 
 /**
  * Deletes a trashed collection for good, with its nodes, changelog,
- * favorites, shares and access requests, in one transaction. `trashed` narrows which
+ * favorites, shares, access requests and everyone's local values of its
+ * variables, in one transaction. `trashed` narrows which
  * trashed state still qualifies (the job passes its age cutoff), so a
  * collection restored meanwhile is left alone. `false` when nothing
  * matched.
@@ -35,6 +38,7 @@ export async function purgeCollection(
 		await CollectionFavoriteModel.deleteMany({ collectionId }, { session });
 		await ElementRoleModel.deleteMany(element, { session });
 		await AccessRequestModel.deleteMany(element, { session });
+		await deleteScopeLocalValues([collectionScope(collectionId)], session);
 		return true;
 	});
 }

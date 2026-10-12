@@ -10,6 +10,7 @@ import type {
 } from "@localman/shared/api-client";
 import type { Types } from "mongoose";
 import { ElementRoleModel } from "../access/element-role-model.js";
+import { collectSharedElements } from "../access/shared-elements.js";
 import {
 	findWorkspaceById,
 	workspaceRoleOf,
@@ -29,8 +30,6 @@ export interface ListedRoot {
 	updatedAt: Date;
 }
 
-/** Shares read per round when collecting what a non-member may open. */
-const SHARE_PAGE = 500;
 const PROJECTION = {
 	workspaceId: 1,
 	name: 1,
@@ -44,44 +43,23 @@ function workspaceNotFound(): OperationError {
 	return new OperationError(404, "NOT_FOUND", "Workspace not found");
 }
 
-/**
- * The live collections of the workspace shared with `sub`, read page by
- * page through all of their collection shares (shares elsewhere are
- * skipped, never counted against a limit).
- */
-async function sharedRoots(
+/** The live collections of the workspace shared with `sub`. */
+function sharedRoots(
 	sub: string,
 	workspaceId: Types.ObjectId,
 ): Promise<ListedRoot[]> {
-	const roots: ListedRoot[] = [];
-	let after: Types.ObjectId | null = null;
-	while (roots.length < COLLECTIONS_PER_WORKSPACE_MAX) {
-		const page: { _id: Types.ObjectId; elementId: string }[] =
-			await ElementRoleModel.find(
-				{
-					userId: sub,
-					elementType: "collection",
-					...(after ? { _id: { $gt: after } } : {}),
-				},
-				{ elementId: 1 },
-			)
-				.sort({ _id: 1 })
-				.limit(SHARE_PAGE)
-				.lean<{ _id: Types.ObjectId; elementId: string }[]>();
-		const ids = page.flatMap((share) => toObjectId(share.elementId) ?? []);
-		if (ids.length > 0) {
-			roots.push(
-				...(await CollectionModel.find(
-					{ _id: { $in: ids }, workspaceId, ...LIVE_COLLECTION },
-					PROJECTION,
-				).lean<ListedRoot[]>()),
-			);
-		}
-		const last = page.at(-1);
-		if (!last || page.length < SHARE_PAGE) break;
-		after = last._id;
-	}
-	return roots;
+	return collectSharedElements(
+		sub,
+		"collection",
+		COLLECTIONS_PER_WORKSPACE_MAX,
+		(elementIds) => {
+			const ids = elementIds.flatMap((id) => toObjectId(id) ?? []);
+			return CollectionModel.find(
+				{ _id: { $in: ids }, workspaceId, ...LIVE_COLLECTION },
+				PROJECTION,
+			).lean<ListedRoot[]>();
+		},
+	);
 }
 
 export interface VisibleRoots {

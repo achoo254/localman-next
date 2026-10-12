@@ -1,3 +1,4 @@
+import { type Keyring, parseKeyring } from "../modules/auth/token-cipher.js";
 import type { Env } from "./env.js";
 
 export interface TurnstileSettings {
@@ -80,6 +81,8 @@ export interface RuntimeSettings {
 	 * reach on the server's own address.
 	 */
 	readonly tunnelDomains: readonly string[];
+	/** Keys of secret variables at rest; `null`: they cannot be saved. */
+	readonly variableKeyring: Keyring | null;
 	/**
 	 * Heavy dashboard operations per account and per project, both must
 	 * pass: they render, write and measure megabytes in the process that
@@ -118,6 +121,7 @@ export const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = Object.freeze({
 	proxyRateLimit: perMinute(120),
 	proxyBlockedCidrs: [],
 	tunnelDomains: [],
+	variableKeyring: null,
 	heavyOperationRateLimit: {
 		generate: { perUser: perMinute(30), perProject: perMinute(60) },
 		replaceData: { perUser: perMinute(60), perProject: perMinute(120) },
@@ -149,6 +153,9 @@ export function runtimeSettingsFromEnv(env: Env): RuntimeSettings {
 		ownerSubs: new Set(env.OWNER_SUBS),
 		proxyBlockedCidrs: env.PROXY_BLOCKED_CIDRS,
 		tunnelDomains: env.TUNNEL_DOMAINS,
+		variableKeyring: env.VARIABLE_ENCRYPTION_KEY
+			? parseKeyring(env.VARIABLE_ENCRYPTION_KEY)
+			: null,
 		turnstile:
 			TURNSTILE_SITE_KEY && TURNSTILE_SECRET_KEY
 				? {

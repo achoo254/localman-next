@@ -60,3 +60,6 @@ export * from "./collections/collection-tags.js";
 export * from "./collections/changelog-model.js";
 export * from "./collections/collection-schemas.js";
 export * from "./collections/collection-tree-schema.js";
+export * from "./environments/environment-model.js";
+export * from "./environments/environment-schemas.js";
+export * from "./environments/variable-resolver.js";

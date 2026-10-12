@@ -7,6 +7,9 @@ import { collaboratorOperations } from "../modules/collaborators/collaborator-op
 import { inviteOperations } from "../modules/collaborators/invite-operations.js";
 import { magicLinkOperations } from "../modules/collaborators/magic-link-operations.js";
 import { collectionOperations } from "../modules/collections/collection-operations.js";
+import { environmentOperations } from "../modules/environments/environment-operations.js";
+import { globalsOperations } from "../modules/environments/globals-operations.js";
+import { variableScopeOperations } from "../modules/environments/variable-scope-operations.js";
 import { contactMessageAdminOperations } from "../modules/feedback/contact-message-admin-operations.js";
 import { submitContactMessage } from "../modules/feedback/contact-message-operations.js";
 import { proInterestAdminOperations } from "../modules/feedback/pro-interest-admin-operations.js";
@@ -81,6 +84,9 @@ export const operations: readonly AnyOperation[] = [
 	...workspaceOperations,
 	...accessOperations,
 	...collectionOperations,
+	...environmentOperations,
+	...globalsOperations,
+	...variableScopeOperations,
 	...resourceTreeOperations,
 	...resourceDataOperations,
 	getMockUrls,

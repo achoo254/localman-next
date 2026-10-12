@@ -114,7 +114,7 @@ export const deleteWorkspaceOperation = defineOperation({
 	method: "DELETE",
 	path: PATH,
 	summary: "Delete a team workspace",
-	description: `Admins only. Removes the team workspace with its members and pending invitations; everyone loses access at once. Its collections go to the trash, deleted by the caller, who can restore them into another workspace (\`collections\` counts them). A personal workspace cannot be deleted (409 PERSONAL_WORKSPACE). Call with dryRun to see the workspace, its member and collection counts first. ${MEMBER_ONLY}`,
+	description: `Admins only. Removes the team workspace with its members and pending invitations; everyone loses access at once. Its collections go to the trash, deleted by the caller, who can restore them into another workspace (\`collections\` counts them); its environments and globals are deleted for good (\`environments\` counts them). A personal workspace cannot be deleted (409 PERSONAL_WORKSPACE). Call with dryRun to see the workspace, its member, collection and environment counts first. ${MEMBER_ONLY}`,
 	input: z.object({ workspaceId: workspaceIdSchema }),
 	output: z.object({
 		dryRun: z.boolean(),
@@ -122,6 +122,7 @@ export const deleteWorkspaceOperation = defineOperation({
 		workspace: workspaceView,
 		members: z.number().int(),
 		collections: z.number().int(),
+		environments: z.number().int(),
 	}),
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: false, destructive: true, idempotent: true },

@@ -11,7 +11,8 @@
 # - a copy of root's nvm Node in /opt/localman/runtime: /root is not
 #   traversable by other users, so `localman` cannot run the nvm binary;
 # - /opt/localman/.env seeded from .env.production.example with a fresh
-#   SESSION_ENCRYPTION_KEY when missing (never overwritten);
+#   SESSION_ENCRYPTION_KEY and VARIABLE_ENCRYPTION_KEY when missing (never
+#   overwritten; an older file only gets the variable key added);
 # - the daily backup cron (02:45) and logrotate for its log; the pm2 logs
 #   are rotated by the pm2-logrotate module only (checked below);
 # - pm2 startup; a report of internal ports reachable from outside.
@@ -63,8 +64,10 @@ ENV_FILE="$APP_DIR/.env"
 if [ ! -f "$ENV_FILE" ]; then
 	[ -s "$INFRA_DIR/.env.production.example" ] || die "missing $INFRA_DIR/.env.production.example"
 	# The key reaches awk through its environment, not argv (visible in ps).
-	(umask 077; SESSION_KEY="k1:$(openssl rand -base64 32)" awk '
+	(umask 077; SESSION_KEY="k1:$(openssl rand -base64 32)" \
+		VARIABLE_KEY="k1:$(openssl rand -base64 32)" awk '
 		/^SESSION_ENCRYPTION_KEY=/ { print "SESSION_ENCRYPTION_KEY=" ENVIRON["SESSION_KEY"]; next }
+		/^VARIABLE_ENCRYPTION_KEY=/ { print "VARIABLE_ENCRYPTION_KEY=" ENVIRON["VARIABLE_KEY"]; next }
 		{ print }' "$INFRA_DIR/.env.production.example" >"$ENV_FILE")
 	echo "wrote $ENV_FILE (fill in the empty secrets before deploying)"
 fi
@@ -72,6 +75,15 @@ fi
 if ! grep -q '^HOST=' "$ENV_FILE"; then
 	printf '\n# Interface of both servers (loopback: reachable through nginx only).\nHOST=127.0.0.1\n' >>"$ENV_FILE"
 	echo "added HOST=127.0.0.1 to $ENV_FILE"
+fi
+# Files seeded before secret variables existed: add a fresh key, never
+# change a set one (losing it loses every secret variable for good).
+if ! grep -q '^VARIABLE_ENCRYPTION_KEY=.' "$ENV_FILE"; then
+	sed -i '/^VARIABLE_ENCRYPTION_KEY=$/d' "$ENV_FILE"
+	# printf is a builtin: the key never shows in ps.
+	printf '\n# Secret environment and global variables at rest (keep a copy).\nVARIABLE_ENCRYPTION_KEY=%s\n' \
+		"k1:$(openssl rand -base64 32)" >>"$ENV_FILE"
+	echo "added VARIABLE_ENCRYPTION_KEY to $ENV_FILE"
 fi
 chown root:"$APP_USER" "$ENV_FILE"
 chmod 640 "$ENV_FILE"

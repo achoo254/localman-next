@@ -1,0 +1,175 @@
+import {
+	ENVIRONMENT_NAME_MAX,
+	type EnvironmentColor,
+	type EnvironmentDetail,
+	type VariableInput,
+} from "@localman/shared/api-client";
+import type { ClientSession, Types } from "mongoose";
+import { elementNotFound } from "../access/access-policy.js";
+import { inWorkspaceTransaction } from "../workspaces/workspace-lock.js";
+import { requireWorkspace } from "../workspaces/workspace-roles.js";
+import {
+	assertEnvironmentRoom,
+	requireEnvironment,
+} from "./environment-access.js";
+import {
+	EnvironmentModel,
+	type StoredEnvironment,
+	environmentScope,
+} from "./environment-model.js";
+import { toEnvironmentDetail } from "./environment-view.js";
+import { resealLocalValues } from "./local-reseal.js";
+import {
+	type StoredVariable,
+	secretKeysOf,
+	sharedValueOf,
+	toStoredVariables,
+} from "./variable-store.js";
+
+export interface NewEnvironment {
+	readonly name: string;
+	readonly color?: EnvironmentColor;
+	readonly variables?: readonly VariableInput[];
+}
+
+async function loadEnvironment(id: Types.ObjectId): Promise<StoredEnvironment> {
+	const doc = await EnvironmentModel.findById(id).lean<StoredEnvironment>();
+	if (!doc) throw elementNotFound();
+	return doc;
+}
+
+/** Inserts under the workspace lock, within its room; returns the new id. */
+async function insertEnvironment(
+	workspaceId: Types.ObjectId,
+	sub: string,
+	build: (id: Types.ObjectId) => Omit<NewEnvironment, "variables"> & {
+		variables: StoredVariable[];
+	},
+): Promise<Types.ObjectId> {
+	return inWorkspaceTransaction(workspaceId, async (session: ClientSession) => {
+		await assertEnvironmentRoom(workspaceId, session);
+		const doc = new EnvironmentModel({ workspaceId, createdBy: sub });
+		const fields = build(doc._id);
+		doc.set({ ...fields, color: fields.color ?? "grey", updatedBy: sub });
+		await doc.save({ session });
+		return doc._id;
+	});
+}
+
+/** Admins and Editors of the workspace add environments (they edit them). */
+export async function createEnvironment(
+	sub: string,
+	workspaceId: string,
+	input: NewEnvironment,
+): Promise<EnvironmentDetail> {
+	const { workspace } = await requireWorkspace(sub, "addElements", workspaceId);
+	const id = await insertEnvironment(workspace._id, sub, (newId) => ({
+		name: input.name,
+		color: input.color,
+		variables: toStoredVariables(
+			input.variables ?? [],
+			[],
+			environmentScope(newId),
+		),
+	}));
+	return toEnvironmentDetail(sub, await loadEnvironment(id), "editor");
+}
+
+export async function getEnvironment(
+	sub: string,
+	id: string,
+): Promise<EnvironmentDetail> {
+	const { environmentId, role } = await requireEnvironment(sub, id, "view");
+	return toEnvironmentDetail(sub, await loadEnvironment(environmentId), role);
+}
+
+/** Editors rename or recolor it. */
+export async function updateEnvironment(
+	sub: string,
+	id: string,
+	update: { name?: string; color?: EnvironmentColor },
+): Promise<EnvironmentDetail> {
+	const { environmentId } = await requireEnvironment(sub, id, "edit");
+	await EnvironmentModel.updateOne(
+		{ _id: environmentId },
+		{ $set: { ...update, updatedBy: sub } },
+	);
+	return toEnvironmentDetail(
+		sub,
+		await loadEnvironment(environmentId),
+		"editor",
+	);
+}
+
+/**
+ * Editors replace the variables (definitions and shared values) in
+ * order. Local values follow names, so a variable turning secret (or back)
+ * reseals everyone's local values of that name.
+ */
+export async function setEnvironmentVariables(
+	sub: string,
+	id: string,
+	variables: readonly VariableInput[],
+): Promise<EnvironmentDetail> {
+	const { environmentId } = await requireEnvironment(sub, id, "edit");
+	const current = await loadEnvironment(environmentId);
+	const scope = environmentScope(environmentId);
+	const next = toStoredVariables(variables, current.variables, scope);
+	await resealLocalValues(
+		scope,
+		secretKeysOf(current.variables),
+		secretKeysOf(next),
+	);
+	await EnvironmentModel.updateOne(
+		{ _id: environmentId },
+		{ $set: { variables: next, updatedBy: sub } },
+	);
+	return toEnvironmentDetail(
+		sub,
+		await loadEnvironment(environmentId),
+		"editor",
+	);
+}
+
+function copyName(name: string): string {
+	return `${name} Copy`.slice(0, ENVIRONMENT_NAME_MAX);
+}
+
+/**
+ * Copies the environment as "<name> Copy" into `workspaceId` (its own by
+ * default), where the caller must be Admin or Editor. A Viewer may copy
+ * it, but a secret withheld from them stays unshared in the copy.
+ */
+export async function duplicateEnvironment(
+	sub: string,
+	id: string,
+	workspaceId?: string,
+): Promise<EnvironmentDetail> {
+	const { environmentId, element, role } = await requireEnvironment(
+		sub,
+		id,
+		"view",
+	);
+	const source = await loadEnvironment(environmentId);
+	const targetId = workspaceId ?? element.workspaceId.toHexString();
+	const { workspace } = await requireWorkspace(sub, "addElements", targetId);
+	const sourceScope = environmentScope(environmentId);
+	const inputs = source.variables.map(
+		(variable): VariableInput => ({
+			key: variable.key,
+			type: variable.type,
+			enabled: variable.enabled,
+			description: variable.description,
+			sharedValue:
+				variable.type === "secret" && role !== "editor"
+					? null
+					: sharedValueOf(variable, sourceScope),
+		}),
+	);
+	const copyId = await insertEnvironment(workspace._id, sub, (newId) => ({
+		name: copyName(source.name),
+		color: source.color,
+		variables: toStoredVariables(inputs, [], environmentScope(newId)),
+	}));
+	return toEnvironmentDetail(sub, await loadEnvironment(copyId), "editor");
+}

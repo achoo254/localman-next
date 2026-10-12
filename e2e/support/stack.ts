@@ -69,6 +69,7 @@ function apiEnv(mongoUri: string, oidcSecret: string): NodeJS.ProcessEnv {
 		OIDC_CLIENT_ID: "localman-web",
 		OIDC_CLIENT_SECRET: oidcSecret,
 		SESSION_ENCRYPTION_KEY: `k1:${randomBytes(32).toString("base64")}`,
+		VARIABLE_ENCRYPTION_KEY: `k1:${randomBytes(32).toString("base64")}`,
 		TRUST_PROXY: "loopback",
 		MOCK_BASE_DOMAIN,
 		// Tunnel mappings accept only these domains; the Tunelo specs use one.

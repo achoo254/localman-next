@@ -32,7 +32,7 @@ export const testApp = createDashboardApp({
 	},
 });
 
-type Method = "post" | "put" | "delete";
+type Method = "post" | "put" | "patch" | "delete";
 
 export interface TestCaller {
 	get(path: string): request.Test;

@@ -413,6 +413,14 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Đợt A đã commit (`8f099c0`). Bước tiếp theo: làm đợt B, chưa push và chưa deploy; khi đợt B xong mới deploy và bật cờ `workspaces`. User chốt; Jev phân vân: làm tiếp đợt B 0.40, deploy và bật cờ 0.31, deploy giữ cờ tắt 0.29.
 - Changelog: "Hide diff" chỉ để giảm nhiễu, chỉ ẩn diff của chính thay đổi đó và UI ghi rõ thao tác này không xoá dữ liệu khỏi lịch sử (Jev 0.89; ẩn cả ở diff liền kề 0.09; thêm thao tác purge 0.02). Thay đổi có patch vượt 4 MiB chỉ lưu metadata; dry run và hộp thoại xác nhận báo `irreversible` (Jev 0.80; lưu nghịch đảo riêng 0.14; chặn hẳn 0.06).
 
+### Vòng 34: khi cook phase 13 (2026-10-12, user: "làm tuần tự, cần quyết định gửi model jev quyết")
+- Phase 13 chia 2 đợt như phase 12 (Jev 0.96; một lượt 0.03). Đợt A: model, secret, resolver, CRUD environment và globals, active environment, local/shared từng biến, UI selector, editor và globals, nối resolver vào gửi request. Đợt B: thao tác "all" có revision, import/export Postman, highlighter, tooltip, gợi ý `{{`, "Set as variable", script, pane Variables, thanh Info. Mỗi đợt commit riêng.
+- UI environment đặt sau cờ mới `environments`, chỉ bật ở dev và E2E, chưa vào `released-features` cho tới khi phase xong và qua review (Jev 0.99), vì cờ `workspaces` sẽ lên prod ở lần deploy tới.
+- Script giữ quyết định Vòng 27: `lm.environment`, `lm.collectionVariables`, `lm.globals`, `lm.variables`, không alias `pm.*`.
+- Biến secret của environment và globals mã hoá bằng keyring mới `VARIABLE_ENCRYPTION_KEY` (định dạng như `SESSION_ENCRYPTION_KEY`), không bắt buộc lúc khởi động: thiếu khoá thì tạo hoặc sửa biến secret trả 503, phần còn lại vẫn chạy (Jev 0.52; bắt buộc 0.36; dùng chung khoá session 0.12). Lý do tách khoá: session xoay khoá rồi bỏ khoá cũ được, còn biến secret sống vô thời hạn.
+- Xoá environment là xoá vĩnh viễn cùng biến và giá trị local, có dry run và hộp thoại xác nhận nêu số biến (Jev 0.98; thùng rác 0.02).
+- Biến collection giữ quyết định Vòng 32: không mã hoá, cờ secret chỉ che UI; phase 13 chỉ thêm giá trị local riêng từng user cho biến collection (Jev 0.81; mã hoá cả biến collection 0.19).
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 

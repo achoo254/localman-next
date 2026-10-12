@@ -6,6 +6,10 @@ import {
 	countLiveCollections,
 	trashWorkspaceCollections,
 } from "../collections/workspace-collections.js";
+import {
+	countWorkspaceEnvironments,
+	deleteWorkspaceEnvironments,
+} from "../environments/environment-delete-service.js";
 import { ensurePersonalWorkspace } from "./personal-workspace.js";
 import {
 	inOwnerTransaction,
@@ -142,6 +146,8 @@ export interface WorkspaceDeletion {
 	readonly members: number;
 	/** Live collections moved to the trash with it. */
 	readonly collections: number;
+	/** Environments deleted with it (its globals go too). */
+	readonly environments: number;
 }
 
 /**
@@ -149,7 +155,8 @@ export interface WorkspaceDeletion {
  * under the workspace lock, so no invitation or acceptance racing the
  * deletion survives it. Its live collections go to the trash in the same
  * transaction, deleted by `sub`, who can restore them into another
- * workspace. A dry run only counts.
+ * workspace; its environments and globals are deleted for good. A dry run
+ * only counts.
  */
 export async function deleteTeamWorkspace(
 	workspace: StoredWorkspace,
@@ -160,9 +167,13 @@ export async function deleteTeamWorkspace(
 	const counts = await memberCounts([workspace._id]);
 	const members = counts.get(workspace._id.toHexString()) ?? 0;
 	if (dryRun) {
-		return { members, collections: await countLiveCollections(workspace._id) };
+		const [collections, environments] = await Promise.all([
+			countLiveCollections(workspace._id),
+			countWorkspaceEnvironments(workspace._id),
+		]);
+		return { members, collections, environments };
 	}
-	const collections = await inWorkspaceTransaction(
+	const { collections, environments } = await inWorkspaceTransaction(
 		workspace._id,
 		async (session) => {
 			const trashed = await trashWorkspaceCollections(
@@ -170,13 +181,14 @@ export async function deleteTeamWorkspace(
 				sub,
 				session,
 			);
+			const removed = await deleteWorkspaceEnvironments(workspace._id, session);
 			await WorkspaceModel.deleteOne({ _id: workspace._id }, { session });
 			await WorkspaceMemberModel.deleteMany(
 				{ workspaceId: workspace._id },
 				{ session },
 			);
-			return trashed;
+			return { collections: trashed, environments: removed };
 		},
 	);
-	return { members, collections };
+	return { members, collections, environments };
 }
