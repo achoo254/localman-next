@@ -22,6 +22,9 @@ rsync -avz \
   dist/tunelo-server/server.mjs.map \
   "$VPS_HOST:$REMOTE_DIR/"
 
+echo "Syncing web console assets..."
+rsync -avz --delete dist/tunelo-server/static/ "$VPS_HOST:$REMOTE_DIR/static/"
+
 echo "Syncing package.json (sanitized for prod)..."
 rsync -avz dist/tunelo-server/package.json "$VPS_HOST:$REMOTE_DIR/package.json"
 

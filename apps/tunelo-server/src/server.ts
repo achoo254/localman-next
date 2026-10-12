@@ -6,12 +6,13 @@ import { createLoginPageHandler } from "./api/render-login-page.js";
 import { createIdpTokenVerifier } from "./auth/idp-token-verifier.js";
 import { createTokenAuthenticator } from "./auth/token-authenticator.js";
 import { loadAuthConfig } from "./config/auth-config.js";
-import { tunnelDomains } from "./config/tunnel-domains.js";
+import { primaryTunnelDomain, tunnelDomains } from "./config/tunnel-domains.js";
 import { createKeyStore } from "./key-store/create-key-store.js";
 import { createLogger } from "./logger.js";
 import { createRelayHandler, extractSubdomain } from "./request-relay.js";
 import { usageTracker } from "./services/usage-tracker.js";
 import { tunnelManager } from "./tunnel-manager.js";
+import { mountWebConsole } from "./web/web-console.js";
 import { attachWsHandler } from "./ws-handler.js";
 
 const logger = createLogger("tunelo-server");
@@ -65,6 +66,16 @@ async function start(): Promise<void> {
 
 	// Approve page of tunelo CLI 1.6.x (`/login?req=<id>`).
 	app.get("/login", createLoginPageHandler(authConfig));
+
+	// Web console (`/`, `/lang`, `/auth/*`, `/assets/*`) on the public apex
+	// host. Without its variables it stays off and `/` answers as before.
+	// Never fatal: a console error only logs and leaves the console off.
+	mountWebConsole(
+		app,
+		process.env,
+		{ issuer: authConfig.issuer, primaryDomain: primaryTunnelDomain() },
+		createLogger("tunelo-web"),
+	);
 
 	// Apex fallthrough (health, unknown paths): relay handler gets raw req/res.
 	app.use((req, res) => relay(req, res));

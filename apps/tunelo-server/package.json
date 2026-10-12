@@ -20,6 +20,7 @@
 		"jsonwebtoken": "^9.0.3",
 		"mongoose": "^9.3.3",
 		"nanoid": "^5.0.0",
+		"openid-client": "^6.8.8",
 		"otplib": "^13.4.0",
 		"pino": "^9.0.0",
 		"qrcode": "^1.5.4",

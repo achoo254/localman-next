@@ -1,5 +1,11 @@
 import { execSync } from "node:child_process";
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+	cpSync,
+	existsSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
@@ -64,4 +70,12 @@ writeFileSync(
 );
 console.log("Wrote dist/tunelo-server/package.json (production deps only)");
 
-console.log("Build complete: dist/tunelo-server/server.mjs + package.json");
+// Web console assets (token + page CSS), served at /assets next to server.mjs
+cpSync(resolve(root, "apps/tunelo-server/static"), resolve(distDir, "static"), {
+	recursive: true,
+});
+console.log("Copied web console assets to dist/tunelo-server/static");
+
+console.log(
+	"Build complete: dist/tunelo-server/server.mjs + package.json + static/",
+);
