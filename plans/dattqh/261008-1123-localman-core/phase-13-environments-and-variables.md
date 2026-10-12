@@ -96,6 +96,8 @@ Nguồn tham chiếu: [Managing environments](https://learning.postman.com/docs/
   - [x] T10a (2026-10-12): `e2e/specs/environments-and-variables.spec.ts` gửi `{{baseUrl}}/users` tới mock, đổi environment active thì request đổi theo, giá trị local thắng shared
   - [ ] T10b Hover thấy đúng scope (đợt B, cùng highlighter)
 - [ ] T11 Staging đã deploy sau khi user xác nhận
+  - [x] T11a Đợt A lên prod với cờ `environments` tắt (2026-10-12, user chốt), DAST API và nginx đạt
+  - [ ] T11b Bật cờ `environments` sau đợt B và review
 - [ ] T12 Review không còn finding mức high
   - [x] T12a Review đợt A (2026-10-12): `plans/dattqh/reports/code-reviewer-261012-0935-phase-13-slice-a.md` 3 High, 4 Medium, 8 Low; đã sửa hết, mỗi High/Medium có test tái hiện (mục "Xử lý" của report)
   - [ ] T12b Review đợt B

@@ -428,6 +428,10 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Prod chạy release `20261011-084333-217f3064cb16` (workspaces và collections đã lên), nên giới hạn body 128k của nginx đang làm import và lưu collection lớn hơn 128 KB trả 413 cho người dùng. Bản sửa ở `origin/main`, chờ deploy.
 - Deploy: Jev khuyên deploy ngay với cờ `environments` vẫn tắt (0.93; chờ đợt B 0.07; bật cờ luôn 0.0), để sửa lỗi 413 và chạy DAST thật trên API environments. Deploy chờ user yêu cầu tường minh.
 
+### Vòng 36: deploy sau đợt A của phase 13 (2026-10-12, user chốt "Deploy, cờ tắt")
+- Deploy release `20261012-031014-e9751e0e2a0f-dirty` lên prod, cờ `environments` vẫn tắt; backup trước đó `localman-20261012-101006`. `setup-server.sh` thêm `VARIABLE_ENCRYPTION_KEY` vào `/opt/localman/.env`.
+- DAST đạt cho API environments và nginx (`plans/dattqh/reports/security-261012-1016-phase-13-environments-dast.md`): 15 endpoint mới đòi đăng nhập, kiểm Origin, body 200 KB tới API không còn 413 (lỗi collections trên prod đã hết), trần 16m và zone rate limit có hiệu lực, secret mã hoá khi lưu trên Mongo prod, đổi kiểu biến seal lại đúng, IDOR trả 404, xoá dọn sạch. UI chưa kiểm trên prod vì cờ tắt.
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 
