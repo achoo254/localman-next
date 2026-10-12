@@ -100,7 +100,7 @@ SSH_TARGET=<alias> [SSH_OPTS="-F ssh_config"] [VITE_FEATURES=...] bash infra/loc
 
 ```bash
 curl -fsS https://localman.hoandat.com/ -o /dev/null -w '%{http_code}\n'           # 200
-curl -sI https://localman.hoandat.com/ | grep -i content-security-policy            # có 3 sha256
+curl -sI https://localman.hoandat.com/ | grep -i content-security-policy            # 1 sha256 cho mỗi script inline của dist/*.html (5 ở 10/2026)
 curl -fsS "https://{secret}.localman.hoandat.com{prefix}/users"                     # dữ liệu mock
 curl -fsS "https://localman.hoandat.com/m/{secret}{prefix}/users"                   # cùng dữ liệu qua /m/
 curl -s -o /dev/null -w '%{http_code}\n' https://www.localman.hoandat.com/          # 404 (tên dành riêng)

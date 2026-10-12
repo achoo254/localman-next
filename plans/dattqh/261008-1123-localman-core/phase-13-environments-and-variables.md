@@ -95,9 +95,9 @@ Nguồn tham chiếu: [Managing environments](https://learning.postman.com/docs/
 - [x] T10 E2E environment pass
   - [x] T10a (2026-10-12): `e2e/specs/environments-and-variables.spec.ts` gửi `{{baseUrl}}/users` tới mock, đổi environment active thì request đổi theo, giá trị local thắng shared
   - [x] T10b (2026-10-12): hover thấy đúng giá trị và scope
-- [ ] T11 Staging đã deploy sau khi user xác nhận
+- [x] T11 Staging đã deploy sau khi user xác nhận
   - [x] T11a Đợt A lên prod với cờ `environments` tắt (2026-10-12, user chốt), DAST API và nginx đạt
-  - [ ] T11b Bật cờ `environments` sau đợt B và review
+  - [x] T11b Bật cờ `environments` sau đợt B và review (release `20261012-105625-1ab618562676`, DAST đạt: `reports/security-261012-1805-phase-13-slice-b-dast.md`)
 - [x] T12 Review không còn finding mức high (kiểm lại `reports/code-reviewer-261012-1630-phase-13-slice-b-fix-verification.md`: 0 High; Medium mới N1 đã sửa)
   - [x] T12a Review đợt A (2026-10-12): `plans/dattqh/reports/code-reviewer-261012-0935-phase-13-slice-a.md` 3 High, 4 Medium, 8 Low; đã sửa hết, mỗi High/Medium có test tái hiện (mục "Xử lý" của report)
   - [x] T12b Review đợt B: `reports/code-reviewer-261012-1535-phase-13-slice-b-{backend,web}.md` (0 Critical; 2 High, 10 Medium đã sửa có test); kiểm lại bản sửa ở `reports/code-reviewer-261012-1630-phase-13-slice-b-fix-verification.md`
@@ -109,4 +109,4 @@ Nguồn tham chiếu: [Managing environments](https://learning.postman.com/docs/
 - [x] `pnpm check:mcp-coverage` pass (167 operation, 132 tool)
 
 ### Đợt B (12/10/2026, Vòng 38)
-Xong theo checklist trên, kèm vá ma trận phase 12 theo `reports/code-reviewer-261012-1430-collections-environments-parity-audit.md` (liên kết mock project/environment, kéo example, changelog: diff ẩn cho Editor, session cửa sổ 5 phút lưu `sessionStartSeq`, local value biến collection, import environment từ modal, statusbar Trash/Globals, Copy link cho node, link phần tử mở đúng chỗ kể cả người ngoài workspace). SAST: `reports/security-261012-1610-phase-13-slice-b-sast.md` (đạt). Cờ `environments` thêm vào `infra/localman/released-features`. Còn T11b: deploy (user yêu cầu) rồi DAST.
+Xong theo checklist trên, kèm vá ma trận phase 12 theo `reports/code-reviewer-261012-1430-collections-environments-parity-audit.md` (liên kết mock project/environment, kéo example, changelog: diff ẩn cho Editor, session cửa sổ 5 phút lưu `sessionStartSeq`, local value biến collection, import environment từ modal, statusbar Trash/Globals, Copy link cho node, link phần tử mở đúng chỗ kể cả người ngoài workspace). SAST: `reports/security-261012-1610-phase-13-slice-b-sast.md` (đạt). Cờ `environments` thêm vào `infra/localman/released-features`. Deploy lên prod (release `20261012-105625-1ab618562676`, backup `localman-20261012-175619`) và DAST đạt (`reports/security-261012-1805-phase-13-slice-b-dast.md`): 0 Critical/High/Medium, 1 Low (nhãn SHARED cho biến chưa chia sẻ trong pane Variables), 2 Info.
