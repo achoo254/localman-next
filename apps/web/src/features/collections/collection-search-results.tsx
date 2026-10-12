@@ -2,7 +2,7 @@ import {
 	COLLECTION_SEARCH_RESULTS_MAX,
 	type CollectionSearchMatch,
 } from "@localman/shared/api-client";
-import { IconFolder, IconStack2 } from "@tabler/icons-react";
+import { IconBookmark, IconFolder, IconStack2 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { KeyboardEvent } from "react";
 import { Alert } from "../../components/ui/alert";
@@ -41,6 +41,14 @@ function moveFocus(event: KeyboardEvent<HTMLUListElement>): void {
 	next.focus();
 }
 
+/** A request without a method falls back to the folder icon. */
+const KIND_ICONS = {
+	collection: IconStack2,
+	folder: IconFolder,
+	request: IconFolder,
+	example: IconBookmark,
+} as const;
+
 function Lead({ match }: { match: CollectionSearchMatch }) {
 	if (match.kind === "request" && match.method) {
 		return (
@@ -54,7 +62,7 @@ function Lead({ match }: { match: CollectionSearchMatch }) {
 			</span>
 		);
 	}
-	const Icon = match.kind === "collection" ? IconStack2 : IconFolder;
+	const Icon = KIND_ICONS[match.kind];
 	return (
 		<Icon size={16} aria-hidden="true" className="flex-none text-icon-muted" />
 	);
@@ -76,8 +84,8 @@ export function CollectionSearchResults({
 			onOpen({ kind: "collection", collectionId, name });
 			return;
 		}
-		if (match.kind === "folder") {
-			onOpen({ kind: "folder", collectionId, nodeId, name });
+		if (match.kind === "folder" || match.kind === "example") {
+			onOpen({ kind: match.kind, collectionId, nodeId, name });
 			return;
 		}
 		try {

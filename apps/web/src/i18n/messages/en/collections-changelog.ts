@@ -3,7 +3,7 @@ export const collectionsChangelog = {
 	changelog: {
 		title: "Changelog",
 		intro:
-			"Changes one person makes within 5 minutes are grouped into one session.",
+			"Changes one person makes within 5 minutes of their first change are grouped into one session.",
 		changes: {
 			one: "{count} change",
 			other: "{count} changes",
@@ -12,11 +12,13 @@ export const collectionsChangelog = {
 		closeDiff: "Close diff",
 		hide: "Hide diff",
 		hideNote:
-			"Hides this diff from the changelog. It doesn't remove the data from the collection's history.",
+			"Hides this diff from viewers; editors still see it. It doesn't remove the data from the collection's history.",
 		irreversible:
 			"This change is too large to keep in the changelog. You won't be able to undo it or restore earlier changes.",
 		show: "Show diff",
 		hidden: "Diff hidden by an editor.",
+		hiddenFromViewers:
+			"This diff is hidden from viewers. You can see it because you're an editor.",
 		unavailable: "This change was too large to keep its diff.",
 		diffFailed: "We couldn't load this diff.",
 		before: "Before",
@@ -40,6 +42,7 @@ export const collectionsChangelog = {
 		},
 		restore: "Restore",
 		restoreTitle: "Restore to this change",
+		restoreNeedsEditor: "Only editors can restore a change.",
 		restoreQuestion:
 			"Restore the collection to how it was right after this change?",
 		restoreBody: "This adds a new change; nothing is lost.",

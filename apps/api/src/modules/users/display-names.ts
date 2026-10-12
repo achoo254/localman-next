@@ -1,8 +1,9 @@
-import { UserModel } from "../users/user-model.js";
+import { UserModel } from "./user-model.js";
 
 /**
- * Names (else usernames) of these accounts in one query, for changelog,
- * activity, trash and Overview. Removed accounts are absent.
+ * Names (else usernames) of these accounts in one query, for what shows
+ * who made or changed something (collections, environments, trash).
+ * Removed accounts are absent.
  */
 export async function displayNames(
 	subs: Iterable<string>,

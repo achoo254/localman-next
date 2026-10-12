@@ -14,13 +14,14 @@ interface NodeHit {
 	_id: Types.ObjectId;
 	collectionId: Types.ObjectId;
 	parentId: Types.ObjectId | null;
-	kind: "folder" | "request";
+	kind: "folder" | "request" | "example";
 	name: string;
 	/** Only `draft.method` is projected; the rest of the draft stays in Mongo. */
 	draft?: { method?: HttpMethod };
 }
 
-interface FolderLink {
+/** A folder above a hit, or the request an example belongs to. */
+interface ParentLink {
 	_id: Types.ObjectId;
 	name: string;
 	parentId: Types.ObjectId | null;
@@ -29,13 +30,14 @@ interface FolderLink {
 const MAX = COLLECTION_SEARCH_RESULTS_MAX;
 
 /**
- * The folders above `hits`, fetched one level per round (at most
- * `COLLECTION_DEPTH_MAX` rounds, each a bounded `$in` by id).
+ * The folders above `hits` (and the request of an example hit), fetched
+ * one level per round (at most `COLLECTION_DEPTH_MAX` + 1 rounds, each a
+ * bounded `$in` by id).
  */
-async function foldersAbove(
+async function parentsAbove(
 	hits: readonly NodeHit[],
-): Promise<Map<string, FolderLink>> {
-	const folders = new Map<string, FolderLink>();
+): Promise<Map<string, ParentLink>> {
+	const folders = new Map<string, ParentLink>();
 	const unseen = (ids: (Types.ObjectId | null)[]) => [
 		...new Set(
 			ids.flatMap((id) =>
@@ -46,20 +48,20 @@ async function foldersAbove(
 	let pending = unseen(hits.map((hit) => hit.parentId));
 	for (
 		let round = 0;
-		pending.length > 0 && round < COLLECTION_DEPTH_MAX;
+		pending.length > 0 && round <= COLLECTION_DEPTH_MAX;
 		round += 1
 	) {
 		const rows = await CollectionNodeModel.find(
-			{ _id: { $in: pending }, kind: "folder" },
+			{ _id: { $in: pending }, kind: { $in: ["folder", "request"] } },
 			{ name: 1, parentId: 1 },
-		).lean<FolderLink[]>();
+		).lean<ParentLink[]>();
 		for (const row of rows) folders.set(row._id.toHexString(), row);
 		pending = unseen(rows.map((row) => row.parentId));
 	}
 	return folders;
 }
 
-function pathOf(hit: NodeHit, folders: Map<string, FolderLink>): string[] {
+function pathOf(hit: NodeHit, folders: Map<string, ParentLink>): string[] {
 	const path: string[] = [];
 	const seen = new Set<string>();
 	for (let at = hit.parentId; at && !seen.has(at.toHexString()); ) {
@@ -86,10 +88,9 @@ function collectionMatch(root: ListedRoot): CollectionSearchMatch {
 }
 
 /**
- * Collections, folders and requests of the workspace whose name holds `q`
- * (case and accents ignored), among those the caller may open: at most
- * `COLLECTION_SEARCH_RESULTS_MAX`, collections first. Node names are
- * matched on their folded copy (`searchName`) through the index.
+ * Collections, folders, requests and examples of the workspace whose name
+ * holds `q` (case and accents ignored), among those the caller may open:
+ * at most `COLLECTION_SEARCH_RESULTS_MAX`, collections first.
  */
 export async function searchCollections(
 	sub: string,
@@ -104,6 +105,7 @@ export async function searchCollections(
 		.sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }))
 		.map(collectionMatch);
 	const matches = collections.slice(0, MAX);
+	// Every node keeps its folded name (older examples got one at start).
 	const filter = {
 		collectionId: { $in: roots.map((root) => root._id) },
 		searchName: { $regex: escapeRegExp(needle) },
@@ -126,7 +128,7 @@ export async function searchCollections(
 		.limit(room + 1)
 		.lean<NodeHit[]>();
 	const shown = hits.slice(0, room);
-	const folders = await foldersAbove(shown);
+	const folders = await parentsAbove(shown);
 	const names = new Map(
 		roots.map((root) => [root._id.toHexString(), root.name]),
 	);

@@ -82,5 +82,5 @@ export async function restoreCollection(
 		await chargeRoot(trashed._id, sub, session, { revisions: [revision] });
 	});
 	// The caller adds elements to the target: an Editor of what lands there.
-	return loadCollectionDetail(trashed._id, "editor");
+	return loadCollectionDetail(trashed._id, "editor", sub);
 }

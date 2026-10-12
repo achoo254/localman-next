@@ -82,7 +82,8 @@ export function useCollectionCreate(
 			const urls = await fetchMockUrls(projectId);
 			const requests = mockRequestsOf(urls, nameOf);
 			const tree = mockProjectTree(projectName, urls.resources, requests);
-			return await run({ tree: fitTree(tree, fallbackNames(t)) }, false);
+			const fitted = fitTree(tree, fallbackNames(t));
+			return await run({ tree: fitted, mockProjectId: projectId }, false);
 		} catch (error) {
 			fail(error);
 			return false;

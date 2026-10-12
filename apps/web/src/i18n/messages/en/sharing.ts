@@ -50,7 +50,11 @@ export const sharing = {
 	element: {
 		pageTitle: "Shared item",
 		role: "Your role: {role}",
-		soon: "Opening it in the workbench arrives with collections.",
+		environmentsOff:
+			"Environments aren't turned on in the API client yet, so this environment can't open there.",
+		openFailed: "Couldn't open {name} in the API client.",
+		nodeGone:
+			"That item is no longer in {name}, so the collection opened instead.",
 		back: "Back to the API client",
 		invalidTitle: "This link isn't valid",
 		invalidText:

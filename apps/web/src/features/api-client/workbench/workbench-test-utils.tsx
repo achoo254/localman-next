@@ -7,8 +7,9 @@ import { TooltipProvider } from "../../../components/ui/tooltip";
 import { ApiClientScreen } from "../../../pages/api-client/api-client-screen";
 import { createTestQueryClient } from "../../../test/render-app";
 import { DEFAULT_CLIENT_SETTINGS } from "../routing/client-settings-api";
+import type { RequestSender } from "./send-types";
 import { WorkbenchProvider } from "./workbench-context";
-import type { RequestSender, SettledResponse } from "./workbench-types";
+import type { SettledResponse } from "./workbench-types";
 
 export interface ApiCall {
 	method: string;

@@ -1,4 +1,4 @@
-/** Server search of a workspace's collections, folders and requests by name. */
+/** Server search of a workspace's collections, folders, requests and examples by name. */
 import {
 	COLLECTION_SEARCH_QUERY_MAX,
 	type CollectionSearchMatch,
@@ -15,7 +15,7 @@ import {
 	optionalString,
 } from "../../lib/json-guards";
 
-const KINDS = ["collection", "folder", "request"] as const;
+const KINDS = ["collection", "folder", "request", "example"] as const;
 
 function parseMatch(value: unknown): CollectionSearchMatch {
 	const data = expectRecord(value, "search match");

@@ -5,7 +5,7 @@ export const collectionsChangelog: Pick<Messages["collections"], "changelog"> =
 		changelog: {
 			title: "Changelog",
 			intro:
-				"Các thay đổi của cùng một người trong vòng 5 phút được gom thành một session.",
+				"Các thay đổi của cùng một người trong vòng 5 phút kể từ thay đổi đầu tiên được gom thành một session.",
 			changes: {
 				other: "{count} thay đổi",
 			},
@@ -13,11 +13,13 @@ export const collectionsChangelog: Pick<Messages["collections"], "changelog"> =
 			closeDiff: "Đóng diff",
 			hide: "Ẩn diff",
 			hideNote:
-				"Ẩn diff này khỏi changelog. Việc này không xoá dữ liệu khỏi lịch sử của collection.",
+				"Ẩn diff này với viewer, editor vẫn xem được. Việc này không xoá dữ liệu khỏi lịch sử của collection.",
 			irreversible:
 				"Thay đổi này quá lớn để lưu trong changelog. Bạn sẽ không hoàn tác được nó, cũng không khôi phục được các thay đổi trước đó.",
 			show: "Hiện diff",
 			hidden: "Diff đã bị một editor ẩn.",
+			hiddenFromViewers:
+				"Diff này đang ẩn với viewer. Bạn vẫn xem được vì bạn là editor.",
 			unavailable: "Thay đổi này quá lớn nên không giữ được diff.",
 			diffFailed: "Không tải được diff này.",
 			before: "Trước",
@@ -39,6 +41,7 @@ export const collectionsChangelog: Pick<Messages["collections"], "changelog"> =
 			},
 			restore: "Khôi phục",
 			restoreTitle: "Khôi phục về thay đổi này",
+			restoreNeedsEditor: "Chỉ editor mới khôi phục được thay đổi.",
 			restoreQuestion:
 				"Khôi phục collection về trạng thái ngay sau thay đổi này?",
 			restoreBody: "Việc này thêm một thay đổi mới; không mất gì cả.",

@@ -4,7 +4,7 @@ export const collectionsChangelog: Pick<Messages["collections"], "changelog"> =
 	{
 		changelog: {
 			title: "Changelog",
-			intro: "同一个人在 5 分钟内的修改会归为一个 session。",
+			intro: "同一个人从第一次修改起 5 分钟内的修改会归为一个 session。",
 			changes: {
 				other: "{count} 处修改",
 			},
@@ -12,11 +12,12 @@ export const collectionsChangelog: Pick<Messages["collections"], "changelog"> =
 			closeDiff: "关闭 diff",
 			hide: "隐藏 diff",
 			hideNote:
-				"在 changelog 中隐藏此 diff，不会从 collection 的历史中删除数据。",
+				"对 viewer 隐藏此 diff，editor 仍可查看。不会从 collection 的历史中删除数据。",
 			irreversible:
 				"此修改过大，无法保存在 changelog 中。你将无法撤销它，也无法恢复更早的修改。",
 			show: "显示 diff",
 			hidden: "diff 已被 editor 隐藏。",
+			hiddenFromViewers: "此 diff 对 viewer 隐藏。你是 editor，所以仍可查看。",
 			unavailable: "此修改过大，未保留 diff。",
 			diffFailed: "无法加载此 diff。",
 			before: "修改前",
@@ -38,6 +39,7 @@ export const collectionsChangelog: Pick<Messages["collections"], "changelog"> =
 			},
 			restore: "恢复",
 			restoreTitle: "恢复到此修改",
+			restoreNeedsEditor: "只有 editor 才能恢复修改。",
 			restoreQuestion: "将 collection 恢复到此修改刚完成时的状态？",
 			restoreBody: "这会新增一条修改，不会丢失任何内容。",
 			restored: "已恢复 collection。",

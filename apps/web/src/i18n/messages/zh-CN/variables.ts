@@ -1,0 +1,91 @@
+import type { Messages } from "../../message-types";
+
+export const variables: Messages["variables"] = {
+	scope: {
+		global: "Global",
+		collection: "Collection",
+		environment: "Environment",
+		temporary: "临时",
+		dynamic: "动态",
+	},
+	tooltip: {
+		empty: "（空）",
+		secret: "secret 值已隐藏",
+		withheld: "对你隐藏：设置你自己的 local 值即可使用",
+		openEnvironment: "打开 {name}",
+		openGlobals: "打开 globals",
+		noValue: "（无值）",
+		from: "值来自 {scope}",
+		fromNamed: "值来自 {scope} · {name}",
+		overridden: "被覆盖",
+		disabled: "（已停用）",
+		precedence: "优先级：Global < Collection < Environment < 临时",
+		dynamic: "每次发送请求时都会生成一个新值。",
+		undeclared: "未声明",
+		undeclaredNote:
+			"当前使用的 scope 都没有声明这个变量，因此 <code>{token}</code> 会按原样发送。",
+		inactiveNote: "存在同名变量，但已停用或没有值。",
+	},
+	add: {
+		scope: "添加到",
+		value: "值",
+		submit: "添加变量",
+		viewerNote: "Viewer 只能添加临时变量。",
+	},
+	choice: {
+		environment: "Environment · {name}",
+		environmentNone: "Environment",
+		collection: "Collection · {name}",
+		collectionNone: "Collection",
+		global: "Globals",
+		temporary: "临时（此标签页）",
+		help: {
+			environment: "共享值，同步给所有有权限的人",
+			collection: "与所有能打开该 collection 的人共享",
+			global: "此 workspace 中的每个请求都会使用",
+			temporary: "只在此标签页中保留，关闭即失效；优先级最高",
+		},
+		blocked: {
+			editorsOnly: "只有 Editor 能修改此 scope",
+			noEnvironment: "当前没有启用的 environment",
+			noCollection: "此请求尚未保存到 collection",
+			noWorkspace: "全局变量尚未加载",
+		},
+		option: "{label}（{reason}）",
+	},
+	set: {
+		action: "设为变量",
+		title: "设为变量",
+		name: "变量名",
+		namePlaceholder: "authToken",
+		value: "值",
+		scope: "Scope",
+		submit: "设置变量",
+		done: "已在 {scope} 中设置 {name}",
+		failed: "无法设置变量。",
+		localReset: "你的 local 值已重置，新值随即生效。",
+		localKept: "无法重置你在 {name} 上的 local 值，它仍会覆盖新值。",
+		errors: {
+			nameRequired: "请输入变量名。",
+			nameInvalid: "名称不能包含空格或花括号，也不能以 $ 开头。",
+			nameTooLong: "名称最多 {max} 个字符。",
+			valueTooLong: "值最多 {max} 个字符。",
+		},
+	},
+	existing: {
+		replace:
+			"{name} 已存在于此。设置后，所有使用此 scope 的人看到的 shared 值都会被替换。",
+		disabled: "该变量已停用并将保持停用：在 Editor 启用之前不会使用新值。",
+		local: "你在此变量上的 local 值将被重置，以便新值生效。",
+	},
+	suggest: {
+		label: "变量建议",
+	},
+	temporary: {
+		title: "临时变量",
+		note: "只保存在此标签页中，关闭后即丢失。临时变量会覆盖所有 scope。",
+		empty: "此标签页还没有临时变量。选中文本后使用“设为变量”即可添加。",
+		caption: "此标签页的临时变量",
+		remove: "删除 {name}",
+	},
+};

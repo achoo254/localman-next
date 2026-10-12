@@ -25,8 +25,11 @@ export type ChangelogEntityKind =
 	| "request"
 	| "example";
 
-/** Consecutive changes of one author less than this apart form a session. */
-export const CHANGELOG_SESSION_GAP_MS = 5 * 60_000;
+/**
+ * A session is one author's consecutive changes within this window from
+ * the session's first (oldest) change; a later change starts a new one.
+ */
+export const CHANGELOG_SESSION_WINDOW_MS = 5 * 60_000;
 /** Revisions kept per collection; older ones are trimmed. */
 export const CHANGELOG_REVISIONS_MAX = 2_000;
 

@@ -147,12 +147,14 @@ describe("collections tree menus", () => {
 			"Add folder",
 			"Rename",
 			"Duplicate",
+			"Copy link",
 			"Delete",
 		]);
 		expect(await labels("r2")).toEqual([
 			"Add example",
 			"Rename",
 			"Duplicate",
+			"Copy link",
 			"Delete",
 		]);
 	});

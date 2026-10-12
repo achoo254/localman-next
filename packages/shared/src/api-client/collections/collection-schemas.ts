@@ -38,6 +38,10 @@ export const variableEntrySchema: z.ZodType<VariableEntry> = z.object({
 	enabled: z.boolean().optional(),
 });
 const orderKey = z.string().min(1).max(200);
+/** A Mongo object id (24 hex digits). */
+const linkId = z.string().regex(/^[a-f\d]{24}$/i);
+/** `mockProjectId` of a new collection: a mock project the caller can read. */
+export const collectionMockProjectIdSchema = linkId;
 
 /** Body of `PATCH /collections/:id`: the root's editable fields. */
 export const collectionUpdateSchema = z
@@ -50,6 +54,10 @@ export const collectionUpdateSchema = z
 		tags: collectionTagsSchema,
 		/** `null` clears the status. */
 		status: collectionStatusSchema.nullable(),
+		/** An environment of the collection's workspace; `null` links none. */
+		linkedEnvironmentId: linkId.nullable(),
+		/** A mock project the caller can read; `null` unlinks it. */
+		mockProjectId: linkId.nullable(),
 	})
 	.partial();
 

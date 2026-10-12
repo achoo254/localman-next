@@ -15,7 +15,9 @@ import {
 	draftBytes,
 	draftTooLarge,
 } from "../api-client/draft-size.js";
+import { displayNames } from "../users/display-names.js";
 import type { NodePayload } from "./collection-bytes.js";
+import { type CollectionLinks, linksFor } from "./collection-links.js";
 import {
 	CollectionModel,
 	LIVE_COLLECTION,
@@ -26,7 +28,6 @@ import {
 	type StoredCollectionNode,
 } from "./collection-node-model.js";
 import { toCollectionDetail } from "./collection-view.js";
-import { displayNames } from "./people.js";
 import { foldSearchText } from "./search-text.js";
 
 /**
@@ -35,6 +36,11 @@ import { foldSearchText } from "./search-text.js";
  * lands in a workspace (create, duplicate, restore).
  */
 export const COLLECTIONS_PER_WORKSPACE_MAX = 1_000;
+
+const NO_LINKS: CollectionLinks = {
+	mockProject: null,
+	relatedEnvironment: null,
+};
 
 export const newNodeId = (): string => new Types.ObjectId().toHexString();
 
@@ -77,20 +83,23 @@ export async function findNodes(
 }
 
 /**
- * The live collection with its nodes, as seen by a caller holding `role`
- * on it; 404 once it is gone or trashed.
+ * The live collection with its nodes, as seen by `sub` holding `role` on
+ * it (links only name what they may read; `null` skips them, for an
+ * export); 404 once it is gone or trashed.
  */
 export async function loadCollectionDetail(
 	collectionId: Types.ObjectId,
 	role: ElementRole,
+	sub: string | null,
 ): Promise<CollectionDetail> {
 	const root = await findLiveCollection(collectionId);
 	if (!root) throw elementNotFound();
-	const [nodes, names] = await Promise.all([
+	const [nodes, names, links] = await Promise.all([
 		findNodes(collectionId),
 		displayNames([root.createdBy, root.updatedBy]),
+		sub === null ? NO_LINKS : linksFor(sub, root),
 	]);
-	return toCollectionDetail(root, nodes, role, names);
+	return toCollectionDetail(root, nodes, role, names, links);
 }
 
 /** 409 `COLLECTION_LIMIT_REACHED` when the workspace is full. */
@@ -113,8 +122,8 @@ export async function assertWorkspaceRoom(
 }
 
 /**
- * The stored form of a node; its ids must be 24 hex digits. Examples are
- * left out of search (no `searchName`): they show under their request.
+ * The stored form of a node; its ids must be 24 hex digits. Every kind
+ * keeps its folded name (`searchName`) for the sidebar search.
  */
 export function storedNodeOf(
 	node: CollectionNode,
@@ -128,16 +137,13 @@ export function storedNodeOf(
 		kind: node.kind,
 		order: node.order,
 		name: node.name,
+		searchName: foldSearchText(node.name),
 		updatedBy: sub,
 	};
 	if (node.kind === "example") {
 		return { ...base, request: node.request, response: node.response };
 	}
-	const searchable = {
-		...base,
-		searchName: foldSearchText(node.name),
-		description: node.description,
-	};
+	const searchable = { ...base, description: node.description };
 	return node.kind === "request"
 		? { ...searchable, draft: node.draft }
 		: { ...searchable, auth: node.auth, scripts: node.scripts };

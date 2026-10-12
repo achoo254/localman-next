@@ -27,6 +27,7 @@ import {
 } from "./variable-interpolation.js";
 
 export interface PrepareOptions {
+	/** Scopes, plus `runFaker` when the caller loaded Faker for `$random…`. */
 	variables?: InterpolationContext;
 	/** Parent auth used when the draft's auth is `inherit`. */
 	inheritedAuth?: EffectiveAuth;

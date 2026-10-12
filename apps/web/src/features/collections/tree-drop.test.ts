@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { example } from "./collections-fixtures";
 import { folder, request } from "./collections-test-utils";
 import {
 	applyMove,
@@ -74,6 +75,52 @@ describe("planMove", () => {
 		expect(planMove(NODES, "f1", node("f1"), "inside")).toBeNull();
 		expect(planMove(NODES, "r1", node("r2"), "before")).toBeNull();
 		expect(planMove(NODES, "r1", node("r2"), "inside")).toBeNull();
+	});
+});
+
+describe("planMove with examples", () => {
+	const WITH_EXAMPLES = [
+		...NODES,
+		example("e1", "r1", "a0"),
+		example("e2", "r1", "a1"),
+		example("e3", "r1", "a2"),
+		example("x1", "r2", "a0"),
+	];
+
+	it("reorders an example among the examples of its request", () => {
+		expect(planMove(WITH_EXAMPLES, "e3", node("e1"), "before")).toEqual({
+			parentId: "r1",
+			beforeOrder: null,
+			afterOrder: "a0",
+		});
+		expect(planMove(WITH_EXAMPLES, "e1", node("e2"), "after")).toEqual({
+			parentId: "r1",
+			beforeOrder: "a1",
+			afterOrder: "a2",
+		});
+		expect(planMove(WITH_EXAMPLES, "e1", node("e2"), "before")).toBeNull();
+	});
+
+	it("keeps examples under their request and other nodes out of them", () => {
+		expect(planMove(WITH_EXAMPLES, "e1", node("x1"), "before")).toBeNull();
+		expect(planMove(WITH_EXAMPLES, "e1", node("r2"), "after")).toBeNull();
+		expect(planMove(WITH_EXAMPLES, "e1", node("f1"), "inside")).toBeNull();
+		expect(
+			planMove(WITH_EXAMPLES, "e1", { kind: "collection" }, "inside"),
+		).toBeNull();
+		expect(planMove(WITH_EXAMPLES, "r2", node("e1"), "before")).toBeNull();
+		expect(planMove(WITH_EXAMPLES, "e1", node("e2"), "inside")).toBeNull();
+	});
+
+	it("moves only the order of an example in the optimistic view", () => {
+		const moved = applyMove(WITH_EXAMPLES, "e3", {
+			parentId: "r1",
+			beforeOrder: null,
+			afterOrder: "a0",
+		});
+		const e3 = moved.find((item) => item.id === "e3");
+		expect(e3?.parentId).toBe("r1");
+		expect(e3 && e3.order < "a0").toBe(true);
 	});
 });
 

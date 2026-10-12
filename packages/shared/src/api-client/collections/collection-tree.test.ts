@@ -34,6 +34,8 @@ function detailOf(tree: CollectionTree): CollectionDetail {
 		updatedBy: "u1",
 		updatedByName: "Ada",
 		updatedAt: "2026-10-11T00:00:00.000Z",
+		mockProject: null,
+		relatedEnvironment: null,
 		nodes,
 	};
 }

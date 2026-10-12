@@ -3,6 +3,12 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NO_FEATURES } from "../../config/features";
 import type { MockRoute } from "../../test/mock-fetch";
+import {
+	PERSONAL,
+	TEAM,
+	chooseWorkspace,
+	savedWorkspace,
+} from "../workspaces/workspaces-test-helpers";
 import { ElementLinkPage } from "./element-link-page";
 import {
 	COLLECTION,
@@ -14,18 +20,23 @@ import {
 } from "./sharing-test-helpers";
 
 const NOT_FOUND = apiError(404, "NOT_FOUND");
+const ENVIRONMENT = "/api/v1/elements/environment/e1";
 const REQUEST = `POST ${COLLECTION}/access-requests`;
 
 function renderLink(
 	routes: Record<string, MockRoute>,
 	{ at = "/elements/collection/c1", flags = FLAGS_ON } = {},
 ) {
-	return renderSharing(routes, {
-		path: "/elements/:type/:id",
-		at,
-		flags,
-		element: <ElementLinkPage />,
-	});
+	const workspaces = { body: { items: [PERSONAL, TEAM] } };
+	return renderSharing(
+		{ "GET /api/v1/workspaces": workspaces, ...routes },
+		{
+			path: "/elements/:type/:id",
+			at,
+			flags,
+			element: <ElementLinkPage />,
+		},
+	);
 }
 
 describe("/elements/:type/:id", () => {
@@ -36,15 +47,69 @@ describe("/elements/:type/:id", () => {
 		expect(await screen.findByText("Workbench page")).toBeInTheDocument();
 	});
 
-	it("shows the item and the caller's role when they have access", async () => {
-		renderLink({ [`GET ${COLLECTION}`]: summary({ role: "viewer" }) });
+	it("switches to the item's workspace and opens it in the API client", async () => {
+		chooseWorkspace("w-personal");
+		const { router } = renderLink({
+			[`GET ${COLLECTION}`]: summary({ role: "viewer" }),
+		});
+		expect(await screen.findByText("Workbench page")).toBeInTheDocument();
+		expect(router.state.location.state).toEqual({
+			openElement: { type: "collection", id: "c1" },
+		});
+		expect(savedWorkspace()).toBe("w-team");
+	});
+
+	it("keeps a node of the collection, and drops a malformed one", async () => {
+		const routes = { [`GET ${COLLECTION}`]: summary() };
+		const first = renderLink(routes, { at: "/elements/collection/c1?node=f1" });
+		await screen.findByText("Workbench page");
+		expect(first.router.state.location.state).toEqual({
+			openElement: { type: "collection", id: "c1", nodeId: "f1" },
+		});
+		first.unmount();
+		const second = renderLink(routes, {
+			at: "/elements/collection/c1?node=%3Cscript%3E",
+		});
+		await screen.findByText("Workbench page");
+		expect(second.router.state.location.state).toEqual({
+			openElement: { type: "collection", id: "c1" },
+		});
+	});
+
+	it("opens an environment too when environments are on", async () => {
+		const { router } = renderLink(
+			{ [`GET ${ENVIRONMENT}`]: summary({ type: "environment", id: "e1" }) },
+			{
+				at: "/elements/environment/e1",
+				flags: { ...FLAGS_ON, environments: true },
+			},
+		);
+		expect(await screen.findByText("Workbench page")).toBeInTheDocument();
+		expect(router.state.location.state).toEqual({
+			openElement: { type: "environment", id: "e1" },
+		});
+	});
+
+	it("says plainly that an environment can't open while environments are off", async () => {
+		renderLink(
+			{
+				[`GET ${ENVIRONMENT}`]: summary({
+					type: "environment",
+					id: "e1",
+					name: "Staging",
+					role: "viewer",
+				}),
+			},
+			{ at: "/elements/environment/e1" },
+		);
 		expect(
-			await screen.findByRole("heading", { level: 1, name: "Orders API" }),
+			await screen.findByRole("heading", { level: 1, name: "Staging" }),
 		).toBeInTheDocument();
 		expect(byId("element-page-role")).toHaveTextContent("Your role: Viewer");
-		expect(byId("element-page")).toHaveTextContent(
-			"Opening it in the workbench arrives with collections.",
+		expect(byId("element-page-note")).toHaveTextContent(
+			"Environments aren't turned on in the API client yet",
 		);
+		expect(screen.queryByText("Workbench page")).toBeNull();
 	});
 
 	it("asks for access on 404, without naming the item", async () => {
@@ -116,10 +181,7 @@ describe("/elements/:type/:id", () => {
 		await userEvent.click(
 			await screen.findByRole("button", { name: "Request access" }),
 		);
-		expect(
-			await screen.findByRole("heading", { level: 1, name: "Orders API" }),
-		).toBeInTheDocument();
-		expect(byId("element-page-role")).toHaveTextContent("Your role: Editor");
+		expect(await screen.findByText("Workbench page")).toBeInTheDocument();
 	});
 
 	it("explains a link with an unknown item type", async () => {

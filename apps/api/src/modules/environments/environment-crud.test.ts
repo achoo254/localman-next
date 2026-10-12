@@ -37,7 +37,11 @@ describe("environments", () => {
 			name: "Staging",
 			color: "green",
 			role: "editor",
+			createdBy: EVE,
+			createdByName: "Eve",
 		});
+		const read = await as(VIC).get(`/environments/${env.id}`);
+		expect(read.body.createdByName).toBe("Eve");
 		const viewer = await as(VIC).send(
 			"post",
 			`/workspaces/${ws}/environments`,
@@ -52,6 +56,14 @@ describe("environments", () => {
 			{ name: "Prod" },
 		);
 		expect(outsider.status).toBe(404);
+	});
+
+	it("names the creator as null once their account is gone", async () => {
+		const ws = (await teamOfThree()).toHexString();
+		const env = await createEnvironmentAs(EVE, ws);
+		await EnvironmentModel.updateOne({ _id: env.id }, { createdBy: "gone" });
+		const read = await as(EVE).get(`/environments/${env.id}`);
+		expect(read.body).toMatchObject({ createdBy: "gone", createdByName: null });
 	});
 
 	it("lists them by name with each caller's role; outsiders see shared ones only", async () => {

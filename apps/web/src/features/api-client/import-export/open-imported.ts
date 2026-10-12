@@ -9,6 +9,7 @@ import {
 	type ApiRequestDraft,
 	type FlatImportedRequest,
 	type ImportedCollection,
+	type ImportedData,
 	type ImportedEnvironment,
 	applyCollectionVariables,
 } from "@localman/shared/api-client";
@@ -24,6 +25,8 @@ export interface ImportedRequestsSelection {
 export interface ImportedEnvironmentSelection {
 	kind: "environment";
 	environment: ImportedEnvironment;
+	/** The file's JSON as written, which the server's import checks itself. */
+	file: unknown;
 }
 
 export type ImportSelection =
@@ -54,4 +57,32 @@ export function toRequestsSelection(
 			draft: standaloneDraft(request, collection),
 		})),
 	};
+}
+
+/** The JSON of the text or file the parser recognised as an environment. */
+function environmentJson(text: string): unknown {
+	try {
+		return JSON.parse(text);
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * What "Import" hands over: an environment file with its JSON (`text` is
+ * what was pasted or read), or the picked requests of a collection.
+ */
+export function toSelection(
+	data: ImportedData,
+	picked: readonly FlatImportedRequest[],
+	text: string,
+): ImportSelection {
+	if (data.format === "environment-v21") {
+		return {
+			kind: "environment",
+			environment: data,
+			file: environmentJson(text),
+		};
+	}
+	return toRequestsSelection(data, picked);
 }

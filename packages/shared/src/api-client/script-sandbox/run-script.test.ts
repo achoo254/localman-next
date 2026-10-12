@@ -17,6 +17,8 @@ describe("createScriptRunner loading", () => {
 		const input = {
 			phase: "pre" as const,
 			request: baseRequest,
+			globals: {},
+			collectionVariables: {},
 			environment: {},
 			variables: {},
 		};
@@ -37,6 +39,8 @@ describe("createScriptRunner loading", () => {
 			phase: "pre" as const,
 			script: "lm.environment.set('a', 1)",
 			request: baseRequest,
+			globals: {},
+			collectionVariables: {},
 			environment: {},
 			variables: {},
 		};

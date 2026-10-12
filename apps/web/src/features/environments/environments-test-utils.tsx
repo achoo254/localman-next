@@ -3,6 +3,8 @@ import type {
 	GlobalsDetail,
 	VariableView,
 } from "@localman/shared/api-client";
+import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { FeaturesContext, NO_FEATURES } from "../../config/features";
 import { ApiClientScreen } from "../../pages/api-client/api-client-screen";
 import { makeUser } from "../../test/fixtures";
@@ -63,9 +65,32 @@ export function environment(
 		],
 		localValues: [],
 		createdBy: "user-1",
+		createdByName: "Ada Lovelace",
 		createdAt: "2026-10-12T01:00:00.000Z",
 		...overrides,
 	};
+}
+
+/** The list entry of `environment(overrides)`. */
+export function summary(overrides: Partial<EnvironmentDetail> = {}) {
+	const {
+		variables,
+		localValues,
+		createdBy,
+		createdByName,
+		createdAt,
+		...rest
+	} = environment(overrides);
+	return rest;
+}
+
+/** Opens Staging from the Environments sidebar; resolves to its table. */
+export async function openStaging(user = userEvent.setup()) {
+	await user.click(await screen.findByRole("button", { name: "Envs" }));
+	await user.click(
+		await screen.findByRole("button", { name: /^Staging( \(active\))?$/ }),
+	);
+	return screen.findByRole("table", { name: "Variables of Staging" });
 }
 
 export const EMPTY_GLOBALS: GlobalsDetail = {

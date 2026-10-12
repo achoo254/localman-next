@@ -36,6 +36,8 @@ export interface CodeEditorProps {
 	lineNumbers?: boolean;
 	/** Sizing classes of the frame, e.g. `min-h-40` or `h-96`. */
 	className?: string;
+	/** More CodeMirror extensions (the `{{variable}}` highlighter); swapped when they change. */
+	extensions?: Extension;
 	"data-id"?: string;
 }
 
@@ -72,6 +74,7 @@ export function CodeEditor(props: CodeEditorProps) {
 	const grammar = useRef(new Compartment());
 	const access = useRef(new Compartment());
 	const editable = useRef(new Compartment());
+	const extra = useRef(new Compartment());
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: the editor is created once; later prop changes are applied by the effects below.
 	useEffect(() => {
@@ -96,6 +99,7 @@ export function CodeEditor(props: CodeEditorProps) {
 					placeholderExtension(props.placeholder ?? ""),
 					access.current.of(accessibility(props)),
 					editable.current.of(readOnlyState(Boolean(props.readOnly))),
+					extra.current.of(props.extensions ?? []),
 					EditorView.updateListener.of((update) => {
 						if (update.docChanged) {
 							latest.current.onChange(update.state.doc.toString());
@@ -134,6 +138,12 @@ export function CodeEditor(props: CodeEditorProps) {
 			changes: { from: 0, to: instance.state.doc.length, insert: props.value },
 		});
 	}, [props.value]);
+
+	useEffect(() => {
+		view.current?.dispatch({
+			effects: extra.current.reconfigure(props.extensions ?? []),
+		});
+	}, [props.extensions]);
 
 	const { label, labelledBy, describedBy, readOnly } = props;
 	useEffect(() => {

@@ -51,7 +51,10 @@ export const sharing: Messages["sharing"] = {
 	element: {
 		pageTitle: "共享的项目",
 		role: "你的角色：{role}",
-		soon: "在 workbench 中打开此项将随 collection 功能一起推出。",
+		environmentsOff:
+			"API client 尚未启用 Environments，因此无法在其中打开此 environment。",
+		openFailed: "无法在 API client 中打开 {name}。",
+		nodeGone: "该项已不在 {name} 中，因此打开了 collection。",
 		back: "返回 API client",
 		invalidTitle: "此链接无效",
 		invalidText: "请检查链接，或请共享者发送新链接。",

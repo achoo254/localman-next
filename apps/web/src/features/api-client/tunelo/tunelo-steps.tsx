@@ -10,6 +10,8 @@ import {
 /** Install, sign in, open a tunnel for `port`: the commands to copy. */
 export function TuneloSteps({ port }: { port: number }) {
 	const t = useT();
+	// A port is an identifier, not a quantity: no locale digit grouping (8.003).
+	const portText = String(port);
 	const steps = [
 		{
 			id: "install",
@@ -23,7 +25,7 @@ export function TuneloSteps({ port }: { port: number }) {
 		},
 		{
 			id: "http",
-			title: t("apiClientTunelo.steps.http", { port }),
+			title: t("apiClientTunelo.steps.http", { port: portText }),
 			code: tuneloHttpCommand(port),
 		},
 	];
@@ -45,7 +47,7 @@ export function TuneloSteps({ port }: { port: number }) {
 				))}
 			</ol>
 			<p className="m-0 text-muted text-xs">
-				{renderRich(t("apiClientTunelo.steps.tcpHint", { port }))}
+				{renderRich(t("apiClientTunelo.steps.tcpHint", { port: portText }))}
 			</p>
 		</div>
 	);

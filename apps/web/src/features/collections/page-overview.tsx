@@ -37,7 +37,7 @@ export function PageOverview(props: PageOverviewProps) {
 
 	return (
 		<div
-			data-id="collection-overview"
+			data-id={props.folderId ? "folder-overview" : "collection-overview"}
 			className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem]"
 		>
 			<section
@@ -112,7 +112,11 @@ export function PageOverview(props: PageOverviewProps) {
 				<h3 id="collection-details-title" className="m-0 font-semibold text-sm">
 					{t("collections.page.overview.details")}
 				</h3>
-				<CollectionMeta detail={detail} folderId={props.folderId} />
+				<CollectionMeta
+					detail={detail}
+					folderId={props.folderId}
+					canEditLinks={props.canEdit && props.folderId === null}
+				/>
 				{props.aside}
 			</section>
 		</div>

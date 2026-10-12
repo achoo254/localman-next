@@ -137,6 +137,8 @@ export const apiClient: Messages["apiClient"] = {
 			getVariable: "读取变量",
 			setEnvironment: "设置 environment 变量",
 			unsetEnvironment: "删除 environment 变量",
+			setCollectionVariable: "设置 collection 变量",
+			setGlobal: "设置 global 变量",
 			statusIs200: "检查状态码为 200",
 			saveToken: "保存 response 中的 token",
 			log: "打印 request 的 URL",

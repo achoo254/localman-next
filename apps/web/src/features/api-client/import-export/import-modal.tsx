@@ -14,6 +14,10 @@ import {
 	CollectionOpenPicker,
 	defaultSelection,
 } from "./collection-open-picker";
+import {
+	type EnvironmentImport,
+	EnvironmentImportNote,
+} from "./environment-import-note";
 import { ImportDetection } from "./import-detection";
 import {
 	type CollectionSaveTarget,
@@ -21,7 +25,7 @@ import {
 	ImportModeChoice,
 } from "./import-save-mode";
 import { ImportSource } from "./import-source";
-import { type ImportSelection, toRequestsSelection } from "./open-imported";
+import { type ImportSelection, toSelection } from "./open-imported";
 import { useImportSource } from "./use-import-source";
 
 export interface ImportModalProps {
@@ -35,6 +39,11 @@ export interface ImportModalProps {
 	saveCollection?: CollectionSaveTarget | null;
 	/** Choice picked when the dialog opens. */
 	initialMode?: ImportMode;
+	/**
+	 * An environment file can be imported (environments on, the caller may
+	 * add to the workspace); otherwise the dialog says why it can't.
+	 */
+	environmentImport?: EnvironmentImport;
 }
 
 /**
@@ -49,6 +58,7 @@ export function ImportModal({
 	maxRequests = DRAFT_MAX_TABS,
 	saveCollection = null,
 	initialMode = "tabs",
+	environmentImport = "unavailable",
 }: ImportModalProps) {
 	const t = useT();
 	const detectionId = useId();
@@ -106,19 +116,15 @@ export function ImportModal({
 			void save(saveTarget);
 			return;
 		}
-		onImport(
-			data.format === "environment-v21"
-				? { kind: "environment", environment: data }
-				: toRequestsSelection(
-						data,
-						requests.filter((request) => selected.has(request.id)),
-					),
-		);
+		const picked = requests.filter((request) => selected.has(request.id));
+		onImport(toSelection(data, picked, source.file?.text ?? source.text));
 		changeOpen(false);
 	};
 	const isEnvironment = data?.format === "environment-v21";
+	const environmentBlocked = isEnvironment && environmentImport !== "allowed";
 	const canSubmit =
 		data !== null &&
+		!environmentBlocked &&
 		(saveTarget ? !isEnvironment : isEnvironment || selected.size > 0);
 	// The file is read or the text parsed: the button spins until it can import.
 	const processing =
@@ -174,6 +180,9 @@ export function ImportModal({
 					onChange={setMode}
 					workspaceName={saveCollection.workspaceName}
 				/>
+			) : null}
+			{isEnvironment && environmentImport !== "allowed" ? (
+				<EnvironmentImportNote reason={environmentImport} />
 			) : null}
 			{saveError ? (
 				<Alert tone="danger">{errorMessage(saveError)}</Alert>

@@ -13,7 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useCallback, useRef, useState } from "react";
 import { createScriptHost } from "../../../platform/script-host";
 import { createLazyScriptRunner } from "../workbench/script-steps";
-import type { RequestSender } from "../workbench/workbench-types";
+import type { RequestSender } from "../workbench/send-types";
 import { type ClientSettings, clientSettingsApi } from "./client-settings-api";
 import { browserCorsCache } from "./cors-cache";
 import type { RoutingSnapshot, SecretAsk } from "./route-types";

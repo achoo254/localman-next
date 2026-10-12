@@ -1,4 +1,5 @@
 import type { Logger } from "./logger.js";
+import { backfillExampleSearchNames } from "./modules/collections/example-search-backfill.js";
 import { CollectionTrashJob } from "./modules/collections/trash-purge-job.js";
 import { TombstoneSweeper } from "./modules/projects/tombstone-sweeper.js";
 import { TrialReminderJob } from "./modules/trial/trial-reminders.js";
@@ -17,17 +18,21 @@ export function createBackgroundJobs(logger: Logger): BackgroundJobs {
 	const trialReminders = new TrialReminderJob(logger);
 	// Collections past their days in the trash are deleted for good.
 	const collectionTrash = new CollectionTrashJob(logger);
+	// Once per start: older examples get the folded name search uses.
+	let backfill: Promise<number> | undefined;
 	return {
 		start() {
 			tombstoneSweeper.start();
 			trialReminders.start();
 			collectionTrash.start();
+			backfill ??= backfillExampleSearchNames(logger);
 		},
 		async stop() {
 			await Promise.all([
 				tombstoneSweeper.stop(),
 				trialReminders.stop(),
 				collectionTrash.stop(),
+				backfill,
 			]);
 		},
 	};

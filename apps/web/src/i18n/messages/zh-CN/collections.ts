@@ -10,6 +10,10 @@ export const collections: Messages["collections"] = {
 		collections: "Collections",
 		trash: "回收站",
 	},
+	statusBar: {
+		globals: "打开 Globals",
+		trash: "打开回收站",
+	},
 	sidebar: {
 		title: "Collections",
 		new: "新建",
@@ -140,6 +144,10 @@ export const collections: Messages["collections"] = {
 		collection: "保存为 collection",
 		collectionHint: "连同 folder、auth、脚本和变量保存到 {workspace}。",
 		submit: "保存 collection",
+		environmentUnavailable:
+			"此 workspace 还不支持 Environments，因此无法导入此文件。",
+		environmentViewer:
+			"Viewer 无法向此 workspace 添加 environment。请让 Admin 或 Editor 导入此文件。",
 	},
 	fromMock: {
 		title: "从 mock project 创建 collection",

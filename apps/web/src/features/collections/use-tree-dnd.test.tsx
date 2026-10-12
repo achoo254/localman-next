@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ToastProvider } from "../../components/ui/toast";
 import { mockFetch } from "../../test/mock-fetch";
 import { createTestQueryClient } from "../../test/render-app";
+import { example } from "./collections-fixtures";
 import { detail, folder, request, summary } from "./collections-test-utils";
 import { buildTreeRows } from "./tree-rows";
 import { type DetailState, collectionKey } from "./use-collections";
@@ -32,7 +33,7 @@ function renderDnd(cached: CollectionDetail) {
 	const rows = buildTreeRows({
 		collections: [summary("c1")],
 		details,
-		expanded: new Set(["c1", "f1", "f2"]),
+		expanded: new Set(["c1", "f1", "f2", "r1"]),
 	});
 	const wrapper = ({ children }: { children: ReactNode }) => (
 		<QueryClientProvider client={client}>
@@ -90,6 +91,40 @@ describe("tree drag and drop", () => {
 				parentId: null,
 				beforeOrder: "a1",
 				afterOrder: null,
+			}),
+		);
+	});
+
+	it("reorders the examples of one request", async () => {
+		const withExamples = {
+			...SHOP,
+			nodes: [
+				...SHOP.nodes,
+				example("e1", "r1", "a0", "Found"),
+				example("e2", "r1", "a1", "Missing"),
+			],
+		};
+		const { calls } = mockFetch({
+			[`POST ${MOVE_PATH}/e2/move`]: {
+				body: example("e2", "r1", "Zz", "Missing"),
+			},
+			"GET /api/v1/collections/c1": { body: withExamples },
+		});
+		const { result } = renderDnd(withExamples);
+		let moved = true;
+		act(() => {
+			moved = result.current.drop("e2", "top", "before");
+		});
+		expect(moved).toBe(false);
+		act(() => {
+			moved = result.current.drop("e2", "e1", "before");
+		});
+		expect(moved).toBe(true);
+		await waitFor(() =>
+			expect(calls.find((c) => c.method === "POST")?.body).toEqual({
+				parentId: "r1",
+				beforeOrder: null,
+				afterOrder: "a0",
 			}),
 		);
 	});

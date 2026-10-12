@@ -19,6 +19,8 @@ export interface ChangelogChangeItemProps {
 	collectionId: string;
 	change: ChangelogChange;
 	canEdit: boolean;
+	/** The visible note saying why Restore is off (Viewers). */
+	restoreNoteId?: string;
 	onRestore: (change: ChangelogChange) => void;
 }
 
@@ -27,12 +29,15 @@ export function ChangelogChangeItem({
 	collectionId,
 	change,
 	canEdit,
+	restoreNoteId,
 	onRestore,
 }: ChangelogChangeItemProps) {
 	const { t, formatDate } = useI18n();
 	const toast = useToast();
 	const [open, setOpen] = useState(false);
-	const diff = useChangeDiff(collectionId, change.id, open && !change.hidden);
+	// Editors still read a hidden diff; Viewers only learn that it is hidden.
+	const hiddenForCaller = change.hidden && !canEdit;
+	const diff = useChangeDiff(collectionId, change.id, open && !hiddenForCaller);
 	const visibility = useSetChangeHidden(collectionId);
 	const text = describeChange(change, t);
 	const toggleHidden = () =>
@@ -47,7 +52,7 @@ export function ChangelogChangeItem({
 			},
 		);
 	let body = null;
-	if (open && change.hidden) {
+	if (open && hiddenForCaller) {
 		body = (
 			<p className="m-0 text-muted text-xs">
 				{t("collections.changelog.hidden")}
@@ -68,6 +73,11 @@ export function ChangelogChangeItem({
 	} else if (open && diff.data) {
 		body = (
 			<>
+				{change.hidden ? (
+					<p data-id="changelog-hidden-note" className="m-0 text-muted text-xs">
+						{t("collections.changelog.hiddenFromViewers")}
+					</p>
+				) : null}
 				<DiffView
 					before={diff.data.before}
 					after={diff.data.after}
@@ -128,11 +138,13 @@ export function ChangelogChangeItem({
 						)}
 					</Button>
 				) : null}
-				{canEdit && change.restorable ? (
+				{change.restorable ? (
 					<Button
 						size="sm"
 						variant="ghost"
 						data-id="changelog-restore"
+						disabled={!canEdit}
+						aria-describedby={restoreNoteId}
 						onClick={() => onRestore(change)}
 					>
 						<IconHistory size={14} aria-hidden="true" />

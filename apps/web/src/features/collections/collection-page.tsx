@@ -82,6 +82,7 @@ export function CollectionPage({ page }: { page: CollectionPageTab }) {
 		<div data-id={`${page.kind}-page`} className="flex min-w-0 flex-col">
 			<PageHeader
 				page={page}
+				workspaceId={detail.workspaceId}
 				name={fields.name}
 				collectionName={detail.name}
 				canEdit={model.canEdit}
@@ -164,6 +165,7 @@ export function CollectionPage({ page }: { page: CollectionPageTab }) {
 					{page.kind === "collection" ? (
 						<TabsContent value="variables" className="pt-4">
 							<PageVariables
+								collectionId={page.collectionId}
 								variables={fields.variables}
 								canEdit={model.canEdit}
 								onChange={(variables) => model.edit({ variables })}

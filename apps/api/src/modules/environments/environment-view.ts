@@ -6,6 +6,7 @@ import {
 	VARIABLE_TYPES,
 } from "@localman/shared/api-client";
 import { z } from "zod";
+import { displayNames } from "../users/display-names.js";
 import {
 	type StoredEnvironment,
 	environmentScope,
@@ -39,6 +40,7 @@ export const environmentDetailView = environmentSummaryView.extend({
 	variables: z.array(variableView),
 	localValues: z.array(localValueView),
 	createdBy: z.string(),
+	createdByName: z.string().nullable(),
 	createdAt: z.string(),
 });
 
@@ -74,7 +76,7 @@ export function toEnvironmentSummary(
 
 /**
  * The environment as `sub` sees it: shared values (secrets withheld from
- * a Viewer) and `sub`'s own local values.
+ * a Viewer), `sub`'s own local values and the creator's display name.
  */
 export async function toEnvironmentDetail(
 	sub: string,
@@ -82,14 +84,19 @@ export async function toEnvironmentDetail(
 	role: ElementRole,
 ): Promise<EnvironmentDetail> {
 	const scope = environmentScope(stored._id);
+	const [localValues, names] = await Promise.all([
+		readLocalValues(sub, scope),
+		displayNames([stored.createdBy]),
+	]);
 	return {
 		...toEnvironmentSummary(
 			{ ...stored, variableCount: stored.variables.length },
 			role,
 		),
 		variables: toVariableViews(stored.variables, scope, role === "editor"),
-		localValues: await readLocalValues(sub, scope),
+		localValues,
 		createdBy: stored.createdBy,
+		createdByName: names.get(stored.createdBy) ?? null,
 		createdAt: stored.createdAt.toISOString(),
 	};
 }

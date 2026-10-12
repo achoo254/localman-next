@@ -59,6 +59,12 @@ export const apiClientTunelo = {
 	badge: {
 		label: "Via Tunelo",
 		tip: "Sent to {url}",
+		labelAuto: "Tunnel ready",
+		tipAuto:
+			"Auto sends straight from your browser when it can, and through {url} when it cannot. Choose Proxy to always use the tunnel.",
+		labelDirect: "Tunnel not used",
+		tipDirect:
+			"Direct always sends from your browser. Choose Proxy or Auto to use {url}.",
 		unmap: "Remove the mapping of {key}",
 	},
 } as const;

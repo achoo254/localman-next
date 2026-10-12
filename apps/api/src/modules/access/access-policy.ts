@@ -20,11 +20,13 @@ import { type ShareRow, claimEmailShare } from "./email-share-claim.js";
  * the role their workspace role gives (Admin and Editor edit, Viewer
  * views) and the role shared with them on this element. A share can raise
  * the workspace role, never lower it. A share addressed to the caller's
- * IdP-verified email becomes theirs here, on first use.
+ * IdP-verified email becomes theirs here, on first use; `claim: false`
+ * only reads (showing another element's name must not claim it).
  */
 export async function elementRoleOf(
 	sub: string,
 	element: ElementRecord,
+	{ claim = true }: { claim?: boolean } = {},
 ): Promise<ElementRole | null> {
 	const workspace = await findWorkspaceById(element.workspaceId.toHexString());
 	const fromWorkspace = workspace
@@ -44,7 +46,7 @@ export async function elementRoleOf(
 	).lean<ShareRow[]>();
 	const own = rows.find((row) => row.userId === sub)?.role ?? null;
 	// A share to their verified email may arrive on top of an account share.
-	const claimed = await claimEmailShare(sub, element, rows);
+	const claimed = claim ? await claimEmailShare(sub, element, rows) : null;
 	return strongerElementRole(fromWorkspace, strongerElementRole(own, claimed));
 }
 

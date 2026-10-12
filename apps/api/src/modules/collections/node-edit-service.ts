@@ -106,7 +106,7 @@ export async function updateNode(
 		for (const key of FIELDS[before.kind]) {
 			if (update[key] !== undefined) $set[key] = update[key];
 		}
-		if (update.name !== undefined && before.kind !== "example") {
+		if (update.name !== undefined) {
 			$set.searchName = foldSearchText(update.name);
 		}
 		await chargeRoot(collectionId, sub, session, {

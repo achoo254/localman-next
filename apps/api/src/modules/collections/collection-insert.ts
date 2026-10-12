@@ -28,6 +28,10 @@ export interface NewCollection {
 	/** Ids from `newNodeId`, parents listed before their children or not. */
 	readonly nodes: readonly CollectionNode[];
 	readonly sub: string;
+	/** The mock project it comes from, already checked readable. */
+	readonly mockProjectId?: Types.ObjectId;
+	/** The environment linked to it (`null`: none chosen), same workspace. */
+	readonly linkedEnvironmentId?: Types.ObjectId | null;
 }
 
 /**
@@ -59,6 +63,10 @@ export async function insertCollection(
 				requestCount,
 				createdBy: input.sub,
 				updatedBy: input.sub,
+				...(input.mockProjectId ? { mockProjectId: input.mockProjectId } : {}),
+				...(input.linkedEnvironmentId === undefined
+					? {}
+					: { linkedEnvironmentId: input.linkedEnvironmentId }),
 			},
 		],
 		{ session },

@@ -143,6 +143,8 @@ export const apiClient = {
 			getVariable: "Read a variable",
 			setEnvironment: "Set an environment variable",
 			unsetEnvironment: "Remove an environment variable",
+			setCollectionVariable: "Set a collection variable",
+			setGlobal: "Set a global variable",
 			statusIs200: "Test status is 200",
 			saveToken: "Save a token from the response",
 			log: "Log the request URL",

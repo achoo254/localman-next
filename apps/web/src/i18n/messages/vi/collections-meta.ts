@@ -2,7 +2,7 @@ import type { Messages } from "../../message-types";
 
 type Part = Pick<
 	Messages["collections"],
-	"status" | "tags" | "rightRail" | "info" | "activity"
+	"status" | "tags" | "rightRail" | "info" | "links" | "activity"
 >;
 
 export const collectionsMeta: Part = {
@@ -59,6 +59,18 @@ export const collectionsMeta: Part = {
 		id: "ID",
 		copyId: "Sao chép ID",
 		copied: "Đã sao chép ID.",
+		created: "Ngày tạo",
+		role: "Vai trò của bạn",
+	},
+	links: {
+		environment: "Environment liên quan",
+		mockProject: "Mock project liên quan",
+		notLinked: "Chưa liên kết",
+		none: "Không có",
+		sharedHint: "Được share cùng collection này",
+		choose: "Đổi environment liên quan",
+		linked: "Đã liên kết {name} với collection này.",
+		unlinked: "Collection này không còn environment liên quan.",
 	},
 	activity: {
 		title: "Hoạt động gần đây",

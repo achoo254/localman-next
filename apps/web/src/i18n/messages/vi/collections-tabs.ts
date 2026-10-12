@@ -12,6 +12,7 @@ export const collectionsTabs: Tabs = {
 			folder: "Folder",
 			example: "Example",
 		},
+		sharedWithYou: "Được chia sẻ với bạn",
 		nameLabel: {
 			collection: "Tên collection",
 			folder: "Tên folder",

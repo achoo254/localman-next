@@ -11,7 +11,10 @@ export interface InfoPanelProps {
 	folderId: string | null;
 }
 
-/** ID (with copy), creator, last update and who made it, workspace, requests. */
+/**
+ * ID (with copy), creator, creation date, last update, workspace, requests,
+ * related environment and mock project, and the caller's role.
+ */
 export function InfoPanel({ detail, folderId }: InfoPanelProps) {
 	const t = useT();
 	const toast = useToast();
@@ -24,7 +27,7 @@ export function InfoPanel({ detail, folderId }: InfoPanelProps) {
 		);
 	};
 	return (
-		<div className="grid content-start gap-4">
+		<div data-id="right-info" className="grid content-start gap-4">
 			<div className="grid gap-1">
 				<span className="text-muted text-sm">{t("collections.info.id")}</span>
 				<div className="flex min-w-0 items-center gap-1">
@@ -42,7 +45,7 @@ export function InfoPanel({ detail, folderId }: InfoPanelProps) {
 					/>
 				</div>
 			</div>
-			<CollectionMeta detail={detail} folderId={folderId} />
+			<CollectionMeta detail={detail} folderId={folderId} variant="info" />
 		</div>
 	);
 }

@@ -8,19 +8,12 @@ import type {
 	EnvironmentDetail,
 } from "@localman/shared/api-client";
 import { useQueryClient } from "@tanstack/react-query";
-import { useToast } from "../../components/ui/toast";
-import { useT } from "../../i18n/i18n-context";
-import { errorMessage } from "../../lib/api-client";
 import { useWorkbenchActions } from "../api-client/workbench/workbench-context";
 import { usePageAutosave } from "../collections/use-page-autosave";
 import { useWorkspaces } from "../workspaces/current-workspace";
-import { duplicateEnvironment, updateEnvironment } from "./environments-api";
-import {
-	environmentKey,
-	environmentListKey,
-	storeEnvironment,
-} from "./use-environments";
-import { useOpenVariablesPage } from "./use-open-variables-page";
+import { updateEnvironment } from "./environments-api";
+import { useDuplicateEnvironment } from "./use-create-environment";
+import { environmentKey, environmentListKey } from "./use-environments";
 
 type Meta = { name: string; color: EnvironmentColor };
 
@@ -28,11 +21,8 @@ export function useEnvironmentMeta(
 	environment: EnvironmentDetail,
 	pageId: string,
 ) {
-	const t = useT();
-	const toast = useToast();
 	const client = useQueryClient();
 	const { renamePage } = useWorkbenchActions();
-	const { openEnvironment } = useOpenVariablesPage();
 	const { id, workspaceId } = environment;
 	// Only name and color: a rename's answer must not bring back older variables.
 	const meta = usePageAutosave<Meta>(async (patch) => {
@@ -56,18 +46,7 @@ export function useEnvironmentMeta(
 		(workspace) => workspace.id === workspaceId,
 	)?.role;
 	const canManage = workspaceRole === "admin" || workspaceRole === "editor";
-	const duplicate = async () => {
-		try {
-			const copy = await duplicateEnvironment(id);
-			storeEnvironment(client, copy);
-			openEnvironment(copy.id, copy.name);
-		} catch (error) {
-			toast.show({
-				tone: "error",
-				title: t("environments.errors.duplicateFailed"),
-				description: errorMessage(error),
-			});
-		}
-	};
+	const duplicateMutation = useDuplicateEnvironment();
+	const duplicate = () => duplicateMutation.mutate(id);
 	return { meta, canManage, duplicate };
 }

@@ -10,7 +10,7 @@ import {
 	interpolationScope,
 	withheldNames,
 } from "@localman/shared/api-client";
-import type { SendInput } from "./workbench-types";
+import type { SendInput } from "./send-types";
 
 /**
  * Scopes below the scripts' `lm.variables`: the resolved globals,

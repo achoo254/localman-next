@@ -67,11 +67,7 @@ export function TreeRowView(props: TreeRowViewProps) {
 	const drag = useDraggable({
 		id: row.id,
 		data: row,
-		disabled:
-			!props.draggable ||
-			row.kind === "collection" ||
-			row.kind === "example" ||
-			renaming,
+		disabled: !props.draggable || row.kind === "collection" || renaming,
 	});
 	const drop = useDroppable({ id: row.id, data: row });
 	const expanded = isBranch(row) ? row.expanded : undefined;

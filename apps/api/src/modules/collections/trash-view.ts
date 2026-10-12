@@ -1,9 +1,9 @@
 import type { TrashedCollectionSummary } from "@localman/shared/api-client";
 import type { Types } from "mongoose";
 import { z } from "zod";
+import { displayNames } from "../users/display-names.js";
 import { WorkspaceModel } from "../workspaces/workspace-model.js";
 import { statusView, tagsView } from "./collection-view.js";
-import { displayNames } from "./people.js";
 import { type TrashedCollection, purgeAtOf } from "./trash-access.js";
 
 export const trashedView = z.object({

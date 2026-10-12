@@ -23,6 +23,7 @@ function setup(initial: VariableView[], localValues: LocalValue[] = []) {
 	const patches: LocalValueWrite[][] = [];
 	let server = initial;
 	let local = localValues;
+	const control = { failShared: false };
 	const view = renderHook<
 		ReturnType<typeof useVariableEditor>,
 		VariableEditorOptions
@@ -41,6 +42,7 @@ function setup(initial: VariableView[], localValues: LocalValue[] = []) {
 		canEdit: true,
 		saveShared: async (writes) => {
 			puts.push(writes);
+			if (control.failShared) throw new Error("shared save failed");
 			server = writes.map((w) => ({
 				...variable(w.key, w.sharedValue),
 				id: w.id ?? `srv-${w.key}`,
@@ -60,7 +62,7 @@ function setup(initial: VariableView[], localValues: LocalValue[] = []) {
 	});
 	view.rerender(props());
 	const refetch = () => view.rerender({ ...props(), variables: [...server] });
-	return { view, puts, patches, refetch };
+	return { view, puts, patches, refetch, control };
 }
 
 /** Past the autosave pause, then the save's promises. */
@@ -138,5 +140,48 @@ describe("useVariableEditor", () => {
 			["a", "1"],
 			["ac", "2"],
 		]);
+	});
+
+	it("resets shared local values only once the shared save succeeds", async () => {
+		const { view, puts, patches, control } = setup(
+			[variable("a", "1"), variable("b", null)],
+			[
+				{ key: "a", value: "2" },
+				{ key: "b", value: "3" },
+			],
+		);
+		control.failShared = true;
+		act(() => view.result.current.shareRows(view.result.current.rows));
+		await pause();
+		expect(puts).toHaveLength(1);
+		expect(patches).toEqual([]);
+		expect(view.result.current.status.state).toBe("error");
+		expect(view.result.current.rows.map((row) => row.local)).toEqual([
+			"2",
+			"3",
+		]);
+		control.failShared = false;
+		await act(() => view.result.current.flush());
+		expect(puts.at(-1)?.map((w) => [w.key, w.sharedValue])).toEqual([
+			["a", "2"],
+			["b", "3"],
+		]);
+		expect(patches).toEqual([
+			[
+				{ key: "a", value: null },
+				{ key: "b", value: null },
+			],
+		]);
+	});
+
+	it("keeps a local value typed after Share instead of resetting it", async () => {
+		const { view, patches } = setup(
+			[variable("a", "1")],
+			[{ key: "a", value: "2" }],
+		);
+		act(() => view.result.current.shareRows(view.result.current.rows));
+		act(() => view.result.current.editLocal("a", "9"));
+		await pause();
+		expect(patches).toEqual([[{ key: "a", value: "9" }]]);
 	});
 });

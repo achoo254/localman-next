@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { example } from "./collections-fixtures";
 import {
 	LIST_PATH,
 	ORDERS,
@@ -96,5 +97,43 @@ describe("collections search", () => {
 		const list = await screen.findByRole("list", { name: "Search results" });
 		expect(within(list).getAllByRole("button")).toHaveLength(2);
 		expect(screen.getByText(/Showing the first 100 matches/)).toBeVisible();
+	});
+
+	it("lists an example under its request and opens it", async () => {
+		const withExample = {
+			...ORDERS,
+			nodes: [...ORDERS.nodes, example("e1", "r1", "a0", "Found")],
+		};
+		const user = userEvent.setup();
+		renderWorkbenchPage({
+			[`GET ${LIST_PATH}`]: {
+				body: { items: [summary("c1", { name: "Orders" }), summary("c2")] },
+			},
+			[SEARCH]: {
+				body: {
+					matches: [
+						{
+							collectionId: "c1",
+							collectionName: "Orders",
+							nodeId: "e1",
+							kind: "example",
+							name: "Found",
+							path: ["Users", "List users"],
+						},
+					],
+					truncated: false,
+				},
+			},
+			"GET /api/v1/collections/c1": { body: withExample },
+		});
+		await typeQuery("found");
+		const [result] = await waitFor(() => {
+			const results = allById("sidebar-search-result");
+			expect(results).toHaveLength(1);
+			return results;
+		});
+		expect(result).toHaveTextContent("Orders / Users / List users");
+		if (result) await user.click(result);
+		expect(await screen.findByRole("tab", { name: /Found/ })).toBeVisible();
 	});
 });

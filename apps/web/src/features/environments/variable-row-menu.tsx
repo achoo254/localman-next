@@ -14,6 +14,7 @@ import {
 	DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import { useT } from "../../i18n/i18n-context";
+import { canReset, canUnshare, shareActionOf } from "./variable-batch";
 import { type VariableRow, currentValue } from "./variable-rows";
 
 export interface VariableRowMenuProps {
@@ -36,15 +37,8 @@ export interface VariableRowMenuProps {
 export function VariableRowMenu(props: VariableRowMenuProps) {
 	const t = useT();
 	const { row, canEdit } = props;
-	const hasLocal = row.local !== undefined;
-	const shared = row.variable.sharedValue !== null || row.variable.sharedHidden;
 	const value = currentValue(row);
-	const shareAction =
-		canEdit && hasLocal && row.sync === "edited"
-			? shared && !row.localOnly
-				? "update"
-				: "share"
-			: null;
+	const shareAction = shareActionOf(row, canEdit);
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger
@@ -57,7 +51,11 @@ export function VariableRowMenu(props: VariableRowMenuProps) {
 			<DropdownMenuContent align="end">
 				{shareAction ? (
 					<DropdownMenuItem
-						data-id={`var-table-${shareAction}`}
+						data-id={
+							shareAction === "share"
+								? "var-menu-share"
+								: "var-menu-update-shared"
+						}
 						icon={<IconCloudUpload size={16} aria-hidden="true" />}
 						onSelect={props.onShare}
 					>
@@ -66,18 +64,18 @@ export function VariableRowMenu(props: VariableRowMenuProps) {
 							: t("environments.table.updateShared")}
 					</DropdownMenuItem>
 				) : null}
-				{hasLocal ? (
+				{canReset(row) ? (
 					<DropdownMenuItem
-						data-id="var-table-reset"
+						data-id="var-menu-reset"
 						icon={<IconArrowBackUp size={16} aria-hidden="true" />}
 						onSelect={props.onReset}
 					>
 						{t("environments.table.resetValue")}
 					</DropdownMenuItem>
 				) : null}
-				{canEdit && shared && !row.localOnly ? (
+				{canUnshare(row, canEdit) ? (
 					<DropdownMenuItem
-						data-id="var-table-unshare"
+						data-id="var-menu-unshare"
 						icon={<IconLock size={16} aria-hidden="true" />}
 						onSelect={props.onUnshare}
 					>
@@ -85,7 +83,7 @@ export function VariableRowMenu(props: VariableRowMenuProps) {
 					</DropdownMenuItem>
 				) : null}
 				<DropdownMenuItem
-					data-id="var-table-copy"
+					data-id="var-menu-copy"
 					icon={<IconCopy size={16} aria-hidden="true" />}
 					disabled={value === null}
 					onSelect={() => {
@@ -99,7 +97,7 @@ export function VariableRowMenu(props: VariableRowMenuProps) {
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
 							danger
-							data-id="var-table-delete"
+							data-id="var-menu-delete"
 							icon={<IconTrash size={16} aria-hidden="true" />}
 							onSelect={props.onDelete}
 						>

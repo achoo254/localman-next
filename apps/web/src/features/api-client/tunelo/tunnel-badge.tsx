@@ -1,4 +1,8 @@
-import { localTargetKey, rewriteToTunnel } from "@localman/shared/api-client";
+import {
+	type RouteMode,
+	localTargetKey,
+	rewriteToTunnel,
+} from "@localman/shared/api-client";
 import { IconPlugConnected, IconX } from "@tabler/icons-react";
 import { Tooltip } from "../../../components/ui/tooltip";
 import { useT } from "../../../i18n/i18n-context";
@@ -9,11 +13,13 @@ import {
 } from "../routing/use-client-settings";
 
 /**
- * In the URL bar of a local URL that has an enabled tunnel mapping:
- * "Via Tunelo", the real URL in a tooltip, and a button removing the
- * mapping. `{{var}}` URLs are skipped (their host is not known yet).
+ * In the URL bar of a local URL that has an enabled tunnel mapping: what
+ * the request's route does with it (Proxy goes through the tunnel; Auto
+ * only when the browser cannot send straight; Direct never), the real URL
+ * in a tooltip, and a button removing the mapping. `{{var}}` URLs are
+ * skipped (their host is not known yet).
  */
-export function TunnelBadge({ url }: { url: string }) {
+export function TunnelBadge({ url, mode }: { url: string; mode: RouteMode }) {
 	const t = useT();
 	const { settings } = useClientSettings();
 	const remove = useSettingsChange(clientSettingsApi.deleteTunnel);
@@ -25,18 +31,28 @@ export function TunnelBadge({ url }: { url: string }) {
 		: undefined;
 	if (!local || !mapping) return null;
 	const real = rewriteToTunnel(url, mapping.url) ?? mapping.url;
+	const label =
+		mode === "proxy"
+			? t("apiClientTunelo.badge.label")
+			: mode === "auto"
+				? t("apiClientTunelo.badge.labelAuto")
+				: t("apiClientTunelo.badge.labelDirect");
+	const tip =
+		mode === "proxy"
+			? t("apiClientTunelo.badge.tip", { url: real })
+			: mode === "auto"
+				? t("apiClientTunelo.badge.tipAuto", { url: real })
+				: t("apiClientTunelo.badge.tipDirect", { url: real });
 	return (
 		<span className="mr-1 inline-flex flex-none items-center gap-1 self-center rounded-full border border-info/40 py-0.5 pr-0.5 pl-2 font-mono font-semibold text-info-text text-xs">
-			<Tooltip content={t("apiClientTunelo.badge.tip", { url: real })}>
+			<Tooltip content={tip}>
 				<span
 					data-id="request-url-tunnel-badge"
 					className="inline-flex items-center gap-1 rounded-sm"
 				>
 					<IconPlugConnected size={12} aria-hidden="true" />
-					{t("apiClientTunelo.badge.label")}
-					<span className="sr-only">
-						{t("apiClientTunelo.badge.tip", { url: real })}
-					</span>
+					{label}
+					<span className="sr-only">{tip}</span>
 				</span>
 			</Tooltip>
 			<button

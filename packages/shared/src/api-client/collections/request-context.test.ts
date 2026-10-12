@@ -52,6 +52,8 @@ function collection(nodes: CollectionNode[]): CollectionDetail {
 		updatedBy: "u1",
 		updatedByName: null,
 		updatedAt: "2026-10-11T00:00:00.000Z",
+		mockProject: null,
+		relatedEnvironment: null,
 		nodes,
 	};
 }

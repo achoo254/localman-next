@@ -41,6 +41,8 @@ function fakeRunner(): ScriptRunner & { inputs: ScriptRunInput[] } {
 							],
 						}
 					: input.request,
+				globals: {},
+				collectionVariables: {},
 				environment: {},
 				variables: pre ? { id: "42" } : { ...input.variables },
 				tests: pre ? [] : [{ name: "ok", passed: true, error: null }],

@@ -12,7 +12,7 @@ import {
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useT } from "../../i18n/i18n-context";
-import type { SendContextOf } from "../api-client/workbench/use-send-tab";
+import type { SendContextOf } from "../api-client/workbench/send-hooks";
 import type { SendContext } from "../api-client/workbench/workbench-tab-types";
 import type { WorkbenchTab } from "../api-client/workbench/workbench-types";
 import { useWorkspacesEnabled } from "../workspaces/use-workspaces-enabled";

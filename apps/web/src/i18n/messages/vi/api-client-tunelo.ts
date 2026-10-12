@@ -60,6 +60,12 @@ export const apiClientTunelo: Messages["apiClientTunelo"] = {
 	badge: {
 		label: "Qua Tunelo",
 		tip: "Gửi tới {url}",
+		labelAuto: "Có tunnel",
+		tipAuto:
+			"Auto gửi thẳng từ trình duyệt khi được, và qua {url} khi không được. Chọn Proxy để luôn đi qua tunnel.",
+		labelDirect: "Không dùng tunnel",
+		tipDirect:
+			"Trực tiếp luôn gửi từ trình duyệt. Chọn Proxy hoặc Auto để dùng {url}.",
 		unmap: "Bỏ ánh xạ của {key}",
 	},
 };

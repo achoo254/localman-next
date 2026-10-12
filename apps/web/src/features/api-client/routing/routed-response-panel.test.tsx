@@ -2,16 +2,13 @@ import { createRequestDraft } from "@localman/shared/api-client";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { RequestSender, SendInput } from "../workbench/send-types";
 import {
 	WorkbenchProvider,
 	useWorkbench,
 } from "../workbench/workbench-context";
 import { stubClientApi } from "../workbench/workbench-test-utils";
-import type {
-	RequestSender,
-	SendInput,
-	SettledResponse,
-} from "../workbench/workbench-types";
+import type { SettledResponse } from "../workbench/workbench-types";
 import { RoutedResponsePanel } from "./routed-response-panel";
 import { RESPONSE } from "./routed-sender-test-utils";
 import { renderClient } from "./routing-test-utils";

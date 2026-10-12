@@ -62,13 +62,22 @@ function responseText(response: ClientResponse): string {
 
 /** Everything but the body, which goes in as its own string. */
 function vmInputJson(input: ScriptRunInput): string {
-	const { phase, request, environment, variables } = input;
+	const { phase, request, globals, collectionVariables } = input;
+	const { environment, variables } = input;
 	let response = null;
 	if (input.phase === "post") {
 		const { body: _body, bodyEncoding: _encoding, ...rest } = input.response;
 		response = rest;
 	}
-	return JSON.stringify({ phase, request, environment, variables, response });
+	return JSON.stringify({
+		phase,
+		request,
+		globals,
+		collectionVariables,
+		environment,
+		variables,
+		response,
+	});
 }
 
 function dumpAndDispose(vm: QuickJSContext, handle: QuickJSHandle): unknown {

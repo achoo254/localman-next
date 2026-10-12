@@ -97,7 +97,7 @@ export function SaveToCollectionModal({
 			title={t("collections.save.title")}
 			size="md"
 			initialFocusRef={nameRef}
-			data-id="modal-save-to-collection"
+			data-id="modal-save-request"
 			footer={
 				<ModalFooter>
 					<ModalClose asChild>
@@ -107,7 +107,7 @@ export function SaveToCollectionModal({
 					</ModalClose>
 					<Button
 						variant="primary"
-						data-id="modal-save-to-collection-submit"
+						data-id="modal-save-request-submit"
 						loading={busy}
 						disabled={!chosen || name.trim() === ""}
 						onClick={() => void submit()}
@@ -123,7 +123,7 @@ export function SaveToCollectionModal({
 						ref={nameRef}
 						value={name}
 						maxLength={COLLECTION_NAME_MAX}
-						data-id="modal-save-to-collection-name"
+						data-id="modal-save-request-name"
 						onChange={(event) => setName(event.target.value)}
 					/>
 				</FormField>
@@ -133,7 +133,7 @@ export function SaveToCollectionModal({
 					<FormField label={t("collections.save.collection")}>
 						<Select
 							value={chosen?.id ?? ""}
-							data-id="modal-save-to-collection-collection"
+							data-id="modal-save-request-dest"
 							onChange={(event) => {
 								setCollectionId(event.target.value);
 								setFolderId("");
@@ -150,7 +150,7 @@ export function SaveToCollectionModal({
 				<FormField label={t("collections.save.folder")}>
 					<Select
 						value={folderId}
-						data-id="modal-save-to-collection-folder"
+						data-id="modal-save-request-folder"
 						disabled={!detail.data}
 						onChange={(event) => setFolderId(event.target.value)}
 					>

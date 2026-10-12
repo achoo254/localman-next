@@ -63,3 +63,5 @@ export * from "./collections/collection-tree-schema.js";
 export * from "./environments/environment-model.js";
 export * from "./environments/environment-schemas.js";
 export * from "./environments/variable-resolver.js";
+export * from "./environments/script-scope-values.js";
+export * from "./environments/postman-environment.js";

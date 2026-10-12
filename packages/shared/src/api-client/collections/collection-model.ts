@@ -17,7 +17,18 @@ import type {
 	RequestScripts,
 } from "../request-model.js";
 import type { VariableEntry } from "../variable-interpolation.js";
+import type {
+	CollectionEnvironmentLink,
+	CollectionMockProjectLink,
+} from "./collection-links-model.js";
 import type { CollectionStatus } from "./collection-tags.js";
+
+export {
+	type CollectionEnvironmentLink,
+	type CollectionMockProjectLink,
+	ENVIRONMENT_COLLECTIONS_MAX,
+	type EnvironmentCollectionUse,
+} from "./collection-links-model.js";
 
 export const COLLECTION_NAME_MAX = 200;
 export const COLLECTION_DESCRIPTION_MAX = 20_000;
@@ -114,6 +125,16 @@ export interface CollectionDetail {
 	updatedBy: string;
 	updatedByName: string | null;
 	updatedAt: string;
+	/**
+	 * `null` when none, or when the project is gone or the caller cannot
+	 * read it (its name never shows to them).
+	 */
+	mockProject: CollectionMockProjectLink | null;
+	/**
+	 * `null` when none, or when it is gone, in another workspace or not
+	 * readable by the caller.
+	 */
+	relatedEnvironment: CollectionEnvironmentLink | null;
 	nodes: CollectionNode[];
 }
 
@@ -148,16 +169,16 @@ export interface CollectionSearchMatch {
 	collectionName: string;
 	/** `null` when the collection itself matched. */
 	nodeId: string | null;
-	kind: "collection" | "folder" | "request";
+	kind: "collection" | "folder" | "request" | "example";
 	name: string;
 	/** Requests only. */
 	method?: HttpMethod;
-	/** Names of the folders above the node, outermost first. */
+	/** Names of the folders (and an example's request) above the node, outermost first. */
 	path: string[];
 }
 
 export interface CollectionSearchResult {
-	/** Collections first (by name), then folders and requests. */
+	/** Collections first (by name), then folders, requests and examples. */
 	matches: CollectionSearchMatch[];
 	/** More matched than `COLLECTION_SEARCH_RESULTS_MAX`. */
 	truncated: boolean;

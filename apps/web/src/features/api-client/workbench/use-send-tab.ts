@@ -2,43 +2,21 @@
  * Sending for the workbench: one request in flight per tab, cancellable,
  * its outcome stored as the tab's response, then recorded in history.
  */
-import type { ResolverLayer } from "@localman/shared/api-client";
+import type { ScriptScopeChanges } from "@localman/shared/api-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { type Dispatch, type RefObject, useCallback, useRef } from "react";
 import { useToast } from "../../../components/ui/toast";
 import { activeTranslator } from "../../../i18n/active-translator";
 import { useT } from "../../../i18n/i18n-context";
 import { recordSend } from "./record-send";
+import type { SaveScopes, SendHooks } from "./send-hooks";
 import { failed } from "./send-steps";
+import type { RequestSender, SendOptions } from "./send-types";
+import { withTemporaryLayer } from "./temporary-variables";
 import type { WorkbenchAction } from "./workbench-action";
 import type { WorkbenchState } from "./workbench-reducer";
 import type { SendContext } from "./workbench-tab-types";
-import type {
-	RequestSender,
-	SendOptions,
-	SettledResponse,
-	WorkbenchTab,
-} from "./workbench-types";
-
-/**
- * What a tab bound to a collection request inherits when sent. When its
- * collection (or the request in it) cannot be read, the send fails with
- * `unavailable`, the reason to show: sending it as a loose request would
- * drop its auth and scripts without a word.
- */
-export type SendContextOf = (
-	tab: WorkbenchTab,
-) => Promise<{ context: SendContext } | { unavailable: string }>;
-
-/**
- * The variable scopes a send resolves `{{name}}` from: globals, the
- * bound tab's collection and the active environment, each with the
- * caller's local values. `undefined` keeps the collection variables only.
- */
-export type VariablesOf = (
-	tab: WorkbenchTab,
-	context: SendContext | null,
-) => Promise<readonly ResolverLayer[] | undefined>;
+import type { SettledResponse, WorkbenchTab } from "./workbench-types";
 
 export interface SendTab {
 	send: (tabId: string, options?: SendOptions) => Promise<void>;
@@ -61,28 +39,50 @@ export function useSendTab(
 	latest: RefObject<WorkbenchState>,
 	dispatch: Dispatch<WorkbenchAction>,
 	sender: RequestSender,
-	sendContext?: SendContextOf,
-	variablesOf?: VariablesOf,
+	hooks: SendHooks = {},
 ): SendTab {
 	const t = useT();
 	const toast = useToast();
 	const queryClient = useQueryClient();
 	const controllers = useRef(new Map<string, AbortController>());
 	// Read at send time, so a new function does not change `send`.
-	const contextOf = useRef(sendContext);
-	contextOf.current = sendContext;
-	const layersOf = useRef(variablesOf);
-	layersOf.current = variablesOf;
-	// The variables could not be read: the send stops and says why.
+	const hooksOf = useRef(hooks);
+	hooksOf.current = hooks;
+	// The variables could not be read: the send stops and says why. The
+	// tab's temporary variables go on top of whatever was read.
 	const variablesFor = useCallback(
 		async (tab: WorkbenchTab, context: SendContext | null) => {
 			try {
-				return await layersOf.current?.(tab, context);
+				const layers = await hooksOf.current.variablesOf?.(tab, context);
+				return withTemporaryLayer(layers, context, tab.temporary);
 			} catch {
 				return UNAVAILABLE;
 			}
 		},
 		[],
+	);
+
+	// Saves the scripts' scope changes; says what was dropped or failed.
+	const keepScopes = useCallback(
+		async (save: ReturnType<SaveScopes>, changes: ScriptScopeChanges) => {
+			const { saved, dropped } = await save(changes);
+			if (dropped.length > 0) {
+				const scopes = dropped
+					.map((scope) => t(`apiClient.send.scopeNames.${scope}`))
+					.join(", ");
+				toast.show({
+					tone: "info",
+					title: t("apiClient.send.scopesDropped", { scopes }),
+				});
+			}
+			if (!saved) {
+				toast.show({
+					tone: "error",
+					title: t("apiClient.send.scopesNotSaved"),
+				});
+			}
+		},
+		[t, toast],
 	);
 
 	const abort = useCallback((tabId: string) => {
@@ -102,9 +102,14 @@ export function useSendTab(
 				response: { kind: "sending" },
 			});
 			let settled: SettledResponse;
+			let changes: ScriptScopeChanges | null = null;
+			// Where script changes go is fixed at the click, before any await.
+			const saveChanges = hooksOf.current.saveScopes?.(
+				tab.source?.collectionId ?? null,
+			);
 			try {
 				const { draft, files, routeChosen } = tab;
-				const resolve = contextOf.current;
+				const resolve = hooksOf.current.sendContext;
 				const found = tab.source && resolve ? await resolve(tab) : null;
 				const context = found && "context" in found ? found.context : null;
 				const variables = await variablesFor(tab, context);
@@ -127,12 +132,21 @@ export function useSendTab(
 									...(options ? { options } : {}),
 									...(context ? { context } : {}),
 									...(variables ? { variables } : {}),
+									onScopeChanges: (latest) => {
+										changes = latest;
+									},
 								});
 			} catch {
 				// Senders never reject; a bug in one must not leave the tab spinning.
 				settled = senderBug();
 			}
-			if (controllers.current.get(tabId) !== controller) return;
+			// Done, failed or cancelled: what the scripts set is kept.
+			const keep =
+				changes && saveChanges ? keepScopes(saveChanges, changes) : null;
+			if (controllers.current.get(tabId) !== controller) {
+				await keep;
+				return;
+			}
 			controllers.current.delete(tabId);
 			dispatch({
 				type: "setResponse",
@@ -140,6 +154,7 @@ export function useSendTab(
 				response:
 					settled.kind === "done" ? { ...settled, draft: tab.draft } : settled,
 			});
+			await keep;
 			// History gets the tab's draft as typed: inherited credentials stay out.
 			if (!(await recordSend(tab.draft, settled, queryClient))) {
 				toast.show({
@@ -148,7 +163,7 @@ export function useSendTab(
 				});
 			}
 		},
-		[latest, dispatch, sender, variablesFor, queryClient, toast, t],
+		[latest, dispatch, sender, variablesFor, keepScopes, queryClient, toast, t],
 	);
 
 	const cancel = useCallback(

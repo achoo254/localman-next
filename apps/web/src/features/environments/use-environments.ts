@@ -20,6 +20,7 @@ import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import {
 	fetchEnvironment,
+	fetchEnvironmentCollections,
 	fetchEnvironments,
 	fetchGlobals,
 } from "./environments-api";
@@ -57,6 +58,15 @@ export function useEnvironment(id: string | null) {
 		queryKey: environmentKey(id ?? ""),
 		queryFn: () => fetchEnvironment(id ?? ""),
 		enabled: id !== null,
+		staleTime: STALE_MS,
+	});
+}
+
+/** Collections that use an environment (Info of its page). */
+export function useEnvironmentCollections(id: string) {
+	return useQuery({
+		queryKey: [...ENVIRONMENTS_KEY, "collections", id] as const,
+		queryFn: () => fetchEnvironmentCollections(id),
 		staleTime: STALE_MS,
 	});
 }

@@ -20,14 +20,18 @@ import { useT } from "../../i18n/i18n-context";
 import { copyText } from "../../platform/clipboard";
 import { appPageUrl } from "../../platform/navigation";
 import type { CollectionPageTab } from "../api-client/workbench/workbench-tab-types";
+import { collectionNodePath } from "../sharing/open-element-state";
 import { elementPath } from "../sharing/sharing-api";
 import { EditableName } from "./editable-name";
 import { PageSaveState } from "./page-save-state";
+import { SharedWithYouBadge } from "./shared-with-you-badge";
 import { useExportCollection } from "./use-export-collection";
 import type { SaveStatus } from "./use-page-autosave";
 
 export interface PageHeaderProps {
 	page: CollectionPageTab;
+	/** The collection's workspace ("Shared with you" outside the caller's). */
+	workspaceId: string;
 	name: string;
 	collectionName: string;
 	canEdit: boolean;
@@ -47,9 +51,10 @@ export function PageHeader(props: PageHeaderProps) {
 	const { page } = props;
 	const Icon = page.kind === "collection" ? IconStack2 : IconFolder;
 	const copyLink = async () => {
-		const ok = await copyText(
-			appPageUrl(elementPath("collection", page.collectionId)),
-		);
+		const path = page.nodeId
+			? collectionNodePath(page.collectionId, page.nodeId)
+			: elementPath("collection", page.collectionId);
+		const ok = await copyText(appPageUrl(path));
 		toast.show(
 			ok
 				? { tone: "success", title: t("collections.toast.linkCopied") }
@@ -74,12 +79,13 @@ export function PageHeader(props: PageHeaderProps) {
 				data-id="collection-name"
 				onRename={props.onRename}
 			/>
+			<SharedWithYouBadge workspaceId={props.workspaceId} />
 			{props.extra}
 			<PageSaveState status={props.status} onRetry={props.onRetry} />
 			<Button
 				size="sm"
 				variant="secondary"
-				data-id="collection-share"
+				data-id="collection-header-share"
 				onClick={props.onShare}
 			>
 				<IconShare size={16} aria-hidden="true" />

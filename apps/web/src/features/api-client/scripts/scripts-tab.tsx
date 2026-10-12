@@ -3,8 +3,9 @@ import { type ReactNode, useState } from "react";
 import { CodeEditor } from "../../../components/ui/code-editor";
 import { SegmentedControl } from "../../../components/ui/segmented-control";
 import { useT } from "../../../i18n/i18n-context";
+import { useEnvironmentsEnabled } from "../../environments/use-environments-enabled";
 import type { DraftPaneProps } from "../request/draft-pane";
-import { SCRIPT_SNIPPETS, appendSnippet } from "./script-snippets";
+import { appendSnippet, availableSnippets } from "./script-snippets";
 
 export type ScriptPhase = "pre" | "post";
 
@@ -44,6 +45,8 @@ export function ScriptsEditor({
 	note,
 }: ScriptsEditorProps) {
 	const t = useT();
+	// Scope writes only keep their values while environments are on.
+	const scopes = useEnvironmentsEnabled();
 	const [phase, setPhase] = useState<ScriptPhase>("pre");
 	const script = scripts[phase];
 	const setScript = (text: string) => onChange(phase, text);
@@ -103,7 +106,7 @@ export function ScriptsEditor({
 				>
 					{t("apiClient.scripts.snippetsTitle")}
 				</h3>
-				{SCRIPT_SNIPPETS.map((snippet) => (
+				{availableSnippets(scopes).map((snippet) => (
 					<button
 						key={snippet.id}
 						type="button"

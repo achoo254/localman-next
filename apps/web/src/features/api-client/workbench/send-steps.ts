@@ -8,23 +8,27 @@ import {
 	type ClientResponse,
 	type PreparedRequest,
 	RequestPrepareError,
+	type ScriptScopeValues,
 	type VariableScope,
 	prepareRequest,
+	withScriptScopes,
 } from "@localman/shared/api-client";
 import type { ScriptRunner } from "@localman/shared/api-client/script-sandbox";
 import { activeTranslator } from "../../../i18n/active-translator";
-import { readFileBytes } from "../../../platform/file-read";
 import { withVerbatimQuery } from "../request/params-sync";
+import { bodyFiles } from "./body-files";
+import { fakerForSend } from "./faker-loader";
 import { nonBlankScripts, runPostScripts, runPreScripts } from "./script-chain";
+import { givenScopesOf, reportScopes } from "./script-scopes";
 import { scriptVariableScope } from "./script-steps";
 import { prepareErrorMessage, scriptErrorMessage } from "./send-messages";
+import type { SendInput } from "./send-types";
 import { variableScopes, withheldUsed } from "./send-variables";
 import { newId } from "./workbench-ids";
 import type {
 	RouteInfo,
 	ScriptOutcome,
 	SendFailure,
-	SendInput,
 	SendRoute,
 	SettledResponse,
 } from "./workbench-types";
@@ -48,6 +52,11 @@ export interface ReadySend {
 	toSend: ApiRequestDraft;
 	prepared: PreparedRequest;
 	variables: Record<string, string>;
+	/** What the scripts saw of the scopes before running. */
+	givenScopes: ScriptScopeValues;
+	/** The scopes after the pre-request scripts. */
+	scopes: ScriptScopeValues;
+	onScopeChanges?: SendInput["onScopeChanges"];
 	preScript: ScriptOutcome | null;
 	/** Post-response scripts in run order (collection first). */
 	postScripts: string[];
@@ -56,25 +65,6 @@ export interface ReadySend {
 export type PrepareOutcome =
 	| ReadySend
 	| { ok: false; settled: SettledResponse };
-
-/** Bytes of the files the active body refers to. */
-async function bodyFiles(
-	draft: ApiRequestDraft,
-	files: ReadonlyMap<string, File>,
-): Promise<Map<string, Uint8Array>> {
-	const refs =
-		draft.body.type === "binary"
-			? [draft.body.binary]
-			: draft.body.type === "formdata"
-				? draft.body.formData.map((row) => (row.enabled ? row.file : null))
-				: [];
-	const bytes = new Map<string, Uint8Array>();
-	for (const ref of refs) {
-		const file = ref ? files.get(ref.fileId) : undefined;
-		if (ref && file) bytes.set(ref.fileId, await readFileBytes(file));
-	}
-	return bytes;
-}
 
 /**
  * Runs the pre-request scripts, then fills `{{var}}`, auth and the body.
@@ -100,7 +90,8 @@ export async function prepareSend(
 	const postScripts = context
 		? nonBlankScripts(context.postScripts)
 		: nonBlankScripts([draft.scripts.post]);
-	const chain = await runPreScripts(pre, base, scripts, newId);
+	const givenScopes = givenScopesOf(input);
+	const chain = await runPreScripts(pre, base, scripts, newId, givenScopes);
 	const preScript = chain.outcome;
 	if (chain.error) {
 		const message = t("apiClient.send.preScriptFailed", {
@@ -110,9 +101,15 @@ export async function prepareSend(
 		return { ok: false, settled: failed({ code, message, preScript }) };
 	}
 	const { toSend, variables } = chain;
+	// Saved even when the request then fails or is cancelled, as in Postman.
+	reportScopes(input.onScopeChanges, givenScopes, chain.scopes);
 	if (signal.aborted) return { ok: false, settled: CANCELLED };
 
-	const withheld = withheldUsed(input.variables, toSend, variables);
+	// A value a script set in a scope fills `{{name}}` in this very send.
+	const layers = input.variables
+		? withScriptScopes(input.variables, chain.scopes)
+		: undefined;
+	const withheld = withheldUsed(layers, toSend, variables);
 	if (withheld) {
 		const message = t("apiClient.send.secretWithheld", { name: withheld });
 		return {
@@ -121,15 +118,32 @@ export async function prepareSend(
 		};
 	}
 	const scopes: VariableScope[] = [
-		...variableScopes(input.variables, context),
+		...variableScopes(layers, context),
 		scriptVariableScope(variables),
 	];
+	const faker = await fakerForSend(toSend);
+	if (!faker.ok) {
+		const message = t("apiClient.send.dynamicVariablesUnavailable");
+		const code = "DYNAMIC_VARIABLES_UNAVAILABLE";
+		return { ok: false, settled: failed({ code, message, preScript }) };
+	}
+	if (signal.aborted) return { ok: false, settled: CANCELLED };
 	try {
 		const prepared = prepareRequest(withVerbatimQuery(toSend), {
-			variables: { scopes },
+			variables: { scopes, runFaker: faker.runFaker },
 			files: await bodyFiles(toSend, files),
 		});
-		return { ok: true, toSend, prepared, variables, preScript, postScripts };
+		return {
+			ok: true,
+			toSend,
+			prepared,
+			variables,
+			givenScopes,
+			scopes: chain.scopes,
+			onScopeChanges: input.onScopeChanges,
+			preScript,
+			postScripts,
+		};
 	} catch (error) {
 		if (error instanceof RequestPrepareError) {
 			const message = prepareErrorMessage(error);
@@ -159,13 +173,15 @@ export async function finishSend(
 	scripts: ScriptRunner,
 ): Promise<SettledResponse> {
 	const { toSend, prepared, variables, preScript } = ready;
-	const postScript = await runPostScripts(
+	const post = await runPostScripts(
 		ready.postScripts,
 		toSend,
 		variables,
 		delivered.response,
 		scripts,
+		ready.scopes,
 	);
+	reportScopes(ready.onScopeChanges, ready.givenScopes, post.scopes);
 	return {
 		kind: "done",
 		result: {
@@ -173,7 +189,7 @@ export async function finishSend(
 			route: delivered.route,
 			request: { method: prepared.method, url: prepared.url },
 			preScript,
-			postScript,
+			postScript: post.outcome,
 			finishedAt: new Date().toISOString(),
 			...(delivered.routing ? { routing: delivered.routing } : {}),
 		},

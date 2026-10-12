@@ -2,7 +2,8 @@
  * Drag and drop in the collections tree (pure): where on a row a drop
  * lands, and the move it asks the API for (new parent and the order keys
  * of the neighbours around the drop). Drops stay inside one collection;
- * a folder never goes into itself or a folder below it.
+ * a folder never goes into itself or a folder below it, and an example
+ * only moves among the examples of its own request.
  */
 import {
 	type CollectionNode,
@@ -112,13 +113,19 @@ export function planMove(
 	const dragged = nodes.find((node) => node.id === draggedId);
 	if (!dragged) return null;
 	if (target.kind === "node" && target.nodeId === draggedId) return null;
-	// Examples stay under their request, and nothing drops among them.
-	if (dragged.kind === "example") return null;
-	if (
-		target.kind === "node" &&
-		nodes.find((node) => node.id === target.nodeId)?.kind === "example"
-	) {
-		return null;
+	// Examples stay under their request: they only trade places with its
+	// other examples, and nothing else drops among them.
+	const targetNode =
+		target.kind === "node"
+			? nodes.find((node) => node.id === target.nodeId)
+			: undefined;
+	const onExample = targetNode?.kind === "example";
+	if (dragged.kind === "example" || onExample) {
+		const sameRequest =
+			dragged.kind === "example" &&
+			onExample &&
+			targetNode.parentId === dragged.parentId;
+		if (!sameRequest || position === "inside") return null;
 	}
 	const slot = slotOf(nodes, target, position);
 	if (!slot) return null;
@@ -160,9 +167,10 @@ export function applyMove(
 	} catch {
 		return [...nodes];
 	}
-	return nodes.map((node) =>
-		node.id === nodeId && node.kind !== "example"
-			? { ...node, parentId: move.parentId, order }
-			: node,
-	);
+	return nodes.map((node) => {
+		if (node.id !== nodeId) return node;
+		// An example keeps its request; only its place among its siblings moves.
+		if (node.kind === "example") return { ...node, order };
+		return { ...node, parentId: move.parentId, order };
+	});
 }

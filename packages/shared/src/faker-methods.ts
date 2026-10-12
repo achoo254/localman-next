@@ -57,3 +57,18 @@ export function runFakerMethod(
 ): JsonValue | undefined {
 	return RUNNERS.get(id)?.(faker);
 }
+
+/**
+ * A whitelisted method's value as text, for `{{$random…}}`: strings as
+ * they are, numbers and booleans printed, arrays and objects as JSON;
+ * `""` when `id` is not in the whitelist.
+ */
+export function runFakerMethodText(
+	id: string,
+	faker: Faker = defaultFaker,
+): string {
+	const value = runFakerMethod(id, faker);
+	if (value === undefined || value === null) return "";
+	if (typeof value === "object") return JSON.stringify(value);
+	return String(value);
+}

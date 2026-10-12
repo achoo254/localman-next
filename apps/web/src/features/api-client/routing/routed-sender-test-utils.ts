@@ -6,10 +6,8 @@ import {
 } from "@localman/shared/api-client";
 import { type Mock, vi } from "vitest";
 import type { ProxyHopOutcome } from "../workbench/proxy-hop";
-import type {
-	SendOptions,
-	SettledResponse,
-} from "../workbench/workbench-types";
+import type { SendOptions } from "../workbench/send-types";
+import type { SettledResponse } from "../workbench/workbench-types";
 import type { DirectOutcome } from "./direct-fetch";
 import type { RoutingSnapshot, SecretAsk } from "./route-types";
 import { createRoutedSender } from "./routed-sender";

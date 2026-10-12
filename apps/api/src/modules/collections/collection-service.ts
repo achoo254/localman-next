@@ -15,6 +15,10 @@ import { requireCollection } from "./collection-access.js";
 import { rootBytes } from "./collection-bytes.js";
 import { type NewCollection, insertCollection } from "./collection-insert.js";
 import {
+	requireLinkableEnvironment,
+	requireReadableProject,
+} from "./collection-links.js";
+import {
 	CollectionModel,
 	LIVE_COLLECTION,
 	type StoredCollection,
@@ -33,6 +37,8 @@ export interface CollectionSource {
 	readonly name?: string;
 	readonly tree?: CollectionTree;
 	readonly template?: CollectionTemplate;
+	/** The mock project it is made from (a link only). */
+	readonly mockProjectId?: string;
 }
 
 function emptyTree(name: string): CollectionTree {
@@ -75,7 +81,7 @@ export async function insertAndLoad(
 		insertCollection(input, session),
 	);
 	// Its creator adds elements to the workspace: an Admin or Editor there.
-	return loadCollectionDetail(id, "editor");
+	return loadCollectionDetail(id, "editor", input.sub);
 }
 
 /**
@@ -88,8 +94,18 @@ export async function createCollection(
 	source: CollectionSource,
 ): Promise<CollectionDetail> {
 	const { workspace } = await requireWorkspace(sub, "addElements", workspaceId);
+	const mockProjectId =
+		source.mockProjectId === undefined
+			? undefined
+			: await requireReadableProject(sub, source.mockProjectId);
 	const { root, nodes } = collectionTreeToNodes(treeOf(source), newNodeId);
-	return insertAndLoad({ workspaceId: workspace._id, root, nodes, sub });
+	return insertAndLoad({
+		workspaceId: workspace._id,
+		root,
+		nodes,
+		sub,
+		...(mockProjectId ? { mockProjectId } : {}),
+	});
 }
 
 export type CollectionUpdate = z.infer<typeof collectionUpdateSchema>;
@@ -109,11 +125,31 @@ export async function updateCollection(
 		id,
 		"edit",
 	);
+	const { linkedEnvironmentId, mockProjectId, ...content } = update;
 	const set: Record<string, unknown> = {};
-	for (const [key, value] of Object.entries(update)) {
+	for (const [key, value] of Object.entries(content)) {
 		if (value !== undefined) set[key] = value;
 	}
-	if (update.name !== undefined) set.searchName = foldSearchText(update.name);
+	if (content.name !== undefined) {
+		set.searchName = foldSearchText(content.name);
+	}
+	// Links stay out of the changelog; `null` records "none".
+	if (linkedEnvironmentId !== undefined) {
+		set.linkedEnvironmentId =
+			linkedEnvironmentId === null
+				? null
+				: await requireLinkableEnvironment(
+						sub,
+						element.workspaceId,
+						linkedEnvironmentId,
+					);
+	}
+	if (mockProjectId !== undefined) {
+		set.mockProjectId =
+			mockProjectId === null
+				? null
+				: await requireReadableProject(sub, mockProjectId);
+	}
 	await inWorkspaceTransaction(element.workspaceId, async (session) => {
 		const root = await CollectionModel.findOne({
 			_id: collectionId,
@@ -123,7 +159,7 @@ export async function updateCollection(
 			.lean<StoredCollection>();
 		if (!root) throw elementNotFound();
 		const before = rootStateOf(root);
-		const after = { ...before, ...definedOf(update) };
+		const after = { ...before, ...definedOf(content) };
 		const bytes = rootBytes(after) - rootBytes(before);
 		const revision = rootRevision(
 			"update",
@@ -138,11 +174,16 @@ export async function updateCollection(
 			revisions: [revision],
 		});
 	});
-	return loadCollectionDetail(collectionId, role);
+	return loadCollectionDetail(collectionId, role, sub);
 }
 
+type ContentUpdate = Omit<
+	CollectionUpdate,
+	"linkedEnvironmentId" | "mockProjectId"
+>;
+
 /** The fields of `update` that were sent (absent ones stay). */
-function definedOf(update: CollectionUpdate): CollectionUpdate {
+function definedOf(update: ContentUpdate): ContentUpdate {
 	return Object.fromEntries(
 		Object.entries(update).filter(([, value]) => value !== undefined),
 	);
@@ -154,5 +195,5 @@ export async function getCollection(
 	id: string,
 ): Promise<CollectionDetail> {
 	const { collectionId, role } = await requireCollection(sub, id, "view");
-	return loadCollectionDetail(collectionId, role);
+	return loadCollectionDetail(collectionId, role, sub);
 }

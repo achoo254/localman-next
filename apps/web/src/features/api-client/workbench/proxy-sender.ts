@@ -8,7 +8,7 @@ import type { ScriptRunner } from "@localman/shared/api-client/script-sandbox";
 import { proxyHop } from "./proxy-hop";
 import { createLazyScriptRunner } from "./script-steps";
 import { CANCELLED, failed, finishSend, prepareSend } from "./send-steps";
-import type { RequestSender } from "./workbench-types";
+import type { RequestSender } from "./send-types";
 
 export function createProxySender(
 	scripts: ScriptRunner = createLazyScriptRunner(),

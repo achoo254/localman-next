@@ -1,5 +1,6 @@
-/** Folder and request nodes for the collections tests. */
+/** Folder, request and example nodes for the collections tests. */
 import {
+	type CollectionExampleNode,
 	type CollectionFolderNode,
 	type CollectionRequestNode,
 	createRequestDraft,
@@ -37,5 +38,28 @@ export function request(
 		name,
 		description: "",
 		draft: createRequestDraft({ name, url: `https://api.test/${id}` }),
+	};
+}
+
+export function example(
+	id: string,
+	parentId: string,
+	order: string,
+	name = `Example ${id}`,
+): CollectionExampleNode {
+	return {
+		kind: "example",
+		id,
+		parentId,
+		order,
+		name,
+		request: createRequestDraft({ name, url: `https://api.test/${id}` }),
+		response: {
+			status: 200,
+			statusText: "OK",
+			headers: [],
+			body: "{}",
+			bodyLanguage: "json",
+		},
 	};
 }

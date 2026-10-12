@@ -40,4 +40,6 @@ export type WorkbenchAction =
 			update: (draft: ApiRequestDraft) => ApiRequestDraft;
 	  }
 	| { type: "setFile"; id: string; fileId: string; file: File | null }
-	| { type: "setResponse"; id: string; response: TabResponse };
+	| { type: "setResponse"; id: string; response: TabResponse }
+	/** Sets (or with `null` removes) a temporary variable of the tab. */
+	| { type: "setTemporary"; id: string; key: string; value: string | null };

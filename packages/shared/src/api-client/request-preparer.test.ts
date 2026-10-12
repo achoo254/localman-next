@@ -15,6 +15,28 @@ describe("request preparer (ported)", () => {
 		expect(out.body).toEqual({ kind: "none" });
 	});
 
+	it("fills `{{$random…}}` with the context's Faker runner, leaves it without", () => {
+		const draft = baseRequest({
+			url: "https://api.example.com/users/{{$randomUserName}}",
+			headers: [row("X-Name", "{{$randomFirstName}}")],
+		});
+		const runFaker = (id: string) => id.replace(".", "-");
+		const filled = prepareRequest(draft, {
+			variables: { scopes: [], runFaker },
+		});
+		expect(filled.url).toBe("https://api.example.com/users/internet-userName");
+		expect(filled.headers).toContainEqual({
+			name: "X-Name",
+			value: "name-firstName",
+		});
+		const typed = prepareRequest(draft, { variables: { scopes: [] } });
+		expect(typed.headers).toContainEqual({
+			name: "X-Name",
+			value: "{{$randomFirstName}}",
+		});
+		expect(typed.unresolved).toEqual([]);
+	});
+
 	it("merges auth header for bearer", () => {
 		const out = prepareRequest(
 			baseRequest({ auth: { type: "bearer", token: "token123" } }),

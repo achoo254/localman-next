@@ -32,11 +32,14 @@ export async function fetchCollection(id: string): Promise<CollectionDetail> {
 	return parseDetail(await apiRequest(collectionPath(id)));
 }
 
-/** A blank collection (`name`), the REST CRUD template, or an imported tree. */
+/**
+ * A blank collection (`name`), the REST CRUD template, or an imported tree
+ * (with the mock project it is made from, when it is one).
+ */
 export type CollectionSource =
 	| { name: string }
 	| { template: "rest-crud" }
-	| { tree: CollectionTree };
+	| { tree: CollectionTree; mockProjectId?: string };
 
 export async function createCollection(
 	workspaceId: string,
@@ -50,7 +53,7 @@ export async function createCollection(
 	);
 }
 
-/** Root fields of a collection; round 2 edits description, auth and more. */
+/** Root fields of a collection, and its related environment (`null`: none). */
 export type CollectionPatch = Partial<
 	Pick<
 		CollectionDetail,
@@ -61,7 +64,7 @@ export type CollectionPatch = Partial<
 		| "variables"
 		| "tags"
 		| "status"
-	>
+	> & { linkedEnvironmentId: string | null }
 >;
 
 export async function updateCollection(

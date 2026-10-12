@@ -3,6 +3,7 @@ import {
 	COLLECTION_STATUS_PRESETS,
 	type CollectionDetail,
 	type CollectionNode,
+	ENVIRONMENT_COLORS,
 	apiRequestDraftSchema,
 	effectiveAuthSchema,
 	exampleResponseSchema,
@@ -11,6 +12,7 @@ import {
 	variableEntrySchema,
 } from "@localman/shared/api-client";
 import { z } from "zod";
+import type { CollectionLinks } from "./collection-links.js";
 import type { StoredCollection } from "./collection-model.js";
 import type { StoredCollectionNode } from "./collection-node-model.js";
 
@@ -80,6 +82,15 @@ export const collectionDetailView = z.object({
 	updatedBy: z.string(),
 	updatedByName: z.string().nullable(),
 	updatedAt: z.string(),
+	mockProject: z.object({ id: z.string(), name: z.string() }).nullable(),
+	relatedEnvironment: z
+		.object({
+			id: z.string(),
+			name: z.string(),
+			color: z.enum(ENVIRONMENT_COLORS),
+			source: z.enum(["linked", "shared"]),
+		})
+		.nullable(),
 	nodes: z.array(collectionNodeView),
 });
 
@@ -129,13 +140,14 @@ export function toCollectionNode(node: StoredCollectionNode): CollectionNode {
  * Secret variable values and auth credentials are returned as stored to
  * everyone who may view the collection: "secret" is a masking flag for
  * the UI, not an access level. Only an exported file blanks them, since
- * it leaves Localman.
+ * it leaves Localman. `links` are resolved for the caller beforehand.
  */
 export function toCollectionDetail(
 	root: StoredCollection,
 	nodes: readonly StoredCollectionNode[],
 	role: ElementRole,
 	names: ReadonlyMap<string, string>,
+	links: CollectionLinks,
 ): CollectionDetail {
 	return {
 		id: root._id.toHexString(),
@@ -154,6 +166,8 @@ export function toCollectionDetail(
 		updatedBy: root.updatedBy,
 		updatedByName: names.get(root.updatedBy) ?? null,
 		updatedAt: root.updatedAt.toISOString(),
+		mockProject: links.mockProject,
+		relatedEnvironment: links.relatedEnvironment,
 		nodes: nodes.map(toCollectionNode),
 	};
 }

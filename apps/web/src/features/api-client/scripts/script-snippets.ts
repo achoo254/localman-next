@@ -1,12 +1,28 @@
 /**
  * Ready-made lines for the Scripts tab, using the sandbox's `lm` API. The
  * code is never translated; only the label is (`apiClient.scripts.snippets`).
+ * `scopes`: writes a saved scope (`lm.environment`, `lm.globals`…), which
+ * only keeps its value while environments are on.
  */
 export const SCRIPT_SNIPPETS = [
 	{ id: "setVariable", code: 'lm.variables.set("key", "value");' },
 	{ id: "getVariable", code: 'lm.variables.get("key");' },
-	{ id: "setEnvironment", code: 'lm.environment.set("key", "value");' },
-	{ id: "unsetEnvironment", code: 'lm.environment.unset("key");' },
+	{
+		id: "setEnvironment",
+		code: 'lm.environment.set("key", "value");',
+		scopes: true,
+	},
+	{
+		id: "unsetEnvironment",
+		code: 'lm.environment.unset("key");',
+		scopes: true,
+	},
+	{
+		id: "setCollectionVariable",
+		code: 'lm.collectionVariables.set("key", "value");',
+		scopes: true,
+	},
+	{ id: "setGlobal", code: 'lm.globals.set("key", "value");', scopes: true },
 	{
 		id: "statusIs200",
 		code: 'lm.test("Status is 200", () => {\n\tlm.expect(lm.response.status).to.equal(200);\n});',
@@ -14,11 +30,19 @@ export const SCRIPT_SNIPPETS = [
 	{
 		id: "saveToken",
 		code: 'lm.environment.set("token", lm.response.json().token);',
+		scopes: true,
 	},
 	{ id: "log", code: "console.log(lm.request.url);" },
 ] as const;
 
 export type ScriptSnippetId = (typeof SCRIPT_SNIPPETS)[number]["id"];
+
+/** The snippets to offer: scope writers only while environments are on. */
+export function availableSnippets(scopes: boolean) {
+	return SCRIPT_SNIPPETS.filter(
+		(snippet) => scopes || !("scopes" in snippet && snippet.scopes),
+	);
+}
 
 /** `script` with `code` on a new last line. */
 export function appendSnippet(script: string, code: string): string {

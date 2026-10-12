@@ -8,11 +8,15 @@
  */
 import type { LocalValue, VariableView } from "@localman/shared/api-client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-	type SaveStatus,
-	usePageAutosave,
-} from "../collections/use-page-autosave";
+import { usePageAutosave } from "../collections/use-page-autosave";
+import { combinedStatus } from "./combined-status";
 import type { LocalValueWrite, VariableWrite } from "./environments-api";
+import {
+	localWritesAfterSave,
+	resetPatch,
+	sharedDrafts,
+	unsharedDrafts,
+} from "./variable-batch";
 import {
 	type DraftVariable,
 	type VariableRow,
@@ -21,7 +25,6 @@ import {
 	duplicateNames,
 	mergeDrafts,
 	mergedLocal,
-	renamesOf,
 	rowsOf,
 	toWrites,
 } from "./variable-rows";
@@ -37,18 +40,6 @@ export interface VariableEditorOptions {
 type SharedPatch = { variables: DraftVariable[] };
 type LocalPatch = Record<string, string | null>;
 
-const RANK: Record<SaveStatus["state"], number> = {
-	idle: 0,
-	saved: 1,
-	saving: 2,
-	error: 3,
-};
-
-/** One status for both saves: an error, else saving, else saved. */
-export function combinedStatus(a: SaveStatus, b: SaveStatus): SaveStatus {
-	return RANK[b.state] > RANK[a.state] ? b : a;
-}
-
 export function useVariableEditor(options: VariableEditorOptions) {
 	const { variables, localValues, canEdit } = options;
 	const saveSharedRef = useRef(options.saveShared);
@@ -57,20 +48,26 @@ export function useVariableEditor(options: VariableEditorOptions) {
 	saveLocalRef.current = options.saveLocal;
 	const localRef = useRef(new Map<string, string>());
 
+	// Local values shared but not reset yet: they go only once the shared
+	// save succeeds, so a failed save never loses them.
+	const resetsRef = useRef(new Set<string>());
+	const flushLocalRef = useRef(async (): Promise<void> => {});
+
 	const shared = usePageAutosave<SharedPatch>(async (patch) => {
 		if (!patch.variables) return;
+		// The keys shared by the variables this save sends.
+		const sent = [...resetsRef.current];
 		await saveSharedRef.current(toWrites(patch.variables));
-		// The new names exist now: carry the caller's values over to them.
-		const moves = renamesOf(patch.variables).flatMap(({ from, to }) => {
-			const value = localRef.current.get(from);
-			return value === undefined || localRef.current.has(to)
-				? []
-				: [
-						{ key: from, value: null },
-						{ key: to, value },
-					];
-		});
-		if (moves.length > 0) await saveLocalRef.current(moves);
+		// Typed local values go first, so the resets below come last.
+		await flushLocalRef.current();
+		const resets = sent.filter((key) => resetsRef.current.has(key));
+		const writes = localWritesAfterSave(
+			patch.variables,
+			localRef.current,
+			resets,
+		);
+		if (writes.length > 0) await saveLocalRef.current(writes);
+		for (const key of resets) resetsRef.current.delete(key);
 	});
 	const local = usePageAutosave<LocalPatch>(async (patch) => {
 		const values = Object.entries(patch).map(([key, value]) => ({
@@ -79,6 +76,7 @@ export function useVariableEditor(options: VariableEditorOptions) {
 		}));
 		if (values.length > 0) await saveLocalRef.current(values);
 	});
+	flushLocalRef.current = local.flush;
 
 	const [drafts, setDrafts] = useState(() => draftsOf(variables));
 	const sharedPending = shared.pending.variables !== undefined;
@@ -108,7 +106,10 @@ export function useVariableEditor(options: VariableEditorOptions) {
 
 	const editLocal = useCallback(
 		(key: string, value: string | null) => {
-			if (key.trim() !== "") local.edit({ [key]: value });
+			if (key.trim() === "") return;
+			// A value typed after Share wins over its pending reset.
+			resetsRef.current.delete(key);
+			local.edit({ [key]: value });
 		},
 		[local.edit],
 	);
@@ -123,13 +124,17 @@ export function useVariableEditor(options: VariableEditorOptions) {
 		[commit],
 	);
 
+	const newRowId = useCallback((): string => {
+		nextRow.current += 1;
+		return `new-${nextRow.current}`;
+	}, []);
+
 	/** A blank row to type into; nothing is saved until it has a name. */
 	const addVariable = useCallback((): string => {
-		nextRow.current += 1;
-		const rowId = `new-${nextRow.current}`;
+		const rowId = newRowId();
 		setDrafts((current) => [...current, blankDraft(rowId)]);
 		return rowId;
-	}, []);
+	}, [newRowId]);
 
 	const removeVariable = useCallback(
 		(rowId: string) =>
@@ -137,30 +142,36 @@ export function useVariableEditor(options: VariableEditorOptions) {
 		[commit],
 	);
 
-	/** Share value / Update shared value: the local value becomes shared. */
-	const share = useCallback(
-		(row: VariableRow) => {
-			const value = row.local ?? "";
-			if (row.localOnly) {
-				nextRow.current += 1;
-				const added = {
-					...blankDraft(`new-${nextRow.current}`),
-					key: row.variable.key,
-					sharedValue: value,
-				};
-				commit([...draftsRef.current, added]);
-			} else {
-				editVariable(row.variable.rowId, { sharedValue: value });
-			}
-			editLocal(row.localKey, null);
+	/** Reset value of these rows: their local values go in one save. */
+	const resetRows = useCallback(
+		(rows: readonly VariableRow[]) => {
+			const patch = resetPatch(rows);
+			if (Object.keys(patch).length > 0) local.edit(patch);
 		},
-		[commit, editVariable, editLocal],
+		[local.edit],
 	);
 
-	const unshare = useCallback(
-		(row: VariableRow) =>
-			editVariable(row.variable.rowId, { sharedValue: null }),
-		[editVariable],
+	/**
+	 * Share value / Update shared value of these rows (one or all): their
+	 * local values become shared in one save; once it succeeds, they reset.
+	 */
+	const shareRows = useCallback(
+		(rows: readonly VariableRow[]) => {
+			if (rows.length === 0) return;
+			for (const key of Object.keys(resetPatch(rows))) {
+				resetsRef.current.add(key);
+			}
+			commit(sharedDrafts(draftsRef.current, rows, newRowId));
+		},
+		[commit, newRowId],
+	);
+
+	/** Unshare of these rows: their shared values go in one save. */
+	const unshareRows = useCallback(
+		(rows: readonly VariableRow[]) => {
+			if (rows.length > 0) commit(unsharedDrafts(draftsRef.current, rows));
+		},
+		[commit],
 	);
 
 	const flush = useCallback(async () => {
@@ -175,8 +186,9 @@ export function useVariableEditor(options: VariableEditorOptions) {
 		addVariable,
 		removeVariable,
 		editLocal,
-		share,
-		unshare,
+		shareRows,
+		unshareRows,
+		resetRows,
 		flush,
 		status: combinedStatus(shared.status, local.status),
 	};

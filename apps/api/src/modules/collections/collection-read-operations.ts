@@ -43,7 +43,7 @@ export const getCollectionOperation = defineOperation({
 	method: "GET",
 	path: COLLECTION_PATH,
 	summary: "Get a collection with its folders and requests",
-	description: `The root (description, auth, scripts, variables the items inherit) and every folder and request as a flat list linked by parentId and ordered by \`order\` (compare as plain strings) within each parent. ${ACCESS_NOTE}`,
+	description: `The root (description, auth, scripts, variables the items inherit) and every folder and request as a flat list linked by parentId and ordered by \`order\` (compare as plain strings) within each parent. \`mockProject\` and \`relatedEnvironment\` (the linked environment, else the one shared with it: \`source\`) are \`null\` when none, gone or not readable by the caller. ${ACCESS_NOTE}`,
 	input: z.object({ collectionId: collectionIdSchema }),
 	output: collectionDetailView,
 	scopes: [USER_SCOPE],
@@ -79,7 +79,8 @@ export const exportCollectionOperation = defineOperation({
 			input.collectionId,
 			"export",
 		);
-		const detail = await loadCollectionDetail(collectionId, role);
+		// Links stay out of the file: no need to resolve them.
+		const detail = await loadCollectionDetail(collectionId, role, null);
 		const v21 = exportCollectionV21(nodesToCollectionTree(detail));
 		// Plain object copies: interfaces lack the index signature of the view.
 		return { ...v21, info: { ...v21.info } };

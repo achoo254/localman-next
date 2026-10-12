@@ -140,6 +140,8 @@ export const apiClient: Messages["apiClient"] = {
 			getVariable: "Đọc biến",
 			setEnvironment: "Đặt biến environment",
 			unsetEnvironment: "Xoá biến environment",
+			setCollectionVariable: "Đặt biến collection",
+			setGlobal: "Đặt biến global",
 			statusIs200: "Kiểm status 200",
 			saveToken: "Lưu token từ response",
 			log: "Ghi URL của request ra console",

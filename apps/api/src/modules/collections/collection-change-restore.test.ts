@@ -181,7 +181,13 @@ describe("restore to a change", () => {
 		const shown = listed.body.sessions.flatMap(
 			(s: { changes: unknown[] }) => s.changes,
 		);
-		expect(shown).toHaveLength(100);
+		// One author within seconds, which a page never splits: the stored
+		// session of the two new folders, then the older ones grouped on read.
+		expect(
+			listed.body.sessions.map((s: { changes: unknown[] }) => s.changes.length),
+		).toEqual([2, (root?.revisionCount ?? 0) - 2]);
+		expect(shown).toHaveLength(root?.revisionCount ?? -1);
+		expect(listed.body.nextBefore).toBeNull();
 		const stubDiff = await as(EVE).get(
 			`/collections/${id}/changelog/${created}/diff`,
 		);

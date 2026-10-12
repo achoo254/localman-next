@@ -121,7 +121,7 @@ describe("examples", () => {
 		expect((await as(EVE).send("post", path, status)).status).toBe(400);
 	});
 
-	it("go with their request when it is deleted or duplicated, and stay out of search", async () => {
+	it("go with their request when it is deleted or duplicated, and show in search under it", async () => {
 		const { id, req } = await withRequest();
 		await addNode(EVE, id, exampleNode("Saved", req.id));
 		const copy = await as(EVE).send(
@@ -139,7 +139,14 @@ describe("examples", () => {
 		const found = await as(EVE).get(
 			`/workspaces/${ws}/collections/search?q=saved`,
 		);
-		expect(found.body.matches).toEqual([]);
+		const hits = found.body.matches.map(
+			(m: { kind: string; path: string[] }) =>
+				`${m.kind} under ${m.path.at(-1)}`,
+		);
+		expect(hits.sort()).toEqual([
+			"example under Get",
+			"example under Get Copy",
+		]);
 		const dry = await as(EVE).send(
 			"delete",
 			`/collections/${id}/nodes/${req.id}?dryRun=true`,

@@ -7,6 +7,7 @@ import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { copyText } from "../../platform/clipboard";
 import { appPageUrl } from "../../platform/navigation";
+import { collectionNodePath } from "../sharing/open-element-state";
 import { elementPath } from "../sharing/sharing-api";
 import type { TreeDialog } from "./collection-dialogs";
 import { collectionErrorMessage } from "./collection-errors";
@@ -85,9 +86,12 @@ export function useTreeActions(options: TreeActionsOptions) {
 	};
 
 	const copyLink = async (row: TreeRow): Promise<void> => {
-		const copied = await copyText(
-			appPageUrl(elementPath("collection", row.id)),
-		);
+		// Only those who may open the collection open what the link names.
+		const path =
+			row.kind === "collection"
+				? elementPath("collection", row.id)
+				: collectionNodePath(row.collectionId, row.id);
+		const copied = await copyText(appPageUrl(path));
 		toast.show(
 			copied
 				? { tone: "success", title: t("collections.toast.linkCopied") }

@@ -178,9 +178,9 @@ export function VariableRow({ row, index, editor, onCopy }: VariableRowProps) {
 					row={row}
 					canEdit={editor.canEdit}
 					label={name}
-					onShare={() => editor.share(row)}
-					onReset={() => editor.editLocal(row.localKey, null)}
-					onUnshare={() => editor.unshare(row)}
+					onShare={() => editor.shareRows([row])}
+					onReset={() => editor.resetRows([row])}
+					onUnshare={() => editor.unshareRows([row])}
 					onCopy={onCopy}
 					onDelete={() => editor.removeVariable(variable.rowId)}
 				/>

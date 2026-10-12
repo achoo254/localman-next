@@ -16,6 +16,7 @@ import {
 } from "@localman/shared/api-client";
 import {
 	InvalidResponseError,
+	type JsonRecord,
 	expectArray,
 	expectBoolean,
 	expectNumber,
@@ -81,7 +82,29 @@ export function parseEnvironmentDetail(value: unknown): EnvironmentDetail {
 		variables: expectArray(data, "variables").map(parseVariable),
 		localValues: parseLocalValues(data.localValues),
 		createdBy: expectString(data, "createdBy"),
+		// A removed account has no name; an older API sends none.
+		createdByName:
+			typeof data.createdByName === "string" ? data.createdByName : null,
 		createdAt: expectString(data, "createdAt"),
+	};
+}
+
+/** An exported environment: the file's JSON and the name to save it as. */
+export interface EnvironmentFile {
+	fileName: string;
+	environment: JsonRecord;
+}
+
+/** The file name is a plain `.json` name, never a path. */
+export function parseEnvironmentFile(value: unknown): EnvironmentFile {
+	const data = expectRecord(value, "environment file");
+	const fileName = expectString(data, "fileName").trim();
+	if (!/^[^/\\]+\.json$/i.test(fileName)) {
+		throw new InvalidResponseError("fileName");
+	}
+	return {
+		fileName,
+		environment: expectRecord(data.environment, "environment"),
 	};
 }
 
@@ -101,5 +124,27 @@ export function parseActiveEnvironment(value: unknown): ActiveEnvironment {
 	return {
 		workspaceId: expectString(data, "workspaceId"),
 		environmentId: optionalString(data, "environmentId"),
+	};
+}
+
+/** A collection using the environment: linked to it, or shared with it. */
+export interface EnvironmentCollection {
+	id: string;
+	name: string;
+	source: "linked" | "shared";
+}
+
+export function parseEnvironmentCollection(
+	value: unknown,
+): EnvironmentCollection {
+	const data = expectRecord(value, "environment collection");
+	const source = data.source;
+	if (source !== "linked" && source !== "shared") {
+		throw new InvalidResponseError("source");
+	}
+	return {
+		id: expectString(data, "id"),
+		name: expectString(data, "name"),
+		source,
 	};
 }

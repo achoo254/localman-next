@@ -8,6 +8,7 @@ import {
 	DRAFT_MAX_TABS,
 } from "@localman/shared/api-client";
 import { isBlankDraft, isDirty } from "./draft-compare";
+import { NO_TEMPORARY, withTemporary } from "./temporary-variables";
 import type { WorkbenchAction } from "./workbench-action";
 import type { PageTab } from "./workbench-tab-types";
 import type { TabResponse, WorkbenchTab } from "./workbench-types";
@@ -48,6 +49,7 @@ function newTab(
 		redacted: extra.redacted ?? false,
 		source: extra.source ?? null,
 		saved: extra.saved ?? null,
+		temporary: NO_TEMPORARY,
 	};
 }
 
@@ -185,5 +187,14 @@ export function workbenchReducer(
 				...tab,
 				response: action.response,
 			}));
+		case "setTemporary":
+			return mapTab(state, action.id, (tab) => {
+				const temporary = withTemporary(
+					tab.temporary,
+					action.key,
+					action.value,
+				);
+				return temporary === tab.temporary ? tab : { ...tab, temporary };
+			});
 	}
 }

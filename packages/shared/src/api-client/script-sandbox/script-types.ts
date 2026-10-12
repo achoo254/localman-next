@@ -3,6 +3,12 @@
  * a `lm` object (no `pm` alias); everything crosses the sandbox boundary as
  * JSON, so these shapes are all the caller and the script share.
  */
+import {
+	ENVIRONMENT_VARIABLES_MAX,
+	LOCAL_VALUES_MAX,
+	VARIABLE_KEY_MAX,
+	VARIABLE_VALUE_MAX,
+} from "../environments/environment-model.js";
 import { MAX_ROW_VALUE_LENGTH } from "../limits.js";
 import type { HeaderEntry, HttpMethod } from "../request-model.js";
 import type { ClientResponse } from "../response-model.js";
@@ -13,10 +19,20 @@ export const MAX_SCRIPT_LOG_ENTRIES = 200;
 export const MAX_SCRIPT_LOG_LENGTH = 4 * 1024;
 /** `lm.test` calls per run. */
 export const MAX_SCRIPT_TESTS = 200;
-/** Keys `lm.environment` and `lm.variables` may each hold after a run. */
+/** Keys `lm.variables` may hold after a run. */
 export const MAX_SCRIPT_VARIABLES = 500;
 /** A variable ends up as a table value, so it shares that cap. */
 export const MAX_SCRIPT_VARIABLE_LENGTH = MAX_ROW_VALUE_LENGTH;
+/**
+ * Keys a saved scope (`lm.globals`, `lm.collectionVariables`,
+ * `lm.environment`) may hold: its definitions plus one person's local
+ * values. Its names and values are saved as local values, so they take
+ * the local value caps.
+ */
+export const MAX_SCRIPT_SCOPE_VARIABLES =
+	ENVIRONMENT_VARIABLES_MAX + LOCAL_VALUES_MAX;
+export const MAX_SCRIPT_SCOPE_KEY_LENGTH = VARIABLE_KEY_MAX;
+export const MAX_SCRIPT_SCOPE_VALUE_LENGTH = VARIABLE_VALUE_MAX;
 /** Characters kept of an error or failed-assertion message. */
 export const MAX_SCRIPT_MESSAGE_LENGTH = 1024;
 
@@ -58,11 +74,16 @@ export interface ScriptRequest {
 interface ScriptRunBase {
 	script: string;
 	request: ScriptRequest;
-	/** Active environment: `lm.environment`. */
+	/** Globals as the caller uses them (local first): `lm.globals`. */
+	globals: Readonly<Record<string, string>>;
+	/** The request's collection, same way: `lm.collectionVariables`. */
+	collectionVariables: Readonly<Record<string, string>>;
+	/** Active environment, same way: `lm.environment`. */
 	environment: Readonly<Record<string, string>>;
 	/**
 	 * Values local to this send: `lm.variables`. Reads fall back to the
-	 * environment; writes stay here and override it for `{{var}}`.
+	 * environment, collection, then globals; writes stay here and override
+	 * them for `{{var}}`.
 	 */
 	variables: Readonly<Record<string, string>>;
 }
@@ -99,6 +120,9 @@ export interface ScriptRunResult {
 	 * come back as given, and a pre script error means "do not send".
 	 */
 	request: ScriptRequest;
+	/** Each scope as the script left it; the caller saves the changes as local values. */
+	globals: Record<string, string>;
+	collectionVariables: Record<string, string>;
 	environment: Record<string, string>;
 	variables: Record<string, string>;
 	/** Tests and logs recorded before an error are kept. */

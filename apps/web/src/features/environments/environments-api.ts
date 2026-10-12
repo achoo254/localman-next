@@ -15,7 +15,11 @@ import type {
 import { apiRequest } from "../../lib/api-client";
 import { expectArray, expectRecord } from "../../lib/json-guards";
 import {
+	type EnvironmentCollection,
+	type EnvironmentFile,
+	parseEnvironmentCollection,
 	parseEnvironmentDetail,
+	parseEnvironmentFile,
 	parseEnvironmentSummary,
 	parseGlobals,
 	parseLocalValues,
@@ -51,6 +55,40 @@ export async function fetchEnvironments(
 
 export async function fetchEnvironment(id: string): Promise<EnvironmentDetail> {
 	return parseEnvironmentDetail(await apiRequest(environmentPath(id)));
+}
+
+/** Collections linked to the environment or shared with it. */
+export async function fetchEnvironmentCollections(
+	id: string,
+): Promise<EnvironmentCollection[]> {
+	const data = expectRecord(
+		await apiRequest(`${environmentPath(id)}/collections`),
+		"environment collections",
+	);
+	return expectArray(data, "items").map(parseEnvironmentCollection);
+}
+
+/** The environment as a file to download (shared values only). */
+export async function exportEnvironment(id: string): Promise<EnvironmentFile> {
+	return parseEnvironmentFile(
+		await apiRequest(`${environmentPath(id)}/export`),
+	);
+}
+
+/**
+ * A new environment from an environment file's JSON; the server checks
+ * it (400 INVALID_ENVIRONMENT_FILE names the problem).
+ */
+export async function importEnvironment(
+	workspaceId: string,
+	environment: unknown,
+): Promise<EnvironmentDetail> {
+	return parseEnvironmentDetail(
+		await apiRequest(workspacePath(workspaceId, "environments/import"), {
+			method: "POST",
+			body: { environment },
+		}),
+	);
 }
 
 export async function createEnvironment(

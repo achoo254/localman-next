@@ -3,8 +3,8 @@ import { CHANGELOG_REVISIONS_MAX } from "@localman/shared/api-client";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
 import { restoreToChange } from "./change-restore-service.js";
+import { CHANGELOG_PAGE } from "./changelog-page.js";
 import {
-	CHANGELOG_PAGE,
 	listActivity,
 	listChangelog,
 	revisionDiff,
@@ -37,7 +37,7 @@ export const getCollectionChangelogOperation = defineOperation({
 	method: "GET",
 	path: CHANGELOG_PATH,
 	summary: "List the changelog of a collection",
-	description: `Changes newest first, ${CHANGELOG_PAGE} per page, grouped into sessions (one author's changes less than 5 minutes apart); pass \`nextBefore\` as \`before\` for older ones. Each change names the entity (collection, folder, request, example), the action and the fields it changed; \`restorable\` says whether restore_collection_change can go back to it. The last ${CHANGELOG_REVISIONS_MAX} changes are kept. Viewers may read it. ${ACCESS_NOTE}`,
+	description: `Changes newest first, about ${CHANGELOG_PAGE} per page, grouped into sessions (one author's consecutive changes within 5 minutes of the session's first change; a page always ends on a whole session); pass \`nextBefore\` as \`before\` for older ones. Each change names the entity (collection, folder, request, example), the action and the fields it changed; \`restorable\` says whether restore_collection_change can go back to it. The last ${CHANGELOG_REVISIONS_MAX} changes are kept. Viewers may read it. ${ACCESS_NOTE}`,
 	input: z.object({
 		collectionId: collectionIdSchema,
 		before: z
@@ -59,7 +59,7 @@ export const getCollectionChangeDiffOperation = defineOperation({
 	method: "GET",
 	path: `${REVISION_PATH}/diff`,
 	summary: "Show what one change of a collection changed",
-	description: `The entity (collection root, folder, request or example) right before and after the change, as JSON; \`null\` on the side where it did not exist. \`available: false\` when the diff is hidden or was too large to keep. ${MISSING} ${ACCESS_NOTE}`,
+	description: `The entity (collection root, folder, request or example) right before and after the change, as JSON; \`null\` on the side where it did not exist. \`hidden: true\` when an Editor hid it: Editors and Admins still get the diff, Viewers get \`available: false\`, as when it was too large to keep. ${MISSING} ${ACCESS_NOTE}`,
 	input: revisionInput,
 	output: diffView,
 	scopes: [USER_SCOPE],
@@ -78,7 +78,7 @@ function visibilityOperation(hidden: boolean) {
 		summary: hidden
 			? "Hide the diff of one change"
 			: "Show a hidden diff again",
-		description: `Editors. The change stays in the changelog; ${hidden ? "everyone then sees only who changed what and when" : "its diff is visible again"}. ${MISSING} ${ACCESS_NOTE}`,
+		description: `Editors. The change stays in the changelog; ${hidden ? "Viewers then see only who changed what and when, Editors still see the diff" : "its diff is visible again"}. ${MISSING} ${ACCESS_NOTE}`,
 		input: revisionInput,
 		output: changeView,
 		scopes: [USER_SCOPE],

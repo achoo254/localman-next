@@ -21,6 +21,8 @@ describe("createProxySender failures", () => {
 		const failing: ScriptRunner = {
 			run: async (input) => ({
 				request: input.request,
+				globals: {},
+				collectionVariables: {},
 				environment: {},
 				variables: {},
 				tests: [],

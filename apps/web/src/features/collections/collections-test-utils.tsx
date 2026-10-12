@@ -13,6 +13,7 @@ import { renderRoutes } from "../../test/render-app";
 import { DEFAULT_CLIENT_SETTINGS } from "../api-client/routing/client-settings-api";
 import { WorkbenchProvider } from "../api-client/workbench/workbench-context";
 import { echoSender } from "../api-client/workbench/workbench-test-utils";
+import { ElementLinkPage } from "../sharing/element-link-page";
 import type { Workspace } from "../workspaces/workspaces-api";
 import {
 	FLAGS_ON,
@@ -70,6 +71,8 @@ export function detail(
 		updatedByName: "Minh Anh",
 		createdAt: "2026-10-01T01:00:00.000Z",
 		updatedAt: "2026-10-10T01:00:00.000Z",
+		mockProject: null,
+		relatedEnvironment: null,
 		nodes,
 		...overrides,
 	};
@@ -97,9 +100,10 @@ const WORKBENCH: Record<string, MockRoute> = {
 };
 
 /**
- * The API client page at `/api-client` (a stand-in at `/trash`) with the
- * team workspace chosen; `role` is the caller's role there, `storage`
- * what this browser kept from an earlier visit.
+ * The API client page at `/api-client` (a stand-in at `/trash`, the
+ * element link page) with the team workspace chosen; `role` is the
+ * caller's role there, `storage` what this browser kept from an earlier
+ * visit.
  */
 export function renderWorkbenchPage(
 	routes: Record<string, MockRoute>,
@@ -107,13 +111,19 @@ export function renderWorkbenchPage(
 		flags = FLAGS_ON,
 		role = "admin",
 		storage = {},
+		at = "/api-client",
+		workspace = TEAM.id,
 	}: {
 		flags?: typeof FLAGS_ON;
 		role?: Workspace["role"];
 		storage?: Record<string, string>;
+		/** Where the router starts (an element link, say). */
+		at?: string;
+		/** The workspace this browser had chosen. */
+		workspace?: string;
 	} = {},
 ) {
-	chooseWorkspace(TEAM.id);
+	chooseWorkspace(workspace);
 	for (const [key, value] of Object.entries(storage)) {
 		window.localStorage.setItem(key, value);
 	}
@@ -136,8 +146,16 @@ export function renderWorkbenchPage(
 				),
 			},
 			{ path: "/trash", element: <p>Trash page</p> },
+			{
+				path: "/elements/:type/:id",
+				element: (
+					<FeaturesContext value={flags}>
+						<ElementLinkPage />
+					</FeaturesContext>
+				),
+			},
 		],
-		"/api-client",
+		at,
 	);
 	return { ...api, ...view };
 }

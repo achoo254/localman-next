@@ -17,7 +17,7 @@ import { closeServer } from "./http/close-server.js";
 import { runShutdownSteps, shutdownSteps } from "./lib/shutdown-sequence.js";
 import { type Logger, createLogger } from "./logger.js";
 import { createMockApp } from "./mock-server.js";
-import { configureProxyLogger } from "./modules/api-client/proxy-operations.js";
+import { configureModuleLoggers } from "./module-loggers.js";
 import {
 	authSettingsFromEnv,
 	createAuthModule,
@@ -37,7 +37,6 @@ import {
 	type NotificationService,
 	createNotificationService,
 } from "./modules/notifications/notification-service.js";
-import { configureTrialLogger } from "./modules/trial/trial-plan.js";
 
 /** Budget of the whole shutdown (`runShutdownSteps` cuts it there). */
 const SHUTDOWN_TIMEOUT_MS = 10_000;
@@ -80,9 +79,8 @@ function listen(
 
 const env = loadEnvOrExit();
 const logger: Logger = createLogger(env.LOG_LEVEL);
-configureProxyLogger(logger);
+configureModuleLoggers(logger);
 requestLog.configure(logger);
-configureTrialLogger(logger);
 const servers: Server[] = [];
 let shuttingDown = false;
 let notifications: NotificationService | undefined;

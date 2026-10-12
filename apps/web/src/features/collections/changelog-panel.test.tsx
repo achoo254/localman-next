@@ -33,7 +33,7 @@ describe("changelog panel", () => {
 		);
 	});
 
-	it("hides a diff for everyone", async () => {
+	it("hides a diff from viewers", async () => {
 		const { calls } = renderShop({
 			[`POST ${LOG}/rv1/hide`]: { body: change("rv1", true) },
 		});

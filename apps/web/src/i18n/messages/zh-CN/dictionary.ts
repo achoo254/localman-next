@@ -35,6 +35,7 @@ import { trafficLog } from "./traffic-log";
 import { trial } from "./trial";
 import { ui } from "./ui";
 import { upstream } from "./upstream";
+import { variables } from "./variables";
 import { webhookInbox } from "./webhook-inbox";
 import { workspaces } from "./workspaces";
 
@@ -77,5 +78,6 @@ export const zhCN: Messages = {
 	workspaces,
 	sharing,
 	environments,
+	variables,
 	collections,
 };

@@ -10,6 +10,10 @@ export const collections = {
 		collections: "Collections",
 		trash: "Trash",
 	},
+	statusBar: {
+		globals: "Open Globals",
+		trash: "Open the Trash",
+	},
 	sidebar: {
 		title: "Collections",
 		new: "Create",
@@ -148,6 +152,10 @@ export const collections = {
 		collectionHint:
 			"Saved in {workspace} with its folders, auth, scripts and variables.",
 		submit: "Save collection",
+		environmentUnavailable:
+			"Environments aren't available in this workspace yet, so this file can't be imported.",
+		environmentViewer:
+			"Viewers can't add environments to this workspace. Ask an Admin or Editor to import this file.",
 	},
 	fromMock: {
 		title: "Collection from a mock project",

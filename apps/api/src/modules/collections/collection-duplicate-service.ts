@@ -3,10 +3,15 @@ import {
 	type CollectionDetail,
 	type CollectionNode,
 } from "@localman/shared/api-client";
+import { Types } from "mongoose";
 import { requireWorkspace } from "../workspaces/workspace-roles.js";
 import { requireCollection } from "./collection-access.js";
 import { insertAndLoad } from "./collection-service.js";
-import { loadCollectionDetail, newNodeId } from "./collection-store.js";
+import {
+	findLiveCollection,
+	loadCollectionDetail,
+	newNodeId,
+} from "./collection-store.js";
 
 const COPY_SUFFIX = " Copy";
 
@@ -17,7 +22,9 @@ export function copyName(name: string): string {
 
 /**
  * Copies a collection the caller can view into a workspace where they add
- * elements (its own by default), with new node ids.
+ * elements (its own by default), with new node ids. Its mock project comes
+ * along when the caller can read it; its linked environment when the copy
+ * stays in the same workspace.
  */
 export async function duplicateCollection(
 	sub: string,
@@ -34,7 +41,13 @@ export async function duplicateCollection(
 		"addElements",
 		targetWorkspaceId ?? element.workspaceId.toHexString(),
 	);
-	const source = await loadCollectionDetail(collectionId, role);
+	const [source, root] = await Promise.all([
+		loadCollectionDetail(collectionId, role, sub),
+		findLiveCollection(collectionId),
+	]);
+	// The environment an Editor chose stays valid in the same workspace only.
+	const sameWorkspace = workspace._id.equals(element.workspaceId);
+	const linked = root?.linkedEnvironmentId;
 	const ids = new Map(source.nodes.map((node) => [node.id, newNodeId()]));
 	const nodes = source.nodes.flatMap((node): CollectionNode[] => {
 		const id = ids.get(node.id) ?? newNodeId();
@@ -59,5 +72,12 @@ export async function duplicateCollection(
 		},
 		nodes,
 		sub,
+		// Only a link the caller can read comes along (`mockProject` is null otherwise).
+		...(source.mockProject
+			? { mockProjectId: new Types.ObjectId(source.mockProject.id) }
+			: {}),
+		...(sameWorkspace && linked !== undefined
+			? { linkedEnvironmentId: linked }
+			: {}),
 	});
 }

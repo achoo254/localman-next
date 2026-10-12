@@ -15,6 +15,11 @@ import mongoose, { Schema, type Types } from "mongoose";
  * write also updates the root in the same transaction: `bytes` (JSON size
  * of the root's and nodes' content, capped per collection),
  * `requestCount` (the sidebar's count) and `updatedAt`.
+ *
+ * Links (`collection-links.ts`), outside the changelog: the mock project
+ * it was created from, the environment an Editor linked (`null` once they
+ * chose none) and the environment last shared together with it. Views
+ * resolve them per caller and skip what is gone or unreadable.
  */
 const collectionSchema = new Schema(
 	{
@@ -30,6 +35,10 @@ const collectionSchema = new Schema(
 		requestCount: { type: Number, default: 0 },
 		tags: { type: [String], default: [] },
 		status: { type: Schema.Types.Mixed, default: null },
+		mockProjectId: { type: Schema.Types.ObjectId },
+		/** No default: absent means no Editor chose yet, `null` chose none. */
+		linkedEnvironmentId: { type: Schema.Types.ObjectId },
+		sharedEnvironmentId: { type: Schema.Types.ObjectId },
 		/** `name` folded for search (`foldSearchText`). */
 		searchName: { type: String },
 		/** Last revision number, and what the changelog holds (trimmed). */
@@ -89,6 +98,9 @@ export interface StoredCollection {
 	readonly requestCount?: number;
 	readonly tags?: readonly string[];
 	readonly status?: CollectionStatus | null;
+	readonly mockProjectId?: Types.ObjectId | null;
+	readonly linkedEnvironmentId?: Types.ObjectId | null;
+	readonly sharedEnvironmentId?: Types.ObjectId | null;
 	readonly revisionSeq?: number;
 	readonly revisionCount?: number;
 	readonly revisionBytes?: number;

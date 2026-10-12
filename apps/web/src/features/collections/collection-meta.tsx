@@ -1,6 +1,9 @@
 import type { CollectionDetail } from "@localman/shared/api-client";
+import { Badge } from "../../components/ui/badge";
 import { useI18n } from "../../i18n/i18n-context";
+import { elementRoleLabel } from "../sharing/use-element-access";
 import { useWorkspaces } from "../workspaces/current-workspace";
+import { CollectionLinksMeta } from "./collection-links-meta";
 import { subtreeIds } from "./tree-drop";
 
 /** Requests of the collection, or of one folder and everything inside it. */
@@ -17,10 +20,22 @@ export function requestCount(
 export interface CollectionMetaProps {
 	detail: CollectionDetail;
 	folderId: string | null;
+	/** The Info rail adds when it was made and the caller's role. */
+	variant?: "overview" | "info";
+	/** An Editor may pick the related environment here. */
+	canEditLinks?: boolean;
 }
 
-/** Who made it and changed it last, when, where, and how many requests. */
-export function CollectionMeta({ detail, folderId }: CollectionMetaProps) {
+/**
+ * Who made it and changed it last, when, where, how many requests, and
+ * its related environment and mock project.
+ */
+export function CollectionMeta({
+	detail,
+	folderId,
+	variant = "overview",
+	canEditLinks = false,
+}: CollectionMetaProps) {
 	const { t, formatDate } = useI18n();
 	const workspaces = useWorkspaces().data ?? [];
 	const workspace = workspaces.find((w) => w.id === detail.workspaceId);
@@ -34,6 +49,14 @@ export function CollectionMeta({ detail, folderId }: CollectionMetaProps) {
 			<dd className="m-0 truncate" data-id="collection-created-by">
 				{detail.createdByName ?? someone}
 			</dd>
+			{variant === "info" ? (
+				<>
+					<dt className="text-muted">{t("collections.info.created")}</dt>
+					<dd className="m-0" data-id="collection-created-at">
+						{formatDate(detail.createdAt)}
+					</dd>
+				</>
+			) : null}
 			<dt className="text-muted">{t("collections.page.overview.updated")}</dt>
 			<dd className="m-0" data-id="collection-updated">
 				{t("collections.page.overview.updatedBy", {
@@ -47,6 +70,15 @@ export function CollectionMeta({ detail, folderId }: CollectionMetaProps) {
 			<dd className="m-0" data-id="collection-request-count">
 				{requestCount(detail, folderId)}
 			</dd>
+			<CollectionLinksMeta detail={detail} canEditEnvironment={canEditLinks} />
+			{variant === "info" ? (
+				<>
+					<dt className="text-muted">{t("collections.info.role")}</dt>
+					<dd className="m-0" data-id="collection-role">
+						<Badge tone="neutral">{elementRoleLabel(detail.role, t)}</Badge>
+					</dd>
+				</>
+			) : null}
 		</dl>
 	);
 }

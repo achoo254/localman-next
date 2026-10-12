@@ -1,5 +1,6 @@
 import {
 	STATUS_NAME_MAX,
+	STATUS_NAME_MIN,
 	type StatusProblem,
 	validateStatus,
 } from "@localman/shared/api-client";
@@ -53,7 +54,7 @@ export function CustomStatusModal({
 		(problem === "name-length" ||
 			problem === "name-start" ||
 			problem === "name-characters")
-			? t(PROBLEM_KEYS[problem], { min: 2, max: STATUS_NAME_MAX })
+			? t(PROBLEM_KEYS[problem], { min: STATUS_NAME_MIN, max: STATUS_NAME_MAX })
 			: undefined;
 	const emojiError =
 		tried && problem === "emoji" ? t(PROBLEM_KEYS.emoji) : undefined;

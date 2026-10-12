@@ -10,6 +10,10 @@ export const collections: Messages["collections"] = {
 		collections: "Collections",
 		trash: "Thùng rác",
 	},
+	statusBar: {
+		globals: "Mở Globals",
+		trash: "Mở Thùng rác",
+	},
 	sidebar: {
 		title: "Collections",
 		new: "Tạo mới",
@@ -144,6 +148,10 @@ export const collections: Messages["collections"] = {
 		collectionHint:
 			"Lưu vào {workspace} cùng folder, auth, script và biến của nó.",
 		submit: "Lưu collection",
+		environmentUnavailable:
+			"Workspace này chưa có Environments nên chưa import được file này.",
+		environmentViewer:
+			"Viewer không thêm được environment vào workspace này. Hãy nhờ Admin hoặc Editor import file này.",
 	},
 	fromMock: {
 		title: "Collection từ project mock",

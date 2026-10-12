@@ -4,6 +4,13 @@ export const apiClientSend: Messages["apiClient"]["send"] = {
 	preScriptFailed: "Chưa gửi: script pre-request đã dừng. {reason}",
 	secretWithheld:
 		"Chưa gửi: request dùng {name}, một secret chỉ Editor xem được. Hãy đặt giá trị local của riêng bạn cho biến này trong environment rồi gửi lại.",
+	scopesDropped:
+		"Script đã đặt giá trị {scopes} nhưng không có chỗ lưu: chưa có environment đang active, hoặc request không thuộc collection nào.",
+	scopeNames: { environment: "environment", collectionVariables: "collection" },
+	scopesNotSaved:
+		"Đã nhận response, nhưng không lưu được các biến mà script đã đặt. Hãy gửi lại để thử lại.",
+	dynamicVariablesUnavailable:
+		"Chưa gửi: không tải được giá trị ngẫu nhiên ($random…). Kiểm tra kết nối rồi thử lại.",
 	variablesUnavailable:
 		"Chưa gửi: không tải được biến của environment. Hãy kiểm tra kết nối rồi thử lại.",
 	fileUnreadable: "Không đọc được một file của body. Hãy chọn lại file.",

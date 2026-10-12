@@ -7,23 +7,13 @@ import {
 	LIST,
 	byId,
 	environment,
+	openStaging as openEnvironment,
 	renderEnvironments,
+	summary,
 	variable,
 } from "./environments-test-utils";
 
 afterEach(() => vi.unstubAllGlobals());
-
-const summary = (overrides = {}) => {
-	const { variables, localValues, createdBy, createdAt, ...rest } =
-		environment(overrides);
-	return rest;
-};
-
-async function openEnvironment(user = userEvent.setup()) {
-	await user.click(await screen.findByRole("button", { name: "Envs" }));
-	await user.click(await screen.findByRole("button", { name: "Staging" }));
-	return screen.findByRole("table", { name: "Variables of Staging" });
-}
 
 describe("environment page", () => {
 	it("lets an Editor set a local value and change a shared value", async () => {
@@ -160,5 +150,26 @@ describe("environment page", () => {
 				name: "Variables of New environment",
 			}),
 		).toBeVisible();
+	});
+
+	it("marks an environment of a workspace you are not in as shared with you", async () => {
+		const shared = environment({ workspaceId: "w-other", role: "viewer" });
+		renderEnvironments({
+			[`GET ${LIST}`]: { body: { items: [summary()] } },
+			[`GET ${ENV_PATH}`]: { body: shared },
+		});
+		await openEnvironment();
+		expect(byId("environment-header-shared")).toHaveTextContent(
+			"Shared with you",
+		);
+	});
+
+	it("shows no shared badge in your own workspace", async () => {
+		renderEnvironments({
+			[`GET ${LIST}`]: { body: { items: [summary()] } },
+			[`GET ${ENV_PATH}`]: { body: environment() },
+		});
+		await openEnvironment();
+		expect(byId("environment-header-shared")).toBeNull();
 	});
 });

@@ -24,7 +24,7 @@ export const shareElementOperation = defineOperation({
 	method: "POST",
 	path: PATH,
 	summary: "Share a collection or environment with someone",
-	description: `Shares by username or email as Viewer or Editor; an existing share is raised to the role, never lowered. A matching account is notified (in-app, Web Push, Telegram as it chose); an email without an account is held for the account whose IdP verifies that email. \`includeEnvironmentId\` (collections only) shares that environment too, with the same role, and needs the Editor role on it. Returns Manage access. 409 PERSONAL_WORKSPACE for elements of a personal workspace (move them to a team workspace first); 400 CANNOT_SHARE_SELF; 404 INVITEE_NOT_FOUND for an unknown username; lookups share a budget with invitations (429 RATE_LIMITED). ${MANAGER_NOTE}`,
+	description: `Shares by username or email as Viewer or Editor; an existing share is raised to the role, never lowered. A matching account is notified (in-app, Web Push, Telegram as it chose); an email without an account is held for the account whose IdP verifies that email. \`includeEnvironmentId\` (collections only) shares that environment too, with the same role, and needs the Editor role on it; when it is in the collection's workspace it becomes the collection's related environment until an Editor links one. Returns Manage access. 409 PERSONAL_WORKSPACE for elements of a personal workspace (move them to a team workspace first); 400 CANNOT_SHARE_SELF; 404 INVITEE_NOT_FOUND for an unknown username; lookups share a budget with invitations (429 RATE_LIMITED). ${MANAGER_NOTE}`,
 	input: z.object({
 		...elementParams,
 		usernameOrEmail: usernameOrEmailSchema,

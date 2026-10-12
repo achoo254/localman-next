@@ -1,5 +1,5 @@
 import type { ChangelogChange } from "@localman/shared/api-client";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
 import { ConfirmModal } from "../../components/ui/confirm-modal";
@@ -24,6 +24,7 @@ export interface ChangelogPanelProps {
 
 /** Sessions of changes, newest first, with diffs, hiding and restore. */
 export function ChangelogPanel({ collectionId, canEdit }: ChangelogPanelProps) {
+	const viewerNoteId = useId();
 	const { t, formatDate } = useI18n();
 	const toast = useToast();
 	const log = useChangelog(collectionId);
@@ -68,6 +69,15 @@ export function ChangelogPanel({ collectionId, canEdit }: ChangelogPanelProps) {
 			<p className="m-0 text-muted text-xs">
 				{t("collections.changelog.intro")}
 			</p>
+			{canEdit ? null : (
+				<p
+					id={viewerNoteId}
+					data-id="changelog-viewer-note"
+					className="m-0 text-muted text-xs"
+				>
+					{t("collections.changelog.restoreNeedsEditor")}
+				</p>
+			)}
 			{skeleton ? (
 				<SkeletonRegion
 					label={t("collections.changelog.loading")}
@@ -118,6 +128,7 @@ export function ChangelogPanel({ collectionId, canEdit }: ChangelogPanelProps) {
 						<ul className="m-0 list-none p-0">
 							{session.changes.map((change) => (
 								<ChangelogChangeItem
+									restoreNoteId={canEdit ? undefined : viewerNoteId}
 									key={change.id}
 									collectionId={collectionId}
 									change={change}
@@ -149,7 +160,7 @@ export function ChangelogPanel({ collectionId, canEdit }: ChangelogPanelProps) {
 				confirmLabel={t("collections.changelog.restore")}
 				onConfirm={confirmRestore}
 				confirmDisabled={preview.pending}
-				data-id="modal-changelog-restore"
+				data-id="modal-restore-change"
 			>
 				<p className="m-0">{t("collections.changelog.restoreBody")}</p>
 				<IrreversibleNote show={preview.irreversible} />

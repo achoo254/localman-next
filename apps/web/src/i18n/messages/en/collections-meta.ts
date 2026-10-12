@@ -53,6 +53,18 @@ export const collectionsMeta = {
 		id: "ID",
 		copyId: "Copy ID",
 		copied: "Copied the ID.",
+		created: "Created",
+		role: "Your role",
+	},
+	links: {
+		environment: "Related environment",
+		mockProject: "Related mock project",
+		notLinked: "Not linked",
+		none: "None",
+		sharedHint: "Shared with this collection",
+		choose: "Change the related environment",
+		linked: "Linked {name} to this collection.",
+		unlinked: "This collection has no related environment now.",
 	},
 	activity: {
 		title: "Recent activity",

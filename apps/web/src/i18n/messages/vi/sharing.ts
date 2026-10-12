@@ -51,7 +51,10 @@ export const sharing: Messages["sharing"] = {
 	element: {
 		pageTitle: "Mục được chia sẻ",
 		role: "Vai trò của bạn: {role}",
-		soon: "Mở mục này trong workbench sẽ có cùng tính năng collection.",
+		environmentsOff:
+			"API client chưa bật Environments nên chưa mở được environment này ở đó.",
+		openFailed: "Không mở được {name} trong API client.",
+		nodeGone: "Mục đó không còn trong {name} nên đã mở collection.",
 		back: "Về API client",
 		invalidTitle: "Link này không hợp lệ",
 		invalidText: "Kiểm tra lại link, hoặc nhờ người chia sẻ gửi link mới.",

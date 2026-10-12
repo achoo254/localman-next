@@ -10,12 +10,14 @@ import { useWorkbenchActions } from "../api-client/workbench/workbench-context";
 import type { VariablesPageTab } from "../api-client/workbench/workbench-tab-types";
 import { ShareDialog } from "../sharing/share-dialog";
 import { isNotFound } from "../sharing/sharing-errors";
+import { combinedStatus } from "./combined-status";
 import { DeleteEnvironmentModal } from "./delete-environment-modal";
 import { EnvironmentHeader } from "./environment-header";
 import {
 	setEnvironmentLocalValues,
 	setEnvironmentVariables,
 } from "./environments-api";
+import { useExportEnvironment } from "./use-environment-file";
 import { useEnvironmentMeta } from "./use-environment-meta";
 import {
 	environmentKey,
@@ -25,7 +27,8 @@ import {
 	useEnvironment,
 	useSetActiveEnvironment,
 } from "./use-environments";
-import { combinedStatus, useVariableEditor } from "./use-variable-editor";
+import { useVariableBulk } from "./use-variable-bulk";
+import { useVariableEditor } from "./use-variable-editor";
 import { VariableTable } from "./variable-table";
 
 function EnvironmentEditor({
@@ -60,6 +63,8 @@ function EnvironmentEditor({
 				await setEnvironmentLocalValues(id, values),
 			),
 	});
+	const bulk = useVariableBulk(editor);
+	const exportFile = useExportEnvironment();
 	const isActive = active.data?.environmentId === id;
 	const status = combinedStatus(meta.status, editor.status);
 	return (
@@ -81,7 +86,9 @@ function EnvironmentEditor({
 				onToggleActive={() => setActive.mutate(isActive ? null : id)}
 				onShare={() => setSharing(true)}
 				onDuplicate={() => void duplicate()}
+				onExport={() => void exportFile(id, environment.name)}
 				onDelete={() => setDeleting(true)}
+				bulkItems={bulk.items}
 			/>
 			<div className="grid gap-4 px-4 py-4">
 				{environment.role === "editor" ? null : (
@@ -98,6 +105,7 @@ function EnvironmentEditor({
 					caption={t("environments.table.caption", { name: environment.name })}
 				/>
 			</div>
+			{bulk.dialogs}
 			<ShareDialog
 				elementType="environment"
 				elementId={id}

@@ -58,7 +58,7 @@ export function UrlBar({ draft, update, sending, onSend }: UrlBarProps) {
 						setPastedCurl(text);
 					}}
 				/>
-				<TunnelBadge url={draft.url} />
+				<TunnelBadge url={draft.url} mode={draft.settings.route} />
 			</div>
 			<select
 				value={draft.settings.route}

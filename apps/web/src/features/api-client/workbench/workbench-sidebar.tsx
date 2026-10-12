@@ -15,6 +15,7 @@ import {
 	SidebarRail,
 	type SidebarSection,
 } from "./sidebar-rail";
+import { useSidebarSectionRequests } from "./sidebar-section-request";
 
 export interface WorkbenchSidebarProps {
 	/** History section (Tunelo and Routing are built in). */
@@ -79,6 +80,10 @@ export function WorkbenchSidebar({
 		setSidebarOpen((open) => !(open && next === section));
 		setSection(next);
 	};
+	useSidebarSectionRequests((next) => {
+		setSection(next);
+		setSidebarOpen(true);
+	});
 	const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
 		if (event.key !== "Escape" || !drawerOpen) return;
 		event.stopPropagation();

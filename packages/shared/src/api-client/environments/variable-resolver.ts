@@ -20,7 +20,7 @@ export interface ScopeVariable {
 	enabled: boolean;
 	secret: boolean;
 	source: "local" | "shared" | "none";
-	/** A secret whose shared value only the server may fill in. */
+	/** A secret whose shared value is hidden from the caller (no local value). */
 	withheld: boolean;
 }
 
@@ -120,7 +120,8 @@ export function resolveVariable(
 				kind: layer.kind,
 				...(layer.label === undefined ? {} : { label: layer.label }),
 			};
-			// A withheld secret still wins: the server fills it in.
+			// A withheld secret still wins: a send using it stops (SECRET_WITHHELD)
+			// until the caller sets a local value; no lower value stands in.
 			const usable =
 				variable.enabled && (variable.source !== "none" || variable.withheld);
 			(usable ? enabled : disabled).push(candidate);
@@ -142,7 +143,7 @@ function declaredNames(layers: readonly ResolverLayer[]): string[] {
 /**
  * The winning value of every name as one interpolation scope: what can
  * be filled in on this side. A name won by a withheld secret is left out
- * (no lower value stands in for it), so `{{name}}` stays for the server.
+ * (no lower value stands in for it), so `{{name}}` stays unresolved.
  */
 export function interpolationScope(layers: readonly ResolverLayer[]): {
 	name: string;
@@ -156,7 +157,7 @@ export function interpolationScope(layers: readonly ResolverLayer[]): {
 	return { name: "variables", variables };
 }
 
-/** Names won by a secret only the server may fill in. */
+/** Names won by a secret hidden from the caller; a send using one stops. */
 export function withheldNames(layers: readonly ResolverLayer[]): string[] {
 	return declaredNames(layers).filter(
 		(name) => resolveVariable(name, layers).winner?.withheld === true,

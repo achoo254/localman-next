@@ -6,10 +6,12 @@ import {
 	IconCircleCheck,
 	IconCopy,
 	IconDots,
+	IconDownload,
 	IconLock,
 	IconShare,
 	IconTrash,
 } from "@tabler/icons-react";
+import { type ReactNode, useRef } from "react";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import {
@@ -23,9 +25,11 @@ import { IconButton } from "../../components/ui/icon-button";
 import { useT } from "../../i18n/i18n-context";
 import { EditableName } from "../collections/editable-name";
 import { PageSaveState } from "../collections/page-save-state";
+import { SharedWithYouBadge } from "../collections/shared-with-you-badge";
 import type { SaveStatus } from "../collections/use-page-autosave";
 import { RequestEditButton } from "../sharing/request-edit-button";
 import { ColorMenu } from "./environment-color";
+import { useRenameRequest } from "./rename-request";
 
 export interface EnvironmentHeaderProps {
 	environment: EnvironmentDetail;
@@ -44,17 +48,27 @@ export interface EnvironmentHeaderProps {
 	onToggleActive: () => void;
 	onShare: () => void;
 	onDuplicate: () => void;
+	onExport: () => void;
 	onDelete: () => void;
+	/** The "all" actions of the variables, first in More. */
+	bulkItems: ReactNode;
 }
 
-/** Color, name, Read only and Request to Edit for Viewers, Set active, Share, More. */
+/**
+ * Color, name, Read only and Request to Edit for Viewers, Set active,
+ * Share, and More: the "all" actions of the variables, Duplicate, Export
+ * and Delete.
+ */
 export function EnvironmentHeader(props: EnvironmentHeaderProps) {
 	const t = useT();
 	const { environment } = props;
 	const canEdit = environment.role === "editor";
 	const { canDuplicate, canDelete } = props;
+	const headerRef = useRef<HTMLElement>(null);
+	useRenameRequest(environment.id, headerRef);
 	return (
 		<header
+			ref={headerRef}
 			data-id="environment-header"
 			className="flex flex-wrap items-center gap-2 border-border-subtle border-b px-4 py-3"
 		>
@@ -69,6 +83,10 @@ export function EnvironmentHeader(props: EnvironmentHeaderProps) {
 				readOnly={!canEdit}
 				data-id="environment-header-title"
 				onRename={props.onRename}
+			/>
+			<SharedWithYouBadge
+				workspaceId={environment.workspaceId}
+				data-id="environment-header-shared"
 			/>
 			{canEdit ? null : (
 				<>
@@ -106,28 +124,37 @@ export function EnvironmentHeader(props: EnvironmentHeaderProps) {
 				<IconShare size={16} aria-hidden="true" />
 				{t("environments.page.share")}
 			</Button>
-			{canDuplicate || canDelete ? (
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<IconButton
-							size="sm"
-							data-id="environment-header-more"
-							label={t("environments.page.more", { name: props.name })}
-							icon={<IconDots size={18} aria-hidden="true" />}
-						/>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end">
-						{canDuplicate ? (
-							<DropdownMenuItem
-								data-id="env-more-duplicate"
-								icon={<IconCopy size={16} aria-hidden="true" />}
-								onSelect={props.onDuplicate}
-							>
-								{t("environments.menu.duplicate")}
-							</DropdownMenuItem>
-						) : null}
-						{canDuplicate && canDelete ? <DropdownMenuSeparator /> : null}
-						{canDelete ? (
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<IconButton
+						size="sm"
+						data-id="environment-header-more"
+						label={t("environments.page.more", { name: props.name })}
+						icon={<IconDots size={18} aria-hidden="true" />}
+					/>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="end">
+					{props.bulkItems}
+					<DropdownMenuSeparator />
+					{canDuplicate ? (
+						<DropdownMenuItem
+							data-id="env-more-duplicate"
+							icon={<IconCopy size={16} aria-hidden="true" />}
+							onSelect={props.onDuplicate}
+						>
+							{t("environments.menu.duplicate")}
+						</DropdownMenuItem>
+					) : null}
+					<DropdownMenuItem
+						data-id="env-more-export"
+						icon={<IconDownload size={16} aria-hidden="true" />}
+						onSelect={props.onExport}
+					>
+						{t("environments.file.export")}
+					</DropdownMenuItem>
+					{canDelete ? (
+						<>
+							<DropdownMenuSeparator />
 							<DropdownMenuItem
 								danger
 								data-id="env-more-delete"
@@ -136,10 +163,10 @@ export function EnvironmentHeader(props: EnvironmentHeaderProps) {
 							>
 								{t("environments.menu.delete")}
 							</DropdownMenuItem>
-						) : null}
-					</DropdownMenuContent>
-				</DropdownMenu>
-			) : null}
+						</>
+					) : null}
+				</DropdownMenuContent>
+			</DropdownMenu>
 		</header>
 	);
 }

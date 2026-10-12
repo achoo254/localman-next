@@ -27,6 +27,10 @@ import {
 	optionalString,
 } from "../../lib/json-guards";
 import { parseElementRole } from "../sharing/sharing-api";
+import {
+	parseEnvironmentLink,
+	parseMockProjectLink,
+} from "./collection-link-parsers";
 
 /** The part of a zod schema the parsers need (the web does not import zod). */
 interface SafeParser<T> {
@@ -130,6 +134,8 @@ export function parseDetail(value: unknown): CollectionDetail {
 		updatedBy: expectString(data, "updatedBy"),
 		updatedByName: optionalString(data, "updatedByName"),
 		updatedAt: expectString(data, "updatedAt"),
+		mockProject: parseMockProjectLink(data.mockProject),
+		relatedEnvironment: parseEnvironmentLink(data.relatedEnvironment),
 		nodes: expectArray(data, "nodes").map(parseNode),
 	};
 }

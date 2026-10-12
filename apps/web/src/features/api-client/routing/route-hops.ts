@@ -19,11 +19,8 @@ import {
 	failed,
 	finishSend,
 } from "../workbench/send-steps";
-import type {
-	RouteWhy,
-	SendInput,
-	SettledResponse,
-} from "../workbench/workbench-types";
+import type { SendInput } from "../workbench/send-types";
+import type { RouteWhy, SettledResponse } from "../workbench/workbench-types";
 import type { RouteTarget } from "./route-plan";
 import type { RouterDeps, RoutingSnapshot } from "./route-types";
 import { sensitiveParts } from "./sensitive-parts";

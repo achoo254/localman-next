@@ -6,7 +6,11 @@
  * Besides the value, every result says which `secret` variables were
  * used, so the router can ask before such a request leaves the browser.
  */
-import { resolveDynamicVariable } from "./dynamic-variables.js";
+import {
+	type FakerRunner,
+	isDynamicVariable,
+	resolveDynamicVariable,
+} from "./dynamic-variables.js";
 
 /** `{{ name }}`; names cannot contain braces, so `{{{x}}}` is `{` + x + `}`. */
 export const VARIABLE_PATTERN = /\{\{([^{}]+)\}\}/g;
@@ -32,6 +36,12 @@ export interface VariableScope {
  */
 export interface InterpolationContext {
 	scopes: readonly VariableScope[];
+	/**
+	 * Fills `{{$random…}}` from the Faker whitelist. Without it those stay
+	 * as typed (not reported unresolved), apart from the few with a
+	 * built-in stand-in; synchronous previews leave it out.
+	 */
+	runFaker?: FakerRunner;
 }
 
 export interface InterpolationResult {
@@ -87,9 +97,9 @@ export function createInterpolator(
 			const name = raw.trim();
 			if (!name) return match;
 			if (name.startsWith("$")) {
-				const dynamic = resolveDynamicVariable(name);
+				const dynamic = resolveDynamicVariable(name, context?.runFaker);
 				if (dynamic !== null) return dynamic;
-				unresolved.add(name);
+				if (!isDynamicVariable(name)) unresolved.add(name);
 				return match;
 			}
 			const found = lookup.get(name);

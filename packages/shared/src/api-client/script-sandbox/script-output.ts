@@ -8,6 +8,8 @@ import {
 	MAX_SCRIPT_LOG_ENTRIES,
 	MAX_SCRIPT_LOG_LENGTH,
 	MAX_SCRIPT_MESSAGE_LENGTH,
+	MAX_SCRIPT_SCOPE_VALUE_LENGTH,
+	MAX_SCRIPT_SCOPE_VARIABLES,
 	MAX_SCRIPT_TESTS,
 	MAX_SCRIPT_VARIABLES,
 	MAX_SCRIPT_VARIABLE_LENGTH,
@@ -24,6 +26,8 @@ export interface SandboxOutput {
 	request: ScriptRequest | null;
 	/** Why `lm.request` cannot be sent; reported as a script error. */
 	requestProblem: string | null;
+	globals: Record<string, string>;
+	collectionVariables: Record<string, string>;
 	environment: Record<string, string>;
 	variables: Record<string, string>;
 	tests: ScriptTestResult[];
@@ -39,14 +43,18 @@ function isLogLevel(value: unknown): value is ScriptLogLevel {
 	return SCRIPT_LOG_LEVELS.some((level) => level === value);
 }
 
-function readVariables(value: unknown): Record<string, string> | null {
+function readVariables(
+	value: unknown,
+	max = MAX_SCRIPT_VARIABLES,
+	length = MAX_SCRIPT_VARIABLE_LENGTH,
+): Record<string, string> | null {
 	if (!isRecord(value)) return null;
 	const entries = Object.entries(value);
-	if (entries.length > MAX_SCRIPT_VARIABLES) return null;
+	if (entries.length > max) return null;
 	const valid: [string, string][] = [];
 	for (const [key, text] of entries) {
 		if (typeof text !== "string") return null;
-		if (text.length > MAX_SCRIPT_VARIABLE_LENGTH) return null;
+		if (text.length > length) return null;
 		valid.push([key, text]);
 	}
 	// fromEntries defines own keys, so a "__proto__" variable stays data.
@@ -135,11 +143,22 @@ export function readSandboxOutput(
 	if (!isRecord(root) || typeof root.logsTruncated !== "boolean") {
 		return MALFORMED;
 	}
-	const environment = readVariables(root.environment);
+	const scope = (value: unknown) =>
+		readVariables(
+			value,
+			MAX_SCRIPT_SCOPE_VARIABLES,
+			MAX_SCRIPT_SCOPE_VALUE_LENGTH,
+		);
+	const globals = scope(root.globals);
+	const collectionVariables = scope(root.collectionVariables);
+	const environment = scope(root.environment);
 	const variables = readVariables(root.variables);
 	const tests = readTests(root.tests);
 	const logs = readLogs(root.logs);
-	if (!environment || !variables || !tests || !logs) return MALFORMED;
+	if (!globals || !collectionVariables || !environment || !variables) {
+		return MALFORMED;
+	}
+	if (!tests || !logs) return MALFORMED;
 
 	let request: ScriptRequest | null = null;
 	let requestProblem: string | null = null;
@@ -155,6 +174,8 @@ export function readSandboxOutput(
 	return {
 		request,
 		requestProblem,
+		globals,
+		collectionVariables,
 		environment,
 		variables,
 		tests,

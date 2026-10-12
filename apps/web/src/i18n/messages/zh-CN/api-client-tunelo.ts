@@ -58,6 +58,11 @@ export const apiClientTunelo: Messages["apiClientTunelo"] = {
 	badge: {
 		label: "经 Tunelo",
 		tip: "发送到 {url}",
+		labelAuto: "有 tunnel",
+		tipAuto:
+			"Auto 能直接从浏览器发送时直接发送，不能时经 {url} 发送。选择 Proxy 可始终使用 tunnel。",
+		labelDirect: "不使用 tunnel",
+		tipDirect: "直连始终从浏览器发送。选择 Proxy 或 Auto 才会使用 {url}。",
 		unmap: "移除 {key} 的映射",
 	},
 };

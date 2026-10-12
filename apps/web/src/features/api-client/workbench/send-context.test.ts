@@ -25,6 +25,8 @@ function fakeRunner(): ScriptRunner & { ran: string[] } {
 		if (key && value !== undefined) variables[key] = value;
 		return {
 			request: input.request,
+			globals: { ...input.globals },
+			collectionVariables: { ...input.collectionVariables },
 			environment: { ...input.environment },
 			variables,
 			tests: [{ name, passed: true, error: null }],

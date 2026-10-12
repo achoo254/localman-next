@@ -3,6 +3,7 @@ import type { ClientSession, Types } from "mongoose";
 import { CollectionModel } from "./collection-model.js";
 import { CollectionRevisionModel } from "./collection-revision-model.js";
 import { type RevisionInput, builtRevision } from "./revision-patch.js";
+import { sessionToJoin } from "./revision-session.js";
 
 /**
  * Patch bytes the changelog of one collection keeps (with at most
@@ -53,6 +54,10 @@ export async function appendRevisions(
 	}
 	const first = (counters.revisionSeq ?? 0) + 1;
 	const at = new Date();
+	const start = (await sessionToJoin(collectionId, authorId, at, session)) ?? {
+		seq: first,
+		at,
+	};
 	await CollectionRevisionModel.insertMany(
 		built.map((revision, index) => ({
 			...revision,
@@ -60,6 +65,8 @@ export async function appendRevisions(
 			seq: first + index,
 			authorId,
 			at,
+			sessionStartSeq: start.seq,
+			sessionStartAt: start.at,
 		})),
 		{ session },
 	);

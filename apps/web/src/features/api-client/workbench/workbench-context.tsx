@@ -19,12 +19,10 @@ import {
 	useReducer,
 	useRef,
 } from "react";
+import type { SaveScopes, SendContextOf, VariablesOf } from "./send-hooks";
+import type { RequestSender } from "./send-types";
 import { useDraftSync } from "./use-draft-sync";
-import {
-	type SendContextOf,
-	type VariablesOf,
-	useSendTab,
-} from "./use-send-tab";
+import { useSendTab } from "./use-send-tab";
 import type {
 	Workbench,
 	WorkbenchActions,
@@ -33,7 +31,6 @@ import type {
 import { newId } from "./workbench-ids";
 import { INITIAL_WORKBENCH, workbenchReducer } from "./workbench-reducer";
 import type { OpenTabOptions } from "./workbench-tab-types";
-import type { RequestSender } from "./workbench-types";
 
 const StateContext = createContext<WorkbenchState | null>(null);
 const ActionsContext = createContext<WorkbenchActions | null>(null);
@@ -52,6 +49,8 @@ export interface WorkbenchProviderProps {
 	sendContext?: SendContextOf;
 	/** Globals and environment variables a send resolves (flag on). */
 	variablesOf?: VariablesOf;
+	/** Saves what scripts set in the scopes as local values (flag on). */
+	saveScopes?: SaveScopes;
 }
 
 export function WorkbenchProvider({
@@ -62,6 +61,7 @@ export function WorkbenchProvider({
 	retryDelaysMs,
 	sendContext,
 	variablesOf,
+	saveScopes,
 }: WorkbenchProviderProps) {
 	const [state, dispatch] = useReducer(workbenchReducer, INITIAL_WORKBENCH);
 	const latest = useRef(state);
@@ -74,7 +74,11 @@ export function WorkbenchProvider({
 		send: sendTab,
 		cancel: cancelSend,
 		abort,
-	} = useSendTab(latest, dispatch, sender, sendContext, variablesOf);
+	} = useSendTab(latest, dispatch, sender, {
+		sendContext,
+		variablesOf,
+		saveScopes,
+	});
 
 	const openTab = useCallback(
 		(draft?: ApiRequestDraft, options: OpenTabOptions = {}) => {
@@ -118,6 +122,8 @@ export function WorkbenchProvider({
 			setSaved: (id, saved) => dispatch({ type: "setSaved", id, saved }),
 			setFile: (id, fileId, file) =>
 				dispatch({ type: "setFile", id, fileId, file }),
+			setTemporaryVariable: (id, key, value) =>
+				dispatch({ type: "setTemporary", id, key, value }),
 			send: (id, options) => void sendTab(id, options),
 			cancelSend,
 			saveDrafts: sync.flush,

@@ -86,7 +86,7 @@ describe("collection changelog", () => {
 		);
 	});
 
-	it("shows before and after of a change, and hides it for everyone", async () => {
+	it("shows before and after of a change, and hides it from Viewers only", async () => {
 		const { id } = await edited();
 		const changes = await changesOf(EVE, id);
 		const update = changes.find(
@@ -128,6 +128,12 @@ describe("collection changelog", () => {
 			available: false,
 			before: null,
 		});
+		// Editors and Admins still read a hidden diff, flagged as hidden.
+		for (const editor of [EVE, ADA]) {
+			const own = await as(editor).get(diffPath);
+			expect(own.body).toMatchObject({ hidden: true, available: true });
+			expect(own.body.after.draft.method).toBe("POST");
+		}
 		await as(EVE).send(
 			"post",
 			`/collections/${id}/changelog/${update.id}/show`,

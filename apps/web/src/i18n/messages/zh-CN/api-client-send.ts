@@ -4,6 +4,13 @@ export const apiClientSend: Messages["apiClient"]["send"] = {
 	preScriptFailed: "未发送：pre-request script 已停止。{reason}",
 	secretWithheld:
 		"未发送：它使用了 {name}，这是只有 Editor 能查看的 secret。请在 environment 中为它设置你自己的本地值，然后重新发送。",
+	scopesDropped:
+		"脚本设置了 {scopes} 的值，但无处保存：没有已激活的 environment，或 request 不属于任何 collection。",
+	scopeNames: { environment: "environment", collectionVariables: "collection" },
+	scopesNotSaved:
+		"已收到 response，但脚本设置的变量未能保存。请重新发送以重试。",
+	dynamicVariablesUnavailable:
+		"未发送：无法加载随机值（$random…），请检查网络后重试。",
 	variablesUnavailable: "未发送：无法加载 environment 变量，请检查网络后重试。",
 	fileUnreadable: "无法读取 body 中的文件，请重新选择。",
 	prepare: {

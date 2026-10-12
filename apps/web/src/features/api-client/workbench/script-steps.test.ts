@@ -25,6 +25,8 @@ describe("script steps", () => {
 				'lm.request.url = lm.request.url + "?page=2";',
 			].join("\n"),
 			request: toScriptRequest(draft),
+			globals: {},
+			collectionVariables: {},
 			environment: {},
 			variables: {},
 		});

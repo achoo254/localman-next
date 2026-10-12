@@ -18,7 +18,10 @@ import mongoose, { Schema, type Types } from "mongoose";
  * A revision whose patches would be too large keeps its metadata only
  * (`partial`); nothing older than it can be restored. Trimmed revisions
  * stay as stubs (`trimmed`, no patches), so a restore to one answers 409
- * rather than 404.
+ * rather than 404. `sessionStartSeq`/`sessionStartAt` name the first
+ * revision of the changelog session it belongs to (set when written;
+ * revisions written before they existed lack them and are grouped when
+ * read).
  */
 const revisionSchema = new Schema(
 	{
@@ -40,6 +43,8 @@ const revisionSchema = new Schema(
 		/** Trimmed from the changelog: a stub kept to tell it existed. */
 		trimmed: { type: Boolean, default: false },
 		bytes: { type: Number, required: true },
+		sessionStartSeq: { type: Number },
+		sessionStartAt: { type: Date },
 	},
 	{ collection: "collection_revisions", versionKey: false, minimize: false },
 );
@@ -80,4 +85,6 @@ export interface StoredRevision {
 	readonly hidden: boolean;
 	readonly trimmed?: boolean;
 	readonly bytes: number;
+	readonly sessionStartSeq?: number | null;
+	readonly sessionStartAt?: Date | null;
 }

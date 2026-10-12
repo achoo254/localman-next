@@ -1,6 +1,7 @@
 /**
  * Source evaluated in a fresh QuickJS context before the user script. It
- * builds the whole `lm` API (variables, request, response, tests, expect)
+ * builds the whole `lm` API (globals, collection variables, environment,
+ * variables, request, response, tests, expect)
  * and `console` inside the VM, so the host never exposes a callback and
  * never holds a VM function across calls. The host only passes JSON in and
  * reads one JSON string back from the returned `finish` function.
@@ -12,6 +13,9 @@ import {
 	MAX_SCRIPT_LOG_ENTRIES,
 	MAX_SCRIPT_LOG_LENGTH,
 	MAX_SCRIPT_MESSAGE_LENGTH,
+	MAX_SCRIPT_SCOPE_KEY_LENGTH,
+	MAX_SCRIPT_SCOPE_VALUE_LENGTH,
+	MAX_SCRIPT_SCOPE_VARIABLES,
 	MAX_SCRIPT_TESTS,
 	MAX_SCRIPT_VARIABLES,
 	MAX_SCRIPT_VARIABLE_LENGTH,
@@ -29,8 +33,9 @@ const LOG_MAX = ${MAX_SCRIPT_LOG_ENTRIES};
 const LOG_LENGTH = ${MAX_SCRIPT_LOG_LENGTH};
 const MESSAGE_MAX = ${MAX_SCRIPT_MESSAGE_LENGTH};
 const TEST_MAX = ${MAX_SCRIPT_TESTS};
-const VAR_MAX = ${MAX_SCRIPT_VARIABLES};
-const VAR_LENGTH = ${MAX_SCRIPT_VARIABLE_LENGTH};
+// lm.variables lives for one send; saved scopes take the local value caps.
+const SEND_LIMITS = { max: ${MAX_SCRIPT_VARIABLES}, length: ${MAX_SCRIPT_VARIABLE_LENGTH}, key: 0 };
+const SCOPE_LIMITS = { max: ${MAX_SCRIPT_SCOPE_VARIABLES}, length: ${MAX_SCRIPT_SCOPE_VALUE_LENGTH}, key: ${MAX_SCRIPT_SCOPE_KEY_LENGTH} };
 
 const str = (value) => {
 	if (typeof value === "string") return value;
@@ -60,27 +65,39 @@ const record = (level) => (...args) => {
 	logs.push({ level, message: cut(text, LOG_LENGTH) });
 };
 
-const store = (values, label, fallback) => Object.freeze({
+// below: the scopes a read falls back to, highest first (lm.variables only).
+const store = (values, label, below, limits) => Object.freeze({
 	get: (key) => {
 		const name = String(key);
-		return own(values, name) ? values[name] : fallback ? fallback.get(name) : undefined;
+		if (own(values, name)) return values[name];
+		const from = below.find((scope) => own(scope, name));
+		return from ? from[name] : undefined;
 	},
-	has: (key) => own(values, String(key)),
+	has: (key) => own(values, String(key)) || below.some((scope) => own(scope, String(key))),
 	set: (key, value) => {
 		const name = String(key);
 		if (!name.trim()) throw new TypeError(label + ".set: the name is empty");
+		if (limits.key && name.length > limits.key) throw new RangeError(label + ".set: name longer than " + limits.key + " characters");
+		if (limits.key && name !== name.trim()) throw new TypeError(label + ".set: the name starts or ends with a space");
 		const text = str(value);
-		if (text.length > VAR_LENGTH) throw new RangeError(label + ".set: value longer than " + VAR_LENGTH + " characters");
-		if (!own(values, name) && Object.keys(values).length >= VAR_MAX) throw new RangeError(label + ": more than " + VAR_MAX + " variables");
+		if (text.length > limits.length) throw new RangeError(label + ".set: value longer than " + limits.length + " characters");
+		if (!own(values, name) && Object.keys(values).length >= limits.max) throw new RangeError(label + ": more than " + limits.max + " variables");
 		values[name] = text;
 	},
 	unset: (key) => { delete values[String(key)]; },
-	toObject: () => Object.fromEntries(Object.entries(values)),
+	clear: () => { for (const key of Object.keys(values)) delete values[key]; },
+	// A null-prototype target keeps a "__proto__" name as data.
+	toObject: () => Object.assign(Object.create(null), ...below.slice().reverse(), values),
 });
+const globalValues = copy(input.globals);
+const collectionValues = copy(input.collectionVariables);
 const envValues = copy(input.environment);
 const varValues = copy(input.variables);
-const environment = store(envValues, "lm.environment", null);
-const variables = store(varValues, "lm.variables", environment);
+const globals = store(globalValues, "lm.globals", [], SCOPE_LIMITS);
+const collectionVariables = store(collectionValues, "lm.collectionVariables", [], SCOPE_LIMITS);
+const environment = store(envValues, "lm.environment", [], SCOPE_LIMITS);
+// Postman's order: a script value, then environment, collection, globals.
+const variables = store(varValues, "lm.variables", [envValues, collectionValues, globalValues], SEND_LIMITS);
 
 const headerOf = (list, name) => {
 	const lower = String(name).toLowerCase();
@@ -150,7 +167,7 @@ const test = (name, fn) => {
 ${SCRIPT_EXPECT_SOURCE}
 
 const define = (name, value) => Object.defineProperty(globalThis, name, { value, writable: false, configurable: false });
-define("lm", Object.freeze({ environment, variables, request, response, test, expect }));
+define("lm", Object.freeze({ globals, collectionVariables, environment, variables, request, response, test, expect }));
 define("console", Object.freeze({ log: record("log"), info: record("info"), warn: record("warn"), error: record("error") }));
 
 return () => {
@@ -167,7 +184,8 @@ return () => {
 		}
 	}
 	return stringify({
-		request: snapshot, requestError, environment: envValues, variables: varValues,
+		request: snapshot, requestError, globals: globalValues, collectionVariables: collectionValues,
+		environment: envValues, variables: varValues,
 		tests: tests.map((t) => ({ name: t.name, passed: t.passed, error: t.error })),
 		logs, logsTruncated,
 	});

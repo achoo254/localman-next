@@ -1,6 +1,6 @@
 import {
 	CHANGELOG_ACTIONS,
-	CHANGELOG_SESSION_GAP_MS,
+	CHANGELOG_SESSION_WINDOW_MS,
 	type ChangelogChange,
 	type ChangelogSession,
 } from "@localman/shared/api-client";
@@ -88,7 +88,11 @@ export function toChange(
 
 /**
  * Sessions of revisions listed newest first: one author's consecutive
- * changes less than `CHANGELOG_SESSION_GAP_MS` apart.
+ * changes within `CHANGELOG_SESSION_WINDOW_MS` of the session's first
+ * (oldest) change, as stored on each revision (`sessionStartSeq`).
+ * Revisions written before that are grouped here, oldest first, so their
+ * bounds only depend on older revisions: the oldest one given must start
+ * a session (see `changelog-page.ts`).
  */
 export function toSessions(
 	revisions: readonly RevisionMeta[],
@@ -96,18 +100,14 @@ export function toSessions(
 	names: ReadonlyMap<string, string>,
 ): ChangelogSession[] {
 	const sessions: ChangelogSession[] = [];
+	let first: RevisionMeta | null = null;
 	let last: RevisionMeta | null = null;
-	for (const rev of revisions) {
+	for (const rev of [...revisions].reverse()) {
 		const current = sessions.at(-1);
-		const joins =
-			current !== undefined &&
-			last !== null &&
-			last.authorId === rev.authorId &&
-			last.at.getTime() - rev.at.getTime() <= CHANGELOG_SESSION_GAP_MS;
 		const change = toChange(rev, newestPartial);
-		if (joins && current) {
-			current.changes.push(change);
-			current.from = change.at;
+		if (current && first && last && joinsSession(first, last, rev)) {
+			current.changes.unshift(change);
+			current.to = change.at;
 		} else {
 			sessions.push({
 				authorId: rev.authorId,
@@ -116,8 +116,26 @@ export function toSessions(
 				to: change.at,
 				changes: [change],
 			});
+			first = rev;
 		}
 		last = rev;
 	}
-	return sessions;
+	return sessions.reverse();
+}
+
+/**
+ * Whether `rev` (the next newer revision after `last`) belongs to the
+ * session that `first` opened: the session stored on both, or for older
+ * revisions without one, the same author within the window.
+ */
+export function joinsSession(
+	first: RevisionMeta,
+	last: RevisionMeta,
+	rev: RevisionMeta,
+): boolean {
+	if (last.authorId !== rev.authorId) return false;
+	const mark = rev.sessionStartSeq;
+	if (typeof mark === "number") return first.sessionStartSeq === mark;
+	if (typeof first.sessionStartSeq === "number") return false;
+	return rev.at.getTime() - first.at.getTime() <= CHANGELOG_SESSION_WINDOW_MS;
 }

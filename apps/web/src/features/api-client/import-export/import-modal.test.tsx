@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { seriousViolations } from "../../../test/axe";
+import type { EnvironmentImport } from "./environment-import-note";
 import { ImportModal } from "./import-modal";
 import type { ImportSelection } from "./open-imported";
 
@@ -27,10 +28,17 @@ const COLLECTION = JSON.stringify({
 	],
 });
 
-function renderModal() {
+function renderModal(props: { environmentImport?: EnvironmentImport } = {}) {
 	const onImport = vi.fn<(selection: ImportSelection) => void>();
 	const onOpenChange = vi.fn();
-	render(<ImportModal open onOpenChange={onOpenChange} onImport={onImport} />);
+	render(
+		<ImportModal
+			open
+			onOpenChange={onOpenChange}
+			onImport={onImport}
+			{...props}
+		/>,
+	);
 	const dialog = screen.getByRole("dialog", { name: "Import" });
 	return { dialog, onImport, onOpenChange };
 }
@@ -109,7 +117,7 @@ describe("ImportModal", () => {
 	});
 
 	it("imports an environment file", async () => {
-		const { dialog, onImport } = renderModal();
+		const { dialog, onImport } = renderModal({ environmentImport: "allowed" });
 		await paste(
 			dialog,
 			JSON.stringify({ name: "Dev", values: [{ key: "a", value: "1" }] }),
@@ -125,7 +133,38 @@ describe("ImportModal", () => {
 		expect(onImport.mock.calls[0]?.[0]).toMatchObject({
 			kind: "environment",
 			environment: { name: "Dev" },
+			file: { name: "Dev", values: [{ key: "a", value: "1" }] },
 		});
+	});
+
+	it("explains that environments can't be imported yet", async () => {
+		const { dialog, onImport } = renderModal();
+		await paste(
+			dialog,
+			JSON.stringify({ name: "Dev", values: [{ key: "a", value: "1" }] }),
+		);
+		expect(
+			await within(dialog).findByText(
+				"Environments aren't available in this workspace yet, so this file can't be imported.",
+			),
+		).toBeVisible();
+		const submit = within(dialog).getByRole("button", {
+			name: "Import environment",
+		});
+		expect(submit).toBeDisabled();
+		await userEvent.click(submit);
+		expect(onImport).not.toHaveBeenCalled();
+	});
+
+	it("tells a Viewer why they can't import an environment", async () => {
+		const { dialog } = renderModal({ environmentImport: "viewer" });
+		await paste(dialog, JSON.stringify({ name: "Dev", values: [] }));
+		expect(
+			await within(dialog).findByText(/Viewers can't add environments/),
+		).toBeVisible();
+		expect(
+			within(dialog).getByRole("button", { name: "Import environment" }),
+		).toBeDisabled();
 	});
 
 	it.each([

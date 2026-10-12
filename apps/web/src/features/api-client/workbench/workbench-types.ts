@@ -1,14 +1,12 @@
 /**
- * Shared contract of the API client workbench: tabs, per-tab response and
- * the request sender. Editor, response viewer, history, import/export and
+ * Shared contract of the API client workbench: tabs and the per-tab
+ * response (what a send takes is in `send-types.ts`). Editor, response viewer, history, import/export and
  * router share state only through these shapes and `workbench-context.tsx`.
  */
 import type {
 	ApiRequestDraft,
 	ClientResponse,
 	HttpMethod,
-	ResolverLayer,
-	RouteMode,
 	TabSource,
 } from "@localman/shared/api-client";
 import type {
@@ -16,7 +14,7 @@ import type {
 	ScriptLogEntry,
 	ScriptTestResult,
 } from "@localman/shared/api-client/script-sandbox";
-import type { SendContext } from "./workbench-tab-types";
+import type { TemporaryVariable } from "./temporary-variables";
 
 /**
  * Where a request went. The proxy-only sender always uses the proxy; the
@@ -157,10 +155,8 @@ export interface WorkbenchTab {
 	/** Picked files by `FileRef.fileId`; they never reach the draft API. */
 	files: ReadonlyMap<string, File>;
 	response: TabResponse;
-	/**
-	 * The user set the route on this tab. A route that came with the draft
-	 * (account default, restore) is no choice: credentials still need an OK.
-	 */
+	/** The user set the route here; one that came with the draft (account
+	 * default, restore) is no choice: credentials still need an OK. */
 	routeChosen: boolean;
 	/** Opened from a history entry whose credentials were hidden. */
 	redacted: boolean;
@@ -168,31 +164,6 @@ export interface WorkbenchTab {
 	source: TabSource | null;
 	/** That request's draft as last saved or loaded; `dirty` compares to it. */
 	saved: ApiRequestDraft | null;
+	/** Temporary variables: in memory only, above every scope. */
+	temporary: readonly TemporaryVariable[];
 }
-
-/** One-off choices for a single send (retry buttons of the response). */
-export interface SendOptions {
-	route?: RouteMode; // for this send only; the tab keeps its own
-	/** After a browser `TypeError`: a proxy success remembers the origin. */
-	afterDirectBlocked?: boolean;
-}
-
-export interface SendInput {
-	draft: ApiRequestDraft;
-	files: ReadonlyMap<string, File>;
-	/** Aborted by "Cancel" or when the tab closes. */
-	signal: AbortSignal;
-	options?: SendOptions;
-	/** `WorkbenchTab.routeChosen`; `options.route` counts as chosen too. */
-	routeChosen?: boolean;
-	/** Auth, scripts and variables from the collection of a bound tab. */
-	context?: SendContext;
-	/** Globals, collection and environment with local values (flag on). */
-	variables?: readonly ResolverLayer[];
-}
-
-/**
- * Sends one request, scripts included. Never rejects: every failure comes
- * back as `{ kind: "failed" }`, an abort as `{ kind: "cancelled" }`.
- */
-export type RequestSender = (input: SendInput) => Promise<SettledResponse>;

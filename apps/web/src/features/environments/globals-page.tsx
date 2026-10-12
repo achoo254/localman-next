@@ -1,9 +1,15 @@
 import type { GlobalsDetail } from "@localman/shared/api-client";
-import { IconLock, IconWorld } from "@tabler/icons-react";
+import { IconDots, IconLock, IconWorld } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Alert } from "../../components/ui/alert";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
+import { IconButton } from "../../components/ui/icon-button";
 import { Skeleton, SkeletonRegion } from "../../components/ui/skeleton";
 import { useT } from "../../i18n/i18n-context";
 import { useDelayedFlag } from "../../lib/use-delayed-flag";
@@ -11,6 +17,7 @@ import type { VariablesPageTab } from "../api-client/workbench/workbench-tab-typ
 import { PageSaveState } from "../collections/page-save-state";
 import { setGlobals, setGlobalsLocalValues } from "./environments-api";
 import { globalsKey, storeLocalValues, useGlobals } from "./use-environments";
+import { useVariableBulk } from "./use-variable-bulk";
 import { useVariableEditor } from "./use-variable-editor";
 import { VariableTable } from "./variable-table";
 
@@ -36,6 +43,7 @@ function GlobalsEditor({ globals }: { globals: GlobalsDetail }) {
 				await setGlobalsLocalValues(workspaceId, values),
 			),
 	});
+	const bulk = useVariableBulk(editor);
 	return (
 		<div
 			data-id="globals-editor"
@@ -60,6 +68,19 @@ function GlobalsEditor({ globals }: { globals: GlobalsDetail }) {
 					status={editor.status}
 					onRetry={() => void editor.flush()}
 				/>
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<IconButton
+							size="sm"
+							data-id="globals-more"
+							label={t("environments.page.more", {
+								name: t("environments.globals.title"),
+							})}
+							icon={<IconDots size={18} aria-hidden="true" />}
+						/>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end">{bulk.items}</DropdownMenuContent>
+				</DropdownMenu>
 			</header>
 			<div className="grid gap-4 px-4 py-4">
 				<p className="m-0 text-muted text-sm">
@@ -70,6 +91,7 @@ function GlobalsEditor({ globals }: { globals: GlobalsDetail }) {
 					caption={t("environments.globals.caption")}
 				/>
 			</div>
+			{bulk.dialogs}
 		</div>
 	);
 }

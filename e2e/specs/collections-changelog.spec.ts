@@ -29,7 +29,7 @@ test("restore a change from the changelog and save a response as an example", as
 	await expect(changes.first()).toBeVisible();
 	// The oldest change is the collection being created from the template.
 	await changes.last().getByTestId("changelog-restore").click();
-	await page.getByTestId("modal-changelog-restore-confirm").click();
+	await page.getByTestId("modal-restore-change-confirm").click();
 	await expect(tree.getByText("List items", { exact: true })).toBeVisible();
 	await expect(tree.getByText("List all items")).toHaveCount(0);
 

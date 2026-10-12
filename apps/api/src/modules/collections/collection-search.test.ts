@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
 import { describe, expect, it } from "vitest";
+import { createLogger } from "../../logger.js";
 import { as } from "../../test-support/dashboard-test-app.js";
 import {
 	ADA,
@@ -9,10 +10,12 @@ import {
 	patchAs,
 } from "../access/testing/access-fixture.js";
 import { CollectionNodeModel } from "./collection-node-model.js";
+import { backfillExampleSearchNames } from "./example-search-backfill.js";
 import {
 	addNode,
 	createAs,
 	draftOf,
+	exampleNode,
 	folder,
 	teamOfThree,
 	useCollectionTestDb,
@@ -78,6 +81,46 @@ describe("client.searchCollections", () => {
 			renamed.body.matches.map((m: { nodeId: string }) => m.nodeId),
 		).toEqual([create.id]);
 		expect((await search(VIC, ws, "d.n")).body.matches).toEqual([]);
+	});
+
+	it("matches examples under their request, renamed and older ones too", async () => {
+		const { ws, cafe, create } = await shop();
+		const saved = await addNode(
+			EVE,
+			cafe.id,
+			exampleNode("Đơn thành công", create.id),
+		);
+		const hit = {
+			collectionId: cafe.id,
+			collectionName: "Café API",
+			nodeId: saved.id,
+			kind: "example",
+			name: "Đơn thành công",
+			path: ["Đơn hàng", "Mới", "Tạo đơn"],
+		};
+		expect((await search(VIC, ws, "THANH CONG")).body.matches).toEqual([hit]);
+		await patchAs(EVE, `/collections/${cafe.id}/nodes/${saved.id}`, {
+			name: "Order created",
+		});
+		expect(
+			(await search(VIC, ws, "created")).body.matches.map(
+				(m: { nodeId: string }) => m.nodeId,
+			),
+		).toEqual([saved.id]);
+		// An example saved before examples kept a folded name: found once
+		// the start-up backfill gives it one, accents ignored.
+		await CollectionNodeModel.updateOne(
+			{ _id: new Types.ObjectId(saved.id) },
+			{ $set: { name: "Đơn cũ" }, $unset: { searchName: 1 } },
+		);
+		expect((await search(VIC, ws, "don cu")).body.matches).toEqual([]);
+		expect(await backfillExampleSearchNames(createLogger("silent"))).toBe(1);
+		expect(await backfillExampleSearchNames(createLogger("silent"))).toBe(0);
+		expect(
+			(await search(VIC, ws, "DON CU")).body.matches.map(
+				(m: { kind: string }) => m.kind,
+			),
+		).toEqual(["example"]);
 	});
 
 	it("searches only what the caller may open", async () => {

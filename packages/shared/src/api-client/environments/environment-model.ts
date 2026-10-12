@@ -89,6 +89,8 @@ export interface EnvironmentDetail extends EnvironmentSummary {
 	variables: VariableView[];
 	localValues: LocalValue[];
 	createdBy: string;
+	/** Name (else username) of the creator; `null` once the account is gone. */
+	createdByName: string | null;
 	createdAt: string;
 }
 

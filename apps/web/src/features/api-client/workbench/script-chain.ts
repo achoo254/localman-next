@@ -1,13 +1,16 @@
 /**
  * Several scripts of one phase run one after another: for a request of a
  * collection, the collection's, then each folder's (outer first), then
- * the request's own. Each sees the request and `lm.variables` the one
+ * the request's own. Each sees the request, `lm.variables` and the scopes
+ * (`lm.globals`, `lm.collectionVariables`, `lm.environment`) the one
  * before left; the first error stops the chain (a pre-request error means
- * "do not send"). Their tests and logs show together, in run order.
+ * "do not send", and no scope change of the chain is kept). Their tests
+ * and logs show together, in run order.
  */
 import type {
 	ApiRequestDraft,
 	ClientResponse,
+	ScriptScopeValues,
 } from "@localman/shared/api-client";
 import type {
 	ScriptError,
@@ -42,8 +45,15 @@ export function nonBlankScripts(scripts: readonly string[]): string[] {
 export interface PreChainResult {
 	toSend: ApiRequestDraft;
 	variables: Record<string, string>;
+	/** The scopes as the scripts left them (as given after an error). */
+	scopes: ScriptScopeValues;
 	outcome: ScriptOutcome | null;
 	error: ScriptError | null;
+}
+
+function scopesOf(result: ScriptScopeValues): ScriptScopeValues {
+	const { globals, collectionVariables, environment } = result;
+	return { globals, collectionVariables, environment };
 }
 
 export async function runPreScripts(
@@ -51,26 +61,36 @@ export async function runPreScripts(
 	draft: ApiRequestDraft,
 	runner: ScriptRunner,
 	newId: () => string,
+	given: ScriptScopeValues,
 ): Promise<PreChainResult> {
 	let toSend = draft;
 	let variables: Record<string, string> = {};
+	let scopes = given;
 	let outcome: ScriptOutcome | null = null;
 	for (const script of scripts) {
 		const result = await runner.run({
 			phase: "pre",
 			script,
 			request: toScriptRequest(toSend),
-			environment: {},
+			...scopes,
 			variables,
 		});
 		outcome = mergeOutcomes(outcome, scriptOutcome(result));
 		if (result.error) {
-			return { toSend: draft, variables: {}, outcome, error: result.error };
+			const error = result.error;
+			return { toSend: draft, variables: {}, scopes: given, outcome, error };
 		}
 		toSend = applyScriptRequest(toSend, result.request, newId);
 		variables = result.variables;
+		scopes = scopesOf(result);
 	}
-	return { toSend, variables, outcome, error: null };
+	return { toSend, variables, scopes, outcome, error: null };
+}
+
+export interface PostChainResult {
+	outcome: ScriptOutcome | null;
+	/** Scopes after the scripts that ran without an error. */
+	scopes: ScriptScopeValues;
 }
 
 export async function runPostScripts(
@@ -79,21 +99,24 @@ export async function runPostScripts(
 	variables: Record<string, string>,
 	response: ClientResponse,
 	runner: ScriptRunner,
-): Promise<ScriptOutcome | null> {
+	given: ScriptScopeValues,
+): Promise<PostChainResult> {
 	let outcome: ScriptOutcome | null = null;
 	let current = variables;
+	let scopes = given;
 	for (const script of scripts) {
 		const result = await runner.run({
 			phase: "post",
 			script,
 			request: toScriptRequest(sent),
-			environment: {},
+			...scopes,
 			variables: current,
 			response,
 		});
 		outcome = mergeOutcomes(outcome, scriptOutcome(result));
 		if (result.error) break;
 		current = result.variables;
+		scopes = scopesOf(result);
 	}
-	return outcome;
+	return { outcome, scopes };
 }

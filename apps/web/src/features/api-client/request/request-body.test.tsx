@@ -3,13 +3,13 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { editorText, setEditorText } from "../../../test/code-mirror";
+import type { SendInput } from "../workbench/send-types";
 import {
 	byDataId,
 	echoSender,
 	renderWorkbench,
 	stubClientApi,
 } from "../workbench/workbench-test-utils";
-import type { SendInput } from "../workbench/workbench-types";
 
 afterEach(() => vi.unstubAllGlobals());
 

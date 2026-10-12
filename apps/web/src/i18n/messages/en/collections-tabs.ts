@@ -6,6 +6,7 @@ export const collectionsTabs = {
 			folder: "Folder",
 			example: "Example",
 		},
+		sharedWithYou: "Shared with you",
 		nameLabel: {
 			collection: "Collection name",
 			folder: "Folder name",

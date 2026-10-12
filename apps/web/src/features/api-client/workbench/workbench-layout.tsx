@@ -9,6 +9,7 @@ import {
 import { IconButton } from "../../../components/ui/icon-button";
 import { useT } from "../../../i18n/i18n-context";
 import { useDelayedFlag } from "../../../lib/use-delayed-flag";
+import { VariableAssistProvider } from "../../variables/variable-assist-provider";
 import { RequestEditor } from "../request/request-editor";
 import { TabBar } from "../tabs/tab-bar";
 import { tabDomId } from "../tabs/tab-item";
@@ -140,7 +141,7 @@ export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 						className="flex min-h-0 flex-1 flex-col overflow-y-auto"
 					>
 						{activeTab ? (
-							<>
+							<VariableAssistProvider key={activeTab.id} tab={activeTab}>
 								<div className="min-w-0 flex-none">
 									{props.renderAboveRequest?.(activeTab)}
 									<RequestEditor
@@ -156,7 +157,7 @@ export function WorkbenchLayout(props: WorkbenchLayoutProps) {
 								>
 									{props.renderResponse(activeTab)}
 								</section>
-							</>
+							</VariableAssistProvider>
 						) : activePage && props.renderPage ? (
 							props.renderPage(activePage)
 						) : (

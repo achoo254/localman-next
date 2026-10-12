@@ -3,6 +3,13 @@ export const apiClientSend = {
 	preScriptFailed: "Not sent: the pre-request script stopped. {reason}",
 	secretWithheld:
 		"Not sent: it uses {name}, a secret only Editors can see. Set your own local value for it in the environment, then send again.",
+	scopesDropped:
+		"Your scripts set {scopes} values, but there was nowhere to keep them: no active environment, or a request outside any collection.",
+	scopeNames: { environment: "environment", collectionVariables: "collection" },
+	scopesNotSaved:
+		"The response came back, but the variables your scripts set could not be saved. Send again to retry.",
+	dynamicVariablesUnavailable:
+		"Not sent: couldn't load the random values ($random…). Check your connection and try again.",
 	variablesUnavailable:
 		"Not sent: we couldn't load your environment variables. Check your connection and try again.",
 	fileUnreadable: "A file of the body could not be read. Choose it again.",

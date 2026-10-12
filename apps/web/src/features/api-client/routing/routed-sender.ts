@@ -5,7 +5,7 @@
  */
 import { activeTranslator } from "../../../i18n/active-translator";
 import { failed, prepareSend } from "../workbench/send-steps";
-import type { RequestSender } from "../workbench/workbench-types";
+import type { RequestSender } from "../workbench/send-types";
 import { viaDirect } from "./direct-hop";
 import {
 	type HopContext,

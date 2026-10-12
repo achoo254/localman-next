@@ -12,6 +12,8 @@ const INPUT: ScriptRunInput = {
 	phase: "pre",
 	script: "lm.variables.set('a', '1')",
 	request: { method: "GET", url: "https://api.test/", headers: [], body: null },
+	globals: {},
+	collectionVariables: {},
 	environment: {},
 	variables: {},
 };
@@ -19,6 +21,8 @@ const INPUT: ScriptRunInput = {
 function resultFor(input: ScriptRunInput): ScriptRunResult {
 	return {
 		request: input.request,
+		globals: {},
+		collectionVariables: {},
 		environment: {},
 		variables: { a: "1" },
 		tests: [],

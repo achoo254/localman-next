@@ -36,6 +36,8 @@ export function createLazyScriptRunner(): ScriptRunner {
 				loading = null;
 				return {
 					request: input.request,
+					globals: { ...input.globals },
+					collectionVariables: { ...input.collectionVariables },
 					environment: { ...input.environment },
 					variables: { ...input.variables },
 					tests: [],

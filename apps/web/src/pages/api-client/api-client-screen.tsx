@@ -11,6 +11,7 @@ import { ExportMenu } from "../../features/api-client/import-export/export-menu"
 import { ImportModal } from "../../features/api-client/import-export/import-modal";
 import type { ImportMode } from "../../features/api-client/import-export/import-save-mode";
 import type { ImportSelection } from "../../features/api-client/import-export/open-imported";
+import { useImportEnvironmentSelection } from "../../features/api-client/import-export/use-import-environment-selection";
 import { FromMockAction } from "../../features/api-client/open-in/from-mock-action";
 import { OpenFromNavigation } from "../../features/api-client/open-in/open-from-navigation";
 import { previewRequest } from "../../features/api-client/request/prepare-preview";
@@ -26,7 +27,9 @@ import type { WorkbenchTab } from "../../features/api-client/workbench/workbench
 import { CollectionsImportModal } from "../../features/collections/collections-import-modal";
 import { CollectionsSidebar } from "../../features/collections/collections-sidebar";
 import { useCollectionsWorkbench } from "../../features/collections/use-collections-workbench";
+import { useEnvironmentsEnabled } from "../../features/environments/use-environments-enabled";
 import { useEnvironmentsWorkbench } from "../../features/environments/use-environments-workbench";
+import { OpenElementFromNavigation } from "../../features/sharing/open-element-from-navigation";
 import { useWorkspacesEnabled } from "../../features/workspaces/use-workspaces-enabled";
 import { useT } from "../../i18n/i18n-context";
 
@@ -63,10 +66,14 @@ export function ApiClientScreen() {
 		setImportOpen(true);
 	}, []);
 	const [snippetOpen, setSnippetOpen] = useState(false);
+	const environmentsOn = useEnvironmentsEnabled();
+	const importEnvironment = useImportEnvironmentSelection(environmentsOn);
 
 	const openImported = (selection: ImportSelection) => {
-		// Environments come with phase 13's variables; requests open as tabs.
-		if (selection.kind !== "requests") return;
+		if (selection.kind === "environment") {
+			importEnvironment.importSelection(selection);
+			return;
+		}
 		selection.requests.forEach((request, index) => {
 			actions.openTab(request.draft, { activate: index === 0 });
 		});
@@ -136,6 +143,7 @@ export function ApiClientScreen() {
 	return bound.wrap(
 		<>
 			<OpenFromNavigation />
+			<OpenElementFromNavigation />
 			<WorkbenchLayout
 				sidebar={
 					<HistorySidebar onOpen={openFromHistory} tools={historyTools} />
@@ -146,7 +154,7 @@ export function ApiClientScreen() {
 				renderPage={(page) => variables.renderPage(page, bound.renderPage)}
 				renderAboveRequest={bound.renderAboveRequest}
 				onSave={bound.onSave}
-				rightRail={bound.rightRail}
+				rightRail={variables.rightRail ?? bound.rightRail}
 				renderHeadActions={(tab) => (
 					<>
 						{bound.saveButton(tab)}
@@ -177,6 +185,7 @@ export function ApiClientScreen() {
 				onImport={openImported}
 				maxRequests={DRAFT_MAX_TABS - tabs.length}
 				initialMode={importMode}
+				environmentImport={importEnvironment.availability}
 			/>
 			<CodeSnippetModal
 				open={snippetOpen}

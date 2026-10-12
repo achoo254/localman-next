@@ -98,7 +98,7 @@ export function StatusMenu({ status, canEdit, onChange }: StatusMenuProps) {
 					</DropdownMenuItem>
 					{status ? (
 						<DropdownMenuItem
-							data-id="status-menu-remove"
+							data-id="status-menu-clear"
 							icon={<IconX size={16} aria-hidden="true" />}
 							onSelect={() => onChange(null)}
 						>

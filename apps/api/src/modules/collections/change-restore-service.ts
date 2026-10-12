@@ -184,6 +184,6 @@ export async function restoreToChange(
 	);
 	const collection = dryRun
 		? null
-		: await loadCollectionDetail(collectionId, role);
+		: await loadCollectionDetail(collectionId, role, sub);
 	return { dryRun, restored: !dryRun, irreversible, collection };
 }

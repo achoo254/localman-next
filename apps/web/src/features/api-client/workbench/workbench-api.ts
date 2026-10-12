@@ -1,11 +1,12 @@
 /** What `useWorkbenchState()` and `useWorkbenchActions()` give panels. */
 import type { ApiRequestDraft, TabSource } from "@localman/shared/api-client";
+import type { SendOptions } from "./send-types";
 import type {
 	DraftSyncStatus,
 	OpenTabOptions,
 	PageTab,
 } from "./workbench-tab-types";
-import type { SendOptions, WorkbenchTab } from "./workbench-types";
+import type { WorkbenchTab } from "./workbench-types";
 
 export interface WorkbenchState {
 	tabs: readonly WorkbenchTab[];
@@ -48,6 +49,12 @@ export interface WorkbenchActions {
 	) => void;
 	/** The bound request as now stored: the tab is clean when they match. */
 	setSaved: (tabId: string, saved: ApiRequestDraft) => void;
+	/** Sets (or with `null` removes) a temporary variable of the tab. */
+	setTemporaryVariable: (
+		tabId: string,
+		key: string,
+		value: string | null,
+	) => void;
 	/** Keeps (or with `null` forgets) the bytes behind a `FileRef.fileId`. */
 	setFile: (tabId: string, fileId: string, file: File | null) => void;
 	/**

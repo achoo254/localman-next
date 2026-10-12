@@ -11,6 +11,7 @@ import { collectionReadOperations } from "./collection-read-operations.js";
 import { searchCollectionsOperation } from "./collection-search-operations.js";
 import { collectionTrashOperations } from "./collection-trash-operations.js";
 import { collectionWriteOperations } from "./collection-write-operations.js";
+import { listEnvironmentCollectionsOperation } from "./environment-collections-operations.js";
 
 // Whatever serves these operations (dashboard, MCP) also shares and moves
 // collections through the access layer, so the adapter comes with them.
@@ -27,4 +28,5 @@ export const collectionOperations: readonly AnyOperation[] = [
 	unfavoriteCollectionOperation,
 	...collectionTrashOperations,
 	...changelogOperations,
+	listEnvironmentCollectionsOperation,
 ];

@@ -7,6 +7,7 @@ import {
 } from "@localman/shared/api-client";
 import { CodeEditor } from "../../../components/ui/code-editor";
 import { useT } from "../../../i18n/i18n-context";
+import { useVariableExtension } from "../../variables/use-variable-extension";
 import { FilePicker } from "./body-binary-picker";
 import type { BodyFilesProps } from "./body-files";
 import { BodyFormTable } from "./body-form-table";
@@ -26,6 +27,7 @@ export function BodyTab({
 	setFile,
 }: DraftPaneProps & BodyFilesProps) {
 	const t = useT();
+	const variables = useVariableExtension();
 	const { body } = draft;
 	const setBody = (change: Partial<RequestBody>) =>
 		update((current) => ({ ...current, body: { ...current.body, ...change } }));
@@ -91,6 +93,7 @@ export function BodyTab({
 						lineNumbers
 						className="min-h-48"
 						data-id="request-body-editor"
+						extensions={variables}
 						onChange={(raw) => setBody({ raw })}
 					/>
 				</div>

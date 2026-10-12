@@ -1,11 +1,13 @@
 import { OperationError } from "@localman/operations";
 import type { ElementRole } from "@localman/shared/access";
 import { isDuplicateKeyError } from "../../db/mongo-errors.js";
+import { type Logger, createLogger } from "../../logger.js";
 import { takeInviteLookupSlot } from "../collaborators/invite-rate-limits.js";
 import {
 	type InviteTarget,
 	resolveInviteTarget,
 } from "../collaborators/invitee-lookup.js";
+import { rememberSharedEnvironment } from "../collections/collection-links.js";
 import { getNotificationService } from "../notifications/notification-runtime.js";
 import { findWorkspaceById } from "../workspaces/workspace-roles.js";
 import { requireElement } from "./access-policy.js";
@@ -91,6 +93,32 @@ function addresseeOf(target: InviteTarget): ShareAddressee {
 	return { email: target.email };
 }
 
+let shareLogger: Logger = createLogger("silent");
+
+/** Installed by `main.ts` with the app logger; silent until then. */
+export function configureShareLogger(logger: Logger): void {
+	shareLogger = logger;
+}
+
+/**
+ * Links the environment shared with a collection to it. The roles are
+ * already granted, so a failed write only loses that hint: logged, and
+ * the share still succeeds.
+ */
+async function rememberIncluded(
+	element: ElementRecord,
+	included: ElementRecord,
+): Promise<void> {
+	try {
+		await rememberSharedEnvironment(element, included);
+	} catch (error) {
+		shareLogger.warn(
+			{ err: error, collectionId: element.id, environmentId: included.id },
+			"Could not link the environment shared with a collection",
+		);
+	}
+}
+
 export interface ShareInput {
 	readonly usernameOrEmail: string;
 	readonly role: ElementRole;
@@ -147,6 +175,10 @@ export async function shareElement(
 	for (const shared of elements) {
 		await grantElementRole(shared, addressee, input.role, sub);
 	}
+	// Once granted: the included environment becomes the collection's
+	// related one (same workspace only) until an Editor links another.
+	const included = elements[1];
+	if (included) await rememberIncluded(element, included);
 	if (!("userId" in addressee)) return;
 	const account = addressee.userId;
 	const sharer = await displayNameOf(sub);

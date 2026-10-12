@@ -1,11 +1,11 @@
 import { WORKSPACE_PERMISSIONS } from "@localman/shared/access";
 import type { TrashList } from "@localman/shared/api-client";
 import type { Types } from "mongoose";
+import { displayNames } from "../users/display-names.js";
 import { WorkspaceMemberModel } from "../workspaces/workspace-member-model.js";
 import { WorkspaceModel } from "../workspaces/workspace-model.js";
 import { toObjectId } from "./collection-ids.js";
 import { CollectionModel } from "./collection-model.js";
-import { displayNames } from "./people.js";
 import { escapeRegExp, foldSearchText } from "./search-text.js";
 import { IN_TRASH, type TrashedCollection } from "./trash-access.js";
 import { toTrashedViews } from "./trash-view.js";

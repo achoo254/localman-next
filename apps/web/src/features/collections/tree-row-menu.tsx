@@ -43,9 +43,12 @@ const MENUS: Record<TreeRow["kind"], readonly (readonly TreeAction[])[]> = {
 		["rename", "duplicate", "share", "copyLink", "move"],
 		["export", "delete"],
 	],
-	folder: [["addRequest", "addFolder", "rename", "duplicate"], ["delete"]],
-	request: [["addExample", "rename", "duplicate"], ["delete"]],
-	example: [["rename", "duplicate"], ["delete"]],
+	folder: [
+		["addRequest", "addFolder", "rename", "duplicate", "copyLink"],
+		["delete"],
+	],
+	request: [["addExample", "rename", "duplicate", "copyLink"], ["delete"]],
+	example: [["rename", "duplicate", "copyLink"], ["delete"]],
 };
 
 /** What a Viewer (no `edit` on the collection) still sees. */
