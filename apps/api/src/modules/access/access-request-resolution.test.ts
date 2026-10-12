@@ -112,6 +112,8 @@ describe("sharing.approveAccessRequest and sharing.denyAccessRequest", () => {
 		const path = `/access-requests/${requestId}/approve`;
 		expect((await as(ADA).send("post", path, {})).status).toBe(400);
 		await ask(OLLIE, elementPath(element), "editor");
+		// Notifications go out in the background: wait for both before reading.
+		await notificationsOf(ADA);
 		// Each notification keeps the role it announced; the request has one role now.
 		const list = await as(ADA).get("/notifications");
 		expect(

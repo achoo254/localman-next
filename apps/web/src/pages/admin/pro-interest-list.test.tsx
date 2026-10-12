@@ -1,5 +1,5 @@
 import { PRO_INTEREST_SOURCES } from "@localman/shared";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetCurrentUserCache } from "../../features/auth/use-current-user";
@@ -21,7 +21,9 @@ describe("ProInterestPage list details", () => {
 		expect(toggle).toHaveAttribute("aria-expanded", "false");
 		expect(await screen.findAllByText("Email matches account")).toHaveLength(1);
 		await userEvent.click(toggle);
-		expect(toggle).toHaveAttribute("aria-expanded", "true");
+		await waitFor(() =>
+			expect(toggle).toHaveAttribute("aria-expanded", "true"),
+		);
 		const history = document.querySelector(
 			'[data-id="admin-pro-row-a1-history"]',
 		);

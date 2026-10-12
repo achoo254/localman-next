@@ -33,11 +33,14 @@ describe("TrialExtensionsPage refusals", () => {
 		expect(
 			await screen.findByRole("heading", { name: "sub-gone" }),
 		).toBeVisible();
-		expect(
-			screen.getByRole("button", {
-				name: "Approve the request from sub-gone",
-			}),
-		).toBeVisible();
+		// The row's actions may render after its heading on a slow machine.
+		await waitFor(() =>
+			expect(
+				screen.getByRole("button", {
+					name: "Approve the request from sub-gone",
+				}),
+			).toBeVisible(),
+		);
 	});
 
 	it.each([
