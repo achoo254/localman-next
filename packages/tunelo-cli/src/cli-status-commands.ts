@@ -1,5 +1,6 @@
 import type { Command } from "commander";
 import { listRecords, removeRecord } from "./run-registry.js";
+import { matchRuns } from "./run-target.js";
 
 function formatUptime(ms: number): string {
 	const s = Math.floor(ms / 1000);
@@ -35,14 +36,7 @@ export function registerStatusCommands(program: Command): void {
 		.description("Stop a running tunnel by PID, subdomain/URL, or 'all'")
 		.action((target: string) => {
 			const records = listRecords();
-			const matches =
-				target === "all"
-					? records
-					: records.filter(
-							(r) =>
-								String(r.pid) === target ||
-								r.tunnels.some((t) => t.url.includes(target)),
-						);
+			const matches = target === "all" ? records : matchRuns(records, target);
 
 			if (matches.length === 0) {
 				console.log(`No running tunnel matches "${target}".`);

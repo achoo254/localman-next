@@ -21,6 +21,8 @@ export interface RunRecord {
 	startedAt: number;
 	server: string;
 	tunnels: RunTunnel[];
+	/** Local inspector of an `http` process (`tunelo watch` reads it). */
+	inspectorPort?: number;
 }
 
 function getRunDir(): string {
@@ -83,7 +85,10 @@ export function listRecords(): RunRecord[] {
 export function startRunRecord(
 	kind: "http" | "tcp",
 	server: string,
-): { update: (tunnels: RunTunnel[]) => void } {
+): {
+	update: (tunnels: RunTunnel[]) => void;
+	setInspectorPort: (port: number) => void;
+} {
 	const pid = process.pid;
 	const record: RunRecord = {
 		pid,
@@ -106,6 +111,10 @@ export function startRunRecord(
 	return {
 		update(tunnels: RunTunnel[]): void {
 			record.tunnels = tunnels;
+			saveRecord(record);
+		},
+		setInspectorPort(port: number): void {
+			record.inspectorPort = port;
 			saveRecord(record);
 		},
 	};

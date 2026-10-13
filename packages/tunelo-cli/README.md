@@ -89,6 +89,7 @@ tunelo tcp 5432                  # tunnel TCP (vd PostgreSQL)
 | `tunelo logout` | Thu hồi đăng nhập của máy này và xoá token |
 | `tunelo status` | Liệt kê tunnel đang chạy trên máy |
 | `tunelo kill <pid\|subdomain\|all>` | Dừng tunnel đang chạy |
+| `tunelo watch [pid\|subdomain\|URL]` | Xem request qua một tunnel đang chạy theo thời gian thực (từ terminal khác): in 10 request gần nhất (`-n`), lọc `--status 5xx`/`--path <chữ>`, thêm `--headers`/`--body`. Từ 1.9.0 |
 | `tunelo link <code>` | Cho Localman thấy tunnel của máy chưa đăng nhập (không cần tài khoản) |
 | `tunelo links` / `tunelo links revoke <id>` | Xem hoặc thu hồi các liên kết của máy |
 | `tunelo mcp` | Chạy MCP server (stdio) để agent AI mở tunnel |

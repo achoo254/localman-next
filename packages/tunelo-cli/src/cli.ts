@@ -8,6 +8,7 @@ import { registerStatusCommands } from "./cli-status-commands.js";
 import { registerTcpCommand } from "./cli-tcp-command.js";
 import { setupTunnel, showCredentialNotices } from "./cli-tunnel-setup.js";
 import { registerUpdateCommand } from "./cli-update-command.js";
+import { registerWatchCommand } from "./cli-watch-command.js";
 import { registerWhoamiCommand } from "./cli-whoami-command.js";
 import { getConfigPath, loadConfig, saveConfig } from "./config.js";
 import { Display } from "./display.js";
@@ -131,6 +132,7 @@ program
 					inspector
 						.start()
 						.then((boundPort) => {
+							run.setInspectorPort(boundPort);
 							display.showInspector(boundPort, inspectPort);
 						})
 						.catch((err: Error) => {
@@ -219,6 +221,7 @@ registerWhoamiCommand(program);
 registerLinkCommands(program);
 registerMcpCommand(program);
 registerStatusCommands(program);
+registerWatchCommand(program);
 registerUpdateCommand(program);
 
 program
