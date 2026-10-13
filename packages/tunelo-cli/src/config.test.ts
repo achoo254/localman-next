@@ -50,6 +50,36 @@ describe("server and credentials", () => {
 		expect(notices).toHaveLength(1);
 	});
 
+	test("a sign-in for the old domain's own tenant keeps its server", () => {
+		const server = "https://tunnel.inetdev.io.vn";
+		saveConfig({
+			server,
+			session: {
+				issuer: "https://auth.inetdev.io.vn",
+				sub: "acc_t",
+				refreshToken: "rt",
+			},
+		});
+		const notices: string[] = [];
+		expect(resolveServerUrl(undefined, () => notices.push("moved"))).toBe(
+			server,
+		);
+		expect(loadConfig().server).toBe(server);
+		expect(notices).toEqual([]);
+	});
+
+	test("a hoandat sign-in saved with the old domain still moves", () => {
+		saveConfig({
+			server: "https://tunnel.inetdev.io.vn",
+			session: {
+				issuer: "https://auth.hoandat.com",
+				sub: "acc_a",
+				refreshToken: "rt",
+			},
+		});
+		expect(resolveServerUrl()).toBe(DEFAULT_SERVER_URL);
+	});
+
 	test("the account session wins over a saved anonymous token", () => {
 		saveConfig({
 			key: "tunelo_anon",
