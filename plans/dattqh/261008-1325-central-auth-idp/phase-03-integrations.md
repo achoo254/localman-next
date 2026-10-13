@@ -67,7 +67,7 @@ Xong T1–T6 và T8. Còn mở T7 (E2E 3 dịch vụ). Không có staging nên T
 - [x] T5 Test token exchange và bộ test cũ pass
 - [x] T6 Production đã chạy `dist/seed-clients.mjs` (chỉ đọc, client tĩnh nằm trong code): 4 client hợp lệ, 0 client DCR, discovery khớp
 - [ ] T7 E2E 3 dịch vụ pass trên production (chờ Localman deploy đăng nhập im lặng)
-  - 2026-10-13 trên production: đăng nhập một lần Localman/Tunelo web/Tunelo CLI qua IdP chạy với người dùng thật (refresh, token exchange 200, audit giao hết); MCP client đăng ký động (2 client DCR) và consent đã sửa. Chưa đạt: "tự nhận tunnel" (Localman chưa có danh sách tunnel theo tài khoản; `tunnelTokens` dựng mà không dùng) và chưa có lượt back-channel logout thật trên production (chỉ test tự động).
+  - 2026-10-13 trên production: đăng nhập một lần Localman/Tunelo web/Tunelo CLI qua IdP chạy với người dùng thật (refresh, token exchange 200, audit giao hết); MCP client đăng ký động (2 client DCR) và consent đã sửa. Chưa đạt: "tự nhận tunnel" (Localman chưa có danh sách tunnel theo tài khoản; `tunnelTokens` dựng mà không dùng) . Back-channel logout chạy thật trên production lúc 18:05 (tenant `inetdev.io.vn`: đăng xuất ở IdP → Localman nhận logout token, phiên về 0).
 - [x] T8 Review không còn finding mức high
 - [x] Verification: token exchange bị từ chối đúng 2 trường hợp (T5)
 - [ ] Verification: E2E đăng nhập một lần, tự nhận tunnel và back-channel logout pass trên production (theo T7)
