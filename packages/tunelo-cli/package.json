@@ -1,6 +1,6 @@
 {
 	"name": "tunelo",
-	"version": "1.8.0",
+	"version": "1.9.0",
 	"type": "module",
 	"description": "Self-hosted ngrok alternative — expose local services via public HTTPS tunnels",
 	"main": "dist/cli.js",
