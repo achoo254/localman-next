@@ -24,6 +24,11 @@ export interface TenantSettings {
 	 * (`OWNER_TELEGRAM_CHAT_ID`); only the primary tenant's do.
 	 */
 	readonly ownerAlerts: boolean;
+	/**
+	 * The Telegram bot (`TELEGRAM_BOT_TOKEN`, hoandat's) notifies users;
+	 * another tenant's users linked their chat to their own IdP's bot.
+	 */
+	readonly telegram: boolean;
 }
 
 /**
@@ -46,6 +51,7 @@ export function tenantSettings(
 			guestForms: true,
 			tunnelDomains: settings.tunnelDomains,
 			ownerAlerts: true,
+			telegram: true,
 		};
 	}
 	return {
@@ -56,5 +62,6 @@ export function tenantSettings(
 		guestForms: false,
 		tunnelDomains: [`tunnel.${tenant.domain}`],
 		ownerAlerts: false,
+		telegram: false,
 	};
 }

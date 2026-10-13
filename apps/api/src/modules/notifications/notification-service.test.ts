@@ -1,7 +1,10 @@
 import { pino } from "pino";
 import { describe, expect, it } from "vitest";
 import webpush from "web-push";
+import { runInTenant } from "../../tenancy/tenant-context.js";
+import { TEST_TENANT } from "../../test-support/test-tenant.js";
 import { SessionModel } from "../auth/session-model.js";
+import { UserModel } from "../users/user-model.js";
 import { WebPushChannel } from "./channels/web-push-channel.js";
 import { NotificationModel } from "./notification-model.js";
 import { updateEventPreferences } from "./notification-preferences-model.js";
@@ -64,6 +67,23 @@ describe("NotificationService channel routing", () => {
 		await kit.notifyAndDrain(USER, EVENT);
 		expect(kit.pushSender).not.toHaveBeenCalled();
 		expect(kit.bot.requests).toHaveLength(1);
+	});
+
+	it("never uses the deployment's Telegram bot for another tenant", async () => {
+		const other = { ...TEST_TENANT, id: "ten_AAAAAAAAAAAAAAAA" };
+		await runInTenant(other, async () => {
+			await UserModel.create({
+				sub: USER,
+				username: "other",
+				telegram: { chatId: "777" },
+			});
+			await updateEventPreferences(USER, [
+				{ type: EVENT.type, telegram: true },
+			]);
+			expect(kit.service().availability.telegram).toBe(false);
+			await kit.notifyAndDrain(USER, EVENT);
+		});
+		expect(kit.bot.requests).toHaveLength(0);
 	});
 
 	it("refuses an event with a link outside the dashboard", async () => {

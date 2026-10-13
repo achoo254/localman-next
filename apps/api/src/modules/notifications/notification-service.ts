@@ -1,6 +1,7 @@
 import { DEFAULT_LOCALE, type Locale } from "@localman/shared";
 import type { Env } from "../../config/env.js";
 import type { Logger } from "../../logger.js";
+import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import { readOwnerLocale, readUserLocale } from "../users/user-locale.js";
 import {
 	type NotificationItem,
@@ -49,8 +50,14 @@ export class NotificationService {
 
 	constructor(private readonly options: NotificationServiceOptions) {}
 
+	/** The Telegram channel, where the request's tenant may use it. */
+	private get telegram(): TelegramChannel | undefined {
+		return tenantSettings().telegram ? this.options.telegram : undefined;
+	}
+
 	get availability(): ChannelAvailability {
-		const { webPush, telegram, telegramBotUsername } = this.options;
+		const { options, telegram } = this;
+		const { webPush, telegramBotUsername } = options;
 		return {
 			webPush: webPush !== undefined,
 			telegram: telegram !== undefined,
@@ -64,7 +71,7 @@ export class NotificationService {
 		NotificationServiceOptions,
 		"logger" | "webPush" | "telegram"
 	> {
-		return this.options;
+		return { ...this.options, telegram: this.telegram };
 	}
 
 	/** The stored in-app notification, or `null` when the user turned it off. */
@@ -80,7 +87,8 @@ export class NotificationService {
 		const item = choice.inApp
 			? await storeInAppNotification(userSub, valid, locale)
 			: null;
-		const { webPush, telegram } = this.options;
+		const { options, telegram } = this;
+		const { webPush } = options;
 		const text = renderNotification(valid.type, valid.params, locale);
 		if (!text) throw new Error(`No texts for notification ${valid.type}`);
 		const message = { ...valid, ...text };
