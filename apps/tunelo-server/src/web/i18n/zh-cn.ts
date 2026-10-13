@@ -19,7 +19,7 @@ export const zhCn: Messages = {
 	"steps.install.body": "需要 Node.js 20 或更高版本。",
 	"steps.login.title": "在你的机器上登录",
 	"steps.login.body":
-		"将这台机器的隧道关联到你的账号。需要 CLI 1.7.0 或更高版本。",
+		"将这台机器的隧道关联到你的账号。需要 CLI 1.8.0 或更高版本。",
 	"steps.open.title": "打开隧道",
 	"steps.open.body": "使用本地服务监听的端口。终端会打印出公网 URL。",
 	"tunnels.title": "你的隧道",
@@ -41,7 +41,7 @@ export const zhCn: Messages = {
 	"empty.body":
 		"隧道运行时会显示在这里。使用 Tunelo CLI 1.6.x 打开的隧道使用匿名密钥，不关联任何账号，因此即使正常工作也不会出现在此列表中。",
 	"empty.fix":
-		"请在那台机器上将 CLI 更新到 1.7.0 或更高版本，登录后重新打开隧道：",
+		"请在那台机器上将 CLI 更新到 1.8.0 或更高版本，登录后重新打开隧道：",
 	"error.login_failed": "登录未完成，请重试。",
 	"error.login_expired": "登录耗时过长，或是在其他标签页中发起的。请重试。",
 	"error.access_denied": "登录已取消。",

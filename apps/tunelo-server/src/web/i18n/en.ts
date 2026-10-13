@@ -22,7 +22,7 @@ export const en = {
 	"steps.install.body": "Needs Node.js 20 or later.",
 	"steps.login.title": "Sign in on your machine",
 	"steps.login.body":
-		"Ties the tunnels of this machine to your account. Needs CLI 1.7.0 or later.",
+		"Ties the tunnels of this machine to your account. Needs CLI 1.8.0 or later.",
 	"steps.open.title": "Open a tunnel",
 	"steps.open.body":
 		"Use the port your local server listens on. The terminal prints the public URL.",
@@ -46,7 +46,7 @@ export const en = {
 	"empty.body":
 		"Tunnels show up here while they run. Tunnels opened with Tunelo CLI 1.6.x use an anonymous key that is not tied to any account, so they are not listed here, even while they work.",
 	"empty.fix":
-		"On that machine, update the CLI to 1.7.0 or later, sign in, then open the tunnel again:",
+		"On that machine, update the CLI to 1.8.0 or later, sign in, then open the tunnel again:",
 	"error.login_failed": "Sign-in did not complete. Please try again.",
 	"error.login_expired":
 		"The sign-in took too long or was started in another tab. Please try again.",

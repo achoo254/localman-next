@@ -19,7 +19,7 @@ export const vi: Messages = {
 	"steps.install.body": "Cần Node.js 20 trở lên.",
 	"steps.login.title": "Đăng nhập trên máy của bạn",
 	"steps.login.body":
-		"Gắn các tunnel của máy này với tài khoản của bạn. Cần CLI 1.7.0 trở lên.",
+		"Gắn các tunnel của máy này với tài khoản của bạn. Cần CLI 1.8.0 trở lên.",
 	"steps.open.title": "Mở tunnel",
 	"steps.open.body":
 		"Dùng cổng mà server trên máy bạn đang nghe. Terminal sẽ in ra URL công khai.",
@@ -43,7 +43,7 @@ export const vi: Messages = {
 	"empty.body":
 		"Tunnel hiện ở đây khi đang chạy. Tunnel mở bằng Tunelo CLI 1.6.x dùng key ẩn danh, không gắn với tài khoản nào, nên không có trong danh sách này dù vẫn hoạt động.",
 	"empty.fix":
-		"Trên máy đó, cập nhật CLI lên 1.7.0 trở lên, đăng nhập, rồi mở lại tunnel:",
+		"Trên máy đó, cập nhật CLI lên 1.8.0 trở lên, đăng nhập, rồi mở lại tunnel:",
 	"error.login_failed": "Đăng nhập chưa hoàn tất. Vui lòng thử lại.",
 	"error.login_expired":
 		"Đăng nhập quá lâu hoặc được bắt đầu ở tab khác. Vui lòng thử lại.",
