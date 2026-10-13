@@ -44,10 +44,13 @@ export class StreamRegistry {
 		this.streams.set(id, entry);
 	}
 
-	/** Route a stream frame to its sink. Unknown ids are ignored (already closed). */
-	push(frame: StreamMessage): void {
+	/**
+	 * Route a stream frame to its sink. Unknown ids are ignored (already
+	 * closed), as are frames from a connection other than the stream's.
+	 */
+	push(connectionId: string, frame: StreamMessage): void {
 		const entry = this.streams.get(frame.id);
-		if (!entry || entry.done) return;
+		if (!entry || entry.done || entry.connectionId !== connectionId) return;
 		this.resetIdle(frame.id, entry);
 
 		switch (frame.type) {
@@ -76,9 +79,9 @@ export class StreamRegistry {
 	}
 
 	/** Adapt a legacy single-message response into the start → data → end lifecycle. */
-	pushLegacyResponse(response: TunnelResponse): void {
+	pushLegacyResponse(connectionId: string, response: TunnelResponse): void {
 		const entry = this.streams.get(response.id);
-		if (!entry || entry.done) return;
+		if (!entry || entry.done || entry.connectionId !== connectionId) return;
 		this.finish(response.id, entry);
 		entry.sink.onStart(response.status, response.headers);
 		if (response.body) entry.sink.onData(Buffer.from(response.body, "base64"));

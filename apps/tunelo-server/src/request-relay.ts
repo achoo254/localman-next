@@ -57,7 +57,9 @@ export function createRelayHandler(): http.RequestListener {
 		if (!subdomain) {
 			if (req.url === DEFAULTS.HEALTH_PATH && req.method === "GET") {
 				res.writeHead(200, { "content-type": "application/json" });
-				res.end(JSON.stringify({ status: "ok", ...tunnelManager.getStats() }));
+				res.end(
+					JSON.stringify({ status: "ok", ...tunnelManager.getTenantStats() }),
+				);
 				return;
 			}
 			res.writeHead(400, { "content-type": "text/plain" });

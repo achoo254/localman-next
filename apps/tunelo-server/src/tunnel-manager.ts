@@ -229,8 +229,8 @@ class TunnelManager {
 	}
 
 	/** Route streaming frames (stream-start/data/end/error) from a client. */
-	handleStreamFrame(frame: StreamMessage): void {
-		this.streams.push(frame);
+	handleStreamFrame(connectionId: string, frame: StreamMessage): void {
+		this.streams.push(connectionId, frame);
 	}
 
 	/** Downstream consumer (e.g. browser) went away — tell the client to stop producing. */
@@ -247,7 +247,7 @@ class TunnelManager {
 		}
 	}
 
-	/** Handle response from client — search all subdomains for this connection to find matching pending request */
+	/** Handle a response from a client: only requests sent over its own connection match. */
 	handleResponseByConnectionId(
 		connectionId: string,
 		response: TunnelResponse,
@@ -263,19 +263,11 @@ class TunnelManager {
 				return;
 			}
 		}
-		// Also check orphaned requests across all subdomains
-		for (const [, orphaned] of this.orphanedRequests) {
-			const pending = orphaned.get(response.id);
-			if (pending) {
-				clearTimeout(pending.timer);
-				orphaned.delete(response.id);
-				pending.resolve(response);
-				return;
-			}
-		}
+		// Orphaned requests are answered only after their tunnel reconnects
+		// (register adopts them), never by another connection.
 		// A streaming client that sent a single legacy "response" — adapt it to
 		// the start → data → end lifecycle so the open stream sink completes.
-		this.streams.pushLegacyResponse(response);
+		this.streams.pushLegacyResponse(connectionId, response);
 	}
 
 	/** Check if request passes Basic Auth for the given tunnel */
@@ -344,8 +336,19 @@ class TunnelManager {
 	}
 
 	/** Health: how many tunnels are open, never whose. */
+	/** Tunnels of every tenant: the loopback health check of the process. */
 	getStats(): { activeTunnels: number } {
 		return { activeTunnels: this.tunnels.size };
+	}
+
+	/** Tunnels of the current tenant: what its own apex `/health` reports. */
+	getTenantStats(): { activeTunnels: number } {
+		const tenantId = currentTenantId();
+		let activeTunnels = 0;
+		for (const tunnel of this.tunnels.values()) {
+			if (tunnel.tenantId === tenantId) activeTunnels++;
+		}
+		return { activeTunnels };
 	}
 
 	closeAll(): void {

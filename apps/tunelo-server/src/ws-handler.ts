@@ -24,6 +24,7 @@ import { type TunnelTenant, runInTenant } from "./tenancy/tunnel-tenant.js";
 import { tunnelManager } from "./tunnel-manager.js";
 import { wsAppRelay } from "./ws-app-relay.js";
 import type { ConnectionState } from "./ws-connection-state.js";
+import { onControlChannel } from "./ws-control-channel.js";
 import {
 	isAuthMessage,
 	isRegisterTunnelMessage,
@@ -87,10 +88,27 @@ export function attachWsHandler(
 	const tenants = new WeakMap<http.IncomingMessage, TunnelTenant>();
 
 	server.on("upgrade", (req, socket, head) => {
+		// Node drops its own socket error handler before "upgrade": a reset
+		// while the tenant lookup is pending would crash the process.
+		const dropError = (): void => undefined;
+		socket.on("error", dropError);
 		void tenantDirectory()
 			.byHost(req.headers.host ?? "")
-			.catch(() => undefined)
-			.then((tenant) => {
+			.then(
+				(tenant) => ({ tenant, failed: false }),
+				() => ({ tenant: undefined, failed: true }),
+			)
+			.then(({ tenant, failed }) => {
+				socket.off("error", dropError);
+				if (socket.destroyed) return;
+				if (failed) {
+					rejectUpgrade(
+						socket,
+						"503 Service Unavailable",
+						"Tenant unavailable",
+					);
+					return;
+				}
 				if (!tenant) {
 					rejectUpgrade(socket, "421 Misdirected Request", "Unknown host");
 					return;
@@ -166,136 +184,6 @@ export function attachWsHandler(
 			ws.close(WS_CLOSE_CODES.AUTH_FAILED, "Unknown host");
 			return;
 		}
-		runInTenant(tenant, () => onControlChannel(ws));
+		runInTenant(tenant, () => onControlChannel(ws, authenticator));
 	});
-
-	/** A control channel, set up in its tenant; its messages run there too. */
-	function onControlChannel(ws: WebSocket): void {
-		const state: ConnectionState = {
-			id: randomUUID(),
-			authStarted: false,
-			authenticated: false,
-			subdomain: "",
-			keyInfo: null,
-			owner: null,
-			messageCount: 0,
-			rateLimitInterval: setInterval(() => {
-				state.messageCount = 0;
-			}, 1000),
-			authTimer: setTimeout(() => {
-				if (!state.authenticated) {
-					safeSend(ws, {
-						type: "auth-result",
-						success: false,
-						subdomain: "",
-						url: "",
-						error: "Auth timeout",
-					});
-					ws.close(WS_CLOSE_CODES.AUTH_TIMEOUT, "Auth timeout");
-				}
-			}, 10_000),
-			pingInterval: null,
-			tcpState: createTcpState(),
-			alive: true,
-		};
-
-		// Native ping/pong keepalive
-		state.pingInterval = setInterval(() => {
-			if (!state.alive) {
-				ws.terminate();
-				return;
-			}
-			state.alive = false;
-			ws.ping();
-		}, DEFAULTS.PING_INTERVAL_MS);
-
-		ws.on("pong", () => {
-			state.alive = true;
-		});
-
-		ws.on(
-			"message",
-			AsyncResource.bind((data: RawData) => {
-				state.messageCount++;
-				if (state.messageCount > DEFAULTS.WS_RATE_LIMIT) {
-					logger.warn({ subdomain: state.subdomain }, "Rate limit exceeded");
-					return;
-				}
-
-				let msg: ClientToServerMessage;
-				try {
-					msg = parseMessage(data.toString()) as ClientToServerMessage;
-				} catch {
-					logger.warn({ connectionId: state.id }, "Invalid JSON message");
-					return;
-				}
-
-				switch (msg.type) {
-					case "auth":
-						if (!isAuthMessage(msg)) {
-							logger.warn({ connectionId: state.id }, "Malformed auth message");
-							ws.close(WS_CLOSE_CODES.AUTH_FAILED, "Malformed auth message");
-							return;
-						}
-						void handleAuth(ws, state, msg, authenticator);
-						break;
-					case "register-tunnel":
-						if (!isRegisterTunnelMessage(msg)) return;
-						handleRegisterTunnel(ws, state, msg);
-						break;
-					case "response":
-						if (!state.authenticated) return;
-						tunnelManager.handleResponseByConnectionId(state.id, msg);
-						break;
-					case "stream-start":
-					case "stream-data":
-					case "stream-end":
-					case "stream-error":
-						if (!state.authenticated) return;
-						tunnelManager.handleStreamFrame(msg);
-						break;
-					case "tcp-register":
-						if (!state.authenticated || !state.owner || !state.keyInfo) return;
-						if (!isTcpRegisterMessage(msg)) return;
-						if (!allowTcpRegister(ws, state.keyInfo, msg.localPort)) return;
-						handleTcpRegister(ws, state.id, msg, state.tcpState, state.owner);
-						break;
-					case "tcp-data":
-						if (!state.authenticated) return;
-						handleTcpData(msg, state.tcpState);
-						break;
-					case "tcp-connection-close":
-						if (!state.authenticated) return;
-						handleTcpConnectionClose(msg, state.tcpState);
-						break;
-					case "ws-data":
-						if (!state.authenticated) return;
-						wsAppRelay.handleData(msg);
-						break;
-					case "ws-close":
-						if (!state.authenticated) return;
-						wsAppRelay.handleClose(msg);
-						break;
-					case "pong":
-						break;
-					default:
-						break;
-				}
-			}),
-		);
-
-		ws.on("close", () => {
-			clearTimeout(state.authTimer);
-			clearInterval(state.rateLimitInterval);
-			if (state.pingInterval) clearInterval(state.pingInterval);
-			cleanupTcpState(state.tcpState);
-			// Always: a `tcpOnly` channel may still have used `register-tunnel`.
-			tunnelManager.unregisterByConnectionId(state.id);
-			wsAppRelay.cleanupByConnection(state.id);
-		});
-
-		ws.on("error", (err) => {
-			logger.error({ err, subdomain: state.subdomain }, "Socket error");
-		});
-	}
 }

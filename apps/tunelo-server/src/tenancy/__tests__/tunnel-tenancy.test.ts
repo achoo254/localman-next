@@ -46,6 +46,9 @@ describe("tunnels per tenant", () => {
 			runInTenant(TEST_TENANT, () => tunnelManager.getAllConnections().length),
 		).toBe(1);
 		expect(runInTenant(ACME, () => tunnelManager.countByOwner("sub"))).toBe(1);
+		expect(runInTenant(ACME, () => tunnelManager.getTenantStats())).toEqual({
+			activeTunnels: 1,
+		});
 		tunnelManager.unregisterByConnectionId("c-acme");
 		expect(runInTenant(ACME, () => tunnelManager.has("app"))).toBe(false);
 		expect(runInTenant(TEST_TENANT, () => tunnelManager.has("app"))).toBe(true);

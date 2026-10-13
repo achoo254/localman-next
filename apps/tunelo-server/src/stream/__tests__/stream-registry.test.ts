@@ -32,13 +32,18 @@ describe("StreamRegistry", () => {
 		const reg = new StreamRegistry();
 		const { sink, calls } = spySink();
 		reg.register("r1", "c1", sink);
-		reg.push({ type: "stream-start", id: "r1", status: 200, headers: {} });
-		reg.push({
+		reg.push("c1", {
+			type: "stream-start",
+			id: "r1",
+			status: 200,
+			headers: {},
+		});
+		reg.push("c1", {
 			type: "stream-data",
 			id: "r1",
 			data: Buffer.from("hello").toString("base64"),
 		});
-		reg.push({ type: "stream-end", id: "r1" });
+		reg.push("c1", { type: "stream-end", id: "r1" });
 
 		expect(calls.starts).toBe(1);
 		expect(calls.data).toEqual(["hello"]);
@@ -50,8 +55,18 @@ describe("StreamRegistry", () => {
 		const reg = new StreamRegistry();
 		const { sink, calls } = spySink();
 		reg.register("r1", "c1", sink);
-		reg.push({ type: "stream-start", id: "r1", status: 200, headers: {} });
-		reg.push({ type: "stream-start", id: "r1", status: 500, headers: {} });
+		reg.push("c1", {
+			type: "stream-start",
+			id: "r1",
+			status: 200,
+			headers: {},
+		});
+		reg.push("c1", {
+			type: "stream-start",
+			id: "r1",
+			status: 500,
+			headers: {},
+		});
 		expect(calls.starts).toBe(1);
 	});
 
@@ -59,7 +74,7 @@ describe("StreamRegistry", () => {
 		const reg = new StreamRegistry();
 		const { sink, calls } = spySink();
 		reg.register("r1", "c1", sink);
-		reg.push({
+		reg.push("c1", {
 			type: "stream-data",
 			id: "r1",
 			data: Buffer.from("x").toString("base64"),
@@ -71,7 +86,7 @@ describe("StreamRegistry", () => {
 		const reg = new StreamRegistry();
 		const { sink, calls } = spySink();
 		reg.register("r1", "c1", sink);
-		reg.pushLegacyResponse({
+		reg.pushLegacyResponse("c1", {
 			type: "response",
 			id: "r1",
 			status: 200,
@@ -100,14 +115,40 @@ describe("StreamRegistry", () => {
 		const reg = new StreamRegistry();
 		const { sink, calls } = spySink();
 		reg.register("r1", "c1", sink);
-		reg.push({ type: "stream-start", id: "r1", status: 200, headers: {} });
-		reg.push({ type: "stream-end", id: "r1" });
+		reg.push("c1", {
+			type: "stream-start",
+			id: "r1",
+			status: 200,
+			headers: {},
+		});
+		reg.push("c1", { type: "stream-end", id: "r1" });
 		// Late frame after the stream finished — must be a no-op.
-		reg.push({
+		reg.push("c1", {
 			type: "stream-data",
 			id: "r1",
 			data: Buffer.from("late").toString("base64"),
 		});
 		expect(calls.data).toEqual([]);
+	});
+
+	test("frames from another connection are ignored", () => {
+		const reg = new StreamRegistry();
+		const { sink, calls } = spySink();
+		reg.register("r1", "c1", sink);
+		reg.push("c2", {
+			type: "stream-start",
+			id: "r1",
+			status: 200,
+			headers: {},
+		});
+		reg.pushLegacyResponse("c2", {
+			type: "response",
+			id: "r1",
+			status: 200,
+			headers: {},
+			body: "",
+		});
+		expect(calls.starts).toBe(0);
+		expect(reg.has("r1")).toBe(true);
 	});
 });

@@ -63,5 +63,6 @@ export type TunnelScope = (typeof TUNNEL_SCOPES)[keyof typeof TUNNEL_SCOPES];
 export const SERVER_TOKEN_PREFIX = "tunelo_";
 
 export function generateRequestId(): string {
-	return `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+	// Unguessable: a client must not be able to answer another's request.
+	return `req_${globalThis.crypto.randomUUID()}`;
 }

@@ -130,14 +130,16 @@ class WsAppRelay {
 	}
 
 	/** Frame from the local app (via client) → forward to the browser. */
-	handleData(msg: WsDataMessage): void {
+	handleData(connectionId: string, msg: WsDataMessage): void {
 		const conn = this.conns.get(msg.id);
-		if (!conn || conn.socket.readyState !== conn.socket.OPEN) return;
+		if (!conn || conn.connectionId !== connectionId) return;
+		if (conn.socket.readyState !== conn.socket.OPEN) return;
 		conn.socket.send(Buffer.from(msg.data, "base64"), { binary: msg.binary });
 	}
 
 	/** Local app closed the WS → close the browser side. */
-	handleClose(msg: WsCloseMessage): void {
+	handleClose(connectionId: string, msg: WsCloseMessage): void {
+		if (this.conns.get(msg.id)?.connectionId !== connectionId) return;
 		const conn = this.teardown(msg.id);
 		if (conn) safeCloseSocket(conn.socket, msg.code, msg.reason);
 	}
