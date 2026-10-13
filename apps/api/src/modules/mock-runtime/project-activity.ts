@@ -1,5 +1,5 @@
+import { groupByTenant } from "@localman/tenancy";
 import type { Logger } from "../../logger.js";
-import { groupByTenant } from "../../tenancy/group-by-tenant.js";
 import {
 	type LocalmanTenant,
 	runInTenant,

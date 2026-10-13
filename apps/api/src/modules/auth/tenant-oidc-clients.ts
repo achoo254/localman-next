@@ -1,12 +1,9 @@
+import { tenantClientSecret, tenantIdpTransport } from "@localman/tenancy";
 import { PRIMARY_TENANT_ID } from "../../tenancy/primary-tenant.js";
 import { currentTenant } from "../../tenancy/tenant-context.js";
 import type { OidcApi } from "./oidc-api.js";
 import { type AuthorizationRequest, OidcClient } from "./oidc-client.js";
-import {
-	type TenantIdpSettings,
-	tenantClientSecret,
-	tenantIdpTransport,
-} from "./tenant-idp.js";
+import { type TenantIdpSettings, tenantIdpAccess } from "./tenant-idp.js";
 
 /** Clients kept at most; one per tenant seen. */
 const MAX_CLIENTS = 1_000;
@@ -40,7 +37,7 @@ export class TenantOidcClients implements OidcApi {
 			clientId: this.primary.clientId,
 			clientSecret: tenantClientSecret(this.tenantIdp.clientKey, tenant.id),
 			publicUrl: tenant.publicUrl,
-			transport: tenantIdpTransport(this.tenantIdp, tenant),
+			transport: tenantIdpTransport(tenantIdpAccess(this.tenantIdp), tenant),
 		});
 		for (const oldest of this.clients.keys()) {
 			if (this.clients.size < MAX_CLIENTS) break;

@@ -59,6 +59,9 @@ importers:
       '@localman/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@localman/tenancy':
+        specifier: workspace:*
+        version: link:../../packages/tenancy
       '@modelcontextprotocol/server':
         specifier: 2.3.1
         version: 2.3.1
@@ -135,6 +138,9 @@ importers:
 
   apps/tunelo-server:
     dependencies:
+      '@localman/tenancy':
+        specifier: workspace:*
+        version: link:../../packages/tenancy
       '@tunelo/shared':
         specifier: workspace:*
         version: link:../../packages/tunelo-shared
@@ -370,6 +376,22 @@ importers:
       ajv-draft-04:
         specifier: ^1.0.0
         version: 1.0.0(ajv@8.20.0)
+
+  packages/tenancy:
+    dependencies:
+      jose:
+        specifier: ^6.2.12
+        version: 6.2.12
+      openid-client:
+        specifier: ^6.8.8
+        version: 6.8.8
+      zod:
+        specifier: ^4.3.6
+        version: 4.6.5
+    devDependencies:
+      mongoose:
+        specifier: ^9.3.3
+        version: 9.11.0
 
   packages/tunelo-cli:
     dependencies:

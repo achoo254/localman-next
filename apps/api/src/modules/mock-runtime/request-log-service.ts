@@ -1,6 +1,6 @@
+import { groupByTenant } from "@localman/tenancy";
 import type { Types } from "mongoose";
 import { type Logger, createLogger } from "../../logger.js";
-import { groupByTenant } from "../../tenancy/group-by-tenant.js";
 import {
 	type LocalmanTenant,
 	findCurrentTenant,

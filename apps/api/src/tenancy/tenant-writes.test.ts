@@ -1,9 +1,9 @@
+import { CrossTenantWriteError, MissingTenantError } from "@localman/tenancy";
 import mongoose, { Schema } from "mongoose";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { connectTestMongo } from "../test-support/test-mongo.js";
 import { TEST_TENANT } from "../test-support/test-tenant.js";
 import { acrossTenants, runInTenant } from "./tenant-context.js";
-import { CrossTenantWriteError, MissingTenantError } from "./tenant-errors.js";
 import { tenantScopePlugin } from "./tenant-scope-plugin.js";
 
 const OTHER = { ...TEST_TENANT, id: "ten_AAAAAAAAAAAAAAAA" };

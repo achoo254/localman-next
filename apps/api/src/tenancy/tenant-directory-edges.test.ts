@@ -1,3 +1,4 @@
+import { TENANT_FRESH_MS, TenantAnswerCache } from "@localman/tenancy";
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { createLogger } from "../logger.js";
@@ -5,7 +6,6 @@ import { createMockApp } from "../mock-server.js";
 import { UsageMeter } from "../modules/mock-runtime/usage-meter.js";
 import { TEST_TENANT } from "../test-support/test-tenant.js";
 import { createIdpTenantDirectory } from "./idp-tenant-directory.js";
-import { TENANT_FRESH_MS, TenantAnswerCache } from "./tenant-answer-cache.js";
 import { type LocalmanTenant, setTestDefaultTenant } from "./tenant-context.js";
 import { configureTenants, singleTenantDirectory } from "./tenant-directory.js";
 

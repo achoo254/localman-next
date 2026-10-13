@@ -1,5 +1,4 @@
-import type { Logger } from "../logger.js";
-import type { TenantAnswer } from "./idp-tenant-client.js";
+import type { TenancyLogger } from "./tenancy-logger.js";
 
 /** A found tenant is asked again after this long. */
 export const TENANT_FRESH_MS = 60_000;
@@ -14,29 +13,29 @@ export const RETRY_MS = 10_000;
 const MAX_FOUND = 1_000;
 const MAX_MISSING = 1_000;
 
-interface Entry {
-	readonly answer: TenantAnswer;
+interface Entry<A> {
+	readonly answer: A | undefined;
 	readonly freshUntil: number;
 }
 
 /**
- * Answers of the IdP's tenant API by key: fresh ones are reused, one
+ * Answers of the IdP's tenant API by key (`undefined`: its 404): fresh ones are reused, one
  * question per key is in flight at a time, and when the IdP fails the
  * last answer is kept (stale-while-error, retried every `RETRY_MS`), so
  * tenants already seen keep working while the IdP restarts. Only a real
  * 404 is remembered as "no tenant"; a failure with nothing known throws.
  */
-export class TenantAnswerCache {
-	private readonly found = new Map<string, Entry>();
-	private readonly missing = new Map<string, Entry>();
-	private readonly loading = new Map<string, Promise<TenantAnswer>>();
+export class TenantAnswerCache<A> {
+	private readonly found = new Map<string, Entry<A>>();
+	private readonly missing = new Map<string, Entry<A>>();
+	private readonly loading = new Map<string, Promise<A | undefined>>();
 
 	constructor(
-		private readonly logger: Logger,
+		private readonly logger: TenancyLogger,
 		private readonly now: () => number = Date.now,
 	) {}
 
-	get(key: string, load: () => Promise<TenantAnswer>): Promise<TenantAnswer> {
+	get(key: string, load: () => Promise<A | undefined>): Promise<A | undefined> {
 		const entry = this.found.get(key) ?? this.missing.get(key);
 		if (entry && this.now() < entry.freshUntil) {
 			return Promise.resolve(entry.answer);
@@ -51,12 +50,12 @@ export class TenantAnswerCache {
 	}
 
 	/** Remembers an answer learned another way (a host lookup, by id). */
-	set(key: string, answer: TenantAnswer): void {
+	set(key: string, answer: A | undefined): void {
 		const ttl = answer ? TENANT_FRESH_MS : MISSING_FRESH_MS;
 		this.store(key, { answer, freshUntil: this.now() + ttl });
 	}
 
-	private store(key: string, entry: Entry): void {
+	private store(key: string, entry: Entry<A>): void {
 		this.found.delete(key);
 		this.missing.delete(key);
 		const [map, max] = entry.answer
@@ -71,9 +70,9 @@ export class TenantAnswerCache {
 
 	private async refresh(
 		key: string,
-		known: Entry | undefined,
-		load: () => Promise<TenantAnswer>,
-	): Promise<TenantAnswer> {
+		known: Entry<A> | undefined,
+		load: () => Promise<A | undefined>,
+	): Promise<A | undefined> {
 		try {
 			const answer = await load();
 			this.set(key, answer);

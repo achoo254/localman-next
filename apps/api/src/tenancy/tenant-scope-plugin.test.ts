@@ -1,3 +1,4 @@
+import { CrossTenantWriteError, MissingTenantError } from "@localman/tenancy";
 import mongoose, { Schema } from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
@@ -10,7 +11,6 @@ import {
 	runInTenant,
 	setTestDefaultTenant,
 } from "./tenant-context.js";
-import { CrossTenantWriteError, MissingTenantError } from "./tenant-errors.js";
 import { tenantScopePlugin } from "./tenant-scope-plugin.js";
 
 function tenant(id: string): LocalmanTenant {

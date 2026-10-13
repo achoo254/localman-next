@@ -1,3 +1,4 @@
+import { MissingTenantError } from "@localman/tenancy";
 import { Types } from "mongoose";
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -21,7 +22,6 @@ import {
 	runInTenant,
 	setTestDefaultTenant,
 } from "./tenant-context.js";
-import { MissingTenantError } from "./tenant-errors.js";
 
 // No default tenant here: what works below sets its tenant itself, as in
 // production.

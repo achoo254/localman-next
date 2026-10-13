@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { type Server, createServer } from "node:http";
 import type { AddressInfo } from "node:net";
+import { loopbackFetch } from "@localman/tenancy";
 import type { Express } from "express";
 import request, { type Response } from "supertest";
 import { createDashboardApp } from "../../../dashboard-server.js";
@@ -8,7 +9,6 @@ import { createLogger } from "../../../logger.js";
 import type { LocalmanTenant } from "../../../tenancy/tenant-context.js";
 import { basic } from "../../audit/testing/security-events.js";
 import { createAuthModule } from "../auth-module.js";
-import { loopbackFetch } from "../loopback-fetch.js";
 import { tenantClientSecret } from "../tenant-idp.js";
 import {
 	AUDIT_CREDENTIALS,

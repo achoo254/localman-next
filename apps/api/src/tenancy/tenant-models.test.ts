@@ -63,8 +63,6 @@ describe("tenant-owned models", () => {
 				"modules/mock-callbacks/retry-queue.ts",
 				// Lists the tenants that have users.
 				"tenancy/each-tenant.ts",
-				// Tags old documents, drops replaced indexes.
-				"tenancy/tenant-migration.ts",
 			].sort(),
 		);
 	});

@@ -1,20 +1,5 @@
-import { z } from "zod";
+import { type TenantSummary, createIdpTenantApi } from "@localman/tenancy";
 import type { LocalmanTenant } from "./tenant-context.js";
-
-/** How long one call to the IdP's internal API may take. */
-const LOOKUP_TIMEOUT_MS = 3_000;
-
-/** What the IdP says about a tenant (`GET /internal/tenants/…`), nothing secret. */
-const tenantSummary = z.object({
-	id: z.string().min(1),
-	domain: z.string().min(1),
-	displayName: z.string(),
-	issuer: z.url(),
-	/** Only `active` tenants are served; a claimed one only has its /admin. */
-	status: z.string(),
-	resources: z.object({ localman: z.url() }),
-	ownerSubs: z.array(z.string()),
-});
 
 /** `undefined`: the IdP has no serving tenant there (its 404). */
 export type TenantAnswer = LocalmanTenant | undefined;
@@ -24,7 +9,7 @@ export interface IdpTenantClient {
 	byId(id: string): Promise<TenantAnswer>;
 }
 
-function toTenant(summary: z.output<typeof tenantSummary>): LocalmanTenant {
+function toTenant(summary: TenantSummary): LocalmanTenant {
 	const publicUrl = new URL(summary.resources.localman);
 	return Object.freeze({
 		id: summary.id,
@@ -37,33 +22,22 @@ function toTenant(summary: z.output<typeof tenantSummary>): LocalmanTenant {
 	});
 }
 
-/**
- * The IdP's internal API (loopback, Basic `localman:<secret>`). A 404 is
- * an answer (no such tenant); anything else that is not 200 throws, so
- * the directory keeps what it knew.
- */
+/** The IdP's internal API as Localman (Basic `localman:<secret>`). */
 export function createIdpTenantClient(
 	origin: string,
 	secret: string,
 	fetchImpl: typeof fetch = fetch,
 ): IdpTenantClient {
-	const authorization = `Basic ${Buffer.from(`localman:${secret}`).toString("base64")}`;
-	const get = async (path: string): Promise<TenantAnswer> => {
-		const response = await fetchImpl(new URL(path, origin), {
-			headers: { authorization },
-			redirect: "error",
-			signal: AbortSignal.timeout(LOOKUP_TIMEOUT_MS),
-		});
-		if (response.status === 404) return undefined;
-		if (!response.ok) {
-			throw new Error(`IdP tenant lookup answered ${response.status}`);
-		}
-		const summary = tenantSummary.parse(await response.json());
-		return summary.status === "active" ? toTenant(summary) : undefined;
-	};
+	const api = createIdpTenantApi({
+		origin,
+		role: "localman",
+		secret,
+		fetch: fetchImpl,
+	});
+	const tenantOf = (summary: TenantSummary | undefined): TenantAnswer =>
+		summary ? toTenant(summary) : undefined;
 	return {
-		byHost: (host) =>
-			get(`/internal/tenants/lookup?host=${encodeURIComponent(host)}`),
-		byId: (id) => get(`/internal/tenants/${encodeURIComponent(id)}`),
+		byHost: async (host) => tenantOf(await api.byHost(host)),
+		byId: async (id) => tenantOf(await api.byId(id)),
 	};
 }

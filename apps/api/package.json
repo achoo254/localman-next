@@ -19,6 +19,7 @@
 		"@faker-js/faker": "^10.6.0",
 		"@localman/operations": "workspace:*",
 		"@localman/shared": "workspace:*",
+		"@localman/tenancy": "workspace:*",
 		"@modelcontextprotocol/server": "2.3.1",
 		"express": "^5.2.1",
 		"express-rate-limit": "^8.7.1",

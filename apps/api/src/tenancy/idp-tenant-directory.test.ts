@@ -1,3 +1,4 @@
+import { TENANT_FRESH_MS } from "@localman/tenancy";
 import { describe, expect, it, vi } from "vitest";
 import { createLogger } from "../logger.js";
 import { TEST_TENANT } from "../test-support/test-tenant.js";
@@ -6,7 +7,6 @@ import {
 	createIdpTenantDirectory,
 	localmanDomainOf,
 } from "./idp-tenant-directory.js";
-import { TENANT_FRESH_MS } from "./tenant-answer-cache.js";
 import type { LocalmanTenant } from "./tenant-context.js";
 
 const ACME: LocalmanTenant = {
@@ -122,7 +122,10 @@ describe("IdP tenant client", () => {
 				displayName: "Acme",
 				issuer: "https://auth.acme.example",
 				status,
-				resources: { localman: "https://localman.acme.example" },
+				resources: {
+					localman: "https://localman.acme.example",
+					tunnel: "https://tunnel.acme.example",
+				},
 				ownerSubs: ["acc_owner"],
 			});
 		};

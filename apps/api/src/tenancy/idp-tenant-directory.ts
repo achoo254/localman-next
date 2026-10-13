@@ -1,6 +1,6 @@
+import { TenantAnswerCache, appDomainOf } from "@localman/tenancy";
 import type { Logger } from "../logger.js";
 import type { IdpTenantClient, TenantAnswer } from "./idp-tenant-client.js";
-import { TenantAnswerCache } from "./tenant-answer-cache.js";
 import type { LocalmanTenant } from "./tenant-context.js";
 import type { TenantDirectory } from "./tenant-directory.js";
 
@@ -9,14 +9,7 @@ import type { TenantDirectory } from "./tenant-directory.js";
  * `<label>.localman.<d>` (mocks). Hosts with a port are never a tenant's.
  */
 export function localmanDomainOf(host: string): string | undefined {
-	if (host.includes(":")) return undefined;
-	const labels = host.split(".");
-	const at = labels[0] === "localman" ? 1 : labels[1] === "localman" ? 2 : -1;
-	if (at < 0) return undefined;
-	const domain = labels.slice(at);
-	return domain.length >= 2 && domain.every(Boolean)
-		? domain.join(".")
-		: undefined;
+	return appDomainOf(host, "localman");
 }
 
 /**
@@ -32,7 +25,10 @@ export function createIdpTenantDirectory(options: {
 	readonly now?: () => number;
 }): TenantDirectory {
 	const { primary, client } = options;
-	const cache = new TenantAnswerCache(options.logger, options.now);
+	const cache = new TenantAnswerCache<LocalmanTenant>(
+		options.logger,
+		options.now,
+	);
 	const dashboardHost = new URL(primary.publicUrl).host;
 	const mockBase = primary.mockBaseDomain;
 

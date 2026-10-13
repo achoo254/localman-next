@@ -1,0 +1,23 @@
+{
+	"name": "@localman/tenancy",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"zod": "^4.3.6",
+		"jose": "^6.2.12",
+		"openid-client": "^6.8.8"
+	},
+	"peerDependencies": {
+		"mongoose": "^9.3.3"
+	},
+	"devDependencies": {
+		"mongoose": "^9.3.3"
+	}
+}
