@@ -309,3 +309,4 @@ Mọi collection thuộc một tenant (`tenantId`, `docs/decisions/0003-tenant-s
 | `{secret}.localman.hoandat.com` | Mock runtime công khai |
 | `auth.hoandat.com` | IdP dùng chung (plan `261008-1325-central-auth-idp`) |
 | `*.tunnel.hoandat.com` | Tunelo (plan `261008-1156-tunelo-accounts-and-tunnel-list`) |
+| `localman.<domain>`, `{secret}.localman.<domain>` | Tenant khác (domain nhận ở IdP): cùng process, chọn tenant theo Host (`docs/decisions/0003-tenant-scoped-data.md`) |

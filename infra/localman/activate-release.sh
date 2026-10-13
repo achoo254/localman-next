@@ -30,7 +30,8 @@ id="${1:?usage: activate-release.sh <release-id>}"
 [[ "$id" =~ ^[A-Za-z0-9._-]+$ ]] || die "bad release id"
 new="$RELEASES/$id"
 for part in api/main.mjs api/package.json api/pnpm-lock.yaml web/index.html \
-	nginx/localman-http.conf nginx/localman.hoandat.com.conf; do
+	nginx/localman-http.conf nginx/localman.hoandat.com.conf nginx/localman-app.inc \
+	nginx/localman-tenants.conf; do
 	[ -s "$new/$part" ] || die "upload incomplete: missing $new/$part"
 done
 # shellcheck disable=SC1091

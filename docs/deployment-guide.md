@@ -11,7 +11,7 @@ Mọi script nằm ở [`infra/localman/`](../infra/localman/); tài liệu này
 | DNS (Cloudflare, zone `hoandat.com`) | `localman` → `103.72.98.65` proxied; `*.localman` → `103.72.98.65` DNS only (Universal SSL miễn phí không phủ wildcard hai cấp) |
 | TLS | Let's Encrypt `localman.hoandat.com` + `*.localman.hoandat.com`, gia hạn bằng DNS-01 Cloudflare (`authenticator = dns-cloudflare`, `renew_hook = systemctl reload nginx`) qua [`issue-wildcard-cert.sh`](../infra/localman/issue-wildcard-cert.sh); dùng cho cả host proxied (SSL "full") lẫn wildcard |
 | Release | `/opt/localman/releases/<id>/{api,web,nginx}` (id = giờ UTC + commit, thêm `-dirty` nếu cây làm việc có sửa đổi), symlink `/opt/localman/current` trỏ release đang chạy; giữ 5 release gần nhất. Lên release mới: [`activate-release.sh`](../infra/localman/activate-release.sh); đổi qua lại giữa các release: [`switch-release.sh`](../infra/localman/switch-release.sh) |
-| nginx | `/etc/nginx/conf.d/localman-http.conf` (zone `limit_req`/`limit_conn`, log che secret) và `/etc/nginx/conf.d/localman.hoandat.com.conf` (CSP mang hash của đúng bản build). Mỗi release có bản conf riêng trong `releases/<id>/nginx/`, `switch-release.sh` cài bản đó cùng lúc với đổi symlink; bản gốc ở [`infra/localman/nginx/`](../infra/localman/nginx/), không chép tay |
+| nginx | `/etc/nginx/conf.d/localman-http.conf` (zone `limit_req`/`limit_conn`, log che secret), `/etc/nginx/conf.d/localman.hoandat.com.conf` (CSP mang hash của đúng bản build), `/etc/nginx/localman/localman-app.inc` (location của dashboard, dùng chung cho hoandat và tenant) và `/etc/nginx/conf.d/localman-tenants.conf` (`localman.<domain>`, `*.localman.<domain>` của tenant; chỉ cài khi đã có `00-tenants-http.conf` của IdP, vì chứng chỉ chọn theo SNI qua map ở đó). Mỗi release có bản conf riêng trong `releases/<id>/nginx/`, `switch-release.sh` cài bản đó cùng lúc với đổi symlink; bản gốc ở [`infra/localman/nginx/`](../infra/localman/nginx/), không chép tay |
 | IP client thật | Host proxied dựa vào `set_real_ip_from` (dải Cloudflare) + `real_ip_header CF-Connecting-IP` đã có ở cấp `http` trên server, Localman không lặp lại (`activate-release.sh` cảnh báo nếu thiếu). Host DNS-only `*.localman` không tin header nào (`set_real_ip_from unix:;` trong server block), `$remote_addr` là IP kết nối thật. Site chỉ chuyển `X-Forwarded-For $remote_addr` và `X-Forwarded-Host $host`, API tin proxy `127.0.0.1` (`TRUST_PROXY=127.0.0.1`) |
 | `/internal/` | Chỉ cho `103.72.98.65` (IdP trên chính server này, đi qua Cloudflare nên sau real-IP là IPv4 công khai của server), `127.0.0.1`, `::1`; nơi khác nhận 403 |
 | `/mcp` | Localman MCP (Streamable HTTP, Bearer token của IdP): `proxy_buffering off` cho SSE, body tối đa 4 MB, `proxy_read_timeout 300s` (Cloudflare vẫn cắt kết nối im lặng sau 100 giây, client MCP tự nối lại). `/.well-known/oauth-protected-resource` (metadata RFC 9728) cũng tới API |
@@ -120,6 +120,14 @@ seq 1 100 | xargs -P 20 -I % curl -s -o /dev/null -w '%{http_code}\n' "$MOCK_URL
 - Trình duyệt: mở `/`, `/docs` và form góp ý (Turnstile hiện), console không có lỗi CSP; đăng nhập và đăng xuất qua IdP.
 - Server: `pm2 status localman-api`, `pm2 logs localman-api --lines 50 --nostream`, `tail /var/log/nginx/localman-mock.access.log` (đường dẫn `/m/` hiện `[secret]`).
 - 429 `RATE_LIMITED` của form công khai sau khi mở form: theo dõi để chỉnh `feedbackRateLimit.perIp` nếu người dùng sau CGNAT bị chặn nhầm.
+
+## Tenant khác (domain đã nhận ở IdP)
+
+Bật theo thứ tự, mỗi bước là thao tác trên prod chỉ làm khi được yêu cầu:
+
+1. IdP đã cài `00-tenants-http.conf`, `tenants-acme.conf` và provisioner (repo `hoandat-auth`, `docs/deployment-guide.md`); release tiếp theo của Localman khi đó tự cài `localman-tenants.conf` (`nginx -t` trước khi reload).
+2. Lấy khoá `localman-web` từ IdP (`node --env-file=.env dist/app-client-key.mjs localman-web <file>`) và secret `localman:` của `INTERNAL_API_CREDENTIALS`; điền `IDP_INTERNAL_URL`, `IDP_INTERNAL_SECRET`, `IDP_LOOPBACK_URL`, `LOCALMAN_CLIENT_KEY` vào `/opt/localman/.env` (mẫu ở `infra/localman/.env.production.example`), rồi `pm2 reload localman-api`. Lần khởi động này gỡ index cũ không có `tenantId`.
+3. Kiểm: `curl -s --resolve localman.<domain>:443:127.0.0.1 https://localman.<domain>/api/v1/tenant` trả tên và domain của tenant; host không phải tenant nhận 421.
 
 ## Index theo tenant
 

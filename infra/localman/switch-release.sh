@@ -28,10 +28,23 @@ target="$RELEASES/$id"
 source /root/.nvm/nvm.sh >/dev/null
 
 echo "== nginx config of $id"
+# Files and where they go: conf.d loads every *.conf; the shared dashboard
+# locations are included from /etc/nginx/localman. The tenants' blocks use
+# the IdP's 00-tenants-http.conf (certificate map): only once it exists.
+installs=(
+	"localman-http.conf:/etc/nginx/conf.d"
+	"localman.hoandat.com.conf:/etc/nginx/conf.d"
+	"localman-app.inc:/etc/nginx/localman"
+)
+if [ -f /etc/nginx/conf.d/00-tenants-http.conf ]; then
+	installs+=("localman-tenants.conf:/etc/nginx/conf.d")
+fi
+mkdir -p /etc/nginx/localman
 changed=()
-for name in localman-http.conf localman.hoandat.com.conf; do
+for entry in "${installs[@]}"; do
+	name="${entry%%:*}"
 	src="$target/nginx/$name"
-	dest="/etc/nginx/conf.d/$name"
+	dest="${entry#*:}/$name"
 	[ -s "$src" ] || die "missing $src"
 	if ! cmp -s "$src" "$dest"; then
 		if [ -f "$dest" ]; then cp -p "$dest" "$dest.bak"; else rm -f "$dest.bak"; fi

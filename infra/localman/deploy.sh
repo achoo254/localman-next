@@ -67,15 +67,16 @@ cp -R apps/api/dist/. "$OUT/api/"
 cp -R apps/web/dist "$OUT/web"
 
 echo "== nginx config with the CSP hashes of this build"
-cp infra/localman/nginx/localman-http.conf "$OUT/nginx/"
+cp infra/localman/nginx/localman-http.conf infra/localman/nginx/localman-app.inc "$OUT/nginx/"
 HASHES="$(node infra/localman/csp-hashes.mjs apps/web/dist/*.html)"
 # Base64 hashes never contain '|' or '&'.
-sed "s|__CSP_SCRIPT_HASHES__|$HASHES|" infra/localman/nginx/localman.hoandat.com.conf \
-	>"$OUT/nginx/localman.hoandat.com.conf"
-if grep -q '__CSP_SCRIPT_HASHES__' "$OUT/nginx/localman.hoandat.com.conf"; then
-	echo "CSP placeholder left in the nginx config" >&2
-	exit 1
-fi
+for name in localman.hoandat.com.conf localman-tenants.conf; do
+	sed "s|__CSP_SCRIPT_HASHES__|$HASHES|" "infra/localman/nginx/$name" >"$OUT/nginx/$name"
+	if grep -q '__CSP_SCRIPT_HASHES__' "$OUT/nginx/$name"; then
+		echo "CSP placeholder left in $name" >&2
+		exit 1
+	fi
+done
 
 echo "== upload (files owned by the remote root)"
 sync_infra
