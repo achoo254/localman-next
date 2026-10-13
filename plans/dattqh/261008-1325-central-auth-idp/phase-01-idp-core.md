@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "IdP lõi: OIDC, client, key, deploy"
-status: in-progress
+status: completed
 priority: P1
 effort: "M"
 dependencies: []
@@ -80,9 +80,9 @@ Repo riêng: `achoo254/hoandat-auth` (private; tạo bằng `gh repo create` khi
 - [x] T9 `auth.hoandat.com` phân giải qua Cloudflare và có TLS hợp lệ
 - [x] T10 Production chạy trên .65 (user chỉ định .65 cho cả app và DB; không có môi trường staging riêng), key ký sinh trên server và nằm ngoài repo
 - [x] T11 Conformance Config OP pass trên production (plan `l4pE9nbnLX6y0`. Lần 1 ngày 2026-10-12: 37 đạt, 1 lỗi vì discovery thiếu RS256 cho ID token. Đã sửa theo ADR 0005 của `hoandat-auth`, commit `b964281`, deploy cùng ngày, thêm khoá RSA trên server. Lần 2: PASSED, 38 đạt, 0 lỗi, 6 thông tin về tính năng tuỳ chọn)
-- [ ] T11 Conformance Basic OP pass trên bản IdP thử (harness e2e + Tunelo + bộ kiểm host sẵn)
+- [x] T11 Conformance Basic OP trên bản IdP thử (harness e2e + Tunelo + bộ kiểm host sẵn, chạy qua API của suite, ngày 2026-10-13, plan `roxcEuJzulAxt`): 22 PASSED, 3 WARNING (claim profile/`name` của tài khoản thử, không trả `acr`), 4 SKIPPED (address, phone, request object), 4 REVIEW (ảnh đã tải; trang lỗi `redirect_uri` đúng), 2 FAILED do chính sách/cấu hình: `oidcc-refresh-token` (`invalid_scope`, client web cố ý không có `offline_access`) và `oidcc-server-client-secret-post` (không có client `client_secret_post`). Harness cho PKCE không bắt buộc (prod bắt buộc, chặt hơn OIDC Core) và bỏ grant token exchange (`hoandat-auth` `395edb6`). Config OP chạy lại trên production cùng ngày: PASSED 38/38 (plan `UYPbPU1ahTveZ`)
 - [x] T12 Review không còn finding mức high
 - [x] Verification: Code + PKCE, device flow, refresh xoay vòng và từ chối `aud` sai đều pass bằng `openid-client`
-- [ ] Verification: conformance suite pass (theo T11)
+- [x] Verification: conformance suite pass (theo T11, với hai FAILED do chính sách ghi ở trên)
 - [x] lint/typecheck/test sạch: `pnpm lint` (Biome), `tsc --noEmit`, `pnpm test`
 - [x] `pnpm check:mcp-coverage`: N/A (repo `hoandat-auth` không dùng operation registry của Localman)

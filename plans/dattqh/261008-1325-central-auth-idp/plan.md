@@ -49,11 +49,11 @@ Access token là JWT ngắn hạn (15 phút), ký bằng ES256, có `aud` theo t
 
 ## Phases
 
-| # | Phase | Tier | Phụ thuộc | Trạng thái (2026-10-12) |
+| # | Phase | Tier | Phụ thuộc | Trạng thái (2026-10-13) |
 |---|---|---|---|---|
-| 01 | [IdP lõi: OIDC, client, key, deploy](phase-01-idp-core.md) | M | — | in-progress: còn T11 conformance |
+| 01 | [IdP lõi: OIDC, client, key, deploy](phase-01-idp-core.md) | M | — | completed: Config OP 38/38 trên production, Basic OP chạy trên bản IdP thử (22 đạt, 2 lỗi do chính sách) |
 | 02 | [Tài khoản và đăng nhập không dùng email](phase-02-accounts-and-login.md) | L | 01 | completed; phần mật khẩu đã gỡ theo ADR 0004 |
-| 03 | [Tích hợp Localman, Tunelo, MCP](phase-03-integrations.md) | M | 02 | in-progress: còn T7 E2E 3 dịch vụ trên production |
+| 03 | [Tích hợp Localman, Tunelo, MCP](phase-03-integrations.md) | M | 02 | in-progress: T7 còn "tự nhận tunnel" (Localman chưa có danh sách tunnel theo tài khoản) và một lượt back-channel logout thật trên production |
 
 **Thứ tự với các plan khác:** plan này chạy **trước** phase 02 của Localman và **trước** plan Tunelo. Localman phase 02 thu gọn lại thành "OIDC client và thông báo".
 
