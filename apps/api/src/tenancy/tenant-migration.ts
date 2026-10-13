@@ -69,13 +69,19 @@ export async function dropReplacedIndexes(logger: Logger): Promise<string[]> {
 }
 
 /**
- * Startup, before listening: old documents get the primary tenant, every
- * index (tenant-prefixed) is built, then the indexes they replace go.
- * `create-tenant-indexes` does the first two before a deploy, so this
- * only catches documents written in between.
+ * Startup, before listening: old documents get the primary tenant and
+ * every index (tenant-prefixed) is built; `create-tenant-indexes` does
+ * both before a deploy, so this only catches documents written in
+ * between. The indexes they replace are dropped once other tenants are
+ * served (`multiTenant`): until then they stay, so rolling back to a
+ * release before tenants needs no index build, and once a second tenant
+ * writes, the old unique indexes would refuse its documents.
  */
-export async function migrateToTenants(logger: Logger): Promise<void> {
+export async function migrateToTenants(
+	logger: Logger,
+	multiTenant: boolean,
+): Promise<void> {
 	await tagUntaggedDocuments(logger);
 	await initModels();
-	await dropReplacedIndexes(logger);
+	if (multiTenant) await dropReplacedIndexes(logger);
 }

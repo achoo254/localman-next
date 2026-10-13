@@ -6,15 +6,12 @@ import {
 } from "../test-support/test-mongo.js";
 import {
 	type LocalmanTenant,
-	MissingTenantError,
 	acrossTenants,
 	runInTenant,
 	setTestDefaultTenant,
 } from "./tenant-context.js";
-import {
-	CrossTenantWriteError,
-	tenantScopePlugin,
-} from "./tenant-scope-plugin.js";
+import { CrossTenantWriteError, MissingTenantError } from "./tenant-errors.js";
+import { tenantScopePlugin } from "./tenant-scope-plugin.js";
 
 function tenant(id: string): LocalmanTenant {
 	return {

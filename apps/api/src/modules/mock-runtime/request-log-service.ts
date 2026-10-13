@@ -3,7 +3,6 @@ import { type Logger, createLogger } from "../../logger.js";
 import { groupByTenant } from "../../tenancy/group-by-tenant.js";
 import {
 	type LocalmanTenant,
-	acrossTenants,
 	findCurrentTenant,
 	runInTenant,
 } from "../../tenancy/tenant-context.js";
@@ -155,28 +154,29 @@ export class RequestLogService {
 			this.writing = { lines: batch.length, bytes: this.bufferBytes };
 			this.buffer = [];
 			this.bufferBytes = 0;
-			try {
-				for (const { tenant, entries } of groupByTenant(batch)) {
-					const lines = entries.map(({ line }) => line);
-					await runInTenant(tenant, () => this.write(lines));
-					for (const line of lines) this.trimmer.note(line.projectId);
-				}
-			} catch (error) {
-				// Lines of a failed write are dropped: the log is best effort.
-				this.logger.error(
-					{ err: error, lines: batch.length },
-					"Request log flush failed",
-				);
-				return;
-			} finally {
-				this.writing = { lines: 0, bytes: 0 };
+			for (const { tenant, entries } of groupByTenant(batch)) {
+				const lines = entries.map(({ line }) => line);
+				await runInTenant(tenant, () => this.writeLines(lines));
 			}
+			this.writing = { lines: 0, bytes: 0 };
 		}
-		// Project ids are unique across tenants: trimming needs no tenant.
-		await acrossTenants(() => this.trimmer.run()).catch((error: unknown) => {
+		await this.trimmer.run().catch((error: unknown) => {
 			this.logger.error({ err: error }, "Request log trim failed");
 		});
 		this.dropped.report(this.logger);
+	}
+
+	/** One tenant's lines; a failed write drops them (the log is best effort). */
+	private async writeLines(lines: StoredRequestLog[]): Promise<void> {
+		try {
+			await this.write(lines);
+			for (const line of lines) this.trimmer.note(line.projectId);
+		} catch (error) {
+			this.logger.error(
+				{ err: error, lines: lines.length },
+				"Request log flush failed",
+			);
+		}
 	}
 
 	/** Flushes every `LOG_FLUSH_INTERVAL_MS` until `stop`. */

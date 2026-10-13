@@ -123,7 +123,7 @@ seq 1 100 | xargs -P 20 -I % curl -s -o /dev/null -w '%{http_code}\n' "$MOCK_URL
 
 ## Index theo tenant
 
-Bundle có `api/create-tenant-indexes.mjs`; `activate-release.sh` chạy nó (user `localman`, env `/opt/localman/.env`) trước khi switch, lúc release cũ còn phục vụ: gắn `tenantId: "primary"` cho document chưa có và dựng mọi index có `tenantId` đứng đầu. Chạy lại được. Lỗi thì release mới không được kích hoạt. Index cũ (không có `tenantId`) do release mới gỡ khi khởi động, sau khi index thay thế đã có. Xem `docs/decisions/0003-tenant-scoped-data.md`.
+Bundle có `api/create-tenant-indexes.mjs`; `activate-release.sh` chạy nó (user `localman`, env `/opt/localman/.env`) trước khi switch, lúc release cũ còn phục vụ: gắn `tenantId: "primary"` cho document chưa có và dựng mọi index có `tenantId` đứng đầu. Chạy lại được. Lỗi thì release mới không được kích hoạt. Index cũ (không có `tenantId`) ở lại tới khi bật tenant khác (đặt `IDP_INTERNAL_URL` và `IDP_INTERNAL_SECRET` rồi reload): lúc đó API gỡ chúng khi khởi động. Trước đó quay về release cũ không cần dựng lại index; sau đó thì cần. Xem `docs/decisions/0003-tenant-scoped-data.md`.
 
 ## Dọn project bỏ hoang
 

@@ -144,7 +144,7 @@ try {
 	await connectMongo(env.MONGO_URI, logger);
 	// Fail fast when an index (unique invariants) cannot be built; old
 	// documents get the primary tenant first.
-	await migrateToTenants(logger);
+	await migrateToTenants(logger, env.IDP_INTERNAL_URL !== undefined);
 	configureRuntime(runtimeSettingsFromEnv(env));
 	configureTenancy(env, logger);
 	notifications = createNotificationService(env, logger);

@@ -1,4 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
+import mongoose from "mongoose";
+import { MissingTenantError } from "./tenant-errors.js";
 
 /**
  * One tenant Localman serves: a domain claimed at the IdP. Its dashboard
@@ -31,9 +33,26 @@ interface Scope {
 const storage = new AsyncLocalStorage<Scope>();
 let testDefault: LocalmanTenant | undefined;
 
+/**
+ * A mongoose query or aggregation runs when awaited, so one returned
+ * unawaited would run after the scope, in the caller's: refused.
+ */
+function inScope<T>(scope: Scope, fn: () => T): T {
+	const result = storage.run(scope, fn);
+	if (
+		result instanceof mongoose.Query ||
+		result instanceof mongoose.Aggregate
+	) {
+		throw new TypeError(
+			"Await the query inside the tenant scope (use .exec())",
+		);
+	}
+	return result;
+}
+
 /** Runs `fn` with every query and write limited to `tenant`. */
 export function runInTenant<T>(tenant: LocalmanTenant, fn: () => T): T {
-	return storage.run({ tenantId: tenant.id, tenant }, fn);
+	return inScope({ tenantId: tenant.id, tenant }, fn);
 }
 
 /**
@@ -42,7 +61,7 @@ export function runInTenant<T>(tenant: LocalmanTenant, fn: () => T): T {
  * sign anyone in. `currentTenant()` throws inside.
  */
 export function runInTenantData<T>(tenantId: string, fn: () => T): T {
-	return storage.run({ tenantId }, fn);
+	return inScope({ tenantId }, fn);
 }
 
 /**
@@ -51,7 +70,7 @@ export function runInTenantData<T>(tenantId: string, fn: () => T): T {
  * scan test keeps the list of callers.
  */
 export function acrossTenants<T>(fn: () => T): T {
-	return storage.run({ allTenants: true }, fn);
+	return inScope({ allTenants: true }, fn);
 }
 
 /** The tenant of the current request or job; undefined across tenants. */
@@ -63,13 +82,6 @@ export function findCurrentTenant(): LocalmanTenant | undefined {
 /** True inside `acrossTenants`. */
 export function isAcrossTenants(): boolean {
 	return storage.getStore()?.allTenants === true;
-}
-
-export class MissingTenantError extends Error {
-	constructor() {
-		super("No tenant in scope for a tenant-owned collection");
-		this.name = "MissingTenantError";
-	}
 }
 
 /** The tenant of the current request or job; throws without one. */

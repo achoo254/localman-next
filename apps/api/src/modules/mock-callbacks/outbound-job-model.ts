@@ -114,7 +114,10 @@ outboundJobSchema.index({ owner: 1 });
 outboundJobSchema.index({ deadlineAt: 1 });
 outboundJobSchema.index({ purgeAt: 1 }, { expireAfterSeconds: 0 });
 
-outboundJobSchema.plugin(tenantScopePlugin);
+// The worker claims due and expired jobs of every tenant (outbound-claims).
+outboundJobSchema.plugin(tenantScopePlugin, {
+	acrossTenants: [{ state: 1, nextAt: 1 }, { deadlineAt: 1 }],
+});
 export const OutboundJobModel = mongoose.model(
 	"OutboundJob",
 	outboundJobSchema,

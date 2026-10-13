@@ -3,6 +3,7 @@ import { isIPv4, isIPv6 } from "node:net";
 import mongoose, { Schema } from "mongoose";
 import type { RateLimitWindow } from "../config/runtime-settings.js";
 import { isDuplicateKeyError } from "../db/mongo-errors.js";
+import { currentTenantId } from "../tenancy/tenant-context.js";
 import { tenantScopePlugin } from "../tenancy/tenant-scope-plugin.js";
 
 /**
@@ -77,7 +78,8 @@ export async function takeRateLimitSlot(
 		.slice(0, 22);
 	const hit = () =>
 		RateLimitWindowModel.findOneAndUpdate(
-			{ _id: `${scope}:${hashed}:${start}` },
+			// `_id` is unique across tenants: it names the tenant too.
+			{ _id: `${currentTenantId()}:${scope}:${hashed}:${start}` },
 			{
 				$inc: { hits: 1 },
 				$setOnInsert: { expiresAt: new Date(start + window.windowMs) },

@@ -1,25 +1,31 @@
 import { Types } from "mongoose";
+import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createLogger } from "../logger.js";
+import { createMockApp } from "../mock-server.js";
 import { readUsage } from "../modules/billing/usage-counter-model.js";
 import type { RequestLogInput } from "../modules/mock-runtime/request-log-entry.js";
 import { RequestLogModel } from "../modules/mock-runtime/request-log-model.js";
-import { RequestLogService } from "../modules/mock-runtime/request-log-service.js";
+import {
+	RequestLogService,
+	requestLog,
+} from "../modules/mock-runtime/request-log-service.js";
 import { UsageMeter } from "../modules/mock-runtime/usage-meter.js";
 import { ProjectModel } from "../modules/projects/project-model.js";
+import { UserModel } from "../modules/users/user-model.js";
 import { as, useDashboardTestDb } from "../test-support/dashboard-test-app.js";
 import { TEST_TENANT } from "../test-support/test-tenant.js";
 import {
 	type LocalmanTenant,
-	MissingTenantError,
 	acrossTenants,
 	runInTenant,
 	setTestDefaultTenant,
 } from "./tenant-context.js";
+import { MissingTenantError } from "./tenant-errors.js";
 
 // No default tenant here: what works below sets its tenant itself, as in
 // production.
-useDashboardTestDb();
+useDashboardTestDb(() => ({ mockBaseDomain: "localman.test" }));
 beforeAll(() => setTestDefaultTenant(undefined));
 afterAll(() => setTestDefaultTenant(TEST_TENANT));
 
@@ -79,5 +85,31 @@ describe("tenant scope without a default tenant", () => {
 		expect(tenants.map((line) => Reflect.get(line, "tenantId")).sort()).toEqual(
 			[OTHER.id, TEST_TENANT.id].sort(),
 		);
+	});
+
+	it("logs a mock request in the tenant of its host", async () => {
+		const owner = "acc_owner";
+		await runInTenant(TEST_TENANT, () =>
+			UserModel.create({ sub: owner, username: "owner" }),
+		);
+		const created = await as(owner).send("post", "/projects", { name: "M" });
+		expect(created.status).toBe(201);
+		const { id, secret } = created.body;
+		await as(owner).send("post", `/projects/${id}/resources`, {
+			name: "users",
+		});
+		const mockApp = createMockApp({
+			logger,
+			usageMeter: new UsageMeter({ logger, warn: async () => undefined }),
+		});
+		const answer = await request(mockApp)
+			.get("/users")
+			.set("host", `${secret}.localman.test`);
+		expect(answer.status).toBe(200);
+		await requestLog.flush();
+		const lines = await runInTenant(TEST_TENANT, () =>
+			RequestLogModel.countDocuments({ projectId: id }).exec(),
+		);
+		expect(lines).toBe(1);
 	});
 });

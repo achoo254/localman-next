@@ -3,6 +3,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import "../db/register-models.js";
 import { createLogger } from "../logger.js";
 import { SessionModel } from "../modules/auth/session-model.js";
+import { CollectionRevisionModel } from "../modules/collections/collection-revision-model.js";
+import { OutboundJobModel } from "../modules/mock-callbacks/outbound-job-model.js";
 import { ProjectModel } from "../modules/projects/project-model.js";
 import { connectTestMongo } from "../test-support/test-mongo.js";
 import {
@@ -64,9 +66,48 @@ describe("migrateToTenants", () => {
 		);
 	});
 
+	it("builds named indexes under a new name, then drops the old ones", async () => {
+		const revisions = CollectionRevisionModel.collection;
+		await revisions.dropIndexes();
+		// Production has these since before tenants, with the old keys.
+		await revisions.createIndex(
+			{ collectionId: 1, partial: 1, seq: -1 },
+			{ name: "partial_by_seq", partialFilterExpression: { partial: true } },
+		);
+		await revisions.createIndex(
+			{ collectionId: 1, trimmed: 1, seq: -1 },
+			{ name: "trimmed_by_seq", partialFilterExpression: { trimmed: true } },
+		);
+		await CollectionRevisionModel.createIndexes();
+		expect((await dropReplacedIndexes(logger)).sort()).toEqual([
+			"partial_by_seq",
+			"trimmed_by_seq",
+		]);
+		const names = (await revisions.indexes()).map((index) => index.name);
+		expect(names).toEqual(
+			expect.arrayContaining([
+				"tenant_partial_by_seq",
+				"tenant_trimmed_by_seq",
+			]),
+		);
+	});
+
+	it("keeps the queue's indexes without the tenant prefix", async () => {
+		const keys = (await OutboundJobModel.collection.indexes()).map((index) =>
+			JSON.stringify(index.key),
+		);
+		expect(keys).toEqual(
+			expect.arrayContaining([
+				JSON.stringify({ state: 1, nextAt: 1 }),
+				JSON.stringify({ deadlineAt: 1 }),
+				JSON.stringify({ tenantId: 1, owner: 1 }),
+			]),
+		);
+	});
+
 	it("is cheap to repeat: nothing left to tag", async () => {
 		expect(await tagUntaggedDocuments(logger)).toBe(0);
-		await expect(migrateToTenants(logger)).resolves.toBeUndefined();
+		await expect(migrateToTenants(logger, true)).resolves.toBeUndefined();
 		expect(mongoose.connection.readyState).toBe(1);
 	});
 });

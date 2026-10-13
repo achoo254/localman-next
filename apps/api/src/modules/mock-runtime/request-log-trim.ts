@@ -1,4 +1,8 @@
 import type { Types } from "mongoose";
+import {
+	currentTenantId,
+	runInTenantData,
+} from "../../tenancy/tenant-context.js";
 import { RequestLogModel } from "./request-log-model.js";
 
 /** Lines a project keeps at most; older ones are deleted past it. */
@@ -34,7 +38,11 @@ export async function trimProjectLog(
  * traffic at most, and a quiet one is not looked at again.
  */
 export class LogTrimmer {
-	private readonly touched = new Map<string, Types.ObjectId>();
+	/** Each touched project with its tenant (trimmed in it, on its index). */
+	private readonly touched = new Map<
+		string,
+		{ readonly tenantId: string; readonly projectId: Types.ObjectId }
+	>();
 	private readonly lastRun = new Map<string, number>();
 
 	constructor(
@@ -42,9 +50,10 @@ export class LogTrimmer {
 		private readonly everyMs: number = TRIM_EVERY_MS,
 	) {}
 
-	/** The project got lines in Mongo. */
+	/** The project (of the tenant in scope) got lines in Mongo. */
 	note(projectId: Types.ObjectId): void {
-		this.touched.set(projectId.toHexString(), projectId);
+		const tenantId = currentTenantId();
+		this.touched.set(projectId.toHexString(), { tenantId, projectId });
 	}
 
 	/** Trims the touched projects whose interval passed; failures are thrown. */
@@ -52,11 +61,13 @@ export class LogTrimmer {
 		for (const [key, last] of this.lastRun) {
 			if (now - last >= this.everyMs) this.lastRun.delete(key);
 		}
-		for (const [key, projectId] of this.touched) {
+		for (const [key, { tenantId, projectId }] of this.touched) {
 			if (this.lastRun.has(key)) continue;
 			this.touched.delete(key);
 			this.lastRun.set(key, now);
-			await trimProjectLog(projectId, this.max);
+			await runInTenantData(tenantId, () =>
+				trimProjectLog(projectId, this.max),
+			);
 		}
 	}
 }

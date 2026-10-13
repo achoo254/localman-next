@@ -6,6 +6,14 @@ import "../db/register-models.js";
 import { TENANT_SCOPED } from "./tenant-scope-plugin.js";
 
 const SRC = join(import.meta.dirname, "..");
+/**
+ * Ways around the plugin: the cross-tenant scope, raw driver calls on a
+ * model's or any collection, the raw database, and aggregation stages
+ * that read another collection (the prepended `$match` scopes only the
+ * outer one).
+ */
+const BYPASS =
+	/acrossTenants\(|\bcollection\.\w+\(|connection\.db|\.db\.collection|\$lookup|\$unionWith|\$graphLookup/;
 
 function sourceFiles(dir: string): string[] {
 	return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -18,7 +26,7 @@ function sourceFiles(dir: string): string[] {
 }
 
 describe("tenant-owned models", () => {
-	it("every model is tenant-scoped, and every index but TTL leads with tenantId", () => {
+	it("every model is tenant-scoped, and every index but TTL and the queue's leads with tenantId", () => {
 		const names = mongoose.modelNames();
 		expect(names).toEqual(
 			expect.arrayContaining(["Session", "AuditEvent", "Project", "User"]),
@@ -29,7 +37,10 @@ describe("tenant-owned models", () => {
 			expect(Reflect.get(schema, TENANT_SCOPED), name).toBe(true);
 			for (const [fields, options] of schema.indexes()) {
 				const ttl = "expireAfterSeconds" in options || "expires" in options;
-				if (!ttl) expect(Object.keys(fields)[0], name).toBe("tenantId");
+				const queue = name === "OutboundJob" && !("tenantId" in fields);
+				if (!ttl && !queue) {
+					expect(Object.keys(fields)[0], name).toBe("tenantId");
+				}
 			}
 		}
 	});
@@ -39,9 +50,7 @@ describe("tenant-owned models", () => {
 			.filter((path) => !path.includes(`${join("src", "test-support")}`))
 			.filter((path) => {
 				const text = readFileSync(path, "utf8");
-				return /acrossTenants\(|\.collection\.(insert|update|delete|find|replace|bulkWrite)/.test(
-					text,
-				);
+				return BYPASS.test(text);
 			})
 			.map((path) => relative(SRC, path))
 			.sort();
@@ -49,13 +58,13 @@ describe("tenant-owned models", () => {
 			[
 				// Raw record writes: tenantId set by hand.
 				"modules/mock-runtime/crud-handlers.ts",
-				// Trims by project id, unique across tenants.
-				"modules/mock-runtime/request-log-service.ts",
 				// Claims jobs of every tenant, runs each in its own.
 				"modules/mock-callbacks/outbound-claims.ts",
 				"modules/mock-callbacks/retry-queue.ts",
 				// Lists the tenants that have users.
 				"tenancy/each-tenant.ts",
+				// Tags old documents, drops replaced indexes.
+				"tenancy/tenant-migration.ts",
 			].sort(),
 		);
 	});
