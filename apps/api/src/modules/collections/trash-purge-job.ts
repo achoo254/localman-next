@@ -1,4 +1,5 @@
 import type { Logger } from "../../logger.js";
+import { forEachTenant } from "../../tenancy/each-tenant.js";
 import { CollectionModel } from "./collection-model.js";
 import type { StoredCollection } from "./collection-model.js";
 import { TRASH_RETENTION_DAYS } from "./trash-access.js";
@@ -63,7 +64,9 @@ export class CollectionTrashJob {
 
 	private run(): void {
 		if (this.running) return;
-		this.running = purgeExpiredTrash(this.logger)
+		this.running = forEachTenant(this.logger, () =>
+			purgeExpiredTrash(this.logger),
+		)
 			.then(
 				() => undefined,
 				(error: unknown) => {

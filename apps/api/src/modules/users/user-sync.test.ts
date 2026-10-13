@@ -50,6 +50,7 @@ describe("syncUserFromUserInfo", () => {
 			"planExpiresAt",
 			"sub",
 			"telegram",
+			"tenantId",
 			"trialStartedAt",
 			"updatedAt",
 			"username",

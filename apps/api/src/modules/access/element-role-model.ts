@@ -5,6 +5,7 @@ import {
 	type ShareableElementType,
 } from "@localman/shared/access";
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * A role on one element (collection or environment) given to one person,
@@ -40,6 +41,7 @@ elementRoleSchema.index({ userId: 1, elementType: 1 });
 // Manage access lists an element's shares oldest first.
 elementRoleSchema.index({ elementType: 1, elementId: 1, createdAt: 1 });
 
+elementRoleSchema.plugin(tenantScopePlugin);
 export const ElementRoleModel = mongoose.model(
 	"ElementRole",
 	elementRoleSchema,

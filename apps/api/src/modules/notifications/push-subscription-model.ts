@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * A browser's Web Push subscription (one per device and browser profile),
@@ -21,6 +22,7 @@ const pushSubscriptionSchema = new Schema(
 	{ collection: "push_subscriptions", timestamps: true, versionKey: false },
 );
 
+pushSubscriptionSchema.plugin(tenantScopePlugin);
 export const PushSubscriptionModel = mongoose.model(
 	"PushSubscription",
 	pushSubscriptionSchema,

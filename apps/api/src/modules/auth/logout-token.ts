@@ -1,6 +1,7 @@
 import { type JWTVerifyGetKey, errors, jwtVerify } from "jose";
 import mongoose, { Schema } from "mongoose";
 import { isDuplicateKeyError } from "../../db/mongo-errors.js";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 export const BACKCHANNEL_LOGOUT_EVENT =
 	"http://schemas.openid.net/event/backchannel-logout";
@@ -17,6 +18,7 @@ const logoutTokenJtiSchema = new Schema(
 	},
 	{ collection: "logout_token_jtis", versionKey: false },
 );
+logoutTokenJtiSchema.plugin(tenantScopePlugin);
 const LogoutTokenJtiModel = mongoose.model(
 	"LogoutTokenJti",
 	logoutTokenJtiSchema,

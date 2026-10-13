@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import mongoose, { Schema } from "mongoose";
 import * as oidc from "openid-client";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 import { hashSessionToken } from "./session-store.js";
 
 /** How long a user may take at the IdP before the callback is refused. */
@@ -24,6 +25,7 @@ const loginTransactionSchema = new Schema(
 	{ collection: "login_transactions", versionKey: false },
 );
 
+loginTransactionSchema.plugin(tenantScopePlugin);
 const LoginTransactionModel = mongoose.model(
 	"LoginTransaction",
 	loginTransactionSchema,

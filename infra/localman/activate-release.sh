@@ -3,7 +3,11 @@
 # ({api,web,nginx}). Run as root on the server (deploy.sh does it):
 #   bash /opt/localman/infra/activate-release.sh <release-id>
 # 1. setup-server.sh (idempotent: user, dirs, Node runtime, cron, logrotate);
-# 2. runtime dependencies from the shipped lockfile (--frozen-lockfile);
+# 2. runtime dependencies from the shipped lockfile (--frozen-lockfile),
+#    then the release's tenant indexes built while the current release
+#    still serves (create-tenant-indexes.mjs: tags old documents with the
+#    primary tenant, builds every index; idempotent), so the new process
+#    starts within switch-release.sh's 30 seconds;
 # 3. web assets of the previous release carried forward (hard links), so
 #    tabs opened before the deploy still load their chunks; assets older
 #    than 14 days are dropped;
@@ -40,6 +44,11 @@ if [ -L "$APP_DIR/current" ]; then previous="$(basename "$(readlink "$APP_DIR/cu
 
 echo "== runtime dependencies"
 (cd "$new/api" && npx --yes "pnpm@$PNPM_VERSION" install --prod --frozen-lockfile --reporter=silent)
+
+echo "== tenant indexes"
+(cd "$new/api" && runuser -u localman -- "$APP_DIR/runtime/node" \
+	--env-file="$APP_DIR/.env" create-tenant-indexes.mjs) ||
+	die "building the tenant indexes failed; current release unchanged"
 
 echo "== web assets"
 if [ -n "$previous" ] && [ -d "$RELEASES/$previous/web/assets" ]; then

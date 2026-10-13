@@ -3,6 +3,7 @@ import {
 	type TrialExtensionStatus,
 } from "@localman/shared";
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * A user's request to extend their Pro trial, decided by an owner on the
@@ -38,6 +39,7 @@ trialExtensionSchema.index({ userSub: 1, requestedAt: -1 });
 // The admin list: pending (or every) request, newest first.
 trialExtensionSchema.index({ status: 1, requestedAt: -1 });
 
+trialExtensionSchema.plugin(tenantScopePlugin);
 export const TrialExtensionModel = mongoose.model(
 	"TrialExtension",
 	trialExtensionSchema,

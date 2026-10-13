@@ -19,14 +19,19 @@ const external = Object.keys(manifest.dependencies).filter(
 
 rmSync(distDir, { recursive: true, force: true });
 // One self-contained file per entry: the server (`dist/main.mjs`, run by
-// pm2) and the operator command `dist/cleanup-abandoned-projects.mjs`, run
-// on the server with the same env file.
+// pm2) and the operator commands `dist/cleanup-abandoned-projects.mjs` and
+// `dist/create-tenant-indexes.mjs` (activate-release.sh runs it before the
+// switch), run on the server with the same env file.
 await build({
 	entryPoints: {
 		main: resolve(apiRoot, "src/main.ts"),
 		"cleanup-abandoned-projects": resolve(
 			apiRoot,
 			"scripts/cleanup-abandoned-projects.ts",
+		),
+		"create-tenant-indexes": resolve(
+			apiRoot,
+			"scripts/create-tenant-indexes.ts",
 		),
 	},
 	outdir: distDir,

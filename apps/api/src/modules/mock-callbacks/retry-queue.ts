@@ -1,9 +1,13 @@
 import { setTimeout as sleep } from "node:timers/promises";
 import { limitsFor } from "@localman/shared";
 import { type Logger, createLogger } from "../../logger.js";
+import { acrossTenants, runInTenant } from "../../tenancy/tenant-context.js";
+import { tenantDirectory } from "../../tenancy/tenant-directory.js";
+import { storedTenantId } from "../../tenancy/tenant-scope-plugin.js";
 import { effectivePlan } from "../billing/plan-guard.js";
 import type { UsageMeter } from "../mock-runtime/usage-meter.js";
 import type { JobProject } from "./job-project.js";
+import { OwnerSlots, claimDueJob, takeExpiredJob } from "./outbound-claims.js";
 import {
 	OutboundJobModel,
 	type StoredOutboundJob,
@@ -40,6 +44,7 @@ const EXPIRE_PER_POLL = 50;
  * attempts, then settled (log line, last result) and deleted. A job left
  * `running` by a dead process is claimed again once its lock expires.
  * `stop` claims nothing more, aborts what is in flight and puts it back.
+ * Jobs of every tenant share the queue; each runs in its own tenant.
  */
 export class OutboundQueue {
 	private readonly deps: OutboundDeps;
@@ -48,7 +53,7 @@ export class OutboundQueue {
 	private readonly perOwner: number;
 	private meter: UsageMeter | undefined;
 	private readonly inflight = new Set<Promise<void>>();
-	private readonly running = new Map<string, number>();
+	private readonly slots = new OwnerSlots();
 	private abort = new AbortController();
 	private timer: NodeJS.Timeout | undefined;
 	private polling: Promise<void> | undefined;
@@ -91,15 +96,21 @@ export class OutboundQueue {
 
 	private async fill(): Promise<void> {
 		for (let i = 0; i < EXPIRE_PER_POLL && !this.abort.signal.aborted; i++) {
-			const job = await this.takeExpired();
+			const job = await takeExpiredJob();
 			if (!job) break;
-			await expireOutboundJob(job, this.logger);
+			await this.inTenantOf(job, () => expireOutboundJob(job, this.logger));
 		}
 		while (
 			!this.abort.signal.aborted &&
 			this.inflight.size < this.concurrency
 		) {
-			const job = await this.claim();
+			const lockedUntil = new Date(
+				Date.now() + this.deps.timeoutMs + LOCK_MARGIN_MS,
+			);
+			const job = await claimDueJob(
+				this.slots.busy(this.perOwner),
+				lockedUntil,
+			);
 			if (!job) return;
 			this.launch(job);
 		}
@@ -112,57 +123,38 @@ export class OutboundQueue {
 		return this.meter.admit(project.owner, limit, project.id.toHexString());
 	};
 
+	/** Runs `work` in the job's tenant; a job of no known tenant is skipped. */
+	private async inTenantOf(
+		job: StoredOutboundJob,
+		work: () => Promise<void>,
+	): Promise<void> {
+		const tenant = await tenantDirectory().byId(storedTenantId(job));
+		if (tenant) return runInTenant(tenant, work);
+		this.logger.warn({ jobId: job._id }, "Outbound job of an unknown tenant");
+	}
+
 	private launch(job: StoredOutboundJob): void {
-		const key = job.owner;
-		this.running.set(key, (this.running.get(key) ?? 0) + 1);
+		const release = this.slots.take({
+			tenantId: storedTenantId(job),
+			owner: job.owner,
+		});
 		const context = {
 			deps: this.deps,
 			signal: this.abort.signal,
 			logger: this.logger,
 			charge: this.charge,
 		};
-		const run: Promise<void> = runOutboundJob(job, context)
+		const run: Promise<void> = this.inTenantOf(job, () =>
+			runOutboundJob(job, context),
+		)
 			.catch((error: unknown) => {
 				this.logger.error({ err: error }, "Outbound delivery failed");
 			})
 			.finally(() => {
 				this.inflight.delete(run);
-				const left = (this.running.get(key) ?? 1) - 1;
-				if (left > 0) this.running.set(key, left);
-				else this.running.delete(key);
+				release();
 			});
 		this.inflight.add(run);
-	}
-
-	/** Takes (deletes) one job past its deadline that no worker holds. */
-	private takeExpired(): Promise<StoredOutboundJob | null> {
-		const now = new Date();
-		return OutboundJobModel.findOneAndDelete({
-			deadlineAt: { $lte: now },
-			$or: [{ state: "pending" }, { lockedUntil: { $lte: now } }],
-		}).lean<StoredOutboundJob>();
-	}
-
-	private claim(): Promise<StoredOutboundJob | null> {
-		const now = new Date();
-		const busy = [...this.running]
-			.filter(([, count]) => count >= this.perOwner)
-			.map(([owner]) => owner);
-		const lockedUntil = new Date(
-			now.getTime() + this.deps.timeoutMs + LOCK_MARGIN_MS,
-		);
-		return OutboundJobModel.findOneAndUpdate(
-			{
-				$or: [
-					{ state: "pending", nextAt: { $lte: now } },
-					{ state: "running", lockedUntil: { $lte: now } },
-				],
-				deadlineAt: { $gt: now },
-				...(busy.length > 0 ? { owner: { $nin: busy } } : {}),
-			},
-			{ $set: { state: "running", lockedUntil } },
-			{ sort: { nextAt: 1 }, returnDocument: "after" },
-		).lean<StoredOutboundJob>();
 	}
 
 	/**
@@ -175,7 +167,10 @@ export class OutboundQueue {
 			await settleTracked();
 			await this.poll();
 			await Promise.allSettled([...this.inflight]);
-			if ((await OutboundJobModel.countDocuments()) === 0) return;
+			const left = await acrossTenants(() =>
+				OutboundJobModel.countDocuments().exec(),
+			);
+			if (left === 0) return;
 			await sleep(Math.min(this.pollMs, 20));
 		}
 		throw new Error("The outbound queue did not drain in time");

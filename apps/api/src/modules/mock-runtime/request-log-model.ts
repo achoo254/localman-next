@@ -1,5 +1,6 @@
 import type { HeaderEntry } from "@localman/shared/api-client";
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /** Who answered a logged request (`inbox`, `callback`: outbound deliveries). */
 export const REQUEST_LOG_SOURCES = [
@@ -137,4 +138,5 @@ requestLogSchema.index(
 );
 requestLogSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
+requestLogSchema.plugin(tenantScopePlugin);
 export const RequestLogModel = mongoose.model("RequestLog", requestLogSchema);

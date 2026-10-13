@@ -1,4 +1,5 @@
 import type { Logger } from "../../logger.js";
+import { forEachTenant } from "../../tenancy/each-tenant.js";
 import { ProjectModel, type StoredProject } from "./project-model.js";
 import { deleteProjectCascade } from "./project-service.js";
 
@@ -64,7 +65,9 @@ export class TombstoneSweeper {
 
 	private run(): void {
 		if (this.running) return;
-		this.running = sweepTombstones(this.logger)
+		this.running = forEachTenant(this.logger, () =>
+			sweepTombstones(this.logger),
+		)
 			.then(
 				() => undefined,
 				(error: unknown) => {

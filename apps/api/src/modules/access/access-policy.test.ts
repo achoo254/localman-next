@@ -131,8 +131,8 @@ describe("element_roles indexes and claims", () => {
 		const names = (await ElementRoleModel.collection.indexes()).map(
 			(index) => index.name,
 		);
-		expect(names).toContain("elementType_1_elementId_1_createdAt_1");
-		expect(names).not.toContain("email_1");
+		expect(names).toContain("tenantId_1_elementType_1_elementId_1_createdAt_1");
+		expect(names).not.toContain("tenantId_1_email_1");
 	});
 });
 

@@ -3,8 +3,12 @@ import { backfillExampleSearchNames } from "./modules/collections/example-search
 import { CollectionTrashJob } from "./modules/collections/trash-purge-job.js";
 import { TombstoneSweeper } from "./modules/projects/tombstone-sweeper.js";
 import { TrialReminderJob } from "./modules/trial/trial-reminders.js";
+import { forEachTenant } from "./tenancy/each-tenant.js";
 
-/** The periodic jobs of the API process, started and stopped together. */
+/**
+ * The periodic jobs of the API process, started and stopped together.
+ * Each run goes through every tenant in turn.
+ */
 export interface BackgroundJobs {
 	start(): void;
 	/** Clears the timers and waits for running work (before Mongo closes). */
@@ -19,13 +23,15 @@ export function createBackgroundJobs(logger: Logger): BackgroundJobs {
 	// Collections past their days in the trash are deleted for good.
 	const collectionTrash = new CollectionTrashJob(logger);
 	// Once per start: older examples get the folded name search uses.
-	let backfill: Promise<number> | undefined;
+	let backfill: Promise<void> | undefined;
 	return {
 		start() {
 			tombstoneSweeper.start();
 			trialReminders.start();
 			collectionTrash.start();
-			backfill ??= backfillExampleSearchNames(logger);
+			backfill ??= forEachTenant(logger, () =>
+				backfillExampleSearchNames(logger),
+			);
 		},
 		async stop() {
 			await Promise.all([

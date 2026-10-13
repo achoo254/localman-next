@@ -1,11 +1,16 @@
 import type { Logger } from "../../logger.js";
 import {
+	type LocalmanTenant,
+	currentTenant,
+	runInTenant,
+} from "../../tenancy/tenant-context.js";
+import {
 	incrementUsage,
 	readUsage,
 	yyyymmOf,
 } from "../billing/usage-counter-model.js";
 import { ProjectActivity } from "./project-activity.js";
-import { type QuotaWarning, crossedThresholds } from "./quota-warnings.js";
+import { type QuotaWarning, sendCrossedWarnings } from "./quota-warnings.js";
 
 /** How often counted requests are written to `usage_counters`. */
 export const USAGE_FLUSH_INTERVAL_MS = 5_000;
@@ -13,6 +18,8 @@ export const USAGE_FLUSH_INTERVAL_MS = 5_000;
 const IDLE_MS = 10 * 60_000;
 
 interface OwnerMonth {
+	/** Counters are flushed on a timer, outside the request's tenant. */
+	readonly tenant: LocalmanTenant;
 	readonly owner: string;
 	/** An instant inside the month, for `incrementUsage`. */
 	readonly at: Date;
@@ -70,8 +77,10 @@ export class UsageMeter {
 		projectId?: string,
 	): Promise<boolean> {
 		const at = this.now();
-		const key = `${owner}:${yyyymmOf(at)}`;
-		const loaded = this.months.get(key) ?? (await this.load(key, owner, at));
+		const tenant = currentTenant();
+		const key = `${tenant.id}:${owner}:${yyyymmOf(at)}`;
+		const loaded =
+			this.months.get(key) ?? (await this.load(key, tenant, owner, at));
 		// From here on nothing awaits: the entry counted is the one a flush
 		// sees. If a flush dropped it while this call waited, it comes back.
 		const month = this.months.get(key) ?? loaded;
@@ -81,17 +90,23 @@ export class UsageMeter {
 		const used = month.stored + month.sending + month.pending;
 		if (limit !== null && used >= limit) return false;
 		month.pending += 1;
-		if (projectId !== undefined) this.activity.record(projectId, at);
+		if (projectId !== undefined) this.activity.record(tenant, projectId, at);
 		return true;
 	}
 
 	/** Reads the stored month once; concurrent first requests share it. */
-	private load(key: string, owner: string, at: Date): Promise<OwnerMonth> {
+	private load(
+		key: string,
+		tenant: LocalmanTenant,
+		owner: string,
+		at: Date,
+	): Promise<OwnerMonth> {
 		const known = this.loading.get(key);
 		if (known) return known;
 		const loading = readUsage(owner, at)
 			.then(
 				(totals): OwnerMonth => ({
+					tenant,
 					owner,
 					at,
 					stored: totals.mockRequests,
@@ -128,7 +143,9 @@ export class UsageMeter {
 	private async flushAll(): Promise<void> {
 		await this.activity.flush();
 		for (const month of [...this.months.values()]) {
-			if (month.pending > 0) await this.send(month);
+			if (month.pending > 0) {
+				await runInTenant(month.tenant, () => this.send(month));
+			}
 		}
 		// Synchronous with admits: an entry dropped here has nothing pending.
 		const now = this.now().getTime();
@@ -158,28 +175,12 @@ export class UsageMeter {
 		// Moved from "sending" to "stored" at once, so admits never count it twice.
 		month.sending -= by;
 		month.stored = total;
-		await this.warnCrossed(month, total - by, total);
-	}
-
-	private async warnCrossed(
-		month: OwnerMonth,
-		before: number,
-		after: number,
-	): Promise<void> {
-		for (const threshold of crossedThresholds(month.limit, before, after)) {
-			try {
-				await this.options.warn(month.owner, {
-					threshold,
-					limit: month.limit ?? 0,
-					month: yyyymmOf(month.at),
-				});
-			} catch (error) {
-				this.options.logger.error(
-					{ err: error, threshold },
-					"Quota warning failed",
-				);
-			}
-		}
+		await sendCrossedWarnings(this.options, month.owner, {
+			limit: month.limit,
+			month: yyyymmOf(month.at),
+			before: total - by,
+			after: total,
+		});
 	}
 
 	/** Flushes every `USAGE_FLUSH_INTERVAL_MS` until `stop`. */

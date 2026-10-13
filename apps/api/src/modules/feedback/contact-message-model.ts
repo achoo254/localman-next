@@ -7,6 +7,7 @@ import {
 	type ContactStatus,
 } from "@localman/shared";
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * Messages left through the "Góp ý / Liên hệ" form. They share the
@@ -39,6 +40,7 @@ const contactMessageSchema = new Schema(
 );
 contactMessageSchema.index({ type: 1, status: 1, createdAt: -1 });
 
+contactMessageSchema.plugin(tenantScopePlugin);
 export const ContactMessageModel = mongoose.model(
 	"ContactMessage",
 	contactMessageSchema,

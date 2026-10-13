@@ -23,9 +23,9 @@ Các internal package `@localman/*` là package chỉ có source TypeScript: `ex
 apps/api/src/main.ts
   ├─ loadEnv()            zod validate biến môi trường, sai thì log fatal và exit 1
   ├─ connectMongo()       không kết nối được thì exit 1 (fail-fast, PM2/Compose tự restart)
-  ├─ initModels()         chờ mọi model dựng xong index; index unique dựng lỗi thì exit 1
-  ├─ dashboard app :4000  request id + log → helmet → Localman MCP (/mcp, /.well-known/oauth-protected-resource) → CSRF guard → với route có `bodyLimit`: kiểm phiên (ẩn danh 401 trước khi đọc body) rồi json theo route → json 100kb → /auth/*, /internal/audit-events → /api/v1/openapi.json → no-store + router từ registry → /healthz → 404 → error handler
-  ├─ mock app      :4100  request id + log → helmet (CORP cross-origin, không CSP) → CSP sandbox + nosniff → CORS (preflight 204) → đọc secret → rate limit → json 100kb → mock router → /healthz → 404 → error handler
+  ├─ migrateToTenants()   gắn tenant chính cho document cũ, chờ mọi model dựng xong index (index unique dựng lỗi thì exit 1), bỏ index cũ đã có bản `tenantId` đứng đầu
+  ├─ dashboard app :4000  request id + log → tenant của Host (421 nếu không có) → helmet → Localman MCP (/mcp, /.well-known/oauth-protected-resource) → CSRF guard → với route có `bodyLimit`: kiểm phiên (ẩn danh 401 trước khi đọc body) rồi json theo route → json 100kb → /auth/*, /internal/audit-events → /api/v1/openapi.json → no-store + router từ registry → /healthz → 404 → error handler
+  ├─ mock app      :4100  request id + log → tenant của Host → helmet (CORP cross-origin, không CSP) → CSP sandbox + nosniff → CORS (preflight 204) → đọc secret → rate limit → json 100kb → mock router → /healthz → 404 → error handler
   └─ TombstoneSweeper     dọn ngay rồi mỗi 10 phút các project xoá dở (xem Projects)
 ```
 
@@ -297,7 +297,9 @@ Ngoài biến nền tảng, `apps/api/src/config/feature-env.ts` đọc `MOCK_BA
 
 ## Dữ liệu
 
-MongoDB 7 chạy dạng single-node replica set (`rs0`), vì dữ liệu resource được thay trong transaction. File `docker-compose.yml` dựng sẵn và tự `rs.initiate` ở lần chạy đầu. Test dùng `MongoMemoryReplSet` một node (wiredTiger) chung cho cả lượt chạy, mỗi file test một database.
+MongoDB 7 chạy dạng single-node replica set (`rs0`), vì dữ liệu resource được thay trong transaction.
+
+Mọi collection thuộc một tenant (`tenantId`, `docs/decisions/0003-tenant-scoped-data.md`): plugin `tenancy/tenant-scope-plugin.ts` lọc và đóng dấu theo tenant trong ngữ cảnh (`tenancy/tenant-context.ts`), mọi index trừ TTL đứng đầu bằng `tenantId`. Bộ đếm, log request và job nền giữ tenant của từng mục và ghi trong tenant đó. File `docker-compose.yml` dựng sẵn và tự `rs.initiate` ở lần chạy đầu. Test dùng `MongoMemoryReplSet` một node (wiredTiger) chung cho cả lượt chạy, mỗi file test một database.
 
 ## Domain
 

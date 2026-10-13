@@ -1,3 +1,4 @@
+import type { Logger } from "../../logger.js";
 import type { NotificationService } from "../notifications/notification-service.js";
 
 /** Shares of the monthly quota that send the owner a warning. */
@@ -60,4 +61,42 @@ export function notifyQuotaWarning(
 	return async (owner, warning) => {
 		await service().notify(owner, quotaWarningMessage(warning));
 	};
+}
+
+/** One flush's move of a counter, from `before` to `after` requests. */
+export interface CounterMove {
+	readonly limit: number | null;
+	/** `YYYYMM` of the counted month. */
+	readonly month: string;
+	readonly before: number;
+	readonly after: number;
+}
+
+/**
+ * Sends `owner` a warning for each threshold the move crossed; a failed
+ * warning is logged and the others are still sent.
+ */
+export async function sendCrossedWarnings(
+	sender: {
+		readonly warn: (owner: string, warning: QuotaWarning) => Promise<void>;
+		readonly logger: Logger;
+	},
+	owner: string,
+	move: CounterMove,
+): Promise<void> {
+	for (const threshold of crossedThresholds(
+		move.limit,
+		move.before,
+		move.after,
+	)) {
+		try {
+			await sender.warn(owner, {
+				threshold,
+				limit: move.limit ?? 0,
+				month: move.month,
+			});
+		} catch (error) {
+			sender.logger.error({ err: error, threshold }, "Quota warning failed");
+		}
+	}
 }

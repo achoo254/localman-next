@@ -5,6 +5,7 @@ import type {
 } from "@localman/shared/api-client";
 import type { Operation } from "fast-json-patch";
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * One change of a collection, written in the transaction of the change:
@@ -61,6 +62,7 @@ revisionSchema.index(
 	{ name: "trimmed_by_seq", partialFilterExpression: { trimmed: true } },
 );
 
+revisionSchema.plugin(tenantScopePlugin);
 export const CollectionRevisionModel = mongoose.model(
 	"CollectionRevision",
 	revisionSchema,

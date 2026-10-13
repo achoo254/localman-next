@@ -1,6 +1,7 @@
 import { OperationError } from "@localman/operations";
 import { type JsonObject, MAX_RECORDS_PER_RESOURCE } from "@localman/shared";
 import type { ClientSession } from "mongoose";
+import { currentTenantId } from "../../tenancy/tenant-context.js";
 import { inProjectTransaction } from "../projects/project-lock.js";
 import { RecordModel, toRecordView } from "../resources/record-model.js";
 import {
@@ -82,8 +83,14 @@ export async function createRecord(
 				: data,
 		};
 		const bytes = await checkedBytesDelta(resource, record, null, session);
+		// Raw driver write (no casting of user keys): tenantId set by hand.
 		await RecordModel.collection.insertOne(
-			{ ...record, resourceId: resource._id, projectId: resource.projectId },
+			{
+				...record,
+				resourceId: resource._id,
+				projectId: resource.projectId,
+				tenantId: currentTenantId(),
+			},
 			{ session },
 		);
 		await ResourceModel.updateOne(
@@ -118,7 +125,7 @@ export async function updateRecord(
 		const bytes = await checkedBytesDelta(resource, updated, record, session);
 		// The whole `data` is replaced: no update path is built from user keys.
 		await RecordModel.collection.updateOne(
-			{ _id: record._id },
+			{ _id: record._id, tenantId: currentTenantId() },
 			{ $set: { data: updated.data } },
 			{ session },
 		);

@@ -1,6 +1,7 @@
 import { parseArgs } from "node:util";
 import type { PlanId } from "@localman/shared";
 import type { Logger } from "../../logger.js";
+import { TENANT_OPTION, tenantIdArg } from "../../tenancy/tenant-arg.js";
 import { effectivePlan } from "../billing/plan-guard.js";
 import { UserModel } from "../users/user-model.js";
 import { type ActivitySource, projectActivities } from "./project-activity.js";
@@ -17,17 +18,23 @@ const MAX_IDLE_DAYS = 3650;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export interface CleanupArgs {
+	/** Tenant whose projects are looked at (`--tenant`, primary by default). */
+	readonly tenantId: string;
 	readonly idleDays: number;
 	/** Delete for real; without it the run only lists (dry run). */
 	readonly apply: boolean;
 }
 
-/** `[--days N] [--apply]`; throws a usage message on anything else. */
+/** `[--tenant id] [--days N] [--apply]`; throws a usage message on anything else. */
 export function parseCleanupArgs(argv: readonly string[]): CleanupArgs {
 	const { values } = parseArgs({
 		// pnpm may forward the `--` separator itself.
 		args: argv.filter((arg) => arg !== "--"),
-		options: { days: { type: "string" }, apply: { type: "boolean" } },
+		options: {
+			days: { type: "string" },
+			apply: { type: "boolean" },
+			...TENANT_OPTION,
+		},
 		strict: true,
 	});
 	const days = values.days ?? String(DEFAULT_IDLE_DAYS);
@@ -35,7 +42,11 @@ export function parseCleanupArgs(argv: readonly string[]): CleanupArgs {
 	if (!(idleDays >= 1 && idleDays <= MAX_IDLE_DAYS)) {
 		throw new Error(`--days must be a whole number from 1 to ${MAX_IDLE_DAYS}`);
 	}
-	return { idleDays, apply: values.apply === true };
+	return {
+		tenantId: tenantIdArg(values.tenant),
+		idleDays,
+		apply: values.apply === true,
+	};
 }
 
 /** A live project of a Free owner without activity in the window. */

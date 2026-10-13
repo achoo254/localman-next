@@ -1,5 +1,6 @@
 import type { EnvironmentColor } from "@localman/shared/api-client";
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 import { type StoredVariable, storedVariableSchema } from "./variable-store.js";
 
 /**
@@ -26,6 +27,7 @@ const environmentSchema = new Schema(
 );
 environmentSchema.index({ workspaceId: 1, name: 1 });
 
+environmentSchema.plugin(tenantScopePlugin);
 export const EnvironmentModel = mongoose.model(
 	"Environment",
 	environmentSchema,

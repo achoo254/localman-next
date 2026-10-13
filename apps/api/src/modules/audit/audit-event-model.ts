@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import { isDuplicateKeyError } from "../../db/mongo-errors.js";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /** The IdP keeps delivered events 30 days; so does Localman. */
 const RETENTION_SECONDS = 30 * 24 * 60 * 60;
@@ -26,6 +27,7 @@ const auditEventSchema = new Schema(
 	{ collection: "audit_events", versionKey: false, minimize: false },
 );
 
+auditEventSchema.plugin(tenantScopePlugin);
 export const AuditEventModel = mongoose.model("AuditEvent", auditEventSchema);
 
 export async function wasAuditEventReceived(jti: string): Promise<boolean> {

@@ -8,11 +8,7 @@ import {
 	runtimeSettingsFromEnv,
 } from "./config/runtime-settings.js";
 import { createDashboardApp } from "./dashboard-server.js";
-import {
-	connectMongo,
-	disconnectMongo,
-	initModels,
-} from "./db/connect-mongo.js";
+import { connectMongo, disconnectMongo } from "./db/connect-mongo.js";
 import { closeServer } from "./http/close-server.js";
 import { runShutdownSteps, shutdownSteps } from "./lib/shutdown-sequence.js";
 import { type Logger, createLogger } from "./logger.js";
@@ -37,6 +33,8 @@ import {
 	type NotificationService,
 	createNotificationService,
 } from "./modules/notifications/notification-service.js";
+import { configurePrimaryTenant } from "./tenancy/primary-tenant.js";
+import { migrateToTenants } from "./tenancy/tenant-migration.js";
 
 /** Budget of the whole shutdown (`runShutdownSteps` cuts it there). */
 const SHUTDOWN_TIMEOUT_MS = 10_000;
@@ -144,9 +142,11 @@ process.on("uncaughtException", (error) => {
 // supervisor (PM2, Compose) restarts the process once the database is back.
 try {
 	await connectMongo(env.MONGO_URI, logger);
-	// Fail fast when an index (unique invariants) cannot be built.
-	await initModels();
+	// Fail fast when an index (unique invariants) cannot be built; old
+	// documents get the primary tenant first.
+	await migrateToTenants(logger);
 	configureRuntime(runtimeSettingsFromEnv(env));
+	configurePrimaryTenant(env);
 	notifications = createNotificationService(env, logger);
 	setNotificationService(notifications);
 	const auth = createAuthModule(authSettingsFromEnv(env), logger);

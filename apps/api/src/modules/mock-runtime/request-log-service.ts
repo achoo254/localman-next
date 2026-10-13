@@ -1,5 +1,13 @@
 import type { Types } from "mongoose";
 import { type Logger, createLogger } from "../../logger.js";
+import { groupByTenant } from "../../tenancy/group-by-tenant.js";
+import {
+	type LocalmanTenant,
+	acrossTenants,
+	findCurrentTenant,
+	runInTenant,
+} from "../../tenancy/tenant-context.js";
+import { DroppedLines } from "./request-log-drops.js";
 import {
 	type RequestLogInput,
 	lineBytes,
@@ -11,29 +19,20 @@ import {
 	type StoredAttempt,
 	type StoredRequestLog,
 } from "./request-log-model.js";
+import {
+	LOG_FLUSH_INTERVAL_MS,
+	MAX_BUFFERED_BYTES,
+	MAX_BUFFERED_LINES,
+	type RequestLogOptions,
+	insertLines,
+} from "./request-log-options.js";
 import { LogTrimmer } from "./request-log-trim.js";
 
-/** How often buffered lines are written to `request_logs`. */
-export const LOG_FLUSH_INTERVAL_MS = 2_000;
-/** Lines held in memory (buffered or being written) at most. */
-export const MAX_BUFFERED_LINES = 5_000;
-/** Bytes of those lines (`lineBytes`) at most; past either cap new lines are dropped. */
-export const MAX_BUFFERED_BYTES = 32 * 1024 * 1024;
-/** Dropped lines are reported in one warning at most this often. */
-const DROP_WARNING_EVERY_MS = 60_000;
-
-export interface RequestLogOptions {
-	readonly maxBufferedLines?: number;
-	readonly maxBufferedBytes?: number;
-	/** Lines one project keeps in Mongo (`MAX_LINES_PER_PROJECT`). */
-	readonly maxLinesPerProject?: number;
-	readonly trimEveryMs?: number;
-	/** Writes a batch; `insertMany` on `request_logs` by default. */
-	readonly write?: (lines: StoredRequestLog[]) => Promise<unknown>;
+interface BufferedLine {
+	/** Lines are written on a timer, outside the request's tenant. */
+	readonly tenant: LocalmanTenant;
+	readonly line: StoredRequestLog;
 }
-
-const insertLines = (lines: StoredRequestLog[]) =>
-	RequestLogModel.insertMany(lines, { ordered: false, lean: true });
 
 /**
  * Request log of the mock runtime, the webhook inbox and mock callbacks.
@@ -47,11 +46,10 @@ const insertLines = (lines: StoredRequestLog[]) =>
  * project is cut back to its newest `MAX_LINES_PER_PROJECT` lines.
  */
 export class RequestLogService {
-	private buffer: StoredRequestLog[] = [];
+	private buffer: BufferedLine[] = [];
 	private bufferBytes = 0;
 	private writing = { lines: 0, bytes: 0 };
-	private dropped = 0;
-	private lastDropWarning = 0;
+	private readonly dropped = new DroppedLines();
 	private readonly live = new LogListeners((error) =>
 		this.logger.warn({ err: error }, "Request log listener failed"),
 	);
@@ -96,23 +94,20 @@ export class RequestLogService {
 		const bytes = lineBytes(line);
 		const lines = this.buffer.length + this.writing.lines;
 		if (lines >= this.maxLines || this.heldBytes + bytes > this.maxBytes) {
-			this.dropped += 1;
-			this.warnDropped();
+			this.dropped.add();
+			this.dropped.report(this.logger);
 			void this.flush();
 			return line;
 		}
-		this.buffer.push(line);
+		const tenant = findCurrentTenant();
+		if (!tenant) {
+			this.logger.error("Request log line outside a tenant dropped");
+			return line;
+		}
+		this.buffer.push({ tenant, line });
 		this.bufferBytes += bytes;
 		if (this.bufferBytes >= this.maxBytes / 4) void this.flush();
 		return line;
-	}
-
-	private warnDropped(now = Date.now()): void {
-		const quiet = now - this.lastDropWarning < DROP_WARNING_EVERY_MS;
-		if (this.dropped === 0 || quiet) return;
-		this.logger.warn({ lines: this.dropped }, "Request log lines dropped");
-		this.dropped = 0;
-		this.lastDropWarning = now;
 	}
 
 	/**
@@ -161,8 +156,11 @@ export class RequestLogService {
 			this.buffer = [];
 			this.bufferBytes = 0;
 			try {
-				await this.write(batch);
-				for (const line of batch) this.trimmer.note(line.projectId);
+				for (const { tenant, entries } of groupByTenant(batch)) {
+					const lines = entries.map(({ line }) => line);
+					await runInTenant(tenant, () => this.write(lines));
+					for (const line of lines) this.trimmer.note(line.projectId);
+				}
 			} catch (error) {
 				// Lines of a failed write are dropped: the log is best effort.
 				this.logger.error(
@@ -174,10 +172,11 @@ export class RequestLogService {
 				this.writing = { lines: 0, bytes: 0 };
 			}
 		}
-		await this.trimmer.run().catch((error: unknown) => {
+		// Project ids are unique across tenants: trimming needs no tenant.
+		await acrossTenants(() => this.trimmer.run()).catch((error: unknown) => {
 			this.logger.error({ err: error }, "Request log trim failed");
 		});
-		this.warnDropped();
+		this.dropped.report(this.logger);
 	}
 
 	/** Flushes every `LOG_FLUSH_INTERVAL_MS` until `stop`. */

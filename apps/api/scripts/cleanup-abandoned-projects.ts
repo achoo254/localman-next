@@ -4,6 +4,7 @@
  * was ever recorded):
  *   pnpm --filter @localman/api cleanup:abandoned [--days 90]          # dry run
  *   pnpm --filter @localman/api cleanup:abandoned --days 90 --apply   # delete
+ * `--tenant <id>` picks the tenant (default: primary, hoandat.com).
  * Reads the API environment (same validation as the server) and logs JSON
  * lines with pino; never the Mongo URI or emails. Deletion goes through
  * the regular project cascade (tombstone, dependents, document). Exit
@@ -20,6 +21,7 @@ import {
 // Loads every module that registers project dependents (resources,
 // records, collaborators…), so the cascade removes all of them.
 import "../src/operations/registry.js";
+import { runInTenantData } from "../src/tenancy/tenant-context.js";
 
 const bootLogger = createLogger("info");
 
@@ -46,7 +48,9 @@ const logger = createLogger(env.LOG_LEVEL);
 let exitCode = 0;
 try {
 	await connectMongo(env.MONGO_URI, logger);
-	const summary = await runAbandonedCleanup(args, logger);
+	const summary = await runInTenantData(args.tenantId, () =>
+		runAbandonedCleanup(args, logger),
+	);
 	if (summary.failed > 0) exitCode = 1;
 } catch (error) {
 	logger.fatal({ err: error }, "Abandoned project cleanup failed");

@@ -5,6 +5,7 @@ import {
 	type WorkspaceVisibility,
 } from "@localman/shared/access";
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * A place for collections and environments. Every user has exactly one
@@ -30,6 +31,7 @@ workspaceSchema.index(
 );
 workspaceSchema.index({ ownerId: 1, type: 1 });
 
+workspaceSchema.plugin(tenantScopePlugin);
 export const WorkspaceModel = mongoose.model("Workspace", workspaceSchema);
 
 export interface StoredWorkspace {

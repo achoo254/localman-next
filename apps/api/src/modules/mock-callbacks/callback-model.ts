@@ -1,5 +1,6 @@
 import type { HeaderEntry } from "@localman/shared/api-client";
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 import type { CallbackEvent } from "../mock-runtime/request-log-model.js";
 import { registerProjectDependent } from "../projects/project-dependents.js";
 import { registerResourceDependent } from "../resources/resource-dependents.js";
@@ -61,6 +62,7 @@ const callbackConfigSchema = new Schema(
 callbackConfigSchema.index({ resourceId: 1 }, { unique: true });
 callbackConfigSchema.index({ projectId: 1 });
 
+callbackConfigSchema.plugin(tenantScopePlugin);
 export const CallbackConfigModel = mongoose.model(
 	"CallbackConfig",
 	callbackConfigSchema,

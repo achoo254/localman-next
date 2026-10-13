@@ -1,4 +1,5 @@
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * A mock project. `secret` is the public subdomain of its mock runtime
@@ -59,6 +60,7 @@ projectSchema.index(
 	{ partialFilterExpression: { deletingAt: { $exists: true } } },
 );
 
+projectSchema.plugin(tenantScopePlugin);
 export const ProjectModel = mongoose.model("Project", projectSchema);
 
 /** `upstream` as stored; read through `upstreamOf` (mock runtime). */

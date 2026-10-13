@@ -5,6 +5,7 @@ import type {
 	RequestScripts,
 } from "@localman/shared/api-client";
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * A folder or request of a collection, one record each, so a drag and
@@ -47,6 +48,7 @@ collectionNodeSchema.index({ collectionId: 1, parentId: 1, order: 1 });
 // Search scans the folded names in the index, not the documents.
 collectionNodeSchema.index({ collectionId: 1, searchName: 1 });
 
+collectionNodeSchema.plugin(tenantScopePlugin);
 export const CollectionNodeModel = mongoose.model(
 	"CollectionNode",
 	collectionNodeSchema,

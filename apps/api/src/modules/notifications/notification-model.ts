@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 import { NOTIFICATION_TYPES } from "./notification-events.js";
 
 /** In-app notifications are deleted this long after they were created. */
@@ -36,6 +37,7 @@ const notificationSchema = new Schema(
 notificationSchema.index({ userSub: 1, _id: -1 });
 notificationSchema.index({ userSub: 1, readAt: 1 });
 
+notificationSchema.plugin(tenantScopePlugin);
 export const NotificationModel = mongoose.model(
 	"Notification",
 	notificationSchema,

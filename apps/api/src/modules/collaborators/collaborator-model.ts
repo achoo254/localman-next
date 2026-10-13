@@ -1,4 +1,5 @@
 import mongoose, { type PipelineStage, Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 export type CollaboratorStatus = "pending" | "accepted";
 
@@ -69,6 +70,7 @@ collaboratorSchema.index(
 	},
 );
 
+collaboratorSchema.plugin(tenantScopePlugin);
 export const CollaboratorModel = mongoose.model(
 	"Collaborator",
 	collaboratorSchema,

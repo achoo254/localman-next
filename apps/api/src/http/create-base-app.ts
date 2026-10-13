@@ -3,6 +3,8 @@ import express, { type Express, type RequestHandler } from "express";
 import helmet, { type HelmetOptions } from "helmet";
 import { getDbState } from "../db/connect-mongo.js";
 import type { Logger } from "../logger.js";
+import { tenantDirectory } from "../tenancy/tenant-directory.js";
+import { tenantScope } from "../tenancy/tenant-scope-middleware.js";
 import { createErrorHandler, notFoundHandler } from "./error-handler.js";
 import { type DescribeRoute, requestLog } from "./request-log.js";
 
@@ -47,8 +49,8 @@ export interface BaseAppOptions {
 }
 
 /**
- * Shared shell of both HTTP servers: request id and log line, security
- * headers, JSON body limit, `/healthz`, 404 and the error handler.
+ * Shared shell of both HTTP servers: request id and log line, the
+ * tenant of the Host, security headers, JSON body limit, `/healthz`, 404 and the error handler.
  */
 export function createBaseApp({
 	logger,
@@ -63,6 +65,8 @@ export function createBaseApp({
 	app.disable("x-powered-by");
 	app.set("trust proxy", trustProxy);
 	app.use(requestLog(logger, describeRoute));
+	// Everything after runs in the tenant of the Host (421 for no tenant).
+	app.use(tenantScope(tenantDirectory));
 	app.use(helmet(helmetOptions));
 	for (const middleware of beforeBody) app.use(middleware);
 	for (const { method, path, limit, before = [] } of routeBodyLimits) {

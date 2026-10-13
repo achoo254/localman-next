@@ -1,6 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import mongoose, { Schema, type Types } from "mongoose";
 import { isDuplicateKeyError } from "../../db/mongo-errors.js";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 import { registerProjectDependent } from "../projects/project-dependents.js";
 
 /** Prefix of a Hosted Mock MCP token, so leaked tokens are recognizable. */
@@ -27,6 +28,7 @@ const mcpTokenSchema = new Schema(
 	{ collection: "mcp_tokens", timestamps: true, versionKey: false },
 );
 
+mcpTokenSchema.plugin(tenantScopePlugin);
 export const McpTokenModel = mongoose.model("McpToken", mcpTokenSchema);
 
 export interface StoredMcpToken {

@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import { isDuplicateKeyError } from "../../db/mongo-errors.js";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 import { saigonMonth } from "../../time/saigon-time.js";
 
 /** Monthly counters billed to the project owner. */
@@ -22,6 +23,7 @@ const usageCounterSchema = new Schema(
 );
 usageCounterSchema.index({ ownerSub: 1, yyyymm: 1 }, { unique: true });
 
+usageCounterSchema.plugin(tenantScopePlugin);
 export const UsageCounterModel = mongoose.model(
 	"UsageCounter",
 	usageCounterSchema,

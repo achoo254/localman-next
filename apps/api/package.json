@@ -11,6 +11,7 @@
 		"typecheck": "tsc --noEmit",
 		"set-user-plan": "tsx --env-file-if-exists=../../.env scripts/set-user-plan.ts",
 		"cleanup:abandoned": "tsx --env-file-if-exists=../../.env scripts/cleanup-abandoned-projects.ts",
+		"create-tenant-indexes": "tsx --env-file-if-exists=../../.env scripts/create-tenant-indexes.ts",
 		"load:mock": "tsx scripts/load-mock.ts",
 		"bench:mock-writes": "tsx scripts/bench-mock-writes.ts"
 	},

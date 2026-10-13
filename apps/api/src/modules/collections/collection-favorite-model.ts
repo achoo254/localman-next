@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /** A collection one user starred: it comes first in their sidebar. */
 const collectionFavoriteSchema = new Schema(
@@ -14,6 +15,7 @@ collectionFavoriteSchema.index(
 );
 collectionFavoriteSchema.index({ collectionId: 1 });
 
+collectionFavoriteSchema.plugin(tenantScopePlugin);
 export const CollectionFavoriteModel = mongoose.model(
 	"CollectionFavorite",
 	collectionFavoriteSchema,

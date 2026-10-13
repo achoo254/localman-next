@@ -1,5 +1,6 @@
 import { OperationError } from "@localman/operations";
 import mongoose, { type ClientSession, Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 import { WorkspaceModel } from "./workspace-model.js";
 
 /**
@@ -18,6 +19,7 @@ const workspaceLockSchema = new Schema(
 	{ collection: "workspace_locks", versionKey: false },
 );
 
+workspaceLockSchema.plugin(tenantScopePlugin);
 const WorkspaceLockModel = mongoose.model("WorkspaceLock", workspaceLockSchema);
 
 async function bump(key: string, session: ClientSession): Promise<void> {

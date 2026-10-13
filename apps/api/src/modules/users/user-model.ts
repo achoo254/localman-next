@@ -1,5 +1,6 @@
 import { SUPPORTED_LOCALES } from "@localman/shared";
 import mongoose, { Schema } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * A Localman user, mirrored from the IdP claims at every sign-in and token
@@ -80,4 +81,5 @@ userSchema.index(
 	{ partialFilterExpression: { trialStartedAt: { $exists: true } } },
 );
 
+userSchema.plugin(tenantScopePlugin);
 export const UserModel = mongoose.model("User", userSchema);

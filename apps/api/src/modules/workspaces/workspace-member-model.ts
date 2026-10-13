@@ -1,5 +1,6 @@
 import { WORKSPACE_ROLES, type WorkspaceRole } from "@localman/shared/access";
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 export type WorkspaceMemberStatus = "pending" | "accepted";
 
@@ -57,6 +58,7 @@ workspaceMemberSchema.index(
 	},
 );
 
+workspaceMemberSchema.plugin(tenantScopePlugin);
 export const WorkspaceMemberModel = mongoose.model(
 	"WorkspaceMember",
 	workspaceMemberSchema,

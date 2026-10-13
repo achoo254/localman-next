@@ -1,4 +1,5 @@
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 import { OutboundJobModel } from "../mock-callbacks/outbound-job-model.js";
 import type { StoredDelivery } from "../mock-callbacks/outbound-send.js";
 import { registerProjectDependent } from "../projects/project-dependents.js";
@@ -60,6 +61,7 @@ const inboxSchema = new Schema(
 );
 inboxSchema.index({ projectId: 1, name: 1 }, { unique: true });
 
+inboxSchema.plugin(tenantScopePlugin);
 export const InboxModel = mongoose.model("WebhookInbox", inboxSchema);
 
 // Inboxes go with their project, waiting forwards too. A clone starts

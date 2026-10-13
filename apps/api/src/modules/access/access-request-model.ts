@@ -5,6 +5,7 @@ import {
 	type ShareableElementType,
 } from "@localman/shared/access";
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 export type AccessRequestStatus = "pending" | "approved" | "denied";
 
@@ -50,6 +51,7 @@ accessRequestSchema.index(
 	},
 );
 
+accessRequestSchema.plugin(tenantScopePlugin);
 export const AccessRequestModel = mongoose.model(
 	"AccessRequest",
 	accessRequestSchema,

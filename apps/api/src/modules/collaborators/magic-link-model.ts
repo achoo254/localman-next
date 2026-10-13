@@ -1,4 +1,5 @@
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * The reusable join link of a project: anyone signed in who opens it
@@ -21,6 +22,7 @@ const magicLinkSchema = new Schema(
 	{ collection: "magic_links", timestamps: true, versionKey: false },
 );
 
+magicLinkSchema.plugin(tenantScopePlugin);
 export const MagicLinkModel = mongoose.model("MagicLink", magicLinkSchema);
 
 export interface StoredMagicLink {

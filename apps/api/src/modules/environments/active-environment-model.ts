@@ -1,4 +1,5 @@
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * The environment a person uses in a workspace (the selector at the top
@@ -16,6 +17,7 @@ const activeEnvironmentSchema = new Schema(
 activeEnvironmentSchema.index({ userId: 1, workspaceId: 1 }, { unique: true });
 activeEnvironmentSchema.index({ environmentId: 1 });
 
+activeEnvironmentSchema.plugin(tenantScopePlugin);
 export const ActiveEnvironmentModel = mongoose.model(
 	"ActiveEnvironment",
 	activeEnvironmentSchema,

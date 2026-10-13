@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { TEST_TENANT } from "../../test-support/test-tenant.js";
 import {
 	ClientSettingsModel,
 	MAX_SECRET_PROXY_HOSTS,
@@ -83,6 +84,7 @@ describe("client settings: secret consent and tunnel switches", () => {
 
 	it("reads a mapping stored before the switch existed as enabled", async () => {
 		await ClientSettingsModel.collection.insertOne({
+			tenantId: TEST_TENANT.id,
 			userSub: ALICE,
 			tunnelMappings: [{ key: "localhost:8080", url: TUNNEL }],
 		});

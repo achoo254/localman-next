@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * One person's local value of a variable, by name, in one scope
@@ -25,6 +26,7 @@ localVariableValueSchema.index(
 // Deleting a scope removes everyone's values in it.
 localVariableValueSchema.index({ scope: 1 });
 
+localVariableValueSchema.plugin(tenantScopePlugin);
 export const LocalVariableValueModel = mongoose.model(
 	"LocalVariableValue",
 	localVariableValueSchema,

@@ -71,7 +71,7 @@ describe("abandoned project cleanup", () => {
 		const ids = await seed();
 		const logs = captureLogs();
 		const summary = await runAbandonedCleanup(
-			{ idleDays: DEFAULT_IDLE_DAYS, apply: false },
+			{ tenantId: "primary", idleDays: DEFAULT_IDLE_DAYS, apply: false },
 			logs.logger,
 			LATER,
 		);
@@ -99,7 +99,7 @@ describe("abandoned project cleanup", () => {
 		const ids = await seed();
 		const logs = captureLogs();
 		const summary = await runAbandonedCleanup(
-			{ idleDays: DEFAULT_IDLE_DAYS, apply: true },
+			{ tenantId: "primary", idleDays: DEFAULT_IDLE_DAYS, apply: true },
 			logs.logger,
 			LATER,
 		);
@@ -132,7 +132,7 @@ describe("abandoned project activity", () => {
 		);
 		const logs = captureLogs();
 		const summary = await runAbandonedCleanup(
-			{ idleDays: DEFAULT_IDLE_DAYS, apply: true },
+			{ tenantId: "primary", idleDays: DEFAULT_IDLE_DAYS, apply: true },
 			logs.logger,
 			LATER,
 		);
@@ -153,15 +153,30 @@ describe("abandoned project activity", () => {
 
 describe("parseCleanupArgs", () => {
 	it("defaults to a 90-day dry run and reads --days and --apply", () => {
-		expect(parseCleanupArgs([])).toEqual({ idleDays: 90, apply: false });
-		expect(parseCleanupArgs(["--", "--days", "30", "--apply"])).toEqual({
-			idleDays: 30,
-			apply: true,
+		expect(parseCleanupArgs([])).toEqual({
+			tenantId: "primary",
+			idleDays: 90,
+			apply: false,
 		});
+		expect(
+			parseCleanupArgs([
+				"--",
+				"--days",
+				"30",
+				"--apply",
+				"--tenant",
+				"ten_AAAAAAAAAAAAAAAA",
+			]),
+		).toEqual({ tenantId: "ten_AAAAAAAAAAAAAAAA", idleDays: 30, apply: true });
 	});
 
 	it("rejects bad values and unknown flags", () => {
-		for (const argv of [["--days", "0"], ["--days", "1.5"], ["--force"]]) {
+		for (const argv of [
+			["--days", "0"],
+			["--days", "1.5"],
+			["--force"],
+			["--tenant", "hoandat.com"],
+		]) {
 			expect(() => parseCleanupArgs(argv)).toThrow();
 		}
 	});

@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 import {
 	NOTIFICATION_EVENT_TYPES,
 	type NotificationEventType,
@@ -32,6 +33,7 @@ const notificationPreferencesSchema = new Schema(
 	},
 );
 
+notificationPreferencesSchema.plugin(tenantScopePlugin);
 const NotificationPreferencesModel = mongoose.model(
 	"NotificationPreferences",
 	notificationPreferencesSchema,

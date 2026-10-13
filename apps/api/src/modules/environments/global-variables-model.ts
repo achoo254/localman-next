@@ -1,4 +1,5 @@
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 import { type StoredVariable, storedVariableSchema } from "./variable-store.js";
 
 /**
@@ -20,6 +21,7 @@ const globalVariablesSchema = new Schema(
 );
 globalVariablesSchema.index({ workspaceId: 1 }, { unique: true });
 
+globalVariablesSchema.plugin(tenantScopePlugin);
 export const GlobalVariablesModel = mongoose.model(
 	"GlobalVariables",
 	globalVariablesSchema,

@@ -1,5 +1,6 @@
 import { OperationError } from "@localman/operations";
 import mongoose, { type ClientSession, Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 import { LIVE_PROJECT, ProjectModel } from "./project-model.js";
 
 /**
@@ -19,6 +20,7 @@ const resourceTreeLockSchema = new Schema(
 	{ collection: "resource_tree_locks", versionKey: false },
 );
 
+resourceTreeLockSchema.plugin(tenantScopePlugin);
 export const ResourceTreeLockModel = mongoose.model(
 	"ResourceTreeLock",
 	resourceTreeLockSchema,

@@ -1,4 +1,5 @@
 import mongoose, { type ClientSession, Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * A member the owner removed from a project. The magic link refuses this
@@ -19,6 +20,7 @@ const memberRemovalSchema = new Schema(
 );
 memberRemovalSchema.index({ projectId: 1, userSub: 1 }, { unique: true });
 
+memberRemovalSchema.plugin(tenantScopePlugin);
 export const MemberRemovalModel = mongoose.model(
 	"MemberRemoval",
 	memberRemovalSchema,

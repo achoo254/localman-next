@@ -5,6 +5,7 @@ import {
 	type ProInterestTeamSize,
 } from "@localman/shared";
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * Types this model stores. Contact messages (`type: "contact"`) share the
@@ -73,6 +74,7 @@ feedbackSchema.index(
 );
 feedbackSchema.index({ type: 1, createdAt: -1 });
 
+feedbackSchema.plugin(tenantScopePlugin);
 export const FeedbackModel = mongoose.model("Feedback", feedbackSchema);
 
 export interface StoredSubmission {

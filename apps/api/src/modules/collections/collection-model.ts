@@ -5,6 +5,7 @@ import type {
 	VariableEntry,
 } from "@localman/shared/api-client";
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * The root of a collection: its workspace, Markdown description and what
@@ -78,6 +79,7 @@ collectionSchema.index(
 	{ partialFilterExpression: { deletedAt: { $exists: true } } },
 );
 
+collectionSchema.plugin(tenantScopePlugin);
 export const CollectionModel = mongoose.model("Collection", collectionSchema);
 
 /** Filter of collections not in the trash. */

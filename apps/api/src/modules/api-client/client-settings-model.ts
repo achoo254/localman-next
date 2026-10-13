@@ -1,5 +1,6 @@
 import { ROUTE_MODES, type RouteMode } from "@localman/shared/api-client";
 import mongoose, { Schema } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /** Hosts pinned as "always send through the proxy" per user. */
 export const MAX_ROUTING_HOSTS = 200;
@@ -45,6 +46,7 @@ const clientSettingsSchema = new Schema(
 	{ collection: "client_settings", timestamps: true, versionKey: false },
 );
 
+clientSettingsSchema.plugin(tenantScopePlugin);
 export const ClientSettingsModel = mongoose.model(
 	"ClientSettings",
 	clientSettingsSchema,

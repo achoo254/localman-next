@@ -1,5 +1,6 @@
 import type { ApiRequestDraft, TabSource } from "@localman/shared/api-client";
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * An open tab of the API client with its unsaved request
@@ -26,6 +27,7 @@ const draftSchema = new Schema(
 draftSchema.index({ userSub: 1, tabId: 1 }, { unique: true });
 draftSchema.index({ userSub: 1, order: 1 });
 
+draftSchema.plugin(tenantScopePlugin);
 export const DraftModel = mongoose.model("ClientDraft", draftSchema);
 
 /** Lean record; `draft` passed `apiRequestDraftSchema` when written. */

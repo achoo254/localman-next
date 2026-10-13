@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * A signed-in browser. `_id` is the SHA-256 of the cookie value, so a
@@ -21,4 +22,5 @@ const sessionSchema = new Schema(
 	{ collection: "sessions", timestamps: true, versionKey: false },
 );
 
+sessionSchema.plugin(tenantScopePlugin);
 export const SessionModel = mongoose.model("Session", sessionSchema);

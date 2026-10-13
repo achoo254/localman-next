@@ -4,6 +4,7 @@ import {
 	OBJECT_ID_FIELD,
 } from "@localman/shared";
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * One record of a resource. `id` (the Object ID) and `parentRecordId` (the
@@ -26,6 +27,7 @@ recordSchema.index({ resourceId: 1, id: 1 }, { unique: true });
 recordSchema.index({ resourceId: 1, parentRecordId: 1 });
 recordSchema.index({ projectId: 1 });
 
+recordSchema.plugin(tenantScopePlugin);
 export const RecordModel = mongoose.model("Record", recordSchema);
 
 export interface StoredRecord {

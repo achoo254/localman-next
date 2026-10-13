@@ -1,5 +1,6 @@
 import { TRIAL_EXTENSION_GRACE_DAYS } from "@localman/shared";
 import type { Logger } from "../../logger.js";
+import { forEachTenant } from "../../tenancy/each-tenant.js";
 import { saigonDate } from "../../time/saigon-time.js";
 import type { NotificationEvent } from "../notifications/notification-events.js";
 import { getNotificationService } from "../notifications/notification-runtime.js";
@@ -134,11 +135,12 @@ export class TrialReminderJob {
 
 	private run(): void {
 		if (this.running) return;
-		this.running = sendTrialReminders(this.logger)
+		this.running = forEachTenant(this.logger, async () => {
+			const sent = await sendTrialReminders(this.logger);
+			if (sent > 0) this.logger.info({ sent }, "Trial reminders sent");
+		})
 			.then(
-				(sent) => {
-					if (sent > 0) this.logger.info({ sent }, "Trial reminders sent");
-				},
+				() => undefined,
 				(error: unknown) => {
 					this.logger.error({ err: error }, "Trial reminder run failed");
 				},

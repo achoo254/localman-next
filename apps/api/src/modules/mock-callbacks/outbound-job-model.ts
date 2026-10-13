@@ -1,5 +1,6 @@
 import type { HeaderEntry } from "@localman/shared/api-client";
 import mongoose, { Schema, Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 import type {
 	CallbackEvent,
 	StoredAttempt,
@@ -113,6 +114,7 @@ outboundJobSchema.index({ owner: 1 });
 outboundJobSchema.index({ deadlineAt: 1 });
 outboundJobSchema.index({ purgeAt: 1 }, { expireAfterSeconds: 0 });
 
+outboundJobSchema.plugin(tenantScopePlugin);
 export const OutboundJobModel = mongoose.model(
 	"OutboundJob",
 	outboundJobSchema,

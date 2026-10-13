@@ -24,6 +24,7 @@ Quy tắc:
 - Lỗi API theo dạng `{ error: { code, message } }`; không lộ stack ra client, không log secret.
 - Internal package `@localman/*` là source-only TS (`exports` trỏ vào `src/index.ts`); import tương đối dùng đuôi `.js` (NodeNext), trừ `apps/web` (Bundler).
 - TypeScript strict, không `any` (dùng `unknown` + type guard), không non-null assertion `!`, named exports, file kebab-case, ≤ 200 dòng.
+- **Dữ liệu theo tenant** (`docs/decisions/0003-tenant-scoped-data.md`): model mới gắn `schema.plugin(tenantScopePlugin)` sau mọi `schema.index` và trước `mongoose.model`. Không ghi thô qua `Model.collection` hay dùng `acrossTenants` ngoài danh sách của `tenant-models.test.ts`. Việc chạy ngoài request (timer, job) phải giữ tenant của mục và ghi trong `runInTenant`; job định kỳ đi qua `forEachTenant`. Lệnh vận hành mới nhận `--tenant`.
 - Kiến trúc tổng thể: `docs/system-architecture.md`.
 
 ## Tunelo

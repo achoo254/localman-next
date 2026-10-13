@@ -4,6 +4,7 @@ import type {
 	ResourceField,
 } from "@localman/shared";
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 const fieldSchema = new Schema(
 	{
@@ -84,6 +85,7 @@ const resourceSchema = new Schema(
 resourceSchema.index({ projectId: 1, parentId: 1, name: 1 }, { unique: true });
 resourceSchema.index({ ownerSub: 1, quotaSlot: 1 }, { unique: true });
 
+resourceSchema.plugin(tenantScopePlugin);
 export const ResourceModel = mongoose.model("Resource", resourceSchema);
 
 export interface StoredResource {

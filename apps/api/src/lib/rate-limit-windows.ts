@@ -3,6 +3,7 @@ import { isIPv4, isIPv6 } from "node:net";
 import mongoose, { Schema } from "mongoose";
 import type { RateLimitWindow } from "../config/runtime-settings.js";
 import { isDuplicateKeyError } from "../db/mongo-errors.js";
+import { tenantScopePlugin } from "../tenancy/tenant-scope-plugin.js";
 
 /**
  * Fixed-window hit counters, in Mongo so limits hold across processes and
@@ -19,6 +20,7 @@ const rateLimitSchema = new Schema(
 );
 rateLimitSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
+rateLimitSchema.plugin(tenantScopePlugin);
 export const RateLimitWindowModel = mongoose.model(
 	"RateLimitWindow",
 	rateLimitSchema,

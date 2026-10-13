@@ -121,6 +121,10 @@ seq 1 100 | xargs -P 20 -I % curl -s -o /dev/null -w '%{http_code}\n' "$MOCK_URL
 - Server: `pm2 status localman-api`, `pm2 logs localman-api --lines 50 --nostream`, `tail /var/log/nginx/localman-mock.access.log` (đường dẫn `/m/` hiện `[secret]`).
 - 429 `RATE_LIMITED` của form công khai sau khi mở form: theo dõi để chỉnh `feedbackRateLimit.perIp` nếu người dùng sau CGNAT bị chặn nhầm.
 
+## Index theo tenant
+
+Bundle có `api/create-tenant-indexes.mjs`; `activate-release.sh` chạy nó (user `localman`, env `/opt/localman/.env`) trước khi switch, lúc release cũ còn phục vụ: gắn `tenantId: "primary"` cho document chưa có và dựng mọi index có `tenantId` đứng đầu. Chạy lại được. Lỗi thì release mới không được kích hoạt. Index cũ (không có `tenantId`) do release mới gỡ khi khởi động, sau khi index thay thế đã có. Xem `docs/decisions/0003-tenant-scoped-data.md`.
+
 ## Dọn project bỏ hoang
 
 Bundle có thêm `api/cleanup-abandoned-projects.mjs`: project của chủ gói Free không có request mock trong N ngày (mặc định 90). Chạy bằng cùng Node, cùng user và cùng env file với pm2, **luôn dry-run trước**, đọc danh sách trong log, rồi mới `--apply`. Không có cron tự xoá.
@@ -131,7 +135,7 @@ runuser -u localman -- /opt/localman/runtime/node --env-file=/opt/localman/.env 
 runuser -u localman -- /opt/localman/runtime/node --env-file=/opt/localman/.env cleanup-abandoned-projects.mjs --days 90 --apply  # xoá
 ```
 
-Mã thoát: 0 xong, 1 có project xoá lỗi hoặc lỗi chạy, 2 sai tham số hoặc env. Nên chạy backup ngay trước `--apply`.
+Thêm `--tenant <id>` để chạy cho một tenant khác (mặc định `primary`, hoandat.com). Mã thoát: 0 xong, 1 có project xoá lỗi hoặc lỗi chạy, 2 sai tham số hoặc env. Nên chạy backup ngay trước `--apply`.
 
 ## Xoay token Cloudflare
 

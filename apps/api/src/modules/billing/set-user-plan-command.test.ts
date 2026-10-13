@@ -21,11 +21,22 @@ describe("parseSetUserPlanArgs", () => {
 				"2026-12-31",
 			]),
 		).toEqual({
+			tenantId: "primary",
 			user: { username: "dat" },
 			plan: "pro",
 			expiresAt: new Date("2026-12-31T16:59:59.999Z"),
 		});
-		expect(parseSetUserPlanArgs(["--sub", "acc_1", "--plan", "free"])).toEqual({
+		expect(
+			parseSetUserPlanArgs([
+				"--sub",
+				"acc_1",
+				"--plan",
+				"free",
+				"--tenant",
+				"ten_AAAAAAAAAAAAAAAA",
+			]),
+		).toEqual({
+			tenantId: "ten_AAAAAAAAAAAAAAAA",
 			user: { sub: "acc_1" },
 			plan: "free",
 			expiresAt: null,
@@ -65,6 +76,7 @@ describe("setUserPlan", () => {
 		});
 		const expiresAt = new Date("2026-12-31T16:59:59.999Z");
 		const pro = await setUserPlan({
+			tenantId: "primary",
 			user: { username: "dat" },
 			plan: "pro",
 			expiresAt,
@@ -76,6 +88,7 @@ describe("setUserPlan", () => {
 			planExpiresAt: expiresAt.toISOString(),
 		});
 		const free = await setUserPlan({
+			tenantId: "primary",
 			user: { sub: "acc_1" },
 			plan: "free",
 			expiresAt: null,
@@ -88,14 +101,24 @@ describe("setUserPlan", () => {
 
 	it("refuses unknown and ambiguous users", async () => {
 		await expect(
-			setUserPlan({ user: { sub: "nobody" }, plan: "pro", expiresAt: null }),
+			setUserPlan({
+				tenantId: "primary",
+				user: { sub: "nobody" },
+				plan: "pro",
+				expiresAt: null,
+			}),
 		).rejects.toThrow(/No user/);
 		await UserModel.create([
 			{ sub: "acc_a", username: "twin" },
 			{ sub: "acc_b", username: "twin" },
 		]);
 		await expect(
-			setUserPlan({ user: { username: "twin" }, plan: "pro", expiresAt: null }),
+			setUserPlan({
+				tenantId: "primary",
+				user: { username: "twin" },
+				plan: "pro",
+				expiresAt: null,
+			}),
 		).rejects.toThrow(/use --sub/);
 	});
 });

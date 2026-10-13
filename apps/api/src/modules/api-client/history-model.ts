@@ -3,6 +3,7 @@ import {
 	HISTORY_TTL_DAYS,
 } from "@localman/shared/api-client";
 import mongoose, { Schema, type Types } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /** How a request reached its target: the browser, the proxy, a tunnel. */
 export const HISTORY_ROUTES = ["direct", "proxy", "tunnel"] as const;
@@ -45,6 +46,7 @@ const historySchema = new Schema(
 // Newest first per user (cursor = _id), and the per-user cap.
 historySchema.index({ userSub: 1, _id: -1 });
 
+historySchema.plugin(tenantScopePlugin);
 export const HistoryModel = mongoose.model("ClientHistory", historySchema);
 
 /** Lean record; `draft` passed `apiRequestDraftSchema` when written. */
