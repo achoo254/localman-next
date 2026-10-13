@@ -1,6 +1,6 @@
 import { setTimeout as sleep } from "node:timers/promises";
 import type { Logger } from "../../logger.js";
-import type { OidcClient } from "./oidc-client.js";
+import type { OidcApi } from "./oidc-api.js";
 import { authUnavailableError, oauthErrorCode } from "./oidc-errors.js";
 import type { Session, SessionStore } from "./session-store.js";
 
@@ -12,7 +12,7 @@ const WAIT_STEP_MS = 150;
 
 export interface SessionRefresherOptions {
 	readonly store: SessionStore;
-	readonly oidc: OidcClient;
+	readonly oidc: OidcApi;
 	readonly logger: Logger;
 	/** Runs after a successful refresh (re-reads userinfo); errors are logged. */
 	readonly afterRefresh?: (session: Session) => Promise<void>;
@@ -74,7 +74,7 @@ export class SessionRefresher {
 			await store.destroyById(session.id);
 			return null;
 		}
-		let refreshed: Awaited<ReturnType<OidcClient["refresh"]>>;
+		let refreshed: Awaited<ReturnType<OidcApi["refresh"]>>;
 		try {
 			refreshed = await oidc.refresh(refreshToken);
 		} catch (error) {

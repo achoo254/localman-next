@@ -1,5 +1,6 @@
 import { type JWTVerifyGetKey, createRemoteJWKSet } from "jose";
 import * as oidc from "openid-client";
+import type { IdpTransport } from "./oidc-api.js";
 import { IdpUnavailableError } from "./oidc-errors.js";
 import { type TokenSet, toTokenSet } from "./token-set.js";
 
@@ -19,6 +20,8 @@ export interface OidcClientSettings {
 	readonly clientSecret: string;
 	/** Public origin of the dashboard; redirect URIs are built from it. */
 	readonly publicUrl: string;
+	/** How a tenant's IdP is reached; the issuer's public URL when absent. */
+	readonly transport?: IdpTransport;
 }
 
 export interface AuthorizationRequest {
@@ -59,6 +62,17 @@ export class OidcClient {
 	}
 
 	private async discover(): Promise<Discovered> {
+		const { transport } = this.settings;
+		if (transport) {
+			const config = new oidc.Configuration(
+				await transport.metadata(),
+				this.settings.clientId,
+				{ redirect_uris: [this.redirectUri] },
+				oidc.ClientSecretBasic(this.settings.clientSecret),
+			);
+			config[oidc.customFetch] = transport.fetch;
+			return { config, jwks: transport.jwks };
+		}
 		const issuer = new URL(this.settings.issuer);
 		const config = await oidc.discovery(
 			issuer,

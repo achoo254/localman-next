@@ -39,6 +39,7 @@ import {
 	registerResourceMetadataRoutes,
 	resourceMetadataUrlOf,
 } from "./mcp-resource-metadata.js";
+import { tenantMcpSettings } from "./mcp-tenant-settings.js";
 import { createOperationMcpServer } from "./operation-mcp-server.js";
 import { PrincipalEventBus } from "./principal-event-bus.js";
 import {
@@ -50,6 +51,7 @@ const SERVER_INFO = { name: "localman", version: "1.0.0" };
 
 export interface LocalmanMcpOptions {
 	/** `PUBLIC_URL`: the resource is `{PUBLIC_URL}/mcp`. */
+	/** The primary tenant's dashboard origin (others follow their domain). */
 	readonly publicUrl: string;
 	/** `OIDC_ISSUER`, advertised as the authorization server. */
 	readonly issuer: string;
@@ -67,9 +69,15 @@ export interface LocalmanMcpOptions {
 const principalKeyOf = (subject: string, clientId: string): string =>
 	`${subject} ${clientId}`;
 
-function assertAllowedOrigin(req: Request, allowed: ReadonlySet<string>) {
+function assertAllowedOrigin(
+	req: Request,
+	allowed: ReadonlySet<string>,
+	tenantOrigin: string,
+) {
 	const origin = req.headers.origin;
-	if (origin === undefined || allowed.has(origin)) return;
+	if (origin === undefined || allowed.has(origin) || origin === tenantOrigin) {
+		return;
+	}
 	throw new OperationError(
 		403,
 		"ORIGIN_REJECTED",
@@ -89,16 +97,16 @@ function assertAllowedOrigin(req: Request, allowed: ReadonlySet<string>) {
  * one JSON-RPC message (batches get 400).
  */
 export function createLocalmanMcpRouter(options: LocalmanMcpOptions): Router {
-	const { logger, publicUrl } = options;
+	const { logger } = options;
 	const reachable = oauthReachableOperations(
 		options.operations ?? registeredOperations,
 	);
-	const settings: McpResourceSettings = {
-		publicUrl,
+	const settings = tenantMcpSettings({
+		publicUrl: options.publicUrl,
 		issuer: options.issuer,
 		scopesSupported: baseScopesOf(reachable),
 		keys: options.keys,
-	};
+	});
 	const origins = new Set(options.allowedOrigins);
 	const selections = createMemoryToolsetSelectionStore();
 	const confirmTokens = createConfirmTokenService();
@@ -142,7 +150,7 @@ export function createLocalmanMcpRouter(options: LocalmanMcpOptions): Router {
 	registerResourceMetadataRoutes(router, settings);
 	router.all(MCP_PATH, async (req, res) => {
 		options.handlers?.assertOpen();
-		assertAllowedOrigin(req, origins);
+		assertAllowedOrigin(req, origins, settings.publicUrl);
 		const token = await authenticateBearer(req, res, settings);
 		if (toolsetsOpenedBy(token.scopes, reachable).size === 0) {
 			throw refuseInsufficientScope(res, settings, settings.scopesSupported);
@@ -160,8 +168,8 @@ export function createLocalmanMcpRouter(options: LocalmanMcpOptions): Router {
 			clientId: token.clientId,
 			scopes: [...token.scopes],
 			expiresAt: token.expiresAt,
-			resource: new URL(mcpResourceUrlOf(publicUrl)),
-			resourceMetadataUrl: resourceMetadataUrlOf(publicUrl),
+			resource: new URL(mcpResourceUrlOf(settings.publicUrl)),
+			resourceMetadataUrl: resourceMetadataUrlOf(settings.publicUrl),
 			extra: callerExtra(caller),
 		};
 		const body = await readMcpBody(req);
@@ -173,7 +181,7 @@ export function createLocalmanMcpRouter(options: LocalmanMcpOptions): Router {
 		res.set("Cache-Control", "no-store");
 		const abort = new AbortController();
 		res.once("close", () => abort.abort());
-		const url = new URL(req.originalUrl, publicUrl).href;
+		const url = new URL(req.originalUrl, settings.publicUrl).href;
 		const request = await toFetchRequest(req, url, abort.signal, body);
 		// Shutdown may have closed the handler while this request was
 		// authenticated: refuse it (503) rather than serve it half-closed.

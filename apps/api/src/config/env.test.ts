@@ -215,12 +215,14 @@ describe("parseEnv", () => {
 		const message = errorOf({ ...REQUIRED, IDP_INTERNAL_SECRET: secret });
 		expect(message).toMatch(/IDP_INTERNAL_URL: .*go together/);
 		expect(message).not.toContain(secret);
-		expect(
-			parseEnv({
-				...REQUIRED,
-				IDP_INTERNAL_URL: "http://127.0.0.1:4501/",
-				IDP_INTERNAL_SECRET: secret,
-			}).IDP_INTERNAL_URL,
-		).toBe("http://127.0.0.1:4501");
+		const env = parseEnv({
+			...REQUIRED,
+			IDP_INTERNAL_URL: "http://127.0.0.1:4501/",
+			IDP_INTERNAL_SECRET: secret,
+			IDP_LOOPBACK_URL: "http://127.0.0.1:4500",
+			LOCALMAN_CLIENT_KEY: "k".repeat(43),
+		});
+		expect(env.IDP_INTERNAL_URL).toBe("http://127.0.0.1:4501");
+		expect(env.IDP_LOOPBACK_URL).toBe("http://127.0.0.1:4500");
 	});
 });

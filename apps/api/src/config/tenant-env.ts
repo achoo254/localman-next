@@ -16,20 +16,45 @@ export const tenantEnvShape = {
 		.string()
 		.min(32, "must be at least 32 characters")
 		.optional(),
+	/**
+	 * The IdP's public listener on loopback, e.g. `http://127.0.0.1:4500`:
+	 * a tenant's token, userinfo and logout endpoints are called there with
+	 * the tenant's Host, never through the tenant's own DNS.
+	 */
+	IDP_LOOPBACK_URL: z
+		.url({ protocol: /^https?$/, error: "must be an http(s) origin" })
+		.transform((value) => new URL(value).origin)
+		.optional(),
+	/**
+	 * Key of `localman-web` given by the IdP (`app-client-key.mjs`): the
+	 * client secret in a tenant is HMAC-SHA256 of the tenant id under it.
+	 */
+	LOCALMAN_CLIENT_KEY: z
+		.string()
+		.regex(/^[A-Za-z0-9_-]{43}$/, "must be the 43-character base64url key")
+		.optional(),
 };
 
-interface TenantEnv {
-	readonly IDP_INTERNAL_URL?: string;
-	readonly IDP_INTERNAL_SECRET?: string;
-}
+/** Settings that only make sense together (other tenants are served). */
+export const TENANT_ENV_KEYS = [
+	"IDP_INTERNAL_URL",
+	"IDP_INTERNAL_SECRET",
+	"IDP_LOOPBACK_URL",
+	"LOCALMAN_CLIENT_KEY",
+] as const;
+
+type TenantEnv = {
+	readonly [key in (typeof TENANT_ENV_KEYS)[number]]?: string;
+};
 
 /** Cross-field rules of the tenant settings. */
 export function checkTenantEnv(env: TenantEnv, ctx: z.RefinementCtx): void {
-	if (Boolean(env.IDP_INTERNAL_URL) !== Boolean(env.IDP_INTERNAL_SECRET)) {
+	const set = TENANT_ENV_KEYS.filter((key) => env[key] !== undefined);
+	if (set.length > 0 && set.length < TENANT_ENV_KEYS.length) {
 		ctx.addIssue({
 			code: "custom",
 			path: ["IDP_INTERNAL_URL"],
-			message: "IDP_INTERNAL_URL and IDP_INTERNAL_SECRET go together",
+			message: `${TENANT_ENV_KEYS.join(", ")} go together`,
 		});
 	}
 }

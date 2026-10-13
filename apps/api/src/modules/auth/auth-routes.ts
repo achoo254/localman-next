@@ -19,16 +19,15 @@ import {
 	newLoginTransaction,
 	saveLoginTransaction,
 } from "./login-transaction.js";
-import type { OidcClient } from "./oidc-client.js";
+import type { OidcApi } from "./oidc-api.js";
 import { IdpUnavailableError } from "./oidc-errors.js";
 import { safeReturnTo } from "./return-to.js";
 import type { SessionStore } from "./session-store.js";
 
 export interface AuthRoutesOptions {
-	readonly oidc: OidcClient;
+	readonly oidc: OidcApi;
 	readonly sessions: SessionStore;
 	readonly cookies: AuthCookies;
-	readonly publicUrl: string;
 	readonly logger: Logger;
 	/** `/auth/login` and `/auth/callback` per client IP and minute (default 20 each). */
 	readonly loginLimitPerMinute?: number;
@@ -46,7 +45,7 @@ function requestedPrompt(value: unknown): "create" | "none" | undefined {
  * routes, not operations: see operations/protocol-routes.ts.
  */
 export function createAuthRouter(options: AuthRoutesOptions): Router {
-	const { oidc, sessions, cookies, publicUrl, logger } = options;
+	const { oidc, sessions, cookies, logger } = options;
 	const router = Router();
 
 	router.get(
@@ -108,10 +107,11 @@ export function createAuthRouter(options: AuthRoutesOptions): Router {
 				return;
 			}
 			clearCookie(res, cookies.login);
-			let tokens: Awaited<ReturnType<OidcClient["exchangeCode"]>>;
+			let tokens: Awaited<ReturnType<OidcApi["exchangeCode"]>>;
 			try {
 				tokens = await oidc.exchangeCode(
-					new URL(req.originalUrl, publicUrl),
+					// The tenant client's own redirect URI gives the origin.
+					new URL(req.originalUrl, oidc.redirectUri),
 					transaction,
 				);
 			} catch (error) {

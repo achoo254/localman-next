@@ -6,6 +6,14 @@
 export class TestBrowser {
 	private readonly cookies = new Map<string, string>();
 
+	/** `send` reaches the IdP (a tenant's IdP through its loopback fetch). */
+	constructor(
+		private readonly send: (
+			url: URL,
+			init: RequestInit,
+		) => Promise<Response> = (url, init) => fetch(url, init),
+	) {}
+
 	async request(
 		url: string | URL,
 		form?: Record<string, string>,
@@ -15,7 +23,7 @@ export class TestBrowser {
 		if (cookie) headers.set("cookie", cookie);
 		const body = form ? new URLSearchParams(form) : undefined;
 		if (body) headers.set("content-type", "application/x-www-form-urlencoded");
-		const response = await fetch(url, {
+		const response = await this.send(new URL(url), {
 			method: body ? "POST" : "GET",
 			headers,
 			body,

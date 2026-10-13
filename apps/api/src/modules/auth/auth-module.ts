@@ -12,9 +12,12 @@ import { deletePushSubscriptionsOfSessions } from "../notifications/push-subscri
 import { syncUserFromUserInfo } from "../users/user-sync.js";
 import { authCookies } from "./auth-cookies.js";
 import { createAuthRouter } from "./auth-routes.js";
+import type { OidcApi } from "./oidc-api.js";
 import { OidcClient } from "./oidc-client.js";
 import { SessionRefresher } from "./session-refresher.js";
 import { type Session, SessionStore } from "./session-store.js";
+import type { TenantIdpSettings } from "./tenant-idp.js";
+import { TenantOidcClients } from "./tenant-oidc-clients.js";
 import { TokenCipher, parseKeyring } from "./token-cipher.js";
 import { TunnelTokenExchange } from "./token-exchange.js";
 
@@ -31,6 +34,8 @@ export interface AuthSettings {
 	readonly serverLimitPerMinute?: number;
 	/** Basic credentials of the IdP's audit pushes; no route without them. */
 	readonly audit?: BasicCredentials;
+	/** Reaching the IdP for other tenants; only the primary one without it. */
+	readonly tenantIdp?: TenantIdpSettings;
 }
 
 export interface AuthModule {
@@ -40,8 +45,11 @@ export interface AuthModule {
 	/** `METHOD path` pairs exempt from the CSRF origin check. */
 	readonly csrfExempt: readonly string[];
 	readonly sessions: SessionStore;
-	/** The IdP's issuer and JWKS, e.g. to verify Localman MCP access tokens. */
-	readonly oidc: OidcClient;
+	/**
+	 * The request tenant's IdP: issuer and JWKS, e.g. to verify Localman
+	 * MCP access tokens.
+	 */
+	readonly oidc: OidcApi;
 	/** Session → Tunelo API token (RFC 8693), for the tunnel list. */
 	readonly tunnelTokens: TunnelTokenExchange;
 }
@@ -53,6 +61,7 @@ export function authSettingsFromEnv(env: Env): AuthSettings {
 		clientSecret: env.OIDC_CLIENT_SECRET,
 		publicUrl: env.PUBLIC_URL,
 		sessionEncryptionKey: env.SESSION_ENCRYPTION_KEY,
+		tenantIdp: tenantIdpFromEnv(env),
 		audit:
 			env.AUDIT_CLIENT_ID && env.AUDIT_CLIENT_SECRET
 				? {
@@ -63,6 +72,25 @@ export function authSettingsFromEnv(env: Env): AuthSettings {
 	};
 }
 
+function tenantIdpFromEnv(env: Env): TenantIdpSettings | undefined {
+	const { IDP_INTERNAL_URL, IDP_INTERNAL_SECRET } = env;
+	const { IDP_LOOPBACK_URL, LOCALMAN_CLIENT_KEY } = env;
+	if (
+		!IDP_INTERNAL_URL ||
+		!IDP_INTERNAL_SECRET ||
+		!IDP_LOOPBACK_URL ||
+		!LOCALMAN_CLIENT_KEY
+	) {
+		return undefined;
+	}
+	return {
+		internalUrl: IDP_INTERNAL_URL,
+		internalSecret: IDP_INTERNAL_SECRET,
+		loopbackUrl: IDP_LOOPBACK_URL,
+		clientKey: LOCALMAN_CLIENT_KEY,
+	};
+}
+
 /** Wires the OIDC client, encrypted session store, refresher and routes. */
 export function createAuthModule(
 	settings: AuthSettings,
@@ -70,7 +98,10 @@ export function createAuthModule(
 ): AuthModule {
 	const keyring = parseKeyring(settings.sessionEncryptionKey);
 	if (!keyring) throw new Error("SESSION_ENCRYPTION_KEY is invalid");
-	const oidc = new OidcClient(settings);
+	const oidc = new TenantOidcClients(
+		new OidcClient(settings),
+		settings.tenantIdp,
+	);
 	// Push devices registered by a session stop with it.
 	const sessions = new SessionStore(
 		new TokenCipher(keyring),
@@ -92,7 +123,6 @@ export function createAuthModule(
 		oidc,
 		sessions,
 		cookies,
-		publicUrl: settings.publicUrl,
 		logger,
 		loginLimitPerMinute: settings.loginLimitPerMinute,
 		serverLimitPerMinute: settings.serverLimitPerMinute,

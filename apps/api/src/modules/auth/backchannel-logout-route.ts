@@ -13,7 +13,7 @@ import {
 	rememberLogoutTokenJti,
 	verifyLogoutToken,
 } from "./logout-token.js";
-import type { OidcClient } from "./oidc-client.js";
+import type { OidcApi } from "./oidc-api.js";
 import { IdpUnavailableError, authUnavailableError } from "./oidc-errors.js";
 import type { SessionStore } from "./session-store.js";
 
@@ -21,7 +21,7 @@ import type { SessionStore } from "./session-store.js";
 const FORM_LIMIT = "16kb";
 
 export interface BackchannelLogoutOptions {
-	readonly oidc: OidcClient;
+	readonly oidc: OidcApi;
 	readonly sessions: SessionStore;
 	readonly logger: Logger;
 	/** Calls per client IP and minute (default `DEFAULT_SERVER_LIMIT_PER_MINUTE`). */

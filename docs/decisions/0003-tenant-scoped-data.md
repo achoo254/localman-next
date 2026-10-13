@@ -1,7 +1,7 @@
 # ADR-0003: Dữ liệu Localman theo tenant (domain)
 
 - **Ngày:** 2026-10-13
-- **Trạng thái:** Đã chốt cho tầng dữ liệu và việc chọn tenant theo Host; đăng nhập và web theo tenant làm tiếp theo ADR này
+- **Trạng thái:** Đã chốt cho tầng dữ liệu, việc chọn tenant theo Host và đăng nhập theo tenant; job nền và web theo tenant làm tiếp theo ADR này
 - **Người quyết định:** dattqh (Localman phục vụ mọi domain đã nhận ở IdP `hoandat-auth`, hoandat.com là tenant số 1 không đổi hành vi; Pro/trial ở tenant mới như hoandat, owner của tenant là admin của tenant). Thiết kế theo `docs/decisions/0006-tenants-by-domain.md` của repo `hoandat-auth`.
 
 ## Bối cảnh
@@ -19,7 +19,8 @@ IdP `hoandat-auth` cho người dùng nhận domain riêng (tenant): `auth.<doma
 7. **Tenant theo Host** (`tenancy/idp-tenant-directory.ts`, bật khi có `IDP_INTERNAL_URL` + `IDP_INTERNAL_SECRET`): host của tenant chính (`PUBLIC_URL`, `MOCK_BASE_DOMAIN` và subdomain) không bao giờ hỏi IdP, nên hoandat.com chạy khi IdP ngừng. Host `localman.<d>` và `<label>.localman.<d>` khác hỏi `GET /internal/tenants/lookup` của IdP (loopback, Basic `localman:<secret>`); việc nền hỏi `GET /internal/tenants/<id>`. Câu trả lời được cache 60 giây, `404` 30 giây; IdP lỗi thì dùng câu trả lời cũ, chưa từng biết host thì 503 `TENANT_UNAVAILABLE`. Host không thuộc tenant nào: 421.
 8. **Cấu hình theo tenant** đọc qua `tenantSettings()`: tenant chính giữ runtime settings từ env; tenant khác suy từ domain (`localman.<d>`, `tunnel.<d>`, owner là `ownerSubs` của IdP). SSRF guard, CSRF origin, link project, mock host và tunnel host vì thế theo tenant đang gọi: proxy của tenant B không tới được mock của tenant A (địa chỉ của chính server bị chặn như mọi host lạ). Tenant khác chưa có Turnstile nên form công khai chỉ nhận người đã đăng nhập (khách nhận 401), và góp ý của nó không báo Telegram của owner triển khai.
 9. **Cache và giới hạn trong bộ nhớ có khoá theo tenant** (`tenantKey`): cache project theo secret, công cụ Mock MCP, chuỗi enqueue theo owner, rate limit theo secret; giới hạn theo IP vẫn chung mọi tenant. Listener `finish` có ghi DB được gắn vào ngữ cảnh của request (`AsyncResource.bind`).
-10. **Lệnh vận hành có `--tenant <id>`** (mặc định `primary`): `set-user-plan`, `cleanup-abandoned-projects`. Chúng chạy trong phạm vi chỉ có dữ liệu (`runInTenantData`), không có cấu hình tenant.
+10. **Đăng nhập theo tenant** (`modules/auth/tenant-oidc-clients.ts`): mọi chỗ dùng client OIDC (route `/auth/*`, làm mới phiên, back-channel logout, MCP, token exchange) đi qua một client theo tenant của request. Tenant chính giữ client từ env như cũ. Tenant khác dùng `localman-web` tại `https://auth.<d>`: secret là base64url HMAC-SHA256 của `tenantId` dưới `LOCALMAN_CLIENT_KEY` (cùng cách IdP suy ra); discovery và JWKS lấy qua API nội bộ của IdP; token, userinfo, logout gọi qua listener loopback của IdP (`IDP_LOOPBACK_URL`) với Host của tenant (`loopback-fetch.ts`), nên DNS của domain (do chủ domain giữ) không quyết định secret và code đi đâu. MCP của tenant là `https://localman.<d>/mcp` với IdP `https://auth.<d>`; token exchange đích `https://tunnel.<d>`. Intake audit là một URL cho mọi tenant: `iss` của SET chọn tenant, SET được xác minh bằng khoá của tenant đó và áp vào dữ liệu của nó.
+11. **Lệnh vận hành có `--tenant <id>`** (mặc định `primary`): `set-user-plan`, `cleanup-abandoned-projects`. Chúng chạy trong phạm vi chỉ có dữ liệu (`runInTenantData`), không có cấu hình tenant.
 
 ## Lý do (tại sao)
 
