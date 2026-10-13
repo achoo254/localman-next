@@ -11,7 +11,7 @@ export const getMe = defineOperation({
 	path: "/users/me",
 	summary: "Get the signed-in user",
 	description:
-		"Profile synced from auth.hoandat.com at sign-in, the Localman plan in force, whether the user owns this deployment (admin), whether a Telegram chat is linked for notifications, the interface language notifications use (`en` until chosen), and the Pro trial (`available`, `active` or `ended`, its end, the latest extension request).",
+		"Profile synced from the identity provider at sign-in, the Localman plan in force, whether the user owns this deployment (admin), whether a Telegram chat is linked for notifications, the interface language notifications use (`en` until chosen), and the Pro trial (`available`, `active` or `ended`, its end, the latest extension request).",
 	input: z.object({}),
 	output: currentUserSchema,
 	scopes: [USER_SCOPE],
