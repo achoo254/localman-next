@@ -66,14 +66,14 @@ export function registerResourceMetadataRoutes(
 	router: Router,
 	settings: McpResourceSettings,
 ): void {
-	const document = protectedResourceMetadata(settings);
 	for (const path of [RESOURCE_METADATA_PATH, MCP_METADATA_PATH]) {
 		router.options(path, (_req, res) => {
 			res.set(METADATA_CORS).status(204).end();
 		});
 		router.get(path, (_req, res) => {
 			res.set(METADATA_CORS).set("Cache-Control", "public, max-age=300");
-			res.json(document);
+			// Read per request: each tenant's domain has its own resource.
+			res.json(protectedResourceMetadata(settings));
 		});
 	}
 }
