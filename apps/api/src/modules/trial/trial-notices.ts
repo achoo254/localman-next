@@ -1,5 +1,5 @@
-import { runtimeSettings } from "../../config/runtime-settings.js";
 import { messagesFor } from "../../i18n/server-messages.js";
+import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import { saigonDate } from "../../time/saigon-time.js";
 import { alertOwnerThrottled } from "../feedback/owner-alert-throttle.js";
 import { getNotificationService } from "../notifications/notification-runtime.js";
@@ -27,7 +27,7 @@ export async function notifyOwnersOfRequest(
 ): Promise<void> {
 	const user = requester.name?.trim() || requester.username;
 	const service = getNotificationService();
-	for (const owner of runtimeSettings().ownerSubs) {
+	for (const owner of tenantSettings().ownerSubs) {
 		service.notifyLater(owner, {
 			type: "trial.extension.requested",
 			params: { user },

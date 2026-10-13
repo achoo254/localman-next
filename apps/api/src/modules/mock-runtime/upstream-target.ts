@@ -1,5 +1,5 @@
 import { isTunnelUrl } from "@localman/shared/api-client";
-import { runtimeSettings } from "../../config/runtime-settings.js";
+import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import { ClientSettingsModel } from "../api-client/client-settings-model.js";
 import type { ProjectUpstream } from "./upstream-config.js";
 
@@ -27,7 +27,7 @@ export const ownerTunnelUrl: TunnelLookup = async (owner, port) => {
 		(candidate) => candidate.key === key && candidate.enabled !== false,
 	);
 	if (!mapping) return null;
-	return isTunnelUrl(mapping.url, runtimeSettings().tunnelDomains)
+	return isTunnelUrl(mapping.url, tenantSettings().tunnelDomains)
 		? mapping.url
 		: null;
 };

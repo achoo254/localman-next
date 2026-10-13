@@ -2,6 +2,7 @@ import { OperationError } from "@localman/operations";
 import type { Response } from "express";
 import { runtimeSettings } from "../../config/runtime-settings.js";
 import { takeRateLimitSlot } from "../../lib/rate-limit-windows.js";
+import { tenantKey } from "../../tenancy/tenant-context.js";
 import { TtlLruCache } from "../mock-runtime/ttl-lru-cache.js";
 import { ensureUserForSubject } from "../users/user-sync.js";
 import {
@@ -92,11 +93,12 @@ export class SubscriptionSlots {
  */
 const knownSubjects = new TtlLruCache<true>(10_000, 10 * 60_000);
 
-/** `ensureUserForSubject`, at most once per subject and TTL. */
+/** `ensureUserForSubject`, at most once per tenant, subject and TTL. */
 export async function ensureKnownSubject(subject: string): Promise<void> {
-	if (knownSubjects.get(subject)) return;
+	const key = tenantKey(subject);
+	if (knownSubjects.get(key)) return;
 	await ensureUserForSubject(subject);
-	knownSubjects.set(subject, true);
+	knownSubjects.set(key, true);
 }
 
 /** TEST ONLY. Forgets the known subjects (tests empty the users collection). */

@@ -1,75 +1,9 @@
 import { OperationError } from "@localman/operations";
 import type { Request, RequestHandler, Response } from "express";
 import { clientIpBucket } from "../../lib/rate-limit-windows.js";
+import { tenantKey } from "../../tenancy/tenant-context.js";
 import { type MockAddress, looksLikeMcp } from "./resolve-project.js";
-
-export type RateDecision =
-	| { readonly ok: true }
-	| { readonly ok: false; readonly retryAfterSeconds: number };
-
-/**
- * Fixed-window counters kept in this process's memory. The mock runtime
- * runs as one process (PM2 fork mode); with several, each would allow
- * the full rate, which is acceptable at this stage (Mongo windows like
- * the feedback form would cost a write per mock request). A window
- * counts hits (`take`) or any amount such as bytes (`add`). Windows of
- * other keys are swept once per window, so memory follows the number of
- * clients active in the last window.
- */
-export class WindowRateLimiter {
-	private readonly windows = new Map<string, { start: number; used: number }>();
-	private sweptAt = 0;
-
-	constructor(
-		private readonly max: number,
-		private readonly windowMs = 1000,
-		private readonly now: () => number = Date.now,
-	) {}
-
-	private windowOf(key: string): { start: number; used: number } {
-		const now = this.now();
-		const start = now - (now % this.windowMs);
-		if (start > this.sweptAt) {
-			this.sweptAt = start;
-			for (const [other, window] of this.windows) {
-				if (window.start < start) this.windows.delete(other);
-			}
-		}
-		let window = this.windows.get(key);
-		if (!window || window.start !== start) {
-			window = { start, used: 0 };
-			this.windows.set(key, window);
-		}
-		return window;
-	}
-
-	private refuse(start: number): RateDecision {
-		const wait = (start + this.windowMs - this.now()) / 1000;
-		return { ok: false, retryAfterSeconds: Math.max(1, Math.ceil(wait)) };
-	}
-
-	/** Counts one hit; refused once the window holds more than `max`. */
-	take(key: string): RateDecision {
-		const window = this.windowOf(key);
-		window.used += 1;
-		return window.used <= this.max ? { ok: true } : this.refuse(window.start);
-	}
-
-	/** Refused while the window's amount has reached `max` (see `add`). */
-	check(key: string): RateDecision {
-		const window = this.windowOf(key);
-		return window.used < this.max ? { ok: true } : this.refuse(window.start);
-	}
-
-	/** Adds an amount (bytes sent) to the current window. */
-	add(key: string, amount: number): void {
-		this.windowOf(key).used += amount;
-	}
-
-	get size(): number {
-		return this.windows.size;
-	}
-}
+import { type RateDecision, WindowRateLimiter } from "./window-rate-limiter.js";
 
 export interface MockRateLimits {
 	/** Requests per second per project secret. */
@@ -90,13 +24,13 @@ const WRITE_METHODS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * The limits of one mock app. Requests are admitted by IP, by secret, by
- * secret for writes (each write takes the project lock), and while the
- * secret's response bytes of the current second stay under budget; the
- * router charges the bytes it sends, or the bytes a list scanned when
- * that is more (`chargeResponse`). A response that
- * starts under budget is sent whole, so a second may exceed it by one
- * response (at most `MAX_RESPONSE_BYTES`).
+ * The limits of one mock app. Requests are admitted by IP (any tenant),
+ * by the tenant's secret, by it for writes (each write takes the project
+ * lock), and while its response bytes of the current second stay under
+ * budget; the router charges the bytes it sends, or the bytes a list
+ * scanned when that is more (`chargeResponse`). A response that starts
+ * under budget is sent whole, so a second may exceed it by one response
+ * (at most `MAX_RESPONSE_BYTES`).
  */
 export class MockLimiters {
 	private readonly byIp: WindowRateLimiter;
@@ -118,13 +52,14 @@ export class MockLimiters {
 	admit(ip: string | null, secret: string, method: string): RateDecision {
 		const byIp = this.byIp.take(clientIpBucket(ip));
 		if (!byIp.ok) return byIp;
-		const bySecret = this.bySecret.take(secret);
+		const project = tenantKey(secret);
+		const bySecret = this.bySecret.take(project);
 		if (!bySecret.ok) return bySecret;
 		if (WRITE_METHODS.has(method)) {
-			const writes = this.writes.take(secret);
+			const writes = this.writes.take(project);
 			if (!writes.ok) return writes;
 		}
-		return this.bytes.check(secret);
+		return this.bytes.check(project);
 	}
 
 	/**
@@ -132,11 +67,11 @@ export class MockLimiters {
 	 * its path looked like the MCP endpoint (see `rateMethodOf`).
 	 */
 	admitWrite(secret: string): RateDecision {
-		return this.writes.take(secret);
+		return this.writes.take(tenantKey(secret));
 	}
 
 	chargeResponse(secret: string, bytes: number): void {
-		this.bytes.add(secret, bytes);
+		this.bytes.add(tenantKey(secret), bytes);
 	}
 }
 

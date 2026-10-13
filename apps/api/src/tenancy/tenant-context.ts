@@ -92,6 +92,14 @@ export function currentTenantId(): string {
 }
 
 /**
+ * `key` qualified by the tenant in scope, for in-memory caches and limits
+ * whose keys (secrets, owners) are only unique within a tenant.
+ */
+export function tenantKey(key: string): string {
+	return `${currentTenantId()}\n${key}`;
+}
+
+/**
  * Tests only: the tenant used when a test calls models directly, outside
  * a request. Production never sets it, so a missing scope always throws.
  */

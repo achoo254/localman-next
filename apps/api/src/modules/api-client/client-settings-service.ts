@@ -3,7 +3,7 @@ import {
 	DEFAULT_REQUEST_SETTINGS,
 	type RouteMode,
 } from "@localman/shared/api-client";
-import { runtimeSettings } from "../../config/runtime-settings.js";
+import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import {
 	ClientSettingsModel,
 	type HostListField,
@@ -48,7 +48,7 @@ export async function readClientSettings(
 		),
 		defaultRoute: doc?.defaultRoute ?? DEFAULT_REQUEST_SETTINGS.route,
 		sendClientIp: doc?.sendClientIp ?? DEFAULT_REQUEST_SETTINGS.sendClientIp,
-		tunnelDomains: [...runtimeSettings().tunnelDomains],
+		tunnelDomains: [...tenantSettings().tunnelDomains],
 	};
 }
 

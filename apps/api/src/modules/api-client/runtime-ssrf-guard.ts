@@ -1,4 +1,5 @@
 import { runtimeSettings } from "../../config/runtime-settings.js";
+import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import { type SsrfGuard, createSsrfGuard } from "./ssrf-guard.js";
 
 /**
@@ -11,7 +12,7 @@ import { type SsrfGuard, createSsrfGuard } from "./ssrf-guard.js";
 export function createRuntimeSsrfGuard(): SsrfGuard {
 	return createSsrfGuard({
 		extraBlocked: () => runtimeSettings().proxyBlockedCidrs,
-		mockBaseDomain: () => runtimeSettings().mockBaseDomain,
-		tunnelDomains: () => runtimeSettings().tunnelDomains,
+		mockBaseDomain: () => tenantSettings().mockBaseDomain,
+		tunnelDomains: () => tenantSettings().tunnelDomains,
 	});
 }

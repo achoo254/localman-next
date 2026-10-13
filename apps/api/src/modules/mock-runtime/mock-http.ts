@@ -1,6 +1,6 @@
 import type { Request, RequestHandler } from "express";
-import { runtimeSettings } from "../../config/runtime-settings.js";
 import { REQUEST_ID_HEADER } from "../../http/request-log.js";
+import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import { type MockAddress, readMockAddress } from "./resolve-project.js";
 import { SOURCE_HEADER } from "./upstream-headers.js";
 
@@ -52,7 +52,7 @@ export const readAddress: RequestHandler = (req, _res, next) => {
 	const address = readMockAddress(
 		req.hostname ?? "",
 		req.path,
-		runtimeSettings().mockBaseDomain,
+		tenantSettings().mockBaseDomain,
 	);
 	if (address) addresses.set(req, address);
 	next();

@@ -1,3 +1,4 @@
+import { AsyncResource } from "node:async_hooks";
 import { OperationError } from "@localman/operations";
 import type { Request, Response } from "express";
 import { Types } from "mongoose";
@@ -86,10 +87,14 @@ export async function serveInbox(
 	if (forward) {
 		// After the router's log listener: the line exists before its
 		// forward can complete it.
-		res.once("finish", () => {
-			const request = { projectId: project.id, inboxId: inbox._id, forward };
-			trackOutbound(enqueueInboxForward(req, { ...request, lineId, body }));
-		});
+		// Bound to the request's async context: the job is the tenant's.
+		res.once(
+			"finish",
+			AsyncResource.bind(() => {
+				const request = { projectId: project.id, inboxId: inbox._id, forward };
+				trackOutbound(enqueueInboxForward(req, { ...request, lineId, body }));
+			}),
+		);
 	}
 	const { status, contentType, body: answer } = inbox.response;
 	res.status(status).setHeader("Content-Type", inboxContentTypeOf(contentType));

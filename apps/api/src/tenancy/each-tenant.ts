@@ -15,12 +15,12 @@ export async function forEachTenant(
 	const ids = await acrossTenants(() => UserModel.distinct("tenantId").exec());
 	for (const id of ids) {
 		if (typeof id !== "string") continue;
-		const tenant = await tenantDirectory().byId(id);
-		if (!tenant) {
-			logger.warn({ tenantId: id }, "Skipping data of an unknown tenant");
-			continue;
-		}
 		try {
+			const tenant = await tenantDirectory().byId(id);
+			if (!tenant) {
+				logger.warn({ tenantId: id }, "Skipping data of an unknown tenant");
+				continue;
+			}
 			await runInTenant(tenant, job);
 		} catch (error) {
 			logger.error({ err: error, tenantId: id }, "Tenant job failed");

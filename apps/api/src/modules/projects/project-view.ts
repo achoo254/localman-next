@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { runtimeSettings } from "../../config/runtime-settings.js";
+import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import {
 	CollaboratorModel,
 	acceptedCountsPipeline,
@@ -42,7 +42,7 @@ function schemeOf(domain: string): "http" | "https" {
 
 /** `https://{secret}.{MOCK_BASE_DOMAIN}{prefix}`. */
 export function mockBaseUrlOf(secret: string, prefix: string): string {
-	const domain = runtimeSettings().mockBaseDomain;
+	const domain = tenantSettings().mockBaseDomain;
 	return `${schemeOf(domain)}://${secret}.${domain}${prefix}`;
 }
 
@@ -50,7 +50,7 @@ export function mockBaseUrlOf(secret: string, prefix: string): string {
 export function projectUiUrlOf(projectId: string): string {
 	return new URL(
 		`/projects/${encodeURIComponent(projectId)}`,
-		runtimeSettings().publicUrl,
+		tenantSettings().publicUrl,
 	).href;
 }
 

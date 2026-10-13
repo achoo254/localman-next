@@ -7,7 +7,8 @@ import {
 	parseListQuery,
 } from "./query-engine.js";
 import { crossedThresholds } from "./quota-warnings.js";
-import { MockLimiters, WindowRateLimiter } from "./rate-limit.js";
+import { MockLimiters } from "./rate-limit.js";
+import { WindowRateLimiter } from "./window-rate-limiter.js";
 
 const FIELDS: QueryFields = {
 	fields: new Set(["title", "completed", "rank", "meta"]),

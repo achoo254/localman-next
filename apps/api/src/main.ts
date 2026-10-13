@@ -33,7 +33,7 @@ import {
 	type NotificationService,
 	createNotificationService,
 } from "./modules/notifications/notification-service.js";
-import { configurePrimaryTenant } from "./tenancy/primary-tenant.js";
+import { configureTenancy } from "./tenancy/configure-tenancy.js";
 import { migrateToTenants } from "./tenancy/tenant-migration.js";
 
 /** Budget of the whole shutdown (`runShutdownSteps` cuts it there). */
@@ -146,7 +146,7 @@ try {
 	// documents get the primary tenant first.
 	await migrateToTenants(logger);
 	configureRuntime(runtimeSettingsFromEnv(env));
-	configurePrimaryTenant(env);
+	configureTenancy(env, logger);
 	notifications = createNotificationService(env, logger);
 	setNotificationService(notifications);
 	const auth = createAuthModule(authSettingsFromEnv(env), logger);

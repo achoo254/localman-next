@@ -1,5 +1,6 @@
 import { MOCK_MCP_SEGMENT } from "@localman/shared";
 import type { Types } from "mongoose";
+import { tenantKey } from "../../tenancy/tenant-context.js";
 import { type StoredPlan, storedPlanOf } from "../billing/plan-guard.js";
 import {
 	LIVE_PROJECT,
@@ -119,7 +120,7 @@ export interface MockProject {
 }
 
 /**
- * Projects by secret for 60 seconds, unknown secrets included (a flood of
+ * Projects by tenant and secret for 60 seconds, unknown secrets included (a flood of
  * random secrets costs one lookup each, then hits the bounded cache). The
  * dashboard runs in the same process and forgets a project when its
  * prefix changes, its secret is rotated or its deletion starts; other changes (the owner's plan
@@ -152,12 +153,13 @@ async function loadProject(secret: string): Promise<MockProject | null> {
 
 /** The live project of `secret`, cached; concurrent misses share one query. */
 export function resolveProject(secret: string): Promise<MockProject | null> {
-	const cached = cache.get(secret);
+	const key = tenantKey(secret);
+	const cached = cache.get(key);
 	if (cached) return cached;
 	const loading = loadProject(secret);
-	cache.set(secret, loading);
+	cache.set(key, loading);
 	// A failed lookup must not be served from the cache.
-	loading.catch(() => cache.delete(secret));
+	loading.catch(() => cache.delete(key));
 	return loading;
 }
 
@@ -166,7 +168,7 @@ export function resolveProject(secret: string): Promise<MockProject | null> {
  * headers changed, deletion started).
  */
 export function forgetMockProject(secret: string): void {
-	cache.delete(secret);
+	cache.delete(tenantKey(secret));
 }
 
 /** TEST ONLY. Empties the cache between tests that reuse secrets. */

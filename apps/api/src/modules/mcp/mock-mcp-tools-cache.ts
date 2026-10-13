@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { ResourceEndpoint } from "@localman/shared";
+import { tenantKey } from "../../tenancy/tenant-context.js";
 import { TtlLruCache } from "../mock-runtime/ttl-lru-cache.js";
 import type { StoredResource } from "../resources/resource-model.js";
 import {
@@ -66,18 +67,18 @@ export function mockToolsFor(
 	resources: readonly MockApiResource[],
 ): readonly MockToolDefinition[] {
 	const revision = toolsRevision(resources);
-	const hit = cache.get(secret);
+	const hit = cache.get(tenantKey(secret));
 	if (hit?.projectId === projectId && hit.revision === revision) {
 		return hit.tools;
 	}
 	const tools = buildMockTools(resources);
-	cache.set(secret, { projectId, revision, tools });
+	cache.set(tenantKey(secret), { projectId, revision, tools });
 	return tools;
 }
 
 /** Drops the tools of a secret that was rotated or whose project is gone. */
 export function forgetMockTools(secret: string): void {
-	cache.delete(secret);
+	cache.delete(tenantKey(secret));
 }
 
 /** TEST ONLY. */

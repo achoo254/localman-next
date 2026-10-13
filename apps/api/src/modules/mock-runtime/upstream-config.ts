@@ -1,6 +1,6 @@
 import { isValidHeaderName } from "@localman/shared/api-client";
 import { z } from "zod";
-import { runtimeSettings } from "../../config/runtime-settings.js";
+import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import { normalizeHostname } from "../api-client/ssrf-guard.js";
 import type { StoredUpstream } from "../projects/project-model.js";
 
@@ -69,7 +69,7 @@ export function normalizeRedactHeaders(names: readonly string[]): string[] {
  */
 export function isMockHost(hostname: string): boolean {
 	const base = normalizeHostname(
-		runtimeSettings().mockBaseDomain.split(":")[0] ?? "",
+		tenantSettings().mockBaseDomain.split(":")[0] ?? "",
 	);
 	const host = normalizeHostname(hostname);
 	return base !== "" && (host === base || host.endsWith(`.${base}`));

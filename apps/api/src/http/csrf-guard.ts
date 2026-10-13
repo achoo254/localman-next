@@ -1,10 +1,14 @@
 import { OperationError } from "@localman/operations";
 import type { RequestHandler } from "express";
+import { tenantSettings } from "../tenancy/tenant-settings.js";
 
 const SAFE_METHODS: ReadonlySet<string> = new Set(["GET", "HEAD", "OPTIONS"]);
 
 export interface CsrfGuardOptions {
-	/** Exact origins (scheme://host[:port]) allowed to send mutations. */
+	/**
+	 * Exact origins (scheme://host[:port]) allowed to send mutations,
+	 * besides the dashboard origin of the request's tenant.
+	 */
 	readonly allowedOrigins: readonly string[];
 	/** `METHOD path` pairs authenticated by other means (e.g. a signed token). */
 	readonly exempt?: readonly string[];
@@ -31,7 +35,10 @@ export function createCsrfGuard(options: CsrfGuardOptions): RequestHandler {
 		}
 		const origin = req.headers.origin;
 		const fetchSite = req.headers["sec-fetch-site"];
-		if ((origin && origins.has(origin)) || fetchSite === "same-origin") {
+		const allowed =
+			origin !== undefined &&
+			(origins.has(origin) || origin === tenantSettings().publicUrl);
+		if (allowed || fetchSite === "same-origin") {
 			next();
 			return;
 		}

@@ -299,7 +299,7 @@ Ngoài biến nền tảng, `apps/api/src/config/feature-env.ts` đọc `MOCK_BA
 
 MongoDB 7 chạy dạng single-node replica set (`rs0`), vì dữ liệu resource được thay trong transaction.
 
-Mọi collection thuộc một tenant (`tenantId`, `docs/decisions/0003-tenant-scoped-data.md`): plugin `tenancy/tenant-scope-plugin.ts` lọc và đóng dấu theo tenant trong ngữ cảnh (`tenancy/tenant-context.ts`), mọi index trừ TTL đứng đầu bằng `tenantId`. Bộ đếm, log request và job nền giữ tenant của từng mục và ghi trong tenant đó. File `docker-compose.yml` dựng sẵn và tự `rs.initiate` ở lần chạy đầu. Test dùng `MongoMemoryReplSet` một node (wiredTiger) chung cho cả lượt chạy, mỗi file test một database.
+Mọi collection thuộc một tenant (`tenantId`, `docs/decisions/0003-tenant-scoped-data.md`): plugin `tenancy/tenant-scope-plugin.ts` lọc và đóng dấu theo tenant trong ngữ cảnh (`tenancy/tenant-context.ts`), mọi index trừ TTL đứng đầu bằng `tenantId`. Bộ đếm, log request và job nền giữ tenant của từng mục và ghi trong tenant đó. Tenant của request đến từ Host (`tenancy/idp-tenant-directory.ts`): host của hoandat.com từ env, domain khác hỏi API nội bộ của IdP (cache, dùng bản cũ khi IdP lỗi); cấu hình khác nhau giữa tenant đọc qua `tenantSettings()`. File `docker-compose.yml` dựng sẵn và tự `rs.initiate` ở lần chạy đầu. Test dùng `MongoMemoryReplSet` một node (wiredTiger) chung cho cả lượt chạy, mỗi file test một database.
 
 ## Domain
 

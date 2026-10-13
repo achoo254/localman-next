@@ -5,6 +5,7 @@ import {
 	clientIpBucket,
 	takeRateLimitSlot,
 } from "../../lib/rate-limit-windows.js";
+import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import { verifyTurnstile } from "./turnstile-verifier.js";
 
 /** Who sends a public form. */
@@ -51,7 +52,8 @@ export async function takeFeedbackSlot(
 /**
  * Turnstile for guests when configured; the token must have been solved
  * on the form `action` names (`TURNSTILE_ACTIONS`). Signed-in users
- * already proved themselves at the IdP. Fails closed when Cloudflare
+ * already proved themselves at the IdP. A tenant without guest forms
+ * (no Turnstile of its own) asks guests to sign in. Fails closed when Cloudflare
  * cannot answer.
  */
 export async function assertHumanGuest(
@@ -59,8 +61,16 @@ export async function assertHumanGuest(
 	turnstileToken: string | undefined,
 	action: TurnstileAction,
 ): Promise<void> {
-	const { turnstile } = runtimeSettings();
-	if (caller.userSub !== null || turnstile === null) return;
+	const { turnstile, guestForms } = tenantSettings();
+	if (caller.userSub !== null) return;
+	if (!guestForms) {
+		throw new OperationError(
+			401,
+			"UNAUTHENTICATED",
+			"Sign in to send this form",
+		);
+	}
+	if (turnstile === null) return;
 	if (!turnstileToken) {
 		throw new OperationError(
 			400,

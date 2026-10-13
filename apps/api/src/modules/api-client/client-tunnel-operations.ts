@@ -1,8 +1,8 @@
 import { defineOperation } from "@localman/operations";
 import { MAX_URL_LENGTH } from "@localman/shared/api-client";
 import { z } from "zod";
-import { runtimeSettings } from "../../config/runtime-settings.js";
 import { requireSubject } from "../../http/require-auth.js";
+import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import {
 	MAX_HOST_LENGTH,
 	invalidTunnelUrl,
@@ -38,7 +38,7 @@ export const setTunnelMapping = defineOperation({
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
 		const mappingKey = normalizeTunnelKey(input.key);
-		const domains = runtimeSettings().tunnelDomains;
+		const domains = tenantSettings().tunnelDomains;
 		const url = normalizeTunnelUrl(input.url, domains);
 		if (url === null) throw await invalidTunnelUrl(sub, domains);
 		return putTunnelMapping(sub, {

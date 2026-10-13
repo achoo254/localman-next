@@ -8,9 +8,9 @@ import {
 	proxyRequestSchema,
 	proxyResponseSchema,
 } from "@localman/shared/api-client";
-import { runtimeSettings } from "../../config/runtime-settings.js";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
 import { type Logger, createLogger } from "../../logger.js";
+import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import {
 	PROXY_CONCURRENCY,
 	type ProxyConcurrency,
@@ -43,14 +43,14 @@ export interface ProxyDependencies {
 function loggedHost(url: string): string {
 	const host = normalizeHostname(new URL(url).hostname);
 	const base = normalizeHostname(
-		runtimeSettings().mockBaseDomain.split(":")[0] ?? "",
+		tenantSettings().mockBaseDomain.split(":")[0] ?? "",
 	);
 	return base && host.endsWith(`.${base}`) ? `[secret].${base}` : host;
 }
 
 /** `http` or `https`: how callers reach Localman (`Forwarded: proto=`). */
 function publicScheme(): string {
-	return new URL(runtimeSettings().publicUrl).protocol.replace(":", "");
+	return new URL(tenantSettings().publicUrl).protocol.replace(":", "");
 }
 
 const DESCRIPTION = `Sends an HTTP request from the Localman server and returns the response, like the Send button of the API client. Give method, absolute http(s) url, headers as an ordered list of {name, value} (repeated names allowed; Cookie, User-Agent, Origin and Host may be set) and body: bodyType "text" for UTF-8 text, "base64" for bytes, "none" without body (GET and HEAD carry none). options: followRedirects (default true, at most 10), timeoutMs (1000–120000, default 30000), sendClientIp (default true: adds X-Forwarded-For, X-Real-IP and Forwarded with the caller's IP). Every request also carries X-Localman-Proxy: 1, and Host is forced to the URL's host for Localman mock URLs and Tunelo tunnel URLs. The response has status, headers in arrival order (Set-Cookie included, only shown), body as UTF-8 text or base64 (bodyEncoding), size, truncated (body cut at 10 MB), timings in ms {dns, connect, tls, ttfb, total} and finalUrl after redirects. Private, loopback and link-local targets (localhost, 10.x, 192.168.x, 169.254.169.254, fc00::/7…) and mail ports are refused with 403 PROXY_TARGET_BLOCKED; expose a local server with a Tunelo tunnel instead. Other failures: 502 PROXY_DNS_FAILED, PROXY_CONNECTION_FAILED (details.cause), PROXY_TOO_MANY_REDIRECTS, 504 PROXY_TIMEOUT. Every call counts toward the plan's monthly proxy requests (429 MONTHLY_QUOTA_EXCEEDED) and a per-account rate limit (429 RATE_LIMITED); at most ${PROXY_CONCURRENCY.perUser} requests of an account (${PROXY_CONCURRENCY.total} in all) run at once, more answer 429 PROXY_BUSY (details.scope user or server) without counting.`;

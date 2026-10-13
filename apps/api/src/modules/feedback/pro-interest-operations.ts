@@ -4,7 +4,7 @@ import {
 	proInterestSubmissionSchema,
 } from "@localman/shared";
 import { z } from "zod";
-import { runtimeSettings } from "../../config/runtime-settings.js";
+import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import { assertHumanGuest, takeFeedbackSlot } from "./feedback-guards.js";
 import { recordProInterest } from "./pro-interest-service.js";
 
@@ -58,6 +58,6 @@ export const getProInterestFormConfig = defineOperation({
 		exempt: "Chỉ widget Turnstile trên trình duyệt cần site key để hiện form",
 	},
 	handler: () => ({
-		turnstileSiteKey: runtimeSettings().turnstile?.siteKey ?? null,
+		turnstileSiteKey: tenantSettings().turnstile?.siteKey ?? null,
 	}),
 });

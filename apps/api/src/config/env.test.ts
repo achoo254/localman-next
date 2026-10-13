@@ -209,4 +209,18 @@ describe("parseEnv", () => {
 		expect(message).toContain("AUDIT_CLIENT_ID:");
 		expect(message).not.toContain(secret);
 	});
+
+	it("keeps the IdP's internal API settings together, never echoing the secret", () => {
+		const secret = "i".repeat(40);
+		const message = errorOf({ ...REQUIRED, IDP_INTERNAL_SECRET: secret });
+		expect(message).toMatch(/IDP_INTERNAL_URL: .*go together/);
+		expect(message).not.toContain(secret);
+		expect(
+			parseEnv({
+				...REQUIRED,
+				IDP_INTERNAL_URL: "http://127.0.0.1:4501/",
+				IDP_INTERNAL_SECRET: secret,
+			}).IDP_INTERNAL_URL,
+		).toBe("http://127.0.0.1:4501");
+	});
 });

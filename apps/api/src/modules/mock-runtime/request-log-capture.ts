@@ -1,3 +1,4 @@
+import { AsyncResource } from "node:async_hooks";
 import type { IncomingMessage } from "node:http";
 import type { HeaderEntry } from "@localman/shared/api-client";
 import type { Request, Response } from "express";
@@ -139,7 +140,9 @@ export function trackRequestLog(
 		});
 	};
 	// `finish`: the whole response was handed to the socket; `close`
-	// alone: the client went away first.
-	res.once("finish", record);
-	res.once("close", record);
+	// alone: the client went away first. Bound to this request's async
+	// context, so the line is kept in the request's tenant.
+	const recordHere = AsyncResource.bind(record);
+	res.once("finish", recordHere);
+	res.once("close", recordHere);
 }

@@ -1,5 +1,5 @@
 import { DEFAULT_LOCALE, type Locale, isLocale } from "@localman/shared";
-import { runtimeSettings } from "../../config/runtime-settings.js";
+import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import { UserModel } from "./user-model.js";
 
 interface StoredLocale {
@@ -32,7 +32,7 @@ export async function readOwnerLocale(ownerChatId: string): Promise<Locale> {
 		.select("locale")
 		.lean<StoredLocale>();
 	if (byChat) return localeOrDefault(byChat.locale);
-	const owners = [...runtimeSettings().ownerSubs];
+	const owners = [...tenantSettings().ownerSubs];
 	if (owners.length === 0) return DEFAULT_LOCALE;
 	const chosen = await UserModel.find({
 		sub: { $in: owners },

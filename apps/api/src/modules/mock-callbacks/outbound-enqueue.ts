@@ -1,3 +1,4 @@
+import { tenantKey } from "../../tenancy/tenant-context.js";
 import {
 	OutboundJobModel,
 	type StoredOutboundJob,
@@ -10,19 +11,20 @@ import {
  */
 export const MAX_PENDING_PER_OWNER = 200;
 
-/** Enqueues of one owner in this process, run one after the other. */
+/** Enqueues of one owner (of a tenant) in this process, run one after the other. */
 const chains = new Map<string, Promise<void>>();
 
 function oneAtATime<T>(owner: string, work: () => Promise<T>): Promise<T> {
-	const previous = chains.get(owner) ?? Promise.resolve();
+	const key = tenantKey(owner);
+	const previous = chains.get(key) ?? Promise.resolve();
 	const run = previous.then(work);
 	const tail = run.then(
 		() => undefined,
 		() => undefined,
 	);
-	chains.set(owner, tail);
+	chains.set(key, tail);
 	void tail.then(() => {
-		if (chains.get(owner) === tail) chains.delete(owner);
+		if (chains.get(key) === tail) chains.delete(key);
 	});
 	return run;
 }
