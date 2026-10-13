@@ -58,6 +58,35 @@ describe("current user and silent sign-in", () => {
 		expect(navigateToLogin).not.toHaveBeenCalled();
 	});
 
+	it("does not leave when the hint arrived after the probe started", async () => {
+		// A sign-in clicked while /users/me is in flight sets the hint on its
+		// way back; the probe's late 401 must not start a silent sign-in that
+		// would cancel that redirect.
+		let answer: (response: Response) => void = () => {};
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				() =>
+					new Promise<Response>((resolve) => {
+						answer = resolve;
+					}),
+			),
+		);
+		const probe = reloadCurrentUser();
+		document.cookie = "lm_sso_hint=1";
+		answer(
+			new Response(
+				JSON.stringify({
+					error: { code: "UNAUTHENTICATED", message: "Sign in" },
+				}),
+				{ status: 401, headers: { "content-type": "application/json" } },
+			),
+		);
+		await probe;
+		expect(navigateToLogin).not.toHaveBeenCalled();
+		expect(peekCurrentUser()).toEqual({ status: "anonymous" });
+	});
+
 	it("stays loading while it leaves for a silent sign-in", async () => {
 		document.cookie = "lm_sso_hint=1";
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });

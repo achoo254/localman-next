@@ -55,7 +55,11 @@ test("a mock call shows up live, masks authorization and opens in the API Client
 	expect(await answer.json()).toMatchObject({
 		error: { code: "REPLAY_FAILED" },
 	});
-	await expect(page.getByText("Couldn't replay this request")).toBeVisible();
+	// Exact text: for about a second the toast's screen reader announcement
+	// holds the same words inside a longer string.
+	await expect(
+		page.getByText("Couldn't replay this request", { exact: true }),
+	).toBeVisible();
 	await expect(rows).toHaveCount(1);
 
 	await row.getByTestId("request-log-open-client").click();

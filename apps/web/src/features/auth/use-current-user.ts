@@ -24,7 +24,13 @@ function setState(next: CurrentUserState): void {
 }
 
 function load(): Promise<void> {
-	request ??= fetchCurrentUser().then(
+	if (request) return request;
+	// Whether this browser signed in before is decided by the cookies at the
+	// start of the probe: a sign-in clicked while the probe runs sets the hint
+	// on its way back, and a silent sign-in started by the probe's late 401
+	// would cancel that redirect and land on this page instead.
+	const cookiesAtStart = document.cookie;
+	request = fetchCurrentUser().then(
 		// The redirect-loop counter is deliberately left alone here: a loop can
 		// pass through a successful /users/me (another API keeps answering 401),
 		// so only its 60-second window or a manual retry clears it.
@@ -36,7 +42,9 @@ function load(): Promise<void> {
 			}
 			// Leaving for a silent sign-in: stay "loading" rather than flash
 			// the guest view before the page unloads.
-			if (!trySilentSignIn()) setState({ status: "anonymous" });
+			if (!trySilentSignIn(cookiesAtStart)) {
+				setState({ status: "anonymous" });
+			}
 		},
 	);
 	return request;

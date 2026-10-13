@@ -41,7 +41,13 @@ export async function signIn(
 	await page
 		.context()
 		.addCookies([{ name: IDP_USER_COOKIE, value: username, url: IDP_ORIGIN }]);
+	// The sign-in links show while the session probe still runs; clicking
+	// only after it answered keeps the test on the one redirect it waits for.
+	const probe = page.waitForResponse(
+		(response) => new URL(response.url()).pathname === "/api/v1/users/me",
+	);
 	await page.goto("/");
+	await probe;
 	await page.getByTestId(link).click();
 	await page.waitForURL("**/projects");
 }
