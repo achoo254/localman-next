@@ -62,7 +62,7 @@ describe("headers and assets", () => {
 
 	test("other hosts and other paths fall through to the relay as before", async () => {
 		const oldApex = await harness.request("/", {
-			host: "tunnel.inetdev.io.vn",
+			host: "tunnel.example.test",
 		});
 		expect(oldApex.status).toBe(400);
 		expect(oldApex.body).toBe(RELAY_FALLBACK);

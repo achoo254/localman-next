@@ -50,7 +50,7 @@ Starting from v0.3.1, Tunelo supports **Device Code Authorization Flow** — a b
 
 ### 1. nginx (Reverse Proxy)
 
-- Terminates TLS with Let's Encrypt wildcard cert (`*.tunnel.inetdev.io.vn`)
+- Terminates TLS with Let's Encrypt wildcard cert (`*.tunnel.hoandat.com`)
 - Routes requests based on `Host` header subdomain
 - Proxies to tunnel server on localhost:3001
 - Handles WebSocket upgrade (`Upgrade: websocket`)
@@ -259,13 +259,13 @@ CLI requests device code for browser-based authentication (like `gh auth login`)
 ### 4. Tunnel Connection (HTTP, v0.3 Updated)
 
 1. User runs: `tunelo http 3000 --subdomain myapp --key tk_xxxxx`
-2. Client: Connect WS to `wss://tunnel.inetdev.io.vn/tunnel`
+2. Client: Connect WS to `wss://tunnel.hoandat.com/tunnel`
 3. Client: Send auth message (type: 'auth') with API key + subdomain
 4. Server: Hash incoming key (SHA-256) → look up in MongoDB ApiKey collection
 5. Server: Validate: hash match, status='active', expiry not passed
 6. Server: Extract `userId` from ApiKey → find User
 7. Server: Register subdomain in TunnelManager with tunnel metadata
-8. Browser: Hit `https://myapp.tunnel.inetdev.io.vn/api/data`
+8. Browser: Hit `https://myapp.tunnel.hoandat.com/api/data`
 9. nginx: TLS termination, proxy to server:3001 (HTTP)
 10. Server: Lookup subdomain in TunnelManager, serialize HTTP request, send via WS
 11. Client (TunnelClient): Receive request, proxy to `http://localhost:3000/api/data`
@@ -330,7 +330,7 @@ Server responds:
 | VPS | 2-4 vCPU, 4-8GB RAM, Ubuntu |
 | nginx | TLS termination, wildcard routing |
 | Let's Encrypt | Wildcard cert via DNS-01 challenge |
-| DNS | `*.tunnel.inetdev.io.vn` A record to VPS IP |
+| DNS | `*.tunnel.hoandat.com` A record to VPS IP |
 | PM2 | Process manager for tunnel server |
 | Node.js | v20+ (ESM support) |
 

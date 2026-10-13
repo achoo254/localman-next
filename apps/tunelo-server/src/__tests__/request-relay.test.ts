@@ -4,15 +4,15 @@ import { createRelayHandler, extractSubdomain } from "../request-relay.js";
 
 describe("extractSubdomain", () => {
 	test("extracts from standard host header", () => {
-		expect(extractSubdomain("myapp.tunnel.inetdev.io.vn")).toBe("myapp");
+		expect(extractSubdomain("myapp.tunnel.example.test")).toBe("myapp");
 	});
 
 	test("extracts with port in host", () => {
-		expect(extractSubdomain("myapp.tunnel.inetdev.io.vn:3001")).toBe("myapp");
+		expect(extractSubdomain("myapp.tunnel.example.test:3001")).toBe("myapp");
 	});
 
 	test("returns null for bare domain", () => {
-		expect(extractSubdomain("tunnel.inetdev.io.vn")).toBeNull();
+		expect(extractSubdomain("tunnel.example.test")).toBeNull();
 	});
 
 	test("returns null for non-matching domain", () => {
@@ -20,7 +20,7 @@ describe("extractSubdomain", () => {
 	});
 
 	test("extracts hyphenated subdomain", () => {
-		expect(extractSubdomain("my-cool-app.tunnel.inetdev.io.vn")).toBe(
+		expect(extractSubdomain("my-cool-app.tunnel.example.test")).toBe(
 			"my-cool-app",
 		);
 	});
@@ -81,7 +81,7 @@ describe("relay handler — control-plane host gating", () => {
 	}
 
 	test("apex /health returns tunelo health JSON", async () => {
-		const res = await get("/health", "tunnel.inetdev.io.vn");
+		const res = await get("/health", "tunnel.example.test");
 		expect(res.status).toBe(200);
 		expect(JSON.parse(res.body).status).toBe("ok");
 	});
@@ -89,13 +89,13 @@ describe("relay handler — control-plane host gating", () => {
 	test("tenant /health is relayed to the app (not tunelo health)", async () => {
 		// No tunnel registered for this subdomain → relayed path 502s, proving
 		// /health was NOT short-circuited to tunelo's own health.
-		const res = await get("/health", "myapp.tunnel.inetdev.io.vn");
+		const res = await get("/health", "myapp.tunnel.example.test");
 		expect(res.status).toBe(502);
 		expect(res.body).toContain("Tunnel not found");
 	});
 
 	test("apex non-health path is rejected (no tunnel subdomain)", async () => {
-		const res = await get("/", "tunnel.inetdev.io.vn");
+		const res = await get("/", "tunnel.example.test");
 		expect(res.status).toBe(400);
 	});
 });

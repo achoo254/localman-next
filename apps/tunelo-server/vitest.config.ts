@@ -11,8 +11,8 @@ export default defineConfig({
 		maxWorkers: 2,
 		minWorkers: 1,
 		env: {
-			// Primary first; the second is the domain being moved away from.
-			TUNNEL_DOMAINS: "tunnel.hoandat.com,tunnel.inetdev.io.vn",
+			// Primary first; the second shows another domain is accepted too.
+			TUNNEL_DOMAINS: "tunnel.hoandat.com,tunnel.example.test",
 		},
 	},
 	resolve: {

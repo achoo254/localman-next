@@ -43,7 +43,7 @@ async function runRejectingServer(windowMs: number): Promise<number[]> {
 						type: "auth-result",
 						success: true,
 						subdomain: "repro",
-						url: "https://repro.tunnel.inetdev.io.vn",
+						url: "https://repro.tunnel.example.test",
 					}),
 				);
 				setTimeout(() => ws.close(), 100);

@@ -67,20 +67,20 @@ describe("ws upgrade rejection", () => {
 	}
 
 	test("unknown subdomain gets 502, not a bare socket close", async () => {
-		const raw = await upgrade("nosuchtunnel.tunnel.inetdev.io.vn");
+		const raw = await upgrade("nosuchtunnel.tunnel.example.test");
 		expect(raw).not.toBe("");
 		expect(raw).toContain("HTTP/1.1 502 Bad Gateway");
 		expect(raw).toContain("Tunnel not found: nosuchtunnel");
 	});
 
 	test("apex host on a non-control path gets 400", async () => {
-		const raw = await upgrade("tunnel.inetdev.io.vn", "/socket.io/?EIO=4");
+		const raw = await upgrade("tunnel.example.test", "/socket.io/?EIO=4");
 		expect(raw).toContain("HTTP/1.1 400 Bad Request");
 		expect(raw).toContain("no tunnel subdomain");
 	});
 
 	test("rejection carries a framed body the peer can read", async () => {
-		const raw = await upgrade("nosuchtunnel.tunnel.inetdev.io.vn");
+		const raw = await upgrade("nosuchtunnel.tunnel.example.test");
 		expect(raw).toContain("content-length:");
 		expect(raw).toContain("connection: close");
 	});

@@ -285,7 +285,7 @@ Config file management:
 
 ```json
 {
-  "server": "wss://tunnel.inetdev.io.vn",
+  "server": "wss://tunnel.hoandat.com",
   "key": "tk_..."
 }
 ```
@@ -400,7 +400,7 @@ Host: app.tunnel.io.vn → proxy to server:3001 with X-Subdomain: app
 Host: tunnel.io.vn     → WS endpoint for /tunnel
 ```
 
-**TLS:** Let's Encrypt wildcard cert (`*.tunnel.inetdev.io.vn`)
+**TLS:** Let's Encrypt wildcard cert (`*.tunnel.hoandat.com`)
 
 **Features:**
 - HTTP → HTTPS redirect
@@ -428,7 +428,7 @@ Host: tunnel.io.vn     → WS endpoint for /tunnel
 Wildcard certificate via DNS-01 challenge:
 ```bash
 certbot certonly --manual --preferred-challenges dns \
-  -d tunnel.inetdev.io.vn -d "*.tunnel.inetdev.io.vn"
+  -d tunnel.hoandat.com -d "*.tunnel.hoandat.com"
 ```
 
 Auto-renewal via cron (installed by certbot).

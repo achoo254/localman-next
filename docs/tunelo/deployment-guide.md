@@ -54,7 +54,7 @@ trong file này, nếu thiếu process crash-loop lúc khởi động. Set tối
 
 ```bash
 TUNNEL_PORT=3001
-TUNNEL_DOMAINS=tunnel.hoandat.com,tunnel.inetdev.io.vn   # primary first; the rest still accepted
+TUNNEL_DOMAINS=tunnel.hoandat.com   # primary first; any others also accepted
 MONGO_URI=mongodb://<user>:<pass>@localhost:27017/<db>   # required
 JWT_SECRET=<openssl rand -base64 48>                     # required
 ADMIN_EMAILS=you@example.com                             # optional
@@ -104,7 +104,7 @@ IdP session, so signing out at `auth.hoandat.com` ends console sessions.
 Rollback: remove the two variables and restart `tunelo`, or restore
 `server.mjs.bak-pre-web-console` and `package.json.bak-pre-web-console`.
 
-## Domain move from `tunnel.inetdev.io.vn` (in progress)
+## Domain move from `tunnel.inetdev.io.vn`
 
 Since 2026-10-12 the server answers both domains: `TUNNEL_DOMAINS=tunnel.hoandat.com,tunnel.inetdev.io.vn`,
 so every URL it hands out uses `tunnel.hoandat.com`, and nginx has one 443 block
@@ -124,29 +124,27 @@ old `@dattqh/tunelo` package removed), and `server-tools.conf` (`cloudpanel-dev.
 sends `Host onedash-staging.tunnel.hoandat.com` after OneDash learned that alias
 (commit `50f03783c`: MCP public base, backend OAuth issuer, client host lists).
 
-Still on the old domain; requests show up in
-`/var/log/nginx/tunnel-old-domain.access.log` (host, request, source IP):
+Checked on 2026-10-13 (read-only): `cloudpanel-dev.inet.vn` no longer depends on the
+old domain (its proxy sends `Host onedash-staging.tunnel.hoandat.com`, the staging
+client on 202.92.7.26 connects to `tunnel.hoandat.com` since 2026-10-12, no staging
+request on the old domain since 2026-10-12 08:54). The old domain is therefore
+retired; what remained on it:
 
 - The OneDash dev setup, `onedash-dev.tunnel.inetdev.io.vn` (`.env.dattqh_lab` and
-  the dev entries of the same host lists), and its agent on lab .178.
+  the dev entries of the OneDash host lists) and the agents and OTLP exporters that
+  call it: move them to `onedash-dev.tunnel.hoandat.com`.
 
-Kept for now: `mail.tunnel.inetdev.io.vn`, the OneMail dev tunnel (OneMail is moving
-to `mail.tunnel.hoandat.com`; remove these blocks once it has)
-(`tunelo http 8011 -s mail`; workspace-application uses it as its origin for
-cookies, passkeys and WOPI). It has its own DNS A record (DNS only), its own
-certificate (`certbot --cert-name mail.tunnel.inetdev.io.vn`, credential
-`/root/.secrets/cloudflare.ini` for zone `inetdev.io.vn`) and its own server block
-in `tunelo.conf`; `Host` passes through unchanged, so `tunnel.inetdev.io.vn` stays in
-Tunelo's `TUNNEL_DOMAINS` as an internal alias (the `cloudpanel-dev` proxy needs it
-too). Its requests are not counted in the old-domain log.
+`mail.tunnel.inetdev.io.vn` (OneMail dev, Collabora WOPI) goes too, by the owner's
+decision of 2026-10-13: OneMail dev uses `mail.tunnel.hoandat.com` and Collabora
+is tested another way.
 
-When that log stays empty: delete the old domain's public 443 block, log and port
-80 names in `tunelo.conf` (not the `mail` blocks), delete the DNS records `tunnel`
-and `*.tunnel` in zone `inetdev.io.vn` (keep `mail.tunnel`), and
-`certbot delete --cert-name tunnel.inetdev.io.vn`. Keep `tunnel.inetdev.io.vn` in
-`TUNNEL_DOMAINS`. CLIs that start the `mail` tunnel must then connect with
-`--server wss://tunnel.hoandat.com` (or `TUNELO_SERVER`), since CLI 1.6.x defaults
-to the old apex.
+Retiring it on the server (done with the next deploy): `TUNNEL_DOMAINS=tunnel.hoandat.com`
+in `/var/www/tunelo/.env`; in `tunelo.conf` drop the old domain's 443 block, its
+`tunnel_old_domain` log, its port 80 names and both `mail.tunnel.inetdev.io.vn`
+blocks; `nginx -t`, reload nginx, `pm2 reload tunelo`. Then delete the DNS
+records `tunnel`, `*.tunnel` and `mail.tunnel` in zone `inetdev.io.vn` and
+`certbot delete` for `tunnel.inetdev.io.vn` and `mail.tunnel.inetdev.io.vn`. CLI 1.6.x still defaults to the
+old apex: those machines need `--server https://tunnel.hoandat.com` or a newer CLI.
 
 ## MongoDB Setup (v0.3+)
 
@@ -243,7 +241,7 @@ module.exports = {
       ADMIN_EMAILS: 'admin@example.com,dev@example.com',
 
       // Tunnel config
-      TUNNEL_DOMAINS: 'tunnel.hoandat.com,tunnel.inetdev.io.vn'
+      TUNNEL_DOMAINS: 'tunnel.hoandat.com'
     }
   }]
 };
@@ -257,7 +255,7 @@ module.exports = {
 | `JWT_SECRET` | String | 32+ random chars | Used to sign access tokens (24h) |
 | `JWT_REFRESH_SECRET` | String | 32+ random chars | Used to sign refresh tokens (7d) |
 | `ADMIN_EMAILS` | String | `admin@ex.com,dev@ex.com` | Comma-separated emails with admin access |
-| `TUNNEL_DOMAINS` | String | `tunnel.hoandat.com,tunnel.inetdev.io.vn` | Primary first (used in every URL handed out); others still accepted. `TUNNEL_DOMAIN` is read only when this is unset |
+| `TUNNEL_DOMAINS` | String | `tunnel.hoandat.com` | Primary first (used in every URL handed out); others still accepted. `TUNNEL_DOMAIN` is read only when this is unset |
 | `NODE_ENV` | String | `production` | Controls logging, error details |
 
 **Generate secure secrets:**
@@ -334,7 +332,7 @@ curl -i -N \
 | `JWT_SECRET` | Yes | String | (32+ random chars) | Sign access tokens (24h expiry) |
 | `JWT_REFRESH_SECRET` | Yes | String | (32+ random chars) | Sign refresh tokens (7d expiry) |
 | `ADMIN_EMAILS` | No | String | `admin@ex.com,dev@ex.com` | Comma-separated admin emails |
-| `TUNNEL_DOMAINS` | Yes | String | `tunnel.hoandat.com,tunnel.inetdev.io.vn` | Tunnel domains, primary first |
+| `TUNNEL_DOMAINS` | Yes | String | `tunnel.hoandat.com` | Tunnel domains, primary first |
 
 ### Response Cache (Valkey — optional, dev-first)
 
@@ -378,5 +376,5 @@ JWT_REFRESH_SECRET=your-32-char-secret-here-generate-new
 ADMIN_EMAILS=admin@example.com
 
 # Tunnel config
-TUNNEL_DOMAINS=tunnel.hoandat.com,tunnel.inetdev.io.vn
+TUNNEL_DOMAINS=tunnel.hoandat.com
 ```

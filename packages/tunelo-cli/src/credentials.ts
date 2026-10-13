@@ -13,12 +13,9 @@ export type Credential =
 	| { kind: "key"; anonymous: boolean; getKey: () => Promise<string> };
 
 /** Servers that may receive the account token: the official deployment
- *  (new and retired domain) and loopback for local development. Any other
- *  host could replay the token against the real server. */
-const ACCOUNT_SERVER_HOSTS = new Set([
-	"tunnel.hoandat.com",
-	"tunnel.inetdev.io.vn",
-]);
+ *  and loopback for local development. Any other host could replay the
+ *  token against the real server. */
+const ACCOUNT_SERVER_HOSTS = new Set(["tunnel.hoandat.com"]);
 const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
 export function acceptsAccountToken(serverUrl: string): boolean {

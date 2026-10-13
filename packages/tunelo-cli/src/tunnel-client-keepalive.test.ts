@@ -38,7 +38,7 @@ function startDeafServer(): Promise<{ port: number; connections: number[] }> {
 						type: "auth-result",
 						success: true,
 						subdomain: "deaf",
-						url: "https://deaf.tunnel.inetdev.io.vn",
+						url: "https://deaf.tunnel.example.test",
 					}),
 				);
 			});
@@ -96,7 +96,7 @@ test(
 							type: "auth-result",
 							success: true,
 							subdomain: "healthy",
-							url: "https://healthy.tunnel.inetdev.io.vn",
+							url: "https://healthy.tunnel.example.test",
 						}),
 					);
 				});

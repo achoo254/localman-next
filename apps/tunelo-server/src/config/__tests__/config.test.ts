@@ -9,8 +9,8 @@ import {
 describe("tunnel domains", () => {
 	test("parses a list, primary first", () => {
 		expect(
-			parseTunnelDomains(" Tunnel.Hoandat.com , tunnel.inetdev.io.vn,"),
-		).toEqual(["tunnel.hoandat.com", "tunnel.inetdev.io.vn"]);
+			parseTunnelDomains(" Tunnel.Hoandat.com , tunnel.example.test,"),
+		).toEqual(["tunnel.hoandat.com", "tunnel.example.test"]);
 	});
 
 	test("rejects empty lists and bad hostnames", () => {

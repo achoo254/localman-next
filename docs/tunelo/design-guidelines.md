@@ -23,7 +23,7 @@ Options:
 |  tunelo                          v0.1.0     |
 +---------------------------------------------+
 |  Status:    Online                          |
-|  Tunnel:    https://myapp.tunnel.inetdev.io.vn |
+|  Tunnel:    https://myapp.tunnel.hoandat.com |
 |  Forwarding: http://localhost:3000          |
 +---------------------------------------------+
 |  GET  /api/users          200  12ms         |
@@ -68,7 +68,7 @@ Location: `~/.tunelo/config.json`
 
 ```json
 {
-  "server": "wss://tunnel.inetdev.io.vn",
+  "server": "wss://tunnel.hoandat.com",
   "key": "tk_abc123..."
 }
 ```
@@ -77,7 +77,7 @@ Location: `~/.tunelo/config.json`
 1. CLI flags (`--key`, `--server`)
 2. Environment variables (`TUNELO_KEY`, `TUNELO_SERVER`)
 3. Config file (`~/.tunelo/config.json`)
-4. Defaults (server: `wss://tunnel.inetdev.io.vn`, key: none)
+4. Defaults (server: `wss://tunnel.hoandat.com`, key: none)
 
 **Config management:**
 - Config created on first run
@@ -92,14 +92,14 @@ tunelo http 3000
 # Output:
 # tunelo v0.1.0
 # Status: Online
-# Tunnel: https://xyz123.tunnel.inetdev.io.vn
+# Tunnel: https://xyz123.tunnel.hoandat.com
 # Forwarding: http://localhost:3000
 ```
 
 ### Custom subdomain
 ```bash
 tunelo http 3000 --subdomain myapp
-# Tunnel: https://myapp.tunnel.inetdev.io.vn
+# Tunnel: https://myapp.tunnel.hoandat.com
 ```
 
 ### Specify API key

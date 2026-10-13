@@ -4,7 +4,7 @@ const HOSTNAME_REGEX =
 	/^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;
 
 /**
- * Parses `TUNNEL_DOMAINS` ("tunnel.hoandat.com,tunnel.inetdev.io.vn"). The
+ * Parses `TUNNEL_DOMAINS` ("tunnel.hoandat.com,tunnel.example.test"). The
  * first entry is the primary domain used in every URL handed out; the rest
  * are still accepted on incoming requests while users move over.
  */

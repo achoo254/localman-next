@@ -41,7 +41,7 @@ export async function startTunnelServer(options?: {
 		}
 
 		const host = req.headers.host ?? "";
-		const match = host.match(/^([^.]+)\.tunnel\.inetdev\.io\.vn/);
+		const match = host.match(/^([^.]+)\.tunnel\.example\.test/);
 		const subdomain = match ? match[1] : null;
 
 		if (!subdomain) {
@@ -262,7 +262,7 @@ export async function requestThroughTunnel(
 				path,
 				method: options?.method ?? "GET",
 				headers: {
-					host: `${subdomain}.tunnel.inetdev.io.vn`,
+					host: `${subdomain}.tunnel.example.test`,
 					...options?.headers,
 				},
 			},
