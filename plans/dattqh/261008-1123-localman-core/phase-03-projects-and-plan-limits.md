@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Projects và giới hạn gói"
-status: pending
+status: completed
 priority: P1
 effort: "M"
 dependencies: [2]

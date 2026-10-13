@@ -1,7 +1,7 @@
 ---
 phase: 7
 title: "Collaboration và magic link"
-status: pending
+status: completed
 priority: P2
 effort: "M"
 dependencies: [3]

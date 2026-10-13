@@ -7,17 +7,21 @@ Monorepo của bộ công cụ API Localman và Tunelo.
 Đang chạy production tại <https://localman.hoandat.com>:
 
 - **Mock API có trạng thái**, tương đương mockapi.io: project, resource lồng nhau, dữ liệu Faker, custom response. Mock runtime công khai ở `https://{secret}.localman.hoandat.com{prefix}`.
+- **Mock power-ups:** tạo resource từ JSON/OpenAPI/CSV, xuất type, rules và chaos theo endpoint, gợi ý Faker.
+- **Mock MCP** cho mỗi project, **mock lai localhost** (upstream, log request có replay, webhook inbox, mock callback).
+- **API client trên web:** collections, environments, workspace và chia sẻ; request đi thẳng từ trình duyệt, qua proxy hoặc qua Tunelo.
+- **Localman MCP** tại `/mcp`: mỗi operation của registry là một MCP tool.
 - **Cộng tác:** mời thành viên vào project và magic link.
-- **Landing, bảng giá, trang tài khoản và docs người dùng** (`/docs`). Đăng nhập qua `auth.hoandat.com`.
+- **Landing, trang tài khoản và docs người dùng** (`/docs`). Đăng nhập qua `auth.hoandat.com`; mỗi domain đã nhận ở IdP là một tenant ([ADR-0003](docs/decisions/0003-tenant-scoped-data.md)).
 
 **Tunelo:** tunnel `*.tunnel.hoandat.com` tới localhost, gộp vào repo này (xem [`packages/tunelo-cli/README.md`](packages/tunelo-cli/README.md)).
 
-**Sắp có.** Web ẩn nội dung của tính năng chưa phát hành bằng cờ build `VITE_FEATURES` ([`apps/web/src/config/feature-flags.ts`](apps/web/src/config/feature-flags.ts)); [`infra/localman/deploy.sh`](infra/localman/deploy.sh) mặc định build với danh sách cờ rỗng.
+**Sắp có.** Web ẩn nội dung của tính năng chưa phát hành bằng cờ build `VITE_FEATURES` ([`apps/web/src/config/feature-flags.ts`](apps/web/src/config/feature-flags.ts)); [`infra/localman/deploy.sh`](infra/localman/deploy.sh) build với các cờ trong [`infra/localman/released-features`](infra/localman/released-features).
 
-- API client chạy trên web, tương đương Collections và Environments của Postman (cờ `apiClient`; gửi thẳng từ trình duyệt là `directMode`, proxy và Tunelo làm đường dự phòng).
-- Live Mock Sync (`liveMockSync`), Mock MCP (`mockMcp`), mock lai localhost (`hybridMock`).
-- MCP server cho mọi tính năng: operation registry đã sinh MCP tool descriptor cho mọi operation, chưa có server MCP chạy.
-- DevOps toolkit: test API trong CI bằng một lệnh, mock tạm, tunnel có SSO, giám sát.
+- Live Mock Sync (`liveMockSync`): mock luôn đồng bộ với collection và environment.
+- Chia sẻ công khai (guest, nút Run, access key), fork, merge và comment.
+- DevOps toolkit: Collection Runner và CLI `localman` để test API trong CI bằng một lệnh, mock tạm, tunnel có SSO, giám sát.
+- Browser extension.
 
 Thứ tự triển khai và trạng thái từng phase: [`plans/dattqh/EXECUTION.md`](plans/dattqh/EXECUTION.md).
 

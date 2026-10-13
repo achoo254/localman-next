@@ -1,7 +1,7 @@
 # ADR-0003: Dữ liệu Localman theo tenant (domain)
 
 - **Ngày:** 2026-10-13
-- **Trạng thái:** Đã chốt (dữ liệu, chọn tenant theo Host, đăng nhập, thông báo, web); hạ tầng nginx và e2e hai tenant làm tiếp theo ADR này
+- **Trạng thái:** Đã chốt và chạy production từ 13/10/2026 (dữ liệu, chọn tenant theo Host, đăng nhập, thông báo, web, nginx `localman-tenants.conf`); còn e2e hai tenant, Turnstile và Telegram cho tenant khác
 - **Người quyết định:** dattqh (Localman phục vụ mọi domain đã nhận ở IdP `hoandat-auth`, hoandat.com là tenant số 1 không đổi hành vi; Pro/trial ở tenant mới như hoandat, owner của tenant là admin của tenant). Thiết kế theo `docs/decisions/0006-tenants-by-domain.md` của repo `hoandat-auth`.
 
 ## Bối cảnh
@@ -10,7 +10,7 @@ IdP `hoandat-auth` cho người dùng nhận domain riêng (tenant): `auth.<doma
 
 ## Quyết định
 
-1. **Ngữ cảnh tenant bằng `AsyncLocalStorage`** (`apps/api/src/tenancy/tenant-context.ts`). Middleware đầu tiên của cả hai server (`tenantScope` trong `createBaseApp`) chọn tenant theo Host qua `TenantDirectory` rồi chạy phần còn lại của request trong tenant đó; Host không thuộc tenant nào nhận 421, trừ `/healthz`. Hiện thư mục tenant chỉ có tenant chính dựng từ env (`primaryTenantFromEnv`, id `primary` như IdP), phục vụ mọi Host như trước.
+1. **Ngữ cảnh tenant bằng `AsyncLocalStorage`** (`apps/api/src/tenancy/tenant-context.ts`). Middleware đầu tiên của cả hai server (`tenantScope` trong `createBaseApp`) chọn tenant theo Host qua `TenantDirectory` rồi chạy phần còn lại của request trong tenant đó; Host không thuộc tenant nào nhận 421, trừ `/healthz`. Không có `IDP_INTERNAL_URL` thì thư mục tenant chỉ có tenant chính dựng từ env (`primaryTenantFromEnv`, id `primary` như IdP), phục vụ mọi Host như trước; có thì tenant khác được hỏi IdP (mục 7).
 2. **Plugin `tenantScopePlugin` gắn tường minh vào cả 41 schema** (trước `mongoose.model`, không dùng plugin toàn cục vì plugin toàn cục chạy cả trên schema con). Plugin thêm trường `tenantId` bắt buộc, thêm `tenantId` vào filter của mọi query, update, delete, `aggregate` (`$match` đầu pipeline) và `bulkWrite`, đóng dấu `tenantId` khi tạo, `insertMany`, upsert và replace, từ chối `save()` một document của tenant khác. Không có tenant trong ngữ cảnh thì ném `MissingTenantError` (production không có tenant mặc định; test có `TEST_TENANT` qua `src/test-support/tenant-setup.ts`).
 3. **Mọi index đứng đầu bằng `tenantId`**, nên khoá duy nhất cũ thành duy nhất trong tenant (cùng `secret` ở hai tenant được). Index có tên riêng đổi thành `tenant_<tên>` (MongoDB từ chối tên cũ với khoá mới). Giữ nguyên: index TTL (MongoDB bắt buộc một trường) và index khai `acrossTenants` cho truy vấn xuyên tenant (hàng đợi outbound: `{state, nextAt}`, `{deadlineAt}`). Plugin cũng từ chối update đổi hay xoá `tenantId`, `insertMany` mang `tenantId` của tenant khác, `estimatedDocumentCount` ngoài `acrossTenants`; `runInTenant` trả về query chưa chạy thì ném lỗi. Khoá `_id` tự đặt mà không duy nhất theo tenant thì ghép tenant vào (`rate_limit_windows`).
 4. **Đi tắt plugin chỉ ở chỗ được liệt kê** (test `tenant-models.test.ts` quét mã): ghi thô `RecordModel.collection` tự thêm `tenantId`; `acrossTenants` chỉ cho việc nền liệt kê công việc của mọi tenant (hàng đợi outbound nhận job rồi chạy job trong tenant của nó, cắt request log theo project id vốn duy nhất, liệt kê tenant có user).

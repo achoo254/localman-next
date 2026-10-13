@@ -1,7 +1,7 @@
 ---
 phase: 10
 title: "API Client: lõi gửi request và proxy"
-status: pending
+status: in-progress
 priority: P2
 effort: "L"
 dependencies: [9]

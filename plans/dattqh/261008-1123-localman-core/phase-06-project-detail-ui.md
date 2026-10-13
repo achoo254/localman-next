@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "UI Project detail: canvas cây resource và các modal"
-status: pending
+status: completed
 priority: P1
 effort: "L"
 dependencies: [4]

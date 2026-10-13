@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Mock runtime công khai"
-status: pending
+status: completed
 priority: P1
 effort: "L"
 dependencies: [4]

@@ -1,7 +1,7 @@
 ---
 phase: 19
 title: "Mock power-ups: Faker thông minh, tạo resource từ JSON/OpenAPI/CSV, xuất type, chaos, response theo điều kiện"
-status: pending
+status: in-progress
 priority: P2
 effort: "M"
 dependencies: [4, 5, 6]

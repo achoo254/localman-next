@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Đăng nhập qua auth.hoandat.com và kênh thông báo không dùng email"
-status: pending
+status: completed
 priority: P1
 effort: "M"
 dependencies: [1]

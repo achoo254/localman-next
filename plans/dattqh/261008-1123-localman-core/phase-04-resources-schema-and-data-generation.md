@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Resources, schema, sinh dữ liệu"
-status: pending
+status: completed
 priority: P1
 effort: "L"
 dependencies: [3]

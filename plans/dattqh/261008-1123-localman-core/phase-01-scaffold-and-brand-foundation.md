@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Scaffold monorepo và nền tảng brand"
-status: pending
+status: in-progress
 priority: P1
 effort: "M"
 dependencies: []

@@ -1,7 +1,7 @@
 ---
 phase: 13
 title: "Environments và biến tương đương 100% Postman"
-status: in-progress
+status: completed
 priority: P1
 effort: "L"
 dependencies: [11, 12]

@@ -103,7 +103,7 @@ Lúc chuyển: Localman chưa có user thật nên đổi thẳng. Tunelo giữ 
 - Backup chỉ nằm trên chính máy .65, có rotate 14 ngày: quyết định cuối của user (2026-10-12), không đề xuất chép ra ngoài nữa.
 - RS256 cho ID token (ADR 0005 của `hoandat-auth`, Jev 0.98, user duyệt ghi khoá prod): ES256 vẫn mặc định; Config OP trên production PASSED 38/38 sau khi thêm.
 - Bộ conformance của OpenID: Config OP chạy trên production, Basic OP chạy trên bản IdP thử từ harness e2e, công khai qua Tunelo, dùng bộ kiểm host sẵn, không Docker, không chạm production (Jev 0.82 và 0.99; user giao Jev quyết).
-- Localman thêm đăng nhập im lặng (`prompt=none`) để đáp ứng Acceptance 1; code xong ở `localman-next`, chưa commit và chưa deploy. Phía IdP không đổi.
+- Localman thêm đăng nhập im lặng (`prompt=none`) để đáp ứng Acceptance 1 (`d11b992`); đang chạy trên production từ release `20261013-110155-cbd7436e9f93`. Phía IdP không đổi.
 
 ## Câu hỏi mở
 - Nếu sau này muốn có xác minh email hoặc reset mật khẩu qua email, có thể cắm một dịch vụ gửi mail miễn phí (ví dụ Brevo, Resend) vào IdP mà không đổi app nào. Jev nghiêng về có (0.71), nhưng plan giữ quy tắc "không gửi mail" cho tới khi user đồng ý.

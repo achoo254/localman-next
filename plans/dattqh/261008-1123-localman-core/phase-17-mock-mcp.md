@@ -1,7 +1,7 @@
 ---
 phase: 17
 title: "Nền tảng MCP (toolsets, xác nhận, coverage), Mock MCP tức thì và toolset mock"
-status: pending
+status: in-progress
 priority: P1
 effort: "M"
 dependencies: [5, 9]

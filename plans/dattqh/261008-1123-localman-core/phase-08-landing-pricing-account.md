@@ -1,7 +1,7 @@
 ---
 phase: 8
 title: "Landing, pricing, account"
-status: pending
+status: completed
 priority: P2
 effort: "M"
 dependencies: [3, 6]

@@ -1,7 +1,7 @@
 ---
 phase: 9
 title: "Hardening, E2E, deploy"
-status: pending
+status: completed
 priority: P1
 effort: "M"
 dependencies: [5, 6, 7, 8]
