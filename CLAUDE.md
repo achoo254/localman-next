@@ -55,6 +55,8 @@ bash infra/tunelo/deploy.sh            # Deploy server (PM2)
 
 Release CLI: tag `tunelo-vX.Y.Z` triggers `.github/workflows/tunelo-publish-cli.yml`.
 
+- **Tunelo theo tenant** (mục "Tenants" của `docs/tunelo/deployment-guide.md`): tenant chọn theo Host ở middleware đầu tiên (`apps/tunelo-server/src/tenancy/`); model mới gắn `tenantScopePlugin`; trạng thái trong bộ nhớ (tunnel, cache, stream) khoá theo `tenantKey(subdomain)`; frame từ client chỉ nhận từ đúng connection đã gửi request. Tenant chính (`primary`) dựng từ env, không bao giờ cần API nội bộ của IdP. Phần dùng chung với Localman nằm ở `packages/tenancy` (`@localman/tenancy`). CLI chỉ gửi token tới Tunelo cùng domain với issuer của phiên (`acceptsAccountToken`).
+
 ### Coding Rules
 
 Read `docs/tunelo/code-standards.md` for full details. Quick reference:

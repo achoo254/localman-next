@@ -61,3 +61,4 @@ Các bước CI chạy: [`.github/workflows/ci.yml`](.github/workflows/ci.yml). 
 - [Đa ngôn ngữ (i18n)](docs/i18n.md)
 - Quyết định kiến trúc: [`docs/decisions/`](docs/decisions/)
 - Tunelo: [`docs/tunelo/`](docs/tunelo/), ADR ở [`docs/decisions/tunelo/`](docs/decisions/tunelo/)
+- Domain riêng (tenant): Localman và Tunelo phục vụ `localman.<domain>` và `tunnel.<domain>` của mọi domain đã nhận ở IdP, dữ liệu theo `tenantId` (ADR [`0003-tenant-scoped-data`](docs/decisions/0003-tenant-scoped-data.md), mục "Tenants" của [`docs/tunelo/deployment-guide.md`](docs/tunelo/deployment-guide.md)); hướng dẫn cho chủ domain nằm ở repo `hoandat-auth` (`docs/tenant-owner-guide.md`)
