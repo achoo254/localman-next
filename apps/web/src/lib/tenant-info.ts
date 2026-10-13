@@ -55,7 +55,10 @@ function subscribe(listener: () => void): () => void {
 				loaded = info;
 				for (const notify of listeners) notify();
 			},
-			() => undefined,
+			() => {
+				// Defaults stay; the next page component to mount asks again.
+				loading = false;
+			},
 		);
 	}
 	return () => listeners.delete(listener);

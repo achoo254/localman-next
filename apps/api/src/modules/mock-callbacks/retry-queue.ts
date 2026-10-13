@@ -98,7 +98,12 @@ export class OutboundQueue {
 		for (let i = 0; i < EXPIRE_PER_POLL && !this.abort.signal.aborted; i++) {
 			const job = await takeExpiredJob();
 			if (!job) break;
-			await this.inTenantOf(job, () => expireOutboundJob(job, this.logger));
+			// A tenant the IdP cannot name now must not stop the other jobs.
+			await this.inTenantOf(job, () =>
+				expireOutboundJob(job, this.logger),
+			).catch((error: unknown) => {
+				this.logger.error({ err: error }, "Expiring an outbound job failed");
+			});
 		}
 		while (
 			!this.abort.signal.aborted &&

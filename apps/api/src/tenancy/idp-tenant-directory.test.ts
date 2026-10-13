@@ -114,12 +114,14 @@ describe("IdP tenant client", () => {
 			});
 			if (url.includes("missing")) return new Response(null, { status: 404 });
 			if (url.includes("broken")) return new Response(null, { status: 502 });
+			// A claimed tenant only has its /admin at the IdP.
+			const status = url.includes("claimed") ? "claimed" : "active";
 			return Response.json({
 				id: ACME.id,
 				domain: "acme.example",
 				displayName: "Acme",
 				issuer: "https://auth.acme.example",
-				status: "active",
+				status,
 				resources: { localman: "https://localman.acme.example" },
 				ownerSubs: ["acc_owner"],
 			});
@@ -130,6 +132,7 @@ describe("IdP tenant client", () => {
 			fetchImpl,
 		);
 		expect(await client.byHost("localman.acme.example")).toEqual(ACME);
+		expect(await client.byHost("claimed.example")).toBeUndefined();
 		expect(await client.byId("missing")).toBeUndefined();
 		await expect(client.byId("broken")).rejects.toThrow("502");
 		expect(calls[0]).toEqual({

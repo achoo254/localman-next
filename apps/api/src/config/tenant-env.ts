@@ -22,7 +22,7 @@ export const tenantEnvShape = {
 	 * the tenant's Host, never through the tenant's own DNS.
 	 */
 	IDP_LOOPBACK_URL: z
-		.url({ protocol: /^https?$/, error: "must be an http(s) origin" })
+		.url({ protocol: /^http$/, error: "must be a plain http origin" })
 		.transform((value) => new URL(value).origin)
 		.optional(),
 	/**

@@ -1,5 +1,10 @@
 import { MAX_JSON_BODY_KB } from "@localman/shared";
-import express, { type Express, type RequestHandler } from "express";
+import express, {
+	type Express,
+	type Request,
+	type RequestHandler,
+	type Response,
+} from "express";
 import helmet, { type HelmetOptions } from "helmet";
 import { getDbState } from "../db/connect-mongo.js";
 import type { Logger } from "../logger.js";
@@ -48,6 +53,11 @@ export interface BaseAppOptions {
 	readonly describeRoute?: DescribeRoute;
 }
 
+/** Liveness only: stays 200 while MongoDB is down; `db` reports its state. */
+const healthz = (_req: Request, res: Response): void => {
+	res.status(200).json({ status: "ok", db: getDbState() });
+};
+
 /**
  * Shared shell of both HTTP servers: request id and log line, the
  * tenant of the Host, security headers, JSON body limit, `/healthz`, 404 and the error handler.
@@ -66,7 +76,7 @@ export function createBaseApp({
 	app.set("trust proxy", trustProxy);
 	app.use(requestLog(logger, describeRoute));
 	// Everything after runs in the tenant of the Host (421 for no tenant).
-	app.use(tenantScope(tenantDirectory));
+	app.use(tenantScope(tenantDirectory, healthz));
 	app.use(helmet(helmetOptions));
 	for (const middleware of beforeBody) app.use(middleware);
 	for (const { method, path, limit, before = [] } of routeBodyLimits) {
@@ -75,10 +85,7 @@ export function createBaseApp({
 	app.use(express.json({ limit: JSON_BODY_LIMIT }));
 	mountRoutes?.(app);
 
-	// Liveness only: stays 200 while MongoDB is down; `db` reports its state.
-	app.get("/healthz", (_req, res) => {
-		res.status(200).json({ status: "ok", db: getDbState() });
-	});
+	app.get("/healthz", healthz);
 
 	app.use(notFoundHandler);
 	app.use(createErrorHandler(logger));

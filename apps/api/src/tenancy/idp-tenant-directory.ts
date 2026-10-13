@@ -43,9 +43,12 @@ export function createIdpTenantDirectory(options: {
 	const underPrimary = (domain: string): boolean =>
 		domain === primary.domain || domain.endsWith(`.${primary.domain}`);
 	// The IdP's own id for the primary tenant means our static one.
-	const settle = (answer: TenantAnswer): TenantAnswer => {
+	const settle = (answer: TenantAnswer, domain?: string): TenantAnswer => {
 		if (answer?.id === primary.id) return primary;
-		if (answer) cache.set(`id:${answer.id}`, answer);
+		if (!answer || (domain !== undefined && answer.domain !== domain)) {
+			return undefined;
+		}
+		cache.set(`id:${answer.id}`, answer);
 		return answer;
 	};
 
@@ -58,7 +61,7 @@ export function createIdpTenantDirectory(options: {
 			const answer = await cache.get(`domain:${domain}`, () =>
 				client.byHost(`localman.${domain}`),
 			);
-			return settle(answer);
+			return settle(answer, domain);
 		},
 		async byId(id) {
 			if (id === primary.id) return primary;

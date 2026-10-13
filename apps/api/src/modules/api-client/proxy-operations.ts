@@ -10,6 +10,7 @@ import {
 } from "@localman/shared/api-client";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
 import { type Logger, createLogger } from "../../logger.js";
+import { localmanDomainOf } from "../../tenancy/idp-tenant-directory.js";
 import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import {
 	PROXY_CONCURRENCY,
@@ -45,7 +46,11 @@ function loggedHost(url: string): string {
 	const base = normalizeHostname(
 		tenantSettings().mockBaseDomain.split(":")[0] ?? "",
 	);
-	return base && host.endsWith(`.${base}`) ? `[secret].${base}` : host;
+	if (base && host.endsWith(`.${base}`)) return `[secret].${base}`;
+	// Another tenant's mock host: its secret is masked too.
+	const [label, ...rest] = host.split(".");
+	const other = localmanDomainOf(host) !== undefined && label !== "localman";
+	return other ? `[secret].${rest.join(".")}` : host;
 }
 
 /** `http` or `https`: how callers reach Localman (`Forwarded: proto=`). */

@@ -5,23 +5,30 @@ import type { TenantAnswer } from "./idp-tenant-client.js";
 export const TENANT_FRESH_MS = 60_000;
 /** A 404 (no such tenant) is asked again after this long. */
 export const MISSING_FRESH_MS = 30_000;
-/** Keys kept at most; the oldest answer goes first. */
-const MAX_ENTRIES = 1_000;
+/** After a failed refresh, the last answer is used this long before retrying. */
+export const RETRY_MS = 10_000;
+/**
+ * Answers kept at most, found tenants and 404s apart: hosts anyone can
+ * make up only ever push out other 404s, never a tenant's last answer.
+ */
+const MAX_FOUND = 1_000;
+const MAX_MISSING = 1_000;
 
 interface Entry {
 	readonly answer: TenantAnswer;
-	readonly at: number;
+	readonly freshUntil: number;
 }
 
 /**
  * Answers of the IdP's tenant API by key: fresh ones are reused, one
  * question per key is in flight at a time, and when the IdP fails the
- * last answer is kept (stale-while-error), so tenants already seen keep
- * working while the IdP restarts. Only a real 404 is remembered as "no
- * tenant"; a failure with nothing known throws.
+ * last answer is kept (stale-while-error, retried every `RETRY_MS`), so
+ * tenants already seen keep working while the IdP restarts. Only a real
+ * 404 is remembered as "no tenant"; a failure with nothing known throws.
  */
 export class TenantAnswerCache {
-	private readonly entries = new Map<string, Entry>();
+	private readonly found = new Map<string, Entry>();
+	private readonly missing = new Map<string, Entry>();
 	private readonly loading = new Map<string, Promise<TenantAnswer>>();
 
 	constructor(
@@ -30,8 +37,10 @@ export class TenantAnswerCache {
 	) {}
 
 	get(key: string, load: () => Promise<TenantAnswer>): Promise<TenantAnswer> {
-		const entry = this.entries.get(key);
-		if (entry && this.isFresh(entry)) return Promise.resolve(entry.answer);
+		const entry = this.found.get(key) ?? this.missing.get(key);
+		if (entry && this.now() < entry.freshUntil) {
+			return Promise.resolve(entry.answer);
+		}
 		const running = this.loading.get(key);
 		if (running) return running;
 		const next = this.refresh(key, entry, load).finally(() => {
@@ -43,17 +52,21 @@ export class TenantAnswerCache {
 
 	/** Remembers an answer learned another way (a host lookup, by id). */
 	set(key: string, answer: TenantAnswer): void {
-		this.entries.delete(key);
-		this.entries.set(key, { answer, at: this.now() });
-		for (const oldest of this.entries.keys()) {
-			if (this.entries.size <= MAX_ENTRIES) break;
-			this.entries.delete(oldest);
-		}
+		const ttl = answer ? TENANT_FRESH_MS : MISSING_FRESH_MS;
+		this.store(key, { answer, freshUntil: this.now() + ttl });
 	}
 
-	private isFresh(entry: Entry): boolean {
-		const ttl = entry.answer ? TENANT_FRESH_MS : MISSING_FRESH_MS;
-		return this.now() - entry.at < ttl;
+	private store(key: string, entry: Entry): void {
+		this.found.delete(key);
+		this.missing.delete(key);
+		const [map, max] = entry.answer
+			? [this.found, MAX_FOUND]
+			: [this.missing, MAX_MISSING];
+		map.set(key, entry);
+		for (const oldest of map.keys()) {
+			if (map.size <= max) break;
+			map.delete(oldest);
+		}
 	}
 
 	private async refresh(
@@ -74,6 +87,7 @@ export class TenantAnswerCache {
 				{ err: error },
 				"IdP tenant lookup failed; using the last answer",
 			);
+			this.store(key, { ...known, freshUntil: this.now() + RETRY_MS });
 			return known.answer;
 		}
 	}

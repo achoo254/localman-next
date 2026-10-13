@@ -10,6 +10,8 @@ const tenantSummary = z.object({
 	domain: z.string().min(1),
 	displayName: z.string(),
 	issuer: z.url(),
+	/** Only `active` tenants are served; a claimed one only has its /admin. */
+	status: z.string(),
 	resources: z.object({ localman: z.url() }),
 	ownerSubs: z.array(z.string()),
 });
@@ -22,8 +24,7 @@ export interface IdpTenantClient {
 	byId(id: string): Promise<TenantAnswer>;
 }
 
-function toTenant(body: unknown): LocalmanTenant {
-	const summary = tenantSummary.parse(body);
+function toTenant(summary: z.output<typeof tenantSummary>): LocalmanTenant {
 	const publicUrl = new URL(summary.resources.localman);
 	return Object.freeze({
 		id: summary.id,
@@ -57,7 +58,8 @@ export function createIdpTenantClient(
 		if (!response.ok) {
 			throw new Error(`IdP tenant lookup answered ${response.status}`);
 		}
-		return toTenant(await response.json());
+		const summary = tenantSummary.parse(await response.json());
+		return summary.status === "active" ? toTenant(summary) : undefined;
 	};
 	return {
 		byHost: (host) =>

@@ -1,3 +1,4 @@
+import { localmanDomainOf } from "./idp-tenant-directory.js";
 import type { LocalmanTenant } from "./tenant-context.js";
 
 /**
@@ -23,12 +24,22 @@ export function tenantDirectory(): TenantDirectory {
 }
 
 /**
- * A single tenant serving every host: Localman as it ran before tenants,
- * the primary tenant built from the environment.
+ * A single tenant serving its hosts and any host that is not another
+ * domain's `localman.` (loopback, dev ports): Localman as it ran before
+ * tenants, the primary tenant built from the environment. Another
+ * domain's Localman hosts get no tenant (421), so tenant server blocks
+ * installed ahead of the tenant settings never show the primary's data.
  */
 export function singleTenantDirectory(tenant: LocalmanTenant): TenantDirectory {
 	return {
-		byHost: async () => tenant,
+		byHost: async (host) => {
+			const domain = localmanDomainOf(host.toLowerCase());
+			const other =
+				domain !== undefined &&
+				domain !== tenant.domain &&
+				!domain.endsWith(`.${tenant.domain}`);
+			return other ? undefined : tenant;
+		},
 		byId: async (id) => (id === tenant.id ? tenant : undefined),
 	};
 }
