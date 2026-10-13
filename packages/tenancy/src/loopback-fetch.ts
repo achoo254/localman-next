@@ -17,7 +17,11 @@ export type LoopbackFetch = (
 ) => Promise<Response>;
 
 function headersOf(options: LoopbackFetchOptions): Record<string, string> {
-	return Object.fromEntries(new Headers(options.headers).entries());
+	const headers: Record<string, string> = {};
+	new Headers(options.headers).forEach((value, name) => {
+		headers[name] = value;
+	});
+	return headers;
 }
 
 function bodyOf(body: unknown): string | Buffer | undefined {
