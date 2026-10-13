@@ -106,9 +106,8 @@ Rollback: remove the two variables and restart `tunelo`, or restore
 
 ## Domain move from `tunnel.inetdev.io.vn`
 
-Since 2026-10-12 the server answers both domains: `TUNNEL_DOMAINS=tunnel.hoandat.com,tunnel.inetdev.io.vn`,
-so every URL it hands out uses `tunnel.hoandat.com`, and nginx has one 443 block
-per domain (`infra/tunelo/nginx.conf`).
+Retired on 2026-10-13: the server answers `tunnel.hoandat.com` only. From 2026-10-12
+to then it answered both domains (`TUNNEL_DOMAINS=tunnel.hoandat.com,tunnel.inetdev.io.vn`).
 
 Moved on 2026-10-12: the three lab tunnel clients (`onedash-s3` on lab .171 via
 `/root/.tunelo/config.json`; `onedash-staging` on .174, same file; `miu-staging` on
@@ -138,13 +137,13 @@ retired; what remained on it:
 decision of 2026-10-13: OneMail dev uses `mail.tunnel.hoandat.com` and Collabora
 is tested another way.
 
-Retiring it on the server (done with the next deploy): `TUNNEL_DOMAINS=tunnel.hoandat.com`
-in `/var/www/tunelo/.env`; in `tunelo.conf` drop the old domain's 443 block, its
-`tunnel_old_domain` log, its port 80 names and both `mail.tunnel.inetdev.io.vn`
-blocks; `nginx -t`, reload nginx, `pm2 reload tunelo`. Then delete the DNS
-records `tunnel`, `*.tunnel` and `mail.tunnel` in zone `inetdev.io.vn` and
-`certbot delete` for `tunnel.inetdev.io.vn` and `mail.tunnel.inetdev.io.vn`. CLI 1.6.x still defaults to the
-old apex: those machines need `--server https://tunnel.hoandat.com` or a newer CLI.
+Done on the server on 2026-10-13: `TUNNEL_DOMAINS=tunnel.hoandat.com` in
+`/var/www/tunelo/.env`; the old domain's 443 block, its `tunnel_old_domain` log, its
+port 80 names and both `mail.tunnel.inetdev.io.vn` blocks dropped from `tunelo.conf`
+(previous file `/root/tunelo.conf.bak-261013-142454`); DNS records `tunnel`, `*.tunnel`
+and `mail.tunnel` deleted in Cloudflare zone `inetdev.io.vn`; both certificates deleted
+(archived in `/root/letsencrypt-inetdev-tunnel-261013.tgz`). CLI 1.6.x still defaults to
+the old apex: those machines need `--server https://tunnel.hoandat.com` or a newer CLI.
 
 ## Tenants (domains claimed at the IdP)
 
