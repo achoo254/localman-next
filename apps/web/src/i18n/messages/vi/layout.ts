@@ -26,11 +26,11 @@ export const layout: Messages["layout"] = {
 		signOut: "Đăng xuất",
 	},
 	idpMenu: {
-		heading: "Tài khoản hoandat · mở tab mới",
+		heading: "Tài khoản {idpName} · mở tab mới",
 		email: "Email",
 		signIn: "Phương thức đăng nhập",
 		apps: "Ứng dụng đã cấp quyền",
-		opensIdp: ", mở trang tài khoản hoandat ở tab mới",
+		opensIdp: ", mở trang tài khoản {idpName} ở tab mới",
 	},
 	footer: {
 		copyright: "© {year} Localman",

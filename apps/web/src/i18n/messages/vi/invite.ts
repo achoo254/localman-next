@@ -4,7 +4,7 @@ export const invite: Messages["invite"] = {
 	pageTitle: "Lời mời tham gia project",
 	signIn: {
 		title: "Bạn được mời tham gia một project trên Localman",
-		text: "Đăng nhập hoặc tạo tài khoản hoandat để xem lời mời. Xong bạn sẽ quay lại trang này.",
+		text: "Đăng nhập hoặc tạo tài khoản {idpName} để xem lời mời. Xong bạn sẽ quay lại trang này.",
 		signIn: "Đăng nhập",
 		signUp: "Đăng ký",
 	},

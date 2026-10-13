@@ -44,6 +44,7 @@ import { resourceDataOperations } from "../modules/resources/resource-data-opera
 import { createResourceFromSchema } from "../modules/resources/resource-import-operations.js";
 import { resourceOperations } from "../modules/resources/resource-operations.js";
 import { resourceTreeOperations } from "../modules/resources/resource-tree-operations.js";
+import { getTenantInfo } from "../modules/tenant-info/tenant-info-operation.js";
 import { trialAdminOperations } from "../modules/trial/trial-admin-operations.js";
 import { trialOperations } from "../modules/trial/trial-operations.js";
 import { getMe, setLocale } from "../modules/users/user-operations.js";
@@ -100,4 +101,5 @@ export const operations: readonly AnyOperation[] = [
 	...proInterestAdminOperations,
 	submitContactMessage,
 	...contactMessageAdminOperations,
+	getTenantInfo,
 ];

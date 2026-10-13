@@ -8,6 +8,7 @@ import {
 import { FormField } from "../../components/ui/form-field";
 import { Input } from "../../components/ui/input";
 import { useI18n } from "../../i18n/i18n-context";
+import { useTenantInfo } from "../../lib/tenant-info";
 import type { InviteResult } from "./collaborators-api";
 import { InviteeCard } from "./invitee-card";
 import { useInviteFlow } from "./use-invite-flow";
@@ -33,6 +34,7 @@ export function InviteForm({
 	onPlanLimit,
 }: InviteFormProps) {
 	const { t, formatDate } = useI18n();
+	const idpName = useTenantInfo().displayName;
 	const flow = useInviteFlow({ projectId, onInvited, onPlanLimit });
 	const { candidate, created } = flow;
 	const copyField = useRef<CopyFieldHandle>(null);
@@ -65,7 +67,7 @@ export function InviteForm({
 				>
 					<FormField
 						label={t("collaborators.form.label")}
-						hint={t("collaborators.form.hint")}
+						hint={t("collaborators.form.hint", { idpName })}
 						error={flow.error ?? undefined}
 						announceError
 					>

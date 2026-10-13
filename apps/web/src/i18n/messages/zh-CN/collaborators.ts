@@ -37,7 +37,7 @@ export const collaborators: Messages["collaborators"] = {
 	form: {
 		legend: "邀请协作者",
 		label: "用户名或邮箱",
-		hint: "对方还没有 hoandat 账号？输入邮箱即可创建一次性邀请链接（7 天有效）。",
+		hint: "对方还没有 {idpName} 账号？输入邮箱即可创建一次性邀请链接（7 天有效）。",
 		placeholder: "@username 或 name@example.com",
 		submit: "邀请",
 		empty: "请输入用户名或邮箱。",

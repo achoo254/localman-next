@@ -6,6 +6,7 @@ import { FormField } from "../../components/ui/form-field";
 import { Input } from "../../components/ui/input";
 import { Select } from "../../components/ui/select";
 import { useI18n } from "../../i18n/i18n-context";
+import { useTenantInfo } from "../../lib/tenant-info";
 import { useWorkspaceInvite } from "./use-workspace-invite";
 import { ROLE_CHOICES, roleLabel } from "./workspace-labels";
 
@@ -25,6 +26,7 @@ export function WorkspaceInviteForm({
 	disabled,
 }: WorkspaceInviteFormProps) {
 	const { t, formatDate } = useI18n();
+	const idpName = useTenantInfo().displayName;
 	const roleId = useId();
 	const flow = useWorkspaceInvite(workspaceId);
 	const { issued } = flow;
@@ -102,7 +104,7 @@ export function WorkspaceInviteForm({
 						{t("workspaces.invite.link")}
 					</Button>
 					<span className="text-muted text-[0.8125rem]">
-						{t("workspaces.invite.linkHelp")}
+						{t("workspaces.invite.linkHelp", { idpName })}
 					</span>
 				</div>
 			</fieldset>

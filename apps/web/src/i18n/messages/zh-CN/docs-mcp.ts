@@ -22,7 +22,7 @@ export const docsMcp: Messages["docs"]["mcp"] = {
 		intro:
 			"Localman MCP 的地址是 <code>{url}</code>，agent 可以用它管理你的 project 和 resource：创建 project，从 TypeScript、OpenAPI 或 JSON Schema 类型添加 resource，生成数据，读取 mock URL。它以你的身份操作，权限和额度限制与网页版相同。",
 		signIn:
-			"Agent 通过 OAuth 使用你在 <code>{idp}</code> 的 hoandat 账号登录：客户端会自动注册，并打开浏览器让你授权。<code>mock:read</code> 允许读取 project、resource、数据和 mock URL（包括 secret）；<code>mock:write</code> 允许修改它们。创建凭据的工具还会请求 <code>credentials:write</code>。",
+			"Agent 通过 OAuth 使用你在 <code>{idp}</code> 的 {idpName} 账号登录：客户端会自动注册，并打开浏览器让你授权。<code>mock:read</code> 允许读取 project、resource、数据和 mock URL（包括 secret）；<code>mock:write</code> 允许修改它们。创建凭据的工具还会请求 <code>credentials:write</code>。",
 		claudeAfter:
 			"然后在 Claude Code 中运行 <code>/mcp</code>，选择 <code>localman</code> 登录。",
 		cursorAfter: "Cursor 首次连接时会打开登录页面。",

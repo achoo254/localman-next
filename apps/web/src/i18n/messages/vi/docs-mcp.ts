@@ -22,7 +22,7 @@ export const docsMcp: Messages["docs"]["mcp"] = {
 		intro:
 			"Localman MCP ở <code>{url}</code> cho agent quản lý project và resource của bạn: tạo project, thêm resource từ kiểu TypeScript, OpenAPI hoặc JSON Schema, sinh dữ liệu và lấy URL mock. Agent hành động thay bạn, với cùng quyền và hạn mức như trên web.",
 		signIn:
-			"Agent đăng nhập bằng OAuth qua tài khoản hoandat ở <code>{idp}</code>: client tự đăng ký và mở trình duyệt để bạn cho phép truy cập. <code>mock:read</code> cho đọc project, resource, dữ liệu và URL mock (kể cả secret); <code>mock:write</code> cho thay đổi chúng. Tool tạo credential xin thêm <code>credentials:write</code>.",
+			"Agent đăng nhập bằng OAuth qua tài khoản {idpName} ở <code>{idp}</code>: client tự đăng ký và mở trình duyệt để bạn cho phép truy cập. <code>mock:read</code> cho đọc project, resource, dữ liệu và URL mock (kể cả secret); <code>mock:write</code> cho thay đổi chúng. Tool tạo credential xin thêm <code>credentials:write</code>.",
 		claudeAfter:
 			"Sau đó chạy <code>/mcp</code> trong Claude Code và chọn <code>localman</code> để đăng nhập.",
 		cursorAfter: "Cursor mở trang đăng nhập ở lần kết nối đầu tiên.",

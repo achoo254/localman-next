@@ -8,6 +8,7 @@ import { LoginLink } from "../features/auth/login-link";
 import { useCurrentUser } from "../features/auth/use-current-user";
 import { InviteDetails } from "../features/collaborators/invite-details";
 import { useT } from "../i18n/i18n-context";
+import { useTenantInfo } from "../lib/tenant-info";
 import { useAppTitle } from "../lib/use-document-title";
 
 /**
@@ -16,6 +17,7 @@ import { useAppTitle } from "../lib/use-document-title";
  */
 function InviteSignIn({ returnTo }: { returnTo: string }) {
 	const t = useT();
+	const idpName = useTenantInfo().displayName;
 	const heading = useRef<HTMLHeadingElement>(null);
 	useEffect(() => heading.current?.focus(), []);
 	return (
@@ -34,7 +36,9 @@ function InviteSignIn({ returnTo }: { returnTo: string }) {
 				>
 					{t("invite.signIn.title")}
 				</h1>
-				<p className="m-0 text-muted text-sm">{t("invite.signIn.text")}</p>
+				<p className="m-0 text-muted text-sm">
+					{t("invite.signIn.text", { idpName })}
+				</p>
 				<LoginLink
 					returnTo={returnTo}
 					data-id="invite-page-login"

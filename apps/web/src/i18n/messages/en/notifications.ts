@@ -51,7 +51,7 @@ export const notifications = {
 		empty: "No event types yet.",
 		event: "Event",
 		cell: "{event}: {channel}",
-		note: "Each box saves as soon as you change it. A box is locked when its channel isn't ready. There's no email channel: hoandat doesn't send email.",
+		note: "Each box saves as soon as you change it. A box is locked when its channel isn't ready. There's no email channel: {idpName} doesn't send email.",
 		/** Event types by API `type` ("project.invitation" → projectInvitation). */
 		types: {
 			projectInvitation: "Project collaboration invitations",
@@ -81,7 +81,7 @@ export const notifications = {
 	telegram: {
 		unavailable: "Telegram isn't enabled on the server.",
 		notLinked:
-			"Not linked. Link it in your hoandat account; the link is shared by Localman and Tunelo.",
+			"Not linked. Link it in your {idpName} account; the link is shared by Localman and Tunelo.",
 		linked: "Linked.",
 		linkedAs: "Linked as @{username}.",
 		linkedInactive: "Linked, bot not started yet.",

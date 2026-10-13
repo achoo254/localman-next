@@ -88,7 +88,7 @@ export const workspaces: Messages["workspaces"] = {
 		notified: "对方会收到通知。",
 		linkFor: "已为 {who} 创建邀请链接",
 		link: "复制邀请链接（一次性，7 天）",
-		linkHelp: "适用于还没有 hoandat 账号的人。",
+		linkHelp: "适用于还没有 {idpName} 账号的人。",
 		linkCreated: "已创建一次性邀请链接",
 		linkLabel: "给 {who} 的邀请链接",
 		linkLabelAnyone: "一次性邀请链接",
@@ -134,7 +134,7 @@ export const workspaces: Messages["workspaces"] = {
 	invitePage: {
 		pageTitle: "Workspace 邀请",
 		signInTitle: "你受邀加入 Localman 上的一个 workspace",
-		signInText: "登录或创建 hoandat 账号即可查看邀请，完成后会回到此页面。",
+		signInText: "登录或创建 {idpName} 账号即可查看邀请，完成后会回到此页面。",
 		title: "加入 {workspace}",
 		inviter: "{inviter} 邀请你以 {role} 身份加入。",
 		oneUse: "一次性链接 · {date} 过期",

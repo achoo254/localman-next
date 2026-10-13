@@ -1,5 +1,7 @@
 /**
- * Build-time configuration read from `VITE_*` variables. Values are checked
+ * Build-time configuration read from `VITE_*` variables. The IdP origin is
+ * only the default of the primary domain: the page's own domain is read at
+ * run time (`lib/tenant-info.ts`). Values are checked
  * once at startup so a bad deploy fails loudly instead of sending requests to
  * a malformed URL.
  */
@@ -38,6 +40,3 @@ export const appConfig = {
 	apiBaseUrl: parseApiBaseUrl(import.meta.env.VITE_API_BASE_URL),
 	idpOrigin: parseIdpOrigin(import.meta.env.VITE_IDP_ORIGIN),
 } as const;
-
-/** IdP page for linked sign-in methods (Google, GitHub, Telegram) and sessions. */
-export const idpAccountUrl = `${appConfig.idpOrigin}/account`;

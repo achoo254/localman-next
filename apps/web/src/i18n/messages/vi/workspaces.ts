@@ -90,7 +90,7 @@ export const workspaces: Messages["workspaces"] = {
 		notified: "Người này sẽ nhận được thông báo.",
 		linkFor: "Đã tạo link mời cho {who}",
 		link: "Copy link mời (dùng 1 lần, 7 ngày)",
-		linkHelp: "Cho người chưa có tài khoản hoandat.",
+		linkHelp: "Cho người chưa có tài khoản {idpName}.",
 		linkCreated: "Đã tạo link mời dùng một lần",
 		linkLabel: "Link mời cho {who}",
 		linkLabelAnyone: "Link mời dùng một lần",
@@ -141,7 +141,7 @@ export const workspaces: Messages["workspaces"] = {
 		pageTitle: "Lời mời tham gia workspace",
 		signInTitle: "Bạn được mời tham gia một workspace trên Localman",
 		signInText:
-			"Đăng nhập hoặc tạo tài khoản hoandat để xem lời mời. Xong bạn sẽ quay lại trang này.",
+			"Đăng nhập hoặc tạo tài khoản {idpName} để xem lời mời. Xong bạn sẽ quay lại trang này.",
 		title: "Tham gia {workspace}",
 		inviter: "{inviter} mời bạn với vai trò {role}.",
 		oneUse: "Link dùng một lần · hết hạn {date}",

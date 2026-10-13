@@ -9,7 +9,7 @@ import {
 	docsRich,
 	linkTo,
 } from "./docs-content";
-import { MOCK_URL_FALLBACK, MOCK_URL_PATTERN, docsPath } from "./docs-pages";
+import { docsPath, useDocsUrls } from "./docs-pages";
 import {
 	NestedRoutesSection,
 	QuerySection,
@@ -21,6 +21,7 @@ const FREE = limitsFor("free");
 /** `/docs/quick-start`: from an empty project to a callable mock API. */
 export function QuickStartPage() {
 	const t = useT();
+	const urls = useDocsUrls();
 	const route = (path: string) => <InlineCode key="r">{path}</InlineCode>;
 	const endpointRows = [
 		["GET", route("/customers"), t("docs.quickStart.endpoints.list")],
@@ -60,12 +61,12 @@ export function QuickStartPage() {
 					rows={[
 						[
 							t("docs.quickStart.mockUrl.subdomain"),
-							<InlineCode key="u">{MOCK_URL_PATTERN}</InlineCode>,
+							<InlineCode key="u">{urls.mockUrlPattern}</InlineCode>,
 							t("docs.quickStart.mockUrl.subdomainWhen"),
 						],
 						[
 							t("docs.quickStart.mockUrl.path"),
-							<InlineCode key="u">{MOCK_URL_FALLBACK}</InlineCode>,
+							<InlineCode key="u">{urls.mockUrlFallback}</InlineCode>,
 							t("docs.quickStart.mockUrl.pathWhen"),
 						],
 					]}

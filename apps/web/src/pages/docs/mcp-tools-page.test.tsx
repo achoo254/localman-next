@@ -7,7 +7,10 @@ import { I18nProvider } from "../../i18n/i18n-provider";
 import { en } from "../../i18n/messages/en/dictionary";
 import { vi as viMessages } from "../../i18n/messages/vi/dictionary";
 import { createTranslator } from "../../i18n/translate";
-import { LOCALMAN_MCP_URL } from "./docs-pages";
+import { DEFAULT_TENANT_INFO } from "../../lib/tenant-info";
+import { docsUrlsOf } from "./docs-pages";
+
+const LOCALMAN_MCP_URL = docsUrlsOf(DEFAULT_TENANT_INFO).localmanMcpUrl;
 import { MOCK_TOOLSET_TOOLS } from "./mcp-tools-data";
 import { McpToolsPage } from "./mcp-tools-page";
 

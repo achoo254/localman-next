@@ -50,7 +50,7 @@ export const notifications: Messages["notifications"] = {
 		empty: "暂无事件类型。",
 		event: "事件",
 		cell: "{event}：{channel}",
-		note: "每个选项更改后立即保存。渠道未就绪时对应选项会被锁定。没有邮件渠道：hoandat 不发送邮件。",
+		note: "每个选项更改后立即保存。渠道未就绪时对应选项会被锁定。没有邮件渠道：{idpName} 不发送邮件。",
 		types: {
 			projectInvitation: "Project 协作邀请",
 			projectMockUrlChanged: "共享 project 的 mock URL 已更改",
@@ -78,7 +78,7 @@ export const notifications: Messages["notifications"] = {
 	},
 	telegram: {
 		unavailable: "服务器尚未启用 Telegram。",
-		notLinked: "尚未关联。请在 hoandat 账号中关联，Localman 和 Tunelo 共用。",
+		notLinked: "尚未关联。请在 {idpName} 账号中关联，Localman 和 Tunelo 共用。",
 		linked: "已关联。",
 		linkedAs: "已关联 @{username}。",
 		linkedInactive: "已关联，尚未启动机器人。",

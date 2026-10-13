@@ -26,11 +26,11 @@ export const layout: Messages["layout"] = {
 		signOut: "退出登录",
 	},
 	idpMenu: {
-		heading: "hoandat 账号 · 在新标签页中打开",
+		heading: "{idpName} 账号 · 在新标签页中打开",
 		email: "邮箱",
 		signIn: "登录方式",
 		apps: "已授权的应用",
-		opensIdp: "，在新标签页中打开 hoandat 账号",
+		opensIdp: "，在新标签页中打开 {idpName} 账号",
 	},
 	footer: {
 		copyright: "© {year} Localman",

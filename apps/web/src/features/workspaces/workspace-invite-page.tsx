@@ -4,6 +4,7 @@ import { Navigate, useParams } from "react-router";
 import { buttonClassName } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { useT } from "../../i18n/i18n-context";
+import { useTenantInfo } from "../../lib/tenant-info";
 import { useAppTitle } from "../../lib/use-document-title";
 import { AuthStatus } from "../auth/auth-status";
 import { LoginLink } from "../auth/login-link";
@@ -17,6 +18,7 @@ import { WorkspaceInviteDetails } from "./workspace-invite-details";
  */
 function WorkspaceInviteSignIn({ returnTo }: { returnTo: string }) {
 	const t = useT();
+	const idpName = useTenantInfo().displayName;
 	const heading = useRef<HTMLHeadingElement>(null);
 	useEffect(() => heading.current?.focus(), []);
 	return (
@@ -36,7 +38,7 @@ function WorkspaceInviteSignIn({ returnTo }: { returnTo: string }) {
 					{t("workspaces.invitePage.signInTitle")}
 				</h1>
 				<p className="m-0 text-muted text-sm">
-					{t("workspaces.invitePage.signInText")}
+					{t("workspaces.invitePage.signInText", { idpName })}
 				</p>
 				<LoginLink
 					returnTo={returnTo}

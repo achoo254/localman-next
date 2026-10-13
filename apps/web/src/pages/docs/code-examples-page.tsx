@@ -5,6 +5,7 @@ import {
 	type SegmentedOption,
 } from "../../components/ui/segmented-control";
 import { useT } from "../../i18n/i18n-context";
+import { useTenantInfo } from "../../lib/tenant-info";
 import {
 	type CodeExample,
 	EXAMPLE_LANGUAGES,
@@ -19,7 +20,7 @@ import {
 	docsRich,
 	linkTo,
 } from "./docs-content";
-import { docsPath } from "./docs-pages";
+import { docsPath, onThisDomain } from "./docs-pages";
 
 /** Every example in reading order; tests check each has all languages. */
 export const CODE_EXAMPLES: readonly CodeExample[] = [
@@ -39,6 +40,7 @@ const LANGUAGE_OPTIONS: readonly SegmentedOption<ExampleLanguage>[] =
 /** `/docs/code-examples`: the same tasks in fetch, axios and curl. */
 export function CodeExamplesPage() {
 	const t = useT();
+	const tenant = useTenantInfo();
 	const [language, setLanguage] = useState<ExampleLanguage>("fetch");
 	const label =
 		EXAMPLE_LANGUAGES.find((item) => item.id === language)?.label ?? language;
@@ -87,7 +89,7 @@ export function CodeExamplesPage() {
 				>
 					<CodeBlock
 						caption={label}
-						code={example.code[language]}
+						code={onThisDomain(example.code[language], tenant)}
 						data-id={`docs-example-${example.id}`}
 					/>
 					{notes[example.id] ?? null}

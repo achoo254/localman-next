@@ -5,8 +5,8 @@ import { ExternalLink } from "../../components/ui/external-link";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
 import type { Translate } from "../../i18n/translate";
-import { idpAccountUrl } from "../../lib/app-config";
 import { cn } from "../../lib/cn";
+import { idpAccountUrlOf, useTenantInfo } from "../../lib/tenant-info";
 import { ChannelRow } from "./channel-row";
 import {
 	type NotificationChannels,
@@ -22,9 +22,11 @@ export interface TelegramRowProps {
 function statusText(
 	{ channel, username }: TelegramRowProps,
 	t: Translate,
+	idpName: string,
 ): string {
 	if (!channel.available) return t("notifications.telegram.unavailable");
-	if (!channel.linked) return t("notifications.telegram.notLinked");
+	if (!channel.linked)
+		return t("notifications.telegram.notLinked", { idpName });
 	if (channel.activated) {
 		return username
 			? t("notifications.telegram.linkedAs", { username })
@@ -38,6 +40,7 @@ function statusText(
 /** Telegram is linked at the IdP; Localman's own bot must then be started. */
 export function TelegramRow(props: TelegramRowProps) {
 	const t = useT();
+	const tenant = useTenantInfo();
 	const { channel } = props;
 	const botUrl = telegramBotUrl(channel.botUsername);
 	const needsStart = channel.available && channel.linked && !channel.activated;
@@ -47,11 +50,11 @@ export function TelegramRow(props: TelegramRowProps) {
 			data-id="notify-channel-telegram"
 			statusId="notify-telegram-status"
 			title="Telegram"
-			description={statusText(props, t)}
+			description={statusText(props, t, tenant.displayName)}
 			action={
 				channel.available ? (
 					<ExternalLink
-						href={idpAccountUrl}
+						href={idpAccountUrlOf(tenant)}
 						data-id="notify-telegram-link"
 						className={cn(buttonClassName({ size: "sm" }), "no-underline")}
 					>

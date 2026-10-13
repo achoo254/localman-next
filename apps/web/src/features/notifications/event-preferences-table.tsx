@@ -3,6 +3,7 @@ import { useT } from "../../i18n/i18n-context";
 import type { SourceMessages } from "../../i18n/message-types";
 import type { Translate } from "../../i18n/translate";
 import { cn } from "../../lib/cn";
+import { useTenantInfo } from "../../lib/tenant-info";
 import { useWorkspacesEnabled } from "../workspaces/use-workspaces-enabled";
 import {
 	EVENT_CHANNELS,
@@ -59,6 +60,7 @@ export function EventPreferencesTable({
 	onToggle,
 }: EventPreferencesTableProps) {
 	const t = useT();
+	const idpName = useTenantInfo().displayName;
 	const workspaces = useWorkspacesEnabled();
 	const usable = usableChannels(channels);
 	const events = workspaces
@@ -131,7 +133,7 @@ export function EventPreferencesTable({
 				</div>
 			)}
 			<p className="m-0 text-[0.8125rem] text-muted">
-				{t("notifications.events.note")}
+				{t("notifications.events.note", { idpName })}
 			</p>
 		</section>
 	);

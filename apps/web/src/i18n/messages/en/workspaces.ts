@@ -88,7 +88,7 @@ export const workspaces = {
 		notified: "They'll get a notification.",
 		linkFor: "Created an invite link for {who}",
 		link: "Copy invite link (one use, 7 days)",
-		linkHelp: "For people who don't have a hoandat account yet.",
+		linkHelp: "For people who don't have a {idpName} account yet.",
 		linkCreated: "Created a one-use invite link",
 		linkLabel: "Invite link for {who}",
 		linkLabelAnyone: "One-use invite link",
@@ -140,7 +140,7 @@ export const workspaces = {
 		pageTitle: "Workspace invitation",
 		signInTitle: "You're invited to join a workspace on Localman",
 		signInText:
-			"Sign in or create a hoandat account to see the invitation. You'll come back to this page afterwards.",
+			"Sign in or create a {idpName} account to see the invitation. You'll come back to this page afterwards.",
 		title: "Join {workspace}",
 		inviter: "{inviter} invited you as {role}.",
 		oneUse: "One-use link · expires {date}",

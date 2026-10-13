@@ -1,4 +1,9 @@
 import type { FeatureFlags, FeatureName } from "../../config/features";
+import {
+	DEFAULT_TENANT_INFO,
+	type TenantInfo,
+	useTenantInfo,
+} from "../../lib/tenant-info";
 
 /** One page of the public docs, in reading order. */
 export interface DocsPage {
@@ -47,15 +52,38 @@ export function docsNeighbours(
 	};
 }
 
-/** Production mock domain (`MOCK_BASE_DOMAIN` of the API). */
-export const MOCK_DOMAIN = "localman.hoandat.com";
-/** Mock base URL as the docs write it, placeholders in braces. */
-export const MOCK_URL_PATTERN = `https://{secret}.${MOCK_DOMAIN}{prefix}`;
-/** Path fallback for networks that do not resolve the secret subdomain. */
-export const MOCK_URL_FALLBACK = `https://${MOCK_DOMAIN}/m/{secret}{prefix}`;
+/** Mock domain the static docs are written for (the primary domain). */
+export const MOCK_DOMAIN = DEFAULT_TENANT_INFO.mockBaseDomain;
 /** Base URL the code examples start from; readers paste their secret. */
 export const EXAMPLE_BASE_URL = `https://<secret>.${MOCK_DOMAIN}`;
-/** Localman MCP endpoint of the dashboard, OAuth-protected. */
-export const LOCALMAN_MCP_URL = `https://${MOCK_DOMAIN}/mcp`;
-/** Shared sign-in (OAuth authorization server) of Localman MCP. */
-export const IDP_HOST = "auth.hoandat.com";
+
+/** Mock, MCP and sign-in addresses as the docs write them, for one domain. */
+export interface DocsUrls {
+	/** Mock base URL, placeholders in braces. */
+	readonly mockUrlPattern: string;
+	/** Path fallback for networks that do not resolve the secret subdomain. */
+	readonly mockUrlFallback: string;
+	/** Localman MCP endpoint of the dashboard, OAuth-protected. */
+	readonly localmanMcpUrl: string;
+	/** Shared sign-in (OAuth authorization server) of Localman MCP. */
+	readonly idpHost: string;
+}
+
+export function docsUrlsOf(info: TenantInfo): DocsUrls {
+	return {
+		mockUrlPattern: `https://{secret}.${info.mockBaseDomain}{prefix}`,
+		mockUrlFallback: `${info.publicUrl}/m/{secret}{prefix}`,
+		localmanMcpUrl: `${info.publicUrl}/mcp`,
+		idpHost: new URL(info.idpOrigin).host,
+	};
+}
+
+/** The docs' addresses on the domain being read (the primary one at first). */
+export function useDocsUrls(): DocsUrls {
+	return docsUrlsOf(useTenantInfo());
+}
+
+/** Example code with the static docs' mock domain swapped for this one's. */
+export function onThisDomain(code: string, info: TenantInfo): string {
+	return code.replaceAll(MOCK_DOMAIN, info.mockBaseDomain);
+}

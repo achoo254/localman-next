@@ -25,11 +25,11 @@ export const layout = {
 		signOut: "Sign out",
 	},
 	idpMenu: {
-		heading: "hoandat account · opens in a new tab",
+		heading: "{idpName} account · opens in a new tab",
 		email: "Email",
 		signIn: "Sign-in methods",
 		apps: "Authorized apps",
-		opensIdp: ", opens your hoandat account in a new tab",
+		opensIdp: ", opens your {idpName} account in a new tab",
 	},
 	footer: {
 		copyright: "© {year} Localman",

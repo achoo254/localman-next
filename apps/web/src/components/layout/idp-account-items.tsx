@@ -5,7 +5,7 @@ import {
 	IconUser,
 } from "@tabler/icons-react";
 import { useT } from "../../i18n/i18n-context";
-import { idpAccountUrl } from "../../lib/app-config";
+import { idpAccountUrlOf, useTenantInfo } from "../../lib/tenant-info";
 import { openExternal } from "../../platform/navigation";
 import { DropdownMenuItem, DropdownMenuLabel } from "../ui/dropdown-menu";
 
@@ -44,19 +44,25 @@ export interface IdpAccountItemsProps {
 /** The account menu's links to the IdP account pages, each in a new tab. */
 export function IdpAccountItems({ withApps }: IdpAccountItemsProps) {
 	const t = useT();
+	const tenant = useTenantInfo();
+	const idpName = tenant.displayName;
 	const entries = withApps ? [...IDP_ENTRIES, IDP_APPS_ENTRY] : IDP_ENTRIES;
 	return (
 		<>
-			<DropdownMenuLabel>{t("layout.idpMenu.heading")}</DropdownMenuLabel>
+			<DropdownMenuLabel>
+				{t("layout.idpMenu.heading", { idpName })}
+			</DropdownMenuLabel>
 			{entries.map(({ id, labelKey, hash, Icon }) => (
 				<DropdownMenuItem
 					key={id}
 					data-id={`account-menu-${id}`}
 					icon={<Icon size={16} aria-hidden={true} />}
-					onSelect={() => openExternal(`${idpAccountUrl}#${hash}`)}
+					onSelect={() => openExternal(`${idpAccountUrlOf(tenant)}#${hash}`)}
 				>
 					{t(`layout.idpMenu.${labelKey}`)}
-					<span className="sr-only">{t("layout.idpMenu.opensIdp")}</span>
+					<span className="sr-only">
+						{t("layout.idpMenu.opensIdp", { idpName })}
+					</span>
 					<IconExternalLink size={14} aria-hidden="true" className="ml-auto" />
 				</DropdownMenuItem>
 			))}

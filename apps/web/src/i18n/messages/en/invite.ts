@@ -3,7 +3,7 @@ export const invite = {
 	pageTitle: "Project invitation",
 	signIn: {
 		title: "You're invited to join a project on Localman",
-		text: "Sign in or create a hoandat account to see the invitation. You'll come back to this page afterwards.",
+		text: "Sign in or create a {idpName} account to see the invitation. You'll come back to this page afterwards.",
 		signIn: "Sign in",
 		signUp: "Sign up",
 	},

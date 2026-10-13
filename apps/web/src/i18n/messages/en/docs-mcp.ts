@@ -25,7 +25,7 @@ export const docsMcp = {
 		intro:
 			"Localman MCP at <code>{url}</code> lets an agent manage your projects and resources: create projects, add resources from a TypeScript, OpenAPI or JSON Schema type, generate data and read the mock URLs. It acts as you, with the same permissions and limits as the web app.",
 		signIn:
-			"Agents sign in with OAuth through your hoandat account at <code>{idp}</code>: the client registers itself and opens the browser for you to approve access. <code>mock:read</code> lets it read projects, resources, data and mock URLs (secrets included); <code>mock:write</code> lets it change them. Tools that create a credential also ask for <code>credentials:write</code>.",
+			"Agents sign in with OAuth through your {idpName} account at <code>{idp}</code>: the client registers itself and opens the browser for you to approve access. <code>mock:read</code> lets it read projects, resources, data and mock URLs (secrets included); <code>mock:write</code> lets it change them. Tools that create a credential also ask for <code>credentials:write</code>.",
 		claudeAfter:
 			"Then run <code>/mcp</code> in Claude Code and pick <code>localman</code> to sign in.",
 		cursorAfter: "Cursor opens the sign-in page the first time it connects.",

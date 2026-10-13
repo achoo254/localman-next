@@ -7,7 +7,7 @@ import {
 import { Badge } from "../../components/ui/badge";
 import { cardClassName } from "../../components/ui/card";
 import { CodeBlock } from "../../components/ui/code-block";
-import { DEMO_MOCK_BASE_URL } from "../../content/landing-samples";
+import { demoMockBaseUrl } from "../../content/landing-samples";
 import {
 	claudeAddCommand,
 	mcpEndpointUrl,
@@ -17,6 +17,7 @@ import { McpToolList } from "../../features/mcp/mcp-tool-list";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
 import { cn } from "../../lib/cn";
+import { useTenantInfo } from "../../lib/tenant-info";
 import { LandingSection } from "./landing-section";
 
 /** A `users` resource with every endpoint on: all five tools. */
@@ -30,12 +31,13 @@ const SAMPLE_USERS: MockToolNode = {
 	})),
 };
 
-const SAMPLE_COMMAND = claudeAddCommand({
-	// The name of an unnamed project: the sample has no project name.
-	serverName: mcpServerName(""),
-	url: mcpEndpointUrl(DEMO_MOCK_BASE_URL),
-	tokenEnv: null,
-});
+const sampleCommand = (mockBaseDomain: string): string =>
+	claudeAddCommand({
+		// The name of an unnamed project: the sample has no project name.
+		serverName: mcpServerName(""),
+		url: mcpEndpointUrl(demoMockBaseUrl(mockBaseDomain)),
+		tokenEnv: null,
+	});
 
 const HELP = "m-0 text-[0.8125rem] text-muted";
 
@@ -46,6 +48,7 @@ const HELP = "m-0 text-[0.8125rem] text-muted";
  */
 export function MockMcpSection() {
 	const t = useT();
+	const { mockBaseDomain } = useTenantInfo();
 	return (
 		<LandingSection
 			id="mock-mcp"
@@ -59,7 +62,7 @@ export function MockMcpSection() {
 					<CodeBlock
 						wrap
 						caption="Claude Code"
-						code={SAMPLE_COMMAND}
+						code={sampleCommand(mockBaseDomain)}
 						data-id="landing-mock-mcp-snippet"
 					/>
 					<p className={HELP}>{renderRich(t("landing.mockMcp.snippetHelp"))}</p>

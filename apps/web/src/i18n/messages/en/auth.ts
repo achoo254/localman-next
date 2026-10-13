@@ -11,7 +11,7 @@ export const auth = {
 	callbackError: {
 		access_denied: {
 			title: "You cancelled sign-in",
-			text: "Localman isn't allowed to access your hoandat account yet. Sign in again when you're ready.",
+			text: "Localman isn't allowed to access your {idpName} account yet. Sign in again when you're ready.",
 		},
 		login_expired: {
 			title: "Your sign-in expired",
@@ -26,7 +26,7 @@ export const auth = {
 			text: "You tried to sign in too many times. Please wait a minute and try again.",
 		},
 		idp_unavailable: {
-			title: "Can't reach your hoandat account",
+			title: "Can't reach your {idpName} account",
 			text: "The sign-in server isn't responding. Please try again in a few minutes.",
 		},
 	},

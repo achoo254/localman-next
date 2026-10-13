@@ -11,7 +11,7 @@ export const auth: Messages["auth"] = {
 	callbackError: {
 		access_denied: {
 			title: "Bạn đã huỷ đăng nhập",
-			text: "Localman chưa được phép truy cập tài khoản hoandat của bạn. Đăng nhập lại khi bạn sẵn sàng.",
+			text: "Localman chưa được phép truy cập tài khoản {idpName} của bạn. Đăng nhập lại khi bạn sẵn sàng.",
 		},
 		login_expired: {
 			title: "Phiên đăng nhập đã hết hạn",
@@ -26,7 +26,7 @@ export const auth: Messages["auth"] = {
 			text: "Bạn thử đăng nhập quá nhiều lần, vui lòng đợi một phút rồi thử lại.",
 		},
 		idp_unavailable: {
-			title: "Không kết nối được tài khoản hoandat",
+			title: "Không kết nối được tài khoản {idpName}",
 			text: "Máy chủ đăng nhập đang không phản hồi. Hãy thử lại sau ít phút.",
 		},
 	},

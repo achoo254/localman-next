@@ -3,6 +3,7 @@ import { Navigate } from "react-router";
 import { CodeBlock } from "../../components/ui/code-block";
 import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
+import { useTenantInfo } from "../../lib/tenant-info";
 import {
 	DocsArticle,
 	DocsSection,
@@ -11,24 +12,17 @@ import {
 	Prose,
 	docsRich,
 } from "./docs-content";
-import {
-	IDP_HOST,
-	LOCALMAN_MCP_URL,
-	MOCK_URL_FALLBACK,
-	MOCK_URL_PATTERN,
-	docsPath,
-} from "./docs-pages";
+import { docsPath, useDocsUrls } from "./docs-pages";
 import { McpToolsTable } from "./mcp-tools-table";
 
 const freeMonthly = limitsFor("free").mockRequestsPerMonth;
 
 /** Code samples: commands and config files are never translated. */
-const CLAUDE_COMMAND = `claude mcp add --transport http localman ${LOCALMAN_MCP_URL}`;
-const CURSOR_CONFIG = JSON.stringify(
-	{ mcpServers: { localman: { url: LOCALMAN_MCP_URL } } },
-	null,
-	2,
-);
+
+const claudeCommand = (url: string): string =>
+	`claude mcp add --transport http localman ${url}`;
+const cursorConfig = (url: string): string =>
+	JSON.stringify({ mcpServers: { localman: { url } } }, null, 2);
 
 /**
  * `/docs/mcp`: Hosted Mock MCP of each project and Localman MCP with its
@@ -36,6 +30,8 @@ const CURSOR_CONFIG = JSON.stringify(
  */
 export function McpToolsPage() {
 	const t = useT();
+	const urls = useDocsUrls();
+	const idpName = useTenantInfo().displayName;
 	const { mockMcp } = useFeatures();
 	if (!mockMcp) {
 		return <Navigate to={docsPath("quick-start")} replace />;
@@ -59,11 +55,11 @@ export function McpToolsPage() {
 					rows={[
 						[
 							t("docs.quickStart.mockUrl.subdomain"),
-							<InlineCode key="u">{`${MOCK_URL_PATTERN}/mcp`}</InlineCode>,
+							<InlineCode key="u">{`${urls.mockUrlPattern}/mcp`}</InlineCode>,
 						],
 						[
 							t("docs.quickStart.mockUrl.path"),
-							<InlineCode key="u">{`${MOCK_URL_FALLBACK}/mcp`}</InlineCode>,
+							<InlineCode key="u">{`${urls.mockUrlFallback}/mcp`}</InlineCode>,
 						],
 					]}
 					data-id="docs-mcp-hosted-url"
@@ -86,21 +82,23 @@ export function McpToolsPage() {
 
 			<DocsSection id="localman" title={t("docs.mcp.localman.title")}>
 				<Prose>
-					{docsRich(t("docs.mcp.localman.intro", { url: LOCALMAN_MCP_URL }))}
+					{docsRich(t("docs.mcp.localman.intro", { url: urls.localmanMcpUrl }))}
 				</Prose>
 				<Prose>
-					{docsRich(t("docs.mcp.localman.signIn", { idp: IDP_HOST }))}
+					{docsRich(
+						t("docs.mcp.localman.signIn", { idp: urls.idpHost, idpName }),
+					)}
 				</Prose>
 				<CodeBlock
 					caption="Claude Code"
-					code={CLAUDE_COMMAND}
+					code={claudeCommand(urls.localmanMcpUrl)}
 					wrap
 					data-id="docs-mcp-claude"
 				/>
 				<Prose>{docsRich(t("docs.mcp.localman.claudeAfter"))}</Prose>
 				<CodeBlock
 					caption=".cursor/mcp.json"
-					code={CURSOR_CONFIG}
+					code={cursorConfig(urls.localmanMcpUrl)}
 					data-id="docs-mcp-cursor"
 				/>
 				<Prose>{t("docs.mcp.localman.cursorAfter")}</Prose>

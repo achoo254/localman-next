@@ -1,8 +1,9 @@
 import { Badge } from "../../components/ui/badge";
 import { cardClassName } from "../../components/ui/card";
-import { DEMO_MOCK_BASE_URL, DEMO_USERS } from "../../content/landing-samples";
+import { DEMO_USERS, demoMockBaseUrl } from "../../content/landing-samples";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
+import { useTenantInfo } from "../../lib/tenant-info";
 
 const LOCALHOST_ORDERS = [
 	{ id: "1042", status: "paid", total: 259000 },
@@ -51,6 +52,7 @@ function PreviewCard({ url, body, chip, footer }: PreviewProps) {
  */
 export function HeroPreview({ localhost }: { localhost: boolean }) {
 	const t = useT();
+	const baseUrl = demoMockBaseUrl(useTenantInfo().mockBaseDomain);
 	if (localhost) {
 		return (
 			<PreviewCard
@@ -68,7 +70,7 @@ export function HeroPreview({ localhost }: { localhost: boolean }) {
 	}));
 	return (
 		<PreviewCard
-			url={`${DEMO_MOCK_BASE_URL}/users?page=1&limit=2`}
+			url={`${baseUrl}/users?page=1&limit=2`}
 			body={JSON.stringify(users, null, 2)}
 			footer={t("landing.preview.records", { count: users.length })}
 		/>

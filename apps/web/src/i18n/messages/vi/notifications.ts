@@ -52,7 +52,7 @@ export const notifications: Messages["notifications"] = {
 		empty: "Chưa có loại sự kiện nào.",
 		event: "Sự kiện",
 		cell: "{event}: {channel}",
-		note: "Mỗi ô được lưu ngay khi bạn đổi. Ô bị khoá khi kênh chưa sẵn sàng. Không có kênh email: hoandat không gửi email.",
+		note: "Mỗi ô được lưu ngay khi bạn đổi. Ô bị khoá khi kênh chưa sẵn sàng. Không có kênh email: {idpName} không gửi email.",
 		types: {
 			projectInvitation: "Lời mời cộng tác project",
 			projectMockUrlChanged: "URL mock của project được chia sẻ đã đổi",
@@ -81,7 +81,7 @@ export const notifications: Messages["notifications"] = {
 	telegram: {
 		unavailable: "Máy chủ chưa bật Telegram.",
 		notLinked:
-			"Chưa liên kết. Liên kết ở tài khoản hoandat, dùng chung cho Localman và Tunelo.",
+			"Chưa liên kết. Liên kết ở tài khoản {idpName}, dùng chung cho Localman và Tunelo.",
 		linked: "Đã liên kết.",
 		linkedAs: "Đã liên kết @{username}.",
 		linkedInactive: "Đã liên kết, chưa kích hoạt bot.",

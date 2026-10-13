@@ -41,7 +41,7 @@ export const collaborators: Messages["collaborators"] = {
 	form: {
 		legend: "Mời cộng tác viên",
 		label: "Username hoặc email",
-		hint: "Người chưa có tài khoản hoandat: nhập email để tạo link mời dùng 1 lần (7 ngày).",
+		hint: "Người chưa có tài khoản {idpName}: nhập email để tạo link mời dùng 1 lần (7 ngày).",
 		placeholder: "@username hoặc ten@example.com",
 		submit: "Mời",
 		empty: "Nhập username hoặc email.",

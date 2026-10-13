@@ -39,7 +39,7 @@ export const collaborators = {
 	form: {
 		legend: "Invite collaborators",
 		label: "Username or email",
-		hint: "No hoandat account yet? Enter their email to create a one-time invite link (valid for 7 days).",
+		hint: "No {idpName} account yet? Enter their email to create a one-time invite link (valid for 7 days).",
 		placeholder: "@username or name@example.com",
 		submit: "Invite",
 		empty: "Enter a username or email.",

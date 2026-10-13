@@ -4,7 +4,7 @@ export const invite: Messages["invite"] = {
 	pageTitle: "Project 邀请",
 	signIn: {
 		title: "你受邀加入 Localman 上的一个 project",
-		text: "登录或创建 hoandat 账号即可查看邀请，完成后会回到此页面。",
+		text: "登录或创建 {idpName} 账号即可查看邀请，完成后会回到此页面。",
 		signIn: "登录",
 		signUp: "注册",
 	},

@@ -11,7 +11,7 @@ export const auth: Messages["auth"] = {
 	callbackError: {
 		access_denied: {
 			title: "你已取消登录",
-			text: "Localman 尚未获准访问你的 hoandat 账号。准备好后请重新登录。",
+			text: "Localman 尚未获准访问你的 {idpName} 账号。准备好后请重新登录。",
 		},
 		login_expired: {
 			title: "登录已过期",
@@ -26,7 +26,7 @@ export const auth: Messages["auth"] = {
 			text: "你尝试登录的次数过多，请等待一分钟后重试。",
 		},
 		idp_unavailable: {
-			title: "无法连接 hoandat 账号",
+			title: "无法连接 {idpName} 账号",
 			text: "登录服务器暂无响应。请几分钟后重试。",
 		},
 	},
