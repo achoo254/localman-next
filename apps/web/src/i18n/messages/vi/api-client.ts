@@ -22,6 +22,17 @@ export const apiClient: Messages["apiClient"] = {
 		unsavedBody:
 			"“{name}” có thay đổi chưa được lưu ở nơi nào khác. Đóng tab sẽ bỏ các thay đổi đó.",
 		discard: "Bỏ thay đổi và đóng",
+		duplicate: "Nhân bản tab",
+		closeOne: "Đóng tab",
+		closeOthers: "Đóng các tab khác",
+		closeRight: "Đóng các tab bên phải",
+		closeAll: "Đóng tất cả tab",
+		closeUnchanged: "Đóng các tab không có thay đổi chưa lưu",
+		more: "Thao tác với tab",
+		openList: "Tab đang mở ({count})",
+		unsavedManyTitle: "Đóng {count} tab?",
+		unsavedManyBody:
+			"Số tab có thay đổi chưa được lưu ở nơi nào khác: {dirty}. Đóng sẽ bỏ các thay đổi đó.",
 	},
 	empty: {
 		title: "Bắt đầu gửi request",

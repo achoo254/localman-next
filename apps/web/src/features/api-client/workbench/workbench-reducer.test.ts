@@ -56,6 +56,21 @@ describe("workbenchReducer", () => {
 		expect(state).toEqual({ tabs: [], pages: [], activeTabId: null });
 	});
 
+	it("closes several tabs at once, the nearest kept one taking over", () => {
+		let state = run(open("a"), open("b"), open("c"), open("d"), {
+			type: "activate",
+			id: "b",
+		});
+		state = workbenchReducer(state, { type: "closeMany", ids: ["b", "c"] });
+		expect(state.tabs.map((tab) => tab.id)).toEqual(["a", "d"]);
+		expect(state.activeTabId).toBe("d");
+		state = workbenchReducer(state, { type: "closeMany", ids: ["d"] });
+		expect(state.activeTabId).toBe("a");
+		expect(workbenchReducer(state, { type: "closeMany", ids: ["zz"] })).toBe(
+			state,
+		);
+	});
+
 	it("marks a tab dirty on edit, and not when the update changes nothing", () => {
 		let state = run(open("a"));
 		state = workbenchReducer(state, {

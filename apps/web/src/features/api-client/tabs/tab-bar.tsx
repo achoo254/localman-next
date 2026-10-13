@@ -1,13 +1,6 @@
 import { DRAFT_MAX_TABS } from "@localman/shared/api-client";
 import { IconPlus } from "@tabler/icons-react";
-import {
-	type KeyboardEvent,
-	type ReactNode,
-	useCallback,
-	useEffect,
-	useRef,
-	useState,
-} from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef } from "react";
 import { IconButton } from "../../../components/ui/icon-button";
 import { useT } from "../../../i18n/i18n-context";
 import {
@@ -17,24 +10,12 @@ import {
 import type { WorkbenchTab } from "../workbench/workbench-types";
 import { CloseTabModal } from "./close-tab-modal";
 import { PageTabItem } from "./page-tab-item";
+import { TabContextMenu } from "./tab-context-menu";
 import { TabItem, tabDomId } from "./tab-item";
-import { tabLabel } from "./tab-label";
-
-/** Index of the tab a navigation key moves to, or `null` for other keys. */
-function targetIndex(key: string, index: number, last: number): number | null {
-	switch (key) {
-		case "ArrowRight":
-			return index === last ? 0 : index + 1;
-		case "ArrowLeft":
-			return index === 0 ? last : index - 1;
-		case "Home":
-			return 0;
-		case "End":
-			return last;
-		default:
-			return null;
-	}
-}
+import { TabOverflowMenu } from "./tab-overflow-menu";
+import { useTabClosing } from "./use-tab-closing";
+import { useTabKeys } from "./use-tab-keys";
+import { useTabMenuActions } from "./use-tab-menu-actions";
 
 export interface TabBarProps {
 	panelId: string;
@@ -44,18 +25,26 @@ export interface TabBarProps {
 	trailing?: ReactNode;
 }
 
-/** Open requests as tabs (←/→, Home/End, Delete to close) plus "New". */
+/**
+ * Open requests as tabs (←/→, Home/End, Delete to close) plus "New";
+ * each tab has a right-click menu, "…" lists every tab and closes in bulk.
+ */
 export function TabBar({ panelId, leading, trailing }: TabBarProps) {
 	const t = useT();
 	const { tabs, pages, activeTabId, canOpenTab } = useWorkbenchState();
-	const { activateTab, closeTab, openTab } = useWorkbenchActions();
-	const [closing, setClosing] = useState<WorkbenchTab | null>(null);
+	const { activateTab, openTab, currentTabs } = useWorkbenchActions();
+	const closing = useTabClosing();
+	const { requestClose } = closing;
 	const refocus = useRef(false);
-	// Handlers read the tabs here, so they stay the same for memoized tabs.
-	const latestTabs = useRef(tabs);
-	latestTabs.current = tabs;
-	const latestIds = useRef<string[]>([]);
-	latestIds.current = [...tabs, ...pages].map((item) => item.id);
+	const ids = useMemo(
+		() => [...tabs, ...pages].map((item) => item.id),
+		[tabs, pages],
+	);
+	// Handlers read these, so they stay the same for memoized tabs.
+	const latestIds = useRef<readonly string[]>(ids);
+	latestIds.current = ids;
+	const latestActive = useRef(activeTabId);
+	latestActive.current = activeTabId;
 
 	// After a keyboard switch or a close, focus follows the active tab.
 	useEffect(() => {
@@ -64,37 +53,34 @@ export function TabBar({ panelId, leading, trailing }: TabBarProps) {
 		if (activeTabId) document.getElementById(tabDomId(activeTabId))?.focus();
 	}, [activeTabId]);
 
-	const requestClose = useCallback(
-		(tab: WorkbenchTab) => {
-			if (tab.dirty) setClosing(tab);
-			else closeTab(tab.id);
-		},
-		[closeTab],
+	const closeOne = useCallback(
+		(tab: WorkbenchTab) => requestClose([tab.id]),
+		[requestClose],
+	);
+	const closeById = useCallback(
+		(id: string) => requestClose([id]),
+		[requestClose],
+	);
+	const onKeyDown = useTabKeys(
+		latestIds,
+		useCallback(
+			(id: string) => {
+				refocus.current = true;
+				activateTab(id);
+			},
+			[activateTab],
+		),
+		useCallback(
+			(id: string) => {
+				const tab = currentTabs().find((item) => item.id === id);
+				refocus.current = !tab?.dirty;
+				requestClose([id]);
+			},
+			[currentTabs, requestClose],
+		),
 	);
 
-	const onKeyDown = useCallback(
-		(event: KeyboardEvent<HTMLButtonElement>, tabId: string) => {
-			const ids = latestIds.current;
-			const index = ids.indexOf(tabId);
-			if (index === -1) return;
-			const target = targetIndex(event.key, index, ids.length - 1);
-			const tab = latestTabs.current.find((item) => item.id === tabId);
-			if (target !== null) {
-				event.preventDefault();
-				const next = ids[target];
-				if (next) {
-					refocus.current = true;
-					activateTab(next);
-				}
-			} else if (event.key === "Delete") {
-				event.preventDefault();
-				refocus.current = !tab?.dirty;
-				if (tab) requestClose(tab);
-				else closeTab(tabId);
-			}
-		},
-		[activateTab, requestClose, closeTab],
-	);
+	const menuActions = useTabMenuActions(latestActive, requestClose);
 
 	const limit = t("apiClient.tabs.limit", { max: DRAFT_MAX_TABS });
 	return (
@@ -103,7 +89,7 @@ export function TabBar({ panelId, leading, trailing }: TabBarProps) {
 			className="flex min-w-0 items-stretch border-border-subtle border-b bg-surface-subtle"
 		>
 			{leading}
-			{tabs.length + pages.length > 0 ? (
+			{ids.length > 0 ? (
 				<div
 					role="tablist"
 					aria-label={t("apiClient.tabs.label")}
@@ -111,26 +97,40 @@ export function TabBar({ panelId, leading, trailing }: TabBarProps) {
 					className="flex min-w-0 overflow-x-auto [scrollbar-width:thin]"
 				>
 					{tabs.map((tab) => (
-						<TabItem
+						<TabContextMenu
 							key={tab.id}
-							tab={tab}
-							active={tab.id === activeTabId}
-							panelId={panelId}
-							onSelect={activateTab}
-							onClose={requestClose}
-							onKeyDown={onKeyDown}
-						/>
+							tabId={tab.id}
+							ids={ids}
+							duplicable
+							actions={menuActions}
+						>
+							<TabItem
+								tab={tab}
+								active={tab.id === activeTabId}
+								panelId={panelId}
+								onSelect={activateTab}
+								onClose={closeOne}
+								onKeyDown={onKeyDown}
+							/>
+						</TabContextMenu>
 					))}
 					{pages.map((page) => (
-						<PageTabItem
+						<TabContextMenu
 							key={page.id}
-							page={page}
-							active={page.id === activeTabId}
-							panelId={panelId}
-							onSelect={activateTab}
-							onClose={closeTab}
-							onKeyDown={onKeyDown}
-						/>
+							tabId={page.id}
+							ids={ids}
+							duplicable={false}
+							actions={menuActions}
+						>
+							<PageTabItem
+								page={page}
+								active={page.id === activeTabId}
+								panelId={panelId}
+								onSelect={activateTab}
+								onClose={closeById}
+								onKeyDown={onKeyDown}
+							/>
+						</TabContextMenu>
 					))}
 				</div>
 			) : null}
@@ -147,25 +147,28 @@ export function TabBar({ panelId, leading, trailing }: TabBarProps) {
 					openTab();
 				}}
 			/>
+			{ids.length > 0 ? (
+				<TabOverflowMenu
+					tabs={tabs}
+					pages={pages}
+					activeId={activeTabId}
+					actions={menuActions}
+				/>
+			) : null}
 			{trailing ? (
 				<div className="ml-auto flex flex-none items-center px-1">
 					{trailing}
 				</div>
 			) : null}
 			<CloseTabModal
-				tabName={
-					closing
-						? tabLabel(closing.draft) || t("apiClient.request.untitled")
-						: null
-				}
-				onCancel={() => setClosing(null)}
-				onDiscard={() => {
-					if (closing) closeTab(closing.id);
-					setClosing(null);
-				}}
+				open={closing.open}
+				prompt={closing.prompt}
+				onCancel={closing.cancel}
+				onDiscard={closing.confirm}
 				onCloseAutoFocus={(event) => {
-					const next = activeTabId;
-					const element = next ? document.getElementById(tabDomId(next)) : null;
+					const element = latestActive.current
+						? document.getElementById(tabDomId(latestActive.current))
+						: null;
 					if (!element) return;
 					event.preventDefault();
 					element.focus();

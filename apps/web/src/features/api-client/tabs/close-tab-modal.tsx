@@ -4,18 +4,26 @@ import { Modal, ModalClose } from "../../../components/ui/modal";
 import { ModalFooter } from "../../../components/ui/modal-footer";
 import { useT } from "../../../i18n/i18n-context";
 
+/** What the modal says. */
+export interface CloseTabPrompt {
+	title: string;
+	body: string;
+}
+
 export interface CloseTabModalProps {
-	/** Label of the tab about to close; `null` keeps the modal closed. */
-	tabName: string | null;
+	open: boolean;
+	/** Kept while the modal fades out, so its text does not blank. */
+	prompt: CloseTabPrompt | null;
 	onCancel: () => void;
 	onDiscard: () => void;
 	/** Where focus goes once the tab is gone. */
 	onCloseAutoFocus?: (event: Event) => void;
 }
 
-/** Asks before closing a tab whose edits exist nowhere else. */
+/** Asks before closing tabs whose edits exist nowhere else. */
 export function CloseTabModal({
-	tabName,
+	open,
+	prompt,
 	onCancel,
 	onDiscard,
 	onCloseAutoFocus,
@@ -24,11 +32,11 @@ export function CloseTabModal({
 	const cancel = useRef<HTMLButtonElement>(null);
 	return (
 		<Modal
-			open={tabName !== null}
+			open={open}
 			onOpenChange={(open) => {
 				if (!open) onCancel();
 			}}
-			title={t("apiClient.tabs.unsavedTitle")}
+			title={prompt?.title ?? ""}
 			size="sm"
 			initialFocusRef={cancel}
 			onCloseAutoFocus={onCloseAutoFocus}
@@ -50,9 +58,7 @@ export function CloseTabModal({
 				</ModalFooter>
 			}
 		>
-			<p className="text-sm">
-				{t("apiClient.tabs.unsavedBody", { name: tabName ?? "" })}
-			</p>
+			<p className="text-sm">{prompt?.body}</p>
 		</Modal>
 	);
 }

@@ -107,6 +107,14 @@ export function WorkbenchProvider({
 		[abort],
 	);
 
+	const closeTabs = useCallback(
+		(tabIds: readonly string[]) => {
+			for (const id of tabIds) abort(id);
+			dispatch({ type: "closeMany", ids: tabIds });
+		},
+		[abort],
+	);
+
 	const actions = useMemo<WorkbenchActions>(
 		() => ({
 			openTab,
@@ -116,6 +124,7 @@ export function WorkbenchProvider({
 			currentPages: () => latest.current.pages,
 			activateTab: (id) => dispatch({ type: "activate", id }),
 			closeTab,
+			closeTabs,
 			updateDraft: (id, update) => dispatch({ type: "editDraft", id, update }),
 			bindTab: (id, source, saved) =>
 				dispatch({ type: "bind", id, source, saved }),
@@ -129,7 +138,7 @@ export function WorkbenchProvider({
 			saveDrafts: sync.flush,
 			currentTabs: () => latest.current.tabs,
 		}),
-		[openTab, closeTab, sendTab, cancelSend, sync.flush],
+		[openTab, closeTab, closeTabs, sendTab, cancelSend, sync.flush],
 	);
 
 	const value = useMemo<WorkbenchState>(

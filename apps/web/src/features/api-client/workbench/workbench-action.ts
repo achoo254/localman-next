@@ -33,6 +33,8 @@ export type WorkbenchAction =
 	| { type: "setSaved"; id: string; saved: ApiRequestDraft }
 	| { type: "activate"; id: string }
 	| { type: "close"; id: string }
+	/** Several tabs or pages at once (the tab menu's bulk closes). */
+	| { type: "closeMany"; ids: readonly string[] }
 	| {
 			type: "editDraft";
 			id: string;

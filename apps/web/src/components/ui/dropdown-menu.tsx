@@ -2,6 +2,11 @@ import * as RadixMenu from "@radix-ui/react-dropdown-menu";
 import { IconCheck } from "@tabler/icons-react";
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "../../lib/cn";
+import {
+	MENU_CONTENT_CLASS,
+	MENU_ITEM_CLASS,
+	MENU_SEPARATOR_CLASS,
+} from "./menu-styles";
 
 export const DropdownMenu = RadixMenu.Root;
 export const DropdownMenuTrigger = RadixMenu.Trigger;
@@ -24,21 +29,12 @@ export function DropdownMenuContent({
 				sideOffset={sideOffset}
 				align={align}
 				collisionPadding={8}
-				className={cn(
-					"z-80 min-w-50 rounded-md border border-border bg-surface p-1 text-fg shadow-lg",
-					"data-[state=closed]:animate-fade-out data-[state=open]:animate-pop-in",
-					className,
-				)}
+				className={cn(MENU_CONTENT_CLASS, className)}
 				{...rest}
 			/>
 		</RadixMenu.Portal>
 	);
 }
-
-const ITEM_CLASS = cn(
-	"flex min-h-10 w-full cursor-pointer select-none items-center gap-2 rounded-sm px-3 font-mono text-[0.8125rem] outline-none",
-	"data-disabled:cursor-not-allowed data-highlighted:bg-fg/6 data-disabled:opacity-45",
-);
 
 export interface DropdownMenuItemProps
 	extends ComponentProps<typeof RadixMenu.Item> {
@@ -58,7 +54,7 @@ export function DropdownMenuItem({
 	return (
 		<RadixMenu.Item
 			className={cn(
-				ITEM_CLASS,
+				MENU_ITEM_CLASS,
 				danger ? "text-error" : "text-fg [&_svg]:text-icon-muted",
 				className,
 			)}
@@ -81,7 +77,7 @@ export function DropdownMenuRadioItem({
 }: ComponentProps<typeof RadixMenu.RadioItem>) {
 	return (
 		<RadixMenu.RadioItem
-			className={cn(ITEM_CLASS, "text-fg [&_svg]:text-primary", className)}
+			className={cn(MENU_ITEM_CLASS, "text-fg [&_svg]:text-primary", className)}
 			{...rest}
 		>
 			<span className="inline-flex size-4 shrink-0" aria-hidden="true">
@@ -100,7 +96,7 @@ export function DropdownMenuSeparator({
 }: ComponentProps<typeof RadixMenu.Separator>) {
 	return (
 		<RadixMenu.Separator
-			className={cn("my-1 h-px bg-border-subtle", className)}
+			className={cn(MENU_SEPARATOR_CLASS, className)}
 			{...rest}
 		/>
 	);

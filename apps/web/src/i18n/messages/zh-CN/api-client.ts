@@ -22,6 +22,17 @@ export const apiClient: Messages["apiClient"] = {
 		unsavedBody:
 			"“{name}”中的更改没有保存在其他地方，关闭标签页会丢弃这些更改。",
 		discard: "丢弃并关闭",
+		duplicate: "复制标签页",
+		closeOne: "关闭标签页",
+		closeOthers: "关闭其他标签页",
+		closeRight: "关闭右侧标签页",
+		closeAll: "关闭所有标签页",
+		closeUnchanged: "关闭没有未保存更改的标签页",
+		more: "标签页操作",
+		openList: "已打开的标签页（{count}）",
+		unsavedManyTitle: "关闭 {count} 个标签页？",
+		unsavedManyBody:
+			"其中有 {dirty} 个标签页的更改没有保存在其他地方，关闭会丢弃这些更改。",
 	},
 	empty: {
 		title: "开始发送 request",

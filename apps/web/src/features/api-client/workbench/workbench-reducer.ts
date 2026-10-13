@@ -10,6 +10,7 @@ import {
 import { isBlankDraft, isDirty } from "./draft-compare";
 import { NO_TEMPORARY, withTemporary } from "./temporary-variables";
 import type { WorkbenchAction } from "./workbench-action";
+import { barIds, closeIds } from "./workbench-close";
 import type { PageTab } from "./workbench-tab-types";
 import type { TabResponse, WorkbenchTab } from "./workbench-types";
 
@@ -63,17 +64,6 @@ function mapTab(
 		...state,
 		tabs: state.tabs.map((tab) => (tab.id === id ? update(tab) : tab)),
 	};
-}
-
-/** Tab ids in bar order: requests, then pages. */
-const barIds = (state: WorkbenchState): string[] => [
-	...state.tabs.map((tab) => tab.id),
-	...state.pages.map((page) => page.id),
-];
-
-/** The neighbour that takes focus when the active tab closes. */
-function nextActive(ids: string[], closedIndex: number): string | null {
-	return ids[closedIndex] ?? ids[closedIndex - 1] ?? null;
 }
 
 export function workbenchReducer(
@@ -140,18 +130,10 @@ export function workbenchReducer(
 			return barIds(state).includes(action.id)
 				? { ...state, activeTabId: action.id }
 				: state;
-		case "close": {
-			const index = barIds(state).indexOf(action.id);
-			if (index === -1) return state;
-			const tabs = state.tabs.filter((tab) => tab.id !== action.id);
-			const pages = state.pages.filter((page) => page.id !== action.id);
-			const rest = { ...state, tabs, pages };
-			const activeTabId =
-				state.activeTabId === action.id
-					? nextActive(barIds(rest), index)
-					: state.activeTabId;
-			return { ...rest, activeTabId };
-		}
+		case "close":
+			return closeIds(state, new Set([action.id]));
+		case "closeMany":
+			return closeIds(state, new Set(action.ids));
 		case "bind":
 			return mapTab(state, action.id, (tab) => ({
 				...tab,

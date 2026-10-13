@@ -22,6 +22,17 @@ export const apiClient = {
 		unsavedBody:
 			"“{name}” has changes that are not saved anywhere else. Closing the tab discards them.",
 		discard: "Discard and close",
+		duplicate: "Duplicate tab",
+		closeOne: "Close tab",
+		closeOthers: "Close other tabs",
+		closeRight: "Close tabs to the right",
+		closeAll: "Close all tabs",
+		closeUnchanged: "Close tabs without unsaved changes",
+		more: "Tab actions",
+		openList: "Open tabs ({count})",
+		unsavedManyTitle: "Close {count} tabs?",
+		unsavedManyBody:
+			"Tabs with changes that are not saved anywhere else: {dirty}. Closing discards those changes.",
 	},
 	empty: {
 		title: "Start sending requests",

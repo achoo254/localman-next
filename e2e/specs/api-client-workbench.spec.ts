@@ -117,3 +117,38 @@ test("the API client page has no serious or critical accessibility violations", 
 	);
 	expect(serious).toEqual([]);
 });
+
+test("the tab menu duplicates a tab and closes the others", async ({
+	page,
+}) => {
+	await signIn(page, uniqueUsername("tabmenu", uniqueSuffix()));
+	await openApiClient(page);
+	await newRequestTab(page);
+	const url = `${ECHO_ORIGIN}/cors/tab-menu`;
+	await setUrl(page, url);
+
+	const tabs = page.getByTestId("tabbar-tab");
+	const menu = page.getByTestId("tabbar-tab-menu");
+	await tabs.first().click({ button: "right" });
+	await expect(menu).toBeVisible();
+	await page.getByTestId("tabbar-menu-duplicate").click();
+	// The closing menu fades out before the next one opens.
+	await expect(menu).toHaveCount(0);
+	await expect(tabs).toHaveCount(2);
+	await expect(tabs.nth(1)).toHaveAttribute("aria-selected", "true");
+	await expect(page.getByTestId("request-url")).toHaveValue(url);
+
+	await tabs.nth(1).click({ button: "right" });
+	await page.getByTestId("tabbar-menu-close-others").click();
+	// The first tab holds an unsent edit: one question before it goes.
+	await page.getByTestId("modal-unsaved-discard").click();
+	await expect(tabs).toHaveCount(1);
+
+	await page.getByTestId("tabbar-more").click();
+	await expect(page.getByTestId("tabbar-more-tab")).toHaveCount(1);
+	// Checked with the menu closed: an open menu hides the page from
+	// assistive tech on purpose (focus stays in the menu).
+	await page.keyboard.press("Escape");
+	await expect(page.getByTestId("tabbar-more-menu")).toHaveCount(0);
+	expect(await axeViolations(page)).toEqual([]);
+});

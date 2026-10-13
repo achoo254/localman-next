@@ -36,6 +36,8 @@ export interface WorkbenchActions {
 	activateTab: (tabId: string) => void;
 	/** Closes without asking (the tab bar asks first for a dirty tab). */
 	closeTab: (tabId: string) => void;
+	/** Closes several tabs or pages without asking, in one step. */
+	closeTabs: (tabIds: readonly string[]) => void;
 	/** `update` must be pure and return the same object when nothing changed. */
 	updateDraft: (
 		tabId: string,
