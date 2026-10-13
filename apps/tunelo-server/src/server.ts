@@ -25,6 +25,8 @@ import { attachWsHandler } from "./ws-handler.js";
 const logger = createLogger("tunelo-server");
 
 const port = Number(process.env.TUNNEL_PORT) || DEFAULTS.SERVER_PORT;
+// Behind nginx set 127.0.0.1: otherwise every interface, skipping its checks.
+const host = process.env.TUNNEL_HOST || undefined;
 
 const keyStore = createKeyStore();
 
@@ -115,10 +117,15 @@ async function start(): Promise<void> {
 	const server = http.createServer(app);
 	attachWsHandler(server, authenticator);
 
-	server.listen(port, () => {
+	server.listen(port, host, () => {
 		logger.info("=".repeat(50));
 		logger.info(
-			{ port, nodeVersion: process.version, pid: process.pid },
+			{
+				port,
+				host: host ?? "*",
+				nodeVersion: process.version,
+				pid: process.pid,
+			},
 			"Tunelo server started",
 		);
 		logger.info("=".repeat(50));

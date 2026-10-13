@@ -20,6 +20,8 @@ module.exports = {
 			kill_timeout: 5000,
 			env: {
 				NODE_ENV: "production",
+				// Only nginx reaches the HTTP port; TCP tunnel ports stay public.
+				TUNNEL_HOST: "127.0.0.1",
 			},
 		},
 	],

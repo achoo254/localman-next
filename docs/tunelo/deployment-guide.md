@@ -165,6 +165,10 @@ Turning it on (prod action, with the deploy): set `IDP_INTERNAL_URL`, `IDP_INTER
 reload nginx, `pm2 reload tunelo`. Startup tags documents stored before tenants with the
 primary tenant and, with the IdP settings on, drops the indexes the tenant ones replace.
 
+The HTTP/WebSocket port listens on `TUNNEL_HOST` (`127.0.0.1` from `infra/tunelo/ecosystem.config.cjs`):
+only nginx reaches it, so its Host-equals-SNI check cannot be skipped by calling `:3001` directly.
+TCP tunnel ports are not affected.
+
 The CLI signs in per server: `tunelo login --server https://tunnel.<domain>` signs in at
 `https://auth.<domain>` (derived from the host, never from the server's answers) and makes
 that server the default; the account token is only sent to the Tunelo of its own domain.
