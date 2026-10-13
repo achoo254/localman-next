@@ -1,15 +1,17 @@
 import { CodeBlock } from "../../../components/ui/code-block";
 import { useT } from "../../../i18n/i18n-context";
 import { renderRich } from "../../../i18n/rich-text";
+import { useTenantInfo } from "../../../lib/tenant-info";
 import {
 	TUNELO_INSTALL,
-	TUNELO_LOGIN,
 	tuneloHttpCommand,
+	tuneloLoginCommand,
 } from "./tunelo-commands";
 
 /** Install, sign in, open a tunnel for `port`: the commands to copy. */
 export function TuneloSteps({ port }: { port: number }) {
 	const t = useT();
+	const { tunnelDomain } = useTenantInfo();
 	// A port is an identifier, not a quantity: no locale digit grouping (8.003).
 	const portText = String(port);
 	const steps = [
@@ -21,7 +23,7 @@ export function TuneloSteps({ port }: { port: number }) {
 		{
 			id: "login",
 			title: t("apiClientTunelo.steps.login"),
-			code: TUNELO_LOGIN,
+			code: tuneloLoginCommand(tunnelDomain),
 		},
 		{
 			id: "http",

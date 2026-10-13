@@ -3,6 +3,7 @@
 //
 // Run where mongoose is installed and MONGO_URI is set, e.g. on the server:
 //   cd /var/www/tunelo && node --env-file=.env create-access-token.mjs [label]
+// The token belongs to tenant TENANT_ID (default: the primary tenant).
 //
 // Standalone on purpose (no build step / workspace imports) so it can run
 // against the deployed server's node_modules.
@@ -18,12 +19,15 @@ if (!uri) {
 const label =
 	process.argv[2] ?? `token-${new Date().toISOString().slice(0, 10)}`;
 const maxTunnels = Number(process.env.MAX_TUNNELS ?? 3);
+const tenantId = process.env.TENANT_ID ?? "primary";
 
 // Matches apps/tunelo-server/src/db/models/api-key-model.ts (collection: apikeys).
+// The server owns the indexes (unique per tenant): never build them here.
 const schema = new mongoose.Schema(
 	{
+		tenantId: { type: String, required: true },
 		userId: { type: mongoose.Schema.Types.ObjectId, default: null },
-		keyHash: { type: String, required: true, unique: true },
+		keyHash: { type: String, required: true },
 		keyPrefix: { type: String, required: true },
 		label: { type: String, default: "Default" },
 		status: { type: String, enum: ["active", "revoked"], default: "active" },
@@ -31,7 +35,7 @@ const schema = new mongoose.Schema(
 		expiresAt: { type: Date, default: null },
 		lastUsedAt: { type: Date, default: null },
 	},
-	{ timestamps: { createdAt: true, updatedAt: false } },
+	{ timestamps: { createdAt: true, updatedAt: false }, autoIndex: false },
 );
 const TokenModel = mongoose.model("ApiKey", schema);
 
@@ -41,6 +45,7 @@ const keyPrefix = token.slice(0, 12);
 
 await mongoose.connect(uri);
 await TokenModel.create({
+	tenantId,
 	keyHash,
 	keyPrefix,
 	label,
@@ -51,4 +56,4 @@ await mongoose.disconnect();
 
 console.log("Access token created (copy now — not recoverable):");
 console.log(token);
-console.log(`label=${label} maxTunnels=${maxTunnels}`);
+console.log(`label=${label} maxTunnels=${maxTunnels} tenant=${tenantId}`);

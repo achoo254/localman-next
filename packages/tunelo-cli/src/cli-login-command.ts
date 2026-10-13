@@ -1,7 +1,6 @@
 import type { Command } from "commander";
 import { getApiBaseUrl, verifyKey } from "./api-client.js";
 import { type StoredSession, loadConfig, updateConfig } from "./config.js";
-import { acceptsAccountToken } from "./credentials.js";
 import {
 	deviceNameForIdp,
 	pollForTokens,
@@ -47,12 +46,16 @@ async function saveLegacyKey(key: string): Promise<void> {
 	console.log("  ✓ Token verified & saved. Run: tunelo http <port>");
 }
 
+/** The IdP that signs in for `serverUrl`, from its host (`tunnel.<d>` → `https://auth.<d>`). */
+function issuerFor(serverUrl: string): string {
+	return idpIssuer(serverIdentity(serverUrl)?.issuer);
+}
+
 /**
- * Signs in for `serverUrl`: its IdP and audience follow from its host
- * (`tunnel.<d>` → `https://auth.<d>`), never from what the server says.
+ * Signs in at `issuer` without touching the stored session: a failed or
+ * abandoned sign-in leaves the current one working.
  */
-async function deviceLogin(serverUrl: string): Promise<void> {
-	const issuer = idpIssuer(serverIdentity(serverUrl)?.issuer);
+async function deviceLogin(issuer: string): Promise<StoredSession> {
 	const endpoints = await discover(issuer).catch((err: Error) =>
 		fail(`Could not reach ${issuer}: ${err.message}`),
 	);
@@ -75,11 +78,7 @@ async function deviceLogin(serverUrl: string): Promise<void> {
 	const tokens = await pollForTokens(endpoints, authorization).catch(
 		(err: Error) => fail(err.message),
 	);
-	const session = sessionFromTokens(issuer, tokens, undefined, Date.now());
-	saveSession(session);
-	console.log(
-		`  ✓ Signed in (account ${session.sub}). Run: tunelo http <port>`,
-	);
+	return sessionFromTokens(issuer, tokens, undefined, Date.now());
 }
 
 /** Revokes the grant at the IdP; on failure says where to do it by hand. */
@@ -125,23 +124,28 @@ export function registerLoginCommands(program: Command): void {
 				const serverUrl = options.server
 					? normalizeServer(options.server)
 					: resolveServerUrl(undefined, printServerMigration);
+				const issuer = issuerFor(serverUrl);
 				const existing = loadConfig().session;
-				// Another server: its session replaces this one (one session).
-				const sameServer =
-					existing !== undefined &&
-					acceptsAccountToken(serverUrl, existing.issuer);
-				if (existing && sameServer && !options.force) {
+				const makeDefault = (): void => {
+					if (!options.server) return;
+					updateConfig((config) => ({ ...config, server: serverUrl }));
+				};
+				// Another IdP: its session replaces this one (one session).
+				if (existing?.issuer === issuer && !options.force) {
+					makeDefault();
 					console.log(
 						`  Already signed in (account ${existing.sub}). Use --force to sign in again.`,
 					);
 					return;
 				}
-				// Signing in again replaces this machine's grant: end the old one.
+				const session = await deviceLogin(issuer);
+				// The new grant replaces this machine's old one: end it.
 				if (existing) await revokeSession(existing);
-				if (options.server) {
-					updateConfig((config) => ({ ...config, server: serverUrl }));
-				}
-				await deviceLogin(serverUrl);
+				saveSession(session);
+				makeDefault();
+				console.log(
+					`  ✓ Signed in (account ${session.sub}). Run: tunelo http <port>`,
+				);
 			},
 		);
 

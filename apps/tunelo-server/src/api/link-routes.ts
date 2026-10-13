@@ -5,6 +5,7 @@ import type { KeyInfo } from "../key-store/key-store-types.js";
 import { AttemptLimiter } from "../lib/attempt-limiter.js";
 import { cleanDisplayName } from "../lib/display-name.js";
 import * as deviceLink from "../services/device-link-service.js";
+import { tuneloLoginCommand } from "../tenancy/login-command.js";
 import { authenticateRequest } from "./middleware/authenticate-request.js";
 import { TuneloError } from "./middleware/error-handler.js";
 
@@ -26,7 +27,7 @@ function requireDevice(keyInfo: KeyInfo): { keyId: string; deviceId: string } {
 	if (!keyInfo.deviceId) {
 		throw new TuneloError(
 			"TUNELO_LINK_004",
-			"This token is not bound to a machine; run `tunelo login` first",
+			`This token is not bound to a machine; run \`${tuneloLoginCommand()}\` first`,
 			400,
 		);
 	}

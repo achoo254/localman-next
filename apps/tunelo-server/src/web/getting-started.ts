@@ -1,10 +1,11 @@
+import { tuneloLoginCommand } from "../tenancy/login-command.js";
 import { type SafeHtml, html } from "./html.js";
 import type { MessageKey, Translator } from "./i18n/messages.js";
 
 interface Step {
 	readonly title: MessageKey;
 	readonly body: MessageKey;
-	readonly command: string;
+	readonly command: () => string;
 	readonly id: string;
 }
 
@@ -13,19 +14,19 @@ const STEPS: readonly Step[] = [
 		id: "install",
 		title: "steps.install.title",
 		body: "steps.install.body",
-		command: "npm i -g tunelo",
+		command: () => "npm i -g tunelo",
 	},
 	{
 		id: "login",
 		title: "steps.login.title",
 		body: "steps.login.body",
-		command: "tunelo login",
+		command: () => tuneloLoginCommand(),
 	},
 	{
 		id: "open",
 		title: "steps.open.title",
 		body: "steps.open.body",
-		command: "tunelo http 3000",
+		command: () => "tunelo http 3000",
 	},
 ];
 
@@ -43,7 +44,7 @@ ${heading}
 <ol class="step-list">${STEPS.map(
 		(step) => html`<li class="step" data-id="step-${step.id}">
 <p class="step-title">${i18n.t(step.title)}</p>
-<pre class="command"><code>${step.command}</code></pre>
+<pre class="command"><code>${step.command()}</code></pre>
 <p class="muted">${i18n.t(step.body)}</p>
 </li>`,
 	)}</ol>

@@ -1,6 +1,7 @@
 import { TUNNEL_SCOPES, type TunnelScope } from "@tunelo/shared";
 import type { AuthConfig } from "../config/auth-config.js";
 import type { KeyInfo, KeyStore } from "../key-store/key-store-types.js";
+import { tuneloLoginCommand } from "../tenancy/login-command.js";
 import { type IdpTokenVerifier, looksLikeJwt } from "./idp-token-verifier.js";
 import { hashToken } from "./token-hash.js";
 
@@ -129,7 +130,7 @@ export function createTokenAuthenticator(
 			const day = new Date(cutoffMs).toISOString().slice(0, 10);
 			return fail(
 				"TUNELO_AUTH_004",
-				`Anonymous tokens stopped working on ${day}. Run \`tunelo login\` to sign in with your account.`,
+				`Anonymous tokens stopped working on ${day}. Run \`${tuneloLoginCommand()}\` to sign in with your account.`,
 			);
 		}
 		return { ok: true, keyInfo };

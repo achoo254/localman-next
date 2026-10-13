@@ -12,7 +12,17 @@ import {
 } from "@localman/shared/api-client";
 
 export const TUNELO_INSTALL = "npm install -g tunelo";
-export const TUNELO_LOGIN = "tunelo login";
+
+/**
+ * Sign-in for the Tunelo of `tunnelDomain`. The CLI's default server is
+ * `TUNELO_TUNNEL_DOMAIN`; any other domain must be named, or the user
+ * would sign in at hoandat and open tunnels there.
+ */
+export function tuneloLoginCommand(tunnelDomain: string | null): string {
+	return !tunnelDomain || tunnelDomain === TUNELO_TUNNEL_DOMAIN
+		? "tunelo login"
+		: `tunelo login --server https://${tunnelDomain}`;
+}
 
 export function tuneloHttpCommand(port: number): string {
 	return `tunelo http ${port}`;
