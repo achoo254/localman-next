@@ -104,3 +104,37 @@ Gọi `jev-latest` (`jev-1.13.0`), ngày 13/10/2026. State gồm các sự thậ
 **Jev hỏi lại với dữ kiện đã sửa:** giữ thứ tự (multi-tenant ở đợt 3) có xác suất 0.54, gần như năm ăn năm thua. Owner nên chốt câu này.
 
 **User chốt (13/10):** giữ thứ tự ba đợt (Jev 0.54). Commit, push và deploy bản sửa, dù Jev nghiêng về chỉ commit và push (0.70; deploy 0.23).
+
+## Deploy bản sửa (13/10 tối)
+
+- **Commit và CI:** commit `e14b00a` (sửa đăng nhập im lặng và hai test e2e) và `e1f2a91` (docs), push lên `main`. Một phiên khác commit ảnh chụp `6195239` lên trên, nên run CI `38410975399` chạy trên HEAD đó.
+  - Lần chạy 1 hỏng ở đúng một unit test chập chờn có từ trước (xem mục dưới).
+  - Jev chọn chạy lại job hỏng, deploy khi xanh, rồi sửa test chập chờn thành việc riêng (0.95). Lần chạy 2 xanh; e2e qua 40/40 trên CI, kể cả spec request log.
+- **Release:** `20261013-145342-61952393217e`, không có `-dirty`. Process khởi động lúc 14:54:11 UTC. Cả hai healthz báo `db: connected`. Số restart từ 32 lên 33, đúng một lần reload khi deploy.
+- **15 phút sau (15:09 UTC):** process vẫn chạy liên tục từ 14:54:11, restart vẫn 33, bộ nhớ 184 MB, healthz ổn, 0 lỗi từ release mới.
+- **Kiểm sau deploy:**
+  - `/`, `/docs`, `/api/v1/openapi.json` trả 200; `www` trả 404; `POST /internal/audit-events` từ ngoài trả 403.
+  - CSP có 5 hash, header bảo mật đủ.
+  - Cổng 4000, 4100, 27018 đóng từ ngoài, chỉ nghe `127.0.0.1`.
+  - Log không lộ secret (0 dòng ở access log sau deploy và ở cả ba error log).
+  - Không có lỗi API nào từ release mới.
+- **SAST:** đạt. Diff chỉ đổi thời điểm đọc cookie gợi ý, không có input hay secret mới, cơ chế chống vòng lặp `lm_sso_tried` giữ nguyên.
+- **DAST (luồng đăng nhập):** đạt.
+  - `/auth/login` với `returnTo` là domain ngoài, `//…`, `/\…`, `javascript:` hay dạng mã hoá đều chỉ dẫn tới IdP với `redirect_uri` cố định; `returnTo` không lọt ra `Location`.
+  - Cookie dùng `__Host-` và có `Secure`. `lm_login` có thêm `HttpOnly`. `lm_sso_tried` không có `HttpOnly`, theo thiết kế, vì JS cần đọc nó.
+  - Chưa kiểm được trên production: bước callback trả về `returnTo` cần đăng nhập thật, và chính cuộc đua đã sửa chỉ được kiểm bằng unit test và e2e.
+
+### Phát hiện khi kiểm trình duyệt: beacon của Cloudflare bị CSP chặn
+
+Headless Chromium mở `/` và `/docs` trên production. Mỗi trang có một lỗi CSP: Cloudflare tự chèn script Web Analytics (`static.cloudflareinsights.com/beacon.min.js`) vào HTML trả cho trình duyệt, và `script-src` chặn nó.
+- Lỗi này không do bản deploy: bản build không chứa script đó, và Cloudflare chỉ chèn khi User-Agent là trình duyệt.
+- Không có rủi ro bảo mật, vì script bị chặn. Hậu quả là có lỗi trong console và không thu được analytics.
+- Jev tư vấn: mở CSP cho beacon (`script-src` + `connect-src`, cần sửa code và deploy) 0.55; tắt chèn tự động ở Cloudflare 0.38; để nguyên 0.07. Chờ owner quyết.
+
+### Test chập chờn còn mở: `workbench-renders.test.tsx`
+
+Test này kiểm rằng `useHistoryList` không render lại khi đang gõ, nhưng thỉnh thoảng nhận được 1 render. Nó hỏng ở run 38199038263 và 38232260972 (12/10), rồi ở lần chạy 1 của run 38410975399, luôn với `expected 1 to be +0`. Đã loại hai giả thuyết bằng thí nghiệm:
+- Thông báo của TanStack Query đến muộn sau khi `isFetching() === 0`: làm chậm `notifyManager` 40 ms, test vẫn qua 3/3.
+- Lưu nháp (debounce 30 ms) rơi vào giữa lúc gõ: gõ cách nhau 50 ms sinh ra 5 lần lưu, `history` vẫn render 0 lần.
+
+Nguyên nhân gốc chưa tìm ra. Việc riêng tiếp theo: ghi lại thứ làm `HistorySidebar` render (props của parent, context) trong một run có CPU bị bóp.
