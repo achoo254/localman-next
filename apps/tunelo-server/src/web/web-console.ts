@@ -12,7 +12,15 @@ import type pino from "pino";
 import { createAuthRouter } from "./auth-routes.js";
 import { describeError } from "./oidc-errors.js";
 import { createPageRouter } from "./page-routes.js";
-import { type WebConfigDefaults, loadWebConfig } from "./web-config.js";
+import {
+	type TenantWebSettings,
+	tenantWebConsoles,
+} from "./tenant-web-consoles.js";
+import {
+	type WebConfig,
+	type WebConfigDefaults,
+	loadWebConfig,
+} from "./web-config.js";
 import { type WebContextOptions, createWebContext } from "./web-context.js";
 
 export const CONTENT_SECURITY_POLICY =
@@ -96,20 +104,23 @@ export function createWebConsole(options: WebContextOptions): Router {
 }
 
 /**
- * Mounts the console on `app` when it is configured. Never throws: the
- * console is optional, so a bad setting or a setup error is logged (names,
- * never values) and the API, relay, /login and WebSockets start as before.
+ * Mounts the console on `app` when it is configured, for the primary
+ * tenant and, with `tenants`, for every other tenant's domain. Never
+ * throws: the console is optional, so a bad setting or a setup error is
+ * logged (names, never values) and the API, relay, /login and WebSockets
+ * start as before.
  */
 export function mountWebConsole(
 	app: Express,
 	env: NodeJS.ProcessEnv,
 	defaults: WebConfigDefaults,
 	logger: pino.Logger,
+	tenants?: TenantWebSettings,
 ): boolean {
 	try {
-		const router = webConsoleFromEnv(env, defaults, logger);
-		if (!router) return false;
-		app.use(router);
+		const primary = primaryConsoleFromEnv(env, defaults, logger);
+		if (!primary) return false;
+		app.use(tenantWebConsoles({ primary, tenants, logger }));
 		return true;
 	} catch (error) {
 		logger.error(
@@ -129,6 +140,14 @@ export function webConsoleFromEnv(
 	defaults: WebConfigDefaults,
 	logger: pino.Logger,
 ): Router | null {
+	return primaryConsoleFromEnv(env, defaults, logger)?.router ?? null;
+}
+
+function primaryConsoleFromEnv(
+	env: NodeJS.ProcessEnv,
+	defaults: WebConfigDefaults,
+	logger: pino.Logger,
+): { router: Router; config: WebConfig } | null {
 	const result = loadWebConfig(env, defaults);
 	if (!result.enabled) {
 		logger.warn(
@@ -141,9 +160,10 @@ export function webConsoleFromEnv(
 		{ publicUrl: result.config.publicUrl, clientId: result.config.clientId },
 		"Web console enabled",
 	);
-	return createWebConsole({
+	const router = createWebConsole({
 		config: result.config,
 		logger,
 		tunnelDomain: defaults.primaryDomain,
 	});
+	return { router, config: result.config };
 }

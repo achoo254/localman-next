@@ -47,7 +47,11 @@ const success = {
 describe("device flow", () => {
 	test("asks for the Tunelo resource and scopes", async () => {
 		const endpoints = await discover(idp.issuer);
-		const auth = await startDeviceAuthorization(endpoints, "my-mac");
+		const auth = await startDeviceAuthorization(
+			endpoints,
+			"my-mac",
+			"https://tunnel.hoandat.com",
+		);
 		expect(auth.userCode).toBe("WDJB-MJHT");
 		const form = idp.requests[0]?.form;
 		expect(form?.get("client_id")).toBe("tunelo-cli");
@@ -66,7 +70,11 @@ describe("device flow", () => {
 			success,
 		);
 		const endpoints = await discover(idp.issuer);
-		const auth = await startDeviceAuthorization(endpoints, "mac");
+		const auth = await startDeviceAuthorization(
+			endpoints,
+			"mac",
+			"https://tunnel.hoandat.com",
+		);
 		const clock = fakeClock();
 		const tokens = await pollForTokens(endpoints, auth, clock);
 		expect(tokens).toMatchObject({ refreshToken: "rt-1", expiresIn: 900 });
@@ -84,7 +92,11 @@ describe("device flow", () => {
 			success,
 		);
 		const endpoints = await discover(idp.issuer);
-		const auth = await startDeviceAuthorization(endpoints, "mac");
+		const auth = await startDeviceAuthorization(
+			endpoints,
+			"mac",
+			"https://tunnel.hoandat.com",
+		);
 		const clock = fakeClock();
 		await pollForTokens(endpoints, auth, clock);
 		expect(clock.waits).toEqual([5000, 10000]);
@@ -93,7 +105,11 @@ describe("device flow", () => {
 	test("stops on expired_token", async () => {
 		idp.tokenReplies.push({ status: 400, body: { error: "expired_token" } });
 		const endpoints = await discover(idp.issuer);
-		const auth = await startDeviceAuthorization(endpoints, "mac");
+		const auth = await startDeviceAuthorization(
+			endpoints,
+			"mac",
+			"https://tunnel.hoandat.com",
+		);
 		await expect(
 			pollForTokens(endpoints, auth, fakeClock()),
 		).rejects.toBeInstanceOf(DeviceLoginError);
@@ -103,7 +119,11 @@ describe("device flow", () => {
 		idp.tokenReplies.push(pending);
 		const endpoints = await discover(idp.issuer);
 		const auth = {
-			...(await startDeviceAuthorization(endpoints, "mac")),
+			...(await startDeviceAuthorization(
+				endpoints,
+				"mac",
+				"https://tunnel.hoandat.com",
+			)),
 			expiresIn: 12,
 		};
 		await expect(

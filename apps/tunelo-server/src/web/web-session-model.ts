@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import { tenantScopePlugin } from "../tenancy/tunnel-tenant.js";
 
 /**
  * A browser signed in to the web console. `_id` is the SHA-256 of the cookie
@@ -42,4 +43,5 @@ export interface StoredWebSession {
 	expiresAt: Date;
 }
 
+webSessionSchema.plugin(tenantScopePlugin);
 export const WebSessionModel = model("WebSession", webSessionSchema);

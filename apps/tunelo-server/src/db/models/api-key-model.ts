@@ -1,4 +1,5 @@
 import { type InferRawDocType, Schema, model } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tunnel-tenant.js";
 
 const apiKeySchema = new Schema(
 	{
@@ -35,6 +36,7 @@ export type ApiKeyDocument = InferRawDocType<typeof apiKeySchema> & {
 	_id: Schema.Types.ObjectId;
 };
 
+apiKeySchema.plugin(tenantScopePlugin);
 export const ApiKey = model("ApiKey", apiKeySchema);
 
 /** Matches full-rights tokens only, including rows that predate `scopes`. */

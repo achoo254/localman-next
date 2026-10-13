@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { hashToken } from "../../auth/token-hash.js";
 import { ApiKey } from "../../db/models/api-key-model.js";
 import { useTestDatabase } from "../../test-support/test-mongo.js";
+import { TEST_TENANT } from "../../test-support/test-tenant.js";
 import { issueAccessToken, issueLinkToken } from "../access-token-service.js";
 
 useTestDatabase("access-token-service");
@@ -26,7 +27,9 @@ describe("access token service", () => {
 	});
 
 	test("rows written before scopes existed still count as full-rights", async () => {
+		// As startup leaves it: rows from before tenants carry the primary one.
 		await ApiKey.collection.insertOne({
+			tenantId: TEST_TENANT.id,
 			keyHash: hashToken("tunelo_old"),
 			keyPrefix: "tunelo_old",
 			deviceId: "old-mac",

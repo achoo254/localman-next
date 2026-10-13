@@ -37,11 +37,12 @@ function str(value: unknown): string | null {
 export async function startDeviceAuthorization(
 	endpoints: IdpEndpoints,
 	deviceName: string,
+	resource: string,
 ): Promise<DeviceAuthorization> {
 	const { status, body } = await postForm(endpoints.deviceAuthorization, {
 		client_id: IDP_DEFAULTS.clientId,
 		scope: IDP_DEFAULTS.scope,
-		resource: IDP_DEFAULTS.resource,
+		resource,
 		device_name: deviceName,
 	});
 	const record =

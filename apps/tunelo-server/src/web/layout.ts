@@ -1,3 +1,4 @@
+import { brandValues } from "./brand.js";
 import { type HtmlValue, type SafeHtml, html } from "./html.js";
 import { LOCALES, LOCALE_NAMES } from "./i18n/locale.js";
 import type { Translator } from "./i18n/messages.js";
@@ -78,7 +79,7 @@ export function renderLayout(options: LayoutOptions): string {
 ${options.notice ? html`<p class="notice" role="alert" data-id="page-notice">${options.notice}</p>` : ""}
 ${options.body}
 </main>
-<footer class="page-foot container">${languageSwitcher(i18n)}<p class="muted">${i18n.t("footer.note")}</p></footer>
+<footer class="page-foot container">${languageSwitcher(i18n)}<p class="muted">${i18n.t("footer.note", brandValues())}</p></footer>
 </body>
 </html>`;
 	return page.value;

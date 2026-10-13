@@ -1,3 +1,4 @@
+import type { IdpTransport } from "@localman/tenancy";
 import { type JWTVerifyGetKey, createRemoteJWKSet } from "jose";
 import type pino from "pino";
 import { listByOwner } from "../tunnel-directory.js";
@@ -44,6 +45,8 @@ export interface WebContextOptions {
 	readonly allowInsecureRequests?: boolean;
 	/** Default `SIGN_IN_LIMIT_PER_MINUTE`. */
 	readonly signInLimitPerMinute?: number;
+	/** Another tenant's IdP: discovery, endpoints and keys without its DNS. */
+	readonly transport?: IdpTransport;
 }
 
 export function createWebContext(options: WebContextOptions): WebContext {
@@ -57,6 +60,7 @@ export function createWebContext(options: WebContextOptions): WebContext {
 		clientSecret: config.clientSecret,
 		publicUrl: config.publicUrl,
 		allowInsecureRequests: options.allowInsecureRequests,
+		transport: options.transport,
 	});
 	return {
 		config,
@@ -75,9 +79,11 @@ export function createWebContext(options: WebContextOptions): WebContext {
 		pendingSignIns: new PendingSignIns(),
 		signInLimitPerMinute:
 			options.signInLimitPerMinute ?? SIGN_IN_LIMIT_PER_MINUTE,
-		logoutKeys: createRemoteJWKSet(new URL(`${config.issuer}/jwks`), {
-			timeoutDuration: JWKS_TIMEOUT_MS,
-		}),
+		logoutKeys:
+			options.transport?.jwks ??
+			createRemoteJWKSet(new URL(`${config.issuer}/jwks`), {
+				timeoutDuration: JWKS_TIMEOUT_MS,
+			}),
 		listTunnels: options.listTunnels ?? ((sub) => listByOwner(sub)),
 		tunnelDomain: options.tunnelDomain,
 	};

@@ -19,6 +19,7 @@ import {
 	refreshTokens,
 	subjectOf,
 } from "./idp-client.js";
+import { resourceOfIssuer } from "./server-identity.js";
 
 /** Refresh this long before `exp` so a token never expires mid-handshake. */
 const EXPIRY_MARGIN_MS = 60_000;
@@ -39,6 +40,7 @@ export interface SessionDeps {
 	refresh?: (
 		endpoints: IdpEndpoints,
 		refreshToken: string,
+		resource: string,
 	) => Promise<TokenSet>;
 	sleep?: (ms: number) => Promise<void>;
 	now?: () => number;
@@ -111,7 +113,11 @@ function attemptRefresh(deps: Required<SessionDeps>): Promise<Attempt> {
 		let tokens: TokenSet;
 		try {
 			const endpoints = await deps.discover(session.issuer);
-			tokens = await deps.refresh(endpoints, session.refreshToken);
+			tokens = await deps.refresh(
+				endpoints,
+				session.refreshToken,
+				resourceOfIssuer(session.issuer),
+			);
 		} catch (err) {
 			if (isDeadGrant(err)) {
 				clearSession();

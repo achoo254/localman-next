@@ -6,6 +6,7 @@ import { buildTunnelUrl } from "./config/tunnel-domains.js";
 import type { KeyInfo } from "./key-store/key-store-types.js";
 import { createLogger } from "./logger.js";
 import { tcpPortManager } from "./tcp-port-manager.js";
+import { currentTenantId } from "./tenancy/tunnel-tenant.js";
 import { tunnelManager } from "./tunnel-manager.js";
 import type { TunnelOwner } from "./tunnel-owner.js";
 import type { ConnectionState } from "./ws-connection-state.js";
@@ -41,7 +42,12 @@ export function atTunnelLimit(keyInfo: KeyInfo): boolean {
 	const { ownerSub } = keyInfo;
 	const open = ownerSub
 		? tunnelManager.countByOwner(ownerSub) +
-			tcpPortManager.all().filter((t) => t.owner.ownerSub === ownerSub).length
+			tcpPortManager
+				.all()
+				.filter(
+					(t) =>
+						t.owner.ownerSub === ownerSub && t.tenantId === currentTenantId(),
+				).length
 		: tunnelManager.countByKeyHash(keyInfo.keyHash);
 	return open >= keyInfo.maxTunnels;
 }

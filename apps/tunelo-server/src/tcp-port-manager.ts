@@ -2,6 +2,7 @@
 
 import { DEFAULTS } from "@tunelo/shared";
 import { createLogger } from "./logger.js";
+import { currentTenantId } from "./tenancy/tunnel-tenant.js";
 import type { TunnelOwner } from "./tunnel-owner.js";
 
 const logger = createLogger("tunelo-tcp-port-manager");
@@ -12,6 +13,8 @@ export interface PortAllocation {
 	localPort: number;
 	allocatedAt: Date;
 	owner: TunnelOwner;
+	/** Tenant whose machine opened it; ports are one range for all tenants. */
+	tenantId: string;
 }
 
 class TcpPortManager {
@@ -63,6 +66,7 @@ class TcpPortManager {
 				localPort,
 				allocatedAt: new Date(),
 				owner,
+				tenantId: currentTenantId(),
 			});
 			logger.info(
 				{ port: preferred, socketId, localPort },
@@ -80,6 +84,7 @@ class TcpPortManager {
 					localPort,
 					allocatedAt: new Date(),
 					owner,
+					tenantId: currentTenantId(),
 				});
 				logger.info({ port, socketId, localPort }, "TCP port allocated");
 				return port;

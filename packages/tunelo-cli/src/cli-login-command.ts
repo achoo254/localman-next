@@ -1,6 +1,7 @@
 import type { Command } from "commander";
 import { getApiBaseUrl, verifyKey } from "./api-client.js";
 import { type StoredSession, loadConfig, updateConfig } from "./config.js";
+import { acceptsAccountToken } from "./credentials.js";
 import {
 	deviceNameForIdp,
 	pollForTokens,
@@ -9,7 +10,22 @@ import {
 import { discover, idpIssuer, revokeToken } from "./idp-client.js";
 import { clearSession, saveSession, sessionFromTokens } from "./idp-session.js";
 import { openBrowser } from "./open-browser.js";
+import { resourceOfIssuer, serverIdentity } from "./server-identity.js";
 import { printServerMigration, resolveServerUrl } from "./server-url.js";
+
+/** `--server` as an origin; anything but an http(s) URL is refused. */
+function normalizeServer(raw: string): string {
+	let url: URL;
+	try {
+		url = new URL(raw.includes("://") ? raw : `https://${raw}`);
+	} catch {
+		fail("--server must be a URL such as https://tunnel.example.com");
+	}
+	if (url.protocol !== "https:" && url.protocol !== "http:") {
+		fail("--server must use https");
+	}
+	return url.origin;
+}
 
 function fail(message: string): never {
 	console.error(`  ${message}`);
@@ -31,14 +47,19 @@ async function saveLegacyKey(key: string): Promise<void> {
 	console.log("  ✓ Token verified & saved. Run: tunelo http <port>");
 }
 
-async function deviceLogin(): Promise<void> {
-	const issuer = idpIssuer();
+/**
+ * Signs in for `serverUrl`: its IdP and audience follow from its host
+ * (`tunnel.<d>` → `https://auth.<d>`), never from what the server says.
+ */
+async function deviceLogin(serverUrl: string): Promise<void> {
+	const issuer = idpIssuer(serverIdentity(serverUrl)?.issuer);
 	const endpoints = await discover(issuer).catch((err: Error) =>
 		fail(`Could not reach ${issuer}: ${err.message}`),
 	);
 	const authorization = await startDeviceAuthorization(
 		endpoints,
 		deviceNameForIdp(),
+		resourceOfIssuer(issuer),
 	).catch((err: Error) => fail(err.message));
 
 	const url =
@@ -82,8 +103,16 @@ export function registerLoginCommands(program: Command): void {
 			"Save an anonymous access token instead (CI, no browser); without a value it is read from TUNELO_KEY, keeping it out of shell history",
 		)
 		.option("-f, --force", "Sign in again even if already signed in")
+		.option(
+			"-s, --server <url>",
+			"Tunelo server to sign in for (https://tunnel.<domain>); it becomes the default server",
+		)
 		.action(
-			async (options: { legacyKey?: string | boolean; force?: boolean }) => {
+			async (options: {
+				legacyKey?: string | boolean;
+				force?: boolean;
+				server?: string;
+			}) => {
 				if (options.legacyKey !== undefined) {
 					const key =
 						typeof options.legacyKey === "string"
@@ -93,8 +122,15 @@ export function registerLoginCommands(program: Command): void {
 					await saveLegacyKey(key);
 					return;
 				}
+				const serverUrl = options.server
+					? normalizeServer(options.server)
+					: resolveServerUrl(undefined, printServerMigration);
 				const existing = loadConfig().session;
-				if (existing && !options.force) {
+				// Another server: its session replaces this one (one session).
+				const sameServer =
+					existing !== undefined &&
+					acceptsAccountToken(serverUrl, existing.issuer);
+				if (existing && sameServer && !options.force) {
 					console.log(
 						`  Already signed in (account ${existing.sub}). Use --force to sign in again.`,
 					);
@@ -102,7 +138,10 @@ export function registerLoginCommands(program: Command): void {
 				}
 				// Signing in again replaces this machine's grant: end the old one.
 				if (existing) await revokeSession(existing);
-				await deviceLogin();
+				if (options.server) {
+					updateConfig((config) => ({ ...config, server: serverUrl }));
+				}
+				await deviceLogin(serverUrl);
 			},
 		);
 

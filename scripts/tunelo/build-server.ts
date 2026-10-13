@@ -31,7 +31,9 @@ const serverPkg = JSON.parse(
 );
 const npmDeps = Object.keys(
 	serverPkg.dependencies as Record<string, string>,
-).filter((name) => !name.startsWith("@tunelo/"));
+).filter(
+	(name) => !name.startsWith("@tunelo/") && !name.startsWith("@localman/"),
+);
 
 console.log("Bundling server...");
 await build({
@@ -60,7 +62,8 @@ const prodPkg = {
 	scripts: { start: "node server.mjs" },
 	dependencies: Object.fromEntries(
 		Object.entries(serverPkg.dependencies as Record<string, string>).filter(
-			([name]) => !name.startsWith("@tunelo/"),
+			([name]) =>
+				!name.startsWith("@tunelo/") && !name.startsWith("@localman/"),
 		),
 	),
 };

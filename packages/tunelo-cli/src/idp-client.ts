@@ -16,12 +16,17 @@ export const IDP_DEFAULTS = {
 const HTTP_TIMEOUT_MS = 10_000;
 export const DEVICE_CODE_GRANT = "urn:ietf:params:oauth:grant-type:device_code";
 
-/** `TUNELO_AUTH_ISSUER` points the CLI at a staging or local IdP. */
-export function idpIssuer(): string {
-	return (process.env.TUNELO_AUTH_ISSUER ?? IDP_DEFAULTS.issuer).replace(
-		/\/+$/,
-		"",
-	);
+/**
+ * The IdP to sign in with for `serverIdentityIssuer` (the issuer the server
+ * stands for, see server-identity.ts): `TUNELO_AUTH_ISSUER` points the CLI
+ * at a staging or local IdP instead.
+ */
+export function idpIssuer(serverIdentityIssuer?: string): string {
+	return (
+		process.env.TUNELO_AUTH_ISSUER ??
+		serverIdentityIssuer ??
+		IDP_DEFAULTS.issuer
+	).replace(/\/+$/, "");
 }
 
 export interface IdpEndpoints {
@@ -149,13 +154,14 @@ export function tokenSetOf(reply: { status: number; body: unknown }): TokenSet {
 export async function refreshTokens(
 	endpoints: IdpEndpoints,
 	refreshToken: string,
+	resource: string,
 ): Promise<TokenSet> {
 	return tokenSetOf(
 		await postForm(endpoints.token, {
 			grant_type: "refresh_token",
 			refresh_token: refreshToken,
 			client_id: IDP_DEFAULTS.clientId,
-			resource: IDP_DEFAULTS.resource,
+			resource,
 		}),
 	);
 }

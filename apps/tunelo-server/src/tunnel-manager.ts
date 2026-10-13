@@ -8,6 +8,7 @@ import type { WebSocket } from "ws";
 import { purgeSubdomain } from "./cache/response-cache.js";
 import { createLogger } from "./logger.js";
 import { StreamRegistry, type StreamSink } from "./stream/stream-registry.js";
+import { currentTenantId, tenantKey } from "./tenancy/tunnel-tenant.js";
 import { checkBasicAuth, hashCredentials } from "./tunnel-auth-checker.js";
 import type { TunnelOwner } from "./tunnel-owner.js";
 import { safeSend } from "./ws-send.js";
@@ -31,6 +32,8 @@ export interface TunnelConnection {
 	/** API key ID from KeyStore */
 	keyId: string;
 	subdomain: string;
+	/** Tenant whose domain the tunnel is on; maps key by tenant and subdomain. */
+	tenantId: string;
 	connectedAt: Date;
 	pendingRequests: Map<string, PendingRequest>;
 	/** SHA-256 hash of "user:pass" for Basic Auth — undefined means no auth required */
@@ -53,6 +56,11 @@ export interface RegisterTunnelInput {
 	auth?: string;
 }
 
+/**
+ * Open tunnels of every tenant. Maps are keyed by `tenantKey(subdomain)`
+ * (the same subdomain in two tenants is two tunnels); methods taking a
+ * subdomain run in the request's tenant, counts and lists only see it.
+ */
 class TunnelManager {
 	private tunnels = new Map<string, TunnelConnection>();
 	/** Pending requests preserved during reconnect grace period */
@@ -64,21 +72,22 @@ class TunnelManager {
 
 	register(input: RegisterTunnelInput): boolean {
 		const { subdomain, auth } = input;
+		const key = tenantKey(subdomain);
 		// If tunnel exists with a different socket, reject (subdomain taken)
-		if (this.tunnels.has(subdomain)) return false;
+		if (this.tunnels.has(key)) return false;
 
 		const authHash = auth ? hashCredentials(auth) : undefined;
 
 		// Recover orphaned pending requests from a previous disconnect (grace period reconnect)
-		const orphaned = this.orphanedRequests.get(subdomain);
+		const orphaned = this.orphanedRequests.get(key);
 		const pendingRequests = orphaned ?? new Map<string, PendingRequest>();
 
 		if (orphaned) {
 			// Clear grace timer — client reconnected in time
-			const graceTimer = this.graceTimers.get(subdomain);
+			const graceTimer = this.graceTimers.get(key);
 			if (graceTimer) clearTimeout(graceTimer);
-			this.graceTimers.delete(subdomain);
-			this.orphanedRequests.delete(subdomain);
+			this.graceTimers.delete(key);
+			this.orphanedRequests.delete(key);
 			logger.info(
 				{ subdomain, recoveredRequests: orphaned.size },
 				"Recovered pending requests after reconnect",
@@ -89,13 +98,14 @@ class TunnelManager {
 			void purgeSubdomain(subdomain);
 		}
 
-		this.tunnels.set(subdomain, {
+		this.tunnels.set(key, {
 			socket: input.socket,
 			connectionId: input.connectionId,
 			apiKeyHash: input.apiKeyHash,
 			userId: input.userId,
 			keyId: input.keyId,
 			subdomain,
+			tenantId: currentTenantId(),
 			connectedAt: new Date(),
 			pendingRequests,
 			authHash,
@@ -110,23 +120,25 @@ class TunnelManager {
 		return true;
 	}
 
-	unregister(subdomain: string): void {
-		const tunnel = this.tunnels.get(subdomain);
+	/** Unregisters the tunnel stored under `key` (a `tenantKey`). */
+	private unregisterKey(key: string): void {
+		const tunnel = this.tunnels.get(key);
 		if (!tunnel) return;
+		const { subdomain } = tunnel;
 
 		const pendingCount = tunnel.pendingRequests.size;
-		this.tunnels.delete(subdomain);
+		this.tunnels.delete(key);
 
 		if (pendingCount > 0) {
 			// Move pending requests to orphaned — give client time to reconnect
-			this.orphanedRequests.set(subdomain, tunnel.pendingRequests);
+			this.orphanedRequests.set(key, tunnel.pendingRequests);
 			logger.info(
 				{ subdomain, pendingCount },
 				"Tunnel disconnected, grace period started",
 			);
 
 			const graceTimer = setTimeout(() => {
-				const orphaned = this.orphanedRequests.get(subdomain);
+				const orphaned = this.orphanedRequests.get(key);
 				if (!orphaned) return;
 
 				// Grace period expired — reject all orphaned requests
@@ -137,64 +149,57 @@ class TunnelManager {
 					);
 				}
 				orphaned.clear();
-				this.orphanedRequests.delete(subdomain);
-				this.graceTimers.delete(subdomain);
+				this.orphanedRequests.delete(key);
+				this.graceTimers.delete(key);
 				logger.info(
 					{ subdomain, rejectedCount: pendingCount },
 					"Grace period expired, requests rejected",
 				);
 			}, DEFAULTS.RECONNECT_GRACE_MS);
 
-			this.graceTimers.set(subdomain, graceTimer);
+			this.graceTimers.set(key, graceTimer);
 		} else {
 			logger.info({ subdomain }, "Tunnel unregistered");
 		}
 	}
 
 	get(subdomain: string): TunnelConnection | undefined {
-		return this.tunnels.get(subdomain);
+		return this.tunnels.get(tenantKey(subdomain));
 	}
 
 	has(subdomain: string): boolean {
-		return this.tunnels.has(subdomain);
+		return this.tunnels.has(tenantKey(subdomain));
 	}
 
 	/** Unregister all subdomains associated with a specific connection */
 	unregisterByConnectionId(connectionId: string): void {
 		// Fail in-flight streams first — an open response can't survive a reconnect.
 		this.streams.cleanupByConnection(connectionId);
-		const subdomains = this.getSubdomainsByConnectionId(connectionId);
-		for (const subdomain of subdomains) {
-			this.unregister(subdomain);
+		const keys: string[] = [];
+		for (const [key, tunnel] of this.tunnels) {
+			if (tunnel.connectionId === connectionId) keys.push(key);
 		}
-	}
-
-	/** Get all subdomains registered on a specific connection */
-	getSubdomainsByConnectionId(connectionId: string): string[] {
-		const subdomains: string[] = [];
-		for (const [subdomain, tunnel] of this.tunnels) {
-			if (tunnel.connectionId === connectionId) subdomains.push(subdomain);
-		}
-		return subdomains;
+		for (const key of keys) this.unregisterKey(key);
 	}
 
 	/** Check if subdomain is in grace period (disconnected but waiting for reconnect) */
 	isInGracePeriod(subdomain: string): boolean {
-		return this.orphanedRequests.has(subdomain);
+		return this.orphanedRequests.has(tenantKey(subdomain));
 	}
 
 	sendRequest(
 		subdomain: string,
 		request: TunnelRequest,
 	): Promise<TunnelResponse> {
-		const tunnel = this.tunnels.get(subdomain);
+		const key = tenantKey(subdomain);
+		const tunnel = this.tunnels.get(key);
 		if (!tunnel) return Promise.reject(new Error(`No tunnel for ${subdomain}`));
 
 		return new Promise<TunnelResponse>((resolve, reject) => {
 			const timer = setTimeout(() => {
 				tunnel.pendingRequests.delete(request.id);
 				// Also check orphaned requests
-				const orphaned = this.orphanedRequests.get(subdomain);
+				const orphaned = this.orphanedRequests.get(key);
 				if (orphaned) orphaned.delete(request.id);
 				reject(new Error(`Request timeout [${ErrorCode.REQUEST_TIMEOUT}]`));
 			}, DEFAULTS.REQUEST_TIMEOUT_MS);
@@ -214,7 +219,7 @@ class TunnelManager {
 		request: TunnelRequest,
 		sink: StreamSink,
 	): void {
-		const tunnel = this.tunnels.get(subdomain);
+		const tunnel = this.tunnels.get(tenantKey(subdomain));
 		if (!tunnel) {
 			sink.onError(new Error(`No tunnel for ${subdomain}`));
 			return;
@@ -232,7 +237,7 @@ class TunnelManager {
 	cancelStream(subdomain: string, id: string): void {
 		if (!this.streams.has(id)) return;
 		this.streams.drop(id);
-		const tunnel = this.tunnels.get(subdomain);
+		const tunnel = this.tunnels.get(tenantKey(subdomain));
 		if (tunnel) {
 			safeSend(tunnel.socket, {
 				type: "stream-error",
@@ -248,7 +253,7 @@ class TunnelManager {
 		response: TunnelResponse,
 	): void {
 		// Try all subdomains belonging to this connection
-		for (const [subdomain, tunnel] of this.tunnels) {
+		for (const tunnel of this.tunnels.values()) {
 			if (tunnel.connectionId !== connectionId) continue;
 			const pending = tunnel.pendingRequests.get(response.id);
 			if (pending) {
@@ -275,14 +280,14 @@ class TunnelManager {
 
 	/** Check if request passes Basic Auth for the given tunnel */
 	checkAuth(subdomain: string, authHeader: string | undefined): boolean {
-		const tunnel = this.tunnels.get(subdomain);
+		const tunnel = this.tunnels.get(tenantKey(subdomain));
 		return checkBasicAuth(tunnel?.authHash, authHeader);
 	}
 
 	/** Count active tunnels using a specific API key hash */
 	countByKeyHash(keyHash: string): number {
 		let count = 0;
-		for (const tunnel of this.tunnels.values()) {
+		for (const tunnel of this.inTenant()) {
 			if (tunnel.apiKeyHash === keyHash) count++;
 		}
 		return count;
@@ -291,7 +296,7 @@ class TunnelManager {
 	/** Count active tunnels opened by an account (any machine) */
 	countByOwner(ownerSub: string): number {
 		let count = 0;
-		for (const tunnel of this.tunnels.values()) {
+		for (const tunnel of this.inTenant()) {
 			if (tunnel.owner.ownerSub === ownerSub) count++;
 		}
 		return count;
@@ -300,7 +305,7 @@ class TunnelManager {
 	/** Count active tunnels for a specific user */
 	countByUserId(userId: string): number {
 		let count = 0;
-		for (const tunnel of this.tunnels.values()) {
+		for (const tunnel of this.inTenant()) {
 			if (tunnel.userId === userId) count++;
 		}
 		return count;
@@ -308,33 +313,39 @@ class TunnelManager {
 
 	/** Disconnect and unregister all tunnels using a specific API key hash */
 	disconnectByKeyHash(keyHash: string): void {
-		const subdomains: string[] = [];
-		for (const [subdomain, tunnel] of this.tunnels) {
-			if (tunnel.apiKeyHash === keyHash) subdomains.push(subdomain);
+		const tenantId = currentTenantId();
+		const keys: string[] = [];
+		for (const [key, tunnel] of this.tunnels) {
+			if (tunnel.apiKeyHash === keyHash && tunnel.tenantId === tenantId) {
+				keys.push(key);
+			}
 		}
-		for (const subdomain of subdomains) {
-			const tunnel = this.tunnels.get(subdomain);
-			if (tunnel) tunnel.socket.close();
-			this.unregister(subdomain);
+		for (const key of keys) {
+			this.tunnels.get(key)?.socket.close();
+			this.unregisterKey(key);
 		}
-		if (subdomains.length > 0) {
+		if (keys.length > 0) {
 			logger.info(
-				{ keyHash: keyHash.slice(0, 8), count: subdomains.length },
+				{ keyHash: keyHash.slice(0, 8), count: keys.length },
 				"Disconnected tunnels by key hash",
 			);
 		}
 	}
 
-	/** Get all active tunnel connections (for admin API) */
-	getAllConnections(): TunnelConnection[] {
-		return [...this.tunnels.values()];
+	/** Open tunnels of the tenant in scope. */
+	private inTenant(): TunnelConnection[] {
+		const tenantId = currentTenantId();
+		return [...this.tunnels.values()].filter((t) => t.tenantId === tenantId);
 	}
 
-	getStats(): { activeTunnels: number; subdomains: string[] } {
-		return {
-			activeTunnels: this.tunnels.size,
-			subdomains: [...this.tunnels.keys()],
-		};
+	/** The tenant's active tunnel connections (tunnel lists). */
+	getAllConnections(): TunnelConnection[] {
+		return this.inTenant();
+	}
+
+	/** Health: how many tunnels are open, never whose. */
+	getStats(): { activeTunnels: number } {
+		return { activeTunnels: this.tunnels.size };
 	}
 
 	closeAll(): void {
@@ -351,10 +362,10 @@ class TunnelManager {
 		}
 		this.orphanedRequests.clear();
 
-		for (const [subdomain, tunnel] of this.tunnels) {
+		for (const [key, tunnel] of this.tunnels) {
 			this.streams.cleanupByConnection(tunnel.connectionId);
 			tunnel.socket.close();
-			this.unregister(subdomain);
+			this.unregisterKey(key);
 		}
 	}
 }

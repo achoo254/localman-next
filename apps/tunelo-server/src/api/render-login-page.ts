@@ -1,5 +1,6 @@
 import type { RequestHandler } from "express";
 import type { AuthConfig } from "../config/auth-config.js";
+import { currentTenant } from "../tenancy/tunnel-tenant.js";
 
 /**
  * GET /login?req=<id>, opened by tunelo CLI 1.6.x. In `hybrid` mode nobody
@@ -9,7 +10,8 @@ import type { AuthConfig } from "../config/auth-config.js";
 export function createLoginPageHandler(config: AuthConfig): RequestHandler {
 	return (req, res) => {
 		if (config.mode === "hybrid") {
-			res.redirect(302, `${config.issuer}/account`);
+			// The IdP of the domain the CLI asked (another tenant's or hoandat's).
+			res.redirect(302, `${currentTenant().issuer}/account`);
 			return;
 		}
 		const requestId = String(req.query.req ?? "").slice(0, 128);

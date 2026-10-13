@@ -1,4 +1,5 @@
 import { type InferRawDocType, Schema, model } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tunnel-tenant.js";
 
 // A short-lived device-login request. The CLI creates it (init) with its
 // deviceId; the browser approves it; the CLI polls to retrieve the token.
@@ -26,4 +27,5 @@ export type LoginRequestDocument = InferRawDocType<
 	typeof loginRequestSchema
 > & { _id: Schema.Types.ObjectId };
 
+loginRequestSchema.plugin(tenantScopePlugin);
 export const LoginRequest = model("LoginRequest", loginRequestSchema);

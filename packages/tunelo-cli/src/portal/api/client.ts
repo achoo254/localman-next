@@ -1,6 +1,6 @@
 /** Fetch wrapper for Tunelo server API — prepends server URL, manages CSRF token */
 
-const DEFAULT_SERVER_URL = "https://tunnel.hoandat.com";
+import { DEFAULT_SERVER_URL } from "../../default-server.js";
 
 function getServerUrl(): string {
 	// In browser env, use injected window var or env var or default

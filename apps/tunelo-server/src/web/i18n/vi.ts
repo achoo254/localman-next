@@ -11,9 +11,9 @@ export const vi: Messages = {
 	"home.eyebrow": "Tunnel cho lập trình viên",
 	"home.title": "Đưa server trên máy bạn lên internet bằng một lệnh",
 	"home.lead":
-		"Tunelo cấp cho ứng dụng đang chạy trên máy bạn một địa chỉ HTTPS công khai dưới {domain}, hoặc một cổng TCP cho mọi thứ khác. Đăng nhập bằng tài khoản hoandat để xem mọi tunnel các máy của bạn đang mở.",
-	"home.cta": "Đăng nhập bằng hoandat",
-	"home.ctaHint": "Bằng Google hoặc GitHub, qua auth.hoandat.com.",
+		"Tunelo cấp cho ứng dụng đang chạy trên máy bạn một địa chỉ HTTPS công khai dưới {domain}, hoặc một cổng TCP cho mọi thứ khác. Đăng nhập bằng tài khoản {brand} để xem mọi tunnel các máy của bạn đang mở.",
+	"home.cta": "Đăng nhập bằng {brand}",
+	"home.ctaHint": "Bằng Google hoặc GitHub, qua {idpHost}.",
 	"steps.title": "Bắt đầu",
 	"steps.install.title": "Cài CLI",
 	"steps.install.body": "Cần Node.js 20 trở lên.",
@@ -51,5 +51,5 @@ export const vi: Messages = {
 	"error.idp_unavailable":
 		"Dịch vụ đăng nhập tạm thời không truy cập được. Vui lòng thử lại sau ít phút.",
 	"error.csrf": "Yêu cầu đã hết hạn. Tải lại trang rồi thử lại.",
-	"footer.note": "Tài khoản do auth.hoandat.com quản lý",
+	"footer.note": "Tài khoản do {idpHost} quản lý",
 };

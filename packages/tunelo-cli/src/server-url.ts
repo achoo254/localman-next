@@ -1,6 +1,7 @@
 import { loadConfig, updateConfig } from "./config.js";
+import { DEFAULT_SERVER_URL } from "./default-server.js";
 
-export const DEFAULT_SERVER_URL = "https://tunnel.hoandat.com";
+export { DEFAULT_SERVER_URL } from "./default-server.js";
 /** Hosts of the old domain; saved configs pointing there move over. */
 const RETIRED_HOSTS = new Set(["tunnel.inetdev.io.vn"]);
 

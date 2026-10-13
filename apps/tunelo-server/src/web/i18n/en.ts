@@ -14,9 +14,9 @@ export const en = {
 	"home.eyebrow": "Tunnels for developers",
 	"home.title": "Put a local server on the internet with one command",
 	"home.lead":
-		"Tunelo gives the app running on your machine a public HTTPS address under {domain}, or a TCP port for anything else. Sign in with your hoandat account to see every tunnel your machines have open.",
-	"home.cta": "Sign in with hoandat",
-	"home.ctaHint": "Google or GitHub, through auth.hoandat.com.",
+		"Tunelo gives the app running on your machine a public HTTPS address under {domain}, or a TCP port for anything else. Sign in with your {brand} account to see every tunnel your machines have open.",
+	"home.cta": "Sign in with {brand}",
+	"home.ctaHint": "Google or GitHub, through {idpHost}.",
 	"steps.title": "Get started",
 	"steps.install.title": "Install the CLI",
 	"steps.install.body": "Needs Node.js 20 or later.",
@@ -54,5 +54,5 @@ export const en = {
 	"error.idp_unavailable":
 		"The sign-in service is not reachable right now. Please try again shortly.",
 	"error.csrf": "That request expired. Reload the page and try again.",
-	"footer.note": "Accounts by auth.hoandat.com",
+	"footer.note": "Accounts by {idpHost}",
 } as const;

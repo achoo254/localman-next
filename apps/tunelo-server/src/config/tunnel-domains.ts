@@ -1,12 +1,14 @@
 import { buildTunnelUrl as buildUrlOn } from "@tunelo/shared";
+import { currentTenant } from "../tenancy/tunnel-tenant.js";
 
 const HOSTNAME_REGEX =
 	/^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;
 
 /**
- * Parses `TUNNEL_DOMAINS` ("tunnel.hoandat.com,tunnel.example.test"). The
- * first entry is the primary domain used in every URL handed out; the rest
- * are still accepted on incoming requests while users move over.
+ * Parses `TUNNEL_DOMAINS` ("tunnel.hoandat.com,tunnel.example.test"): the
+ * primary tenant's tunnel domains. The first entry is used in every URL
+ * handed out to it; the rest are also accepted on incoming requests.
+ * Other tenants' domains come from the IdP (`tenancy/tenant-directory.ts`).
  */
 export function parseTunnelDomains(raw: string): string[] {
 	const domains = raw
@@ -48,12 +50,15 @@ export function primaryTunnelDomain(): string {
 	return primary;
 }
 
-/** `https://<subdomain>.<primary domain>` */
+/** `https://<subdomain>.<tunnel domain of the tenant in scope>` */
 export function buildTunnelUrl(subdomain: string): string {
-	return buildUrlOn(subdomain, primaryTunnelDomain());
+	return buildUrlOn(subdomain, currentTenant().tunnelDomain);
 }
 
-/** `tcp://<primary domain>:<port>` */
+/**
+ * `tcp://<tunnel domain of the tenant in scope>:<port>`. TCP ports are one
+ * range for every tenant: the port, not the host name, picks the tunnel.
+ */
 export function buildTcpUrl(port: number): string {
-	return `tcp://${primaryTunnelDomain()}:${port}`;
+	return `tcp://${currentTenant().tunnelDomain}:${port}`;
 }

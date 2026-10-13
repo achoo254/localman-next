@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tunnel-tenant.js";
 
 const usageLogSchema = new Schema({
 	// A key's ObjectId as hex, or an account `sub` for identity-provider
@@ -15,4 +16,5 @@ usageLogSchema.index({ userId: 1, date: 1 });
 usageLogSchema.index({ keyId: 1, date: 1 });
 usageLogSchema.index({ date: 1 });
 
+usageLogSchema.plugin(tenantScopePlugin);
 export const UsageLog = model("UsageLog", usageLogSchema);

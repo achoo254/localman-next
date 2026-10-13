@@ -1,4 +1,5 @@
 import { type InferRawDocType, Schema, model } from "mongoose";
+import { tenantScopePlugin } from "../../tenancy/tunnel-tenant.js";
 
 // A pending `tunelo link` pairing. A client (e.g. Localman) opens it and shows
 // the user an `XXXX-XXXX` code; the anonymous machine approves it with that
@@ -27,4 +28,5 @@ export type LinkRequestDocument = InferRawDocType<typeof linkRequestSchema> & {
 	_id: Schema.Types.ObjectId;
 };
 
+linkRequestSchema.plugin(tenantScopePlugin);
 export const LinkRequest = model("LinkRequest", linkRequestSchema);

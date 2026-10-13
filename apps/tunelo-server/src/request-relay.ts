@@ -1,3 +1,4 @@
+import { AsyncResource } from "node:async_hooks";
 import type http from "node:http";
 import {
 	DEFAULTS,
@@ -9,17 +10,27 @@ import { tunnelDomains } from "./config/tunnel-domains.js";
 import { createLogger } from "./logger.js";
 import { usageTracker } from "./services/usage-tracker.js";
 import { createResponseSink } from "./stream/response-sink.js";
+import { PRIMARY_TENANT_ID } from "./tenancy/primary-tenant.js";
+import { currentTenant } from "./tenancy/tunnel-tenant.js";
 import { tunnelManager } from "./tunnel-manager.js";
 
 const logger = createLogger("tunelo-relay");
 
+/** Tunnel domains of the tenant in scope: the primary's `TUNNEL_DOMAINS`. */
+export function tenantTunnelDomains(): readonly string[] {
+	const tenant = currentTenant();
+	return tenant.id === PRIMARY_TENANT_ID
+		? tunnelDomains()
+		: [tenant.tunnelDomain];
+}
+
 /**
- * Tenant subdomain of a Host header on any configured tunnel domain (old and
- * new run side by side during a move), or null for the apex / foreign hosts.
+ * App subdomain of a Host header on the tenant's tunnel domains, or null
+ * for the apex / foreign hosts.
  */
 export function extractSubdomain(
 	host: string,
-	domains: readonly string[] = tunnelDomains(),
+	domains: readonly string[] = tenantTunnelDomains(),
 ): string | null {
 	const hostname = host.toLowerCase().replace(/:\d+$/, "");
 	// Longest first: with `x.io` and `tunnel.x.io` both configured, the apex
@@ -93,72 +104,85 @@ export function createRelayHandler(): http.RequestListener {
 			chunks.push(chunk);
 		});
 
-		req.on("end", async () => {
-			if (res.writableEnded) return;
+		// Bound to this request's async context: the tunnel lookups below run
+		// in its tenant whatever context the stream emits in.
+		req.on(
+			"end",
+			AsyncResource.bind(async () => {
+				if (res.writableEnded) return;
 
-			const path = req.url ?? "/";
-			const method = req.method ?? "GET";
-			const hasAuth = Boolean(req.headers.authorization);
-			const acceptEncoding = String(req.headers["accept-encoding"] ?? "");
-			const body =
-				chunks.length > 0 ? Buffer.concat(chunks).toString("base64") : null;
+				const path = req.url ?? "/";
+				const method = req.method ?? "GET";
+				const hasAuth = Boolean(req.headers.authorization);
+				const acceptEncoding = String(req.headers["accept-encoding"] ?? "");
+				const body =
+					chunks.length > 0 ? Buffer.concat(chunks).toString("base64") : null;
 
-			// Attribute usage to the tunnel that owns the request at dispatch time.
-			const tunnel = tunnelManager.get(subdomain);
-			const bytesIn = body ? Buffer.byteLength(body, "base64") : 0;
+				// Attribute usage to the tunnel that owns the request at dispatch time.
+				const tunnel = tunnelManager.get(subdomain);
+				const bytesIn = body ? Buffer.byteLength(body, "base64") : 0;
 
-			// Best-effort: serve a cacheable GET from Redis without a WS round-trip.
-			const cachedBytes = await tryServeFromCache(
-				res,
-				subdomain,
-				path,
-				method,
-				hasAuth,
-				acceptEncoding,
-			);
-			if (cachedBytes !== null) {
-				if (tunnel)
-					usageTracker.record(
-						tunnel.keyId,
-						tunnel.userId,
-						bytesIn,
-						cachedBytes,
-					);
-				return;
-			}
+				// Best-effort: serve a cacheable GET from Redis without a WS round-trip.
+				const cachedBytes = await tryServeFromCache(
+					res,
+					subdomain,
+					path,
+					method,
+					hasAuth,
+					acceptEncoding,
+				);
+				if (cachedBytes !== null) {
+					if (tunnel)
+						usageTracker.record(
+							tunnel.keyId,
+							tunnel.userId,
+							bytesIn,
+							cachedBytes,
+						);
+					return;
+				}
 
-			const tunnelReq: TunnelRequest = {
-				type: "request",
-				id: generateRequestId(),
-				method,
-				path,
-				headers: req.headers as Record<string, string | string[]>,
-				body,
-				subdomain,
-			};
+				const tunnelReq: TunnelRequest = {
+					type: "request",
+					id: generateRequestId(),
+					method,
+					path,
+					headers: req.headers as Record<string, string | string[]>,
+					body,
+					subdomain,
+				};
 
-			// If the downstream consumer disconnects, tell the client to stop
-			// producing (no-op once the stream has already finished).
-			res.on("close", () =>
-				tunnelManager.cancelStream(subdomain, tunnelReq.id),
-			);
+				// If the downstream consumer disconnects, tell the client to stop
+				// producing (no-op once the stream has already finished).
+				res.on(
+					"close",
+					AsyncResource.bind(() =>
+						tunnelManager.cancelStream(subdomain, tunnelReq.id),
+					),
+				);
 
-			const sink = createResponseSink(
-				res,
-				subdomain,
-				tunnelReq.id,
-				(bytesOut) => {
-					if (tunnel) {
-						usageTracker.record(tunnel.keyId, tunnel.userId, bytesIn, bytesOut);
-					}
-				},
-			);
-			tunnelManager.openStream(
-				subdomain,
-				tunnelReq,
-				wrapForCache(sink, subdomain, path, method, hasAuth, acceptEncoding),
-			);
-		});
+				const sink = createResponseSink(
+					res,
+					subdomain,
+					tunnelReq.id,
+					(bytesOut) => {
+						if (tunnel) {
+							usageTracker.record(
+								tunnel.keyId,
+								tunnel.userId,
+								bytesIn,
+								bytesOut,
+							);
+						}
+					},
+				);
+				tunnelManager.openStream(
+					subdomain,
+					tunnelReq,
+					wrapForCache(sink, subdomain, path, method, hasAuth, acceptEncoding),
+				);
+			}),
+		);
 
 		req.on("error", (err) => {
 			logger.error({ err }, "Request read error");

@@ -1,6 +1,14 @@
+import type { IdpTransport } from "@localman/tenancy";
 import * as oidc from "openid-client";
+import {
+	type IssuedTokens,
+	stringClaim,
+	toIssuedTokens,
+} from "./issued-tokens.js";
 import { IdpUnavailableError } from "./oidc-errors.js";
-import type { SessionTokens, WebProfile } from "./web-session-store.js";
+import type { WebProfile } from "./web-session-store.js";
+
+export type { IssuedTokens } from "./issued-tokens.js";
 
 /**
  * No API scope and no `resource`: the console reads tunnels in process by
@@ -13,11 +21,6 @@ export const LOGIN_SCOPE = "openid profile";
 export const CALLBACK_PATH = "/auth/callback";
 const DISCOVERY_TIMEOUT_SECONDS = 10;
 const REQUEST_TIMEOUT_SECONDS = 10;
-/** Used when the token response omits `expires_in`; refreshes early. */
-const FALLBACK_ACCESS_TTL_SECONDS = 60;
-/** The IdP's grant idle window, when it does not state the refresh expiry. */
-const REFRESH_IDLE_SECONDS = 30 * 24 * 60 * 60;
-
 export interface WebOidcSettings {
 	readonly issuer: string;
 	readonly clientId: string;
@@ -25,51 +28,8 @@ export interface WebOidcSettings {
 	readonly publicUrl: string;
 	/** Tests only: lets openid-client talk to an http:// issuer. */
 	readonly allowInsecureRequests?: boolean;
-}
-
-/** Tokens of one response, plus what the console reads from the ID token. */
-export interface IssuedTokens extends SessionTokens {
-	/** Only for userinfo right after sign-in; never stored. */
-	readonly accessToken: string;
-	readonly sub: string | null;
-	readonly sid: string | null;
-}
-
-/** Longest display name or username kept; longer values are cut. */
-const MAX_PROFILE_LENGTH = 200;
-
-function stringClaim(
-	claims: Readonly<Record<string, unknown>> | undefined,
-	name: string,
-): string | null {
-	const value = claims?.[name];
-	return typeof value === "string" && value.trim() !== ""
-		? value.trim().slice(0, MAX_PROFILE_LENGTH)
-		: null;
-}
-
-function toIssuedTokens(
-	response: oidc.TokenEndpointResponse & oidc.TokenEndpointResponseHelpers,
-	now = Date.now(),
-): IssuedTokens {
-	const accessTtl = response.expiresIn() ?? FALLBACK_ACCESS_TTL_SECONDS;
-	const stated = response.refresh_token_expires_in;
-	const refreshTtl =
-		typeof stated === "number" && stated > 0 ? stated : REFRESH_IDLE_SECONDS;
-	const accessExp = new Date(now + accessTtl * 1000);
-	const claims = response.claims();
-	return {
-		accessToken: response.access_token,
-		refreshToken: response.refresh_token ?? null,
-		idToken: response.id_token ?? null,
-		accessExp,
-		// Without a refresh token nothing can prove the grant after expiry.
-		refreshExp: response.refresh_token
-			? new Date(now + refreshTtl * 1000)
-			: accessExp,
-		sub: stringClaim(claims, "sub"),
-		sid: stringClaim(claims, "sid"),
-	};
+	/** Another tenant's IdP, reached without its public DNS. */
+	readonly transport?: IdpTransport;
 }
 
 /**
@@ -98,7 +58,33 @@ export class WebOidcClient {
 	}
 
 	private async discover(): Promise<oidc.Configuration> {
-		const config = await oidc.discovery(
+		const { transport } = this.settings;
+		const config = transport
+			? await this.fromTransport(transport)
+			: await this.discoverPublicly();
+		// Token, refresh and revocation calls sit in a browser round trip.
+		config.timeout = REQUEST_TIMEOUT_SECONDS;
+		return config;
+	}
+
+	private async fromTransport(
+		transport: IdpTransport,
+	): Promise<oidc.Configuration> {
+		const config = new oidc.Configuration(
+			await transport.metadata(),
+			this.settings.clientId,
+			{
+				redirect_uris: [this.redirectUri],
+				id_token_signed_response_alg: "ES256",
+			},
+			oidc.ClientSecretBasic(this.settings.clientSecret),
+		);
+		config[oidc.customFetch] = transport.fetch;
+		return config;
+	}
+
+	private discoverPublicly(): Promise<oidc.Configuration> {
+		return oidc.discovery(
 			new URL(this.settings.issuer),
 			this.settings.clientId,
 			{
@@ -113,9 +99,6 @@ export class WebOidcClient {
 					: [],
 			},
 		);
-		// Token, refresh and revocation calls sit in a browser round trip.
-		config.timeout = REQUEST_TIMEOUT_SECONDS;
-		return config;
 	}
 
 	async authorizationUrl(request: {

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { hostname } from "node:os";
 import { loadConfig, updateConfig } from "./config.js";
 import { getAccessToken } from "./idp-session.js";
+import { serverIdentity } from "./server-identity.js";
 
 /**
  * What `tunelo http|tcp|mcp` authenticates with, in order: `--key`,
@@ -12,13 +13,18 @@ export type Credential =
 	| { kind: "account"; sub: string; getKey: () => Promise<string> }
 	| { kind: "key"; anonymous: boolean; getKey: () => Promise<string> };
 
-/** Servers that may receive the account token: the official deployment
- *  and loopback for local development. Any other host could replay the
- *  token against the real server. */
-const ACCOUNT_SERVER_HOSTS = new Set(["tunnel.hoandat.com"]);
 const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
-export function acceptsAccountToken(serverUrl: string): boolean {
+/**
+ * Whether the account token of `sessionIssuer` may go to `serverUrl`: only
+ * to the Tunelo of the same domain (`https://auth.<d>` signs in for
+ * `tunnel.<d>`), over TLS, or to loopback for local development. Any other
+ * server could replay the token against the real one.
+ */
+export function acceptsAccountToken(
+	serverUrl: string,
+	sessionIssuer: string,
+): boolean {
 	let url: URL;
 	try {
 		url = new URL(serverUrl);
@@ -27,11 +33,12 @@ export function acceptsAccountToken(serverUrl: string): boolean {
 	}
 	if (LOOPBACK_HOSTS.has(url.hostname)) return true;
 	const secure = url.protocol === "https:" || url.protocol === "wss:";
-	return secure && ACCOUNT_SERVER_HOSTS.has(url.hostname);
+	const issuer = sessionIssuer.replace(/\/+$/, "");
+	return secure && serverIdentity(serverUrl)?.issuer === issuer;
 }
 
 export const UNTRUSTED_SERVER_MESSAGE =
-	"Your account sign-in only works with the official Tunelo server; use --key for this server.";
+	"Your sign-in is for another Tunelo server; run `tunelo login --server <url>` for this one, or use --key.";
 
 export function resolveCredential(
 	flagKey: string | undefined,
@@ -46,7 +53,7 @@ export function resolveCredential(
 		};
 	}
 	const config = loadConfig();
-	if (config.session && acceptsAccountToken(serverUrl)) {
+	if (config.session && acceptsAccountToken(serverUrl, config.session.issuer)) {
 		return {
 			kind: "account",
 			sub: config.session.sub,

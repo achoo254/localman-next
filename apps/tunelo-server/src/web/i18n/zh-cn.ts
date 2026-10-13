@@ -11,9 +11,9 @@ export const zhCn: Messages = {
 	"home.eyebrow": "面向开发者的隧道",
 	"home.title": "一条命令，把本地服务放到互联网上",
 	"home.lead":
-		"Tunelo 为你电脑上运行的应用提供 {domain} 下的公网 HTTPS 地址，其他服务则可使用 TCP 端口。使用 hoandat 账号登录，即可查看你的各台机器当前打开的所有隧道。",
-	"home.cta": "使用 hoandat 登录",
-	"home.ctaHint": "通过 auth.hoandat.com 使用 Google 或 GitHub 登录。",
+		"Tunelo 为你电脑上运行的应用提供 {domain} 下的公网 HTTPS 地址，其他服务则可使用 TCP 端口。使用 {brand} 账号登录，即可查看你的各台机器当前打开的所有隧道。",
+	"home.cta": "使用 {brand} 登录",
+	"home.ctaHint": "通过 {idpHost} 使用 Google 或 GitHub 登录。",
 	"steps.title": "快速开始",
 	"steps.install.title": "安装 CLI",
 	"steps.install.body": "需要 Node.js 20 或更高版本。",
@@ -47,5 +47,5 @@ export const zhCn: Messages = {
 	"error.access_denied": "登录已取消。",
 	"error.idp_unavailable": "登录服务暂时无法访问，请稍后重试。",
 	"error.csrf": "请求已过期。请刷新页面后重试。",
-	"footer.note": "账号由 auth.hoandat.com 提供",
+	"footer.note": "账号由 {idpHost} 提供",
 };

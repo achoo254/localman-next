@@ -53,7 +53,11 @@ describe("server and credentials", () => {
 	test("the account session wins over a saved anonymous token", () => {
 		saveConfig({
 			key: "tunelo_anon",
-			session: { issuer: "https://idp", sub: "acc_a", refreshToken: "rt" },
+			session: {
+				issuer: "https://auth.hoandat.com",
+				sub: "acc_a",
+				refreshToken: "rt",
+			},
 		});
 		const official = "https://tunnel.hoandat.com";
 		expect(resolveCredential(undefined, official)).toMatchObject({
@@ -74,10 +78,36 @@ describe("server and credentials", () => {
 		).toMatchObject({
 			kind: "key",
 		});
-		expect(acceptsAccountToken("ws://tunnel.hoandat.com")).toBe(false);
-		expect(acceptsAccountToken("ws://127.0.0.1:3001")).toBe(true);
+		expect(acceptsAccountToken("ws://tunnel.hoandat.com", "https://idp")).toBe(
+			false,
+		);
+		expect(acceptsAccountToken("ws://127.0.0.1:3001", "https://idp")).toBe(
+			true,
+		);
 		saveConfig({ session });
 		expect(resolveCredential(undefined, "https://evil.example")).toBeNull();
+	});
+
+	test("the account token only goes to the Tunelo of its own domain", () => {
+		const hoandat = "https://auth.hoandat.com";
+		expect(acceptsAccountToken("https://tunnel.hoandat.com", hoandat)).toBe(
+			true,
+		);
+		expect(acceptsAccountToken("wss://tunnel.hoandat.com/", hoandat)).toBe(
+			true,
+		);
+		expect(acceptsAccountToken("https://tunnel.acme.example", hoandat)).toBe(
+			false,
+		);
+		expect(
+			acceptsAccountToken(
+				"https://tunnel.acme.example",
+				"https://auth.acme.example",
+			),
+		).toBe(true);
+		expect(acceptsAccountToken("https://x.tunnel.hoandat.com", hoandat)).toBe(
+			false,
+		);
 	});
 
 	test("an anonymous machine is reminded with the cutoff date", () => {

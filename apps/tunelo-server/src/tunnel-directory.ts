@@ -1,5 +1,6 @@
 import { buildTcpUrl, buildTunnelUrl } from "./config/tunnel-domains.js";
 import { type PortAllocation, tcpPortManager } from "./tcp-port-manager.js";
+import { currentTenantId } from "./tenancy/tunnel-tenant.js";
 import { type TunnelConnection, tunnelManager } from "./tunnel-manager.js";
 import type { TunnelOwner } from "./tunnel-owner.js";
 
@@ -36,7 +37,11 @@ export interface TunnelSources {
 
 const liveSources: TunnelSources = {
 	http: () => tunnelManager.getAllConnections(),
-	tcp: () => tcpPortManager.all(),
+	// Ports are one range for every tenant: list the tenant's own only.
+	tcp: () => {
+		const tenantId = currentTenantId();
+		return tcpPortManager.all().filter((t) => t.tenantId === tenantId);
+	},
 };
 
 function listMatching(

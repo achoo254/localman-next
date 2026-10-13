@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { createLogger } from "../logger.js";
+import { currentTenantId } from "../tenancy/tunnel-tenant.js";
 import { getRedis } from "./redis-client.js";
 
 const logger = createLogger("tunelo-cache");
@@ -13,14 +14,18 @@ export interface CachedResponse {
 
 const KEY_PREFIX = "tunelo:cache";
 
-/** Key isolates by subdomain (tenant) and hashes the path (bounds length, keeps
- *  query strings out of logs). */
-/** Key isolates by subdomain (tenant) and content-encoding variant, then hashes
+/** Cache key prefix of a subdomain in the tenant in scope (the same
+ *  subdomain on another tenant's domain is another app). */
+function prefixFor(subdomain: string): string {
+	return `${KEY_PREFIX}:${currentTenantId()}:${subdomain}`;
+}
+
+/** Key isolates by tenant, subdomain and content-encoding variant, then hashes
  *  the path (bounds length, keeps query strings out of logs). Variant sits
- *  before the hash so per-subdomain purge (`:{subdomain}:*`) still matches. */
+ *  before the hash so per-subdomain purge (`{prefix}:*`) still matches. */
 function keyFor(subdomain: string, variant: string, path: string): string {
 	const hash = createHash("sha1").update(path).digest("hex");
-	return `${KEY_PREFIX}:${subdomain}:${variant}:${hash}`;
+	return `${prefixFor(subdomain)}:${variant}:${hash}`;
 }
 
 export async function getCached(
@@ -67,13 +72,13 @@ export async function setCached(
 }
 
 /**
- * Drop every cached response for a subdomain. Called when a tunnel opens a fresh
+ * Drop every cached response for a subdomain of the tenant in scope. Called when a tunnel opens a fresh
  * session so a restarted local app never serves stale assets.
  */
 export async function purgeSubdomain(subdomain: string): Promise<void> {
 	const redis = getRedis();
 	if (!redis) return;
-	const match = `${KEY_PREFIX}:${subdomain}:*`;
+	const match = `${prefixFor(subdomain)}:*`;
 	try {
 		let cursor = "0";
 		let removed = 0;

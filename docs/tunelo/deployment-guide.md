@@ -146,6 +146,29 @@ records `tunnel`, `*.tunnel` and `mail.tunnel` in zone `inetdev.io.vn` and
 `certbot delete` for `tunnel.inetdev.io.vn` and `mail.tunnel.inetdev.io.vn`. CLI 1.6.x still defaults to the
 old apex: those machines need `--server https://tunnel.hoandat.com` or a newer CLI.
 
+## Tenants (domains claimed at the IdP)
+
+Tunelo serves `tunnel.<domain>` and `*.tunnel.<domain>` of every domain claimed at the
+IdP (`hoandat-auth`, ADR 0006) from the same process. The primary tenant (hoandat.com)
+comes from `TUNNEL_DOMAINS`, `AUTH_ISSUER`, `AUTH_AUDIENCE` and never needs the IdP's
+internal API; another tenant is looked up there by Host (cached, last answer kept while
+the IdP is down). Tunnels, cache, TCP ports in tunnel lists, keys, links, usage and
+console sessions are per tenant: the same subdomain on two domains is two tunnels. TCP
+ports are one range for all tenants (the port, not the host, picks the tunnel); their
+URLs use the tenant's domain. A tenant's tokens are verified against `https://auth.<domain>`
+with audience `https://tunnel.<domain>` and keys from the internal API.
+
+Turning it on (prod action, with the deploy): set `IDP_INTERNAL_URL`, `IDP_INTERNAL_SECRET`
+(and, for tenants' web console, `IDP_LOOPBACK_URL`, `TUNELO_CLIENT_KEY`) in
+`/var/www/tunelo/.env` (see `apps/tunelo-server/.env.example`), install
+`infra/tunelo/nginx-tenants.conf` as `/etc/nginx/conf.d/tunelo-tenants.conf`, `nginx -t`,
+reload nginx, `pm2 reload tunelo`. Startup tags documents stored before tenants with the
+primary tenant and, with the IdP settings on, drops the indexes the tenant ones replace.
+
+The CLI signs in per server: `tunelo login --server https://tunnel.<domain>` signs in at
+`https://auth.<domain>` (derived from the host, never from the server's answers) and makes
+that server the default; the account token is only sent to the Tunelo of its own domain.
+
 ## MongoDB Setup (v0.3+)
 
 ### Option A: Local MongoDB (Same VPS)
