@@ -145,6 +145,13 @@ and `mail.tunnel` deleted in Cloudflare zone `inetdev.io.vn`; both certificates 
 (archived in `/root/letsencrypt-inetdev-tunnel-261013.tgz`). CLI 1.6.x still defaults to
 the old apex: those machines need `--server https://tunnel.hoandat.com` or a newer CLI.
 
+Since the evening of 2026-10-13 `inetdev.io.vn` is a tenant of the IdP (the owner's
+acceptance domain): `tunnel.inetdev.io.vn` and `*.tunnel.inetdev.io.vn` answer again,
+for that tenant only. A machine still configured with the old domain and a hoandat
+sign-in reaches the tenant and is refused (its tunnel names answer 502); the CLI moves
+such a saved server to `tunnel.hoandat.com`, but keeps it when the saved sign-in is
+the tenant's own (`tunelo login --server https://tunnel.inetdev.io.vn`).
+
 ## Tenants (domains claimed at the IdP)
 
 Tunelo serves `tunnel.<domain>` and `*.tunnel.<domain>` of every domain claimed at the
