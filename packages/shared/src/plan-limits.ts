@@ -27,6 +27,10 @@ export interface PlanLimits {
 	readonly objectTemplate: boolean;
 	readonly teamWorkspaces: number;
 	readonly membersPerWorkspace: number;
+	/**
+	 * Forks and pull requests. Public links, guest links, access keys and
+	 * Run buttons work on every plan.
+	 */
 	readonly forkPrPublic: boolean;
 	readonly mockRequestsPerMonth: number | null;
 	readonly proxyRequestsPerMonth: number | null;

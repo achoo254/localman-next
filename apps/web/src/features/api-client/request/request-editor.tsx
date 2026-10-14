@@ -1,3 +1,4 @@
+import { hasBlankedSecrets } from "@localman/shared/api-client";
 import { IconLock } from "@tabler/icons-react";
 import { type ReactNode, useContext } from "react";
 import { Badge } from "../../../components/ui/badge";
@@ -8,7 +9,6 @@ import {
 	TabsTrigger,
 } from "../../../components/ui/tabs";
 import { useT } from "../../../i18n/i18n-context";
-import { hasBlankedSecrets } from "../history/redact-draft";
 import { ScriptsTab } from "../scripts/scripts-tab";
 import { useWorkbenchActions } from "../workbench/workbench-context";
 import type { WorkbenchTab } from "../workbench/workbench-types";

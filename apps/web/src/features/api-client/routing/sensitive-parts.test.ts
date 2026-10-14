@@ -4,11 +4,7 @@ import {
 	prepareRequest,
 } from "@localman/shared/api-client";
 import { describe, expect, it } from "vitest";
-import {
-	isLiteralValue,
-	isSensitiveName,
-	sensitiveParts,
-} from "./sensitive-parts";
+import { sensitiveParts } from "./sensitive-parts";
 
 function partsOf(draft: ApiRequestDraft): string[] {
 	return sensitiveParts(draft, prepareRequest(draft));
@@ -19,46 +15,6 @@ const header = (key: string, value: string) => ({
 	key,
 	value,
 	enabled: true,
-});
-
-describe("isSensitiveName", () => {
-	it.each([
-		"Authorization",
-		"Cookie",
-		"X-API-Key",
-		"x-api-key",
-		"apiKey",
-		"api_key",
-		"X-Auth-Token",
-		"access_token",
-		"client_secret",
-		"password",
-		"sig",
-		"X-Hub-Signature",
-	])("flags %s", (name) => {
-		expect(isSensitiveName(name)).toBe(true);
-	});
-
-	it.each([
-		"Content-Type",
-		"Accept",
-		"keyword",
-		"author",
-		"page",
-		"Keep-Alive",
-		"",
-	])("leaves %s", (name) => {
-		expect(isSensitiveName(name)).toBe(false);
-	});
-});
-
-describe("isLiteralValue", () => {
-	it("is false for empty values and values that use a {{var}}", () => {
-		expect(isLiteralValue("sk_live_1")).toBe(true);
-		expect(isLiteralValue("")).toBe(false);
-		expect(isLiteralValue("{{token}}")).toBe(false);
-		expect(isLiteralValue("Bearer {{token}}")).toBe(false);
-	});
 });
 
 describe("sensitiveParts", () => {

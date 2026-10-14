@@ -1,6 +1,6 @@
-import { createRequestDraft } from "@localman/shared/api-client";
 import { describe, expect, it } from "vitest";
-import { hasBlankedSecrets, redactDraft } from "./redact-draft";
+import { createRequestDraft } from "../request-model.js";
+import { hasBlankedSecrets, redactDraft } from "./redact-draft.js";
 
 const row = (key: string, value: string) => ({
 	id: `r-${key}`,
@@ -71,6 +71,39 @@ describe("redactDraft", () => {
 		expect(redactDraft(withVars)).toBe(withVars);
 		const plain = createRequestDraft({ url: "https://api.test/?page=1" });
 		expect(redactDraft(plain)).toBe(plain);
+	});
+});
+
+describe("redactDraft on the URL", () => {
+	it("blanks a literal key next to a {{var}} pair and keeps the reference as typed", () => {
+		const url = "https://{{host}}/x?api_key=sk_live_x&user={{userId}}";
+		const redacted = redactDraft(createRequestDraft({ url }));
+		expect(redacted.url).toBe("https://{{host}}/x?api_key&user={{userId}}");
+	});
+
+	it("drops a typed user:password@ and keeps one made of references", () => {
+		expect(
+			redactDraft(createRequestDraft({ url: "https://ann:pw@api.test/x" })).url,
+		).toBe("https://api.test/x");
+		expect(
+			redactDraft(createRequestDraft({ url: "https://ann@api.test/x?a=1" }))
+				.url,
+		).toBe("https://api.test/x?a=1");
+		const refs = createRequestDraft({
+			url: "https://{{user}}:{{pass}}@api.test/x",
+		});
+		expect(redactDraft(refs)).toBe(refs);
+		expect(
+			redactDraft(createRequestDraft({ url: "https://api.test/x?to=a@b.c" }))
+				.url,
+		).toBe("https://api.test/x?to=a@b.c");
+	});
+
+	it("blanks a literal Set-Cookie header", () => {
+		const redacted = redactDraft(
+			createRequestDraft({ headers: [row("Set-Cookie", "sid=1")] }),
+		);
+		expect(redacted.headers[0]?.value).toBe("");
 	});
 });
 

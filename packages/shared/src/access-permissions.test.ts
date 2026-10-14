@@ -40,6 +40,7 @@ const WORKSPACE_MATRIX: readonly [
 	["manageMembers", Y, N, N],
 	["manageRoles", Y, N, N],
 	["manageVisibility", Y, N, N],
+	["publishPublic", Y, Y, N],
 ];
 
 /** Collection table: [action, Editor, Viewer]. */

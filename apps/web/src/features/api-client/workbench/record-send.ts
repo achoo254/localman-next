@@ -1,13 +1,12 @@
 /**
  * After a send: the request goes to the account's history as the tab has
  * it (`{{var}}` kept, so no variable's value reaches the server), with
- * credentials typed in literally blanked (`history/redact-draft.ts`), and
+ * credentials typed in literally blanked (`redactDraft`), and
  * what the browser measured of the response.
  */
-import type { ApiRequestDraft } from "@localman/shared/api-client";
+import { type ApiRequestDraft, redactDraft } from "@localman/shared/api-client";
 import type { QueryClient } from "@tanstack/react-query";
 import { recordHistoryEntry } from "../history/history-api";
-import { redactDraft } from "../history/redact-draft";
 import { invalidateHistory } from "../history/use-history";
 import type { SettledResponse } from "./workbench-types";
 

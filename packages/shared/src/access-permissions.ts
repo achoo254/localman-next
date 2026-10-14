@@ -52,6 +52,12 @@ export const WORKSPACE_PERMISSIONS = {
 	manageRoles: ["admin"],
 	/** Manage workspace visibility. */
 	manageVisibility: ["admin"],
+	/**
+	 * Take a collection outside the workspace: public and guest links,
+	 * access keys, Run buttons. Members only: a person shared one element
+	 * cannot publish it.
+	 */
+	publishPublic: ["admin", "editor"],
 } as const satisfies Record<string, readonly WorkspaceRole[]>;
 export type WorkspaceAction = keyof typeof WORKSPACE_PERMISSIONS;
 

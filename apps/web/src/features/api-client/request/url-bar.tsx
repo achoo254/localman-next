@@ -2,6 +2,7 @@ import {
 	ROUTE_MODES,
 	type RouteMode,
 	looksLikeCurl,
+	paramsFromUrl,
 } from "@localman/shared/api-client";
 import { IconSend } from "@tabler/icons-react";
 import { useState } from "react";
@@ -12,7 +13,6 @@ import { newId } from "../workbench/workbench-ids";
 import { CurlImportModal } from "./curl-import-modal";
 import type { DraftPaneProps } from "./draft-pane";
 import { MethodSelect } from "./method-select";
-import { paramsFromUrl } from "./params-sync";
 import { VariableInput } from "./variable-input";
 
 export interface UrlBarProps extends DraftPaneProps {

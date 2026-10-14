@@ -65,3 +65,10 @@ export * from "./environments/environment-schemas.js";
 export * from "./environments/variable-resolver.js";
 export * from "./environments/script-scope-values.js";
 export * from "./environments/postman-environment.js";
+// Redaction: history, the router and every public view of a collection.
+export * from "./redaction/sensitive-names.js";
+export * from "./redaction/query-pairs.js";
+export * from "./redaction/redact-draft.js";
+export * from "./redaction/public-collection.js";
+export * from "./redaction/secret-heuristics.js";
+export * from "./collections/public-sharing-model.js";

@@ -1,8 +1,8 @@
+import { urlWithParams } from "@localman/shared/api-client";
 import { useT } from "../../../i18n/i18n-context";
 import type { DraftPaneProps } from "./draft-pane";
 import { newKeyValueRow } from "./draft-pane";
 import { KeyValueTable } from "./key-value-table";
-import { urlWithParams } from "./params-sync";
 
 /** Query params, kept in step with the URL's query string. */
 export function ParamsTab({ draft, update }: DraftPaneProps) {

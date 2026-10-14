@@ -1,4 +1,4 @@
-import { DRAFT_MAX_TABS } from "@localman/shared/api-client";
+import { DRAFT_MAX_TABS, hasBlankedSecrets } from "@localman/shared/api-client";
 import { IconCode, IconUpload } from "@tabler/icons-react";
 import { useCallback, useMemo, useState } from "react";
 import { Button } from "../../components/ui/button";
@@ -6,7 +6,6 @@ import { IconButton } from "../../components/ui/icon-button";
 import { useToast } from "../../components/ui/toast";
 import type { HistoryDetail } from "../../features/api-client/history/history-api";
 import { HistorySidebar } from "../../features/api-client/history/history-sidebar";
-import { hasBlankedSecrets } from "../../features/api-client/history/redact-draft";
 import { ExportMenu } from "../../features/api-client/import-export/export-menu";
 import { ImportModal } from "../../features/api-client/import-export/import-modal";
 import type { ImportMode } from "../../features/api-client/import-export/import-save-mode";
