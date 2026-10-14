@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -74,6 +75,8 @@ function apiEnv(mongoUri: string, oidcSecret: string): NodeJS.ProcessEnv {
 		MOCK_BASE_DOMAIN,
 		// Tunnel mappings accept only these domains; the Tunelo specs use one.
 		TUNNEL_DOMAINS: TUNNEL_DOMAIN,
+		// Unreleased features the specs cover, behind their server gates.
+		PUBLIC_SHARING_ENABLED: "true",
 	};
 }
 
@@ -87,19 +90,31 @@ function idpEnv(oidcSecret: string): NodeJS.ProcessEnv {
 	};
 }
 
+/** Flags production builds with (`infra/localman/released-features`). */
+function releasedFeatures(): string[] {
+	const file = resolve(REPO, "infra/localman/released-features");
+	return readFileSync(file, "utf8")
+		.split("\n")
+		.map((line) => line.trim())
+		.filter((line) => line !== "" && !line.startsWith("#"));
+}
+
+/** Specs that cover features not released yet turn their flags on here. */
+const UNRELEASED_FEATURES = ["publicSharing"];
+
 /**
  * Production build of the web app for the E2E: same origin for the API
- * (empty VITE_API_BASE_URL) and the local IdP for the account page.
+ * (empty VITE_API_BASE_URL), the local IdP for the account page, and the
+ * production flags plus the unreleased ones under test.
  */
 function webBuildEnv(): NodeJS.ProcessEnv {
 	return {
 		...baseEnv(),
 		VITE_API_BASE_URL: "",
 		VITE_IDP_ORIGIN: IDP_ORIGIN,
-		// Every flag the specs need: the API client, the MCP tab of the
-		// endpoint card, and the hybrid mock tabs (upstream, request log,
-		// webhook inbox, callbacks).
-		VITE_FEATURES: "apiClient,mockMcp,hybridMock,workspaces,environments",
+		VITE_FEATURES: [
+			...new Set([...releasedFeatures(), ...UNRELEASED_FEATURES]),
+		].join(","),
 	};
 }
 
