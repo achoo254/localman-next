@@ -38,6 +38,18 @@
         proxy_pass http://127.0.0.1:4000;
     }
 
+    # Public sharing reads (public links, the JSON of an access key): no
+    # session, so per-IP limits come first (zone in localman-http.conf).
+    # Case-insensitive like the API's router. Link ids and access keys are
+    # in the URL and error lines (upstream down, limit hit) quote it, so
+    # only critical errors are logged here.
+    location ~* ^/api/v1/public/ {
+        error_log /var/log/nginx/localman-mock.error.log crit;
+        limit_req zone=localman_public burst=20 nodelay;
+        add_header X-Robots-Tag "noindex" always;
+        proxy_pass http://127.0.0.1:4000;
+    }
+
     # Collections and environments (/api/v1/collections/…,
     # /api/v1/environments/…, and creating either in
     # /api/v1/workspaces/:id/…): an imported collection tree takes up to
@@ -152,6 +164,13 @@
 
     location = /robots.txt {
         expires 1d;
+    }
+
+    # "Run in Localman" badge embedded in READMEs (GitHub fetches it through
+    # its image proxy). A missing file is a 404, never the app's HTML.
+    location = /run-button.svg {
+        expires 1d;
+        try_files $uri =404;
     }
 
     # SPA: unknown paths render the app, which shows its own 404.
