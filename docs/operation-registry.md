@@ -78,6 +78,8 @@ Thứ tự trong router: xác thực → check scope (401 `UNAUTHENTICATED`, 403
 
 Khi sạch, script in bảng operation → tool theo toolset (markdown: tên tool, route, hint, scope token, cách xác nhận, mô tả ngắn; operation `exempt` kèm lý do). `--markdown <path>` ghi thêm bảng đó ra file (trang docs "MCP tools").
 
+**Cổng phát hành.** Registry liệt kê mọi operation, kể cả tính năng chưa phát hành, để coverage và test thấy chúng. Tính năng cần giữ khỏi production (vì `deploy.sh` build working tree dùng chung) thì `main.ts` lọc trước khi đưa cho router và Localman MCP: hiện có `servedOperations` của chia sẻ công khai (`modules/public-sharing/public-sharing-gate.ts`, biến `PUBLIC_SHARING_ENABLED`). Operation bị lọc không có route (404 như path lạ) và không có tool.
+
 ## MCP tool sinh từ operation
 
 `createOperationMcpServer` (`apps/api/src/modules/mcp/operation-mcp-server.ts`) biến mỗi operation `mcp: true` thành một tool:

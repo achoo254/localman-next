@@ -9,6 +9,10 @@ dependencies: [11, 12, 13, 14]
 
 # Phase 15: Chia sẻ công khai
 
+> **Tách đôi (2026-10-14).** 15a (public link, guest link, access key, nút Run chế độ import, cảnh báo secret) làm ở
+> `plans/dattqh/261014-0825-public-sharing-links-keys-run/`. Phần còn lại ở đây là 15b: fork từ public link, chế độ fork
+> của nút Run, workspace `public`; chờ phase 14.
+
 ## Goal
 Hoàn tất phần share của Postman cho người ngoài team: public workspace kèm public link và fork từ public, guest xem qua link, nút nhúng "Run in Localman" (tương đương "Run in Postman"), và link JSON chỉ đọc bằng Collection Access Key.
 

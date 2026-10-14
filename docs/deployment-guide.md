@@ -154,6 +154,14 @@ Thêm `--tenant <id>` để chạy cho một tenant khác (mặc định `primar
 3. `certbot renew --dry-run --cert-name localman.hoandat.com` phải thành công với token mới.
 4. Xoá token cũ trên Cloudflare, cập nhật bản sao trong iCloud.
 
+## Chia sẻ công khai (`PUBLIC_SHARING_ENABLED`)
+
+Public link, guest link, access key và nút Run chạy khi **cả hai** cùng bật: cờ web `publicSharing` (dòng trong [`released-features`](../infra/localman/released-features), có hiệu lực ở bản build kế tiếp) và cổng server `PUBLIC_SHARING_ENABLED=true` trong `/opt/localman/.env`. Cổng tắt thì API không route và MCP không có tool nào của tính năng này (path trả 404), nên bản deploy của working tree chưa phát hành được gì.
+
+- **Bật:** thêm `publicSharing` vào `released-features` và deploy; trên server đặt `PUBLIC_SHARING_ENABLED=true` trong `/opt/localman/.env` rồi `pm2 reload localman-api` (`--env-file` đọc lại khi process khởi động lại).
+- **Kiểm sau khi bật:** `GET /api/v1/public/links/x` trả 404 `PUBLIC_LINK_NOT_FOUND` (JSON của API, không phải 404 của router), `/run-button.svg` trả `image/svg+xml`, access log nginx ghi `/public/c/[redacted]`.
+- **Tắt khẩn (rollback):** đặt `PUBLIC_SHARING_ENABLED=false`, `pm2 reload localman-api`. Mọi link, key, nút ngừng ngay; dữ liệu giữ nguyên, bật lại thì chạy tiếp. Chỉ đổi release khi lỗi nằm ngoài tính năng này.
+
 ## Rollback
 
 - Code: đổi symlink về một release còn giữ (tối đa 5 bản). Script cài lại nginx conf của release đó (CSP khớp `index.html` của nó), đổi symlink, reload nginx và pm2, kiểm health:

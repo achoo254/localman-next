@@ -6,6 +6,8 @@ Test là chủ sở hữu thực thi của hợp đồng này: `contract.test.ts
 
 Mock runtime không đi qua operation registry: không có trong OpenAPI của dashboard. Mỗi project có một MCP endpoint riêng ở `{prefix}/mcp` (Hosted Mock MCP, xem [mục MCP](#mcp)) thao tác trên cùng dữ liệu; MCP để quản lý project và resource là các operation `mock.*` của dashboard API.
 
+Mục [Chia sẻ công khai của collection](#chia-sẻ-công-khai-của-collection) ở cuối là hợp đồng thứ hai cho người ngoài workspace: trang public link, JSON qua access key và nút Run in Localman. Các route đó đi qua operation registry của dashboard (cổng 4000).
+
 Đường dẫn file bên dưới tính từ `apps/api/src/` nếu không ghi package.
 
 ## Địa chỉ
@@ -168,3 +170,29 @@ Bảng mã lỗi cho người dùng cuối: `apps/web/src/pages/docs/status-code
 - **Template:** chỉ thay tham chiếu nguyên chuỗi; Faker gọi qua whitelist id tra bằng `Map`, không có đường chạy code tuỳ ý.
 - **CORS:** `*` không credentials, nên trình duyệt không gửi cookie của Localman tới mock.
 - **Log:** không ghi header, cookie, body hay query; secret trong path chỉ còn 4 ký tự đầu, secret trong Host không bao giờ được ghi (`maskSecret`, `mockRouteOf` trong `mock-http.ts`). Access log của nginx dùng format che secret (xem [deployment-guide.md](deployment-guide.md)).
+
+## Chia sẻ công khai của collection
+
+Bốn đường đưa một collection ra ngoài workspace, đều sau cổng server `PUBLIC_SHARING_ENABLED` (tắt: operation không được route, không có MCP tool, path trả 404 như path lạ; `modules/public-sharing/public-sharing-gate.ts`) và cờ web `publicSharing`. Code ở `modules/public-sharing/`; test là chủ sở hữu thực thi (`public-link.test.ts`, `guest-link.test.ts`, `access-key.test.ts`, `run-button.test.ts`, `workspace-sharing.test.ts`, `public-sharing-gate.test.ts`).
+
+**Một serializer.** Mọi dữ liệu đi ra (trang public, trang guest, JSON của access key, cây mà nút Run import) do `publicCollectionTree` và `publicEnvironment` (`packages/shared/src/api-client/redaction/public-collection.ts`) dựng trên server, không bao giờ từ view nội bộ. Bị che: giá trị biến `secret`; credential gõ thẳng trong tab Auth của collection, folder, request và request của example; giá trị gõ thẳng của header, query, field form (urlencoded, form-data dạng text) và cặp trong fragment có tên nhạy cảm (`isSensitiveName`, gồm `Set-Cookie`, `WWW-Authenticate`, `session…`); chữ gõ cạnh `{{var}}` cũng tính là gõ thẳng; `user:password@` trong URL (mọi dạng) và trong `Location` của example; body response của mọi example; environment chỉ giữ shared value của biến không `secret`. Tham chiếu `{{var}}` giữ nguyên văn (query dựng lại bằng `query-pairs.ts`, không qua `URLSearchParams`). Body, path và script **không** bị che: thao tác bật/tạo trả `warnings` (vị trí, không giá trị) từ `findSecretLikeValues` để UI cảnh báo.
+
+**Ai công khai được.** Chỉ thành viên workspace hiện tại của collection có vai trò Admin hoặc Editor (`WORKSPACE_PERMISSIONS.publishPublic`); người chỉ được share lẻ thì 403 `FORBIDDEN`. Mỗi lần phục vụ kiểm lại: người tạo vẫn là Admin/Editor của workspace **hiện tại** (không lưu `workspaceId`, chuyển collection thì theo workspace mới) và công tắc tương ứng còn bật.
+
+**Công tắc của Admin** (`GET`/`PATCH /workspaces/:workspaceId/sharing`, `sharing.getWorkspaceSharing`, `sharing.updateWorkspaceSharing`): `publicLinksAllowed` (public link, nút Run public), `guestsAllowed`, `accessKeysAllowed`; mặc định bật, document cũ đọc ra bật. Tắt là `destructive`, dry run đếm `stopped.{links,accessKeys,runButtons}`; tắt thì thứ đang có ngừng ngay, bật lại thì chạy tiếp (không xoá gì). Bật hay tạo khi công tắc tắt: 403 `PUBLIC_LINKS_DISABLED`, `GUESTS_DISABLED`, `ACCESS_KEYS_DISABLED`.
+
+| Đường | Quản lý (`/api/v1`) | Đọc từ bên ngoài | Lỗi khi không phục vụ được |
+|---|---|---|---|
+| Public link | `POST`/`GET`/`DELETE /collections/:id/public-link` | `GET /public/links/:linkId` (không cần đăng nhập); trang web `/public/c/:linkId` | 404 `PUBLIC_LINK_NOT_FOUND`, một thông điệp cho mọi lý do |
+| Guest link | `POST`/`GET`/`DELETE /collections/:id/guest-link` | `POST /guest-links/view` body `{ linkId }` (cần đăng nhập); trang `/guest/:linkId` | 404 `PUBLIC_LINK_NOT_FOUND` |
+| Access key | `POST`/`GET /collections/:id/access-keys`, `DELETE …/access-keys/:keyId` | `GET /public/collections/:collectionId?access_key=lmck_…` trả Collection v2.1 đã che | 401 `ACCESS_KEY_INVALID`, một thông điệp |
+| Nút Run | `POST`/`GET /collections/:id/run-buttons`, `DELETE …/run-buttons/:runButtonId` | `POST /run-buttons/preview`, `POST /run-buttons/import` body có `buttonId` (cần đăng nhập); trang `/run/:buttonId`, badge `/run-button.svg` | 404 `RUN_BUTTON_NOT_FOUND` |
+
+- **Id là capability.** `linkId` 32 byte, `buttonId` 16 byte ngẫu nhiên (base64url); access key `lmck_` + 32 byte, chỉ lưu SHA-256 và 4 ký tự cuối, trả một lần. Thu hồi là **xoá document** (bật lại ra id mới). Id sai định dạng bị trả lỗi trước khi tra DB.
+- **Bật, tạo:** bật public link, guest link, tạo nút Run và import nút Run có `dryRun` và cần `confirm_token` qua MCP (`requiresConfirmation`); tạo access key là `createsCredential` (MCP cần `credentials:write`). Tắt, thu hồi, xoá là `destructive` có `dryRun`. Bật hai lần trả cùng link; hai lệnh bật song song chỉ còn một (unique index, bắt duplicate key).
+- **Access key:** hết hạn sau 60 ngày không dùng (`lastUsedAt ?? createdAt`, kiểm lúc dùng; `lastUsedAt` ghi tối đa mỗi giờ); tối đa 10 key mỗi người mỗi collection (409 `ACCESS_KEY_LIMIT_REACHED`); chủ key hoặc Admin workspace thấy và thu hồi được. 401 cho: key sai, key collection khác, quá hạn, người tạo hết là Admin/Editor, công tắc tắt, collection ở thùng rác.
+- **Nút Run:** `team` chỉ thành viên workspace nguồn dùng được, `public` cho mọi người đã đăng nhập và cần `publicLinksAllowed`. Environment gắn kèm phải cùng workspace và người tạo có `shareVariables`; nếu sau đó không còn hợp lệ, import vẫn tạo collection và trả `environmentError: { code: "ENVIRONMENT_UNAVAILABLE" }`. Import cần Admin/Editor ở workspace đích; `includeScripts: false` bỏ mọi script; cùng `idempotencyKey` trong 10 phút trả kết quả cũ (409 `IMPORT_IN_PROGRESS` khi lần đầu chưa xong); quá `MAX_IMPORT_BYTES` sau khi che: 413 `COLLECTION_TOO_LARGE`; giới hạn workspace của `createCollection`/`createEnvironment` giữ nguyên. Tối đa 20 nút mỗi collection.
+- **Rate limit** (`publicSharingRateLimit` trong `config/runtime-settings.ts`): đếm theo IP **trước** mọi tra cứu (public link, access key), nên dò id chỉ tạo một bộ đếm mỗi địa chỉ; theo key chỉ sau khi key khớp; trang guest và nút Run đếm theo IP và theo tài khoản. Vượt: 429 `RATE_LIMITED`. nginx thêm zone `localman_public` cho `/api/v1/public/`.
+- **Log:** id của link, nút và access key không vào access log nginx (map `$localman_logged_uri`, không phân biệt hoa thường, test ở `scripts/nginx-log-map/`); `/api/v1/public/` chỉ ghi error log mức `crit` vì dòng lỗi trích cả URL; log request của API chỉ ghi route mẫu, không ghi query. Cloudflare trước domain chính vẫn thấy URL đầy đủ.
+- **Dọn dẹp:** purge collection xoá link, key, nút của nó; xoá environment xoá các nút gắn nó.
+
