@@ -5,6 +5,7 @@ import {
 	workspaceRoleAllows,
 } from "@localman/shared/access";
 import { IconCheck, IconMinus } from "@tabler/icons-react";
+import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
 import { roleLabel } from "./workspace-labels";
 
@@ -21,6 +22,11 @@ const CELL = "border-border-subtle border-b px-3 py-2";
  */
 export function WorkspacePermissionsTable() {
 	const t = useT();
+	const { publicSharing } = useFeatures();
+	// Unreleased features are not advertised.
+	const actions = publicSharing
+		? ACTIONS
+		: ACTIONS.filter((action) => action !== "publishPublic");
 	return (
 		<details data-id="ws-settings-permissions" className="text-sm">
 			<summary className="min-h-11 cursor-pointer content-center font-mono font-semibold text-[0.8125rem]">
@@ -41,7 +47,7 @@ export function WorkspacePermissionsTable() {
 						</tr>
 					</thead>
 					<tbody>
-						{ACTIONS.map((action) => (
+						{actions.map((action) => (
 							<tr key={action}>
 								<th scope="row" className={`${CELL} font-normal`}>
 									{t(`workspaces.permissions.actions.${action}`)}

@@ -1,5 +1,6 @@
 import { docsCustomResponses } from "./docs-custom-responses";
 import { docsMcp } from "./docs-mcp";
+import { docsPublicSharing } from "./docs-public-sharing";
 import { docsQuickStart } from "./docs-quick-start";
 import { docsReference } from "./docs-reference";
 
@@ -32,6 +33,10 @@ export const docs = {
 			title: "MCP tools",
 			summary: "Connect AI agents to your mocks",
 		},
+		publicSharing: {
+			title: "Public sharing",
+			summary: "Share a collection outside your workspace",
+		},
 	},
 	headerMethod: "Method",
 	headerRoute: "Route",
@@ -56,4 +61,5 @@ export const docs = {
 	},
 	customResponses: docsCustomResponses,
 	mcp: docsMcp,
+	publicSharing: docsPublicSharing,
 } as const;

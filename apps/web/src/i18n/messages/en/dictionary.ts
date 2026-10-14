@@ -22,6 +22,7 @@ import { notifications } from "./notifications";
 import { primitives } from "./primitives";
 import { projectDetail } from "./project-detail";
 import { projects } from "./projects";
+import { publicSharing } from "./public-sharing";
 import { resourceChaos } from "./resource-chaos";
 import { resourceExport } from "./resource-export";
 import { resourceImport } from "./resource-import";
@@ -82,4 +83,5 @@ export const en = {
 	environments,
 	variables,
 	collections,
+	publicSharing,
 } as const;

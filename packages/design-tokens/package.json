@@ -4,7 +4,8 @@
 	"private": true,
 	"type": "module",
 	"exports": {
-		"./tokens.css": "./tokens.css"
+		"./tokens.css": "./tokens.css",
+		"./run-button.svg": "./run-button.svg"
 	},
 	"dependencies": {
 		"@radix-ui/colors": "^3.0.0"

@@ -33,6 +33,7 @@ describe("Pro interest needs by released features", () => {
 			mockPowerUps: true,
 			workspaces: true,
 			environments: true,
+			publicSharing: true,
 		};
 		expect(ids(all)).not.toContain("devops_ci");
 		expect(sourceNeedFor("devops", all)).toBeUndefined();

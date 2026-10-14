@@ -37,7 +37,11 @@ interface SafeParser<T> {
 	safeParse(value: unknown): { success: true; data: T } | { success: false };
 }
 
-function parseWith<T>(schema: SafeParser<T>, value: unknown, what: string): T {
+export function parseWith<T>(
+	schema: SafeParser<T>,
+	value: unknown,
+	what: string,
+): T {
 	const parsed = schema.safeParse(value);
 	if (!parsed.success) throw new InvalidResponseError(what);
 	return parsed.data;

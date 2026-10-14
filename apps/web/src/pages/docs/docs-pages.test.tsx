@@ -18,7 +18,12 @@ import {
 	docsPath,
 } from "./docs-pages";
 
-const WITH_MCP: FeatureFlags = { ...NO_FEATURES, mockMcp: true };
+/** Every page's feature on, so the table of contents lists them all. */
+const WITH_MCP: FeatureFlags = {
+	...NO_FEATURES,
+	mockMcp: true,
+	publicSharing: true,
+};
 
 /** The real route table under these feature flags. */
 function renderDocs(path: string, flags: FeatureFlags = NO_FEATURES) {

@@ -63,5 +63,13 @@ export const appRoutes: RouteObject[] = [
 			"TrialExtensionsPage",
 		),
 	},
+	// Guest link of a collection: its redacted copy, signed in (`publicSharing`).
+	{
+		path: "guest/:linkId",
+		element: lazyPage(
+			() => import("../pages/guest/guest-collection-page"),
+			"GuestCollectionPage",
+		),
+	},
 	...workspaceRoutes,
 ];

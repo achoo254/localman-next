@@ -115,6 +115,7 @@ export const workspaces: Messages["workspaces"] = {
 			manageMembers: "Thêm và gỡ thành viên",
 			manageRoles: "Quản lý vai trò trong workspace",
 			manageVisibility: "Quản lý chế độ hiển thị của workspace",
+			publishPublic: "Chia sẻ collection ra ngoài (link, access key, nút Run)",
 		},
 	},
 	errors: {

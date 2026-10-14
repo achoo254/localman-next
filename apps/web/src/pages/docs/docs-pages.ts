@@ -10,7 +10,12 @@ export interface DocsPage {
 	/** Path segment under `/docs`. */
 	readonly slug: string;
 	/** Key of the title and summary under `docs.pages`. */
-	readonly key: "quickStart" | "codeExamples" | "customResponses" | "mcp";
+	readonly key:
+		| "quickStart"
+		| "codeExamples"
+		| "customResponses"
+		| "mcp"
+		| "publicSharing";
 	/** Shown only when this feature runs in production. */
 	readonly feature?: FeatureName;
 }
@@ -25,6 +30,7 @@ export const DOCS_PAGES: readonly DocsPage[] = [
 	{ slug: "code-examples", key: "codeExamples" },
 	{ slug: "custom-responses", key: "customResponses" },
 	{ slug: "mcp", key: "mcp", feature: "mockMcp" },
+	{ slug: "public-sharing", key: "publicSharing", feature: "publicSharing" },
 ];
 
 /** The pages a reader can open with these feature flags. */

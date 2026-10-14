@@ -1,6 +1,7 @@
 import type { Messages } from "../../message-types";
 import { docsCustomResponses } from "./docs-custom-responses";
 import { docsMcp } from "./docs-mcp";
+import { docsPublicSharing } from "./docs-public-sharing";
 import { docsQuickStart } from "./docs-quick-start";
 import { docsReference } from "./docs-reference";
 
@@ -32,6 +33,10 @@ export const docs: Messages["docs"] = {
 			title: "MCP 工具",
 			summary: "将 AI agent 连接到你的 mock",
 		},
+		publicSharing: {
+			title: "公开分享",
+			summary: "将 collection 分享到 workspace 之外",
+		},
 	},
 	headerMethod: "Method",
 	headerRoute: "路由",
@@ -56,4 +61,5 @@ export const docs: Messages["docs"] = {
 	},
 	customResponses: docsCustomResponses,
 	mcp: docsMcp,
+	publicSharing: docsPublicSharing,
 };

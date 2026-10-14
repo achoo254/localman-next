@@ -12,6 +12,7 @@ import {
 } from "vite";
 import { apiProxy } from "./src/config/dev-api-proxy";
 import { parseFeatureFlags } from "./src/config/feature-flags";
+import { runButtonBadge } from "./src/config/run-button-badge";
 
 /**
  * Vendor chunks, so the app chunk stays small and libraries are cached
@@ -152,7 +153,7 @@ export default defineConfig(({ mode }) => {
 	// instead of failing in the browser at startup.
 	parseFeatureFlags(loadEnv(mode, ROOT, "VITE_").VITE_FEATURES);
 	return {
-		plugins: [react(), tailwindcss(), prerenderPages()],
+		plugins: [react(), tailwindcss(), prerenderPages(), runButtonBadge()],
 		// The API client's script worker imports QuickJS lazily, which needs
 		// code splitting inside the worker: only the ES format allows it.
 		worker: { format: "es" },

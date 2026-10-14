@@ -26,6 +26,24 @@ export const publicRoutes: RouteObject[] = [
 			"WorkspaceInvitePage",
 		),
 	},
+	// A collection published with a public link; read-only, no sign-in
+	// (`publicSharing` flag, home otherwise).
+	{
+		path: "public/c/:linkId",
+		element: lazyPage(
+			() => import("../pages/public/public-collection-page"),
+			"PublicCollectionPage",
+		),
+	},
+	// "Run in Localman" badges land here; public so the page can explain
+	// before asking to sign in (`publicSharing` flag, home otherwise).
+	{
+		path: "run/:buttonId",
+		element: lazyPage(
+			() => import("../pages/run/run-button-page"),
+			"RunButtonPage",
+		),
+	},
 	// Design-system reference page kept for comparing with the prototype.
 	{
 		path: "_primitives",
@@ -66,6 +84,13 @@ export const publicRoutes: RouteObject[] = [
 				element: lazyPage(
 					() => import("../pages/docs/mcp-tools-page"),
 					"McpToolsPage",
+				),
+			},
+			{
+				path: "public-sharing",
+				element: lazyPage(
+					() => import("../pages/docs/public-sharing-page"),
+					"PublicSharingPage",
 				),
 			},
 		],

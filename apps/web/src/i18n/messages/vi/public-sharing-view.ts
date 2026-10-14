@@ -1,0 +1,125 @@
+import type { Messages } from "../../message-types";
+
+export const publicSharingView: Messages["publicSharing"]["view"] = {
+	page: {
+		pageTitle: "Collection được chia sẻ",
+		readOnly: "chỉ đọc",
+		updated: "Cập nhật {date}",
+		requests: {
+			other: "{count} request",
+		},
+		tree: "Thư mục và request",
+		emptyTree: "Collection này chưa có request nào.",
+		overview: "Tổng quan",
+		variables: "Biến của collection",
+		noVariables: "Không có biến nào.",
+		hidden: "đã ẩn",
+		notFoundTitle: "Link này không tồn tại hoặc đã bị tắt",
+		notFoundText:
+			"Hãy nhờ người đã chia sẻ gửi link mới. Link ngừng hoạt động khi bị tắt.",
+		rateLimitedTitle: "Có quá nhiều yêu cầu",
+		rateLimitedText: "Vui lòng đợi một phút rồi tải lại trang.",
+		loadFailed: "Không tải được collection này.",
+		home: "Về Localman",
+	},
+	request: {
+		params: "Query params",
+		headers: "Header",
+		auth: "Authorization",
+		body: "Body",
+		description: "Mô tả",
+		examples: "Example",
+		disabled: "tắt",
+		noBody: "Không có body",
+		file: "File: {name}",
+		authTypes: {
+			inherit: "Kế thừa từ thư mục hoặc collection",
+			none: "Không xác thực",
+			bearer: "Bearer token",
+			basic: "Basic auth",
+			apikey: "API key",
+		},
+		token: "Token",
+		username: "Tên đăng nhập",
+		password: "Mật khẩu",
+		keyName: "Key",
+		keyValue: "Giá trị",
+		keyIn: "Gắn vào",
+		keyInHeader: "Header",
+		keyInQuery: "Query params",
+		exampleStatus: "Status {status}",
+		exampleBodyHidden: "Body response của example không được công khai.",
+		noExamples: "Không có example nào.",
+	},
+	guest: {
+		pageTitle: "Xem với tư cách khách",
+		guestBadge: "khách",
+		requestEdit: "Xin quyền chỉnh sửa",
+		openInWorkspace: "Mở trong workspace",
+		note: "Bạn đang xem bản chỉ đọc. Mở link này không cho bạn quyền gì trên collection.",
+	},
+	run: {
+		pageTitle: "Run in Localman",
+		signInTitle: "Đăng nhập để import collection này",
+		signInText:
+			"Nút Run in Localman này import một bản sao của collection vào một workspace của bạn. Hãy đăng nhập trước; chưa có gì được import cho tới khi bạn xác nhận.",
+		signIn: "Đăng nhập",
+		signUp: "Tạo tài khoản",
+		workspace: "Import vào",
+		workspaceHint: "Các workspace mà bạn là Admin hoặc Editor.",
+		noWorkspace:
+			"Bạn không phải Admin hay Editor của workspace nào nên chưa có nơi để import.",
+		previewTitle: "Những gì sẽ được import",
+		requests: {
+			other: "{count} request",
+		},
+		environment: "Environment: {name}",
+		environmentUnavailable:
+			"Environment không còn dùng được, chỉ collection được import.",
+		noEnvironment: "Không kèm environment.",
+		scriptsTitle: "Script trong collection này",
+		noScripts: "Không có script nào.",
+		scriptPhase: {
+			pre: "trước request",
+			post: "sau response",
+		},
+		includeScripts: "Import script",
+		includeScriptsHint:
+			"Script chạy khi bạn gửi request và đọc được giá trị environment của bạn. Chỉ import khi bạn tin người đã chia sẻ.",
+		import: "Import collection",
+		doneTitle: "Đã import",
+		doneText: "“{name}” đã có trong workspace của bạn.",
+		openCollection: "Mở collection",
+		environmentError: "Collection đã được import nhưng environment thì chưa.",
+	},
+	workspace: {
+		title: "Chia sẻ công khai",
+		text: "Những gì Admin và Editor được công khai từ workspace này. Tắt một công tắc là dừng ngay những gì đang có; bật lại thì chúng chạy tiếp.",
+		readOnly: "Chỉ Admin mới đổi được các cài đặt này.",
+		loadFailed: "Không tải được cài đặt chia sẻ.",
+		switches: {
+			publicLinksAllowed: "Public link",
+			guestsAllowed: "Guest link",
+			accessKeysAllowed: "Access key",
+		},
+		hints: {
+			publicLinksAllowed:
+				"Trang chỉ đọc ai cũng mở được, và nút Run ai cũng dùng được.",
+			guestsAllowed:
+				"Trang chỉ đọc cho người đã đăng nhập, họ có thể xin quyền chỉnh sửa.",
+			accessKeysAllowed: "Key cho phép script đọc collection dưới dạng JSON.",
+		},
+		offTitle: "Tắt {name}",
+		offQuestion: "Tắt {name} cho workspace này?",
+		offStops:
+			"Những mục này dừng ngay. Không có gì bị xoá, bật lại thì chúng chạy tiếp.",
+		stopped: {
+			links: { other: "{count} link" },
+			accessKeys: { other: "{count} access key" },
+			runButtons: { other: "{count} nút Run" },
+		},
+		offCountsLoading: "Đang đếm những mục sẽ dừng…",
+		offConfirm: "Tắt",
+		saved: "Đã lưu cài đặt chia sẻ.",
+	},
+};

@@ -6,7 +6,9 @@
  * `mockPowerUps` (resource import, type export, chaos, conditional rules
  * and Faker suggestions), `workspaces` (workspaces, sharing and access
  * requests of the API client) and `environments` (environments, globals
- * and local values of variables; needs `workspaces`).
+ * and local values of variables; needs `workspaces`) and `publicSharing`
+ * (public and guest links, collection access keys and Run buttons; the API
+ * serves them only with `PUBLIC_SHARING_ENABLED`).
  *
  * Set at build time in `VITE_FEATURES`, a comma-separated list such as
  * `apiClient,mockMcp`. Everything is off by default. No React here:
@@ -21,6 +23,7 @@ export interface FeatureFlags {
 	readonly mockPowerUps: boolean;
 	readonly workspaces: boolean;
 	readonly environments: boolean;
+	readonly publicSharing: boolean;
 }
 
 export type FeatureName = keyof FeatureFlags;
@@ -34,6 +37,7 @@ export const NO_FEATURES: FeatureFlags = Object.freeze({
 	mockPowerUps: false,
 	workspaces: false,
 	environments: false,
+	publicSharing: false,
 });
 
 function isFeatureName(value: string): value is FeatureName {

@@ -4,25 +4,17 @@ import {
 } from "@localman/shared/access";
 import type { ReactNode } from "react";
 import { Alert } from "../../components/ui/alert";
-import { CopyField } from "../../components/ui/copy-field";
 import { Modal } from "../../components/ui/modal";
 import { Skeleton, SkeletonRegion } from "../../components/ui/skeleton";
-import {
-	Tabs,
-	TabsContent,
-	TabsList,
-	TabsTrigger,
-} from "../../components/ui/tabs";
 import { useT } from "../../i18n/i18n-context";
 import { useDelayedFlag } from "../../lib/use-delayed-flag";
-import { appPageUrl } from "../../platform/navigation";
 import { useWorkspacesEnabled } from "../workspaces/use-workspaces-enabled";
+import { CollectionShareTabs } from "./collection-share-tabs";
 import { ManageAccessList } from "./manage-access-list";
 import {
 	SharePeopleForm,
 	type ShareableEnvironment,
 } from "./share-people-form";
-import { elementPath } from "./sharing-api";
 import { sharingErrorMessage } from "./sharing-errors";
 import { useElement, useElementAccess } from "./use-element-access";
 
@@ -110,22 +102,10 @@ function PeopleTab(props: Omit<ShareDialogProps, "open" | "onOpenChange">) {
 	);
 }
 
-function LinkTab({ type, id }: { type: ShareableElementType; id: string }) {
-	const t = useT();
-	return (
-		<CopyField
-			label={t("sharing.link.label")}
-			value={appPageUrl(elementPath(type, id))}
-			hint={t("sharing.link.note")}
-			data-id="share-link-input"
-			copyDataId="share-copy-link"
-		/>
-	);
-}
-
 /**
  * Share a collection or environment: People (invite, Manage access) and,
- * for collections, Link. Environments have People only. Renders nothing
+ * for collections, Link and the public sharing tabs
+ * (`collection-share-tabs.tsx`). Environments have People only. Renders nothing
  * while the `workspaces` flag is off.
  */
 export function ShareDialog({
@@ -140,20 +120,11 @@ export function ShareDialog({
 	let body: ReactNode = people;
 	if (props.elementType === "collection") {
 		body = (
-			<Tabs defaultValue="people" className="grid gap-4">
-				<TabsList aria-label={t("sharing.dialog.tabs")} className="px-0">
-					<TabsTrigger value="people" data-id="share-tab-people">
-						{t("sharing.dialog.people")}
-					</TabsTrigger>
-					<TabsTrigger value="link" data-id="share-tab-link">
-						{t("sharing.dialog.link")}
-					</TabsTrigger>
-				</TabsList>
-				<TabsContent value="people">{people}</TabsContent>
-				<TabsContent value="link">
-					<LinkTab type={props.elementType} id={props.elementId} />
-				</TabsContent>
-			</Tabs>
+			<CollectionShareTabs
+				collectionId={props.elementId}
+				people={people}
+				environments={props.environments ?? NO_ENVIRONMENTS}
+			/>
 		);
 	}
 	return (

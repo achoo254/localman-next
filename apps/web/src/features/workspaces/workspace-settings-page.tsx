@@ -11,9 +11,11 @@ import {
 	TabsList,
 	TabsTrigger,
 } from "../../components/ui/tabs";
+import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import { useAppTitle } from "../../lib/use-document-title";
+import { WorkspaceSharingSection } from "../public-sharing/workspace-sharing-section";
 import { CreateWorkspaceModal } from "./create-workspace-modal";
 import { useCurrentWorkspace } from "./current-workspace";
 import { useWorkspacesEnabled } from "./use-workspaces-enabled";
@@ -36,6 +38,7 @@ function WorkspaceSettings() {
 	const { query, current } = useCurrentWorkspace();
 	const [params, setParams] = useSearchParams();
 	const [creating, setCreating] = useState(false);
+	const { publicSharing } = useFeatures();
 	const section: Section =
 		params.get("tab") === "members" ? "members" : "general";
 
@@ -95,6 +98,14 @@ function WorkspaceSettings() {
 					<Card className="p-6 max-sm:p-4">
 						<TabsContent value="general">
 							<WorkspaceGeneralPane key={current.id} workspace={current} />
+							{publicSharing ? (
+								<div className="mt-8 border-border-subtle border-t pt-6">
+									<WorkspaceSharingSection
+										key={current.id}
+										workspace={current}
+									/>
+								</div>
+							) : null}
 						</TabsContent>
 						<TabsContent value="members">
 							<WorkspaceMembersPane

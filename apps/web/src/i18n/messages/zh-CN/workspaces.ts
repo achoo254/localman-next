@@ -113,6 +113,7 @@ export const workspaces: Messages["workspaces"] = {
 			manageMembers: "添加和移除成员",
 			manageRoles: "管理 workspace 角色",
 			manageVisibility: "管理 workspace 可见性",
+			publishPublic: "公开分享 collection(链接、access key、Run 按钮)",
 		},
 	},
 	errors: {

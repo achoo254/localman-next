@@ -113,6 +113,8 @@ export const workspaces = {
 			manageMembers: "Add and remove members",
 			manageRoles: "Manage workspace roles",
 			manageVisibility: "Manage workspace visibility",
+			publishPublic:
+				"Share collections publicly (links, access keys, Run buttons)",
 		},
 	},
 	errors: {
