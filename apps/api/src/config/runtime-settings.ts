@@ -84,6 +84,17 @@ export interface RuntimeSettings {
 	/** Keys of secret variables at rest; `null`: they cannot be saved. */
 	readonly variableKeyring: Keyring | null;
 	/**
+	 * Public sharing. Per client IP before any lookup, so guessing link
+	 * ids or keys writes one counter per address, never one per guess;
+	 * per key only once a key matched; per account for signed-in pages.
+	 */
+	readonly publicSharingRateLimit: {
+		readonly publicLinkPerIp: RateLimitWindow;
+		readonly signedInPerUser: RateLimitWindow;
+		readonly accessKeyPerIp: RateLimitWindow;
+		readonly accessKeyPerKey: RateLimitWindow;
+	};
+	/**
 	 * Heavy dashboard operations per account and per project, both must
 	 * pass: they render, write and measure megabytes in the process that
 	 * also serves every mock API. Far above what a person clicks.
@@ -122,6 +133,12 @@ export const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = Object.freeze({
 	proxyBlockedCidrs: [],
 	tunnelDomains: [],
 	variableKeyring: null,
+	publicSharingRateLimit: {
+		publicLinkPerIp: perMinute(60),
+		signedInPerUser: perMinute(60),
+		accessKeyPerIp: perMinute(60),
+		accessKeyPerKey: perMinute(60),
+	},
 	heavyOperationRateLimit: {
 		generate: { perUser: perMinute(30), perProject: perMinute(60) },
 		replaceData: { perUser: perMinute(60), perProject: perMinute(120) },

@@ -114,6 +114,15 @@ export const featureEnvShape = {
 	 * the server's own address (Tunelo may share it). Empty: no tunnels.
 	 */
 	TUNNEL_DOMAINS: domainList,
+	/**
+	 * Public links, guest links, collection access keys and Run buttons.
+	 * Off: their operations are neither routed nor offered as MCP tools,
+	 * so a deploy of unreleased work exposes nothing.
+	 */
+	PUBLIC_SHARING_ENABLED: z
+		.enum(["true", "false"], { error: "must be true or false" })
+		.default("false")
+		.transform((value) => value === "true"),
 	/** Siteverify endpoint; tests point it at a local fake. */
 	TURNSTILE_VERIFY_URL: z
 		.url({ protocol: /^https?$/, error: "must be an http(s) URL" })

@@ -4,6 +4,7 @@ import type { ClientSession, Types } from "mongoose";
 import { elementNotFound } from "../access/access-policy.js";
 import { AccessRequestModel } from "../access/access-request-model.js";
 import { ElementRoleModel } from "../access/element-role-model.js";
+import { RunButtonModel } from "../public-sharing/run-button-model.js";
 import { inWorkspaceTransaction } from "../workspaces/workspace-lock.js";
 import {
 	findWorkspaceById,
@@ -26,7 +27,10 @@ export interface EnvironmentDeletion {
 	readonly variables: number;
 }
 
-/** Everything that hangs off these environments: shares, requests, choices. */
+/**
+ * Everything that hangs off these environments: shares, requests,
+ * choices, and the Run buttons that would import them.
+ */
 async function deleteDependents(
 	ids: readonly Types.ObjectId[],
 	session: ClientSession,
@@ -43,6 +47,7 @@ async function deleteDependents(
 	);
 	await ElementRoleModel.deleteMany(elements, { session });
 	await AccessRequestModel.deleteMany(elements, { session });
+	await RunButtonModel.deleteMany({ environmentId: { $in: ids } }, { session });
 	await deleteScopeLocalValues(ids.map(environmentScope), session);
 }
 

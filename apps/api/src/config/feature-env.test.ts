@@ -101,6 +101,17 @@ describe("product settings in the environment", () => {
 		}
 	});
 
+	it("keeps public sharing off unless PUBLIC_SHARING_ENABLED is true", () => {
+		expect(parseEnv(REQUIRED).PUBLIC_SHARING_ENABLED).toBe(false);
+		expect(
+			parseEnv({ ...REQUIRED, PUBLIC_SHARING_ENABLED: "true" })
+				.PUBLIC_SHARING_ENABLED,
+		).toBe(true);
+		expect(errorOf({ ...REQUIRED, PUBLIC_SHARING_ENABLED: "yes" })).toContain(
+			"PUBLIC_SHARING_ENABLED: must be true or false",
+		);
+	});
+
 	it("reads the Tunelo domains, lowercased and without repeats", () => {
 		expect(parseEnv(REQUIRED).TUNNEL_DOMAINS).toEqual([]);
 		const env = parseEnv({

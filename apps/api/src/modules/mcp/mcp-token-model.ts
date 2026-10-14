@@ -1,14 +1,12 @@
-import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import mongoose, { Schema, type Types } from "mongoose";
 import { isDuplicateKeyError } from "../../db/mongo-errors.js";
+import { issuePrefixedToken } from "../../lib/prefixed-token.js";
 import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 import { registerProjectDependent } from "../projects/project-dependents.js";
 
 /** Prefix of a Hosted Mock MCP token, so leaked tokens are recognizable. */
 export const MCP_TOKEN_PREFIX = "lmmcp_";
-const TOKEN_BYTES = 32;
-/** Characters of the token kept in clear, to tell tokens apart in the UI. */
-const LAST_CHARS = 4;
 
 /**
  * The "Require a token for MCP" setting of a project's Hosted Mock MCP
@@ -53,13 +51,7 @@ export interface IssuedMcpToken {
 
 /** A new random token: `lmmcp_` + 32 bytes in base64url. */
 export function newMcpToken(now = new Date()): IssuedMcpToken {
-	const token = `${MCP_TOKEN_PREFIX}${randomBytes(TOKEN_BYTES).toString("base64url")}`;
-	return {
-		token,
-		hash: sha256(token).toString("hex"),
-		last4: token.slice(-LAST_CHARS),
-		createdAt: now,
-	};
+	return { ...issuePrefixedToken(MCP_TOKEN_PREFIX), createdAt: now };
 }
 
 /**

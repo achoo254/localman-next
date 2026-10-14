@@ -38,6 +38,7 @@ import {
 import { sendTestNotification } from "../modules/notifications/test-notification-operations.js";
 import { projectOperations } from "../modules/projects/project-operations.js";
 import { rotateProjectSecret } from "../modules/projects/project-secret-operations.js";
+import { publicSharingOperations } from "../modules/public-sharing/public-sharing-operations.js";
 import { mockAdvancedOperations } from "../modules/resources/mock-advanced-operations.js";
 import { getMockUrls } from "../modules/resources/mock-url-operations.js";
 import { resourceDataOperations } from "../modules/resources/resource-data-operations.js";
@@ -102,4 +103,6 @@ export const operations: readonly AnyOperation[] = [
 	submitContactMessage,
 	...contactMessageAdminOperations,
 	getTenantInfo,
+	// Served only while PUBLIC_SHARING_ENABLED is on (`servedOperations`).
+	...publicSharingOperations,
 ];

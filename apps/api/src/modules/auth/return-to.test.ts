@@ -11,6 +11,8 @@ describe("safeReturnTo", () => {
 		["/a/./b//c", "/a/b//c"],
 		// An encoded backslash is only a path character, not a host switch.
 		["/%5Cevil", "/%5Cevil"],
+		// The Run button page returns to itself after sign-in.
+		["/run/AbCdEf_-0123456789xy", "/run/AbCdEf_-0123456789xy"],
 	])("keeps the internal path %s as %s", (value, expected) => {
 		expect(safeReturnTo(value)).toBe(expected);
 	});
@@ -23,6 +25,9 @@ describe("safeReturnTo", () => {
 		"//evil.example",
 		"/\\evil.example",
 		"/x\nLocation: https://evil.example",
+		// Browsers drop tabs and newlines in URLs: `/\t/evil` is `//evil`.
+		"/\t/evil.com",
+		"/\n/evil.com",
 		"javascript:alert(1)",
 		["/projects"],
 		`/${"a".repeat(3000)}`,

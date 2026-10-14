@@ -33,6 +33,8 @@ import {
 	type NotificationService,
 	createNotificationService,
 } from "./modules/notifications/notification-service.js";
+import { servedOperations } from "./modules/public-sharing/public-sharing-gate.js";
+import { operations as registeredOperations } from "./operations/registry.js";
 import { configureTenancy } from "./tenancy/configure-tenancy.js";
 import { migrateToTenants } from "./tenancy/tenant-migration.js";
 
@@ -151,12 +153,18 @@ try {
 	setNotificationService(notifications);
 	const auth = createAuthModule(authSettingsFromEnv(env), logger);
 	const allowedOrigins = [env.PUBLIC_URL, env.WEB_ORIGIN];
+	const operations = servedOperations(
+		registeredOperations,
+		env.PUBLIC_SHARING_ENABLED,
+	);
 	const dashboard = createDashboardApp({
 		logger,
+		operations,
 		trustProxy: env.TRUST_PROXY,
 		allowedOrigins,
 		auth,
 		mcp: createLocalmanMcpRouter({
+			operations,
 			publicUrl: env.PUBLIC_URL,
 			issuer: env.OIDC_ISSUER,
 			keys: auth.oidc,
