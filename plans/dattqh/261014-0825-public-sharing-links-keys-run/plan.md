@@ -191,5 +191,27 @@ Cloudflare thấy URL có access key (ADR 0004).
 - e2e mới (`public-sharing-link`, `-guest`, `-run-button`) `--repeat-each=3`: 9/9 pass; gồm axe (không serious/critical)
   trên trang public, guest, Run và Share dialog 5 tab không cuộn ngang ở 375 px.
 - `pnpm e2e` toàn bộ: 43/43 pass, stack dùng cờ của `released-features` + `publicSharing` và `PUBLIC_SHARING_ENABLED=true`.
-- Còn lại (phase 06): commit, deploy (bật cờ web và cổng server cùng lúc), kiểm sau deploy và 15 phút sau, DAST trên
-  production. Kết luận vận hành chỉ đưa ra khi cả SAST và DAST đạt.
+
+### Deploy (2026-10-14, user yêu cầu)
+- Commit `ad20988`…`14bdeca` (7 commit, cây sạch). Jev (skill `localman-ops-prod`) chọn `ak-deploy` (0,92) và thứ tự
+  `env_first` (1,0): backup DB `localman-20261014-145703.archive.gz`, sao `/opt/localman/.env` thành
+  `.env.bak-20261014-public-sharing`, thêm `PUBLIC_SHARING_ENABLED=true`, rồi `deploy.sh` nên web và API bật cùng lúc.
+- Release `20261014-075711-14bdeca6e2d0` (thay `20261014-002733-4565fb27997d`); `nginx -t` ok; `restarts` 34 → 35
+  (lần reload của deploy); error log API trống; cổng 4000/4100/27018 chỉ nghe loopback.
+
+### DAST trên production (2026-10-14, Jev chọn dùng phiên Chrome của user, 0,99)
+Collection thử trong workspace cá nhân chứa secret giả `dast-*` ở mọi chỗ cần che; xoá hẳn sau khi thử.
+- Public link (không cookie), JSON access key (không cookie), guest view, preview và import nút Run: **0** secret giả
+  lọt ra; URL bỏ userinfo, query và fragment bị che, `{{userId}}` giữ; field form, Cookie, `Location`, body example bị che;
+  bản import không có script (`includeScripts: false`).
+- Guest view không cookie 401; guest link đọc như public link 404; workspace cá nhân `canRequestAccess: false`.
+- Dò id: 80 request song song → 53 lần 429 (nginx `localman_public`); 70 request chậm → request thứ 61 nhận
+  `RATE_LIMITED` của API (đúng 60/phút/IP).
+- Tắt ba công tắc: key 401, guest 404, nút Run 404, public link 404 (kiểm riêng sau cửa sổ rate limit); bật lại thì chạy
+  tiếp. Thu hồi key → 401; tắt link → 404; xoá nút → 404; purge collection → 404. Dry run đếm đúng 2 link, 1 nút.
+- Header bảo mật (CSP, HSTS, `X-Frame-Options: DENY`, nosniff, `Referrer-Policy`, COOP) có ở `/public/c/…`, `/guest/…`,
+  `/run/…`; badge `/run-button.svg` `image/svg+xml`.
+- Access log không có id hay key chưa che (kể cả path viết hoa `/api/v1/Public/Links/[redacted]`); error log không có
+  `access_key`. DB sau dọn: 0 link, 0 key, 0 nút, 1 claim import tự hết hạn (TTL 10 phút).
+- Chưa thử trên prod: key quá 60 ngày (cần sửa DB; đã có test tích hợp), tenant khác (chưa có tenant thứ hai bật).
+

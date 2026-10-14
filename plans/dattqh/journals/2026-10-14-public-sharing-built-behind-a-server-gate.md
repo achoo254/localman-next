@@ -27,7 +27,18 @@ summary: "Public link, guest link, access keys and Run button done on the workin
   one based on an assumption about the other is where leaks hide. Test the pair, not each alone.
 - Splitting server work (me) from UI work (subagent) worked because the API contract was written down first.
 
+## Release and DAST (same day)
+- Owner chose commit, deploy, DAST. Jev picked env-first: the gate went into `/opt/localman/.env` before `deploy.sh`,
+  so the new web build and the endpoints went live in one reload (release `20261014-075711-14bdeca6e2d0`).
+- DAST from the owner's signed-in Chrome with a throwaway collection full of fake secrets: no fake secret left through
+  any of the four paths; switches, revoke and purge each stop serving; guessing hits nginx's zone first, then the API's
+  60/min per IP exactly at request 61. Data cleaned; logs carry no ids or keys.
+- A browser-tool script timed out at 45 s while it waited out a rate-limit window, yet kept running in the page and did
+  the cleanup; the next run found the collections gone. Never sleep inside page scripts; wait outside, then act.
+- Our own probing from the same IP made the browser's reads answer 429 mid-test; re-check the masked branch after the
+  window instead of reading 429 as a pass.
+
 ## Next steps
-- User decision: commit, then deploy with `publicSharing` + `PUBLIC_SHARING_ENABLED=true`, then DAST on production.
+- Push the commits; watch `RATE_LIMITED` counts on `/api/v1/public/` for shared NAT users.
 
 > Historical work record — not durable authority. Prefer docs/specs/ADRs for current decisions.

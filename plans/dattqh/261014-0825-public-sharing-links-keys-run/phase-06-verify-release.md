@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "E2E, docs, SAST, deploy, DAST"
-status: in-progress
+status: completed
 priority: P1
 effort: "M"
 dependencies: [2, 3, 4, 5]
