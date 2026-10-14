@@ -2,6 +2,7 @@ import { createRequestDraft } from "@localman/shared/api-client";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { HISTORY_QUERY_KEY } from "../history/use-history";
 import type { ResponsePanelProps } from "../response/response-panel";
 import {
 	byDataId,
@@ -11,6 +12,12 @@ import {
 
 /** Renders of the panels a keystroke in the editor must not touch. */
 const renders = vi.hoisted(() => ({ history: 0, response: 0, tabs: 0 }));
+/**
+ * What each counted history render saw, for the failure message: a changed
+ * `dataUpdatedAt` points at a query notification, an unchanged one at the
+ * sidebar's own state (its skeleton timer) or a parent.
+ */
+const historyLog = vi.hoisted(() => ({ since: 0, entries: [] as string[] }));
 
 vi.mock("../history/use-history", async (importOriginal) => {
 	const actual =
@@ -19,7 +26,11 @@ vi.mock("../history/use-history", async (importOriginal) => {
 		...actual,
 		useHistoryList: () => {
 			renders.history += 1;
-			return actual.useHistoryList();
+			const result = actual.useHistoryList();
+			historyLog.entries.push(
+				`+${Math.round(performance.now() - historyLog.since)}ms pending=${result.isPending} fetching=${result.isFetching} dataUpdatedAt=${result.dataUpdatedAt}`,
+			);
+			return result;
 		},
 	};
 });
@@ -76,16 +87,27 @@ describe("workbench renders", () => {
 		// A refetch counts once its answer is in: on a slow runner the second
 		// history response used to land during the keystrokes.
 		await waitFor(() => expect(client.isFetching()).toBe(0));
+		// A first load slower than the loading delay shows the history skeleton,
+		// which then stays at least 300 ms; hiding it renders the sidebar once.
+		await waitFor(() =>
+			expect(
+				document.querySelector('[data-id="sidebar-history-loading"]'),
+			).toBeNull(),
+		);
 		const name = screen.getByRole("textbox", { name: "Request name" });
 		await user.click(name);
 		renders.history = 0;
 		renders.response = 0;
 		renders.tabs = 0;
+		historyLog.since = performance.now();
+		historyLog.entries = [
+			`before typing: dataUpdatedAt=${client.getQueryState(HISTORY_QUERY_KEY)?.dataUpdatedAt}`,
+		];
 
 		await user.type(name, "hello");
 
 		expect(name).toHaveValue("hello");
-		expect(renders.history).toBe(0);
+		expect(renders.history, historyLog.entries.join(" | ")).toBe(0);
 		expect(renders.response).toBe(0);
 		// One render of the edited tab per keystroke; the other two stay put.
 		expect(renders.tabs).toBe(5);
