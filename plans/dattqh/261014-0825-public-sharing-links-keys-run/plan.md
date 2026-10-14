@@ -1,7 +1,7 @@
 ---
 title: "Chia sẻ công khai 15a: public link, guest, access key, nút Run (import)"
 description: "Người ngoài workspace xem được collection qua public link hoặc guest link, ứng dụng khác đọc JSON qua access key, và README nhúng được nút Run in Localman để import collection; mọi giá trị nhạy cảm bị che phía server."
-status: in-progress
+status: completed
 priority: P1
 effort: "L (6 phase: 1×S, 4×M, 1×M release)"
 branch: ""
@@ -197,7 +197,10 @@ Cloudflare thấy URL có access key (ADR 0004).
   `env_first` (1,0): backup DB `localman-20261014-145703.archive.gz`, sao `/opt/localman/.env` thành
   `.env.bak-20261014-public-sharing`, thêm `PUBLIC_SHARING_ENABLED=true`, rồi `deploy.sh` nên web và API bật cùng lúc.
 - Release `20261014-075711-14bdeca6e2d0` (thay `20261014-002733-4565fb27997d`); `nginx -t` ok; `restarts` 34 → 35
-  (lần reload của deploy); error log API trống; cổng 4000/4100/27018 chỉ nghe loopback.
+  (lần reload của deploy); error log API trống; cổng 4000/4100/27018 chỉ nghe loopback. 15:13 (16 phút sau): vẫn
+  `restarts=35`, online, `/healthz` hai cổng `db: connected`, không dòng lỗi nào.
+
+**Kết luận:** SAST đạt (sau khi sửa), DAST đạt trên production: chia sẻ công khai 15a vận hành được.
 
 ### DAST trên production (2026-10-14, Jev chọn dùng phiên Chrome của user, 0,99)
 Collection thử trong workspace cá nhân chứa secret giả `dast-*` ở mọi chỗ cần che; xoá hẳn sau khi thử.
