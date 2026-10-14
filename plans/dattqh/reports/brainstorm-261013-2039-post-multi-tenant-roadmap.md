@@ -129,7 +129,12 @@ Gọi `jev-latest` (`jev-1.13.0`), ngày 13/10/2026. State gồm các sự thậ
 Headless Chromium mở `/` và `/docs` trên production. Mỗi trang có một lỗi CSP: Cloudflare tự chèn script Web Analytics (`static.cloudflareinsights.com/beacon.min.js`) vào HTML trả cho trình duyệt, và `script-src` chặn nó.
 - Lỗi này không do bản deploy: bản build không chứa script đó, và Cloudflare chỉ chèn khi User-Agent là trình duyệt.
 - Không có rủi ro bảo mật, vì script bị chặn. Hậu quả là có lỗi trong console và không thu được analytics.
-- Jev tư vấn: mở CSP cho beacon (`script-src` + `connect-src`, cần sửa code và deploy) 0.55; tắt chèn tự động ở Cloudflare 0.38; để nguyên 0.07. Chờ owner quyết.
+- Jev tư vấn: mở CSP cho beacon 0.55; tắt chèn tự động ở Cloudflare 0.38; để nguyên 0.07. Owner chọn cho phép beacon.
+- **Đã làm (14/10):**
+  - Chỉ thêm `https://static.cloudflareinsights.com` vào `script-src` của `localman.hoandat.com.conf`; `connect-src` đã cho phép `https:`.
+  - Template tenant giữ nguyên. Jev trả 0.50/0.50 cho câu "sửa cả hai template", nên tôi đo thay vì đoán: `localman.inetdev.io.vn` trả lời trực tiếp từ nginx, không qua proxy Cloudflare, nên không bị chèn beacon.
+  - Commit `4565fb2`, CI xanh, release `20261014-002733-4565fb27997d`.
+  - Headless Chromium xác nhận beacon tải được (200), báo cáo gửi về `/cdn-cgi/rum` thành công (204), và `/`, `/docs` không còn lỗi CSP.
 
 ### Test chập chờn còn mở: `workbench-renders.test.tsx`
 
@@ -137,4 +142,15 @@ Test này kiểm rằng `useHistoryList` không render lại khi đang gõ, như
 - Thông báo của TanStack Query đến muộn sau khi `isFetching() === 0`: làm chậm `notifyManager` 40 ms, test vẫn qua 3/3.
 - Lưu nháp (debounce 30 ms) rơi vào giữa lúc gõ: gõ cách nhau 50 ms sinh ra 5 lần lưu, `history` vẫn render 0 lần.
 
-Nguyên nhân gốc chưa tìm ra. Việc riêng tiếp theo: ghi lại thứ làm `HistorySidebar` render (props của parent, context) trong một run có CPU bị bóp.
+Đã làm thêm ngày 14/10:
+- Loại thêm ba giả thuyết:
+  - Lần mount lại gây GET kép khi tải chậm: thứ tự vẫn là `GET, POST, GET`.
+  - Render đến muộn sau mốc rảnh: số render đứng yên ở 3 sau 100 ms.
+  - Chạy 8 bản sao song song × 3 vòng với 6 tiến trình đốt CPU: không tái hiện được.
+- Ngoài ra, đọc code cho thấy prop `onOpen`/`tools`, `actions` của workbench, context của toast và `useBindingWrites` đều ổn định.
+- Kongming tìm ra một cơ chế tạo đúng một render chỉ từ state của sidebar: skeleton lịch sử được giữ tối thiểu 300 ms (`useDelayedFlag`), và skeleton nằm bên trong `sidebar-history-list`, nên lần chờ `aria-busy` không chặn được lần ẩn. Kongming không làm nó rơi vào lúc gõ được, nên giả thuyết chưa được chứng minh.
+- Kết luận "không còn lỗi sau `3eb9a1e`" của kongming sai: log lần chạy 1 của run 38410975399 hỏng ở dòng 88, và `3eb9a1e` có trong commit đó.
+- Sửa theo Jev (0.85), chỉ đụng test:
+  - Chờ skeleton lịch sử biến mất rồi mới đếm; bước chờ vô hại khi skeleton không hiện.
+  - Gắn vào thông điệp của assertion giá trị `dataUpdatedAt` trước khi gõ, cùng thời điểm, `isPending`, `isFetching`, `dataUpdatedAt` của từng render đếm được. Lần hỏng sau sẽ tự cho biết nguồn: `dataUpdatedAt` đổi là do query, không đổi là do state của sidebar hoặc parent.
+- Nguyên nhân gốc vẫn chưa được chứng minh.
