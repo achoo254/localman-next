@@ -36,19 +36,25 @@ export interface NewEnvironment {
 	readonly variables?: readonly VariableInput[];
 }
 
-async function loadEnvironment(id: Types.ObjectId): Promise<StoredEnvironment> {
+export async function loadEnvironment(
+	id: Types.ObjectId,
+): Promise<StoredEnvironment> {
 	const doc = await EnvironmentModel.findById(id).lean<StoredEnvironment>();
 	if (!doc) throw elementNotFound();
 	return doc;
 }
 
-/** Inserts under the workspace lock, within its room; returns the new id. */
-async function insertEnvironment(
+/**
+ * Inserts under the workspace lock, within its room; returns the new id.
+ * `alongside` writes more in the same transaction (a fork's link).
+ */
+export async function insertEnvironment(
 	workspaceId: Types.ObjectId,
 	sub: string,
 	build: (id: Types.ObjectId) => Omit<NewEnvironment, "variables"> & {
 		variables: StoredVariable[];
 	},
+	alongside?: (id: Types.ObjectId, session: ClientSession) => Promise<void>,
 ): Promise<Types.ObjectId> {
 	return inWorkspaceTransaction(workspaceId, async (session: ClientSession) => {
 		await assertEnvironmentRoom(workspaceId, session);
@@ -56,6 +62,7 @@ async function insertEnvironment(
 		const fields = build(doc._id);
 		doc.set({ ...fields, color: fields.color ?? "grey", updatedBy: sub });
 		await doc.save({ session });
+		await alongside?.(doc._id, session);
 		return doc._id;
 	});
 }

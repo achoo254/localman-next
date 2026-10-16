@@ -70,6 +70,8 @@ export const collectionsChangelog: Pick<Messages["collections"], "changelog"> =
 				trash: "Đã chuyển collection vào thùng rác",
 				untrash: "Đã khôi phục collection từ thùng rác",
 				restore: "Đã khôi phục collection về một thay đổi trước đó",
+				merge: "Đã merge thay đổi từ fork {name}",
+				pull: "Đã kéo thay đổi từ {name}",
 			},
 			fields: {
 				name: "tên",

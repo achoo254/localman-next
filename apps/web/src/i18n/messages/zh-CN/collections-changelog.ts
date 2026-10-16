@@ -66,6 +66,8 @@ export const collectionsChangelog: Pick<Messages["collections"], "changelog"> =
 				trash: "将 collection 移到了回收站",
 				untrash: "从回收站恢复了 collection",
 				restore: "将 collection 恢复到了之前的某次修改",
+				merge: "合并了 fork {name} 的修改",
+				pull: "拉取了 {name} 的修改",
 			},
 			fields: {
 				name: "名称",

@@ -8,7 +8,7 @@ import { watchOperations } from "../modules/watch/watch-operations.js";
 import { servedOperations } from "./feature-gates.js";
 import { operations } from "./registry.js";
 
-const ALL_ON = { publicSharing: true, comments: true };
+const ALL_ON = { publicSharing: true, comments: true, forks: true };
 const SHARING_OFF = { ...ALL_ON, publicSharing: false };
 
 describe("PUBLIC_SHARING_ENABLED", () => {

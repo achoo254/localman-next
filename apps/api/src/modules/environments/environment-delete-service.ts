@@ -5,6 +5,7 @@ import { elementNotFound } from "../access/access-policy.js";
 import { AccessRequestModel } from "../access/access-request-model.js";
 import { ElementRoleModel } from "../access/element-role-model.js";
 import { RunButtonModel } from "../public-sharing/run-button-model.js";
+import { ForkModel } from "../version-control/fork-model.js";
 import { inWorkspaceTransaction } from "../workspaces/workspace-lock.js";
 import {
 	findWorkspaceById,
@@ -48,6 +49,11 @@ async function deleteDependents(
 	await ElementRoleModel.deleteMany(elements, { session });
 	await AccessRequestModel.deleteMany(elements, { session });
 	await RunButtonModel.deleteMany({ environmentId: { $in: ids } }, { session });
+	// A deleted fork drops its link; a deleted source keeps its forks' links.
+	await ForkModel.deleteMany(
+		{ kind: "environment", forkId: { $in: ids } },
+		{ session },
+	);
 	await deleteScopeLocalValues(ids.map(environmentScope), session);
 }
 

@@ -100,6 +100,10 @@ export const ENVIRONMENT_PERMISSIONS = {
 	/** Edit and delete the environment. */
 	edit: ["editor"],
 	manageRoles: ["editor"],
+	/** Fork it (Pro); a Viewer forks into their personal workspace only. */
+	fork: ["editor", "viewer"],
+	/** Merge a fork's changes into it. */
+	mergeFork: ["editor"],
 } as const satisfies Record<string, readonly ElementRole[]>;
 export type EnvironmentAction = keyof typeof ENVIRONMENT_PERMISSIONS;
 

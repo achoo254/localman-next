@@ -71,6 +71,8 @@ export const collectionsChangelog = {
 			trash: "Moved the collection to the Trash",
 			untrash: "Restored the collection from the Trash",
 			restore: "Restored the collection to an earlier change",
+			merge: "Merged changes from the fork {name}",
+			pull: "Pulled changes from {name}",
 		},
 		fields: {
 			name: "name",

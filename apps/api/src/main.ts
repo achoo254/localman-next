@@ -158,6 +158,7 @@ try {
 	const operations = servedOperations(registeredOperations, {
 		publicSharing: env.PUBLIC_SHARING_ENABLED,
 		comments: env.COMMENTS_ENABLED,
+		forks: env.FORKS_ENABLED,
 	});
 	const dashboard = createDashboardApp({
 		logger,

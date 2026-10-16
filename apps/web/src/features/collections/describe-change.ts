@@ -42,6 +42,9 @@ export function describeChange(
 		case "untrash":
 		case "restore":
 			return t(`collections.changelog.describe.${change.action}`);
+		case "merge":
+		case "pull":
+			return t(`collections.changelog.describe.${change.action}`, { name });
 		case "create":
 		case "move":
 		case "delete":

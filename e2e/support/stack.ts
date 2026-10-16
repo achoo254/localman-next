@@ -78,6 +78,7 @@ function apiEnv(mongoUri: string, oidcSecret: string): NodeJS.ProcessEnv {
 		// Unreleased features the specs cover, behind their server gates.
 		PUBLIC_SHARING_ENABLED: "true",
 		COMMENTS_ENABLED: "true",
+		FORKS_ENABLED: "true",
 	};
 }
 

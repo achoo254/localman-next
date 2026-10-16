@@ -479,6 +479,17 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Agent qua Localman MCP không thấy tool comment vì IdP chỉ cấp scope `mock:*` và `client:*`, còn comment và watch nằm ở toolset `collab` (cùng chỗ quản lý thành viên project, cố ý để ngoài tầm OAuth). Chuyển comment và watch sang toolset `client`, cùng chỗ collections; không đổi IdP, quản lý thành viên vẫn ngoài tầm agent (Jev 0,97; thêm scope `collab` ở IdP 0,00; để tới phase 18 0,03). Operation đổi tiền tố `collab.*` thành `client.*`, tên tool MCP giữ nguyên.
 - Làm ngay trước đợt B (Jev noul 0,66). Deploy bản sửa chờ user yêu cầu.
 
+- Deploy bản sửa (user: "đồng ý deploy"): release `20261016-145505-378ac07634cc`; `/` và `openapi.json` 200, CSP 5 hash, back-channel logout 400 với token rác, operation comment là `client.*`, metadata MCP quảng bá `client:*`; `restarts` 36 lên 37, không log lỗi.
+
+### Vòng 44: thiết kế đợt B phase 14 (2026-10-16, user: "xong thì làm tiếp đợt B", Jev quyết)
+- Chia đợt B (Jev 0,91): **B1** fork, pull changes, merge 3 tuỳ chọn và giải xung đột cho collection và environment; **B2** pull request, review, comment trên diff.
+- Gốc chung để merge là snapshot nội dung nguồn lúc fork, thay bằng kết quả sau mỗi lần pull hoặc merge (0,93; dựng lại từ changelog 0,07, vì changelog bị cắt và có revision không giữ patch). Snapshot lưu mỗi node một bản ghi riêng, gốc collection nằm trên bản ghi fork (0,91), để không chạm giới hạn 16 MB mỗi document.
+- Ghép node fork với node nguồn bằng bản đồ id nguồn sang id fork lưu trên liên kết fork, thêm vào khi merge hay pull tạo node mới (0,63; trường `originId` trên từng node 0,35).
+- Viewer của collection chỉ fork vào workspace cá nhân (0,63; mọi workspace được thêm phần tử 0,35). Editor fork vào workspace nào mình được thêm phần tử.
+- Environment: fork chép giá trị secret chỉ cho Editor của nguồn (như duplicate); pull và merge mang key, kiểu và giá trị không phải secret, không bao giờ mang giá trị secret (0,95).
+- Fork của fork được phép (noul 0,72). Xoá nguồn thì fork ở lại thành collection thường, hiện nguồn không còn, pull và merge trả 404 (0,99).
+- Comment của pull request (B2) dùng lại module comment, thêm đích pull request và loại anchor trỏ vào một thay đổi trong diff (0,98).
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 

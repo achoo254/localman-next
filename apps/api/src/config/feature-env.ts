@@ -131,6 +131,14 @@ export const featureEnvShape = {
 		.enum(["true", "false"], { error: "must be true or false" })
 		.default("false")
 		.transform((value) => value === "true"),
+	/**
+	 * Forks, pull changes and merges of collections and environments. Off:
+	 * their operations are neither routed nor offered as MCP tools.
+	 */
+	FORKS_ENABLED: z
+		.enum(["true", "false"], { error: "must be true or false" })
+		.default("false")
+		.transform((value) => value === "true"),
 	/** Siteverify endpoint; tests point it at a local fake. */
 	TURNSTILE_VERIFY_URL: z
 		.url({ protocol: /^https?$/, error: "must be an http(s) URL" })

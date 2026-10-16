@@ -8,6 +8,7 @@ import { collectionScope } from "../environments/scope-local-service.js";
 import { CollectionAccessKeyModel } from "../public-sharing/collection-access-key-model.js";
 import { CollectionLinkModel } from "../public-sharing/collection-link-model.js";
 import { RunButtonModel } from "../public-sharing/run-button-model.js";
+import { ForkBaseNodeModel, ForkModel } from "../version-control/fork-model.js";
 import { CollectionWatchModel } from "../watch/watch-model.js";
 import { CollectionFavoriteModel } from "./collection-favorite-model.js";
 import { CollectionModel } from "./collection-model.js";
@@ -44,6 +45,22 @@ export async function purgeCollection(
 		await CollectionFavoriteModel.deleteMany({ collectionId }, { session });
 		await CommentModel.deleteMany({ collectionId }, { session });
 		await CollectionWatchModel.deleteMany({ collectionId }, { session });
+		// A purged fork drops its link and base; a purged source keeps its
+		// forks' links, which then report the source as unavailable.
+		const links = await ForkModel.find(
+			{ kind: "collection", forkId: collectionId },
+			{ _id: 1 },
+		)
+			.session(session)
+			.lean<{ _id: Types.ObjectId }[]>();
+		await ForkBaseNodeModel.deleteMany(
+			{ linkId: { $in: links.map((link) => link._id) } },
+			{ session },
+		);
+		await ForkModel.deleteMany(
+			{ kind: "collection", forkId: collectionId },
+			{ session },
+		);
 		await ElementRoleModel.deleteMany(element, { session });
 		await AccessRequestModel.deleteMany(element, { session });
 		await CollectionLinkModel.deleteMany({ collectionId }, { session });

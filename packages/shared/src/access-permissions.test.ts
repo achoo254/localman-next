@@ -78,6 +78,8 @@ const ENVIRONMENT_MATRIX: readonly [
 	["shareVariables", Y, N],
 	["edit", Y, N],
 	["manageRoles", Y, N],
+	["fork", Y, Y],
+	["mergeFork", Y, N],
 ];
 
 /** Mock projects: [action, owner, collaborator]. */

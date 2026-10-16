@@ -15,7 +15,18 @@ export const CHANGELOG_ACTIONS = [
 	"untrash",
 	/** "Restore to this change". */
 	"restore",
+	/** A fork's changes merged in (`entityName` is the fork's label). */
+	"merge",
+	/** The source's changes pulled into a fork (`entityName` is the source). */
+	"pull",
 ] as const;
+
+/** Actions that rewrite the whole collection in one change. */
+export const WHOLE_COLLECTION_ACTIONS: readonly ChangelogAction[] = [
+	"restore",
+	"merge",
+	"pull",
+];
 export type ChangelogAction = (typeof CHANGELOG_ACTIONS)[number];
 
 export type ChangelogEntity = "collection" | "node";

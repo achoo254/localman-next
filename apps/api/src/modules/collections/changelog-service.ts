@@ -6,6 +6,7 @@ import {
 	type ChangelogChange,
 	type ChangelogDiff,
 	type ChangelogPage,
+	WHOLE_COLLECTION_ACTIONS,
 } from "@localman/shared/api-client";
 import type { Types } from "mongoose";
 import { displayNames } from "../users/display-names.js";
@@ -137,10 +138,9 @@ export async function revisionDiff(
 		.lean<Pick<StoredRevision, "inverse" | "partial">[]>();
 	if (later.some((row) => row.partial)) return none;
 	const slice = await loadEntitySlice(collectionId, entity);
-	const affected =
-		rev.action === "restore"
-			? await affectedNodes(collectionId, rev.forward, rev.inverse)
-			: undefined;
+	const affected = WHOLE_COLLECTION_ACTIONS.includes(rev.action)
+		? await affectedNodes(collectionId, rev.forward, rev.inverse)
+		: undefined;
 	let before: unknown;
 	let after: unknown;
 	try {

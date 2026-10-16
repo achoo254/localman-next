@@ -21,6 +21,27 @@ export function copyName(name: string): string {
 }
 
 /**
+ * The nodes with fresh ids (parents follow), and old id to new id. An
+ * example whose request is missing is dropped.
+ */
+export function withNewIds(source: readonly CollectionNode[]): {
+	nodes: CollectionNode[];
+	ids: Map<string, string>;
+} {
+	const ids = new Map(source.map((node) => [node.id, newNodeId()]));
+	const nodes = source.flatMap((node): CollectionNode[] => {
+		const id = ids.get(node.id) ?? newNodeId();
+		if (node.kind === "example") {
+			const parentId = ids.get(node.parentId);
+			return parentId ? [{ ...node, id, parentId }] : [];
+		}
+		const parentId = node.parentId === null ? null : ids.get(node.parentId);
+		return [{ ...node, id, parentId: parentId ?? null }];
+	});
+	return { nodes, ids };
+}
+
+/**
  * Copies a collection the caller can view into a workspace where they add
  * elements (its own by default), with new node ids. Its mock project comes
  * along when the caller can read it; its linked environment when the copy
@@ -48,16 +69,7 @@ export async function duplicateCollection(
 	// The environment an Editor chose stays valid in the same workspace only.
 	const sameWorkspace = workspace._id.equals(element.workspaceId);
 	const linked = root?.linkedEnvironmentId;
-	const ids = new Map(source.nodes.map((node) => [node.id, newNodeId()]));
-	const nodes = source.nodes.flatMap((node): CollectionNode[] => {
-		const id = ids.get(node.id) ?? newNodeId();
-		if (node.kind === "example") {
-			const parentId = ids.get(node.parentId);
-			return parentId ? [{ ...node, id, parentId }] : [];
-		}
-		const parentId = node.parentId === null ? null : ids.get(node.parentId);
-		return [{ ...node, id, parentId: parentId ?? null }];
-	});
+	const { nodes } = withNewIds(source.nodes);
 	const { name, description, auth, scripts, variables, tags, status } = source;
 	return insertAndLoad({
 		workspaceId: workspace._id,

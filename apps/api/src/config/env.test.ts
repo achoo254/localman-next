@@ -50,6 +50,7 @@ describe("parseEnv", () => {
 			TUNNEL_DOMAINS: [],
 			PUBLIC_SHARING_ENABLED: false,
 			COMMENTS_ENABLED: false,
+			FORKS_ENABLED: false,
 			TURNSTILE_VERIFY_URL:
 				"https://challenges.cloudflare.com/turnstile/v0/siteverify",
 		});
