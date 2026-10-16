@@ -44,6 +44,7 @@ export function UrlBar({ draft, update, sending, onSend }: UrlBarProps) {
 					aria-label={t("apiClient.request.url")}
 					placeholder={t("apiClient.request.urlPlaceholder")}
 					data-id="request-url"
+					data-comment-part="url"
 					onValueChange={(url) =>
 						update((current) => ({
 							...current,

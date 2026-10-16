@@ -21,7 +21,8 @@ export type HeavyOperation =
 	| "reset"
 	| "clone"
 	| "import"
-	| "suggestFaker";
+	| "suggestFaker"
+	| "comment";
 
 /** Settings that operations read at request time (they are declared statically). */
 export interface RuntimeSettings {
@@ -147,6 +148,9 @@ export const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = Object.freeze({
 		// Previews too: each one parses up to 2 MB of source.
 		import: { perUser: perMinute(60), perProject: perMinute(120) },
 		suggestFaker: { perUser: perMinute(120) },
+		// Writing and editing comments (each may notify people); the second
+		// window counts per collection.
+		comment: { perUser: perMinute(20), perProject: perMinute(60) },
 	},
 });
 

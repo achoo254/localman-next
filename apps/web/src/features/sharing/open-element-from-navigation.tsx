@@ -8,6 +8,7 @@ import type { Translate } from "../../i18n/translate";
 import { useWorkbenchState } from "../api-client/workbench/workbench-context";
 import { type OpenNode, useOpenCollectionNode } from "../collections/open-node";
 import { readCollection } from "../collections/use-send-context";
+import { focusComment } from "../comments/comment-focus";
 import { useEnvironmentsEnabled } from "../environments/use-environments-enabled";
 import { useOpenVariablesPage } from "../environments/use-open-variables-page";
 import { type OpenElement, readOpenElement } from "./open-element-state";
@@ -30,19 +31,20 @@ async function openCollectionNode(
 	{ client, openNode, notify, t }: NodeOpening,
 	collectionId: string,
 	nodeId: string,
-): Promise<void> {
+): Promise<boolean> {
 	const collection = await readCollection(client, collectionId);
 	const node = collection.nodes.find((item) => item.id === nodeId);
 	if (!node) {
 		openNode({ kind: "collection", collectionId, name: collection.name });
 		notify(t("sharing.element.nodeGone", { name: collection.name }));
-		return;
+		return false;
 	}
 	if (node.kind === "request") {
 		openNode({ kind: "request", collection, node });
-		return;
+		return true;
 	}
 	openNode({ kind: node.kind, collectionId, nodeId, name: node.name });
+	return true;
 }
 
 /**
@@ -74,7 +76,12 @@ function useOpenElementFromNavigation(): void {
 		const { pathname, search, hash } = location;
 		void navigate({ pathname, search, hash }, { replace: true, state: null });
 		const notify = (title: string) => toast.show({ tone: "info", title });
-		const open = async ({ type, id, nodeId }: OpenElement): Promise<void> => {
+		const open = async ({
+			type,
+			id,
+			nodeId,
+			commentId,
+		}: OpenElement): Promise<void> => {
 			let name = id;
 			try {
 				const element = await client.fetchQuery({
@@ -82,13 +89,18 @@ function useOpenElementFromNavigation(): void {
 					queryFn: () => fetchElement(type, id),
 				});
 				name = element.name;
+				// The item that actually opened: the collection when it is gone.
+				let opened: string | null = null;
 				if (type === "collection" && nodeId !== undefined) {
 					const opening = { client, openNode, notify, t };
-					await openCollectionNode(opening, id, nodeId);
+					if (await openCollectionNode(opening, id, nodeId)) opened = nodeId;
 				} else if (type === "collection") {
 					openNode({ kind: "collection", collectionId: id, name });
 				} else if (environments) {
 					openEnvironment(id, name);
+				}
+				if (type === "collection" && commentId !== undefined) {
+					focusComment({ collectionId: id, nodeId: opened, commentId });
 				}
 			} catch {
 				toast.show({

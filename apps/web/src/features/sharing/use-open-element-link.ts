@@ -19,6 +19,8 @@ export interface ElementLinkTarget {
 	type: ShareableElementType;
 	id: string;
 	nodeId: string | null;
+	/** A comment to bring into view (collections). */
+	commentId: string | null;
 	/** Known once the element loaded (the caller can read it). */
 	workspaceId: string | null;
 }
@@ -38,7 +40,7 @@ export function useOpenElementLink(
 	const signedIn = session.status === "authenticated";
 	const workspaces = useWorkspaces(signedIn && enabled);
 	const selectWorkspace = useSelectWorkspace();
-	const { type, id, nodeId, workspaceId } = target;
+	const { type, id, nodeId, commentId, workspaceId } = target;
 	// A failed list counts as "not a member": nothing is switched.
 	const listed = workspaces.isSuccess || workspaces.isError;
 	const member =
@@ -48,7 +50,12 @@ export function useOpenElementLink(
 		if (member) selectWorkspace(workspaceId);
 		void navigate("/api-client", {
 			replace: true,
-			state: openElementState({ type, id, ...(nodeId ? { nodeId } : {}) }),
+			state: openElementState({
+				type,
+				id,
+				...(nodeId ? { nodeId } : {}),
+				...(commentId ? { commentId } : {}),
+			}),
 		});
 	}, [
 		enabled,
@@ -61,6 +68,7 @@ export function useOpenElementLink(
 		type,
 		id,
 		nodeId,
+		commentId,
 	]);
 	return {
 		error: session.status === "error" ? session.error : null,

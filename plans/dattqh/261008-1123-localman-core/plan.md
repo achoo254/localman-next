@@ -81,7 +81,7 @@ Dashboard và mock runtime là hai process riêng. Lý do: runtime công khai c�
 | 11 | [Workspace, vai trò và chia sẻ phần tử](phase-11-workspaces-and-sharing.md) | L | 10 | completed |
 | 12 | [Collections tương đương 100% Postman](phase-12-collections.md) | L | 11 | completed |
 | 13 | [Environments và biến tương đương 100% Postman](phase-13-environments-and-variables.md) | L | 11, 12 | completed |
-| 14 | [Fork, merge, pull request, comment, watch](phase-14-fork-merge-comments-watch.md) | XL | 12, 13 | pending |
+| 14 | [Fork, merge, pull request, comment, watch](phase-14-fork-merge-comments-watch.md) | XL | 12, 13 | in-progress |
 | 15 | [Chia sẻ công khai: public workspace, guest, nút Run, access key](phase-15-public-sharing.md) | M | 11, 12, 13, 14 | pending |
 | 16 | [Live Mock Sync: mock luôn đồng bộ với collection và environment](phase-16-live-mock-sync.md) | M | 12, 13, 14 | pending |
 | 17 | [Nền tảng MCP (toolsets, dry-run, coverage) cùng Mock MCP tức thì](phase-17-mock-mcp.md) — **chạy ngay sau 09, trước 10** | M | 5, 9 | in-progress |
@@ -461,6 +461,11 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Phase 14 chia hai đợt (Jev 0,51): đợt A là comment và watch, chạy được ở workspace team của gói Free; đợt B là `three-way-merge`, fork, merge, giải xung đột và pull request. Chia theo kiểu "version control trước" được 0,39.
 - Không giữ cả phase sau một cờ tới khi xong hết (Jev noul 0,40): mỗi đợt có cờ riêng, bật khi đợt đó qua review.
 - Thiết kế đợt A (Jev): watch báo qua job định kỳ đọc changelog, mỗi người theo dõi nhận một thông báo tổng hợp cho mỗi collection mỗi lượt, bỏ thay đổi của chính họ (0,96; báo ngay sau mỗi lần ghi 0,04). Comment cho cả collection ở workspace cá nhân (noul 0,53) và cho Viewer (0,52). Comment inline lưu đoạn chữ đã chọn, "outdated" khi chỗ đó không còn đúng đoạn chữ ấy (0,81; lệch ngay khi phần đó đổi 0,19). Trả lời trong thread báo cho người đã viết trong thread (0,58). Comment và watch có MCP tool (0,84). Không tự watch collection mới tạo (0,50, không qua ngưỡng).
+
+### Vòng 41: SAST đợt A phase 14 (2026-10-16)
+- Review bảo mật không có Critical. Đã sửa: High không giới hạn thông báo (thêm giới hạn `comment` và giới hạn thông báo theo người nhận); Medium thiếu cổng server (thêm `COMMENTS_ENABLED`, mặc định tắt, gom chung cơ chế với `PUBLIC_SHARING_ENABLED` ở `operations/feature-gates.ts`; Jev noul 0,84); anchor lệch với body CRLF; quyền resolve đọc từ `COLLECTION_PERMISSIONS`. Sửa luôn các Low: reply chạy đua với xoá thread, lỗi tra cứu sau khi ghi gây comment trùng, @ trong code, IME và `role="combobox"` của ô soạn.
+- Comment của node đã xoá: giữ lại (restore change mang node về cùng id) và vẫn tính vào hạn mức (Jev 0,70; không tính 0,26; xoá theo node 0,04).
+- Chấp nhận, không sửa: hạn mức 5000 là trần mềm khi ghi đua nhau; job watch đọc mọi watch mỗi phút (đủ ở quy mô hiện tại); Markdown chậm với chuỗi `[[[` dài là component có sẵn, chỉ làm chậm tab của người xem.
 
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.

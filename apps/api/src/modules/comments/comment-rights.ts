@@ -1,3 +1,4 @@
+import { elementRoleAllows } from "@localman/shared/access";
 import type { CollectionAccess } from "../collections/collection-access.js";
 import {
 	findWorkspaceById,
@@ -21,7 +22,7 @@ export async function rightsOf(
 		: null;
 	return {
 		sub,
-		resolveAny: access.role === "editor",
+		resolveAny: elementRoleAllows("collection", access.role, "resolveComments"),
 		deleteAny: workspaceRole === "admin",
 	};
 }

@@ -60,6 +60,25 @@ describe("comment anchors", () => {
 		).toBe(true);
 	});
 
+	it("count a stored \\r\\n as one line break, as the editor does", () => {
+		const crlf: CommentTarget = {
+			kind: "request",
+			draft: createRequestDraft({
+				body: {
+					type: "raw",
+					rawLanguage: "json",
+					raw: '{\r\n  "id": 1\r\n}',
+					urlencoded: [],
+					formData: [],
+					binary: null,
+				},
+			}),
+		};
+		expect(
+			anchorOutdated(crlf, { part: "body", start: 4, end: 8, quote: '"id"' }),
+		).toBe(false);
+	});
+
 	it("only offer scripts on folders and the collection, nothing on examples", () => {
 		const folder: CommentTarget = {
 			kind: "folder",

@@ -50,6 +50,7 @@ export const collectionsMeta: Part = {
 	rightRail: {
 		label: "Chi tiết collection",
 		info: "Thông tin",
+		comments: "Comment",
 		changelog: "Changelog",
 		close: "Đóng panel",
 		backdrop: "Đóng panel chi tiết",

@@ -56,8 +56,19 @@ function rowCell(
 	return row[anchor.field];
 }
 
-/** The whole text the anchor points into, `null` when it is gone. */
+/**
+ * The whole text the anchor points into, `null` when it is gone. Line
+ * breaks read as `\n`, as the browser's code editor counts them, so an
+ * imported body with `\r\n` still matches its offsets.
+ */
 export function anchorText(
+	target: CommentTarget,
+	anchor: CommentAnchor,
+): string | null {
+	return rawAnchorText(target, anchor)?.replace(/\r\n?/g, "\n") ?? null;
+}
+
+function rawAnchorText(
 	target: CommentTarget,
 	anchor: CommentAnchor,
 ): string | null {

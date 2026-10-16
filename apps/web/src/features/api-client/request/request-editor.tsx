@@ -17,6 +17,10 @@ import { AuthTab } from "./auth-tab";
 import { BodyTab } from "./body-tab";
 import type { DraftPaneProps } from "./draft-pane";
 import { HeadersTab } from "./headers-tab";
+import {
+	InlineCommentHostContext,
+	useInlineCommenting,
+} from "./inline-comment-context";
 import { ParamsTab } from "./params-tab";
 import { RequestSettingsTab } from "./request-settings-tab";
 import { UrlBar } from "./url-bar";
@@ -39,7 +43,14 @@ export interface RequestEditorProps {
 
 /** Request builder of the active tab: name, URL bar and the six panes. */
 export function RequestEditor({ tab, headActions }: RequestEditorProps) {
+	const host = useContext(InlineCommentHostContext);
+	const editor = <RequestEditorBody tab={tab} headActions={headActions} />;
+	return host ? host(tab, editor) : editor;
+}
+
+function RequestEditorBody({ tab, headActions }: RequestEditorProps) {
 	const t = useT();
+	const commenting = useInlineCommenting();
 	const workbench = useWorkbenchActions();
 	const inheritNoteOf = useContext(AuthInheritContext);
 	const { draft } = tab;
@@ -81,6 +92,7 @@ export function RequestEditor({ tab, headActions }: RequestEditorProps) {
 				{tab.dirty ? (
 					<Badge tone="neutral">{t("apiClient.request.unsaved")}</Badge>
 				) : null}
+				{commenting?.head}
 				{headActions}
 			</div>
 			<UrlBar

@@ -5,7 +5,7 @@ import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
 import { requireCollection } from "../collections/collection-access.js";
 import { ACCESS_NOTE } from "../collections/collection-read-operations.js";
 import { COMMENT_PATH, commentInput } from "./comment-inputs.js";
-import { setReaction } from "./comment-service.js";
+import { setReaction } from "./comment-thread-service.js";
 
 const REACTION_PATH = `${COMMENT_PATH}/reactions/:reaction`;
 const reactionView = z.object({

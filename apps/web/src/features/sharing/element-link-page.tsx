@@ -11,6 +11,7 @@ import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
 import { useAppTitle } from "../../lib/use-document-title";
+import { COMMENT_PARAM } from "../comments/comment-link";
 import { useEnvironmentsEnabled } from "../environments/use-environments-enabled";
 import { useWorkspacesEnabled } from "../workspaces/use-workspaces-enabled";
 import { NODE_PARAM, isElementId } from "./open-element-state";
@@ -59,11 +60,14 @@ function ElementLink({
 	// A folder or request of the collection; a malformed one is ignored.
 	const node = search.get(NODE_PARAM);
 	const nodeId = type === "collection" && isElementId(node) ? node : null;
+	const comment = search.get(COMMENT_PARAM);
+	const commentId =
+		type === "collection" && isElementId(comment) ? comment : null;
 	const environments = useEnvironmentsEnabled();
 	const opensInWorkbench = type === "collection" || environments;
 	const workspaceId = element.data?.workspaceId ?? null;
 	const handOver = useOpenElementLink(
-		{ type, id, nodeId, workspaceId },
+		{ type, id, nodeId, commentId, workspaceId },
 		opensInWorkbench,
 	);
 	if (handOver.error !== null) {

@@ -1,8 +1,16 @@
-import { IconHistory, IconInfoCircle, IconX } from "@tabler/icons-react";
-import { type KeyboardEvent, memo, useId, useRef } from "react";
+import {
+	IconHistory,
+	IconInfoCircle,
+	IconMessageCircle,
+	IconX,
+} from "@tabler/icons-react";
+import { type KeyboardEvent, memo, useEffect, useId, useRef } from "react";
 import { IconButton } from "../../components/ui/icon-button";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
+import { useCommentFocus } from "../comments/comment-focus";
+import { CommentsPanel } from "../comments/comments-panel";
+import { useCommentsEnabled } from "../comments/use-comments-enabled";
 import { ChangelogPanel } from "./changelog-panel";
 import { InfoPanel } from "./info-panel";
 import {
@@ -13,22 +21,29 @@ import {
 import { useCollection } from "./use-collections";
 import { useDrawerFocus } from "./use-drawer-focus";
 
-const ICONS = { info: IconInfoCircle, changelog: IconHistory } as const;
+const ICONS = {
+	info: IconInfoCircle,
+	comments: IconMessageCircle,
+	changelog: IconHistory,
+} as const;
 
 export interface RightRailProps {
 	collectionId: string;
 	/** The folder of a folder page (its request count). */
 	folderId: string | null;
+	/** The folder, example or request shown; `null` on the collection page. */
+	nodeId: string | null;
 }
 
 /**
- * Right rail of a collection, folder, example or bound request: Info and
- * Changelog panels about 340px wide; below 768px the panel is a drawer
+ * Right rail of a collection, folder, example or bound request: Info,
+ * Comments (the shown item's) and Changelog panels about 340px wide; below 768px the panel is a drawer
  * from the right over a backdrop, which takes the focus while open.
  */
 export const RightRail = memo(function RightRail({
 	collectionId,
 	folderId,
+	nodeId,
 }: RightRailProps) {
 	const t = useT();
 	const panelId = useId();
@@ -38,8 +53,19 @@ export const RightRail = memo(function RightRail({
 	useDrawerFocus(panel !== null, () => setPanel(null), panelRef, closeRef);
 	const collection = useCollection(collectionId);
 	const detail = collection.data;
+	const commentsOn = useCommentsEnabled();
+	const panels = RIGHT_PANELS.filter((id) => commentsOn || id !== "comments");
+	const focus = useCommentFocus();
+	// A comment link or marker for the shown item opens its comments.
+	useEffect(() => {
+		if (!commentsOn || !focus) return;
+		if (focus.collectionId === collectionId && focus.nodeId === nodeId) {
+			setPanel("comments");
+		}
+	}, [commentsOn, focus, collectionId, nodeId, setPanel]);
 	const labels: Record<RightPanel, string> = {
 		info: t("collections.rightRail.info"),
+		comments: t("collections.rightRail.comments"),
 		changelog: t("collections.rightRail.changelog"),
 	};
 	const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
@@ -82,6 +108,13 @@ export const RightRail = memo(function RightRail({
 							{detail && panel === "info" ? (
 								<InfoPanel detail={detail} folderId={folderId} />
 							) : null}
+							{detail && panel === "comments" && commentsOn ? (
+								<CommentsPanel
+									collectionId={collectionId}
+									nodeId={nodeId}
+									workspaceId={detail.workspaceId}
+								/>
+							) : null}
 							{panel === "changelog" ? (
 								<ChangelogPanel
 									collectionId={collectionId}
@@ -97,7 +130,7 @@ export const RightRail = memo(function RightRail({
 				data-id="right-rail"
 				className="flex w-12 flex-none flex-col gap-1 border-border-subtle border-l bg-surface-subtle p-1"
 			>
-				{RIGHT_PANELS.map((id) => {
+				{panels.map((id) => {
 					const Icon = ICONS[id];
 					const active = panel === id;
 					return (

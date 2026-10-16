@@ -13,6 +13,8 @@ export interface OpenElement {
 	id: string;
 	/** A folder, request or example of the collection. */
 	nodeId?: string;
+	/** A comment on the collection or on `nodeId`, to bring into view. */
+	commentId?: string;
 }
 
 export const OPEN_ELEMENT_STATE_KEY = "openElement";
@@ -32,9 +34,11 @@ export const collectionNodePath = (collectionId: string, nodeId: string) =>
 export function openElementState(target: OpenElement): {
 	[OPEN_ELEMENT_STATE_KEY]: OpenElement;
 } {
-	const { type, id, nodeId } = target;
+	const { type, id, nodeId, commentId } = target;
 	const node = type === "collection" && nodeId !== undefined ? { nodeId } : {};
-	return { [OPEN_ELEMENT_STATE_KEY]: { type, id, ...node } };
+	const comment =
+		type === "collection" && commentId !== undefined ? { commentId } : {};
+	return { [OPEN_ELEMENT_STATE_KEY]: { type, id, ...node, ...comment } };
 }
 
 /** The element in `location.state`, or `null` when absent or malformed. */
@@ -42,9 +46,19 @@ export function readOpenElement(state: unknown): OpenElement | null {
 	if (!isRecord(state)) return null;
 	const target = state[OPEN_ELEMENT_STATE_KEY];
 	if (!isRecord(target)) return null;
-	const { type, id, nodeId } = target;
+	const { type, id, nodeId, commentId } = target;
 	if (!isElementType(type) || !isElementId(id)) return null;
-	if (nodeId === undefined) return { type, id };
-	if (type !== "collection" || !isElementId(nodeId)) return null;
-	return { type, id, nodeId };
+	if (type !== "collection") {
+		return nodeId === undefined && commentId === undefined
+			? { type, id }
+			: null;
+	}
+	if (nodeId !== undefined && !isElementId(nodeId)) return null;
+	if (commentId !== undefined && !isElementId(commentId)) return null;
+	return {
+		type,
+		id,
+		...(nodeId === undefined ? {} : { nodeId }),
+		...(commentId === undefined ? {} : { commentId }),
+	};
 }

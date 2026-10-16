@@ -1,4 +1,5 @@
 import { collectionsChangelog } from "./collections-changelog";
+import { collectionsComments } from "./collections-comments";
 import { collectionsExamples } from "./collections-examples";
 import { collectionsMeta } from "./collections-meta";
 import { collectionsTabs } from "./collections-tabs";
@@ -187,4 +188,5 @@ export const collections = {
 	...collectionsExamples,
 	...collectionsMeta,
 	...collectionsChangelog,
+	...collectionsComments,
 } as const;

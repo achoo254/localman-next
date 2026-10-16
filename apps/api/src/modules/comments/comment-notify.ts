@@ -1,8 +1,12 @@
+import { takeRateLimitSlot } from "../../lib/rate-limit-windows.js";
 import { elementPath } from "../access/element-access-view.js";
 import type { ElementRecord } from "../access/element-adapters.js";
 import { getNotificationService } from "../notifications/notification-runtime.js";
 import { displayNames } from "../users/display-names.js";
 import { mentionedReaders, readersAmong } from "./comment-mentions.js";
+
+/** Notices one author sends one person about comments, per window. */
+const NOTICES_PER_RECIPIENT = { max: 10, windowMs: 10 * 60_000 };
 
 /** Where a comment was written and by whom. */
 export interface CommentPlace {
@@ -14,6 +18,15 @@ export interface CommentPlace {
 	readonly commentId: string;
 }
 
+/** Who a comment tells, worked out before it is written. */
+export interface CommentNotices {
+	/** Everyone it @mentions who can open the collection (stored on it). */
+	readonly mentioned: readonly string[];
+	readonly mentions: readonly string[];
+	readonly replies: readonly string[];
+	readonly authorName: string | null;
+}
+
 /** Opens the item with the comments panel on this comment. */
 export function commentLink(place: CommentPlace): string {
 	const query = new URLSearchParams();
@@ -23,59 +36,56 @@ export function commentLink(place: CommentPlace): string {
 }
 
 /**
- * Tells the people @mentioned in `body` who can open the collection and
- * were not told before (`already`); returns them, so the caller stores
- * them and a reply does not tell them twice.
+ * The people to tell about a comment: those it @mentions (and were not
+ * told before, `already`), and for a reply everyone who wrote in the
+ * thread except those it mentions. Reads only, so a failure here leaves
+ * nothing written.
  */
-export async function notifyMentions(
-	place: CommentPlace,
+export async function planNotices(
+	element: ElementRecord,
+	authorId: string,
 	body: string,
 	already: readonly string[],
-): Promise<string[]> {
-	const mentioned = await mentionedReaders(body, place.element, place.authorId);
-	const fresh = mentioned.filter((sub) => !already.includes(sub));
-	await send(place, fresh, "comment.mentioned");
-	return mentioned;
+	threadAuthors: readonly string[] = [],
+): Promise<CommentNotices> {
+	const mentioned = await mentionedReaders(body, element, authorId);
+	const readers = await readersAmong(threadAuthors, element, authorId);
+	const authorName = (await displayNames([authorId])).get(authorId) ?? null;
+	return {
+		mentioned,
+		mentions: mentioned.filter((sub) => !already.includes(sub)),
+		replies: readers.filter((sub) => !mentioned.includes(sub)),
+		authorName,
+	};
 }
 
 /**
- * Tells everyone who wrote in the thread before (and still can open the
- * collection) about a reply, except those the reply @mentions.
+ * Sends the planned notices in the background; past
+ * `NOTICES_PER_RECIPIENT` from this author a person is not told again.
  */
-export async function notifyReply(
+export async function sendNotices(
 	place: CommentPlace,
-	threadAuthors: readonly string[],
-	mentioned: readonly string[],
+	notices: CommentNotices,
 ): Promise<void> {
-	const readers = await readersAmong(
-		threadAuthors,
-		place.element,
-		place.authorId,
-	);
-	await send(
-		place,
-		readers.filter((sub) => !mentioned.includes(sub)),
-		"comment.replied",
-	);
-}
-
-async function send(
-	place: CommentPlace,
-	recipients: readonly string[],
-	type: "comment.mentioned" | "comment.replied",
-): Promise<void> {
-	if (recipients.length === 0) return;
-	const author = (await displayNames([place.authorId])).get(place.authorId);
 	const service = getNotificationService();
-	for (const sub of recipients) {
-		service.notifyLater(sub, {
-			type,
-			params: {
-				author: author ?? null,
-				collection: place.element.name,
-				item: place.nodeName,
-			},
-			link: commentLink(place),
-		});
+	const params = {
+		author: notices.authorName,
+		collection: place.element.name,
+		item: place.nodeName,
+	};
+	const link = commentLink(place);
+	const batches = [
+		["comment.mentioned", notices.mentions],
+		["comment.replied", notices.replies],
+	] as const;
+	for (const [type, recipients] of batches) {
+		for (const sub of recipients) {
+			const allowed = await takeRateLimitSlot(
+				"comment-notice",
+				`${place.authorId}:${sub}`,
+				NOTICES_PER_RECIPIENT,
+			).catch(() => false);
+			if (allowed) service.notifyLater(sub, { type, params, link });
+		}
 	}
 }

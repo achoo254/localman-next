@@ -13,6 +13,7 @@ export const SHARING_FLAGS = {
 	apiClient: true,
 	workspaces: true,
 	publicSharing: true,
+	comments: true,
 };
 
 const listOrders = createRequestDraft({

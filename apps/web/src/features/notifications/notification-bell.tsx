@@ -27,7 +27,7 @@ import { NotificationItem } from "./notification-item";
 import { NotificationListSkeleton } from "./notification-list-skeleton";
 import { type AppNotification, inAppPath } from "./notifications-api";
 import { useNotifications } from "./use-notifications";
-import { WORKSPACE_EVENT_TYPES } from "./workspace-event-types";
+import { useShownEventType } from "./workspace-event-types";
 
 export const NOTIFICATION_SETTINGS_PATH = "/account/notifications";
 
@@ -39,9 +39,8 @@ export function NotificationBell() {
 	const t = useT();
 	const workspaces = useWorkspacesEnabled();
 	const { unreadCount } = bell;
-	const items = workspaces
-		? bell.items
-		: bell.items.filter((item) => !WORKSPACE_EVENT_TYPES.has(item.type));
+	const shown = useShownEventType();
+	const items = bell.items.filter((item) => shown(item.type));
 	const empty = items.length === 0;
 	// First page on its way: skeleton rows; with items on screen: a top bar.
 	const firstLoad = bell.loading && empty && !bell.error;

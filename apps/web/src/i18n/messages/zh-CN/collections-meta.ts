@@ -50,6 +50,7 @@ export const collectionsMeta: Part = {
 	rightRail: {
 		label: "Collection 详情",
 		info: "信息",
+		comments: "评论",
 		changelog: "Changelog",
 		close: "关闭面板",
 		backdrop: "关闭详情面板",

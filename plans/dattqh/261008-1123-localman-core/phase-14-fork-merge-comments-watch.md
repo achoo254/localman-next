@@ -1,7 +1,7 @@
 ---
 phase: 14
 title: "Fork, merge, pull request, comment, watch (theo Postman)"
-status: pending
+status: in-progress
 priority: P2
 effort: "XL"
 dependencies: [12, 13]
@@ -75,19 +75,19 @@ Nguồn tham chiếu: [Forking elements](https://learning.postman.com/docs/colla
 ### Checklist
 - [ ] T1 Spec fork, merge, conflict, PR, comment, watch đã chốt theo prototype
 - [ ] T2 `three-way-merge` có đủ bộ ca xung đột
-- [ ] T3 Backend comment, anchor inline, outdated, mention, quyền Admin
+- [x] T3 Backend comment, anchor inline, outdated, mention, quyền Admin (2026-10-16, đợt A: `apps/api/src/modules/comments/`; anchor lưu offset kèm đoạn chữ đã chọn, outdated khi chỗ đó không còn đúng đoạn chữ, CRLF tính như LF; Viewer comment được; giới hạn `comment` 20/phút mỗi người, 60/phút mỗi collection, mỗi tác giả báo một người tối đa 10 lần/10 phút)
 - [ ] T4 Fork, nhãn, danh sách fork, Pull changes, chặn theo gói
 - [ ] T5 Merge 3 tuỳ chọn, giải xung đột, revision sau merge
 - [ ] T6 PR đủ trạng thái, reviewer, Pull updates, comment inline trên diff
-- [ ] T7 Watch qua hook changelog
-- [ ] T8 UI version control và nút Fork/Watch
-- [ ] T9 UI comment đủ thread, reaction, resolve, Markdown
+- [x] T7 Watch qua changelog (2026-10-16, đợt A: `apps/api/src/modules/watch/`; job `WatchDigestJob` mỗi phút đọc changelog thay vì móc vào từng đường ghi, mỗi người theo dõi nhận một thông báo tổng hợp; chỉ workspace team)
+- [ ] T8 UI version control và nút Fork/Watch (nút Watch xong ở đợt A; còn fork, merge, PR ở đợt B)
+- [x] T9 UI comment đủ thread, reaction, resolve, Markdown (2026-10-16, đợt A: `apps/web/src/features/comments/`, panel Comments ở right rail, comment inline trên vùng chọn của URL/params/headers/body/scripts kèm marker và highlight, gợi ý @mention, Copy link mở đúng thread; cờ web `comments`, cổng server `COMMENTS_ENABLED`)
 - [ ] T10 Integration pass
 - [ ] T11 Staging đã deploy sau khi user xác nhận
 - [ ] T12 Review không còn finding mức high
 - [ ] Verification: unit `three-way-merge` (khác field, cùng field, xoá đối sửa, cùng thêm, sắp lại thứ tự) pass
 - [ ] Verification: integration fork, PR, approve, merge 3 tuỳ chọn và Keep Source/Destination pass; Viewer không merge được vào nguồn
-- [ ] Verification: integration comment (@mention đúng kênh, resolve/reopen, Admin xoá không sửa) pass
+- [x] Verification: integration comment (@mention đúng kênh, resolve/reopen, Admin xoá không sửa) pass (2026-10-16: `comment-operations.test.ts`, `comment-limits.test.ts`, `watch-digest.test.ts`; E2E `collection-comments.spec.ts`)
 - [ ] Mọi dòng ma trận tương đương có test hoặc kịch bản E2E tương ứng
 - [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
 - [ ] `pnpm check:mcp-coverage` pass

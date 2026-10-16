@@ -13,6 +13,7 @@ import type { BodyFilesProps } from "./body-files";
 import { BodyFormTable } from "./body-form-table";
 import type { DraftPaneProps } from "./draft-pane";
 import { newKeyValueRow } from "./draft-pane";
+import { useInlineCommenting } from "./inline-comment-context";
 import { KeyValueTable } from "./key-value-table";
 
 function isRawLanguage(value: string): value is RawLanguage {
@@ -28,6 +29,7 @@ export function BodyTab({
 }: DraftPaneProps & BodyFilesProps) {
 	const t = useT();
 	const variables = useVariableExtension();
+	const anchors = useInlineCommenting()?.codeExtension("body");
 	const { body } = draft;
 	const setBody = (change: Partial<RequestBody>) =>
 		update((current) => ({ ...current, body: { ...current.body, ...change } }));
@@ -85,7 +87,7 @@ export function BodyTab({
 				<p className="text-muted text-sm">{t("apiClient.body.none")}</p>
 			) : null}
 			{body.type === "raw" ? (
-				<div data-id="request-body-raw">
+				<div data-id="request-body-raw" data-comment-part="body">
 					<CodeEditor
 						value={body.raw}
 						language={body.rawLanguage}
@@ -93,7 +95,7 @@ export function BodyTab({
 						lineNumbers
 						className="min-h-48"
 						data-id="request-body-editor"
-						extensions={variables}
+						extensions={anchors ? [variables ?? [], anchors] : variables}
 						onChange={(raw) => setBody({ raw })}
 					/>
 				</div>

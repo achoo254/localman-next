@@ -5,6 +5,7 @@ import { SegmentedControl } from "../../../components/ui/segmented-control";
 import { useT } from "../../../i18n/i18n-context";
 import { useEnvironmentsEnabled } from "../../environments/use-environments-enabled";
 import type { DraftPaneProps } from "../request/draft-pane";
+import { useInlineCommenting } from "../request/inline-comment-context";
 import { appendSnippet, availableSnippets } from "./script-snippets";
 
 export type ScriptPhase = "pre" | "post";
@@ -49,6 +50,8 @@ export function ScriptsEditor({
 	const scopes = useEnvironmentsEnabled();
 	const [phase, setPhase] = useState<ScriptPhase>("pre");
 	const script = scripts[phase];
+	const part = phase === "pre" ? "preScript" : "postScript";
+	const anchors = useInlineCommenting()?.codeExtension(part);
 	const setScript = (text: string) => onChange(phase, text);
 
 	return (
@@ -72,23 +75,26 @@ export function ScriptsEditor({
 						},
 					]}
 				/>
-				<CodeEditor
-					// A new editor per phase keeps undo history apart.
-					key={phase}
-					value={script}
-					language="javascript"
-					label={t(
-						phase === "pre"
-							? "apiClient.scripts.preLabel"
-							: "apiClient.scripts.postLabel",
-					)}
-					placeholder={t("apiClient.scripts.placeholder")}
-					lineNumbers
-					readOnly={readOnly}
-					className="min-h-56"
-					data-id="request-scripts-editor"
-					onChange={setScript}
-				/>
+				<div data-comment-part={part}>
+					<CodeEditor
+						// A new editor per phase keeps undo history apart.
+						key={phase}
+						value={script}
+						language="javascript"
+						label={t(
+							phase === "pre"
+								? "apiClient.scripts.preLabel"
+								: "apiClient.scripts.postLabel",
+						)}
+						placeholder={t("apiClient.scripts.placeholder")}
+						lineNumbers
+						readOnly={readOnly}
+						className="min-h-56"
+						data-id="request-scripts-editor"
+						extensions={anchors}
+						onChange={setScript}
+					/>
+				</div>
 				{note}
 				<p className="text-muted text-xs">
 					{phase === "pre"

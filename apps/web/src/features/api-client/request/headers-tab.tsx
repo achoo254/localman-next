@@ -5,6 +5,7 @@ import { useT } from "../../../i18n/i18n-context";
 import { autoHeaders } from "./auto-headers";
 import type { DraftPaneProps } from "./draft-pane";
 import { newKeyValueRow } from "./draft-pane";
+import { useInlineCommenting } from "./inline-comment-context";
 import { KeyValueTable } from "./key-value-table";
 
 const CELL = "border-border-subtle border-b px-2 py-2 align-middle";
@@ -13,6 +14,7 @@ const CELL = "border-border-subtle border-b px-2 py-2 align-middle";
 export function HeadersTab({ draft, update }: DraftPaneProps) {
 	const t = useT();
 	const [showAuto, setShowAuto] = useState(false);
+	const commenting = useInlineCommenting();
 	const auto = autoHeaders(draft);
 	const autoRows = showAuto
 		? auto.map((header) => (
@@ -36,7 +38,7 @@ export function HeadersTab({ draft, update }: DraftPaneProps) {
 			))
 		: null;
 	return (
-		<div className="grid gap-2">
+		<div className="grid gap-2" data-comment-part="headers">
 			<div>
 				<Button
 					variant="ghost"
@@ -62,6 +64,7 @@ export function HeadersTab({ draft, update }: DraftPaneProps) {
 				addLabel={t("apiClient.headers.add")}
 				withDescription
 				before={autoRows}
+				rowExtra={(row) => commenting?.rowMarker("headers", row.id)}
 			/>
 		</div>
 	);

@@ -17,13 +17,9 @@ import {
 } from "./comment-inputs.js";
 import { reactionOperations } from "./comment-reaction-operations.js";
 import { rightsOf } from "./comment-rights.js";
-import {
-	createComment,
-	deleteComment,
-	editComment,
-	setResolved,
-} from "./comment-service.js";
+import { createComment, editComment } from "./comment-service.js";
 import { nodeObjectId } from "./comment-targets.js";
+import { deleteComment, setResolved } from "./comment-thread-service.js";
 import { countOpenThreads, listThreads } from "./comment-view.js";
 import {
 	countsView,

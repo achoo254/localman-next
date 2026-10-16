@@ -21,6 +21,7 @@ const limits: RuntimeSettings["heavyOperationRateLimit"] = {
 	reset: { perUser: window(2), perProject: window(10) },
 	import: { perUser: window(2), perProject: window(10) },
 	suggestFaker: { perUser: window(2) },
+	comment: { perUser: window(2), perProject: window(10) },
 };
 
 useCollaboratorTestDb(() => ({

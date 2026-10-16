@@ -107,6 +107,6 @@ export const operations: readonly AnyOperation[] = [
 	submitContactMessage,
 	...contactMessageAdminOperations,
 	getTenantInfo,
-	// Served only while PUBLIC_SHARING_ENABLED is on (`servedOperations`).
+	// Served only while PUBLIC_SHARING_ENABLED is on (`feature-gates.ts`).
 	...publicSharingOperations,
 ];

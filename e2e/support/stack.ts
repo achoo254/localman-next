@@ -77,6 +77,7 @@ function apiEnv(mongoUri: string, oidcSecret: string): NodeJS.ProcessEnv {
 		TUNNEL_DOMAINS: TUNNEL_DOMAIN,
 		// Unreleased features the specs cover, behind their server gates.
 		PUBLIC_SHARING_ENABLED: "true",
+		COMMENTS_ENABLED: "true",
 	};
 }
 
@@ -100,7 +101,7 @@ function releasedFeatures(): string[] {
 }
 
 /** Specs that cover features not released yet turn their flags on here. */
-const UNRELEASED_FEATURES = ["publicSharing"];
+const UNRELEASED_FEATURES = ["publicSharing", "comments"];
 
 /**
  * Production build of the web app for the E2E: same origin for the API

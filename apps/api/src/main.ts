@@ -33,7 +33,7 @@ import {
 	type NotificationService,
 	createNotificationService,
 } from "./modules/notifications/notification-service.js";
-import { servedOperations } from "./modules/public-sharing/public-sharing-gate.js";
+import { servedOperations } from "./operations/feature-gates.js";
 import { operations as registeredOperations } from "./operations/registry.js";
 import { configureTenancy } from "./tenancy/configure-tenancy.js";
 import { migrateToTenants } from "./tenancy/tenant-migration.js";
@@ -90,7 +90,9 @@ const usageMeter = new UsageMeter({
 });
 // Callbacks and inbox forwards count against the owners' monthly quota.
 outboundQueue.configure(logger, usageMeter);
-const backgroundJobs = createBackgroundJobs(logger);
+const backgroundJobs = createBackgroundJobs(logger, {
+	watchDigest: env.COMMENTS_ENABLED,
+});
 const mcpHandlers = new McpHandlerRegistry();
 
 async function shutdown(reason: string, exitCode: number): Promise<void> {
@@ -153,10 +155,10 @@ try {
 	setNotificationService(notifications);
 	const auth = createAuthModule(authSettingsFromEnv(env), logger);
 	const allowedOrigins = [env.PUBLIC_URL, env.WEB_ORIGIN];
-	const operations = servedOperations(
-		registeredOperations,
-		env.PUBLIC_SHARING_ENABLED,
-	);
+	const operations = servedOperations(registeredOperations, {
+		publicSharing: env.PUBLIC_SHARING_ENABLED,
+		comments: env.COMMENTS_ENABLED,
+	});
 	const dashboard = createDashboardApp({
 		logger,
 		operations,
@@ -198,7 +200,7 @@ try {
 		{ host: env.HOST, port: env.MOCK_PORT },
 		"Mock runtime listening",
 	);
-	// Tombstone sweep, trial reminders, trash purge.
+	// Tombstone sweep, trial reminders, trash purge, watch digest.
 	backgroundJobs.start();
 } catch (error) {
 	logger.fatal({ err: error }, "Startup failed");

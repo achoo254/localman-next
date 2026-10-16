@@ -44,6 +44,7 @@ export const collectionsMeta = {
 	rightRail: {
 		label: "Collection details",
 		info: "Info",
+		comments: "Comments",
 		changelog: "Changelog",
 		close: "Close panel",
 		backdrop: "Close the details panel",

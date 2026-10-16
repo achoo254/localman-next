@@ -20,6 +20,8 @@ import { useT } from "../../i18n/i18n-context";
 import { copyText } from "../../platform/clipboard";
 import { appPageUrl } from "../../platform/navigation";
 import type { CollectionPageTab } from "../api-client/workbench/workbench-tab-types";
+import { useCommentsEnabled } from "../comments/use-comments-enabled";
+import { WatchButton } from "../comments/watch-button";
 import { collectionNodePath } from "../sharing/open-element-state";
 import { elementPath } from "../sharing/sharing-api";
 import { EditableName } from "./editable-name";
@@ -43,11 +45,12 @@ export interface PageHeaderProps {
 	extra?: ReactNode;
 }
 
-/** Icon, name (editable by Editors), save state, Share and "…". */
+/** Icon, name (editable by Editors), save state, Watch, Share and "…". */
 export function PageHeader(props: PageHeaderProps) {
 	const t = useT();
 	const toast = useToast();
 	const exportCollection = useExportCollection();
+	const commentsOn = useCommentsEnabled();
 	const { page } = props;
 	const Icon = page.kind === "collection" ? IconStack2 : IconFolder;
 	const copyLink = async () => {
@@ -82,6 +85,9 @@ export function PageHeader(props: PageHeaderProps) {
 			<SharedWithYouBadge workspaceId={props.workspaceId} />
 			{props.extra}
 			<PageSaveState status={props.status} onRetry={props.onRetry} />
+			{commentsOn && page.kind === "collection" ? (
+				<WatchButton collectionId={page.collectionId} name={props.name} />
+			) : null}
 			<Button
 				size="sm"
 				variant="secondary"

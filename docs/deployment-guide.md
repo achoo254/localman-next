@@ -162,6 +162,14 @@ Public link, guest link, access key và nút Run chạy khi **cả hai** cùng b
 - **Kiểm sau khi bật:** `GET /api/v1/public/links/x` trả 404 `PUBLIC_LINK_NOT_FOUND` (JSON của API, không phải 404 của router), `/run-button.svg` trả `image/svg+xml`, access log nginx ghi `/public/c/[redacted]`.
 - **Tắt khẩn (rollback):** đặt `PUBLIC_SHARING_ENABLED=false`, `pm2 reload localman-api`. Mọi link, key, nút ngừng ngay; dữ liệu giữ nguyên, bật lại thì chạy tiếp. Chỉ đổi release khi lỗi nằm ngoài tính năng này.
 
+## Comment và watch (`COMMENTS_ENABLED`)
+
+Comment trên collection và watch chạy khi **cả hai** cùng bật: cờ web `comments` trong [`released-features`](../infra/localman/released-features) và cổng server `COMMENTS_ENABLED=true` trong `/opt/localman/.env`. Cổng tắt thì API không route, MCP không có tool `collab.*` của comment và watch (path trả 404), và job tổng hợp watch không chạy.
+
+- **Bật:** thêm `comments` vào `released-features` và deploy; trên server đặt `COMMENTS_ENABLED=true` rồi `pm2 reload localman-api`.
+- **Kiểm sau khi bật:** `GET /api/v1/collections/x/comments` trả 401 khi chưa đăng nhập (route của API, không phải 404), log có lượt `Watch digest` không lỗi sau một phút.
+- **Tắt khẩn (rollback):** đặt `COMMENTS_ENABLED=false`, `pm2 reload localman-api`. Comment và danh sách theo dõi giữ nguyên; bật lại thì job báo các thay đổi kể từ lần báo trước, gộp làm một.
+
 ## Rollback
 
 - Code: đổi symlink về một release còn giữ (tối đa 5 bản). Script cài lại nginx conf của release đó (CSP khớp `index.html` của nó), đổi symlink, reload nginx và pm2, kiểm health:

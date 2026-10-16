@@ -16,7 +16,15 @@ export interface BackgroundJobs {
 	stop(): Promise<void>;
 }
 
-export function createBackgroundJobs(logger: Logger): BackgroundJobs {
+export interface BackgroundJobOptions {
+	/** Watch digests run only while comments and watch are served. */
+	readonly watchDigest: boolean;
+}
+
+export function createBackgroundJobs(
+	logger: Logger,
+	options: BackgroundJobOptions,
+): BackgroundJobs {
 	// Finishes project deletions cut off by an error or a restart.
 	const tombstoneSweeper = new TombstoneSweeper(logger);
 	// Trial reminders (7 days, 1 day, ended), once per trial end.
@@ -24,7 +32,7 @@ export function createBackgroundJobs(logger: Logger): BackgroundJobs {
 	// Collections past their days in the trash are deleted for good.
 	const collectionTrash = new CollectionTrashJob(logger);
 	// Watchers hear about others' collection changes, about once a minute.
-	const watchDigest = new WatchDigestJob(logger);
+	const watchDigest = options.watchDigest ? new WatchDigestJob(logger) : null;
 	// Once per start: older examples get the folded name search uses.
 	let backfill: Promise<void> | undefined;
 	return {
@@ -32,7 +40,7 @@ export function createBackgroundJobs(logger: Logger): BackgroundJobs {
 			tombstoneSweeper.start();
 			trialReminders.start();
 			collectionTrash.start();
-			watchDigest.start();
+			watchDigest?.start();
 			backfill ??= forEachTenant(logger, () =>
 				backfillExampleSearchNames(logger),
 			);
@@ -42,7 +50,7 @@ export function createBackgroundJobs(logger: Logger): BackgroundJobs {
 				tombstoneSweeper.stop(),
 				trialReminders.stop(),
 				collectionTrash.stop(),
-				watchDigest.stop(),
+				watchDigest?.stop(),
 				backfill,
 			]);
 		},

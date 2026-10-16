@@ -1,9 +1,3 @@
-/**
- * What collections add to the workbench while the workspaces flag is on:
- * collection and folder pages, the breadcrumb and Save of bound requests,
- * the inherited-auth note, Ctrl/Cmd+S and the "Save to collection"
- * dialog. Off, every part is absent and the workbench behaves as before.
- */
 import type { CollectionDetail } from "@localman/shared/api-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
@@ -11,6 +5,13 @@ import {
 	AuthInheritContext,
 	type InheritNoteOf,
 } from "../api-client/request/auth-inherit-context";
+/**
+ * What collections add to the workbench while the workspaces flag is on:
+ * collection and folder pages, the breadcrumb and Save of bound requests,
+ * the inherited-auth note, Ctrl/Cmd+S and the "Save to collection"
+ * dialog. Off, every part is absent and the workbench behaves as before.
+ */
+import { InlineCommentHostContext } from "../api-client/request/inline-comment-context";
 import {
 	useWorkbenchActions,
 	useWorkbenchState,
@@ -20,6 +21,7 @@ import {
 	isCollectionPage,
 } from "../api-client/workbench/workbench-tab-types";
 import type { WorkbenchTab } from "../api-client/workbench/workbench-types";
+import { useInlineCommentHost } from "../comments/use-inline-comment-host";
 import { BoundSavedSync } from "./bound-saved-sync";
 import { CollectionPage } from "./collection-page";
 import { ExamplePage } from "./example-page";
@@ -114,6 +116,7 @@ export function useCollectionsWorkbench(
 			) : null,
 		[openNode],
 	);
+	const commentHost = useInlineCommentHost();
 	const askTab = tabs.find((tab) => tab.id === askTabId) ?? null;
 	const rightPanel = useMemo(() => ({ panel, setPanel }), [panel]);
 
@@ -152,13 +155,20 @@ export function useCollectionsWorkbench(
 				folderId={
 					collectionPage?.kind === "folder" ? collectionPage.nodeId : null
 				}
+				nodeId={
+					collectionPage
+						? collectionPage.nodeId
+						: (activeTab?.source?.nodeId ?? null)
+				}
 			/>
 		) : null,
 		wrap: (children) => (
 			<RightPanelContext value={rightPanel}>
 				<PageSaveContext value={openPages}>
 					<AuthInheritContext value={inheritNoteOf}>
-						{children}
+						<InlineCommentHostContext value={commentHost}>
+							{children}
+						</InlineCommentHostContext>
 					</AuthInheritContext>
 				</PageSaveContext>
 			</RightPanelContext>

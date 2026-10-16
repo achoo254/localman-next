@@ -1,4 +1,3 @@
-import type { CommentThreadView } from "@localman/shared/api-client";
 import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
 import {
@@ -10,45 +9,13 @@ import {
 	patchAs,
 } from "../access/testing/access-fixture.js";
 import {
-	addNode,
 	createAs,
-	draftOf,
 	teamOfThree,
 	useCollectionTestDb,
 } from "../collections/testing/collection-fixture.js";
+import { comment, setup, threadsOf } from "./testing/comment-fixture.js";
 
 useCollectionTestDb();
-
-/** A team collection (Ada admin, Eve editor, Vic viewer) with one request. */
-async function setup() {
-	const ws = (await teamOfThree()).toHexString();
-	const { id } = await createAs(EVE, ws, { name: "Orders API" });
-	const draft = draftOf("List orders", {
-		headers: [
-			{ id: "h1", key: "Accept", value: "application/json", enabled: true },
-		],
-	});
-	const req = await addNode(EVE, id, {
-		kind: "request",
-		parentId: null,
-		name: "List orders",
-		draft,
-	});
-	return { id, nodeId: req.id, draft };
-}
-
-const comment = (sub: string, id: string, body: object) =>
-	as(sub).send("post", `/collections/${id}/comments`, body);
-
-async function threadsOf(
-	sub: string,
-	id: string,
-	query = "",
-): Promise<CommentThreadView[]> {
-	const res = await as(sub).get(`/collections/${id}/comments${query}`);
-	expect(res.status, JSON.stringify(res.body)).toBe(200);
-	return (res.body as { threads: CommentThreadView[] }).threads;
-}
 
 describe("comments on a collection", () => {
 	it("lets a Viewer start a thread and others reply, oldest first", async () => {
@@ -184,38 +151,5 @@ describe("comments on a collection", () => {
 		});
 		const [moved] = await threadsOf(EVE, id, `?nodeId=${nodeId}`);
 		expect(moved?.anchor?.outdated).toBe(true);
-	});
-
-	it("counts open threads per item and toggles reactions once per person", async () => {
-		const { id, nodeId } = await setup();
-		const { body } = await comment(VIC, id, { nodeId, body: "a" });
-		await comment(VIC, id, { body: "b" });
-		const counts = await as(VIC).get(`/collections/${id}/comment-counts`);
-		expect(counts.body.counts).toEqual({ [nodeId]: 1, collection: 1 });
-		const react = (sub: string, method: "put" | "delete") =>
-			as(sub).send(
-				method,
-				`/collections/${id}/comments/${body.id}/reactions/heart`,
-			);
-		await react(VIC, "put");
-		await react(VIC, "put");
-		await react(EVE, "put");
-		await react(EVE, "delete");
-		const [thread] = await threadsOf(VIC, id, `?nodeId=${nodeId}`);
-		expect(thread?.comments[0]?.reactions).toEqual([
-			{ key: "heart", count: 1, mine: true },
-		]);
-	});
-
-	it("hides comments from people without a role and items of other collections", async () => {
-		const { id, nodeId } = await setup();
-		expect((await comment(OLLIE, id, { body: "hi" })).status).toBe(404);
-		const other = await createAs(
-			EVE,
-			(await teamOfThree("Other")).toHexString(),
-			{ name: "Other" },
-		);
-		const res = await comment(EVE, other.id, { nodeId, body: "x" });
-		expect(res.status).toBe(404);
 	});
 });

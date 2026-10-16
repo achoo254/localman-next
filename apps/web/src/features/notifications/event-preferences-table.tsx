@@ -4,14 +4,13 @@ import type { SourceMessages } from "../../i18n/message-types";
 import type { Translate } from "../../i18n/translate";
 import { cn } from "../../lib/cn";
 import { useTenantInfo } from "../../lib/tenant-info";
-import { useWorkspacesEnabled } from "../workspaces/use-workspaces-enabled";
 import {
 	EVENT_CHANNELS,
 	type EventChannel,
 	type EventPreference,
 	type NotificationChannels,
 } from "./notification-preferences-api";
-import { WORKSPACE_EVENT_TYPES } from "./workspace-event-types";
+import { useShownEventType } from "./workspace-event-types";
 
 type EventTypeKey =
 	`notifications.events.types.${keyof SourceMessages["notifications"]["events"]["types"]}`;
@@ -61,11 +60,9 @@ export function EventPreferencesTable({
 }: EventPreferencesTableProps) {
 	const t = useT();
 	const idpName = useTenantInfo().displayName;
-	const workspaces = useWorkspacesEnabled();
 	const usable = usableChannels(channels);
-	const events = workspaces
-		? allEvents
-		: allEvents.filter((event) => !WORKSPACE_EVENT_TYPES.has(event.type));
+	const shown = useShownEventType();
+	const events = allEvents.filter((event) => shown(event.type));
 
 	return (
 		<section

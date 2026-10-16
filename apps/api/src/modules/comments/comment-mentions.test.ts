@@ -14,6 +14,12 @@ describe("mentionedUsernames", () => {
 		);
 	});
 
+	it("ignores names inside inline code and fenced blocks", () => {
+		expect(
+			mentionedUsernames("`@ada` and\n```\n@Override\n```\nthen @eve"),
+		).toEqual(["eve"]);
+	});
+
 	it("keeps at most 20 people", () => {
 		const body = Array.from({ length: 25 }, (_, i) => `@user${i}`).join(" ");
 		expect(mentionedUsernames(body)).toHaveLength(20);

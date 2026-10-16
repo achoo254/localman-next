@@ -21,6 +21,7 @@ function rateLimited(): OperationError {
  * out the other members. Call it after the access check, so someone
  * without access cannot spend a project's budget either. `projectId` is
  * `null` for an operation outside any project: only the account counts.
+ * Comments count per collection in its place.
  */
 export async function takeOperationSlot(
 	operation: HeavyOperation,

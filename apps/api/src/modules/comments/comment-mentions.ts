@@ -10,10 +10,13 @@ import { CASE_INSENSITIVE_COLLATION, UserModel } from "../users/user-model.js";
 const MENTION =
 	/(?<![\w@.])@([A-Za-z0-9_](?:[A-Za-z0-9._-]{0,62}[A-Za-z0-9_])?)/g;
 
-/** Usernames @mentioned in a Markdown body, once each, in order. */
+/** Fenced blocks and inline code: `@Override` there mentions nobody. */
+const CODE = /```[\s\S]*?(?:```|$)|`[^`\n]*`/g;
+
+/** Usernames @mentioned in a Markdown body (outside code), once each, in order. */
 export function mentionedUsernames(body: string): string[] {
 	const names = new Map<string, string>();
-	for (const match of body.matchAll(MENTION)) {
+	for (const match of body.replace(CODE, " ").matchAll(MENTION)) {
 		const name = match[1];
 		if (name === undefined) continue;
 		const key = name.toLowerCase();

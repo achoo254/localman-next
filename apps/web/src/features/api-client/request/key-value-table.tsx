@@ -5,6 +5,7 @@ import { Button } from "../../../components/ui/button";
 import { IconButton } from "../../../components/ui/icon-button";
 import { useT } from "../../../i18n/i18n-context";
 import { cn } from "../../../lib/cn";
+import { KeyValueTableHead } from "./key-value-table-head";
 import { VariableInput } from "./variable-input";
 
 export interface KeyValueTableProps<R extends KeyValueRow> {
@@ -30,6 +31,8 @@ export interface KeyValueTableProps<R extends KeyValueRow> {
 	renderValue?: (row: R, update: (row: R) => void) => ReactNode | null;
 	/** Rows shown read-only above the editable ones (auto headers). */
 	before?: ReactNode;
+	/** Shown before a row's remove button (its comment marker). */
+	rowExtra?: (row: R) => ReactNode;
 }
 
 const CELL = "border-border-subtle border-b px-1 py-1 align-middle";
@@ -72,35 +75,11 @@ export function KeyValueTable<R extends KeyValueRow>(
 					className="w-full min-w-120 border-collapse text-sm"
 				>
 					<caption className="sr-only">{props.caption}</caption>
-					<thead>
-						<tr className="text-left text-muted text-xs">
-							<th scope="col" className={cn(CELL, "w-10")}>
-								<span className="sr-only">{t("apiClient.table.enabled")}</span>
-							</th>
-							<th scope="col" className={cn(CELL, "font-semibold")}>
-								{t("apiClient.table.key")}
-							</th>
-							{props.typeColumn ? (
-								<th scope="col" className={cn(CELL, "w-28 font-semibold")}>
-									{props.typeColumn.header}
-								</th>
-							) : null}
-							<th scope="col" className={cn(CELL, "font-semibold")}>
-								{t("apiClient.table.value")}
-							</th>
-							{withDescription ? (
-								<th
-									scope="col"
-									className={cn(CELL, "font-semibold max-md:hidden")}
-								>
-									{t("apiClient.table.description")}
-								</th>
-							) : null}
-							<th scope="col" className={cn(CELL, "w-10")}>
-								<span className="sr-only">{t("apiClient.table.actions")}</span>
-							</th>
-						</tr>
-					</thead>
+					<KeyValueTableHead
+						cell={CELL}
+						typeHeader={props.typeColumn?.header}
+						withDescription={withDescription}
+					/>
 					<tbody>
 						{props.before}
 						{rows.map((row, index) => {
@@ -167,7 +146,8 @@ export function KeyValueTable<R extends KeyValueRow>(
 											/>
 										</td>
 									) : null}
-									<td className={cn(CELL, "text-center")}>
+									<td className={cn(CELL, "whitespace-nowrap text-center")}>
+										{props.rowExtra?.(row)}
 										<IconButton
 											size="sm"
 											icon={<IconX size={14} aria-hidden="true" />}
