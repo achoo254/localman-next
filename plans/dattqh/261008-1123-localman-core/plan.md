@@ -507,6 +507,11 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Một fork được có nhiều pull request đang mở (noul 0,24).
 - Thông báo cốt lõi (0,96): reviewer khi pull request mở; tác giả khi được duyệt, bị từ chối hoặc đã merge; comment thông báo như comment hiện có.
 
+### Vòng 46b: đợt B2 lên production và DAST (2026-10-17, user: "đồng ý deploy B2 rồi chạy DAST")
+- Release `20261016-232319-9bfd1b26afad` (commit `9bfd1b2`, không `-dirty`), backup `localman-20261017-062315` trước deploy; `localman-api` restarts 38 → 39 (đúng lần reload của deploy), không log lỗi; index tenant của `pull_requests` đã dựng.
+- DAST bằng phiên đăng nhập thật (workspace, collection, fork tạm, đã xoá hẳn): mở PR từ collection không phải fork trả 404 `FORK_NOT_FOUND`; tiêu đề rỗng, quá dài, reviewer dạng object `$ne`, quyết định lạ, tuỳ chọn merge lạ trả 400; reviewer không phải Editor trả 400 `INVALID_REVIEWER`; tự đặt mình làm reviewer được bỏ đi lặng lẽ (PR mở với 0 reviewer, đúng thiết kế); id lạ trả 404 `PULL_REQUEST_NOT_FOUND`; người không phải reviewer duyệt trả 403; thay đổi mang `key` theo id của nguồn; comment trên một thay đổi nằm ở thread của PR, không lẫn vào comment collection; merge mang URL của fork sang nguồn, giữ fork; merge lại hay sửa PR đã merge trả 409 `PULL_REQUEST_CLOSED`; xoá hẳn nguồn xoá luôn PR và comment của nó (Mongo đếm 0). Giao diện: liên kết `?pr=` mở đúng dialog, panel Pull request liệt kê PR, tiêu đề `<img onerror>` hiện như chữ, không chạy script. **Kết luận: SAST và DAST đều đạt, pull request vận hành được.**
+- Chưa kiểm được trên production: duyệt/từ chối và thông báo giữa hai tài khoản (cần tài khoản thứ hai; đã có test tích hợp).
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 
