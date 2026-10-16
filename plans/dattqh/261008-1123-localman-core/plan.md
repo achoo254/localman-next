@@ -495,6 +495,11 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Hiển thị fork người gọi không mở được trong danh sách: giữ như Postman, hiện nhãn và người tạo (Jev 0,95).
 - Chấp nhận, ghi lại: danh sách fork gọi kiểm quyền từng fork (tối đa 200); snapshot gốc không tính vào dung lượng (đã có giới hạn tốc độ); restore một mục `merge` ở nguồn không đổi gốc, nên lần pull sau mang việc restore sang fork; ở lại trang fork sau "merge and delete".
 
+### Vòng 45b: đợt B1 lên production và DAST (2026-10-16, user: "đồng ý deploy")
+- Release `20261016-155903-33a73d25cf51` (`33a73d2`, sạch), cờ `forks` và `FORKS_ENABLED=true`. Backup: DB `localman-20261016-225903`, `.env.bak-261016-forks`. `restarts` 37 lên 38 (lần reload của deploy), không log lỗi; route fork trả 401 khi chưa đăng nhập.
+- DAST bằng phiên đăng nhập thật (workspace, collection, environment tạm, đã xoá hẳn): collection không phải fork trả 404 `FORK_NOT_FOUND`; fork, trạng thái và số fork đúng; hai bên cùng sửa URL ra một xung đột, pull không chọn trả 409, lựa chọn hay tuỳ chọn lạ trả 400; pull giữ bản fork; "merge and delete" mang thay đổi sang nguồn, xoá fork (404), changelog ghi `merge`; fork environment chép secret cho Editor, xem trước không chứa giá trị secret nào, merge mang `baseUrl`, giữ `token` của nguồn, biến `constructor` merge đúng; giới hạn `fork` trả 429 ở lượt thứ 11 trong một phút; nút Fork và panel Forks hiện trên giao diện. **Kết luận: SAST và DAST đều đạt, fork, pull, merge vận hành được.**
+- Chưa kiểm được trên production: quy tắc Viewer chỉ fork vào workspace cá nhân (cần tài khoản thứ hai; đã có test tích hợp).
+
 ### Vòng 46: thiết kế đợt B2 phase 14, pull request (2026-10-16, user: "đồng ý deploy, xong làm tiếp đợt B2", Jev quyết)
 - Diff của pull request tính trực tiếp mỗi lần xem từ fork, nguồn và gốc chung, như bản xem trước merge (0,92; lưu snapshot lúc mở 0,08). "Pull updates" là pull sẵn có vào fork.
 - Reviewer là người có vai trò Editor ở collection nguồn (0,73). Chỉ reviewer được duyệt hay từ chối (0,72).

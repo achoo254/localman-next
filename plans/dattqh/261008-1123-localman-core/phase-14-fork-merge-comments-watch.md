@@ -83,7 +83,7 @@ Nguồn tham chiếu: [Forking elements](https://learning.postman.com/docs/colla
 - [ ] T8 UI version control và nút Fork/Watch (Watch xong ở đợt A; fork, nhãn, panel Forks, pull, merge, giải xung đột xong ở đợt B1; còn trang pull request ở B2)
 - [x] T9 UI comment đủ thread, reaction, resolve, Markdown (2026-10-16, đợt A: `apps/web/src/features/comments/`, panel Comments ở right rail, comment inline trên vùng chọn của URL/params/headers/body/scripts kèm marker và highlight, gợi ý @mention, Copy link mở đúng thread; cờ web `comments`, cổng server `COMMENTS_ENABLED`)
 - [ ] T10 Integration pass
-- [ ] T11 Staging đã deploy sau khi user xác nhận (đợt A lên production 2026-10-16, user đồng ý: release `20261016-093326-047ccf396ad0`, cờ `comments` và `COMMENTS_ENABLED=true`, DAST đạt; còn đợt B)
+- [ ] T11 Staging đã deploy sau khi user xác nhận (đợt A lên production 2026-10-16: release `20261016-093326-047ccf396ad0`, cờ `comments`, DAST đạt; đợt B1: release `20261016-155903-33a73d25cf51`, cờ `forks`, DAST đạt; còn B2)
 - [ ] T12 Review không còn finding mức high
 - [x] Verification: unit `three-way-merge` (khác field, cùng field, xoá đối sửa, cùng thêm, sắp lại thứ tự) pass (2026-10-16)
 - [ ] Verification: integration fork, PR, approve, merge 3 tuỳ chọn và Keep Source/Destination pass; Viewer không merge được vào nguồn
