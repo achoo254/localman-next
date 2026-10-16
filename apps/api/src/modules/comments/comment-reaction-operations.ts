@@ -16,7 +16,7 @@ const reactionView = z.object({
 
 function reactionOperation(on: boolean) {
 	return defineOperation({
-		id: on ? "collab.addCommentReaction" : "collab.removeCommentReaction",
+		id: on ? "client.addCommentReaction" : "client.removeCommentReaction",
 		method: on ? "PUT" : "DELETE",
 		path: REACTION_PATH,
 		summary: on ? "React to a comment" : "Take back your reaction",
@@ -25,7 +25,7 @@ function reactionOperation(on: boolean) {
 		output: reactionView,
 		scopes: [USER_SCOPE],
 		annotations: { readOnly: false, destructive: false, idempotent: true },
-		toolset: "collab",
+		toolset: "client",
 		mcp: true,
 		handler: async (ctx, input) => {
 			const sub = requireSubject(ctx);

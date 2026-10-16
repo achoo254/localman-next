@@ -19,7 +19,7 @@ const WHAT =
 	"A watcher is told (in the app, by Web Push or Telegram, as they chose) when someone else changes a request, folder, example, variable, script or the collection itself: at most one notification per collection about every minute, summing up the changes. Their own changes are never reported. Only collections of a team workspace (`available`).";
 
 export const getCollectionWatchOperation = defineOperation({
-	id: "collab.getCollectionWatch",
+	id: "client.getCollectionWatch",
 	method: "GET",
 	path: WATCH_PATH,
 	summary: "Whether you watch a collection",
@@ -28,7 +28,7 @@ export const getCollectionWatchOperation = defineOperation({
 	output: watchView,
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: true, destructive: false, idempotent: true },
-	toolset: "collab",
+	toolset: "client",
 	mcp: true,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
@@ -38,7 +38,7 @@ export const getCollectionWatchOperation = defineOperation({
 });
 
 export const setCollectionWatchOperation = defineOperation({
-	id: "collab.setCollectionWatch",
+	id: "client.setCollectionWatch",
 	method: "PUT",
 	path: WATCH_PATH,
 	summary: "Watch or stop watching a collection",
@@ -50,7 +50,7 @@ export const setCollectionWatchOperation = defineOperation({
 	output: watchView,
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: false, destructive: false, idempotent: true },
-	toolset: "collab",
+	toolset: "client",
 	mcp: true,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);

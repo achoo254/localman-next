@@ -1,5 +1,6 @@
 import { OperationError } from "@localman/operations";
 import express, { type Router } from "express";
+import { errors } from "jose";
 import { asyncHandler } from "../../http/async-handler.js";
 import {
 	DEFAULT_SERVER_LIMIT_PER_MINUTE,
@@ -40,7 +41,8 @@ function invalidToken(): OperationError {
  * `POST /auth/backchannel-logout`: the IdP posts `logout_token` (form
  * encoded) when an IdP session ends. The signed token is the
  * authentication, so this route is exempt from the CSRF origin check.
- * 200 once handled (a replayed `jti` is logged), 400 for a bad token.
+ * 200 once handled (a replayed `jti` is logged), 400 for a bad token,
+ * 503 when the IdP or its keys cannot be reached (the IdP may retry).
  */
 export function registerBackchannelLogout(
 	router: Router,
@@ -79,7 +81,12 @@ export function registerBackchannelLogout(
 					);
 					throw invalidToken();
 				}
-				if (error instanceof IdpUnavailableError) {
+				// `verifyLogoutToken` rethrows only JWKS fetch failures as JOSE
+				// errors: the IdP's keys are out of reach, as when it is down.
+				if (
+					error instanceof IdpUnavailableError ||
+					error instanceof errors.JOSEError
+				) {
 					throw authUnavailableError();
 				}
 				throw error;

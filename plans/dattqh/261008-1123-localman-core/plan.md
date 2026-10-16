@@ -474,6 +474,11 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Chưa kiểm được trên production: thông báo @mention và watch giữa hai tài khoản thật (chỉ có một tài khoản; đã có test tích hợp). Tool MCP comment: token Localman MCP hiện cấp không có scope `collab`, nên agent qua MCP chưa dùng được nhóm tool cộng tác (có từ trước, không do bản này).
 - Ngoài phạm vi, thấy khi đọc log: 12 lỗi `ERR_JWKS_TIMEOUT` lúc 14:55–14:59 (trước deploy). API trả 500 khi không lấy kịp JWKS của IdP để xác thực token MCP.
 
+### Vòng 43: hai việc ngoài phạm vi thấy khi deploy (2026-10-16, user: "phân tích ngoài phạm vi rồi gửi model jev quyết định")
+- `ERR_JWKS_TIMEOUT` lúc 14:55–14:59: nguyên nhân là `POST /auth/backchannel-logout` chỉ đổi `IdpUnavailableError` thành 503, còn lỗi lấy JWKS của IdP (`JWKSTimeout`) thành 500 và không huỷ phiên Localman khi IdP báo đăng xuất. Đường xác thực token MCP đã xử lý đúng. Sửa route cho lỗi JWKS trả 503 `AUTH_UNAVAILABLE`, kèm test (đỏ trước khi sửa, xanh sau) (Jev 0,52; sửa và điều tra luôn vì sao JWKS chậm 0,48). Vì sao JWKS chậm lúc đó còn mở: log IdP không có gì ở mốc giờ ấy.
+- Agent qua Localman MCP không thấy tool comment vì IdP chỉ cấp scope `mock:*` và `client:*`, còn comment và watch nằm ở toolset `collab` (cùng chỗ quản lý thành viên project, cố ý để ngoài tầm OAuth). Chuyển comment và watch sang toolset `client`, cùng chỗ collections; không đổi IdP, quản lý thành viên vẫn ngoài tầm agent (Jev 0,97; thêm scope `collab` ở IdP 0,00; để tới phase 18 0,03). Operation đổi tiền tố `collab.*` thành `client.*`, tên tool MCP giữ nguyên.
+- Làm ngay trước đợt B (Jev noul 0,66). Deploy bản sửa chờ user yêu cầu.
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 

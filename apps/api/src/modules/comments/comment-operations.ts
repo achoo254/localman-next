@@ -33,7 +33,7 @@ const MENTIONS =
 	"`@username` in the body tells that person (in the app, by Web Push or Telegram, as they chose) when they can open the collection.";
 
 export const listCommentsOperation = defineOperation({
-	id: "collab.listComments",
+	id: "client.listComments",
 	method: "GET",
 	path: COMMENTS_PATH,
 	summary: "List the comment threads on a collection or one of its items",
@@ -46,7 +46,7 @@ export const listCommentsOperation = defineOperation({
 	output: threadListView,
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: true, destructive: false, idempotent: true },
-	toolset: "collab",
+	toolset: "client",
 	mcp: true,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
@@ -64,7 +64,7 @@ export const listCommentsOperation = defineOperation({
 });
 
 export const countCommentsOperation = defineOperation({
-	id: "collab.countComments",
+	id: "client.countComments",
 	method: "GET",
 	path: `${COLLECTION_PATH}/comment-counts`,
 	summary: "Count the unresolved comment threads of a collection, per item",
@@ -73,7 +73,7 @@ export const countCommentsOperation = defineOperation({
 	output: countsView,
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: true, destructive: false, idempotent: true },
-	toolset: "collab",
+	toolset: "client",
 	mcp: true,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
@@ -83,7 +83,7 @@ export const countCommentsOperation = defineOperation({
 });
 
 export const createCommentOperation = defineOperation({
-	id: "collab.createComment",
+	id: "client.createComment",
 	method: "POST",
 	path: COMMENTS_PATH,
 	summary: "Comment on a collection or one of its items, or reply to a thread",
@@ -98,7 +98,7 @@ export const createCommentOperation = defineOperation({
 	output: createdView,
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: false, destructive: false, idempotent: false },
-	toolset: "collab",
+	toolset: "client",
 	mcp: true,
 	successStatus: 201,
 	handler: async (ctx, input) => {
@@ -114,7 +114,7 @@ export const createCommentOperation = defineOperation({
 });
 
 export const editCommentOperation = defineOperation({
-	id: "collab.editComment",
+	id: "client.editComment",
 	method: "PATCH",
 	path: COMMENT_PATH,
 	summary: "Edit one of your comments",
@@ -123,7 +123,7 @@ export const editCommentOperation = defineOperation({
 	output: z.object({ id: z.string() }),
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: false, destructive: false, idempotent: true },
-	toolset: "collab",
+	toolset: "client",
 	mcp: true,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
@@ -134,7 +134,7 @@ export const editCommentOperation = defineOperation({
 });
 
 export const deleteCommentOperation = defineOperation({
-	id: "collab.deleteComment",
+	id: "client.deleteComment",
 	method: "DELETE",
 	path: COMMENT_PATH,
 	summary: "Delete a comment (the first one deletes its whole thread)",
@@ -147,7 +147,7 @@ export const deleteCommentOperation = defineOperation({
 	}),
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: false, destructive: true, idempotent: true },
-	toolset: "collab",
+	toolset: "client",
 	mcp: true,
 	dryRun: true,
 	handler: async (ctx, input) => {
@@ -165,7 +165,7 @@ export const deleteCommentOperation = defineOperation({
 });
 
 export const resolveCommentThreadOperation = defineOperation({
-	id: "collab.resolveCommentThread",
+	id: "client.resolveCommentThread",
 	method: "PUT",
 	path: `${COMMENT_PATH}/resolution`,
 	summary: "Resolve or reopen a comment thread",
@@ -174,7 +174,7 @@ export const resolveCommentThreadOperation = defineOperation({
 	output: z.object({ threadId: z.string(), resolved: z.boolean() }),
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: false, destructive: false, idempotent: true },
-	toolset: "collab",
+	toolset: "client",
 	mcp: true,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);

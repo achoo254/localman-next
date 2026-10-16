@@ -164,7 +164,7 @@ Public link, guest link, access key và nút Run chạy khi **cả hai** cùng b
 
 ## Comment và watch (`COMMENTS_ENABLED`)
 
-Comment trên collection và watch chạy khi **cả hai** cùng bật: cờ web `comments` trong [`released-features`](../infra/localman/released-features) và cổng server `COMMENTS_ENABLED=true` trong `/opt/localman/.env`. Cổng tắt thì API không route, MCP không có tool `collab.*` của comment và watch (path trả 404), và job tổng hợp watch không chạy.
+Comment trên collection và watch chạy khi **cả hai** cùng bật: cờ web `comments` trong [`released-features`](../infra/localman/released-features) và cổng server `COMMENTS_ENABLED=true` trong `/opt/localman/.env`. Cổng tắt thì API không route, MCP không có tool của comment và watch (path trả 404), và job tổng hợp watch không chạy.
 
 - **Bật:** thêm `comments` vào `released-features` và deploy; trên server đặt `COMMENTS_ENABLED=true` rồi `pm2 reload localman-api`.
 - **Kiểm sau khi bật:** `GET /api/v1/collections/x/comments` trả 401 khi chưa đăng nhập (route của API, không phải 404), log có lượt `Watch digest` không lỗi sau một phút.
