@@ -23,6 +23,23 @@ export interface ElementAccessText {
 	readonly role: string;
 }
 
+/** A comment's author and where it is; `item` is `null` on the collection itself. */
+export interface CommentText {
+	readonly author: string | null;
+	readonly collection: string;
+	readonly item: string | null;
+}
+
+/** Changes a watcher missed; `changes` is formatted, `count` is the number. */
+export interface CollectionChangeText {
+	readonly collection: string;
+	readonly changes: string;
+	readonly count: number;
+	readonly authors: number;
+	/** The one author, when `authors` is 1 (`null`: no name). */
+	readonly author: string | null;
+}
+
 /** Quota warning values, already formatted for the language. */
 export interface QuotaText {
 	readonly threshold: number;
@@ -83,6 +100,9 @@ export const en = {
 		"access.requested":
 			"Requests for access to your collections and environments",
 		"access.resolved": "Answers to your access requests",
+		"comment.mentioned": "Mentions in comments",
+		"comment.replied": "Replies in comment threads you wrote in",
+		"collection.changed": "Changes to collections you watch",
 	},
 	roleNames: { admin: "Admin", editor: "Editor", viewer: "Viewer" },
 	elementNames: { collection: "collection", environment: "environment" },
@@ -108,6 +128,23 @@ export const en = {
 		deniedTitle: "Access request declined",
 		deniedBody: (p: ElementAccessText): string =>
 			`Your request for ${p.role} access to the ${p.kind} "${p.element}" was declined.`,
+	},
+	commentMentioned: {
+		title: "Mentioned in a comment",
+		body: (p: CommentText): string =>
+			`${p.author ?? "Someone"} mentioned you in a comment on ${p.item === null ? "" : `"${p.item}" in `}the collection "${p.collection}".`,
+	},
+	commentReplied: {
+		title: "New reply",
+		body: (p: CommentText): string =>
+			`${p.author ?? "Someone"} replied in a thread on ${p.item === null ? "" : `"${p.item}" in `}the collection "${p.collection}".`,
+	},
+	collectionChanged: {
+		title: "Collection changed",
+		body: (p: CollectionChangeText): string =>
+			p.authors === 1
+				? `${p.author ?? "Someone"} made ${p.changes} ${p.count === 1 ? "change" : "changes"} to the collection "${p.collection}".`
+				: `${p.authors} people made ${p.changes} changes to the collection "${p.collection}".`,
 	},
 	invitation: {
 		title: "Project collaboration invitation",

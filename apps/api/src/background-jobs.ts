@@ -3,6 +3,7 @@ import { backfillExampleSearchNames } from "./modules/collections/example-search
 import { CollectionTrashJob } from "./modules/collections/trash-purge-job.js";
 import { TombstoneSweeper } from "./modules/projects/tombstone-sweeper.js";
 import { TrialReminderJob } from "./modules/trial/trial-reminders.js";
+import { WatchDigestJob } from "./modules/watch/watch-digest-job.js";
 import { forEachTenant } from "./tenancy/each-tenant.js";
 
 /**
@@ -22,6 +23,8 @@ export function createBackgroundJobs(logger: Logger): BackgroundJobs {
 	const trialReminders = new TrialReminderJob(logger);
 	// Collections past their days in the trash are deleted for good.
 	const collectionTrash = new CollectionTrashJob(logger);
+	// Watchers hear about others' collection changes, about once a minute.
+	const watchDigest = new WatchDigestJob(logger);
 	// Once per start: older examples get the folded name search uses.
 	let backfill: Promise<void> | undefined;
 	return {
@@ -29,6 +32,7 @@ export function createBackgroundJobs(logger: Logger): BackgroundJobs {
 			tombstoneSweeper.start();
 			trialReminders.start();
 			collectionTrash.start();
+			watchDigest.start();
 			backfill ??= forEachTenant(logger, () =>
 				backfillExampleSearchNames(logger),
 			);
@@ -38,6 +42,7 @@ export function createBackgroundJobs(logger: Logger): BackgroundJobs {
 				tombstoneSweeper.stop(),
 				trialReminders.stop(),
 				collectionTrash.stop(),
+				watchDigest.stop(),
 				backfill,
 			]);
 		},

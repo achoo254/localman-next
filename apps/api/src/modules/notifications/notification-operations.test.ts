@@ -184,6 +184,9 @@ describe("notification operations", () => {
 					"element.shared",
 					"access.requested",
 					"access.resolved",
+					"comment.mentioned",
+					"comment.replied",
+					"collection.changed",
 				].map((type) => ({
 					type,
 					label: expect.any(String),

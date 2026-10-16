@@ -18,6 +18,9 @@ export const vi: ServerMessages = {
 		"element.shared": "Collection và environment được chia sẻ với bạn",
 		"access.requested": "Yêu cầu truy cập collection và environment của bạn",
 		"access.resolved": "Kết quả yêu cầu truy cập của bạn",
+		"comment.mentioned": "Được nhắc đến trong comment",
+		"comment.replied": "Trả lời trong thread comment bạn đã viết",
+		"collection.changed": "Thay đổi ở collection bạn đang theo dõi",
 	},
 	roleNames: { admin: "Admin", editor: "Editor", viewer: "Viewer" },
 	elementNames: { collection: "collection", environment: "environment" },
@@ -43,6 +46,23 @@ export const vi: ServerMessages = {
 		deniedTitle: "Yêu cầu truy cập bị từ chối",
 		deniedBody: (p) =>
 			`Yêu cầu quyền ${p.role} với ${p.kind} "${p.element}" của bạn đã bị từ chối.`,
+	},
+	commentMentioned: {
+		title: "Bạn được nhắc trong comment",
+		body: (p) =>
+			`${p.author ?? "Một người dùng"} đã nhắc đến bạn trong comment ở ${p.item === null ? "" : `"${p.item}" thuộc `}collection "${p.collection}".`,
+	},
+	commentReplied: {
+		title: "Có trả lời mới",
+		body: (p) =>
+			`${p.author ?? "Một người dùng"} đã trả lời trong thread ở ${p.item === null ? "" : `"${p.item}" thuộc `}collection "${p.collection}".`,
+	},
+	collectionChanged: {
+		title: "Collection đã thay đổi",
+		body: (p) =>
+			p.authors === 1
+				? `${p.author ?? "Một người dùng"} đã thực hiện ${p.changes} thay đổi ở collection "${p.collection}".`
+				: `${p.authors} người đã thực hiện ${p.changes} thay đổi ở collection "${p.collection}".`,
 	},
 	invitation: {
 		title: "Lời mời cộng tác project",

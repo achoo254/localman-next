@@ -460,6 +460,7 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Việc tiếp theo trong plan chính là phase 14 (Jev 0,51), không phải T8b của phase 10 trước rồi mới 14 (0,48). T8b đã hết bị chặn vì Tunelo `v1.7.0`–`v1.9.0` đã phát hành.
 - Phase 14 chia hai đợt (Jev 0,51): đợt A là comment và watch, chạy được ở workspace team của gói Free; đợt B là `three-way-merge`, fork, merge, giải xung đột và pull request. Chia theo kiểu "version control trước" được 0,39.
 - Không giữ cả phase sau một cờ tới khi xong hết (Jev noul 0,40): mỗi đợt có cờ riêng, bật khi đợt đó qua review.
+- Thiết kế đợt A (Jev): watch báo qua job định kỳ đọc changelog, mỗi người theo dõi nhận một thông báo tổng hợp cho mỗi collection mỗi lượt, bỏ thay đổi của chính họ (0,96; báo ngay sau mỗi lần ghi 0,04). Comment cho cả collection ở workspace cá nhân (noul 0,53) và cho Viewer (0,52). Comment inline lưu đoạn chữ đã chọn, "outdated" khi chỗ đó không còn đúng đoạn chữ ấy (0,81; lệch ngay khi phần đó đổi 0,19). Trả lời trong thread báo cho người đã viết trong thread (0,58). Comment và watch có MCP tool (0,84). Không tự watch collection mới tạo (0,50, không qua ngưỡng).
 
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.

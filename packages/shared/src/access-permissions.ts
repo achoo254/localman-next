@@ -80,6 +80,12 @@ export const COLLECTION_PERMISSIONS = {
 	tag: ["editor"],
 	/** Add, edit and delete mock servers of the collection. */
 	manageMocks: ["editor"],
+	/** Write comments and replies, react; any role (Postman lets Viewers comment). */
+	comment: ["editor", "viewer"],
+	/** Resolve or reopen anyone's thread (authors always may their own). */
+	resolveComments: ["editor"],
+	/** Be told when someone else changes the collection. */
+	watch: ["editor", "viewer"],
 } as const satisfies Record<string, readonly ElementRole[]>;
 export type CollectionAction = keyof typeof COLLECTION_PERMISSIONS;
 

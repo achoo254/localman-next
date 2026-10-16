@@ -7,6 +7,7 @@ import { collaboratorOperations } from "../modules/collaborators/collaborator-op
 import { inviteOperations } from "../modules/collaborators/invite-operations.js";
 import { magicLinkOperations } from "../modules/collaborators/magic-link-operations.js";
 import { collectionOperations } from "../modules/collections/collection-operations.js";
+import { commentOperations } from "../modules/comments/comment-operations.js";
 import { environmentOperations } from "../modules/environments/environment-operations.js";
 import { environmentTransferOperations } from "../modules/environments/environment-transfer-operations.js";
 import { globalsOperations } from "../modules/environments/globals-operations.js";
@@ -49,6 +50,7 @@ import { getTenantInfo } from "../modules/tenant-info/tenant-info-operation.js";
 import { trialAdminOperations } from "../modules/trial/trial-admin-operations.js";
 import { trialOperations } from "../modules/trial/trial-operations.js";
 import { getMe, setLocale } from "../modules/users/user-operations.js";
+import { watchOperations } from "../modules/watch/watch-operations.js";
 import { webhookInboxOperations } from "../modules/webhook-inbox/inbox-operations.js";
 import { workspaceOperations } from "../modules/workspaces/workspace-operations.js";
 
@@ -87,6 +89,8 @@ export const operations: readonly AnyOperation[] = [
 	...workspaceOperations,
 	...accessOperations,
 	...collectionOperations,
+	...commentOperations,
+	...watchOperations,
 	...environmentOperations,
 	...environmentTransferOperations,
 	...globalsOperations,

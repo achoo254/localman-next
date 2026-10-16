@@ -58,6 +58,7 @@ export * from "./collections/collection-order.js";
 export * from "./collections/collection-tree.js";
 export * from "./collections/collection-tags.js";
 export * from "./collections/changelog-model.js";
+export * from "./collections/comment-model.js";
 export * from "./collections/collection-schemas.js";
 export * from "./collections/collection-tree-schema.js";
 export * from "./environments/environment-model.js";

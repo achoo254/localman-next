@@ -61,6 +61,9 @@ const COLLECTION_MATRIX: readonly [
 	["shareToWorkspace", Y, Y],
 	["tag", Y, N],
 	["manageMocks", Y, N],
+	["comment", Y, Y],
+	["resolveComments", Y, N],
+	["watch", Y, Y],
 ];
 
 /** Environment table: [action, Editor, Viewer]. */

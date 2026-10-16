@@ -25,6 +25,9 @@ export const zhCN: ServerMessages = {
 		"element.shared": "与你共享的 collection 和 environment",
 		"access.requested": "对你的 collection 和 environment 的访问请求",
 		"access.resolved": "你的访问请求的处理结果",
+		"comment.mentioned": "评论中提到你",
+		"comment.replied": "你参与的评论讨论有新回复",
+		"collection.changed": "你关注的 collection 有变更",
 	},
 	roleNames: { admin: "Admin", editor: "Editor", viewer: "Viewer" },
 	elementNames: { collection: "collection", environment: "environment" },
@@ -50,6 +53,23 @@ export const zhCN: ServerMessages = {
 		deniedTitle: "访问请求被拒绝",
 		deniedBody: (p) =>
 			`你对 ${p.kind}“${p.element}”的 ${p.role} 权限请求已被拒绝。`,
+	},
+	commentMentioned: {
+		title: "有人在评论中提到你",
+		body: (p) =>
+			`${p.author ?? "有人"}在 collection“${p.collection}”${p.item === null ? "" : `的“${p.item}”`}的评论中提到了你。`,
+	},
+	commentReplied: {
+		title: "新回复",
+		body: (p) =>
+			`${p.author ?? "有人"}回复了 collection“${p.collection}”${p.item === null ? "" : `中“${p.item}”`}的评论讨论。`,
+	},
+	collectionChanged: {
+		title: "Collection 有变更",
+		body: (p) =>
+			p.authors === 1
+				? `${p.author ?? "有人"}对 collection“${p.collection}”做了 ${p.changes} 处变更。`
+				: `${p.authors} 人对 collection“${p.collection}”做了 ${p.changes} 处变更。`,
 	},
 	invitation: {
 		title: "Project 协作邀请",

@@ -162,6 +162,31 @@ const TEMPLATES: Readonly<Record<NotificationType, Template>> = {
 					};
 		},
 	),
+	"comment.mentioned": template(
+		NOTIFICATION_PARAMS["comment.mentioned"],
+		(params, { commentMentioned }) => ({
+			title: commentMentioned.title,
+			body: commentMentioned.body(params),
+		}),
+	),
+	"comment.replied": template(
+		NOTIFICATION_PARAMS["comment.replied"],
+		(params, { commentReplied }) => ({
+			title: commentReplied.title,
+			body: commentReplied.body(params),
+		}),
+	),
+	"collection.changed": template(
+		NOTIFICATION_PARAMS["collection.changed"],
+		(params, { collectionChanged }, locale) => ({
+			title: collectionChanged.title,
+			body: collectionChanged.body({
+				...params,
+				changes: formatCount(locale, params.changes),
+				count: params.changes,
+			}),
+		}),
+	),
 	[TEST_NOTIFICATION_TYPE]: template(
 		NOTIFICATION_PARAMS[TEST_NOTIFICATION_TYPE],
 		(_params, { testNotification }) => testNotification,
