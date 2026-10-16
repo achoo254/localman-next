@@ -74,18 +74,18 @@ Nguồn tham chiếu: [Forking elements](https://learning.postman.com/docs/colla
 
 ### Checklist
 - [ ] T1 Spec fork, merge, conflict, PR, comment, watch đã chốt theo prototype
-- [ ] T2 `three-way-merge` có đủ bộ ca xung đột
+- [x] T2 `three-way-merge` có đủ bộ ca xung đột (2026-10-16, đợt B1: `apps/api/src/modules/version-control/three-way-merge.ts`, `collection-merge.ts` sửa cây sau merge)
 - [x] T3 Backend comment, anchor inline, outdated, mention, quyền Admin (2026-10-16, đợt A: `apps/api/src/modules/comments/`; anchor lưu offset kèm đoạn chữ đã chọn, outdated khi chỗ đó không còn đúng đoạn chữ, CRLF tính như LF; Viewer comment được; giới hạn `comment` 20/phút mỗi người, 60/phút mỗi collection, mỗi tác giả báo một người tối đa 10 lần/10 phút)
-- [ ] T4 Fork, nhãn, danh sách fork, Pull changes, chặn theo gói
-- [ ] T5 Merge 3 tuỳ chọn, giải xung đột, revision sau merge
+- [x] T4 Fork, nhãn, danh sách fork, Pull changes, chặn theo gói (2026-10-16, đợt B1, collection và environment)
+- [x] T5 Merge 3 tuỳ chọn, giải xung đột, revision sau merge (2026-10-16, đợt B1; mục changelog `merge`/`pull`)
 - [ ] T6 PR đủ trạng thái, reviewer, Pull updates, comment inline trên diff
 - [x] T7 Watch qua changelog (2026-10-16, đợt A: `apps/api/src/modules/watch/`; job `WatchDigestJob` mỗi phút đọc changelog thay vì móc vào từng đường ghi, mỗi người theo dõi nhận một thông báo tổng hợp; chỉ workspace team)
-- [ ] T8 UI version control và nút Fork/Watch (nút Watch xong ở đợt A; còn fork, merge, PR ở đợt B)
+- [ ] T8 UI version control và nút Fork/Watch (Watch xong ở đợt A; fork, nhãn, panel Forks, pull, merge, giải xung đột xong ở đợt B1; còn trang pull request ở B2)
 - [x] T9 UI comment đủ thread, reaction, resolve, Markdown (2026-10-16, đợt A: `apps/web/src/features/comments/`, panel Comments ở right rail, comment inline trên vùng chọn của URL/params/headers/body/scripts kèm marker và highlight, gợi ý @mention, Copy link mở đúng thread; cờ web `comments`, cổng server `COMMENTS_ENABLED`)
 - [ ] T10 Integration pass
 - [ ] T11 Staging đã deploy sau khi user xác nhận (đợt A lên production 2026-10-16, user đồng ý: release `20261016-093326-047ccf396ad0`, cờ `comments` và `COMMENTS_ENABLED=true`, DAST đạt; còn đợt B)
 - [ ] T12 Review không còn finding mức high
-- [ ] Verification: unit `three-way-merge` (khác field, cùng field, xoá đối sửa, cùng thêm, sắp lại thứ tự) pass
+- [x] Verification: unit `three-way-merge` (khác field, cùng field, xoá đối sửa, cùng thêm, sắp lại thứ tự) pass (2026-10-16)
 - [ ] Verification: integration fork, PR, approve, merge 3 tuỳ chọn và Keep Source/Destination pass; Viewer không merge được vào nguồn
 - [x] Verification: integration comment (@mention đúng kênh, resolve/reopen, Admin xoá không sửa) pass (2026-10-16: `comment-operations.test.ts`, `comment-limits.test.ts`, `watch-digest.test.ts`; E2E `collection-comments.spec.ts`)
 - [ ] Mọi dòng ma trận tương đương có test hoặc kịch bản E2E tương ứng

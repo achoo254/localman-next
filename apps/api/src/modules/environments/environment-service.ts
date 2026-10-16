@@ -1,3 +1,4 @@
+import { OperationError } from "@localman/operations";
 import {
 	ENVIRONMENT_NAME_MAX,
 	type EnvironmentColor,
@@ -112,6 +113,13 @@ export async function updateEnvironment(
 	);
 }
 
+export interface SetVariablesOptions {
+	/** Write only if it was not changed since (409 `ENVIRONMENT_CHANGED`). */
+	readonly ifUpdatedAt?: Date;
+	/** Name and colour written along. */
+	readonly root?: { readonly name: string; readonly color: EnvironmentColor };
+}
+
 /**
  * Editors replace the variables (definitions and shared values) in
  * order. Local values follow names, so a variable turning secret (or back)
@@ -121,6 +129,7 @@ export async function setEnvironmentVariables(
 	sub: string,
 	id: string,
 	variables: readonly VariableInput[],
+	options: SetVariablesOptions = {},
 ): Promise<EnvironmentDetail> {
 	const { environmentId } = await requireEnvironment(sub, id, "edit");
 	const current = await loadEnvironment(environmentId);
@@ -129,10 +138,19 @@ export async function setEnvironmentVariables(
 	const secrets = secretKeysOf(next);
 	const types = typeChanges(secretKeysOf(current.variables), secrets);
 	await assertCanSeal(scope, types.newlySecret);
-	await EnvironmentModel.updateOne(
-		{ _id: environmentId },
-		{ $set: { variables: next, updatedBy: sub } },
+	const written = await EnvironmentModel.updateOne(
+		options.ifUpdatedAt
+			? { _id: environmentId, updatedAt: options.ifUpdatedAt }
+			: { _id: environmentId },
+		{ $set: { ...options.root, variables: next, updatedBy: sub } },
 	);
+	if (written.matchedCount === 0) {
+		throw new OperationError(
+			409,
+			"ENVIRONMENT_CHANGED",
+			"The environment changed meanwhile; compare again and retry",
+		);
+	}
 	await alignLocalSealing(scope, types.changed, secrets);
 	return toEnvironmentDetail(
 		sub,

@@ -58,6 +58,20 @@ function canonical(value: unknown): string {
 export const sameContent = (a: unknown, b: unknown): boolean =>
 	canonical(a) === canonical(b);
 
+/**
+ * An own property only: keys are user text (variable names), and
+ * `constructor` or `__proto__` must not read the object's prototype.
+ */
+function own<T>(
+	record: Readonly<Record<string, T>>,
+	key: string,
+): T | undefined {
+	return Object.hasOwn(record, key) ? record[key] : undefined;
+}
+
+/** A record without a prototype, safe for any key. */
+const emptyRecord = <T>(): Record<string, T> => Object.create(null);
+
 class Merger {
 	readonly conflicts: MergeConflict[] = [];
 	readonly unresolved: string[] = [];
@@ -84,7 +98,7 @@ class Merger {
 		destination: Fields,
 		prefix = "",
 	): Fields {
-		const merged: Fields = {};
+		const merged = emptyRecord<unknown>();
 		const names = new Set([
 			...Object.keys(base),
 			...Object.keys(source),
@@ -92,9 +106,9 @@ class Merger {
 		]);
 		for (const name of names) {
 			const path = prefix === "" ? name : `${prefix}.${name}`;
-			const b = base[name];
-			const s = source[name];
-			const d = destination[name];
+			const b = own(base, name);
+			const s = own(source, name);
+			const d = own(destination, name);
 			let value: unknown;
 			if (sameContent(s, d) || sameContent(s, b)) value = d;
 			else if (sameContent(d, b)) value = s;
@@ -151,14 +165,19 @@ export function mergeEntities<T extends Fields>(
 	options: MergeOptions = {},
 ): MergeOutcome<T> {
 	const merger = new Merger(options);
-	const result: Record<string, T> = {};
+	const result = emptyRecord<T>();
 	const keys = new Set([
 		...Object.keys(base),
 		...Object.keys(source),
 		...Object.keys(destination),
 	]);
 	for (const key of keys) {
-		const value = merger.entity(key, base[key], source[key], destination[key]);
+		const value = merger.entity(
+			key,
+			own(base, key),
+			own(source, key),
+			own(destination, key),
+		);
 		if (value !== undefined) result[key] = value;
 	}
 	return {

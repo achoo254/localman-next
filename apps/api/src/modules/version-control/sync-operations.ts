@@ -16,6 +16,7 @@ import {
 	mergePreviewView,
 	resolutionsSchema,
 } from "./fork-views-schema.js";
+import type { MergeFollowUp } from "./merge-follow-up.js";
 
 /** What differs between forking a collection and an environment. */
 export interface SyncKind {
@@ -43,7 +44,7 @@ export interface SyncKind {
 		id: string,
 		option: MergeOption,
 		resolutions: Record<string, ConflictSide>,
-	): Promise<void>;
+	): Promise<MergeFollowUp>;
 }
 
 const PRO = "Pro only (403 PLAN_FEATURE_UNAVAILABLE).";
@@ -157,23 +158,26 @@ export function syncOperations(kind: SyncKind): AnyOperation[] {
 			method: "POST",
 			path: `${path}/merge`,
 			summary: "Merge a fork's changes into its source",
-			description: `Editors of the source; \`option\` \`mergeAndUpdate\` (also pulls the merged source back into the fork) and \`mergeAndDelete\` (then deletes the fork${noun === "Collection" ? " to the trash" : " for good"}) need Editor on the fork too. ${CONFLICTS} ${PRO} ${note}`,
+			description: `Editors of the source; \`option\` \`mergeAndUpdate\` (also pulls the merged source back into the fork) and \`mergeAndDelete\` (then deletes the fork${noun === "Collection" ? " to the trash" : " for good"}) need Editor on the fork too; \`followUp\` is \`failed\` when that step could not run after the merge was written (the merge stands). ${CONFLICTS} ${PRO} ${note}`,
 			input: z.object({
 				[param]: id,
 				option: mergeOptionSchema,
 				resolutions: resolutionsSchema,
 			}),
-			output: z.object({ done: z.boolean() }),
+			output: z.object({
+				done: z.boolean(),
+				followUp: z.enum(["none", "done", "failed"]),
+			}),
 			annotations: write,
 			handler: async (ctx, input) => {
 				const body = mergeBody.parse(input);
-				await kind.merge(
+				const followUp = await kind.merge(
 					requireSubject(ctx),
 					idOf(input),
 					body.option,
 					body.resolutions,
 				);
-				return { done: true };
+				return { done: true, followUp };
 			},
 		}),
 	];

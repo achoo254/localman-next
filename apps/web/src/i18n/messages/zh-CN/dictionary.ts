@@ -37,6 +37,7 @@ import { trial } from "./trial";
 import { ui } from "./ui";
 import { upstream } from "./upstream";
 import { variables } from "./variables";
+import { versionControl } from "./version-control";
 import { webhookInbox } from "./webhook-inbox";
 import { workspaces } from "./workspaces";
 
@@ -82,4 +83,5 @@ export const zhCN: Messages = {
 	variables,
 	collections,
 	publicSharing,
+	versionControl,
 };

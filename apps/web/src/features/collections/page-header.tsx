@@ -24,7 +24,9 @@ import { useCommentsEnabled } from "../comments/use-comments-enabled";
 import { WatchButton } from "../comments/watch-button";
 import { collectionNodePath } from "../sharing/open-element-state";
 import { elementPath } from "../sharing/sharing-api";
+import { ForkControls } from "../version-control/fork-controls";
 import { EditableName } from "./editable-name";
+import { useOpenCollectionNode } from "./open-node";
 import { PageSaveState } from "./page-save-state";
 import { SharedWithYouBadge } from "./shared-with-you-badge";
 import { useExportCollection } from "./use-export-collection";
@@ -51,6 +53,7 @@ export function PageHeader(props: PageHeaderProps) {
 	const toast = useToast();
 	const exportCollection = useExportCollection();
 	const commentsOn = useCommentsEnabled();
+	const openNode = useOpenCollectionNode();
 	const { page } = props;
 	const Icon = page.kind === "collection" ? IconStack2 : IconFolder;
 	const copyLink = async () => {
@@ -87,6 +90,16 @@ export function PageHeader(props: PageHeaderProps) {
 			<PageSaveState status={props.status} onRetry={props.onRetry} />
 			{commentsOn && page.kind === "collection" ? (
 				<WatchButton collectionId={page.collectionId} name={props.name} />
+			) : null}
+			{page.kind === "collection" ? (
+				<ForkControls
+					target={{ kind: "collection", id: page.collectionId }}
+					name={props.name}
+					role={props.canEdit ? "editor" : "viewer"}
+					onOpen={(collectionId) =>
+						openNode({ kind: "collection", collectionId, name: props.name })
+					}
+				/>
 			) : null}
 			<Button
 				size="sm"

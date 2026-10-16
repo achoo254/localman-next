@@ -22,7 +22,9 @@ export type HeavyOperation =
 	| "clone"
 	| "import"
 	| "suggestFaker"
-	| "comment";
+	| "comment"
+	| "fork"
+	| "sync";
 
 /** Settings that operations read at request time (they are declared statically). */
 export interface RuntimeSettings {
@@ -151,6 +153,10 @@ export const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = Object.freeze({
 		// Writing and editing comments (each may notify people); the second
 		// window counts per collection.
 		comment: { perUser: perMinute(20), perProject: perMinute(60) },
+		// Forks copy up to 20 MiB; previews, pulls and merges read three
+		// whole states. The second window counts per source or fork.
+		fork: { perUser: perMinute(10), perProject: perMinute(20) },
+		sync: { perUser: perMinute(30), perProject: perMinute(60) },
 	},
 });
 

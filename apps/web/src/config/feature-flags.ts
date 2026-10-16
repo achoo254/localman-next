@@ -9,7 +9,8 @@
  * and local values of variables; needs `workspaces`) and `publicSharing`
  * (public and guest links, collection access keys and Run buttons; the API
  * serves them only with `PUBLIC_SHARING_ENABLED`) and `comments` (comments
- * and watch on collections; needs `workspaces`).
+ * and watch on collections; needs `workspaces`) and `forks` (fork, pull
+ * changes and merge of collections and environments; needs `workspaces`).
  *
  * Set at build time in `VITE_FEATURES`, a comma-separated list such as
  * `apiClient,mockMcp`. Everything is off by default. No React here:
@@ -26,6 +27,7 @@ export interface FeatureFlags {
 	readonly environments: boolean;
 	readonly publicSharing: boolean;
 	readonly comments: boolean;
+	readonly forks: boolean;
 }
 
 export type FeatureName = keyof FeatureFlags;
@@ -41,6 +43,7 @@ export const NO_FEATURES: FeatureFlags = Object.freeze({
 	environments: false,
 	publicSharing: false,
 	comments: false,
+	forks: false,
 });
 
 function isFeatureName(value: string): value is FeatureName {

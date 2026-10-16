@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 
-export const RIGHT_PANELS = ["info", "comments", "changelog"] as const;
+export const RIGHT_PANELS = ["info", "comments", "forks", "changelog"] as const;
 export type RightPanel = (typeof RIGHT_PANELS)[number];
 
 export interface RightPanelState {

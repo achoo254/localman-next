@@ -490,6 +490,18 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Fork của fork được phép (noul 0,72). Xoá nguồn thì fork ở lại thành collection thường, hiện nguồn không còn, pull và merge trả 404 (0,99).
 - Comment của pull request (B2) dùng lại module comment, thêm đích pull request và loại anchor trỏ vào một thay đổi trong diff (0,98).
 
+### Vòng 45: SAST đợt B1 phase 14 (2026-10-16)
+- Không có Critical. Đã sửa: **H1** cặp id ghi sai khi một node bị một bên xoá được giữ lại bằng Keep Source (lần merge sau nhân đôi hoặc tạo lại request); nay cặp mới luôn quy về id thật của phía bên kia và thay cặp cũ, có test đỏ trước khi sửa. **H2** pull/merge environment có thể mất cập nhật: ghi biến và tên/màu trong một lần, chỉ khi `updatedAt` chưa đổi kể từ lúc đọc (409 `ENVIRONMENT_CHANGED`). **M1** "merge and delete" kiểm quyền xoá fork trước khi merge; bước sau merge thất bại thì trả `followUp: "failed"`, merge vẫn giữ. **M2/M3** giới hạn `fork` (10/phút mỗi người, 20 mỗi nguồn) và `sync` (30/phút mỗi người, 60 mỗi fork); web không tự so sánh lại khi quay lại cửa sổ. **L1/L2** merge chỉ đọc thuộc tính riêng, kết quả không có prototype (biến tên `constructor`, `__proto__`); khoá phần gốc environment là chuỗi rỗng. **L3** bộ ghi chung kiểm kích thước từng node. **L4** `auth` merge nguyên khối. **L5** sửa key danh sách thay đổi, hiện "(trống)" cho trường thiếu.
+- Hiển thị fork người gọi không mở được trong danh sách: giữ như Postman, hiện nhãn và người tạo (Jev 0,95).
+- Chấp nhận, ghi lại: danh sách fork gọi kiểm quyền từng fork (tối đa 200); snapshot gốc không tính vào dung lượng (đã có giới hạn tốc độ); restore một mục `merge` ở nguồn không đổi gốc, nên lần pull sau mang việc restore sang fork; ở lại trang fork sau "merge and delete".
+
+### Vòng 46: thiết kế đợt B2 phase 14, pull request (2026-10-16, user: "đồng ý deploy, xong làm tiếp đợt B2", Jev quyết)
+- Diff của pull request tính trực tiếp mỗi lần xem từ fork, nguồn và gốc chung, như bản xem trước merge (0,92; lưu snapshot lúc mở 0,08). "Pull updates" là pull sẵn có vào fork.
+- Reviewer là người có vai trò Editor ở collection nguồn (0,73). Chỉ reviewer được duyệt hay từ chối (0,72).
+- Không bắt buộc duyệt mới merge: Editor của nguồn merge được pull request đang mở, duyệt chỉ là tín hiệu, như Postman (0,83).
+- Một fork được có nhiều pull request đang mở (noul 0,24).
+- Thông báo cốt lõi (0,96): reviewer khi pull request mở; tác giả khi được duyệt, bị từ chối hoặc đã merge; comment thông báo như comment hiện có.
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 

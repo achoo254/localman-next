@@ -4,6 +4,7 @@ import type {
 	ForkStatus,
 	VariableInput,
 } from "@localman/shared/api-client";
+import { takeOperationSlot } from "../../lib/operation-rate-limit.js";
 import { requireEnvironment } from "../environments/environment-access.js";
 import { environmentScope } from "../environments/environment-model.js";
 import {
@@ -32,6 +33,7 @@ export async function forkEnvironment(
 ): Promise<EnvironmentDetail> {
 	const access = await requireEnvironment(sub, id, "fork");
 	await requireForkPlan(sub);
+	await takeOperationSlot("fork", sub, access.element.id);
 	const workspace = await requireForkTarget(
 		sub,
 		access.role,

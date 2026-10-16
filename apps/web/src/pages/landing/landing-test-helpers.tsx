@@ -17,6 +17,7 @@ export const ALL_FEATURES: FeatureFlags = Object.freeze({
 	environments: true,
 	publicSharing: true,
 	comments: true,
+	forks: true,
 });
 
 /** Renders `element` at `/` under the app providers and the given flags. */

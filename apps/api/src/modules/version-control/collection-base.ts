@@ -47,8 +47,10 @@ export async function saveBase(
 }
 
 /**
- * Pairs still worth keeping: those whose source or fork node exists.
- * New ones (from a merge or pull) come after.
+ * The pairs after a pull or merge: those whose source or fork node still
+ * exists, with `added` replacing any pair that named the same source or
+ * fork node (a node brought back after one side deleted it gets a new id
+ * on that side, and its old pair must go).
  */
 export function prunePairs(
 	pairs: readonly IdPair[],
@@ -56,8 +58,15 @@ export function prunePairs(
 	forkIds: ReadonlySet<string>,
 	added: readonly IdPair[] = [],
 ): IdPair[] {
+	const takenS = new Set(added.map((pair) => pair.s));
+	const takenF = new Set(added.map((pair) => pair.f));
 	return [
-		...pairs.filter((pair) => sourceIds.has(pair.s) || forkIds.has(pair.f)),
+		...pairs.filter(
+			(pair) =>
+				!takenS.has(pair.s) &&
+				!takenF.has(pair.f) &&
+				(sourceIds.has(pair.s) || forkIds.has(pair.f)),
+		),
 		...added,
 	];
 }

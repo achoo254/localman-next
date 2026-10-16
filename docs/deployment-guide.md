@@ -170,6 +170,14 @@ Comment trên collection và watch chạy khi **cả hai** cùng bật: cờ web
 - **Kiểm sau khi bật:** `GET /api/v1/collections/x/comments` trả 401 khi chưa đăng nhập (route của API, không phải 404), log có lượt `Watch digest` không lỗi sau một phút.
 - **Tắt khẩn (rollback):** đặt `COMMENTS_ENABLED=false`, `pm2 reload localman-api`. Comment và danh sách theo dõi giữ nguyên; bật lại thì job báo các thay đổi kể từ lần báo trước, gộp làm một.
 
+## Fork, pull và merge (`FORKS_ENABLED`)
+
+Fork, pull changes và merge của collection và environment chạy khi **cả hai** cùng bật: cờ web `forks` trong [`released-features`](../infra/localman/released-features) và cổng server `FORKS_ENABLED=true` trong `/opt/localman/.env`. Cổng tắt thì API không route và MCP không có tool của tính năng này (path trả 404).
+
+- **Bật:** thêm `forks` vào `released-features` và deploy; trên server đặt `FORKS_ENABLED=true` rồi `pm2 reload localman-api`.
+- **Kiểm sau khi bật:** `GET /api/v1/collections/x/fork-status` trả 401 khi chưa đăng nhập (route của API, không phải 404).
+- **Tắt khẩn (rollback):** đặt `FORKS_ENABLED=false`, `pm2 reload localman-api`. Liên kết fork và snapshot giữ nguyên; bật lại thì pull và merge tiếp được.
+
 ## Rollback
 
 - Code: đổi symlink về một release còn giữ (tối đa 5 bản). Script cài lại nginx conf của release đó (CSP khớp `index.html` của nó), đổi symlink, reload nginx và pm2, kiểm health:

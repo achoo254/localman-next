@@ -4,6 +4,7 @@ import type {
 	ForkListItem,
 	ForkStatus,
 } from "@localman/shared/api-client";
+import { takeOperationSlot } from "../../lib/operation-rate-limit.js";
 import { requireCollection } from "../collections/collection-access.js";
 import { withNewIds } from "../collections/collection-duplicate-service.js";
 import { insertCollection } from "../collections/collection-insert.js";
@@ -28,6 +29,7 @@ export async function forkCollection(
 ): Promise<CollectionDetail> {
 	const access = await requireCollection(sub, id, "fork");
 	await requireForkPlan(sub);
+	await takeOperationSlot("fork", sub, access.element.id);
 	const workspace = await requireForkTarget(
 		sub,
 		access.role,

@@ -4,6 +4,7 @@ import type {
 	MergePreview,
 	VariableInput,
 } from "@localman/shared/api-client";
+import { takeOperationSlot } from "../../lib/operation-rate-limit.js";
 import { requireEnvironment } from "../environments/environment-access.js";
 import { deleteEnvironment } from "../environments/environment-delete-service.js";
 import {
@@ -13,7 +14,6 @@ import {
 import {
 	loadEnvironment,
 	setEnvironmentVariables,
-	updateEnvironment,
 } from "../environments/environment-service.js";
 import { sharedValueOf } from "../environments/variable-store.js";
 import {
@@ -29,7 +29,7 @@ import {
 	sourceUnavailable,
 } from "./fork-access.js";
 import { ForkModel } from "./fork-model.js";
-import { sameContent } from "./three-way-merge.js";
+import { type MergeFollowUp, followUp } from "./merge-follow-up.js";
 
 type Resolutions = Readonly<Record<string, ConflictSide>>;
 
@@ -42,6 +42,7 @@ async function sides(
 ) {
 	const fork = await requireEnvironment(sub, forkId, forkAction);
 	await requireForkPlan(sub);
+	await takeOperationSlot("sync", sub, fork.element.id);
 	const link = await requireLink("environment", fork.environmentId);
 	const source = await requireEnvironment(
 		sub,
@@ -82,7 +83,7 @@ async function writeEnv(
 	const keys = [
 		...target.variables
 			.map((variable) => variable.key)
-			.filter((key) => key in merged.variables),
+			.filter((key) => Object.hasOwn(merged.variables, key)),
 		...Object.keys(merged.variables).filter((key) => !current.has(key)),
 	];
 	const inputs = keys.map((key): VariableInput => {
@@ -103,11 +104,12 @@ async function writeEnv(
 					: (next?.value ?? null),
 		};
 	});
-	const id = target._id.toHexString();
-	await setEnvironmentVariables(sub, id, inputs);
-	const root = envStateOf(target).root;
-	if (!sameContent(root, merged.root))
-		await updateEnvironment(sub, id, merged.root);
+	// One guarded write: a change made since `target` was read fails it
+	// (409 ENVIRONMENT_CHANGED) instead of being overwritten and lost.
+	await setEnvironmentVariables(sub, target._id.toHexString(), inputs, {
+		ifUpdatedAt: target.updatedAt,
+		root: merged.root,
+	});
 }
 
 export async function previewEnvironmentSync(
@@ -157,13 +159,15 @@ export async function mergeEnvironment(
 	forkId: string,
 	option: MergeOption,
 	resolutions: Resolutions,
-): Promise<void> {
+): Promise<MergeFollowUp> {
 	const s = await sides(
 		sub,
 		forkId,
 		option === "merge" ? "view" : "edit",
 		"mergeFork",
 	);
+	// Refuse before merging when the fork could not be deleted afterwards.
+	if (option === "mergeAndDelete") await deleteEnvironment(sub, forkId, true);
 	const merge = mergeEnvironments(
 		s.base,
 		envStateOf(s.forkEnv),
@@ -176,6 +180,10 @@ export async function mergeEnvironment(
 		{ _id: s.link._id },
 		{ $set: { base: envStateOf(s.forkEnv) } },
 	);
-	if (option === "mergeAndUpdate") await pullEnvironment(sub, forkId, {});
-	if (option === "mergeAndDelete") await deleteEnvironment(sub, forkId, false);
+	return followUp(option, async () => {
+		if (option === "mergeAndUpdate") await pullEnvironment(sub, forkId, {});
+		if (option === "mergeAndDelete") {
+			await deleteEnvironment(sub, forkId, false);
+		}
+	});
 }

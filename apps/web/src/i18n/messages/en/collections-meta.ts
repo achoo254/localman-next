@@ -45,6 +45,7 @@ export const collectionsMeta = {
 		label: "Collection details",
 		info: "Info",
 		comments: "Comments",
+		forks: "Forks",
 		changelog: "Changelog",
 		close: "Close panel",
 		backdrop: "Close the details panel",

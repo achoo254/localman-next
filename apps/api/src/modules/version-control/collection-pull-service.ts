@@ -61,7 +61,7 @@ export async function applyPull(
 				resolutions,
 			);
 			if (merge.unresolved.length > 0) throw conflictsLeft(merge.unresolved);
-			const { toFork } = pairMaps(link.pairs);
+			const { toFork, toSource } = pairMaps(link.pairs);
 			const { state, renamed } = allocateIds(
 				renameState(merge.state, (id) => toFork.get(id) ?? id),
 				(id) => id in states.fork.nodes,
@@ -82,7 +82,9 @@ export async function applyPull(
 				link.pairs,
 				new Set(Object.keys(states.source.nodes)),
 				new Set(Object.keys(state.nodes)),
-				[...renamed].map(([s, f]) => ({ s, f })),
+				// A renamed key is a fork id for a node the fork had deleted (the
+				// source's version came back), else a source id new to the fork.
+				[...renamed].map(([key, f]) => ({ s: toSource.get(key) ?? key, f })),
 			);
 			await saveBase(link._id, states.source, pairs, session);
 		},

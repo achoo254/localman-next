@@ -13,8 +13,11 @@ import {
 	sameContent,
 } from "./three-way-merge.js";
 
-/** Key of the environment's own fields among the merged entities. */
-const ROOT_KEY = "environment";
+/**
+ * Key of the environment's own fields among the merged entities: empty,
+ * which no variable name can be, so their conflict ids never clash.
+ */
+const ROOT_KEY = "";
 
 /**
  * What merges compare of an environment: name and colour, and each
@@ -35,7 +38,7 @@ export interface EnvState {
 }
 
 export function envStateOf(env: StoredEnvironment): EnvState {
-	const variables: Record<string, EnvVariableState> = {};
+	const variables: Record<string, EnvVariableState> = Object.create(null);
 	for (const variable of env.variables) {
 		const { type, enabled, description } = variable;
 		variables[variable.key] =

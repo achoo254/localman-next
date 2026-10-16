@@ -28,8 +28,10 @@ import { PageSaveState } from "../collections/page-save-state";
 import { SharedWithYouBadge } from "../collections/shared-with-you-badge";
 import type { SaveStatus } from "../collections/use-page-autosave";
 import { RequestEditButton } from "../sharing/request-edit-button";
+import { ForkControls } from "../version-control/fork-controls";
 import { ColorMenu } from "./environment-color";
 import { useRenameRequest } from "./rename-request";
+import { useOpenVariablesPage } from "./use-open-variables-page";
 
 export interface EnvironmentHeaderProps {
 	environment: EnvironmentDetail;
@@ -65,6 +67,7 @@ export function EnvironmentHeader(props: EnvironmentHeaderProps) {
 	const canEdit = environment.role === "editor";
 	const { canDuplicate, canDelete } = props;
 	const headerRef = useRef<HTMLElement>(null);
+	const { openEnvironment } = useOpenVariablesPage();
 	useRenameRequest(environment.id, headerRef);
 	return (
 		<header
@@ -115,6 +118,12 @@ export function EnvironmentHeader(props: EnvironmentHeaderProps) {
 					? t("environments.page.active")
 					: t("environments.page.setActive")}
 			</Button>
+			<ForkControls
+				target={{ kind: "environment", id: environment.id }}
+				name={environment.name}
+				role={canEdit ? "editor" : "viewer"}
+				onOpen={(id) => openEnvironment(id, environment.name)}
+			/>
 			<Button
 				size="sm"
 				variant="secondary"

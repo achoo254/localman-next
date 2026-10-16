@@ -8,6 +8,7 @@ import {
 	personalWorkspace,
 } from "../access/testing/access-fixture.js";
 import { teamOfThree } from "../collections/testing/collection-fixture.js";
+import { setEnvironmentVariables } from "../environments/environment-service.js";
 import {
 	createEnvironmentAs,
 	useEnvironmentTestDb,
@@ -118,5 +119,26 @@ describe("environment forks", () => {
 		});
 		expect(done.status).toBe(200);
 		expect(sharedOf(await read(EVE, fork), "baseUrl")).toBe("https://s.test");
+	});
+
+	it("merge variables named like built-in object properties", async () => {
+		const { source, fork } = await forkedEnv();
+		await setVariables(EVE, fork, {}, [
+			variableInput("constructor", "c"),
+			variableInput("__proto__", "p"),
+		]);
+		const res = await as(ADA).send("post", `/environments/${fork}/merge`, {});
+		expect(res.status, JSON.stringify(res.body)).toBe(200);
+		const merged = await read(ADA, source);
+		expect(sharedOf(merged, "constructor")).toBe("c");
+		expect(sharedOf(merged, "__proto__")).toBe("p");
+	});
+
+	it("refuse to write over a change made since it was read", async () => {
+		const { source } = await forkedEnv();
+		await expect(
+			setEnvironmentVariables(ADA, source, [], { ifUpdatedAt: new Date(0) }),
+		).rejects.toMatchObject({ status: 409, code: "ENVIRONMENT_CHANGED" });
+		expect((await read(ADA, source)).variables).toHaveLength(2);
 	});
 });

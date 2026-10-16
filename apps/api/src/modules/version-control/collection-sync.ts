@@ -1,4 +1,5 @@
 import type { ClientSession } from "mongoose";
+import { takeOperationSlot } from "../../lib/operation-rate-limit.js";
 import {
 	type CollectionAccess,
 	requireCollection,
@@ -45,6 +46,7 @@ export async function sidesOf(
 ): Promise<Sides> {
 	const fork = await requireCollection(sub, forkId, forkAction);
 	await requireForkPlan(sub);
+	await takeOperationSlot("sync", sub, fork.element.id);
 	const link = await requireLink("collection", fork.collectionId);
 	const source = await requireCollection(
 		sub,

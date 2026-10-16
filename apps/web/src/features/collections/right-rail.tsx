@@ -1,4 +1,5 @@
 import {
+	IconGitFork,
 	IconHistory,
 	IconInfoCircle,
 	IconMessageCircle,
@@ -11,8 +12,11 @@ import { cn } from "../../lib/cn";
 import { useCommentFocus } from "../comments/comment-focus";
 import { CommentsPanel } from "../comments/comments-panel";
 import { useCommentsEnabled } from "../comments/use-comments-enabled";
+import { ForksPanel } from "../version-control/forks-panel";
+import { useForksEnabled } from "../version-control/use-forks-enabled";
 import { ChangelogPanel } from "./changelog-panel";
 import { InfoPanel } from "./info-panel";
+import { useOpenCollectionNode } from "./open-node";
 import {
 	RIGHT_PANELS,
 	type RightPanel,
@@ -24,6 +28,7 @@ import { useDrawerFocus } from "./use-drawer-focus";
 const ICONS = {
 	info: IconInfoCircle,
 	comments: IconMessageCircle,
+	forks: IconGitFork,
 	changelog: IconHistory,
 } as const;
 
@@ -54,7 +59,11 @@ export const RightRail = memo(function RightRail({
 	const collection = useCollection(collectionId);
 	const detail = collection.data;
 	const commentsOn = useCommentsEnabled();
-	const panels = RIGHT_PANELS.filter((id) => commentsOn || id !== "comments");
+	const forksOn = useForksEnabled();
+	const openNode = useOpenCollectionNode();
+	const panels = RIGHT_PANELS.filter(
+		(id) => (commentsOn || id !== "comments") && (forksOn || id !== "forks"),
+	);
 	const focus = useCommentFocus();
 	// A comment link or marker for the shown item opens its comments.
 	useEffect(() => {
@@ -66,6 +75,7 @@ export const RightRail = memo(function RightRail({
 	const labels: Record<RightPanel, string> = {
 		info: t("collections.rightRail.info"),
 		comments: t("collections.rightRail.comments"),
+		forks: t("collections.rightRail.forks"),
 		changelog: t("collections.rightRail.changelog"),
 	};
 	const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
@@ -113,6 +123,18 @@ export const RightRail = memo(function RightRail({
 									collectionId={collectionId}
 									nodeId={nodeId}
 									workspaceId={detail.workspaceId}
+								/>
+							) : null}
+							{panel === "forks" && forksOn ? (
+								<ForksPanel
+									target={{ kind: "collection", id: collectionId }}
+									onOpen={(forkId, label) =>
+										openNode({
+											kind: "collection",
+											collectionId: forkId,
+											name: label,
+										})
+									}
 								/>
 							) : null}
 							{panel === "changelog" ? (

@@ -14,6 +14,7 @@ export const SHARING_FLAGS = {
 	workspaces: true,
 	publicSharing: true,
 	comments: true,
+	forks: true,
 };
 
 const listOrders = createRequestDraft({

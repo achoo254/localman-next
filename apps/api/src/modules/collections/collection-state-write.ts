@@ -7,7 +7,11 @@ import {
 	rootBytes,
 } from "./collection-bytes.js";
 import { CollectionNodeModel } from "./collection-node-model.js";
-import { nodesLimitReached, storedNodeOf } from "./collection-store.js";
+import {
+	assertNodeSize,
+	nodesLimitReached,
+	storedNodeOf,
+} from "./collection-store.js";
 import { type CollectionState, buildRevision } from "./revision-patch.js";
 import { chargeRoot } from "./root-change.js";
 import { foldSearchText } from "./search-text.js";
@@ -78,6 +82,8 @@ export async function writeCollectionState(
 		{ session },
 	);
 	const fresh = nodes.filter((node) => !same(node.id));
+	// A merge can put together a request larger than an edit may write.
+	for (const node of fresh) assertNodeSize(node);
 	if (fresh.length > 0) {
 		const docs = fresh.map((node) => storedNodeOf(node, collectionId, sub));
 		await CollectionNodeModel.insertMany(docs, { session });

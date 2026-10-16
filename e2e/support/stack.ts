@@ -102,7 +102,7 @@ function releasedFeatures(): string[] {
 }
 
 /** Specs that cover features not released yet turn their flags on here. */
-const UNRELEASED_FEATURES = ["publicSharing", "comments"];
+const UNRELEASED_FEATURES = ["publicSharing", "comments", "forks"];
 
 /**
  * Production build of the web app for the E2E: same origin for the API

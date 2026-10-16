@@ -11,8 +11,11 @@ import {
 
 /** Key of the collection's own fields among the merged entities. */
 export const ROOT_KEY = "collection";
-/** Request, example and folder parts merged field by field. */
-const NESTED = new Set(["draft", "request", "response", "scripts", "auth"]);
+/**
+ * Request, example and folder parts merged field by field. `auth` stays
+ * whole: fields of two auth types must not mix.
+ */
+const NESTED = new Set(["draft", "request", "response", "scripts"]);
 
 type NodeFields = Record<string, unknown>;
 

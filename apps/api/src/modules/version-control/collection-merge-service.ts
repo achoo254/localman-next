@@ -5,7 +5,7 @@ import type {
 } from "@localman/shared/api-client";
 import { writeCollectionState } from "../collections/collection-state-write.js";
 import { newNodeId } from "../collections/collection-store.js";
-import { trashCollection } from "../collections/trash-service.js";
+import { trashCollection, trashable } from "../collections/trash-service.js";
 import { inWorkspaceTransaction } from "../workspaces/workspace-lock.js";
 import { prunePairs, saveBase } from "./collection-base.js";
 import { mergeCollections } from "./collection-merge.js";
@@ -13,6 +13,7 @@ import { applyPull } from "./collection-pull-service.js";
 import { sidesOf, statesOf } from "./collection-sync.js";
 import { conflictsLeft, requireLink } from "./fork-access.js";
 import { allocateIds, pairMaps, renameState } from "./fork-id-space.js";
+import { type MergeFollowUp, followUp } from "./merge-follow-up.js";
 import { mergePreview } from "./merge-views.js";
 
 /** What merging the fork would do to its source (the source's Editors). */
@@ -51,9 +52,11 @@ export async function applyMerge(
 	forkId: string,
 	option: MergeOption,
 	resolutions: Readonly<Record<string, ConflictSide>>,
-): Promise<void> {
+): Promise<MergeFollowUp> {
 	const forkAction = option === "merge" ? "view" : "edit";
 	const sides = await sidesOf(sub, forkId, forkAction, "mergeFork");
+	// Refuse before merging when the fork could not be deleted afterwards.
+	if (option === "mergeAndDelete") await trashable(sub, forkId);
 	await inWorkspaceTransaction(
 		sides.source.element.workspaceId,
 		async (session) => {
@@ -82,7 +85,13 @@ export async function applyMerge(
 				{ current: states.source, target: state },
 				{ action: "merge", entityName: link.label, dryRun: false },
 			);
-			const added = [...renamed].map(([f, s]) => ({ s, f }));
+			// A renamed key is a source id for a node the source had deleted (the
+			// fork's version came back), else a fork id new to the source.
+			const { toFork } = pairMaps(link.pairs);
+			const added = [...renamed].map(([key, s]) => ({
+				s,
+				f: toFork.get(key) ?? key,
+			}));
 			const pairs = prunePairs(
 				link.pairs,
 				new Set(Object.keys(state.nodes)),
@@ -94,8 +103,10 @@ export async function applyMerge(
 			await saveBase(link._id, base, pairs, session);
 		},
 	);
-	if (option === "mergeAndUpdate") await applyPull(sub, forkId, {});
-	if (option === "mergeAndDelete") {
-		await trashCollection(sub, forkId, "delete", false);
-	}
+	return followUp(option, async () => {
+		if (option === "mergeAndUpdate") await applyPull(sub, forkId, {});
+		if (option === "mergeAndDelete") {
+			await trashCollection(sub, forkId, "delete", false);
+		}
+	});
 }

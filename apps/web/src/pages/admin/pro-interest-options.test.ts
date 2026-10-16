@@ -35,6 +35,7 @@ describe("Pro interest needs by released features", () => {
 			environments: true,
 			publicSharing: true,
 			comments: true,
+			forks: true,
 		};
 		expect(ids(all)).not.toContain("devops_ci");
 		expect(sourceNeedFor("devops", all)).toBeUndefined();

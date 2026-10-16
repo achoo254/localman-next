@@ -22,6 +22,8 @@ const limits: RuntimeSettings["heavyOperationRateLimit"] = {
 	import: { perUser: window(2), perProject: window(10) },
 	suggestFaker: { perUser: window(2) },
 	comment: { perUser: window(2), perProject: window(10) },
+	fork: { perUser: window(2), perProject: window(10) },
+	sync: { perUser: window(2), perProject: window(10) },
 };
 
 useCollaboratorTestDb(() => ({

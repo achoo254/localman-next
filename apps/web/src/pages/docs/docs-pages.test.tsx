@@ -24,6 +24,7 @@ const WITH_MCP: FeatureFlags = {
 	mockMcp: true,
 	publicSharing: true,
 	comments: true,
+	forks: true,
 };
 
 /** The real route table under these feature flags. */
