@@ -71,8 +71,8 @@ Thêm 5 tiện ích cho mock, đều không cần viết code, chạy trên web 
 - [x] T8 Integration và bảo mật pass
 - [ ] T9 Staging đã deploy sau khi user xác nhận
 - [x] T10 Review không còn finding mức high
-- [ ] Verification: unit matcher, inference (JSON lồng, mảng rỗng, `$ref` vòng, CSV BOM), exporters, chaos, rules pass
-- [ ] Verification: integration JSON 3 bản ghi, petstore, `errorRate` 45–55%, rule `x-role: admin` 403 pass
-- [ ] Verification: OpenAPI/CSV tối đa 2 MB, không gọi `$ref` ra URL ngoài
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
-- [ ] `pnpm check:mcp-coverage` pass
+- [x] Verification: unit matcher, inference (JSON lồng, mảng rỗng, `$ref` vòng, CSV BOM), exporters, chaos, rules pass (2026-10-16: `faker-field-matcher*.test.ts`, `schema-inference*.test.ts` có JSON lồng, mảng rỗng, `$ref` vòng, CSV BOM; `type-exporters*.test.ts`, `chaos.test.ts`, `conditional-rules.test.ts`)
+- [x] Verification: integration JSON 3 bản ghi, petstore, `errorRate` 45–55%, rule `x-role: admin` 403 pass (2026-10-16: `resource-import-tree.test.ts`, `resource-import-operations.test.ts`, `mock-behavior.test.ts` có `errorRate` và rule `x-role: admin` trả 403)
+- [x] Verification: OpenAPI/CSV tối đa 2 MB, không gọi `$ref` ra URL ngoài (2026-10-16: `resource-import-limits.test.ts`, `schema-inference-openapi-limits.test.ts`)
+- [x] `pnpm lint && pnpm typecheck && pnpm test` sạch (2026-10-16: 681 file, 4869 test)
+- [x] `pnpm check:mcp-coverage` pass (2026-10-16)

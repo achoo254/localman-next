@@ -1,6 +1,6 @@
 ---
 title: "Đa ngôn ngữ (English mặc định, 中文, Tiếng Việt) và bỏ tên đối thủ khỏi app"
-status: in-progress
+status: completed
 created: 2026-10-09
 tier: L
 ---

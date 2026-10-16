@@ -21,7 +21,6 @@ Monorepo của bộ công cụ API Localman và Tunelo.
 - Live Mock Sync (`liveMockSync`): mock luôn đồng bộ với collection và environment.
 - Chia sẻ công khai (guest, nút Run, access key), fork, merge và comment.
 - DevOps toolkit: Collection Runner và CLI `localman` để test API trong CI bằng một lệnh, mock tạm, tunnel có SSO, giám sát.
-- Browser extension.
 
 Thứ tự triển khai và trạng thái từng phase: [`plans/dattqh/EXECUTION.md`](plans/dattqh/EXECUTION.md).
 

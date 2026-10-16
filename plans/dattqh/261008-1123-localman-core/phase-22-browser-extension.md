@@ -1,13 +1,15 @@
 ---
 phase: 22
 title: "Browser extension: gửi request vượt CORS, cùng bộ công cụ cookie, storage, network, performance cho tab đang mở"
-status: pending
+status: cancelled
 priority: P2
 effort: "L"
 dependencies: [10]
 ---
 
 # Phase 22: Browser extension (lõi)
+
+> **Đã huỷ (2026-10-16).** User bỏ browser extension; xem Vòng 39 trong `plan.md`. Nội dung dưới đây chỉ giữ làm hồ sơ.
 
 > Extension là tuỳ chọn; Jev cho 0.55 cho phần gửi request. User bổ sung ngày 2026-10-08: extension còn là **bộ tiện ích cho tab đang mở** (cookie, storage, network, performance), như một phần thưởng cho người cài. Tiện ích mở rộng nằm ở phase 23.
 

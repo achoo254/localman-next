@@ -1,13 +1,15 @@
 ---
 phase: 23
 title: "Extension: tiện ích mở rộng cho tab đang mở"
-status: pending
+status: cancelled
 priority: P3
 effort: "M"
 dependencies: [22]
 ---
 
 # Phase 23: Tiện ích mở rộng của extension
+
+> **Đã huỷ (2026-10-16).** User bỏ browser extension; xem Vòng 39 trong `plan.md`. Nội dung dưới đây chỉ giữ làm hồ sơ.
 
 > Phần "…" trong yêu cầu của user ngày 2026-10-08. Jev chọn 7 trên 8 tiện ích (xác suất > 0.5). Loại: chụp màn hình kèm ghi chú (0.41).
 

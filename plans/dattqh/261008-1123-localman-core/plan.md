@@ -89,10 +89,10 @@ Dashboard và mock runtime là hai process riêng. Lý do: runtime công khai c�
 | 19 | [Mock power-ups: Faker thông minh, tạo resource từ JSON/OpenAPI/CSV, xuất type, chaos, response theo điều kiện](phase-19-mock-power-ups.md) | M | 4, 5, 6 | in-progress |
 | 20 | [Mock lai localhost, log request có replay, webhook inbox về localhost, mock callback](phase-20-mock-traffic-and-hybrid-localhost.md) | L | 5, 10 | completed |
 | 21 | [Client power-ups: secret local không rời trình duyệt, nối request không cần script, docs tự sinh](phase-21-client-power-ups.md) | M | 10, 13, 16 | pending |
-| 22 | [Browser extension: gửi request vượt CORS, cùng bộ công cụ cookie, storage, network, performance cho tab đang mở](phase-22-browser-extension.md) | L | 10 | pending |
-| 23 | [Extension: tiện ích mở rộng (cache/SW, console, tạm tắt CORS, giả lập thiết bị, sửa header, xem JSON, thay response bằng mock)](phase-23-extension-utilities.md) | M | 22 | pending |
+| 22 | [Browser extension: gửi request vượt CORS, cùng bộ công cụ cookie, storage, network, performance cho tab đang mở](phase-22-browser-extension.md) | L | 10 | cancelled |
+| 23 | [Extension: tiện ích mở rộng (cache/SW, console, tạm tắt CORS, giả lập thiết bị, sửa header, xem JSON, thay response bằng mock)](phase-23-extension-utilities.md) | M | 22 | cancelled |
 
-**Thứ tự thực thi:** 01 → 09 → **17 → 19** → 10 → **20** → 11 → 16 → **21 → 18**. Phase 22 và 23 (extension, tuỳ chọn) làm sau cùng. Sau đó là plan DevOps `../261008-1337-devops-toolkit/` (7 phase). Số phase giữ nguyên để không phá các tham chiếu chéo. Plan IdP và plan Tunelo phải xong trước phase 02 và phase 10.
+**Thứ tự thực thi:** 01 → 09 → **17 → 19** → 10 → **20** → 11 → 16 → **21 → 18**. Phase 22 và 23 (browser extension) đã huỷ ngày 2026-10-16 (Vòng 39). Sau đó là plan DevOps `../261008-1337-devops-toolkit/` (7 phase). Số phase giữ nguyên để không phá các tham chiếu chéo. Plan IdP và plan Tunelo phải xong trước phase 02 và phase 10.
 
 Phase 10–15 chỉ bắt đầu khi phần mock API (01–09) đã lên staging, theo thứ tự user yêu cầu. Ngoại lệ duy nhất: phase 11 viết `access-policy` dùng chung, nên phase 03 và 07 thiết kế module phân quyền ở dạng dễ chuyển sang policy đó (giao diện mock không đổi).
 
@@ -448,6 +448,18 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Rà soát phase 12 (`plans/dattqh/reports/code-reviewer-261012-1430-collections-environments-parity-audit.md`): 10/16 dòng đạt, 5 dòng mới một phần, 2 lối vào chết trên prod (import file environment, snippet `lm.environment.set`). Jev: lưu trường liên kết `mockProjectId` (ghi khi tạo từ mock) và `linkedEnvironmentId` (Editor chọn, mặc định environment share kèm) (0,99); diff đã ẩn vẫn cho Editor xem kèm ghi chú, Viewer không (0,55, độ tự tin 0,10); session changelog là cửa sổ cố định 5 phút từ thay đổi đầu, không cắt ở ranh giới trang (0,68); Unshare giữ hành vi xoá shared, không chuyển thành local (0,82).
 - Sau review đợt B (`reports/code-reviewer-261012-1535-phase-13-slice-b-{backend,web}.md`, 0 Critical; backend 4 Medium, web 2 High + 6 Medium), Jev: duplicate collection mang theo `linkedEnvironmentId` (noul 0,68); thay đổi của pre-request script vẫn lưu khi request lỗi hoặc bị huỷ như Postman (0,61); phân trang changelog lưu `sessionStartSeq` lúc ghi (0,98); "nơi đang dùng" trong Info của environment là danh sách collection liên quan người xem đọc được (0,99); link phần tử share riêng cho người ngoài workspace mở phần tử mà không đổi workspace (0,53, độ tự tin 0,06); Move environment không thuộc đợt này (noul 0,09); "Set as variable"/"Add to" trùng tên thì cảnh báo thay shared cho mọi người và reset local của người bấm (0,67).
 - Deploy và DAST đợt B (user: "chạy DAST thật cho Environments sau deploy"): CI đỏ hai lần vì test chập chờn của workbench (đếm render History khi refetch về muộn; lượt lưu draft của tab mới trống chen trước), sửa ở `3eb9a1e`, `1ab6185`, CI xanh. Hai session thống nhất chỉ deploy một lần, session auth deploy release `20261012-105625-1ab618562676` sau backup `localman-20261012-175619`. DAST đạt (`reports/security-261012-1805-phase-13-slice-b-dast.md`): endpoint mới đòi đăng nhập và kiểm Origin, export không lộ secret, import seal secret trên Mongo, `{{baseUrl}}` qua Proxy/Tunelo 200, `lm.environment.set` lưu thành local, log không có secret. Còn 1 Low (nhãn SHARED cho biến chưa chia sẻ) và 2 Info (502 cho body lớn bị chặn CSRF, thiếu trang 404 của app).
+
+### Vòng 39: bỏ browser extension (2026-10-16, user: "plan browser extension bỏ đi nhé")
+- Huỷ phase 22 và 23 (đợt 8, issue #61 và #62). Cả hai chưa có mục nào làm và repo chưa có code extension, nên không phải gỡ gì trong code.
+- Giữ tệp phase và `prototype/extension.html` làm hồ sơ, đánh dấu `cancelled`, không xoá (Jev 0,74; xoá tệp 0,26). Số phase giữ nguyên để không phá tham chiếu chéo.
+- Ghi chú miễn MCP cho tiện ích extension ở phase 17 hết hiệu lực vì không còn tiện ích đó.
+
+### Vòng 40: làm tiếp plan chính (2026-10-16, user: "làm tiếp các công việc nhỏ rồi cook plan chính. Các câu hỏi mở hay đề xuất gửi model jev quyết định")
+- Việc nhỏ: phase 17 T10 đã xong từ trước (trang `/docs/mcp`), chỉ chưa tick; verification phase 19 chạy lại bằng test có sẵn (222 test) rồi tick.
+- Issue #61, #62 đóng dạng *not planned* và đóng milestone đợt 8 (Jev 0,65; để mở 0,35; xoá milestone 0,0).
+- Việc tiếp theo trong plan chính là phase 14 (Jev 0,51), không phải T8b của phase 10 trước rồi mới 14 (0,48). T8b đã hết bị chặn vì Tunelo `v1.7.0`–`v1.9.0` đã phát hành.
+- Phase 14 chia hai đợt (Jev 0,51): đợt A là comment và watch, chạy được ở workspace team của gói Free; đợt B là `three-way-merge`, fork, merge, giải xung đột và pull request. Chia theo kiểu "version control trước" được 0,39.
+- Không giữ cả phase sau một cờ tới khi xong hết (Jev noul 0,40): mỗi đợt có cờ riêng, bật khi đợt đó qua review.
 
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.

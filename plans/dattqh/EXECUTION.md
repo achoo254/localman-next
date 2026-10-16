@@ -8,7 +8,7 @@ Mọi repo clone vào cùng một thư mục làm việc trên máy, gọi là `
 
 | Thư mục | Repo | Vai trò |
 |---|---|---|
-| `$WORKSPACE/localman-next` | `achoo254/localman-next` (private) | Monorepo code: Localman web/api, mock runtime, MCP, Tunelo (sau khi gộp), DevOps, extension. Chứa toàn bộ plan |
+| `$WORKSPACE/localman-next` | `achoo254/localman-next` (private) | Monorepo code: Localman web/api, mock runtime, MCP, Tunelo (sau khi gộp), DevOps. Chứa toàn bộ plan |
 | `$WORKSPACE/hoandat-auth` | `achoo254/hoandat-auth` (tạo ở đợt 0) | IdP `auth.hoandat.com` |
 | `$WORKSPACE/localman` | `achoo254/localman` (repo cũ) | Chỉ đọc để port ở phase 10; archive sau đó |
 | `$WORKSPACE/tunelo` | `achoo254/tunelo` (repo cũ) | Nguồn để gộp ở Localman phase 01; archive sau đó |
@@ -18,12 +18,12 @@ Mọi repo clone vào cùng một thư mục làm việc trên máy, gọi là `
 
 | Plan | Thư mục | Số phase |
 |---|---|---|
-| Localman: mock API, API client, MCP, extension | `261008-1123-localman-core/` | 23 |
+| Localman: mock API, API client, MCP | `261008-1123-localman-core/` | 23 (22 và 23 đã huỷ) |
 | Xác thực tập trung `auth.hoandat.com` | `261008-1325-central-auth-idp/` | 3 |
 | Tunelo: tài khoản, API liệt kê tunnel, domain `tunnel.hoandat.com` | `261008-1156-tunelo-accounts-and-tunnel-list/` | 3 |
 | DevOps toolkit | `261008-1337-devops-toolkit/` | 7 |
 
-Báo cáo nghiên cứu: `reports/`. Prototype HTML (mở thẳng file): `261008-1123-localman-core/prototype/{index,api-client,devops,extension}.html`.
+Báo cáo nghiên cứu: `reports/`. Prototype HTML (mở thẳng file): `261008-1123-localman-core/prototype/{index,api-client,devops}.html`.
 
 ## Đợt triển khai
 
@@ -39,7 +39,7 @@ Mỗi đợt là một milestone trên GitHub. Một đợt chỉ bắt đầu k
 | 5 | Localman 10, 20 | API client có định tuyến gửi thẳng/proxy/Tunelo; mock lai localhost |
 | 6 | Localman 11 → 12 → 13 → 14 → 15 → 16 | Tương đương 100% Collections/Environments của Postman, kèm Live Mock Sync |
 | 7 | Localman 21 → 18 | Đủ MCP toolset; client power-ups |
-| 8 | Localman 22 → 23 | Browser extension |
+| ~~8~~ | ~~Localman 22 → 23~~ | Đã huỷ 2026-10-16: bỏ browser extension |
 | 9 | DevOps 01 → 07 | Test API trong CI bằng 1 lệnh, mock tạm, tunnel có SSO, giám sát |
 
 ## Issue theo phase
@@ -70,8 +70,8 @@ Mỗi đợt là một milestone trên GitHub. Một đợt chỉ bắt đầu k
 | #58 | [Localman 19] Mock power-ups: Faker thông minh, tạo resource từ JSON/OpenAPI/CSV, xuất type, chaos, response theo điều kiện | Đợt 3 — Nền tảng MCP và mock power-ups |
 | #59 | [Localman 20] Mock lai localhost, log request có replay, webhook inbox về localhost, mock callback | Đợt 5 — API client và mock lai localhost |
 | #60 | [Localman 21] Client power-ups: secret local không rời trình duyệt, nối request không cần script, docs tự sinh từ mock | Đợt 7 — Đủ MCP toolset và client power-ups |
-| #61 | [Localman 22] Browser extension: gửi request vượt CORS, cùng bộ công cụ cookie, storage, network, performance cho tab đang mở | Đợt 8 — Browser extension |
-| #62 | [Localman 23] Extension: tiện ích mở rộng cho tab đang mở | Đợt 8 — Browser extension |
+| #61 | [Localman 22] Browser extension: gửi request vượt CORS, cùng bộ công cụ cookie, storage, network, performance cho tab đang mở | Đợt 8 — đã huỷ |
+| #62 | [Localman 23] Extension: tiện ích mở rộng cho tab đang mở | Đợt 8 — đã huỷ |
 | #63 | [Tunelo 01] Server: xác minh token của IdP, tài khoản, scope, API liệt kê tunnel, link-code | Đợt 4 — Tunelo theo tài khoản |
 | #64 | [Tunelo 02] CLI: đăng nhập bằng device flow, refresh, link, nhắc token ẩn danh | Đợt 4 — Tunelo theo tài khoản |
 | #65 | [Tunelo 03] Docs, ADR, phát hành tunelo-v1.7.0, deploy, ngày chặn token ẩn danh | Đợt 4 — Tunelo theo tài khoản |
@@ -98,7 +98,6 @@ Trong checklist, các việc này được ghi "(cần user xác nhận)":
 - sửa DNS và TLS trên Cloudflare;
 - deploy lên staging hoặc production;
 - publish npm (`tunelo`, `localman`);
-- nộp extension lên Chrome Web Store và Firefox AMO;
 - archive repo `localman` và `tunelo` cũ;
 - ngày chặn token ẩn danh của Tunelo.
 

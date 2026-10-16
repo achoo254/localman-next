@@ -31,7 +31,7 @@ Làm keyword thứ ba **"Mock MCP tức thì"** (Jev 0.67) cùng phần mock c�
   - Tạo PAT, tạo hoặc xoay secret của service account, tạo access key cần scope riêng `credentials:write`. Màn consent của IdP hiện cảnh báo đỏ cho scope này.
   - Secret chỉ trả về **đúng một lần** lúc tạo.
   - **Không tool nào đọc lại** secret đã có.
-- **Không có MCP, có ghi lý do** (`exempt`): tiện ích của browser extension (phase 22 và 23; dữ liệu tab chỉ ở trong trình duyệt, Jev 0.77), trang consent OAuth, và các bước UI thuần (kéo thả, đổi theme).
+- **Không có MCP, có ghi lý do** (`exempt`): trang consent OAuth, và các bước UI thuần (kéo thả, đổi theme).
 - **Coverage:** CI chạy `pnpm check:mcp-coverage` và in bảng operation sang tool theo toolset; bảng đó cũng được đăng thành trang docs "MCP tools".
 
 ## Hosted Mock MCP (mọi dòng là tiêu chí nghiệm thu)
@@ -106,7 +106,7 @@ Làm keyword thứ ba **"Mock MCP tức thì"** (Jev 0.67) cùng phần mock c�
 - [x] T7 UI tab MCP (`apps/web/src/features/mcp/`: tab REST/MCP lưu `?endpoint=mcp`, snippet đọc token từ biến môi trường, token hiện một lần, xoay có xác nhận, danh sách tool từ `mockToolEntries`, panel lệnh MCP Inspector; khối landing "Mock MCP tức thì" và mục `account-menu-apps` gắn cờ `mockMcp`; primitive mới `Tabs`, `Switch`, `SegmentedControl`, `CodeBlock` chuyển sang `components/ui`)
 - [x] T8 Integration bằng SDK pass (phần Hosted Mock MCP đã xong: `mock-mcp-server.test.ts`, `mock-mcp-token.test.ts` qua HTTP thật; dry-run/`confirm_token` nằm ở test của T2)
 - [x] T9 E2E OAuth pass trên stack E2E (`e2e/specs/localman-mcp-oauth.spec.ts`: discovery, DCR, consent, token có `resource`, `create_project`, project hiện trên UI, thu hồi refresh token; fake IdP có thêm DCR, resource `/mcp`, revocation). SDK client MCP 2.3.1 đăng ký kèm `offline_access`; IdP thật bỏ qua scope đó cho client DCR từ commit `2ff6bad` của `hoandat-auth` (đã deploy 2026-10-09), fake IdP khớp hành vi này
-- [ ] T10 Trang docs "MCP tools" đã đăng (làm cùng đợt đa ngôn ngữ, viết tiếng Anh: `plans/dattqh/261009-1741-i18n-en-zh-and-brand-cleanup/`)
+- [x] T10 Trang docs "MCP tools" đã đăng ở `/docs/mcp` (`apps/web/src/pages/docs/mcp-tools-page.tsx`, sau cờ `mockMcp`, có trong release production từ `14bdeca`; làm cùng đợt đa ngôn ngữ `plans/dattqh/261009-1741-i18n-en-zh-and-brand-cleanup/`)
 - [x] T11 Deploy production 2026-10-09; Hosted Mock MCP kiểm bằng MCP client SDK thật trên production (10 tool, tạo bản ghi, route lồng, `mock://schema`, `mock://openapi`); Localman MCP trả metadata RFC 9728 và 401 đúng; cờ `mockMcp` bật theo Jev 0.52 (`infra/localman/released-features`). Còn lại: user tự thử `claude mcp add` + consent OAuth thật
 - [x] T12 Review không còn finding mức high (H1 batch JSON-RPC bị chặn 400 và mỗi tool call tính hạn mức riêng; H2 `allOf` OpenAPI có trần bước; M1 thao tác thành viên sang toolset `collab`; M2 giới hạn theo `sub`)
 - [x] Verification: unit `mock-tool-factory` và parse TypeScript/OpenAPI (input xấu bị từ chối) pass
