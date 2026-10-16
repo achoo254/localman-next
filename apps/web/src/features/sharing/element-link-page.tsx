@@ -11,7 +11,7 @@ import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
 import { useAppTitle } from "../../lib/use-document-title";
-import { COMMENT_PARAM } from "../comments/comment-link";
+import { COMMENT_PARAM, PULL_REQUEST_PARAM } from "../comments/comment-link";
 import { useEnvironmentsEnabled } from "../environments/use-environments-enabled";
 import { useWorkspacesEnabled } from "../workspaces/use-workspaces-enabled";
 import { NODE_PARAM, isElementId } from "./open-element-state";
@@ -63,11 +63,13 @@ function ElementLink({
 	const comment = search.get(COMMENT_PARAM);
 	const commentId =
 		type === "collection" && isElementId(comment) ? comment : null;
+	const pr = search.get(PULL_REQUEST_PARAM);
+	const pullRequestId = type === "collection" && isElementId(pr) ? pr : null;
 	const environments = useEnvironmentsEnabled();
 	const opensInWorkbench = type === "collection" || environments;
 	const workspaceId = element.data?.workspaceId ?? null;
 	const handOver = useOpenElementLink(
-		{ type, id, nodeId, commentId, workspaceId },
+		{ type, id, nodeId, commentId, pullRequestId, workspaceId },
 		opensInWorkbench,
 	);
 	if (handOver.error !== null) {

@@ -187,6 +187,9 @@ describe("notification operations", () => {
 					"comment.mentioned",
 					"comment.replied",
 					"collection.changed",
+					"pullRequest.opened",
+					"pullRequest.reviewed",
+					"pullRequest.merged",
 				].map((type) => ({
 					type,
 					label: expect.any(String),

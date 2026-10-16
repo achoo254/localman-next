@@ -30,6 +30,9 @@ export interface NewComment {
 	readonly anchor?: CommentAnchor;
 	/** Set for a reply. */
 	readonly threadId?: string;
+	/** A comment of this pull request (on its source), about `changeKey`. */
+	readonly pullRequestId?: Types.ObjectId;
+	readonly changeKey?: string;
 }
 
 function placeOf(
@@ -43,6 +46,7 @@ function placeOf(
 		nodeId: comment.nodeId?.toHexString() ?? null,
 		nodeName,
 		commentId: comment._id.toHexString(),
+		pullRequestId: comment.pullRequestId?.toHexString() ?? null,
 	};
 }
 
@@ -58,6 +62,10 @@ async function startOrJoin(
 	}
 	const thread = await loadComment(access.collectionId, input.threadId);
 	if (!opensThread(thread)) throw notFound();
+	// A reply through a pull request stays on that pull request's threads.
+	const prOfThread = thread.pullRequestId?.toHexString() ?? null;
+	const prOfInput = input.pullRequestId?.toHexString() ?? null;
+	if (prOfInput !== null && prOfThread !== prOfInput) throw notFound();
 	if (input.anchor !== undefined) {
 		throw new OperationError(400, "VALIDATION_ERROR", "A reply has no anchor");
 	}
@@ -121,6 +129,13 @@ export async function createComment(
 			body: input.body,
 			mentions: [...notices.mentioned],
 			anchor: input.anchor ?? null,
+			// A reply belongs where its thread does.
+			pullRequestId: thread
+				? (thread.pullRequestId ?? null)
+				: (input.pullRequestId ?? null),
+			changeKey: thread
+				? (thread.changeKey ?? null)
+				: (input.changeKey ?? null),
 		})
 	).toObject<StoredComment>();
 	// The thread may have been deleted meanwhile: take the reply back.

@@ -36,6 +36,8 @@ import {
 } from "./environment-sync-service.js";
 import { relabelFork } from "./fork-relabel.js";
 import { labelSchema } from "./fork-views-schema.js";
+import { pullRequestCommentOperations } from "./pull-request-comment-operations.js";
+import { pullRequestCoreOperations } from "./pull-request-operations.js";
 import { syncOperations } from "./sync-operations.js";
 
 const FORK =
@@ -117,4 +119,6 @@ export const forkOperations = [
 		pull: pullEnvironment,
 		merge: mergeEnvironment,
 	}),
+	...pullRequestCoreOperations,
+	...pullRequestCommentOperations,
 ];

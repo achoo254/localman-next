@@ -22,6 +22,10 @@ const commentSchema = new Schema(
 		/** People @mentioned and told, so an edit does not tell them again. */
 		mentions: { type: [String], default: [] },
 		anchor: { type: Schema.Types.Mixed, default: null },
+		/** Set on a comment of a pull request (`collectionId` is its source). */
+		pullRequestId: { type: Schema.Types.ObjectId, default: null },
+		/** The change of the pull request's diff it is about, if any. */
+		changeKey: { type: String, default: null },
 		reactions: { type: Schema.Types.Mixed, default: {} },
 		editedAt: { type: Date, default: null },
 		resolvedAt: { type: Date, default: null },
@@ -32,6 +36,7 @@ const commentSchema = new Schema(
 
 commentSchema.index({ collectionId: 1, nodeId: 1, threadId: 1, _id: 1 });
 commentSchema.index({ threadId: 1, _id: 1 });
+commentSchema.index({ pullRequestId: 1, _id: 1 });
 
 commentSchema.plugin(tenantScopePlugin);
 export const CommentModel = mongoose.model("CollectionComment", commentSchema);
@@ -47,6 +52,8 @@ export interface StoredComment {
 	readonly body: string;
 	readonly mentions: readonly string[];
 	readonly anchor: CommentAnchor | null;
+	readonly pullRequestId?: Types.ObjectId | null;
+	readonly changeKey?: string | null;
 	readonly reactions: StoredReactions;
 	readonly editedAt: Date | null;
 	readonly resolvedAt: Date | null;

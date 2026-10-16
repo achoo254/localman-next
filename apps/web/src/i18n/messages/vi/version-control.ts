@@ -1,4 +1,5 @@
 import type { Messages } from "../../message-types";
+import { versionControlPullRequests } from "./version-control-pull-requests";
 
 export const versionControl: Messages["versionControl"] = {
 	kinds: {
@@ -93,5 +94,12 @@ export const versionControl: Messages["versionControl"] = {
 		conflicts: "Hãy chọn bản cho mọi xung đột trước.",
 		sourceGone: "Bản gốc không còn, hoặc bạn không mở được nó.",
 		forbidden: "Bạn không có quyền làm việc này.",
+		notFound: "Pull request không còn, hoặc bạn không mở được nó.",
+		closed: "Pull request này đã được merge hoặc bị từ chối.",
+		invalidReviewer: "Người duyệt phải là Editor của bản gốc.",
+		pullRequestLimit:
+			"Một collection nhận tối đa 100 pull request đang mở. Hãy merge hoặc từ chối bớt trước.",
+		busy: "Pull request này đang được thay đổi. Hãy thử lại.",
 	},
+	...versionControlPullRequests,
 };

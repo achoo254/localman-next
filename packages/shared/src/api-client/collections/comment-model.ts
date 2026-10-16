@@ -90,8 +90,10 @@ export interface CommentView {
 export interface CommentThreadView {
 	/** The id of its first comment. */
 	id: string;
-	/** `null` for the collection itself. */
+	/** `null` for the collection itself (and on a pull request). */
 	nodeId: string | null;
+	/** On a pull request: the change of its diff it is about, if any. */
+	changeKey: string | null;
 	anchor: (CommentAnchor & { outdated: boolean }) | null;
 	resolvedAt: string | null;
 	resolvedBy: string | null;

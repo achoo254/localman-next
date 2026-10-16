@@ -26,6 +26,26 @@ describe("element navigation state", () => {
 		expect(readOpenElement(null)).toBeNull();
 	});
 
+	it("keeps a pull request and its comment for a collection", () => {
+		const state = openElementState({
+			type: "collection",
+			id: "c1",
+			pullRequestId: "p1",
+			commentId: "m1",
+		});
+		expect(readOpenElement(state)).toEqual({
+			type: "collection",
+			id: "c1",
+			pullRequestId: "p1",
+			commentId: "m1",
+		});
+		expect(
+			readOpenElement({
+				openElement: { type: "collection", id: "c1", pullRequestId: "../x" },
+			}),
+		).toBeNull();
+	});
+
 	it("builds a node link on the collection's element path", () => {
 		expect(collectionNodePath("c1", "r1")).toBe(
 			"/elements/collection/c1?node=r1",

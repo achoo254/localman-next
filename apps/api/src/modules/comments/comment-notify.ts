@@ -16,6 +16,8 @@ export interface CommentPlace {
 	readonly nodeId: string | null;
 	readonly nodeName: string | null;
 	readonly commentId: string;
+	/** Set for a comment of a pull request: the link opens it there. */
+	readonly pullRequestId?: string | null;
 }
 
 /** Who a comment tells, worked out before it is written. */
@@ -30,7 +32,8 @@ export interface CommentNotices {
 /** Opens the item with the comments panel on this comment. */
 export function commentLink(place: CommentPlace): string {
 	const query = new URLSearchParams();
-	if (place.nodeId !== null) query.set("node", place.nodeId);
+	if (place.pullRequestId) query.set("pr", place.pullRequestId);
+	else if (place.nodeId !== null) query.set("node", place.nodeId);
 	query.set("comment", place.commentId);
 	return `${elementPath(place.element)}?${query.toString()}`;
 }

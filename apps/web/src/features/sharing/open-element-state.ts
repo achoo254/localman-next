@@ -15,6 +15,8 @@ export interface OpenElement {
 	nodeId?: string;
 	/** A comment on the collection or on `nodeId`, to bring into view. */
 	commentId?: string;
+	/** A pull request into the collection, to open. */
+	pullRequestId?: string;
 }
 
 export const OPEN_ELEMENT_STATE_KEY = "openElement";
@@ -34,11 +36,15 @@ export const collectionNodePath = (collectionId: string, nodeId: string) =>
 export function openElementState(target: OpenElement): {
 	[OPEN_ELEMENT_STATE_KEY]: OpenElement;
 } {
-	const { type, id, nodeId, commentId } = target;
+	const { type, id, nodeId, commentId, pullRequestId } = target;
 	const node = type === "collection" && nodeId !== undefined ? { nodeId } : {};
 	const comment =
 		type === "collection" && commentId !== undefined ? { commentId } : {};
-	return { [OPEN_ELEMENT_STATE_KEY]: { type, id, ...node, ...comment } };
+	const pr =
+		type === "collection" && pullRequestId !== undefined
+			? { pullRequestId }
+			: {};
+	return { [OPEN_ELEMENT_STATE_KEY]: { type, id, ...node, ...comment, ...pr } };
 }
 
 /** The element in `location.state`, or `null` when absent or malformed. */
@@ -46,19 +52,23 @@ export function readOpenElement(state: unknown): OpenElement | null {
 	if (!isRecord(state)) return null;
 	const target = state[OPEN_ELEMENT_STATE_KEY];
 	if (!isRecord(target)) return null;
-	const { type, id, nodeId, commentId } = target;
+	const { type, id, nodeId, commentId, pullRequestId } = target;
 	if (!isElementType(type) || !isElementId(id)) return null;
 	if (type !== "collection") {
-		return nodeId === undefined && commentId === undefined
+		return nodeId === undefined &&
+			commentId === undefined &&
+			pullRequestId === undefined
 			? { type, id }
 			: null;
 	}
 	if (nodeId !== undefined && !isElementId(nodeId)) return null;
 	if (commentId !== undefined && !isElementId(commentId)) return null;
+	if (pullRequestId !== undefined && !isElementId(pullRequestId)) return null;
 	return {
 		type,
 		id,
 		...(nodeId === undefined ? {} : { nodeId }),
 		...(commentId === undefined ? {} : { commentId }),
+		...(pullRequestId === undefined ? {} : { pullRequestId }),
 	};
 }

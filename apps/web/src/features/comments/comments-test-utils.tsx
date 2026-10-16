@@ -46,6 +46,7 @@ export function thread(
 	return {
 		id,
 		nodeId: null,
+		changeKey: null,
 		anchor: null,
 		resolvedAt: null,
 		resolvedBy: null,

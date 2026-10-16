@@ -74,6 +74,7 @@ export function parseThread(value: unknown): CommentThreadView {
 	return {
 		id: expectString(data, "id"),
 		nodeId: optionalString(data, "nodeId"),
+		changeKey: optionalString(data, "changeKey"),
 		anchor:
 			data.anchor === null
 				? null
@@ -121,15 +122,22 @@ export interface NewComment {
 	body: string;
 	threadId?: string;
 	anchor?: CommentAnchor;
+	/** A comment of this pull request (on its source collection). */
+	pullRequestId?: string;
+	/** On a pull request: the change it is about. */
+	changeKey?: string;
 }
 
 export async function createComment(
 	collectionId: string,
 	comment: NewComment,
 ): Promise<{ id: string; threadId: string }> {
-	const { nodeId, ...rest } = comment;
+	const { nodeId, pullRequestId, ...rest } = comment;
+	const path = pullRequestId
+		? `/api/v1/pull-requests/${encodeURIComponent(pullRequestId)}/comments`
+		: commentsPath(collectionId);
 	const data = expectRecord(
-		await apiRequest(commentsPath(collectionId), {
+		await apiRequest(path, {
 			method: "POST",
 			body: nodeId === null ? rest : { ...rest, nodeId },
 		}),

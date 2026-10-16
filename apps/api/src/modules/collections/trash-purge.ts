@@ -9,6 +9,7 @@ import { CollectionAccessKeyModel } from "../public-sharing/collection-access-ke
 import { CollectionLinkModel } from "../public-sharing/collection-link-model.js";
 import { RunButtonModel } from "../public-sharing/run-button-model.js";
 import { ForkBaseNodeModel, ForkModel } from "../version-control/fork-model.js";
+import { PullRequestModel } from "../version-control/pull-request-model.js";
 import { CollectionWatchModel } from "../watch/watch-model.js";
 import { CollectionFavoriteModel } from "./collection-favorite-model.js";
 import { CollectionModel } from "./collection-model.js";
@@ -20,7 +21,7 @@ import { toTrashedViews } from "./trash-view.js";
 /**
  * Deletes a trashed collection for good, with its nodes, changelog,
  * favorites, shares, access requests, public and guest links, access
- * keys, Run buttons and
+ * keys, Run buttons, pull requests into it and
  * everyone's local values of its variables, in one transaction. `trashed` narrows which
  * trashed state still qualifies (the job passes its age cutoff), so a
  * collection restored meanwhile is left alone. `false` when nothing
@@ -61,6 +62,9 @@ export async function purgeCollection(
 			{ kind: "collection", forkId: collectionId },
 			{ session },
 		);
+		// Pull requests into it go with it (their comments are on it); those
+		// out of a purged fork stay as history, no longer mergeable.
+		await PullRequestModel.deleteMany({ sourceId: collectionId }, { session });
 		await ElementRoleModel.deleteMany(element, { session });
 		await AccessRequestModel.deleteMany(element, { session });
 		await CollectionLinkModel.deleteMany({ collectionId }, { session });

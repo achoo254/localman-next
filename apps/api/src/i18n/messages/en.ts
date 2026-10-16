@@ -40,6 +40,13 @@ export interface CollectionChangeText {
 	readonly author: string | null;
 }
 
+/** A pull request: who acted, its title, its source collection. */
+export interface PullRequestText {
+	readonly author: string | null;
+	readonly title: string;
+	readonly collection: string;
+}
+
 /** Quota warning values, already formatted for the language. */
 export interface QuotaText {
 	readonly threshold: number;
@@ -103,6 +110,9 @@ export const en = {
 		"comment.mentioned": "Mentions in comments",
 		"comment.replied": "Replies in comment threads you wrote in",
 		"collection.changed": "Changes to collections you watch",
+		"pullRequest.opened": "Pull requests waiting for your review",
+		"pullRequest.reviewed": "Reviews of your pull requests",
+		"pullRequest.merged": "Your pull requests merged",
 	},
 	roleNames: { admin: "Admin", editor: "Editor", viewer: "Viewer" },
 	elementNames: { collection: "collection", environment: "environment" },
@@ -145,6 +155,24 @@ export const en = {
 			p.authors === 1
 				? `${p.author ?? "Someone"} made ${p.changes} ${p.count === 1 ? "change" : "changes"} to the collection "${p.collection}".`
 				: `${p.authors} people made ${p.changes} changes to the collection "${p.collection}".`,
+	},
+	pullRequestOpened: {
+		title: "Review requested",
+		body: (p: PullRequestText): string =>
+			`${p.author ?? "Someone"} asks you to review the pull request "${p.title}" into the collection "${p.collection}".`,
+	},
+	pullRequestReviewed: {
+		approvedTitle: "Pull request approved",
+		approvedBody: (p: PullRequestText): string =>
+			`${p.author ?? "A reviewer"} approved your pull request "${p.title}" into the collection "${p.collection}".`,
+		declinedTitle: "Pull request declined",
+		declinedBody: (p: PullRequestText): string =>
+			`${p.author ?? "A reviewer"} declined your pull request "${p.title}" into the collection "${p.collection}".`,
+	},
+	pullRequestMerged: {
+		title: "Pull request merged",
+		body: (p: PullRequestText): string =>
+			`${p.author ?? "Someone"} merged your pull request "${p.title}" into the collection "${p.collection}".`,
 	},
 	invitation: {
 		title: "Project collaboration invitation",

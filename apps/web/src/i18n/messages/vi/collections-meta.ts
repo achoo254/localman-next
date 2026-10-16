@@ -52,6 +52,7 @@ export const collectionsMeta: Part = {
 		info: "Thông tin",
 		comments: "Comment",
 		forks: "Fork",
+		pullRequests: "Pull request",
 		changelog: "Changelog",
 		close: "Đóng panel",
 		backdrop: "Đóng panel chi tiết",

@@ -21,12 +21,14 @@ export interface ThreadActions {
 }
 
 /**
- * The actions of the comments on one item, with toasts on failure and the
- * delete confirmation to render next to the threads.
+ * The actions of the comments on one item (or on a pull request into the
+ * collection), with toasts on failure and the delete confirmation to
+ * render next to the threads.
  */
 export function useThreadActions(
 	collectionId: string,
 	nodeId: string | null,
+	pullRequestId: string | null = null,
 ): { actions: ThreadActions; confirm: ReactNode } {
 	const t = useT();
 	const toast = useToast();
@@ -48,7 +50,14 @@ export function useThreadActions(
 	};
 	const actions: ThreadActions = {
 		reply: (threadId, body) =>
-			run(writes.create.mutateAsync({ nodeId, threadId, body })),
+			run(
+				writes.create.mutateAsync({
+					nodeId,
+					threadId,
+					body,
+					...(pullRequestId ? { pullRequestId } : {}),
+				}),
+			),
 		edit: (id, body) => run(writes.edit.mutateAsync({ id, body })),
 		remove: (id, thread = false) => setPending({ id, thread }),
 		resolve: (id, resolved) =>
@@ -56,13 +65,14 @@ export function useThreadActions(
 		react: (id, reaction, on) =>
 			writes.react.mutate({ id, reaction, on }, { onError: fail }),
 		copyLink: (id) =>
-			void copyText(appPageUrl(commentLinkPath(collectionId, nodeId, id))).then(
-				(ok) =>
-					toast.show(
-						ok
-							? { tone: "success", title: t("collections.comments.linkCopied") }
-							: { tone: "error", title: t("collections.comments.linkFailed") },
-					),
+			void copyText(
+				appPageUrl(commentLinkPath(collectionId, nodeId, id, pullRequestId)),
+			).then((ok) =>
+				toast.show(
+					ok
+						? { tone: "success", title: t("collections.comments.linkCopied") }
+						: { tone: "error", title: t("collections.comments.linkFailed") },
+				),
 			),
 	};
 	const confirm = (

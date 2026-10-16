@@ -21,6 +21,9 @@ export const vi: ServerMessages = {
 		"comment.mentioned": "Được nhắc đến trong comment",
 		"comment.replied": "Trả lời trong thread comment bạn đã viết",
 		"collection.changed": "Thay đổi ở collection bạn đang theo dõi",
+		"pullRequest.opened": "Pull request chờ bạn review",
+		"pullRequest.reviewed": "Kết quả review pull request của bạn",
+		"pullRequest.merged": "Pull request của bạn đã được merge",
 	},
 	roleNames: { admin: "Admin", editor: "Editor", viewer: "Viewer" },
 	elementNames: { collection: "collection", environment: "environment" },
@@ -63,6 +66,24 @@ export const vi: ServerMessages = {
 			p.authors === 1
 				? `${p.author ?? "Một người dùng"} đã thực hiện ${p.changes} thay đổi ở collection "${p.collection}".`
 				: `${p.authors} người đã thực hiện ${p.changes} thay đổi ở collection "${p.collection}".`,
+	},
+	pullRequestOpened: {
+		title: "Có yêu cầu review",
+		body: (p) =>
+			`${p.author ?? "Một người dùng"} nhờ bạn review pull request "${p.title}" vào collection "${p.collection}".`,
+	},
+	pullRequestReviewed: {
+		approvedTitle: "Pull request đã được duyệt",
+		approvedBody: (p) =>
+			`${p.author ?? "Một reviewer"} đã duyệt pull request "${p.title}" của bạn vào collection "${p.collection}".`,
+		declinedTitle: "Pull request bị từ chối",
+		declinedBody: (p) =>
+			`${p.author ?? "Một reviewer"} đã từ chối pull request "${p.title}" của bạn vào collection "${p.collection}".`,
+	},
+	pullRequestMerged: {
+		title: "Pull request đã được merge",
+		body: (p) =>
+			`${p.author ?? "Một người dùng"} đã merge pull request "${p.title}" của bạn vào collection "${p.collection}".`,
 	},
 	invitation: {
 		title: "Lời mời cộng tác project",

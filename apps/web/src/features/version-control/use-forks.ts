@@ -59,7 +59,7 @@ export function useSyncPreview(
  * saved requests into tabs that have no unsaved edits, and drop page
  * edits made against the old content.
  */
-function useAfterSync() {
+export function useAfterSync() {
 	const client = useQueryClient();
 	const refreshTabs = useRefreshBoundTabs();
 	const discardPageEdits = useDiscardPageEdits();
@@ -81,6 +81,8 @@ function useAfterSync() {
 			if (detail) refreshTabs(detail);
 		}
 		await client.invalidateQueries({ queryKey: [...COLLECTIONS_KEY, "list"] });
+		// What their pull requests change was worked out from the old content.
+		await client.invalidateQueries({ queryKey: ["pullRequests"] });
 	};
 }
 

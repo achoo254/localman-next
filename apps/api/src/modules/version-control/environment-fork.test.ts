@@ -96,7 +96,12 @@ describe("environment forks", () => {
 		expect(sharedOf(pulled, "debug")).toBe("1");
 		const preview = await as(ADA).get(`/environments/${fork}/merge`);
 		expect(preview.body.changes).toEqual([
-			{ kind: "added", entityKind: "variable", name: "debug" },
+			{
+				key: "variable:debug",
+				kind: "added",
+				entityKind: "variable",
+				name: "debug",
+			},
 		]);
 		expect(
 			(await as(ADA).send("post", `/environments/${fork}/merge`, {})).status,

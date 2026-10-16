@@ -172,7 +172,7 @@ Comment trên collection và watch chạy khi **cả hai** cùng bật: cờ web
 
 ## Fork, pull và merge (`FORKS_ENABLED`)
 
-Fork, pull changes và merge của collection và environment chạy khi **cả hai** cùng bật: cờ web `forks` trong [`released-features`](../infra/localman/released-features) và cổng server `FORKS_ENABLED=true` trong `/opt/localman/.env`. Cổng tắt thì API không route và MCP không có tool của tính năng này (path trả 404).
+Fork, pull changes, merge của collection và environment, cùng pull request của collection, chạy khi **cả hai** cùng bật: cờ web `forks` trong [`released-features`](../infra/localman/released-features) và cổng server `FORKS_ENABLED=true` trong `/opt/localman/.env`. Cổng tắt thì API không route và MCP không có tool của tính năng này (path trả 404).
 
 - **Bật:** thêm `forks` vào `released-features` và deploy; trên server đặt `FORKS_ENABLED=true` rồi `pm2 reload localman-api`.
 - **Kiểm sau khi bật:** `GET /api/v1/collections/x/fork-status` trả 401 khi chưa đăng nhập (route của API, không phải 404).

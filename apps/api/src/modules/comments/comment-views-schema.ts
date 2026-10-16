@@ -38,6 +38,7 @@ export const threadListView = z.object({
 		z.object({
 			id: z.string(),
 			nodeId: z.string().nullable(),
+			changeKey: z.string().nullable(),
 			anchor: anchorView.nullable(),
 			resolvedAt: z.string().nullable(),
 			resolvedBy: z.string().nullable(),

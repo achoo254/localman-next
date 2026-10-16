@@ -52,6 +52,7 @@ export const collectionsMeta: Part = {
 		info: "信息",
 		comments: "评论",
 		forks: "Fork",
+		pullRequests: "Pull request",
 		changelog: "Changelog",
 		close: "关闭面板",
 		backdrop: "关闭详情面板",

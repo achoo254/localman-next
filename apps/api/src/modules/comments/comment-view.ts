@@ -65,9 +65,14 @@ export async function listThreads(
 	nodeId: Types.ObjectId | null,
 	rights: CommentRights,
 	includeResolved: boolean,
+	pullRequestId: Types.ObjectId | null = null,
 ): Promise<CommentThreadView[]> {
 	const { target } = await loadTarget(collectionId, nodeId);
-	const comments = await CommentModel.find({ collectionId, nodeId })
+	// A pull request's comments live on its source but are its own.
+	const scope = pullRequestId
+		? { collectionId, pullRequestId }
+		: { collectionId, nodeId, pullRequestId: null };
+	const comments = await CommentModel.find(scope)
 		.sort({ _id: 1 })
 		.lean<StoredComment[]>();
 	const firsts = comments.filter(
@@ -80,6 +85,7 @@ export async function listThreads(
 		return {
 			id: first._id.toHexString(),
 			nodeId: first.nodeId?.toHexString() ?? null,
+			changeKey: first.changeKey ?? null,
 			anchor: first.anchor
 				? { ...first.anchor, outdated: anchorOutdated(target, first.anchor) }
 				: null,
@@ -103,6 +109,7 @@ export async function countOpenThreads(
 			$match: {
 				collectionId,
 				resolvedAt: null,
+				pullRequestId: null,
 				$expr: { $eq: ["$_id", "$threadId"] },
 			},
 		},

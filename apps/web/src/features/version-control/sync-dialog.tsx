@@ -1,5 +1,4 @@
 import type { ConflictSide, MergeOption } from "@localman/shared/api-client";
-import { MERGE_OPTIONS } from "@localman/shared/api-client";
 import { useState } from "react";
 import { Alert } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
@@ -8,13 +7,10 @@ import { ModalFooter } from "../../components/ui/modal-footer";
 import { Skeleton, SkeletonRegion } from "../../components/ui/skeleton";
 import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
-import { ConflictList } from "./conflict-list";
 import { useForkErrorMessage } from "./fork-errors";
 import type { ForkTarget } from "./forks-api";
+import { SyncChoices } from "./sync-choices";
 import { useForkActions, useSyncPreview } from "./use-forks";
-
-const RADIO =
-	"flex min-h-11 cursor-pointer items-start gap-2 rounded-md border border-border p-2 has-checked:border-primary has-checked:bg-primary/6 has-disabled:cursor-not-allowed has-disabled:opacity-60";
 
 export interface SyncDialogProps {
 	/** The fork being pulled into, or merged from. */
@@ -124,73 +120,20 @@ export function SyncDialog({
 						{t("versionControl.sync.nothing")}
 					</p>
 				) : (
-					<>
-						<section className="grid gap-1">
-							<h3 className="m-0 font-semibold text-sm">
-								{t("versionControl.sync.changes")}
-							</h3>
-							<ul
-								data-id="sync-changes"
-								className="m-0 grid list-none gap-1 p-0 text-sm"
-							>
-								{preview.data.changes.map((change, index) => (
-									<li key={`${index}-${change.kind}`}>
-										{t(`versionControl.sync.${change.kind}`, {
-											kind: t(`versionControl.kinds.${change.entityKind}`),
-											name: change.name,
-										})}
-									</li>
-								))}
-							</ul>
-						</section>
-						{conflicts.length > 0 ? (
-							<ConflictList
-								conflicts={conflicts}
-								choices={choices}
-								onChoose={setChoices}
-								sides={t(
-									pull
-										? "versionControl.conflicts.pullSides"
-										: "versionControl.conflicts.mergeSides",
-									{ name: source.name },
-								)}
-							/>
-						) : null}
-						{pull ? null : (
-							<fieldset className="m-0 grid gap-2 border-0 p-0">
-								<legend className="mb-1 font-semibold text-sm">
-									{t("versionControl.sync.option")}
-								</legend>
-								{MERGE_OPTIONS.map((value) => {
-									const needsEditor = value !== "merge" && !canEditFork;
-									return (
-										<label
-											key={value}
-											className={RADIO}
-											title={
-												needsEditor
-													? t("versionControl.sync.optionNeedsEditor")
-													: undefined
-											}
-										>
-											<input
-												type="radio"
-												name="merge-option"
-												checked={option === value}
-												disabled={needsEditor}
-												data-id={`modal-merge-opt-${value}`}
-												className="mt-1 size-4 accent-primary-solid"
-												onChange={() => setOption(value)}
-											/>
-											<span className="text-sm">
-												{t(`versionControl.sync.options.${value}`)}
-											</span>
-										</label>
-									);
-								})}
-							</fieldset>
+					<SyncChoices
+						preview={preview.data}
+						choices={choices}
+						onChoose={setChoices}
+						sides={t(
+							pull
+								? "versionControl.conflicts.pullSides"
+								: "versionControl.conflicts.mergeSides",
+							{ name: source.name },
 						)}
-					</>
+						merge={
+							pull ? undefined : { option, onOption: setOption, canEditFork }
+						}
+					/>
 				)}
 				{left > 0 ? (
 					<p className="m-0 text-muted text-xs" data-id="conflicts-left">

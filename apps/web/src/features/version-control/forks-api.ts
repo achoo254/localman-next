@@ -124,6 +124,7 @@ function changeOf(value: unknown): MergeChange {
 			: null;
 	if (!kind) throw new InvalidResponseError("change kind");
 	return {
+		key: expectString(data, "key"),
 		kind,
 		entityKind: entityKindOf(data),
 		name: expectString(data, "name"),
@@ -143,19 +144,20 @@ function conflictOf(value: unknown): MergeConflictView {
 	};
 }
 
+export function parseMergePreview(value: unknown): MergePreview {
+	const data = expectRecord(value, "merge preview");
+	return {
+		changes: expectArray(data, "changes").map(changeOf),
+		conflicts: expectArray(data, "conflicts").map(conflictOf),
+	};
+}
+
 /** What a pull (into the fork) or merge (into its source) would do. */
 export async function fetchSyncPreview(
 	fork: ForkTarget,
 	direction: "pull" | "merge",
 ): Promise<MergePreview> {
-	const data = expectRecord(
-		await apiRequest(`${pathOf(fork)}/${direction}`),
-		"merge preview",
-	);
-	return {
-		changes: expectArray(data, "changes").map(changeOf),
-		conflicts: expectArray(data, "conflicts").map(conflictOf),
-	};
+	return parseMergePreview(await apiRequest(`${pathOf(fork)}/${direction}`));
 }
 
 export async function applySync(

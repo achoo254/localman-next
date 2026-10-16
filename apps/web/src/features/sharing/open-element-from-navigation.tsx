@@ -11,6 +11,7 @@ import { readCollection } from "../collections/use-send-context";
 import { focusComment } from "../comments/comment-focus";
 import { useEnvironmentsEnabled } from "../environments/use-environments-enabled";
 import { useOpenVariablesPage } from "../environments/use-open-variables-page";
+import { focusPullRequest } from "../version-control/pull-request-focus";
 import { type OpenElement, readOpenElement } from "./open-element-state";
 import { fetchElement } from "./sharing-api";
 import { elementKey } from "./use-element-access";
@@ -81,6 +82,7 @@ function useOpenElementFromNavigation(): void {
 			id,
 			nodeId,
 			commentId,
+			pullRequestId,
 		}: OpenElement): Promise<void> => {
 			let name = id;
 			try {
@@ -99,7 +101,13 @@ function useOpenElementFromNavigation(): void {
 				} else if (environments) {
 					openEnvironment(id, name);
 				}
-				if (type === "collection" && commentId !== undefined) {
+				if (type === "collection" && pullRequestId !== undefined) {
+					focusPullRequest({
+						collectionId: id,
+						pullRequestId,
+						commentId: commentId ?? null,
+					});
+				} else if (type === "collection" && commentId !== undefined) {
 					focusComment({ collectionId: id, nodeId: opened, commentId });
 				}
 			} catch {

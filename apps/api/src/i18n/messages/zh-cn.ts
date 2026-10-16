@@ -28,6 +28,9 @@ export const zhCN: ServerMessages = {
 		"comment.mentioned": "评论中提到你",
 		"comment.replied": "你参与的评论讨论有新回复",
 		"collection.changed": "你关注的 collection 有变更",
+		"pullRequest.opened": "等待你审核的 pull request",
+		"pullRequest.reviewed": "你的 pull request 的审核结果",
+		"pullRequest.merged": "你的 pull request 已合并",
 	},
 	roleNames: { admin: "Admin", editor: "Editor", viewer: "Viewer" },
 	elementNames: { collection: "collection", environment: "environment" },
@@ -70,6 +73,24 @@ export const zhCN: ServerMessages = {
 			p.authors === 1
 				? `${p.author ?? "有人"}对 collection“${p.collection}”做了 ${p.changes} 处变更。`
 				: `${p.authors} 人对 collection“${p.collection}”做了 ${p.changes} 处变更。`,
+	},
+	pullRequestOpened: {
+		title: "请求审核",
+		body: (p) =>
+			`${p.author ?? "有人"}请你审核合并到 collection“${p.collection}”的 pull request“${p.title}”。`,
+	},
+	pullRequestReviewed: {
+		approvedTitle: "Pull request 已批准",
+		approvedBody: (p) =>
+			`${p.author ?? "审核人"}批准了你合并到 collection“${p.collection}”的 pull request“${p.title}”。`,
+		declinedTitle: "Pull request 被拒绝",
+		declinedBody: (p) =>
+			`${p.author ?? "审核人"}拒绝了你合并到 collection“${p.collection}”的 pull request“${p.title}”。`,
+	},
+	pullRequestMerged: {
+		title: "Pull request 已合并",
+		body: (p) =>
+			`${p.author ?? "有人"}合并了你到 collection“${p.collection}”的 pull request“${p.title}”。`,
 	},
 	invitation: {
 		title: "Project 协作邀请",

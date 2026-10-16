@@ -1,10 +1,16 @@
-import { IconArrowMerge, IconDownload, IconGitFork } from "@tabler/icons-react";
+import {
+	IconArrowMerge,
+	IconDownload,
+	IconGitFork,
+	IconGitPullRequest,
+} from "@tabler/icons-react";
 import { useState } from "react";
 import { Button } from "../../components/ui/button";
 import { useT } from "../../i18n/i18n-context";
 import { ForkBadge } from "./fork-badge";
 import { ForkDialog } from "./fork-dialog";
 import type { ForkTarget } from "./forks-api";
+import { PullRequestForm } from "./pull-request-form";
 import { SyncDialog } from "./sync-dialog";
 import { useForkStatus } from "./use-forks";
 import { useForksEnabled } from "./use-forks-enabled";
@@ -29,7 +35,9 @@ export function ForkControls(props: ForkControlsProps) {
 function Controls({ target, name, role, onOpen }: ForkControlsProps) {
 	const t = useT();
 	const status = useForkStatus(target);
-	const [dialog, setDialog] = useState<"fork" | "pull" | "merge" | null>(null);
+	const [dialog, setDialog] = useState<
+		"fork" | "pull" | "merge" | "pullRequest" | null
+	>(null);
 	const fork = status.data?.fork ?? null;
 	const source =
 		fork?.source.available && fork.source.name
@@ -61,6 +69,17 @@ function Controls({ target, name, role, onOpen }: ForkControlsProps) {
 				>
 					<IconArrowMerge size={16} aria-hidden="true" />
 					{t("versionControl.sync.merge")}
+				</Button>
+			) : null}
+			{source && role === "editor" && target.kind === "collection" ? (
+				<Button
+					size="sm"
+					variant="ghost"
+					data-id="fork-pull-request"
+					onClick={() => setDialog("pullRequest")}
+				>
+					<IconGitPullRequest size={16} aria-hidden="true" />
+					{t("versionControl.pullRequests.create")}
 				</Button>
 			) : null}
 			<Button
@@ -95,6 +114,13 @@ function Controls({ target, name, role, onOpen }: ForkControlsProps) {
 					direction={dialog}
 					source={source}
 					canEditFork={role === "editor"}
+					onClose={() => setDialog(null)}
+				/>
+			) : null}
+			{dialog === "pullRequest" && source ? (
+				<PullRequestForm
+					forkId={target.id}
+					sourceName={source.name}
 					onClose={() => setDialog(null)}
 				/>
 			) : null}

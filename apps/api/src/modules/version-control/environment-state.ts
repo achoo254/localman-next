@@ -97,6 +97,7 @@ export function envPreview(
 	const changes: MergeChange[] = [];
 	if (!sameContent(destination.root, merge.state.root)) {
 		changes.push({
+			key: "environment",
 			kind: "changed",
 			entityKind: "environment",
 			name: merge.state.root.name,
@@ -111,7 +112,12 @@ export function envPreview(
 		const after = merge.state.variables[key];
 		if (sameContent(before, after)) continue;
 		const kind = !before ? "added" : !after ? "removed" : "changed";
-		changes.push({ kind, entityKind: "variable", name: key });
+		changes.push({
+			key: `variable:${key}`,
+			kind,
+			entityKind: "variable",
+			name: key,
+		});
 	}
 	const conflicts: MergeConflictView[] = merge.conflicts.map((conflict) => ({
 		...conflict,

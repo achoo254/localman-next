@@ -1,10 +1,6 @@
 import type { Locale } from "@localman/shared";
-import type { z } from "zod";
-import {
-	type ServerMessages,
-	formatCount,
-	messagesFor,
-} from "../../i18n/server-messages.js";
+import { formatCount, messagesFor } from "../../i18n/server-messages.js";
+import { COLLABORATION_TEMPLATES } from "./collaboration-texts.js";
 import {
 	NOTIFICATION_EVENT_TYPES,
 	NOTIFICATION_PARAMS,
@@ -12,31 +8,11 @@ import {
 	type NotificationType,
 	TEST_NOTIFICATION_TYPE,
 } from "./notification-events.js";
-
-/** Title and body of one notification in one language. */
-export interface NotificationText {
-	readonly title: string;
-	readonly body: string;
-}
-
-type Template = (params: unknown, locale: Locale) => NotificationText | null;
-
-/** Validates stored params against `schema` before rendering them. */
-function template<S extends z.ZodType>(
-	schema: S,
-	render: (
-		params: z.output<S>,
-		messages: ServerMessages,
-		locale: Locale,
-	) => NotificationText,
-): Template {
-	return (params, locale) => {
-		const parsed = schema.safeParse(params);
-		return parsed.success
-			? render(parsed.data, messagesFor(locale), locale)
-			: null;
-	};
-}
+import {
+	type NotificationText,
+	type Template,
+	template,
+} from "./notification-template.js";
 
 const TEMPLATES: Readonly<Record<NotificationType, Template>> = {
 	"project.invitation": template(
@@ -162,31 +138,7 @@ const TEMPLATES: Readonly<Record<NotificationType, Template>> = {
 					};
 		},
 	),
-	"comment.mentioned": template(
-		NOTIFICATION_PARAMS["comment.mentioned"],
-		(params, { commentMentioned }) => ({
-			title: commentMentioned.title,
-			body: commentMentioned.body(params),
-		}),
-	),
-	"comment.replied": template(
-		NOTIFICATION_PARAMS["comment.replied"],
-		(params, { commentReplied }) => ({
-			title: commentReplied.title,
-			body: commentReplied.body(params),
-		}),
-	),
-	"collection.changed": template(
-		NOTIFICATION_PARAMS["collection.changed"],
-		(params, { collectionChanged }, locale) => ({
-			title: collectionChanged.title,
-			body: collectionChanged.body({
-				...params,
-				changes: formatCount(locale, params.changes),
-				count: params.changes,
-			}),
-		}),
-	),
+	...COLLABORATION_TEMPLATES,
 	[TEST_NOTIFICATION_TYPE]: template(
 		NOTIFICATION_PARAMS[TEST_NOTIFICATION_TYPE],
 		(_params, { testNotification }) => testNotification,

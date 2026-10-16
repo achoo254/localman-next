@@ -1,18 +1,19 @@
 import {
 	IconGitFork,
+	IconGitPullRequest,
 	IconHistory,
 	IconInfoCircle,
 	IconMessageCircle,
 	IconX,
 } from "@tabler/icons-react";
-import { type KeyboardEvent, memo, useEffect, useId, useRef } from "react";
+import { type KeyboardEvent, memo, useId, useRef } from "react";
 import { IconButton } from "../../components/ui/icon-button";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
-import { useCommentFocus } from "../comments/comment-focus";
 import { CommentsPanel } from "../comments/comments-panel";
 import { useCommentsEnabled } from "../comments/use-comments-enabled";
 import { ForksPanel } from "../version-control/forks-panel";
+import { PullRequestsPanel } from "../version-control/pull-requests-panel";
 import { useForksEnabled } from "../version-control/use-forks-enabled";
 import { ChangelogPanel } from "./changelog-panel";
 import { InfoPanel } from "./info-panel";
@@ -22,6 +23,7 @@ import {
 	type RightPanel,
 	useRightPanel,
 } from "./right-panel-context";
+import { useRailFocus } from "./right-rail-focus";
 import { useCollection } from "./use-collections";
 import { useDrawerFocus } from "./use-drawer-focus";
 
@@ -29,6 +31,7 @@ const ICONS = {
 	info: IconInfoCircle,
 	comments: IconMessageCircle,
 	forks: IconGitFork,
+	pullRequests: IconGitPullRequest,
 	changelog: IconHistory,
 } as const;
 
@@ -62,20 +65,20 @@ export const RightRail = memo(function RightRail({
 	const forksOn = useForksEnabled();
 	const openNode = useOpenCollectionNode();
 	const panels = RIGHT_PANELS.filter(
-		(id) => (commentsOn || id !== "comments") && (forksOn || id !== "forks"),
+		(id) =>
+			(commentsOn || id !== "comments") &&
+			(forksOn || (id !== "forks" && id !== "pullRequests")),
 	);
-	const focus = useCommentFocus();
-	// A comment link or marker for the shown item opens its comments.
-	useEffect(() => {
-		if (!commentsOn || !focus) return;
-		if (focus.collectionId === collectionId && focus.nodeId === nodeId) {
-			setPanel("comments");
-		}
-	}, [commentsOn, focus, collectionId, nodeId, setPanel]);
+	useRailFocus(
+		{ collectionId, nodeId },
+		{ comments: commentsOn, forks: forksOn },
+		setPanel,
+	);
 	const labels: Record<RightPanel, string> = {
 		info: t("collections.rightRail.info"),
 		comments: t("collections.rightRail.comments"),
 		forks: t("collections.rightRail.forks"),
+		pullRequests: t("collections.rightRail.pullRequests"),
 		changelog: t("collections.rightRail.changelog"),
 	};
 	const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
@@ -135,6 +138,13 @@ export const RightRail = memo(function RightRail({
 											name: label,
 										})
 									}
+								/>
+							) : null}
+							{panel === "pullRequests" && forksOn ? (
+								<PullRequestsPanel
+									collectionId={collectionId}
+									workspaceId={detail?.workspaceId ?? null}
+									role={detail?.role ?? null}
 								/>
 							) : null}
 							{panel === "changelog" ? (

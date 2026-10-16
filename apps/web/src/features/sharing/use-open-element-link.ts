@@ -21,6 +21,8 @@ export interface ElementLinkTarget {
 	nodeId: string | null;
 	/** A comment to bring into view (collections). */
 	commentId: string | null;
+	/** A pull request into the collection to open. */
+	pullRequestId?: string | null;
 	/** Known once the element loaded (the caller can read it). */
 	workspaceId: string | null;
 }
@@ -40,7 +42,7 @@ export function useOpenElementLink(
 	const signedIn = session.status === "authenticated";
 	const workspaces = useWorkspaces(signedIn && enabled);
 	const selectWorkspace = useSelectWorkspace();
-	const { type, id, nodeId, commentId, workspaceId } = target;
+	const { type, id, nodeId, commentId, pullRequestId, workspaceId } = target;
 	// A failed list counts as "not a member": nothing is switched.
 	const listed = workspaces.isSuccess || workspaces.isError;
 	const member =
@@ -55,6 +57,7 @@ export function useOpenElementLink(
 				id,
 				...(nodeId ? { nodeId } : {}),
 				...(commentId ? { commentId } : {}),
+				...(pullRequestId ? { pullRequestId } : {}),
 			}),
 		});
 	}, [
@@ -69,6 +72,7 @@ export function useOpenElementLink(
 		id,
 		nodeId,
 		commentId,
+		pullRequestId,
 	]);
 	return {
 		error: session.status === "error" ? session.error : null,

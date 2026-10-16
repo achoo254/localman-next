@@ -83,7 +83,9 @@ describe("forks on the collection page", () => {
 			[`GET ${C}/fork-status`]: { body: A_FORK },
 			[`GET ${C}/pull`]: {
 				body: {
-					changes: [{ kind: "changed", entityKind: "request", name: "List" }],
+					changes: [
+						{ key: "r1", kind: "changed", entityKind: "request", name: "List" },
+					],
 					conflicts: [
 						{
 							id: "r1:draft.url",
@@ -135,7 +137,9 @@ describe("forks on the collection page", () => {
 			[`GET ${C}/fork-status`]: { body: A_FORK },
 			[`GET ${C}/merge`]: {
 				body: {
-					changes: [{ kind: "added", entityKind: "request", name: "Create" }],
+					changes: [
+						{ key: "r2", kind: "added", entityKind: "request", name: "Create" },
+					],
 					conflicts: [],
 				},
 			},

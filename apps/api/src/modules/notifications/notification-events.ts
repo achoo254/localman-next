@@ -5,6 +5,8 @@ import {
 } from "@localman/shared/access";
 import { z } from "zod";
 import { normalizeInternalPath } from "../../http/internal-path.js";
+import { COLLABORATION_PARAMS } from "./collaboration-params.js";
+import { day, name } from "./notification-param-values.js";
 
 /**
  * Every kind of event notification Localman sends. Modules add their events
@@ -27,6 +29,9 @@ export const NOTIFICATION_EVENT_TYPES = [
 	"comment.mentioned",
 	"comment.replied",
 	"collection.changed",
+	"pullRequest.opened",
+	"pullRequest.reviewed",
+	"pullRequest.merged",
 ] as const;
 
 export type NotificationEventType = (typeof NOTIFICATION_EVENT_TYPES)[number];
@@ -53,18 +58,6 @@ export const NOTIFICATION_TYPES = [
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
-
-/** A name shown inside a sentence (project, person). */
-const name = z.string().trim().min(1).max(200);
-/** A calendar day in Asia/Saigon, `YYYY-MM-DD`. */
-const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
-
-/** A comment on a collection or on one of its items (`item` null: itself). */
-const commentParams = z.object({
-	author: name.nullable(),
-	collection: name,
-	item: name.nullable(),
-});
 
 /**
  * What is stored with a notification, per event type. Texts are rendered
@@ -123,16 +116,7 @@ export const NOTIFICATION_PARAMS = {
 		role: z.enum(ELEMENT_ROLES),
 		approved: z.boolean(),
 	}),
-	/** `author` is `null` for an account without name or username. */
-	"comment.mentioned": commentParams,
-	"comment.replied": commentParams,
-	/** One per watcher and digest run; `author` only when one person changed it. */
-	"collection.changed": z.object({
-		collection: name,
-		changes: z.number().int().min(1),
-		authors: z.number().int().min(1),
-		author: name.nullable(),
-	}),
+	...COLLABORATION_PARAMS,
 	// No values; Mongo drops an empty object, so a stored test has none.
 	[TEST_NOTIFICATION_TYPE]: z.object({}).optional(),
 } satisfies Record<NotificationType, z.ZodType>;

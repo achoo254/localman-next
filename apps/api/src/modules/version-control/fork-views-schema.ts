@@ -53,6 +53,7 @@ export const forkListView = z.object({
 export const mergePreviewView = z.object({
 	changes: z.array(
 		z.object({
+			key: z.string(),
 			kind: z.enum(["added", "removed", "changed"]),
 			entityKind,
 			name: z.string(),

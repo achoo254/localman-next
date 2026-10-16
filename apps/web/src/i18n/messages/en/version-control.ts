@@ -1,4 +1,6 @@
 /** Forks, pulling changes and merging, of collections and environments. */
+import { versionControlPullRequests } from "./version-control-pull-requests";
+
 export const versionControl = {
 	kinds: {
 		collection: "collection",
@@ -94,5 +96,12 @@ export const versionControl = {
 		conflicts: "Choose a version for every conflict first.",
 		sourceGone: "The source no longer exists, or you can't open it.",
 		forbidden: "You're not allowed to do that.",
+		notFound: "This pull request no longer exists, or you can't open it.",
+		closed: "This pull request is already merged or declined.",
+		invalidReviewer: "Reviewers must be Editors of the source.",
+		pullRequestLimit:
+			"A collection takes at most 100 open pull requests. Merge or decline some first.",
+		busy: "This pull request is changing right now. Try again.",
 	},
+	...versionControlPullRequests,
 } as const;

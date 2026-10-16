@@ -5,11 +5,8 @@ import type {
 	ValidatedEvent,
 } from "../notification-events.js";
 import { NotificationModel } from "../notification-model.js";
-import {
-	type NotificationText,
-	eventLabel,
-	renderNotification,
-} from "../notification-texts.js";
+import type { NotificationText } from "../notification-template.js";
+import { eventLabel, renderNotification } from "../notification-texts.js";
 
 /** What Web Push and Telegram deliver: texts in the recipient's language. */
 export interface NotificationMessage extends NotificationText {

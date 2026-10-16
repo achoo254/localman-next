@@ -16,6 +16,7 @@ function changesOf(
 	const changes: MergeChange[] = [];
 	if (!sameContent(destination.root, merged.root)) {
 		changes.push({
+			key: ROOT_KEY,
 			kind: "changed",
 			entityKind: "collection",
 			name: merged.root.name,
@@ -31,7 +32,7 @@ function changesOf(
 		if (sameContent(before, after)) continue;
 		const node = (after ?? before) as CollectionNode;
 		const kind = !before ? "added" : !after ? "removed" : "changed";
-		changes.push({ kind, entityKind: node.kind, name: node.name });
+		changes.push({ key: id, kind, entityKind: node.kind, name: node.name });
 	}
 	return changes;
 }

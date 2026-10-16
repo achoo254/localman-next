@@ -1,4 +1,5 @@
 import type { Messages } from "../../message-types";
+import { versionControlPullRequests } from "./version-control-pull-requests";
 
 export const versionControl: Messages["versionControl"] = {
 	kinds: {
@@ -89,5 +90,12 @@ export const versionControl: Messages["versionControl"] = {
 		conflicts: "请先为每一处冲突选择版本。",
 		sourceGone: "源已不存在，或你无法打开它。",
 		forbidden: "你没有权限执行此操作。",
+		notFound: "此 pull request 已不存在，或你无法打开它。",
+		closed: "此 pull request 已合并或已拒绝。",
+		invalidReviewer: "审阅者必须是源的 Editor。",
+		pullRequestLimit:
+			"一个 collection 最多接收 100 个打开的 pull request。请先合并或拒绝一些。",
+		busy: "此 pull request 正在变更，请重试。",
 	},
+	...versionControlPullRequests,
 };

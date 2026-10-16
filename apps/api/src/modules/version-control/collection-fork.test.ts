@@ -139,7 +139,7 @@ describe("pulling and merging", () => {
 		const view = await preview(EVE, fork, "pull");
 		expect(view.conflicts).toEqual([]);
 		expect(view.changes).toEqual([
-			{ kind: "changed", entityKind: "request", name: "List" },
+			{ key: req, kind: "changed", entityKind: "request", name: "List" },
 		]);
 		expect(
 			(await as(EVE).send("post", `/collections/${fork}/pull`, {})).status,

@@ -3,6 +3,7 @@ import type {
 	MergeOption,
 	MergePreview,
 } from "@localman/shared/api-client";
+import type { ClientSession } from "mongoose";
 import { writeCollectionState } from "../collections/collection-state-write.js";
 import { newNodeId } from "../collections/collection-store.js";
 import { trashCollection, trashable } from "../collections/trash-service.js";
@@ -10,7 +11,7 @@ import { inWorkspaceTransaction } from "../workspaces/workspace-lock.js";
 import { prunePairs, saveBase } from "./collection-base.js";
 import { mergeCollections } from "./collection-merge.js";
 import { applyPull } from "./collection-pull-service.js";
-import { sidesOf, statesOf } from "./collection-sync.js";
+import { type Sides, sidesOf, statesOf } from "./collection-sync.js";
 import { conflictsLeft, requireLink } from "./fork-access.js";
 import { allocateIds, pairMaps, renameState } from "./fork-id-space.js";
 import { type MergeFollowUp, followUp } from "./merge-follow-up.js";
@@ -46,15 +47,23 @@ export async function previewMerge(
  * source get source ids and pairs; the fork becomes the new base. Then
  * `mergeAndUpdate` pulls the merged source back into the fork, and
  * `mergeAndDelete` moves the fork to the trash.
+ *
+ * A pull request passes `through`: its sides, already checked (a plain
+ * merge need not open the fork), and a write that commits with the merge.
  */
 export async function applyMerge(
 	sub: string,
 	forkId: string,
 	option: MergeOption,
 	resolutions: Readonly<Record<string, ConflictSide>>,
+	through?: {
+		sides?: Sides;
+		alongside: (session: ClientSession) => Promise<void>;
+	},
 ): Promise<MergeFollowUp> {
 	const forkAction = option === "merge" ? "view" : "edit";
-	const sides = await sidesOf(sub, forkId, forkAction, "mergeFork");
+	const sides =
+		through?.sides ?? (await sidesOf(sub, forkId, forkAction, "mergeFork"));
 	// Refuse before merging when the fork could not be deleted afterwards.
 	if (option === "mergeAndDelete") await trashable(sub, forkId);
 	await inWorkspaceTransaction(
@@ -101,6 +110,7 @@ export async function applyMerge(
 			const { toSource } = pairMaps(pairs);
 			const base = renameState(states.fork, (id) => toSource.get(id) ?? id);
 			await saveBase(link._id, base, pairs, session);
+			await through?.alongside(session);
 		},
 	);
 	return followUp(option, async () => {
