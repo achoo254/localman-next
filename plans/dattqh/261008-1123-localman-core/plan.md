@@ -467,6 +467,13 @@ Review phase 01 phát hiện: mock runtime `{secret}.localman.hoandat.com` cùng
 - Comment của node đã xoá: giữ lại (restore change mang node về cùng id) và vẫn tính vào hạn mức (Jev 0,70; không tính 0,26; xoá theo node 0,04).
 - Chấp nhận, không sửa: hạn mức 5000 là trần mềm khi ghi đua nhau; job watch đọc mọi watch mỗi phút (đủ ở quy mô hiện tại); Markdown chậm với chuỗi `[[[` dài là component có sẵn, chỉ làm chậm tab của người xem.
 
+### Vòng 42: đợt A phase 14 lên production và DAST (2026-10-16, user: "đồng ý" deploy, "làm xong đợt 1 đã")
+- Deploy release `20261016-093326-047ccf396ad0` (`047ccf3`, sạch), thêm `comments` vào `released-features`, `COMMENTS_ENABLED=true` trong `/opt/localman/.env`. Backup trước khi ghi: DB `localman-20261016-163320`, `.env.bak-261016-comments`. `restarts` 35 lên 36 (lần reload của deploy), không có log lỗi sau deploy.
+- Kiểm sau deploy: `/` và `openapi.json` 200, CSP 5 hash, cổng 4000/4100/27018 chỉ nghe `127.0.0.1`, route comment/watch trả 401 khi chưa đăng nhập.
+- DAST bằng phiên đăng nhập thật trên production (workspace team và collection tạm, đã xoá hẳn sau đó): tạo, trả lời, reaction, resolve, ẩn/hiện thread đã xong; anchor sai 400 `ANCHOR_MISMATCH`, khoá lạ trong anchor bị bỏ khi lưu, reaction lạ 400; id của collection khác, id lạ và id sai dạng đều 404; body rỗng hoặc quá 10.000 ký tự 400; xoá dry run không xoá; giới hạn `comment` trả 429 `RATE_LIMITED` ở lượt thứ 20 trong một phút; watch ở workspace cá nhân 409 `WATCH_UNAVAILABLE`; job watch chuyển `lastSeq` qua thay đổi của chính người theo dõi mà không gửi thông báo; nội dung `<img onerror>` và link `javascript:` hiện thành chữ trên UI, console không có lỗi CSP. **Kết luận: SAST và DAST đều đạt, comment và watch vận hành được.**
+- Chưa kiểm được trên production: thông báo @mention và watch giữa hai tài khoản thật (chỉ có một tài khoản; đã có test tích hợp). Tool MCP comment: token Localman MCP hiện cấp không có scope `collab`, nên agent qua MCP chưa dùng được nhóm tool cộng tác (có từ trước, không do bản này).
+- Ngoài phạm vi, thấy khi đọc log: 12 lỗi `ERR_JWKS_TIMEOUT` lúc 14:55–14:59 (trước deploy). API trả 500 khi không lấy kịp JWKS của IdP để xác thực token MCP.
+
 ### Verification
 Repo đích chưa tồn tại nên không có claim nào về code để kiểm. Path và module của `localman` được dẫn ở phase 10 đã đối chiếu với `localman/docs/codebase-summary.md` và cây thư mục `localman/client/src`.
 
