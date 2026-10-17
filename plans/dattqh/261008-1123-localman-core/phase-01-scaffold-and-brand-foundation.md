@@ -42,7 +42,7 @@ Repo Tunelo gốc **không bị sửa**, mọi thao tác chạy trên bản clon
    - Đổi tên ADR của Tunelo sang `docs/decisions/tunelo/`.
    - Xoá `tunelo-root-import/` sau khi gộp xong.
 4. Kiểm tra: `pnpm install`, `pnpm --filter @tunelo/server test`, `pnpm --filter tunelo test`, `pnpm --filter tunelo build`. `git log --follow apps/tunelo-server/src/tunnel-manager.ts` phải thấy được lịch sử cũ.
-5. Repo `github.com/achoo254/tunelo` cũ (Jev 0.94): thêm commit cuối có README "Đã chuyển sang github.com/achoo254/localman-next (packages/tunelo-cli, apps/tunelo-server)", rồi **archive** trên GitHub. Field `repository` của npm package `tunelo` trỏ sang `achoo254/localman-next`. Archive là thao tác public trên GitHub nên phải hỏi user trước.
+5. Repo `github.com/achoo254/tunelo` cũ (Jev 0.94): thêm commit cuối có README "Đã chuyển sang github.com/achoo254/localman-next (packages/tunelo-cli, apps/tunelo-server)", rồi **archive** trên GitHub. Field `repository` của npm package `tunelo` trỏ sang `achoo254/localman-next`. Archive là thao tác public trên GitHub nên phải hỏi user trước. Cập nhật 2026-10-17: theo yêu cầu của user, repo cũ không archive mà đã **xoá** khỏi GitHub (trước đó đã che chi tiết server ở HEAD và chuyển public); bản Tunelo duy nhất là trong localman-next.
 6. Deploy server Tunelo **giữ PM2** qua `infra/tunelo/deploy.sh` (Jev 0.98); chỉ sửa path trong script. Đổi sang Docker Compose thì làm sau.
 
 ## Files to Create
