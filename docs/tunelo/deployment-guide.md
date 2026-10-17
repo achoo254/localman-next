@@ -36,7 +36,7 @@ git commit -am "chore(tunelo): release X.Y.Z" && git tag tunelo-vX.Y.Z && git pu
 Server **không** có pipeline tự động. Deploy từ máy có SSH tới staging:
 
 ```bash
-bash infra/tunelo/deploy.sh      # VPS_HOST, REMOTE_DIR có thể override qua biến môi trường
+VPS_HOST=<ssh alias> bash infra/tunelo/deploy.sh   # VPS_HOST bắt buộc; REMOTE_DIR override được
 ```
 
 Script build bundle (`pnpm build:tunelo-server`), rsync `dist/tunelo-server/server.mjs`, `package.json`

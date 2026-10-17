@@ -50,7 +50,7 @@ pnpm build:tunelo-cli                  # Bundle CLI into packages/tunelo-cli/dis
 pnpm --filter @tunelo/server test
 pnpm --filter tunelo test
 pnpm test:tunelo-e2e
-bash infra/tunelo/deploy.sh            # Deploy server (PM2)
+VPS_HOST=<ssh alias> bash infra/tunelo/deploy.sh   # Deploy server (PM2)
 ```
 
 Release CLI: tag `tunelo-vX.Y.Z` triggers `.github/workflows/tunelo-publish-cli.yml`.

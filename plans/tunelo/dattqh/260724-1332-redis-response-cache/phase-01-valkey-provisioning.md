@@ -1,6 +1,6 @@
 # Phase 01 — Provision Valkey bounded trên .65
 
-**Tier:** S — thao tác hạ tầng trên staging `.65` (`103.72.98.65:24700`, root). Không đụng code app.
+**Tier:** S — thao tác hạ tầng trên staging `.65`. Không đụng code app.
 
 ## Bối cảnh (đã verify 2026-07-24)
 

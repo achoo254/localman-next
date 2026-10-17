@@ -1,10 +1,13 @@
 #!/bin/bash
 set -e
 
+# Usage: VPS_HOST=<ssh alias or user@host> bash infra/tunelo/deploy.sh
+# The target is never defaulted so server access details stay out of the repo.
+
 # Run from the monorepo root: paths below are relative to it.
 cd "$(dirname "$0")/../.."
 
-VPS_HOST="${VPS_HOST:-root@103.72.98.65}"
+VPS_HOST="${VPS_HOST:?set VPS_HOST to the server ssh alias}"
 REMOTE_DIR="${REMOTE_DIR:-/var/www/tunelo}"
 
 echo "=== Tunelo Deploy ==="

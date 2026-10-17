@@ -22,7 +22,7 @@ Cấu hình CI/CD trên GitLab để build + deploy tự động lên staging `.
 
 ### 3. `.gitlab-ci.yml` (mới)
 - `build`: `pnpm install --frozen-lockfile` → `pnpm test` (15/15) → `pnpm build:server` (bundle server.mjs + dashboard). Artifact `dist/`.
-- `deploy_staging`: rsync `dist/` + `ecosystem.config.cjs` sang server qua SSH (port 24700, key inject), `pnpm install --prod`, PM2 restart, **health gate retry ~30s (fail job nếu ≠200)**.
+- `deploy_staging`: rsync `dist/` + `ecosystem.config.cjs` sang server qua SSH (key inject), `pnpm install --prod`, PM2 restart, **health gate retry ~30s (fail job nếu ≠200)**.
 - Image `node:20-bookworm-slim`; runner shared #15 (untagged, online). CI Lint: valid.
 - Build job gồm cả `pnpm lint` (biome) — xem mục 7. Verify local: lint ✓, test ✓, build ✓, typecheck server+client ✓.
 
@@ -30,10 +30,10 @@ Cấu hình CI/CD trên GitLab để build + deploy tự động lên staging `.
 | Key | Type | Value |
 |-----|------|-------|
 | `SSH_PRIVATE_KEY` | File | RSA key staging (không mask được vì đa dòng) |
-| `STAGING_HOST` | Var | `103.72.98.65` |
-| `STAGING_PORT` | Var | `24700` |
-| `STAGING_USER` | Var | `root` |
-| `DEPLOY_PATH` | Var | `/var/www/tunelo` |
+| `STAGING_HOST` | Var | (đã lược) |
+| `STAGING_PORT` | Var | (đã lược) |
+| `STAGING_USER` | Var | (đã lược) |
+| `DEPLOY_PATH` | Var | (đã lược) |
 
 ### 5. Fix crash-loop trên staging (root cause thật)
 - Pipeline deploy đúng, nhưng app crash-loop: `.env` server (bản cũ 09/07, config streaming `TUNELO_API_KEYS`) **thiếu `MONGO_URI`/`JWT_SECRET`** mà bản MongoDB yêu cầu.

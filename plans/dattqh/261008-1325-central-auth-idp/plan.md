@@ -93,7 +93,7 @@ Lúc chuyển: Localman chưa có user thật nên đổi thẳng. Tunelo giữ 
 - DNS `auth.hoandat.com` tạo qua MCP Cloudflare (proxied; zone SSL "full", origin dùng chứng chỉ tự ký chung của server). API token Cloudflare trong file token đã hết hiệu lực.
 - Bot Telegram `@auth_hoandat_bot` do user tạo; đã bật webhook có secret. Google/GitHub chờ user tạo OAuth app.
 - Backup database `auth` hằng ngày 02:30, giữ 14 ngày.
-- 2026-10-09: chặn MongoDB 27017 từ Internet theo yêu cầu của user. iptables (lưu ở `/etc/sysconfig/iptables`, đã backup) chỉ còn cho `127.0.0.1`, chính server `103.72.98.65`, mạng Docker `172.16.0.0/12` và hai IP mạng công ty `123.25.21.12`, `103.57.222.248`; mọi nguồn khác bị DROP. Trước đó log cho thấy nhiều IP lạ quét và thử đăng nhập. Rule cũ cho `113.190.138.121` truy cập mọi cổng vẫn giữ nguyên.
+- 2026-10-09: chặn MongoDB 27017 từ Internet theo yêu cầu của user. iptables (lưu ở `/etc/sysconfig/iptables`, đã backup) chỉ còn cho `127.0.0.1`, chính server, mạng Docker và các IP mạng công ty; mọi nguồn khác bị DROP. Trước đó log cho thấy nhiều IP lạ quét và thử đăng nhập. Danh sách IP được phép nằm trên server, không ghi trong repo.
 
 ### Vòng 3: sau khi lên production (2026-10-10 → 2026-10-12)
 - Chỉ đăng nhập và đăng ký bằng Google/GitHub, bỏ hẳn mật khẩu (ADR 0004 của repo `hoandat-auth`, Jev 0.94 "remove_fully"). Thay một phần phase 02.
