@@ -10,7 +10,10 @@
  * (public and guest links, collection access keys and Run buttons; the API
  * serves them only with `PUBLIC_SHARING_ENABLED`) and `comments` (comments
  * and watch on collections; needs `workspaces`) and `forks` (fork, pull
- * changes and merge of collections and environments; needs `workspaces`).
+ * changes and merge of collections and environments; needs `workspaces`) and
+ * `tuneloAccounts` (the API client finds the user's Tunelo tunnels on its
+ * own and links anonymous machines; the API serves it only with
+ * `TUNELO_ACCOUNTS_ENABLED`).
  *
  * Set at build time in `VITE_FEATURES`, a comma-separated list such as
  * `apiClient,mockMcp`. Everything is off by default. No React here:
@@ -28,6 +31,7 @@ export interface FeatureFlags {
 	readonly publicSharing: boolean;
 	readonly comments: boolean;
 	readonly forks: boolean;
+	readonly tuneloAccounts: boolean;
 }
 
 export type FeatureName = keyof FeatureFlags;
@@ -44,6 +48,7 @@ export const NO_FEATURES: FeatureFlags = Object.freeze({
 	publicSharing: false,
 	comments: false,
 	forks: false,
+	tuneloAccounts: false,
 });
 
 function isFeatureName(value: string): value is FeatureName {

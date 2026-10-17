@@ -9,7 +9,7 @@ import type { ProxyHopOutcome } from "../workbench/proxy-hop";
 import type { SendOptions } from "../workbench/send-types";
 import type { SettledResponse } from "../workbench/workbench-types";
 import type { DirectOutcome } from "./direct-fetch";
-import type { RoutingSnapshot, SecretAsk } from "./route-types";
+import type { AutoTunnels, RoutingSnapshot, SecretAsk } from "./route-types";
 import { createRoutedSender } from "./routed-sender";
 
 export const RESPONSE: ClientResponse = {
@@ -47,6 +47,10 @@ export function routerHarness(
 		snapshot?: Partial<RoutingSnapshot>;
 		consent?: boolean;
 		cors?: string[];
+		/** The user's own tunnels (flag `tuneloAccounts`). */
+		autoTunnels?: AutoTunnels;
+		/** Status the proxy (or tunnel) answers; 200 by default. */
+		proxyStatus?: number;
 	} = {},
 ): Harness {
 	const cors = new Set(options.cors ?? []);
@@ -62,7 +66,7 @@ export function routerHarness(
 	const proxy = vi.fn(
 		async (_prepared: PreparedRequest): Promise<ProxyHopOutcome> => ({
 			kind: "response",
-			response: RESPONSE,
+			response: { ...RESPONSE, status: options.proxyStatus ?? 200 },
 		}),
 	);
 	const sender = createRoutedSender({
@@ -89,6 +93,7 @@ export function routerHarness(
 		},
 		direct,
 		proxy,
+		...(options.autoTunnels ? { autoTunnels: options.autoTunnels } : {}),
 	});
 	return {
 		send: (draft, sendOptions, routeChosen = false) =>

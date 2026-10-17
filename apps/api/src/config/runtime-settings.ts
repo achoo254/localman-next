@@ -24,7 +24,8 @@ export type HeavyOperation =
 	| "suggestFaker"
 	| "comment"
 	| "fork"
-	| "sync";
+	| "sync"
+	| "tuneloLink";
 
 /** Settings that operations read at request time (they are declared statically). */
 export interface RuntimeSettings {
@@ -157,6 +158,8 @@ export const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = Object.freeze({
 		// whole states. The second window counts per source or fork.
 		fork: { perUser: perMinute(10), perProject: perMinute(20) },
 		sync: { perUser: perMinute(30), perProject: perMinute(60) },
+		// Tunelo opens 20 pairings per 10 minutes per IP, and all come from here.
+		tuneloLink: { perUser: { max: 5, windowMs: 10 * 60_000 } },
 	},
 });
 

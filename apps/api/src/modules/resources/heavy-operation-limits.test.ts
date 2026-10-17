@@ -24,6 +24,7 @@ const limits: RuntimeSettings["heavyOperationRateLimit"] = {
 	comment: { perUser: window(2), perProject: window(10) },
 	fork: { perUser: window(2), perProject: window(10) },
 	sync: { perUser: window(2), perProject: window(10) },
+	tuneloLink: { perUser: window(2) },
 };
 
 useCollaboratorTestDb(() => ({

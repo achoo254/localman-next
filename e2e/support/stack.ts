@@ -9,6 +9,7 @@ import {
 	IDP_ORIGIN,
 	MOCK_BASE_DOMAIN,
 	PORTS,
+	TUNELO_ORIGIN,
 	WEB_ORIGIN,
 } from "./ports.js";
 import {
@@ -28,6 +29,7 @@ const TSX = resolve(REPO, "node_modules/.bin/tsx");
 const API_ENTRY = resolve(REPO, "apps/api/src/main.ts");
 const IDP_ENTRY = resolve(REPO, "e2e/support/idp-server.ts");
 const ECHO_ENTRY = resolve(REPO, "e2e/support/echo-server.ts");
+const TUNELO_ENTRY = resolve(REPO, "e2e/support/tunelo-server.ts");
 /** Tunnel domain of the E2E stack: the tunnel URLs in the Tunelo specs sit under it. */
 const TUNNEL_DOMAIN = "tunnel.hoandat.com";
 const PREVIEW_CONFIG = resolve(REPO, "e2e/support/vite-preview.config.ts");
@@ -79,6 +81,8 @@ function apiEnv(mongoUri: string, oidcSecret: string): NodeJS.ProcessEnv {
 		PUBLIC_SHARING_ENABLED: "true",
 		COMMENTS_ENABLED: "true",
 		FORKS_ENABLED: "true",
+		TUNELO_ACCOUNTS_ENABLED: "true",
+		TUNELO_API_URL: TUNELO_ORIGIN, // the fake Tunelo for every tenant
 	};
 }
 
@@ -102,7 +106,12 @@ function releasedFeatures(): string[] {
 }
 
 /** Specs that cover features not released yet turn their flags on here. */
-const UNRELEASED_FEATURES = ["publicSharing", "comments", "forks"];
+const UNRELEASED_FEATURES = [
+	"publicSharing",
+	"comments",
+	"forks",
+	"tuneloAccounts",
+];
 
 /**
  * Production build of the web app for the E2E: same origin for the API
@@ -120,7 +129,16 @@ function webBuildEnv(): NodeJS.ProcessEnv {
 	};
 }
 
-/** Starts MongoDB, the API, the IdP and the web preview; resolves when all answer. */
+/** A TypeScript entry of the repo run with tsx (API and the fakes). */
+function startTsx(
+	name: string,
+	entry: string,
+	env: NodeJS.ProcessEnv,
+): Service {
+	return startService(name, TSX, [entry], { cwd: REPO, env });
+}
+
+/** Starts MongoDB, the API, the fakes and the web preview; resolves when all answer. */
 export async function startStack(): Promise<void> {
 	if (running) throw new Error("The E2E stack is already running.");
 	for (const port of Object.values(PORTS)) await assertPortFree(port);
@@ -145,23 +163,16 @@ export async function startStack(): Promise<void> {
 		services.push(build);
 		await waitForSuccess(build);
 		const mongoUri = mongo.getUri("localman_e2e");
-		const api = startService("api", TSX, [API_ENTRY], {
-			cwd: REPO,
-			env: apiEnv(mongoUri, oidcSecret),
-		});
-		const idp = startService("fake-idp", TSX, [IDP_ENTRY], {
-			cwd: REPO,
-			env: idpEnv(oidcSecret),
-		});
-		const echo = startService("echo", TSX, [ECHO_ENTRY], {
-			cwd: REPO,
-			env: baseEnv(),
-		});
-		services.push(api, idp, echo);
+		const api = startTsx("api", API_ENTRY, apiEnv(mongoUri, oidcSecret));
+		const idp = startTsx("fake-idp", IDP_ENTRY, idpEnv(oidcSecret));
+		const echo = startTsx("echo", ECHO_ENTRY, baseEnv());
+		const tunelo = startTsx("fake-tunelo", TUNELO_ENTRY, baseEnv());
+		services.push(api, idp, echo, tunelo);
 		await waitForHttp(`${API_ORIGIN}/api/v1/openapi.json`, api);
 		await waitForHttp(`http://127.0.0.1:${PORTS.mock}/healthz`, api);
 		await waitForHttp(`${IDP_ORIGIN}/.well-known/openid-configuration`, idp);
 		await waitForHttp(`${ECHO_ORIGIN}/health`, echo);
+		await waitForHttp(`${TUNELO_ORIGIN}/__e2e/health`, tunelo);
 
 		const web = startService(
 			"web-preview",

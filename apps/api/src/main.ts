@@ -33,6 +33,7 @@ import {
 	type NotificationService,
 	createNotificationService,
 } from "./modules/notifications/notification-service.js";
+import { configureTunelo } from "./modules/tunelo/tunelo-runtime.js";
 import { servedOperations } from "./operations/feature-gates.js";
 import { operations as registeredOperations } from "./operations/registry.js";
 import { configureTenancy } from "./tenancy/configure-tenancy.js";
@@ -154,11 +155,13 @@ try {
 	notifications = createNotificationService(env, logger);
 	setNotificationService(notifications);
 	const auth = createAuthModule(authSettingsFromEnv(env), logger);
+	configureTunelo(auth, env.TUNELO_API_URL, logger);
 	const allowedOrigins = [env.PUBLIC_URL, env.WEB_ORIGIN];
 	const operations = servedOperations(registeredOperations, {
 		publicSharing: env.PUBLIC_SHARING_ENABLED,
 		comments: env.COMMENTS_ENABLED,
 		forks: env.FORKS_ENABLED,
+		tuneloAccounts: env.TUNELO_ACCOUNTS_ENABLED,
 	});
 	const dashboard = createDashboardApp({
 		logger,

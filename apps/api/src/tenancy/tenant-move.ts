@@ -19,8 +19,9 @@ import {
 
 /**
  * Collections that do not move: sessions, sign-in links and transactions,
- * locks, rate limits, queues, and MCP tokens. They hold state of the server
- * they were written on, or keys the install cannot open, and refill.
+ * locks, rate limits, queues, MCP tokens and Tunelo machine links. They
+ * hold state of the server they were written on, or keys the install cannot
+ * open (link tokens are sealed with the session keyring), and refill.
  */
 export const COLLECTIONS_NOT_MOVED: ReadonlySet<string> = new Set([
 	"sessions",
@@ -33,6 +34,7 @@ export const COLLECTIONS_NOT_MOVED: ReadonlySet<string> = new Set([
 	"workspace_locks",
 	"run_button_imports",
 	"mcp_tokens",
+	"tunelo_links",
 ]);
 
 /** Seals one value again: the new sealed value, or null when it cannot be opened. */

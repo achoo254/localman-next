@@ -45,3 +45,8 @@ export function tunnelOrigin(
 	if (domains.length === 0 || !isTunnelUrl(value, domains)) return null;
 	return parseHttpUrl(value)?.origin ?? null;
 }
+
+/** Links an anonymous machine to the user (the code of the connect modal). */
+export function tuneloLinkCommand(code: string): string {
+	return `tunelo link ${code}`;
+}

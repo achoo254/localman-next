@@ -2,12 +2,15 @@ import { IconPlugConnected, IconRefresh } from "@tabler/icons-react";
 import { Alert } from "../../../components/ui/alert";
 import { Button } from "../../../components/ui/button";
 import { useT } from "../../../i18n/i18n-context";
+import { renderRich } from "../../../i18n/rich-text";
 import { clientSettingsApi } from "../routing/client-settings-api";
 import {
 	useClientSettings,
 	useSettingsChange,
 } from "../routing/use-client-settings";
+import type { TunnelNotice } from "../workbench/workbench-types";
 import { CorsHint } from "./cors-hint";
+import { tuneloHttpCommand } from "./tunelo-commands";
 import { TuneloSteps } from "./tunelo-steps";
 import { TunnelPasteForm } from "./tunnel-paste-form";
 import { TunnelWarning } from "./tunnel-warning";
@@ -18,6 +21,8 @@ export interface TuneloPanelProps {
 	port: number;
 	/** The browser tried the target directly first and was refused. */
 	directFailed: boolean;
+	/** The user's tunnel for the port stopped, or serves TCP only. */
+	notice?: TunnelNotice;
 	/** Sends the tab again (after a tunnel was opened or mapped). */
 	onResend: () => void;
 }
@@ -31,6 +36,7 @@ export function TuneloPanel({
 	targetKey,
 	port,
 	directFailed,
+	notice,
 	onResend,
 }: TuneloPanelProps) {
 	const t = useT();
@@ -51,6 +57,23 @@ export function TuneloPanel({
 				<IconPlugConnected size={18} aria-hidden="true" />
 				{t("apiClientTunelo.panel.title")}
 			</h2>
+			{notice ? (
+				<Alert
+					tone="warning"
+					title={t(`apiClientTunelo.accounts.notice.${notice}`, {
+						key: targetKey,
+					})}
+					data-id={`tunelo-notice-${notice}`}
+				>
+					<p className="m-0 text-xs">
+						{renderRich(
+							t(`apiClientTunelo.accounts.notice.${notice}Body`, {
+								command: tuneloHttpCommand(port),
+							}),
+						)}
+					</p>
+				</Alert>
+			) : null}
 			{directFailed ? (
 				<Alert
 					tone="info"

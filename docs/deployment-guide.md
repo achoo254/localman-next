@@ -178,6 +178,14 @@ Fork, pull changes, merge của collection và environment, cùng pull request c
 - **Kiểm sau khi bật:** `GET /api/v1/collections/x/fork-status` trả 401 khi chưa đăng nhập (route của API, không phải 404).
 - **Tắt khẩn (rollback):** đặt `FORKS_ENABLED=false`, `pm2 reload localman-api`. Liên kết fork và snapshot giữ nguyên; bật lại thì pull và merge tiếp được.
 
+## Tunnel theo tài khoản Tunelo (`TUNELO_ACCOUNTS_ENABLED`)
+
+API client tự tìm tunnel Tunelo của user (cùng tài khoản, hoặc máy ẩn danh liên kết bằng `tunelo link <mã>`) khi **cả hai** cùng bật: cờ web `tuneloAccounts` trong [`released-features`](../infra/localman/released-features) và cổng server `TUNELO_ACCOUNTS_ENABLED=true`. Server gọi Tunelo của từng tenant (`https://tunnel.<domain>`, tenant chính `https://tunnel.hoandat.com`), nên Tunelo đó phải có `GET /api/tunnels` và `/api/links/*`; `TUNELO_API_URL` chỉ dùng cho dev/E2E. Link token niêm phong bằng `SESSION_ENCRYPTION_KEY`.
+
+- **Bật:** thêm `tuneloAccounts` vào `released-features` và deploy; trên server đặt `TUNELO_ACCOUNTS_ENABLED=true` rồi `pm2 reload localman-api`.
+- **Kiểm sau khi bật:** `GET /api/v1/client/local-tunnels` trả 401 khi chưa đăng nhập (không phải 404); đăng nhập, chạy `tunelo http <port>` cùng tài khoản rồi gửi tới `http://localhost:<port>` thì badge "Qua Tunelo · <máy>".
+- **Tắt khẩn (rollback):** đặt `TUNELO_ACCOUNTS_ENABLED=false`, `pm2 reload localman-api`. Máy đã liên kết (`tunelo_links`) giữ nguyên; ánh xạ dán tay vẫn chạy.
+
 ## Rollback
 
 - Code: đổi symlink về một release còn giữ (tối đa 5 bản). Script cài lại nginx conf của release đó (CSP khớp `index.html` của nó), đổi symlink, reload nginx và pm2, kiểm health:

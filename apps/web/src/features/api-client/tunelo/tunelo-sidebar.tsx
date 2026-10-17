@@ -1,5 +1,6 @@
 import { memo, useState } from "react";
 import { useToast } from "../../../components/ui/toast";
+import { useFeatures } from "../../../config/features";
 import { useT } from "../../../i18n/i18n-context";
 import { useDelayedFlag } from "../../../lib/use-delayed-flag";
 import {
@@ -13,6 +14,7 @@ import {
 	useSettingsChange,
 } from "../routing/use-client-settings";
 import { TuneloSteps } from "./tunelo-steps";
+import { TunnelLinksSection } from "./tunnel-links-section";
 import { TunnelMappingForm } from "./tunnel-mapping-form";
 import { TunnelMappingList } from "./tunnel-mapping-list";
 import { TunnelMappingsSkeleton } from "./tunnel-mappings-skeleton";
@@ -24,11 +26,13 @@ const DEFAULT_PORT = 3000;
 /**
  * Tunelo section of the workbench sidebar: how to open a tunnel, the
  * form mapping a local address to it, and the user's mappings (on/off,
- * delete). Mappings live in the account's client settings.
+ * delete). Mappings live in the account's client settings. With the
+ * `tuneloAccounts` flag, also the machines linked with `tunelo link`.
  */
 export const TuneloSidebar = memo(function TuneloSidebar() {
 	const t = useT();
 	const toast = useToast();
+	const { tuneloAccounts } = useFeatures();
 	const { settings, data, isPending } = useClientSettings();
 	const skeleton = useDelayedFlag(isPending);
 	const [port, setPort] = useState<number | null>(null);
@@ -62,6 +66,7 @@ export const TuneloSidebar = memo(function TuneloSidebar() {
 			</div>
 			<TuneloSteps port={port ?? DEFAULT_PORT} />
 			<TunnelWarning />
+			{tuneloAccounts ? <TunnelLinksSection /> : null}
 			<TunnelMappingForm
 				onSave={add}
 				busy={save.isPending}

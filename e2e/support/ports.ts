@@ -10,6 +10,7 @@ export const PORTS = {
 	idp: 4620,
 	web: 4630,
 	echo: 4640,
+	tunelo: 4660,
 } as const;
 
 /** Browser origin of the web app (Vite preview, same origin as the API). */
@@ -25,3 +26,5 @@ export const MOCK_BASE_DOMAIN = `localhost:${PORTS.mock}`;
 export const ECHO_ORIGIN = `http://127.0.0.1:${PORTS.echo}`;
 /** Cookie the fake IdP reads to pick the account a sign-in completes as. */
 export const IDP_USER_COOKIE = "e2e_idp_user";
+/** Origin of the fake Tunelo (account API and the specs' control routes). */
+export const TUNELO_ORIGIN = `http://127.0.0.1:${PORTS.tunelo}`;

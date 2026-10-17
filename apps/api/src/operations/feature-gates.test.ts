@@ -4,11 +4,17 @@ import { createDashboardApp } from "../dashboard-server.js";
 import { createLogger } from "../logger.js";
 import { commentOperations } from "../modules/comments/comment-operations.js";
 import { publicSharingOperations } from "../modules/public-sharing/public-sharing-operations.js";
+import { tuneloOperations } from "../modules/tunelo/tunelo-operations.js";
 import { watchOperations } from "../modules/watch/watch-operations.js";
 import { servedOperations } from "./feature-gates.js";
 import { operations } from "./registry.js";
 
-const ALL_ON = { publicSharing: true, comments: true, forks: true };
+const ALL_ON = {
+	publicSharing: true,
+	comments: true,
+	forks: true,
+	tuneloAccounts: true,
+};
 const SHARING_OFF = { ...ALL_ON, publicSharing: false };
 
 describe("PUBLIC_SHARING_ENABLED", () => {
@@ -60,6 +66,27 @@ describe("COMMENTS_ENABLED", () => {
 			operations: off,
 		});
 		const res = await request(app).get("/api/v1/collections/c1/comments");
+		expect(res.status).toBe(404);
+	});
+});
+
+describe("TUNELO_ACCOUNTS_ENABLED", () => {
+	it("leaves the Tunelo account operations out while off", async () => {
+		const off = servedOperations(operations, {
+			...ALL_ON,
+			tuneloAccounts: false,
+		});
+		for (const operation of tuneloOperations) {
+			expect(operations).toContain(operation);
+			expect(off).not.toContain(operation);
+		}
+		expect(off).toHaveLength(operations.length - tuneloOperations.length);
+		const app = createDashboardApp({
+			logger: createLogger("silent"),
+			allowedOrigins: ["https://localman.test"],
+			operations: off,
+		});
+		const res = await request(app).get("/api/v1/client/local-tunnels");
 		expect(res.status).toBe(404);
 	});
 });

@@ -10,13 +10,9 @@ import type {
 	DirectFailReason,
 	SettledResponse,
 } from "../workbench/workbench-types";
+import { viaAutoTunnel } from "./auto-tunnel-hop";
 import { directFetch } from "./direct-fetch";
-import {
-	type HopContext,
-	tunnelNeeded,
-	viaProxy,
-	viaTunnel,
-} from "./route-hops";
+import { type HopContext, viaProxy, viaTunnel } from "./route-hops";
 import { mayHaveReachedTarget } from "./route-plan";
 
 const DIRECT_CODES: Readonly<Record<DirectFailReason, string>> = {
@@ -86,9 +82,21 @@ export async function viaDirect(
 			);
 	}
 	if (strict) return directFailed(ctx, "blocked");
-	// Without a tunnel nothing is resent: the Tunelo panel is a manual step.
+	// Without a mapping: one of the user's own tunnels, else the Tunelo
+	// panel (a manual step). A POST that may have reached the target is
+	// not resent through either on its own.
 	const tunnelUrl = local ? ctx.snapshot.tunnels.get(local.key) : undefined;
-	if (local && !tunnelUrl) return tunnelNeeded(ctx, true);
+	if (local && !tunnelUrl) {
+		return viaAutoTunnel(ctx, {
+			directFailed: true,
+			why: "cors",
+			forbidden,
+			hold: () =>
+				mayHaveReachedTarget(ready.prepared)
+					? directFailed(ctx, "notRetried")
+					: null,
+		});
+	}
 	// Checked before any automatic resend, through a tunnel or the proxy.
 	if (mayHaveReachedTarget(ready.prepared)) {
 		return directFailed(ctx, "notRetried");

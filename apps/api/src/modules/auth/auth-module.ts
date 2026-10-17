@@ -52,6 +52,8 @@ export interface AuthModule {
 	readonly oidc: OidcApi;
 	/** Session → Tunelo API token (RFC 8693), for the tunnel list. */
 	readonly tunnelTokens: TunnelTokenExchange;
+	/** Seals secrets at rest with the session keyring (Tunelo link tokens). */
+	readonly tokenCipher: TokenCipher;
 }
 
 export function authSettingsFromEnv(env: Env): AuthSettings {
@@ -102,9 +104,10 @@ export function createAuthModule(
 		new OidcClient(settings),
 		settings.tenantIdp,
 	);
+	const tokenCipher = new TokenCipher(keyring);
 	// Push devices registered by a session stop with it.
 	const sessions = new SessionStore(
-		new TokenCipher(keyring),
+		tokenCipher,
 		logger,
 		deletePushSubscriptionsOfSessions,
 	);
@@ -153,6 +156,7 @@ export function createAuthModule(
 		csrfExempt,
 		sessions,
 		oidc,
+		tokenCipher,
 		tunnelTokens: new TunnelTokenExchange({
 			oidc,
 			sessions,

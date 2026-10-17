@@ -1,4 +1,5 @@
 import type { Messages } from "../../message-types";
+import { apiClientTuneloAccounts } from "./api-client-tunelo-accounts";
 
 export const apiClientTunelo: Messages["apiClientTunelo"] = {
 	rail: "Tunelo",
@@ -65,4 +66,5 @@ export const apiClientTunelo: Messages["apiClientTunelo"] = {
 		tipDirect: "直连始终从浏览器发送。选择 Proxy 或 Auto 才会使用 {url}。",
 		unmap: "移除 {key} 的映射",
 	},
+	accounts: apiClientTuneloAccounts,
 };

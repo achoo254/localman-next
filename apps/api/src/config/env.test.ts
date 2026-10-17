@@ -51,6 +51,7 @@ describe("parseEnv", () => {
 			PUBLIC_SHARING_ENABLED: false,
 			COMMENTS_ENABLED: false,
 			FORKS_ENABLED: false,
+			TUNELO_ACCOUNTS_ENABLED: false,
 			TURNSTILE_VERIFY_URL:
 				"https://challenges.cloudflare.com/turnstile/v0/siteverify",
 		});

@@ -21,6 +21,12 @@ const hostWithPort = z
 		"must be a host name with an optional port, without scheme",
 	);
 
+/** `true`/`false` switch of an unreleased feature, off unless set. */
+const offByDefault = z
+	.enum(["true", "false"], { error: "must be true or false" })
+	.default("false")
+	.transform((value) => value === "true");
+
 /** Requests per second allowed by a mock rate limit. */
 const perSecond = (fallback: number) =>
 	z.coerce.number().int().min(1).max(100_000).default(fallback);
@@ -119,26 +125,30 @@ export const featureEnvShape = {
 	 * Off: their operations are neither routed nor offered as MCP tools,
 	 * so a deploy of unreleased work exposes nothing.
 	 */
-	PUBLIC_SHARING_ENABLED: z
-		.enum(["true", "false"], { error: "must be true or false" })
-		.default("false")
-		.transform((value) => value === "true"),
+	PUBLIC_SHARING_ENABLED: offByDefault,
 	/**
 	 * Comments and watch on collections. Off: their operations are neither
 	 * routed nor offered as MCP tools, and the watch digest does not run.
 	 */
-	COMMENTS_ENABLED: z
-		.enum(["true", "false"], { error: "must be true or false" })
-		.default("false")
-		.transform((value) => value === "true"),
+	COMMENTS_ENABLED: offByDefault,
 	/**
 	 * Forks, pull changes and merges of collections and environments. Off:
 	 * their operations are neither routed nor offered as MCP tools.
 	 */
-	FORKS_ENABLED: z
-		.enum(["true", "false"], { error: "must be true or false" })
-		.default("false")
-		.transform((value) => value === "true"),
+	FORKS_ENABLED: offByDefault,
+	/**
+	 * Tunnels found through the user's Tunelo account and linked machines
+	 * (`tunelo link`). Off: their operations are neither routed nor listed.
+	 */
+	TUNELO_ACCOUNTS_ENABLED: offByDefault,
+	/**
+	 * Tunelo API for every tenant, e.g. a local Tunelo in dev or a fake in
+	 * E2E (https only in production). Unset: each tenant's own
+	 * `https://tunnel.<domain>`.
+	 */
+	TUNELO_API_URL: z
+		.url({ protocol: /^https?$/, error: "must be an http(s) URL" })
+		.optional(),
 	/** Siteverify endpoint; tests point it at a local fake. */
 	TURNSTILE_VERIFY_URL: z
 		.url({ protocol: /^https?$/, error: "must be an http(s) URL" })
@@ -149,6 +159,7 @@ interface FeatureEnv {
 	readonly NODE_ENV: string;
 	readonly TURNSTILE_SITE_KEY?: string;
 	readonly TURNSTILE_SECRET_KEY?: string;
+	readonly TUNELO_API_URL?: string;
 }
 
 /** Cross-field rules of the feature settings. */
@@ -163,6 +174,14 @@ export function checkFeatureEnv(env: FeatureEnv, ctx: z.RefinementCtx): void {
 	}
 	// Public forms must not accept unverified guests in production.
 	if (env.NODE_ENV !== "production") return;
+	// Every tenant's account and link tokens would travel there.
+	if (env.TUNELO_API_URL?.startsWith("http:")) {
+		ctx.addIssue({
+			code: "custom",
+			path: ["TUNELO_API_URL"],
+			message: "must be https in production",
+		});
+	}
 	if (!turnstile.every(Boolean)) {
 		ctx.addIssue({
 			code: "custom",

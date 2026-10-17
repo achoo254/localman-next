@@ -1,24 +1,36 @@
 /**
  * Builds the API client's router for the page: one sender for the page's
  * life (scripts in a worker, the account's settings, this browser's CORS
- * cache), the consent modal it asks through, and the request of a new
- * tab with the account's default route.
+ * cache, and with `tuneloAccounts` the user's own Tunelo tunnels), the
+ * modals it asks through (consent, which tunnel), and the request of a
+ * new tab with the account's default route.
  */
 import {
 	type ApiRequestDraft,
 	DEFAULT_REQUEST_SETTINGS,
 	createRequestDraft,
 } from "@localman/shared/api-client";
-import { useQueryClient } from "@tanstack/react-query";
+import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useCallback, useRef, useState } from "react";
+import { useFeatures } from "../../../config/features";
 import { createScriptHost } from "../../../platform/script-host";
+import { browserTunnelChoices } from "../tunelo/auto-tunnel";
+import { ChooseTunnelModal } from "../tunelo/choose-tunnel-modal";
+import { readLocalTunnels } from "../tunelo/local-tunnels-query";
+import type { LocalTunnel } from "../tunelo/tunelo-accounts-api";
 import { createLazyScriptRunner } from "../workbench/script-steps";
 import type { RequestSender } from "../workbench/send-types";
 import { type ClientSettings, clientSettingsApi } from "./client-settings-api";
 import { browserCorsCache } from "./cors-cache";
-import type { RoutingSnapshot, SecretAsk } from "./route-types";
+import type {
+	AutoTunnels,
+	RoutingSnapshot,
+	SecretAsk,
+	TunnelPick,
+} from "./route-types";
 import { createRoutedSender } from "./routed-sender";
 import { type ConsentAnswer, SecretConsentModal } from "./secret-consent-modal";
+import { useAskQueue } from "./use-ask-queue";
 import {
 	readClientSettings,
 	useClientSettings,
@@ -28,13 +40,8 @@ import {
 export interface Router {
 	sender: RequestSender;
 	newDraft: () => ApiRequestDraft;
-	/** The consent modal; render it once inside the page. */
+	/** The router's modals; render them once inside the page. */
 	element: ReactNode;
-}
-
-interface PendingAsk {
-	ask: SecretAsk;
-	resolve: (send: boolean) => void;
 }
 
 export function toSnapshot(settings: ClientSettings): RoutingSnapshot {
@@ -49,37 +56,36 @@ export function toSnapshot(settings: ClientSettings): RoutingSnapshot {
 	};
 }
 
+function autoTunnels(
+	queryClient: QueryClient,
+	choose: AutoTunnels["choose"],
+): AutoTunnels {
+	return {
+		list: (port, refresh) => readLocalTunnels(queryClient, port, refresh),
+		choose,
+		choices: browserTunnelChoices(),
+	};
+}
+
 export function useRouter(): Router {
 	const queryClient = useQueryClient();
+	const { tuneloAccounts } = useFeatures();
 	const { settings } = useClientSettings();
 	const latest = useRef(settings);
 	latest.current = settings;
 	const allowSecrets = useSettingsChange(clientSettingsApi.allowSecrets);
-	// Several tabs may ask at once: one modal, answered in order.
-	const queue = useRef<PendingAsk[]>([]);
-	const [current, setCurrent] = useState<PendingAsk | null>(null);
+	const consent = useAskQueue<SecretAsk, boolean>(false);
+	const pick = useAskQueue<TunnelPick, LocalTunnel | null>(null);
 
 	const [sender] = useState(() =>
 		createRoutedSender({
 			scripts: createScriptHost({ fallback: createLazyScriptRunner }),
 			snapshot: async () => toSnapshot(await readClientSettings(queryClient)),
 			corsCache: browserCorsCache(),
-			confirmSecrets: (ask, signal) =>
-				new Promise<boolean>((resolve) => {
-					const pending: PendingAsk = {
-						ask,
-						resolve: (send) => {
-							signal.removeEventListener("abort", onAbort);
-							queue.current = queue.current.filter((item) => item !== pending);
-							setCurrent(queue.current[0] ?? null);
-							resolve(send);
-						},
-					};
-					const onAbort = () => pending.resolve(false);
-					signal.addEventListener("abort", onAbort, { once: true });
-					queue.current = [...queue.current, pending];
-					setCurrent(queue.current[0] ?? null);
-				}),
+			confirmSecrets: consent.ask,
+			...(tuneloAccounts
+				? { autoTunnels: autoTunnels(queryClient, pick.ask) }
+				: {}),
 		}),
 	);
 
@@ -96,16 +102,22 @@ export function useRouter(): Router {
 	);
 
 	const onAnswer = ({ send, remember }: ConsentAnswer) => {
-		if (!current) return;
-		if (send && remember) allowSecrets.mutate(current.ask.host);
-		current.resolve(send);
+		const ask = consent.current;
+		if (!ask) return;
+		if (send && remember) allowSecrets.mutate(ask.host);
+		consent.answer(send);
 	};
 
 	return {
 		sender,
 		newDraft,
 		element: (
-			<SecretConsentModal ask={current?.ask ?? null} onAnswer={onAnswer} />
+			<>
+				<SecretConsentModal ask={consent.current} onAnswer={onAnswer} />
+				{tuneloAccounts ? (
+					<ChooseTunnelModal pick={pick.current} onAnswer={pick.answer} />
+				) : null}
+			</>
 		),
 	};
 }

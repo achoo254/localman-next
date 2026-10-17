@@ -49,6 +49,7 @@ import { resourceTreeOperations } from "../modules/resources/resource-tree-opera
 import { getTenantInfo } from "../modules/tenant-info/tenant-info-operation.js";
 import { trialAdminOperations } from "../modules/trial/trial-admin-operations.js";
 import { trialOperations } from "../modules/trial/trial-operations.js";
+import { tuneloOperations } from "../modules/tunelo/tunelo-operations.js";
 import { getMe, setLocale } from "../modules/users/user-operations.js";
 import { forkOperations } from "../modules/version-control/fork-operations.js";
 import { watchOperations } from "../modules/watch/watch-operations.js";
@@ -87,6 +88,8 @@ export const operations: readonly AnyOperation[] = [
 	...callbackOperations,
 	...proxyOperations,
 	...clientStoreOperations,
+	// Served only while TUNELO_ACCOUNTS_ENABLED is on (`feature-gates.ts`).
+	...tuneloOperations,
 	...workspaceOperations,
 	...accessOperations,
 	...collectionOperations,

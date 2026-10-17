@@ -1,4 +1,5 @@
 import type { Messages } from "../../message-types";
+import { apiClientTuneloAccounts } from "./api-client-tunelo-accounts";
 
 export const apiClientTunelo: Messages["apiClientTunelo"] = {
 	rail: "Tunelo",
@@ -68,4 +69,5 @@ export const apiClientTunelo: Messages["apiClientTunelo"] = {
 			"Trực tiếp luôn gửi từ trình duyệt. Chọn Proxy hoặc Auto để dùng {url}.",
 		unmap: "Bỏ ánh xạ của {key}",
 	},
+	accounts: apiClientTuneloAccounts,
 };

@@ -1,3 +1,5 @@
+import { apiClientTuneloAccounts } from "./api-client-tunelo-accounts";
+
 /** Tunelo in the API client: tunnels to local targets, set by hand. */
 export const apiClientTunelo = {
 	rail: "Tunelo",
@@ -67,4 +69,5 @@ export const apiClientTunelo = {
 			"Direct always sends from your browser. Choose Proxy or Auto to use {url}.",
 		unmap: "Remove the mapping of {key}",
 	},
+	accounts: apiClientTuneloAccounts,
 } as const;

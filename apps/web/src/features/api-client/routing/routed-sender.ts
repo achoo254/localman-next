@@ -3,16 +3,13 @@
  * (`route-plan.ts`) picks direct, proxy or Tunelo, then the post-response
  * script. Never rejects, like every `RequestSender`.
  */
+import { forbiddenHeaderNames } from "@localman/shared/api-client";
 import { activeTranslator } from "../../../i18n/active-translator";
 import { failed, prepareSend } from "../workbench/send-steps";
 import type { RequestSender } from "../workbench/send-types";
+import { viaAutoTunnel } from "./auto-tunnel-hop";
 import { viaDirect } from "./direct-hop";
-import {
-	type HopContext,
-	tunnelNeeded,
-	viaProxy,
-	viaTunnel,
-} from "./route-hops";
+import { type HopContext, viaProxy, viaTunnel } from "./route-hops";
 import { planRoute, routeTarget } from "./route-plan";
 import { EMPTY_SNAPSHOT, type RouterDeps } from "./route-types";
 
@@ -66,7 +63,11 @@ export function createRoutedSender(deps: RouterDeps): RequestSender {
 			case "tunnel":
 				return viaTunnel(ctx, plan.tunnelUrl, plan.why, plan.forbidden);
 			case "needTunnel":
-				return tunnelNeeded(ctx, false);
+				return viaAutoTunnel(ctx, {
+					directFailed: false,
+					why: "manual",
+					forbidden: forbiddenHeaderNames(ready.prepared.headers),
+				});
 		}
 	};
 }

@@ -5,10 +5,31 @@ import { routeWhy } from "./route-why";
 
 /**
  * Note above a response when the route needs explaining: the router
- * switched on its own after a failed direct send, or the browser left
- * out headers it may not send. Nothing for an ordinary send.
+ * switched on its own after a failed direct send, the browser left out
+ * headers it may not send, or the user's tunnel asks for Basic Auth (it
+ * took the request's `Authorization`). Nothing for an ordinary send.
  */
 export function RouteNote({ result }: { result: SendResult }) {
+	const t = useT();
+	if (!result.routing?.tunnelBasicAuth)
+		return <RouteSwitchNote result={result} />;
+	return (
+		<>
+			<Alert
+				tone="info"
+				title={t("apiClientTunelo.accounts.basicAuth")}
+				data-id="response-route-basic-auth"
+			>
+				<p className="m-0 text-xs">
+					{t("apiClientTunelo.accounts.basicAuthBody")}
+				</p>
+			</Alert>
+			<RouteSwitchNote result={result} />
+		</>
+	);
+}
+
+function RouteSwitchNote({ result }: { result: SendResult }) {
 	const t = useT();
 	const { route, routing } = result;
 	if (!routing) return null;

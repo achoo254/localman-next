@@ -5,22 +5,26 @@ import {
 } from "@localman/shared/api-client";
 import { IconPlugConnected, IconX } from "@tabler/icons-react";
 import { Tooltip } from "../../../components/ui/tooltip";
+import { useFeatures } from "../../../config/features";
 import { useT } from "../../../i18n/i18n-context";
 import { clientSettingsApi } from "../routing/client-settings-api";
 import {
 	useClientSettings,
 	useSettingsChange,
 } from "../routing/use-client-settings";
+import { AutoTunnelBadge } from "./auto-tunnel-badge";
 
 /**
  * In the URL bar of a local URL that has an enabled tunnel mapping: what
  * the request's route does with it (Proxy goes through the tunnel; Auto
  * only when the browser cannot send straight; Direct never), the real URL
  * in a tooltip, and a button removing the mapping. `{{var}}` URLs are
- * skipped (their host is not known yet).
+ * skipped (their host is not known yet). Without a mapping, the user's own
+ * tunnel found by the last send (flag `tuneloAccounts`), except in Direct.
  */
 export function TunnelBadge({ url, mode }: { url: string; mode: RouteMode }) {
 	const t = useT();
+	const { tuneloAccounts } = useFeatures();
 	const { settings } = useClientSettings();
 	const remove = useSettingsChange(clientSettingsApi.deleteTunnel);
 	const local = url.includes("{{") ? null : localTargetKey(url);
@@ -29,7 +33,12 @@ export function TunnelBadge({ url, mode }: { url: string; mode: RouteMode }) {
 				(item) => item.enabled && item.key === local.key,
 			)
 		: undefined;
-	if (!local || !mapping) return null;
+	if (!local) return null;
+	if (!mapping) {
+		return tuneloAccounts && mode !== "direct" ? (
+			<AutoTunnelBadge url={url} targetKey={local.key} port={local.port} />
+		) : null;
+	}
 	const real = rewriteToTunnel(url, mapping.url) ?? mapping.url;
 	const label =
 		mode === "proxy"

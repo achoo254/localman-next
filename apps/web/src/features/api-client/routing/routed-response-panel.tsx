@@ -18,7 +18,11 @@ export interface RoutedResponsePanelProps {
 }
 
 function hasRouteNote({ routing }: SendResult): boolean {
-	return routing?.why === "cors" || (routing?.dropped.length ?? 0) > 0;
+	return (
+		routing?.why === "cors" ||
+		(routing?.dropped.length ?? 0) > 0 ||
+		routing?.tunnelBasicAuth === true
+	);
 }
 
 /**
@@ -43,7 +47,8 @@ export const RoutedResponsePanel = memo(function RoutedResponsePanel({
 				targetKey={routing.key}
 				port={routing.port}
 				directFailed={routing.directFailed}
-				onResend={() => workbench.send(tabId)}
+				notice={routing.notice}
+				onResend={() => workbench.send(tabId, { refreshTunnels: true })}
 			/>
 		);
 	}

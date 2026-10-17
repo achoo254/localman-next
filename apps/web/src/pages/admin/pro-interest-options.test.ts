@@ -36,6 +36,7 @@ describe("Pro interest needs by released features", () => {
 			publicSharing: true,
 			comments: true,
 			forks: true,
+			tuneloAccounts: true,
 		};
 		expect(ids(all)).not.toContain("devops_ci");
 		expect(sourceNeedFor("devops", all)).toBeUndefined();

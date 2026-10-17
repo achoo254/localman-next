@@ -1,6 +1,6 @@
 /**
  * Server gates of unreleased features (`PUBLIC_SHARING_ENABLED`,
- * `COMMENTS_ENABLED`, `FORKS_ENABLED`). The working tree is deployed by whichever session
+ * `COMMENTS_ENABLED`, `FORKS_ENABLED`, `TUNELO_ACCOUNTS_ENABLED`). The working tree is deployed by whichever session
  * ships next, so a web flag alone would not keep unreleased endpoints and
  * MCP tools off production: while a gate is off, the operations of its
  * feature are neither routed nor offered over MCP, and their paths answer
@@ -10,6 +10,7 @@
 import type { AnyOperation } from "@localman/operations";
 import { commentOperations } from "../modules/comments/comment-operations.js";
 import { publicSharingOperations } from "../modules/public-sharing/public-sharing-operations.js";
+import { tuneloOperations } from "../modules/tunelo/tunelo-operations.js";
 import { forkOperations } from "../modules/version-control/fork-operations.js";
 import { watchOperations } from "../modules/watch/watch-operations.js";
 
@@ -17,6 +18,8 @@ export interface FeatureGates {
 	readonly publicSharing: boolean;
 	readonly comments: boolean;
 	readonly forks: boolean;
+	/** Tunnels found through the user's Tunelo account and linked machines. */
+	readonly tuneloAccounts: boolean;
 }
 
 const COMMENT_OPERATIONS = [...commentOperations, ...watchOperations];
@@ -30,6 +33,7 @@ export function servedOperations(
 		...(gates.publicSharing ? [] : publicSharingOperations),
 		...(gates.comments ? [] : COMMENT_OPERATIONS),
 		...(gates.forks ? [] : forkOperations),
+		...(gates.tuneloAccounts ? [] : tuneloOperations),
 	]);
 	return off.size === 0
 		? operations

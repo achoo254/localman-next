@@ -14,6 +14,8 @@ export interface SendOptions {
 	route?: RouteMode;
 	/** After a browser `TypeError`: a proxy success remembers the origin. */
 	afterDirectBlocked?: boolean;
+	/** "Check again": read the user's Tunelo tunnels anew, not cached. */
+	refreshTunnels?: boolean;
 }
 
 export interface SendInput {

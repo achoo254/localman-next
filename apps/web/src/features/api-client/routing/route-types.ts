@@ -9,6 +9,8 @@ import type {
 	RequestSettings,
 } from "@localman/shared/api-client";
 import type { ScriptRunner } from "@localman/shared/api-client/script-sandbox";
+import type { TunnelChoices } from "../tunelo/auto-tunnel";
+import type { LocalTunnel } from "../tunelo/tunelo-accounts-api";
 import type { ProxyHopOutcome } from "../workbench/proxy-hop";
 import type { RouteWhy, SendRoute } from "../workbench/workbench-types";
 import type { CorsCache } from "./cors-cache";
@@ -44,12 +46,37 @@ export interface SecretAsk {
 	why: RouteWhy;
 }
 
+/** "Which tunnel should this local address use?" */
+export interface TunnelPick {
+	/** Local target key (`localhost:3000`). */
+	key: string;
+	/** The HTTP tunnels of its port, two or more. */
+	tunnels: LocalTunnel[];
+}
+
+/**
+ * The user's own Tunelo tunnels (flag `tuneloAccounts`), used for a local
+ * target without an enabled manual mapping.
+ */
+export interface AutoTunnels {
+	/** Tunnels of `port`; `null` when they cannot be read (as none). */
+	list: (port: number, refresh: boolean) => Promise<LocalTunnel[] | null>;
+	/** Resolves `null` when the user cancels (or the send is). */
+	choose: (
+		pick: TunnelPick,
+		signal: AbortSignal,
+	) => Promise<LocalTunnel | null>;
+	choices: TunnelChoices;
+}
+
 export interface RouterDeps {
 	scripts: ScriptRunner;
 	snapshot: () => Promise<RoutingSnapshot>;
 	corsCache: Pick<CorsCache, "has" | "remember">;
 	/** Resolves `false` when the user declines (or the send is cancelled). */
 	confirmSecrets: (ask: SecretAsk, signal: AbortSignal) => Promise<boolean>;
+	/** Off without the `tuneloAccounts` flag: no automatic tunnel. */
+	autoTunnels?: AutoTunnels;
 	/** Defaults to `fetch` from the browser; tests pass their own. */
 	direct?: (
 		prepared: PreparedRequest,

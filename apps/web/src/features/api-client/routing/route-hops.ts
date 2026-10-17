@@ -20,7 +20,11 @@ import {
 	finishSend,
 } from "../workbench/send-steps";
 import type { SendInput } from "../workbench/send-types";
-import type { RouteWhy, SettledResponse } from "../workbench/workbench-types";
+import type {
+	RouteWhy,
+	SettledResponse,
+	TunnelNotice,
+} from "../workbench/workbench-types";
 import type { RouteTarget } from "./route-plan";
 import type { RouterDeps, RoutingSnapshot } from "./route-types";
 import { sensitiveParts } from "./sensitive-parts";
@@ -35,6 +39,12 @@ export interface HopContext {
 	routeChosen: boolean;
 }
 
+/** A tunnel found among the user's own (no mapping): shown with the route. */
+export interface FoundTunnel {
+	deviceName: string;
+	basicAuth: boolean;
+}
+
 /** Where the proxy sends the request. */
 interface Destination {
 	host: string;
@@ -47,8 +57,11 @@ async function consent(
 	{ host, url }: Destination,
 	route: "proxy" | "tunelo",
 	why: RouteWhy,
+	routerFound = false,
 ): Promise<true | SettledResponse> {
-	const chosen = why === "manual" && ctx.routeChosen;
+	// Choosing Proxy on the tab is no consent to a tunnel the router found
+	// on its own: the user never picked that tunnel or its machine.
+	const chosen = why === "manual" && ctx.routeChosen && !routerFound;
 	if (chosen || ctx.snapshot.secretHosts.has(host)) return true;
 	const parts = sensitiveParts(ctx.ready.toSend, ctx.ready.prepared);
 	if (parts.length === 0) return true;
@@ -72,9 +85,10 @@ async function viaProxyHop(
 	route: "proxy" | "tunelo",
 	why: RouteWhy,
 	forbidden: string[],
-	tunnelUrl?: string,
+	tunnel?: { url: string; found?: FoundTunnel },
 ): Promise<SettledResponse> {
 	const { deps, input, ready, target } = ctx;
+	const found = tunnel?.found;
 	const send = deps.proxy ?? proxyHop;
 	const hop = await send(prepared, ready.toSend.settings, input.signal);
 	if (hop.kind === "cancelled") return CANCELLED;
@@ -93,7 +107,10 @@ async function viaProxyHop(
 				local: target.local !== null,
 				forbidden,
 				dropped: [],
-				...(tunnelUrl ? { tunnelUrl } : {}),
+				...(tunnel ? { tunnelUrl: tunnel.url } : {}),
+				...(found
+					? { tunnelDevice: found.deviceName, tunnelBasicAuth: found.basicAuth }
+					: {}),
 			},
 		},
 		deps.scripts,
@@ -116,6 +133,7 @@ export async function viaTunnel(
 	tunnelUrl: string,
 	why: RouteWhy,
 	forbidden: string[],
+	found?: FoundTunnel,
 ): Promise<SettledResponse> {
 	const url = rewriteToTunnel(ctx.ready.prepared.url, tunnelUrl);
 	const tunnel = url === null ? null : parseHttpUrl(url);
@@ -127,16 +145,26 @@ export async function viaTunnel(
 		host: tunnel.host.toLowerCase(),
 		url: tunnel.origin,
 	};
-	const asked = await consent(ctx, destination, "tunelo", why);
+	const asked = await consent(
+		ctx,
+		destination,
+		"tunelo",
+		why,
+		found !== undefined,
+	);
 	if (asked !== true) return asked;
 	const prepared = { ...ctx.ready.prepared, url };
-	return viaProxyHop(ctx, prepared, "tunelo", why, forbidden, tunnelUrl);
+	return viaProxyHop(ctx, prepared, "tunelo", why, forbidden, {
+		url: tunnelUrl,
+		found,
+	});
 }
 
 /** A local target with no tunnel: the response area shows the Tunelo panel. */
 export function tunnelNeeded(
 	ctx: HopContext,
 	directFailed: boolean,
+	notice?: TunnelNotice,
 ): SettledResponse {
 	const local = ctx.target.local ?? { key: ctx.target.host, port: 80 };
 	return failed({
@@ -145,6 +173,11 @@ export function tunnelNeeded(
 			key: local.key,
 		}),
 		preScript: ctx.ready.preScript,
-		routing: { kind: "tunnel", ...local, directFailed },
+		routing: {
+			kind: "tunnel",
+			...local,
+			directFailed,
+			...(notice ? { notice } : {}),
+		},
 	});
 }

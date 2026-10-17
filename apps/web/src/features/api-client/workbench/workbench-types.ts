@@ -56,6 +56,10 @@ export interface RouteInfo {
 	dropped: string[];
 	/** Tunelo sends only: origin of the tunnel used. */
 	tunnelUrl?: string;
+	/** Found in the user's Tunelo tunnels (no mapping): the machine's name. */
+	tunnelDevice?: string;
+	/** The tunnel asks for Basic Auth: it used the request's `Authorization`. */
+	tunnelBasicAuth?: boolean;
 }
 
 /** Why a direct send got nothing (`fetch` tells no more). */
@@ -70,11 +74,23 @@ export type DirectFailReason =
 	/** A POST or PATCH may have reached the target: not sent again on its own. */
 	| "notRetried";
 
+/** Why the user's Tunelo tunnels could not take a local target. */
+export type TunnelNotice = "stopped" | "tcpOnly";
+
 /** A send the router stopped, with what the response area offers next. */
 export type RouteFailure =
 	| { kind: "direct"; reason: DirectFailReason; host: string; local: boolean }
-	/** A local target the browser could not reach and no tunnel is set. */
-	| { kind: "tunnel"; key: string; port: number; directFailed: boolean }
+	/**
+	 * A local target the browser could not reach and no tunnel is set;
+	 * `notice`: the tunnel used before stopped, or the port has TCP only.
+	 */
+	| {
+			kind: "tunnel";
+			key: string;
+			port: number;
+			directFailed: boolean;
+			notice?: TunnelNotice;
+	  }
 	/** Credentials would have gone through the proxy; the user said no. */
 	| { kind: "consent"; host: string; parts: string[] };
 

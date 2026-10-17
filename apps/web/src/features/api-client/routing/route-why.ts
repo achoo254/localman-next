@@ -10,7 +10,11 @@ export function routeBadgeLabel(
 	routing: RouteInfo | undefined,
 	t: Translate,
 ): string {
-	if (route === "tunelo") return t("apiClientRouting.badge.tunelo");
+	if (route === "tunelo") {
+		return routing?.tunnelDevice
+			? t("apiClientTunelo.accounts.badge", { device: routing.tunnelDevice })
+			: t("apiClientRouting.badge.tunelo");
+	}
 	if (route === "direct") {
 		return routing?.local
 			? t("apiClientRouting.badge.local")
