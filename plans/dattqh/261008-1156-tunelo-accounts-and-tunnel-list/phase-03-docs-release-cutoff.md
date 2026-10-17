@@ -58,7 +58,7 @@ dependencies: [1, 2]
 - [ ] T6 Server chạy `AUTH_MODE=hybrid` với cutoff và 2 domain sau khi user xác nhận
 - [x] T7 `tunelo@1.7.0` có trên npm sau khi user xác nhận
 - [ ] T8 Kiểm sau deploy pass
-- [ ] T9 Domain cũ đã gỡ sau khi user xác nhận (theo dõi tới khi lưu lượng cũ không đáng kể)
+- [x] T9 Domain cũ đã gỡ sau khi user xác nhận (2026-10-13, commit `d935942`: `tunnel.inetdev.io.vn` rời `TUNNEL_DOMAINS`, nginx và allowlist của CLI; cấu hình CLI cũ tự chuyển sang domain mới)
 - [ ] T10 `tunelo-v2.0.0` phát hành sau khi user xác nhận (theo dõi tới ngày cutoff)
 - [ ] T11 Review không còn finding mức high
 - [ ] Verification: sau deploy CLI 1.6.x vẫn chạy trước cutoff, CLI 1.7.0 `login`/`http`/`whoami` đúng, Localman staging nhận tunnel theo tài khoản
@@ -71,3 +71,13 @@ dependencies: [1, 2]
   kết nối Trusted Publisher chưa được tạo; tạo xong, chạy lại job thì `+ tunelo@1.7.0`, registry hiện `latest=1.7.0`
   lúc 03:59 UTC; `npx tunelo@1.7.0 --version` = 1.7.0.
 - Còn: T2 (changelog, bảng mã lỗi `CLAUDE.md`), T6 (`LEGACY_TOKEN_CUTOFF` đang trống, chờ user), T9 gỡ domain cũ, T10 2.0.0.
+
+## Trạng thái 2026-10-17
+- Đã phát hành thêm `tunelo-v1.8.0` và `tunelo-v1.9.0` (2026-10-13), cùng workflow OIDC; npm `latest=1.9.0`, trường `repository` trỏ về `localman-next`.
+- Domain cũ đã gỡ (T9). Repo `achoo254/tunelo` cũ đã xoá; Tunelo chỉ còn trong monorepo này.
+- Còn thật sự chưa làm:
+  - T1: chưa có `docs/decisions/tunelo/0004-accounts-via-central-idp.md`; `docs/tunelo/system-architecture.md` chưa mô tả luồng đăng nhập qua IdP và `GET /api/tunnels`.
+  - T2: bảng mã lỗi trong `CLAUDE.md` đã đủ và README tiếng Việt của CLI đã có `login`/`whoami`/`link`; còn thiếu phần đó trong `packages/tunelo-cli/README.en.md` và chưa có changelog.
+  - T6: server chạy `AUTH_MODE=hybrid` (mặc định), `LEGACY_TOKEN_CUTOFF` vẫn trống, chờ user chốt ngày.
+  - T8 và Verification: phần "Localman nhận tunnel theo tài khoản" chờ T8b của Localman phase 10.
+  - T10 (2.0.0) theo ngày cutoff; T11 review cuối phase.

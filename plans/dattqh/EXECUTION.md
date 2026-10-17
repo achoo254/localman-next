@@ -1,6 +1,6 @@
 # Thứ tự triển khai và giao việc
 
-Repo code: `achoo254/localman-next` (private). File này là mục lục để chạy `/ak:cook` theo đúng thứ tự. Chi tiết việc cần làm nằm ở mục **"Giao việc"** cuối mỗi file phase. Mỗi phase còn có một GitHub issue, và mỗi đợt là một milestone.
+Repo code: `achoo254/localman-next` (public từ 2026-10-17). File này là mục lục để chạy `/ak:cook` theo đúng thứ tự. Chi tiết việc cần làm nằm ở mục **"Giao việc"** cuối mỗi file phase. Mỗi phase còn có một GitHub issue, và mỗi đợt là một milestone.
 
 ## Thư mục local
 
@@ -8,10 +8,10 @@ Mọi repo clone vào cùng một thư mục làm việc trên máy, gọi là `
 
 | Thư mục | Repo | Vai trò |
 |---|---|---|
-| `$WORKSPACE/localman-next` | `achoo254/localman-next` (private) | Monorepo code: Localman web/api, mock runtime, MCP, Tunelo (sau khi gộp), DevOps. Chứa toàn bộ plan |
+| `$WORKSPACE/localman-next` | `achoo254/localman-next` (public từ 2026-10-17) | Monorepo code: Localman web/api, mock runtime, MCP, Tunelo (sau khi gộp), DevOps. Chứa toàn bộ plan |
 | `$WORKSPACE/hoandat-auth` | `achoo254/hoandat-auth` (tạo ở đợt 0) | IdP `auth.hoandat.com` |
 | `$WORKSPACE/localman` | `achoo254/localman` (repo cũ) | Chỉ đọc để port ở phase 10; archive sau đó |
-| `$WORKSPACE/tunelo` | `achoo254/tunelo` (repo cũ) | Nguồn để gộp ở Localman phase 01; archive sau đó |
+| `$WORKSPACE/tunelo` | `achoo254/tunelo` (repo cũ) | Đã gộp ở Localman phase 01; repo đã xoá khỏi GitHub 2026-10-17, Tunelo chỉ còn trong localman-next |
 | `$WORKSPACE/tunelo-import` | — | Bản clone tạm để chạy `git filter-repo` khi gộp Tunelo; xoá sau khi gộp |
 
 ## Các plan
@@ -98,7 +98,7 @@ Trong checklist, các việc này được ghi "(cần user xác nhận)":
 - sửa DNS và TLS trên Cloudflare;
 - deploy lên staging hoặc production;
 - publish npm (`tunelo`, `localman`);
-- archive repo `localman` và `tunelo` cũ;
+- archive repo `localman` cũ (repo `tunelo` cũ đã xoá 2026-10-17);
 - ngày chặn token ẩn danh của Tunelo.
 
 ## Quy ước đã chốt (tóm tắt)
