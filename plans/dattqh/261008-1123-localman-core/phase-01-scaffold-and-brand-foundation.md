@@ -109,8 +109,8 @@ Repo Tunelo gốc **không bị sửa**, mọi thao tác chạy trên bản clon
 - [x] T1 Clone chỉ đọc repo cũ; workspace pnpm, script gốc và Mongo replica set chạy được
 - [x] T2 Tunelo đã gộp với path mới, tag `tunelo-v*`, lịch sử còn nguyên
 - [x] T3 File root đã gộp trong một commit riêng; `tunelo-root-import/` đã xoá
-- [ ] T4 Đã push nhánh và tag `tunelo-v*` sau khi user xác nhận
-- [ ] T5 Repo `achoo254/tunelo` cũ có README chuyển hướng và đã archive sau khi user xác nhận
+- [x] T4 Đã push nhánh và tag `tunelo-v*` sau khi user xác nhận (2026-10-17: 4 tag `tunelo-v*` có trên origin)
+- [x] T5 Repo `achoo254/tunelo` cũ có README chuyển hướng và đã archive sau khi user xác nhận (2026-10-17: user chọn xoá repo thay vì archive)
 - [x] T6 `tokens.css`, `@theme` và `global.css` xong, khớp prototype
 - [x] T7 Khung web, 13 primitive và wordmark xong
 - [x] T8 Khung api, hai `/healthz` và `plan-limits` xong
