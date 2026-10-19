@@ -1,7 +1,7 @@
 ---
 phase: 14
 title: "Fork, merge, pull request, comment, watch (theo Postman)"
-status: in-progress
+status: completed
 priority: P2
 effort: "XL"
 dependencies: [12, 13]
@@ -30,6 +30,25 @@ Nguồn tham chiếu: [Forking elements](https://learning.postman.com/docs/colla
 | Comment inline: bôi đen trong query param, path param, header, body hoặc một dòng script | Có |
 | Thread, trả lời, reaction, @mention theo `username` (thông báo trong app, Web Push hoặc Telegram tuỳ người được mention chọn; không có email), sửa, xoá (Workspace Admin xoá được nhưng không sửa được), Resolve/Reopen, lọc "Show resolved", Copy link tới comment, Markdown | Có |
 | Watch collection: thông báo khi request, biến, script hoặc folder thay đổi; thay đổi do chính mình làm thì không báo; không áp cho workspace cá nhân | Có |
+
+## Spec đã chốt so với prototype (T1, 2026-10-19)
+
+Ma trận ở trên là tiêu chí nghiệm thu; prototype `prototype/api-client.html` chỉ là tham khảo giao diện. Đối chiếu xong, các điểm sau là khác biệt có chủ đích, không làm trong phase này:
+
+| Prototype | Bản đã làm | Lý do |
+|---|---|---|
+| Trang riêng `#/pull-requests`, `/new`, `/:id`, có tab Thay đổi/Tổng quan | Dialog PR trên trang nguồn, mở bằng `?pr=`; một cột (thay đổi rồi thảo luận) | Không rời ngữ cảnh collection; link vẫn chia sẻ được |
+| Bộ lọc trạng thái, `#id`, from → into, reviewer ở mỗi dòng danh sách PR; nút "Xem tất cả" | Panel Pull requests ở right rail: tiêu đề, tác giả, ngày, trạng thái | Danh sách ngắn theo từng collection; thêm khi có nhu cầu thật |
+| Khung "Thay đổi sẽ gửi" khi tạo PR | Không có; thay đổi xem trong PR sau khi mở | PR tính thay đổi trực tiếp, xem ngay sau khi tạo |
+| Banner "Bản gốc đã thay đổi" | Nút Pull updates luôn có cho Editor của fork | Thay đổi PR tính lại mỗi lần xem, không cần cờ riêng |
+| Diff theo dòng, comment `+` trên từng dòng | Mỗi thay đổi có "Xem diff" (JSON trước/sau) và comment theo thay đổi | Ma trận ghi comment inline trên từng thay đổi |
+| Hover card nguồn/người tạo/ngày, có "Sửa nhãn", "Pull changes" | Tooltip của badge fork có nguồn, người tạo, ngày; bấm badge để sửa nhãn; Pull ở header | Đủ thông tin ma trận yêu cầu |
+| Menu chuột phải trên vùng chọn để comment inline | Nút "Comment" hiện khi bôi đen, kèm marker ở dòng | Dùng được trên cảm ứng và bàn phím |
+| Ô "Watch collection gốc" trong dialog fork | Không có; Watch bật ở header của bản gốc | Watch là thao tác riêng |
+| Danh sách fork của environment, ghi chú "+N fork bạn không xem được", nút Fork trong panel Forks | Environment chỉ có badge và số fork; panel Forks chỉ cho collection | Ngoài ma trận |
+| Popup mời nâng cấp Pro khi bấm Fork | Server trả 403 `PLAN_FEATURE_UNAVAILABLE`, web hiện thông báo | Làm chung khi có luồng nâng cấp Pro |
+| Không có | Sửa tiêu đề, mô tả, người duyệt của PR (tác giả) | Thêm để sửa sai khi tạo PR |
+| Nhóm merge bị tắt và cảnh báo khi không có quyền ở nguồn | Đã làm: `fork-status` trả `source.canMerge`, dialog tắt Merge và hiện cảnh báo | Theo prototype |
 
 ## Files to Create / Modify
 - Create `apps/api/src/modules/version-control/`: `fork-model.ts` (`{sourceType, sourceId, forkId, label, createdBy, baseRevisionId}`), `three-way-merge.ts` (merge 3 chiều trên cây collection theo ID của item, dùng base revision lúc fork hoặc lần pull gần nhất), `conflict-model.ts`, `pull-request-model.ts`, `pull-request-review-model.ts`, routes và service
@@ -73,7 +92,7 @@ Nguồn tham chiếu: [Forking elements](https://learning.postman.com/docs/colla
 | T12 | Review cuối phase, chú trọng mất dữ liệu khi merge | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 Spec fork, merge, conflict, PR, comment, watch đã chốt theo prototype
+- [x] T1 Spec fork, merge, conflict, PR, comment, watch đã chốt theo prototype (2026-10-19: bảng "Spec đã chốt so với prototype" ở trên; làm thêm cho đủ ma trận: fork collection kèm tối đa 5 environment cùng workspace, ghi trong một transaction; "Xem diff" cho từng thay đổi của PR qua `client.getPullRequestChangeDiff`; `fork-status` trả `source.canMerge` để dialog tắt Merge khi không là Editor của nguồn)
 - [x] T2 `three-way-merge` có đủ bộ ca xung đột (2026-10-16, đợt B1: `apps/api/src/modules/version-control/three-way-merge.ts`, `collection-merge.ts` sửa cây sau merge)
 - [x] T3 Backend comment, anchor inline, outdated, mention, quyền Admin (2026-10-16, đợt A: `apps/api/src/modules/comments/`; anchor lưu offset kèm đoạn chữ đã chọn, outdated khi chỗ đó không còn đúng đoạn chữ, CRLF tính như LF; Viewer comment được; giới hạn `comment` 20/phút mỗi người, 60/phút mỗi collection, mỗi tác giả báo một người tối đa 10 lần/10 phút)
 - [x] T4 Fork, nhãn, danh sách fork, Pull changes, chặn theo gói (2026-10-16, đợt B1, collection và environment)
@@ -83,11 +102,11 @@ Nguồn tham chiếu: [Forking elements](https://learning.postman.com/docs/colla
 - [x] T8 UI version control và nút Fork/Watch (Watch xong ở đợt A; fork, nhãn, panel Forks, pull, merge, giải xung đột xong ở đợt B1; đợt B2: nút "Create pull request" trên fork, panel Pull requests ở right rail, dialog chi tiết PR với thay đổi, comment theo từng thay đổi, Approve/Decline, Pull updates, Merge; link `?pr=` mở PR. PR là dialog trên trang nguồn thay vì trang riêng `#/pull-requests`)
 - [x] T9 UI comment đủ thread, reaction, resolve, Markdown (2026-10-16, đợt A: `apps/web/src/features/comments/`, panel Comments ở right rail, comment inline trên vùng chọn của URL/params/headers/body/scripts kèm marker và highlight, gợi ý @mention, Copy link mở đúng thread; cờ web `comments`, cổng server `COMMENTS_ENABLED`)
 - [x] T10 Integration pass (2026-10-16: `collection-fork.test.ts`, `collection-fork-revive.test.ts`, `environment-fork.test.ts`, `pull-request.test.ts`, test comment và watch; E2E `collection-forks.spec.ts` có cả vòng PR)
-- [x] T11 Staging đã deploy sau khi user xác nhận (đợt A lên production 2026-10-16: release `20261016-093326-047ccf396ad0`, cờ `comments`, DAST đạt; đợt B1: release `20261016-155903-33a73d25cf51`, cờ `forks`, DAST đạt; đợt B2: release `20261016-232319-9bfd1b26afad`, pull request, DAST đạt)
+- [x] T11 Staging đã deploy sau khi user xác nhận (đợt A lên production 2026-10-16: release `20261016-093326-047ccf396ad0`, cờ `comments`, DAST đạt; đợt B1: release `20261016-155903-33a73d25cf51`, cờ `forks`, DAST đạt; đợt B2: release `20261016-232319-9bfd1b26afad`, pull request, DAST đạt) Phần bổ sung 2026-10-19 (fork kèm environment, diff PR, `canMerge`) chưa deploy, chờ user xác nhận.
 - [x] T12 Review không còn finding mức high (2026-10-17, SAST đợt B2: đã sửa merge PR khi người merge không mở được fork (high), ghi đồng thời mất duyệt, hai merge cùng lúc và merge sau Decline, báo lại người duyệt khi sửa PR, giới hạn `sync` của preview tính vào fork, truy vấn từng dòng ở danh sách PR, lộ tên người duyệt cho người chỉ mở được fork; mỗi điểm có test trong `pull-request-races.test.ts`)
 - [x] Verification: unit `three-way-merge` (khác field, cùng field, xoá đối sửa, cùng thêm, sắp lại thứ tự) pass (2026-10-16)
 - [x] Verification: integration fork, PR, approve, merge 3 tuỳ chọn và Keep Source/Destination pass; Viewer không merge được vào nguồn (2026-10-16)
 - [x] Verification: integration comment (@mention đúng kênh, resolve/reopen, Admin xoá không sửa) pass (2026-10-16: `comment-operations.test.ts`, `comment-limits.test.ts`, `watch-digest.test.ts`; E2E `collection-comments.spec.ts`)
-- [ ] Mọi dòng ma trận tương đương có test hoặc kịch bản E2E tương ứng
+- [x] Mọi dòng ma trận tương đương có test hoặc kịch bản E2E tương ứng (2026-10-19: bổ sung `collection-fork-environments.test.ts`, `fork-permissions.test.ts`, `pull-request-diff.test.ts`, `comment-edit.test.ts`, `comment-mention-channels.test.ts`, `watch-digest-changes.test.ts`, web `comment-actions.test.tsx`, `comment-reopen.test.tsx` và các ca mới trong `fork-controls.test.tsx`, `pull-requests.test.tsx`: fork kèm environment, đổi nhãn, Pull updates khi PR mở, Keep all destination, Viewer của fork gọi mergeAndUpdate/mergeAndDelete, sửa comment, Copy link, Reopen, watch khi biến/script/folder đổi, mention qua Web Push và Telegram)
 - [x] `pnpm lint && pnpm typecheck && pnpm test` sạch (2026-10-17, đợt B2: 698 file, 4964 test)
 - [x] `pnpm check:mcp-coverage` pass (2026-10-17: 222 operation, 183 tool, 39 exempt)

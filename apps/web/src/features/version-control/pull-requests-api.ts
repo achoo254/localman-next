@@ -95,6 +95,20 @@ export async function fetchPullRequest(id: string): Promise<PullRequestDetail> {
 	};
 }
 
+/** One change of a pull request: the source item now, and after merging. */
+export async function fetchPullRequestChangeDiff(
+	id: string,
+	changeKey: string,
+): Promise<{ before: unknown; after: unknown }> {
+	const data = expectRecord(
+		await apiRequest(
+			`${pullRequestPath(id)}/changes/${encodeURIComponent(changeKey)}/diff`,
+		),
+		"pull request change",
+	);
+	return { before: data.before ?? null, after: data.after ?? null };
+}
+
 /** Editors of the fork's source, offered as reviewers. */
 export async function fetchReviewerCandidates(
 	forkId: string,

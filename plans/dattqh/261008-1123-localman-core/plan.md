@@ -81,7 +81,7 @@ Dashboard và mock runtime là hai process riêng. Lý do: runtime công khai c�
 | 11 | [Workspace, vai trò và chia sẻ phần tử](phase-11-workspaces-and-sharing.md) | L | 10 | completed |
 | 12 | [Collections tương đương 100% Postman](phase-12-collections.md) | L | 11 | completed |
 | 13 | [Environments và biến tương đương 100% Postman](phase-13-environments-and-variables.md) | L | 11, 12 | completed |
-| 14 | [Fork, merge, pull request, comment, watch](phase-14-fork-merge-comments-watch.md) | XL | 12, 13 | in-progress |
+| 14 | [Fork, merge, pull request, comment, watch](phase-14-fork-merge-comments-watch.md) | XL | 12, 13 | completed (phần bổ sung 2026-10-19 chưa deploy) |
 | 15 | [Chia sẻ công khai: public workspace, guest, nút Run, access key](phase-15-public-sharing.md) | M | 11, 12, 13, 14 | pending |
 | 16 | [Live Mock Sync: mock luôn đồng bộ với collection và environment](phase-16-live-mock-sync.md) | M | 12, 13, 14 | pending |
 | 17 | [Nền tảng MCP (toolsets, dry-run, coverage) cùng Mock MCP tức thì](phase-17-mock-mcp.md) — **chạy ngay sau 09, trước 10** | M | 5, 9 | in-progress |

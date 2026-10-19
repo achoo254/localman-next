@@ -30,7 +30,7 @@ const A_FORK = {
 		createdBy: "u2",
 		createdByName: "Eve",
 		createdAt: "2026-10-16T01:00:00.000Z",
-		source: { id: "c9", name: "Orders API", available: true },
+		source: { id: "c9", name: "Orders API", available: true, canMerge: true },
 	},
 };
 
@@ -167,6 +167,27 @@ describe("pull requests", () => {
 				decision: "approved",
 			}),
 		);
+	});
+
+	it("shows the diff of a change on demand", async () => {
+		const { calls } = renderShop({
+			[`GET ${PR}/changes/r1/diff`]: {
+				body: {
+					before: { name: "List", url: "https://api.example.com" },
+					after: { name: "List", url: "https://api.example.com/v2" },
+				},
+			},
+		});
+		const { user, dialog } = await openPullRequest();
+		expect(calls.some((c) => c.path.endsWith("/diff"))).toBe(false);
+		await user.click(within(dialog).getByRole("button", { name: "Show diff" }));
+		const diff = await within(dialog).findByRole("region", {
+			name: "Changes to List",
+		});
+		expect(diff).toHaveTextContent("https://api.example.com/v2");
+		expect(
+			within(dialog).getByRole("button", { name: "Hide diff" }),
+		).toHaveAttribute("aria-expanded", "true");
 	});
 
 	it("merges it with the plain option", async () => {

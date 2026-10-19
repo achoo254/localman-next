@@ -11,6 +11,7 @@ import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { useCurrentUser } from "../auth/use-current-user";
 import { useWorkspaces } from "../workspaces/current-workspace";
+import { ForkEnvironmentPicker } from "./fork-environment-picker";
 import { useForkErrorMessage } from "./fork-errors";
 import type { ForkTarget } from "./forks-api";
 import { useForkActions } from "./use-forks";
@@ -20,6 +21,8 @@ export interface ForkDialogProps {
 	name: string;
 	/** The caller's role on it: a Viewer forks into their personal workspace only. */
 	role: "editor" | "viewer";
+	/** A collection's workspace: its environments can be forked along. */
+	sourceWorkspaceId?: string;
 	onClose: () => void;
 	/** Opens the new fork. */
 	onForked: (forkId: string) => void;
@@ -44,11 +47,16 @@ export function ForkDialog(props: ForkDialogProps) {
 		`${username}-fork`.slice(0, FORK_LABEL_MAX),
 	);
 	const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+	const [environmentIds, setEnvironmentIds] = useState<string[]>([]);
 	const chosen = workspaceId ?? workspaces[0]?.id ?? "";
 	const kind = t(`versionControl.kinds.${props.target.kind}`);
 	const submit = () =>
 		create.mutate(
-			{ label: label.trim(), workspaceId: chosen },
+			{
+				label: label.trim(),
+				workspaceId: chosen,
+				...(environmentIds.length > 0 ? { environmentIds } : {}),
+			},
 			{
 				onSuccess: (forkId) => {
 					toast.show({
@@ -126,6 +134,13 @@ export function ForkDialog(props: ForkDialogProps) {
 						))}
 					</Select>
 				</FormField>
+				{props.target.kind === "collection" && props.sourceWorkspaceId ? (
+					<ForkEnvironmentPicker
+						workspaceId={props.sourceWorkspaceId}
+						selected={environmentIds}
+						onChange={setEnvironmentIds}
+					/>
+				) : null}
 				{workspaces.length === 0 ? (
 					<Alert tone="warning">{t("versionControl.fork.noWorkspace")}</Alert>
 				) : null}

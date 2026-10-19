@@ -25,9 +25,19 @@ const A_FORK = {
 		createdBy: "u2",
 		createdByName: "Eve",
 		createdAt: "2026-10-16T01:00:00.000Z",
-		source: { id: "c9", name: "Orders API", available: true },
+		source: { id: "c9", name: "Orders API", available: true, canMerge: true },
 	},
 };
+
+const environment = (id: string, name: string) => ({
+	id,
+	workspaceId: "w-team",
+	name,
+	color: "green",
+	role: "editor",
+	variableCount: 1,
+	updatedAt: "2026-10-16T01:00:00.000Z",
+});
 
 function renderShop(routes: Record<string, MockRoute> = {}, flags = FLAGS) {
 	return renderWorkbenchPage(
@@ -54,6 +64,33 @@ async function openShop() {
 }
 
 describe("forks on the collection page", () => {
+	it("forks the chosen environments along with the collection", async () => {
+		const { calls } = renderShop({
+			"GET /api/v1/workspaces/w-team/environments": {
+				body: {
+					items: [environment("e1", "Staging"), environment("e2", "Prod")],
+				},
+			},
+			[`POST ${C}/forks`]: {
+				status: 201,
+				body: detail("f1", [], { name: "Shop" }),
+			},
+		});
+		const user = await openShop();
+		await waitFor(() => expect(byId("collection-header-fork")).not.toBeNull());
+		await user.click(byId("collection-header-fork") as HTMLElement);
+		const dialog = await screen.findByRole("dialog", { name: "Fork Shop" });
+		await user.click(
+			await within(dialog).findByRole("checkbox", { name: "Staging" }),
+		);
+		await user.click(within(dialog).getByRole("button", { name: "Fork" }));
+		await waitFor(() =>
+			expect(calls.find((c) => c.method === "POST")?.body).toMatchObject({
+				environmentIds: ["e1"],
+			}),
+		);
+	});
+
 	it("forks into a chosen workspace with a label", async () => {
 		const { calls } = renderShop({
 			[`POST ${C}/forks`]: {
@@ -121,10 +158,16 @@ describe("forks on the collection page", () => {
 			within(dialog).getByRole("button", { name: "Keep all source" }),
 		);
 		expect(submit).toBeEnabled();
+		expect(byId("modal-conflicts-source")).toBeChecked();
+		// "Keep all destination" turns every choice the other way.
+		await user.click(
+			within(dialog).getByRole("button", { name: "Keep all destination" }),
+		);
+		expect(byId("modal-conflicts-destination")).toBeChecked();
 		await user.click(submit);
 		await waitFor(() =>
 			expect(calls.find((c) => c.method === "POST")?.body).toEqual({
-				resolutions: { "r1:draft.url": "source" },
+				resolutions: { "r1:draft.url": "destination" },
 			}),
 		);
 	});
@@ -162,6 +205,43 @@ describe("forks on the collection page", () => {
 			within(dialog).getByRole("radio", {
 				name: "Merge changes and delete this fork",
 			}),
+		).toBeDisabled();
+	});
+
+	it("blocks a merge into a source the caller cannot edit", async () => {
+		renderShop({
+			[`GET ${C}/fork-status`]: {
+				body: {
+					...A_FORK,
+					fork: {
+						...A_FORK.fork,
+						source: { ...A_FORK.fork.source, canMerge: false },
+					},
+				},
+			},
+			[`GET ${C}/merge`]: {
+				body: {
+					changes: [
+						{ key: "r2", kind: "added", entityKind: "request", name: "Create" },
+					],
+					conflicts: [],
+				},
+			},
+		});
+		const user = await openShop();
+		await waitFor(() => expect(byId("fork-merge")).not.toBeNull(), {
+			timeout: 3000,
+		});
+		await user.click(byId("fork-merge") as HTMLElement);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Merge into Orders API",
+		});
+		await within(dialog).findByText("Added request Create");
+		expect(within(dialog).getByRole("alert")).toHaveTextContent(
+			"Merging into Orders API needs the Editor role on it.",
+		);
+		expect(
+			within(dialog).getByRole("button", { name: "Merge" }),
 		).toBeDisabled();
 	});
 

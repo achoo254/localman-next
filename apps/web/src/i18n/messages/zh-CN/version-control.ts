@@ -21,6 +21,10 @@ export const versionControl: Messages["versionControl"] = {
 		workspace: "Workspace",
 		personalOnly: "作为这个 {kind} 的 Viewer，你只能 fork 到个人 workspace。",
 		noWorkspace: "没有你可以添加内容的 workspace。",
+		environments: "一同 fork 的 environment",
+		environmentsHint:
+			"每个 environment 成为单独的 fork，使用相同标签。最多 {max} 个。",
+		noEnvironments: "这个 workspace 还没有 environment。",
 		submit: "Fork",
 		done: "已 fork {name}",
 	},
@@ -53,6 +57,9 @@ export const versionControl: Messages["versionControl"] = {
 			mergeAndDelete: "合并修改并删除这个 fork",
 		},
 		optionNeedsEditor: "需要这个 fork 的 Editor 角色。",
+		mergeNeedsEditor:
+			"合并到 {name} 需要你在其上拥有 Editor 角色。请改为创建 pull request。",
+		mergeNeedsEditorEnvironment: "合并到 {name} 需要你在其上拥有 Editor 角色。",
 		pullDone: "已从 {name} 拉取修改",
 		mergeDone: "已合并到 {name}",
 		followUpFailed: "已合并。之后未能更新或删除这个 fork：请自行拉取或删除。",
@@ -89,6 +96,9 @@ export const versionControl: Messages["versionControl"] = {
 		target: "作为 Viewer，你只能 fork 到个人 workspace。",
 		conflicts: "请先为每一处冲突选择版本。",
 		sourceGone: "源已不存在，或你无法打开它。",
+		environmentOutside:
+			"只有该 collection 所在 workspace 的 environment 可以一同 fork。",
+		changeGone: "这项更改已不在该 pull request 中。重新打开以刷新。",
 		forbidden: "你没有权限执行此操作。",
 		notFound: "此 pull request 已不存在，或你无法打开它。",
 		closed: "此 pull request 已合并或已拒绝。",

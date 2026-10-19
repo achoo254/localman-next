@@ -19,6 +19,8 @@ export interface SyncDialogProps {
 	source: { id: string; name: string };
 	/** Editor of the fork: the two other merge options. */
 	canEditFork: boolean;
+	/** Editor of the source: merging into it at all (merge only). */
+	canMergeIntoSource?: boolean;
 	onClose: () => void;
 }
 
@@ -28,6 +30,7 @@ export function SyncDialog({
 	direction,
 	source,
 	canEditFork,
+	canMergeIntoSource = false,
 	onClose,
 }: SyncDialogProps) {
 	const t = useT();
@@ -38,6 +41,7 @@ export function SyncDialog({
 	const [choices, setChoices] = useState<Record<string, ConflictSide>>({});
 	const [option, setOption] = useState<MergeOption>("merge");
 	const pull = direction === "pull";
+	const blocked = !pull && !canMergeIntoSource;
 	const conflicts = preview.data?.conflicts ?? [];
 	const left = conflicts.filter((conflict) => !choices[conflict.id]).length;
 	const nothing =
@@ -96,7 +100,7 @@ export function SyncDialog({
 					<Button
 						data-id={pull ? "modal-pull-submit" : "modal-merge-submit"}
 						loading={sync.isPending}
-						disabled={!preview.data || nothing || left > 0}
+						disabled={!preview.data || nothing || left > 0 || blocked}
 						onClick={submit}
 					>
 						{t(
@@ -109,6 +113,16 @@ export function SyncDialog({
 			}
 		>
 			<div data-id={pull ? "modal-pull" : "modal-merge"} className="grid gap-4">
+				{blocked ? (
+					<Alert tone="warning" data-id="modal-merge-needs-editor">
+						{t(
+							fork.kind === "environment"
+								? "versionControl.sync.mergeNeedsEditorEnvironment"
+								: "versionControl.sync.mergeNeedsEditor",
+							{ name: source.name },
+						)}
+					</Alert>
+				) : null}
 				{preview.isPending ? (
 					<SkeletonRegion label={t("versionControl.sync.loading")}>
 						<Skeleton className="h-24" />

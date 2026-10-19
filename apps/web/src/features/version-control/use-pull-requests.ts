@@ -6,6 +6,7 @@ import {
 	type PullRequestInput,
 	createPullRequest,
 	fetchPullRequest,
+	fetchPullRequestChangeDiff,
 	fetchPullRequestThreads,
 	fetchPullRequests,
 	fetchReviewerCandidates,
@@ -22,6 +23,20 @@ export function usePullRequests(collectionId: string, enabled = true) {
 		queryKey: [...PULL_REQUESTS_KEY, "collection", collectionId],
 		queryFn: () => fetchPullRequests(collectionId),
 		enabled,
+	});
+}
+
+/** One change's diff, fetched once its row is opened. */
+export function usePullRequestChangeDiff(
+	id: string,
+	changeKey: string,
+	enabled: boolean,
+) {
+	return useQuery({
+		queryKey: [...PULL_REQUESTS_KEY, "diff", id, changeKey],
+		queryFn: () => fetchPullRequestChangeDiff(id, changeKey),
+		enabled,
+		refetchOnWindowFocus: false,
 	});
 }
 

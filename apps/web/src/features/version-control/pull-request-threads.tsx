@@ -1,23 +1,17 @@
 import type {
-	CommentThreadView,
 	MergeChange,
 	PullRequestDetail,
 } from "@localman/shared/api-client";
 import { useState } from "react";
 import { Alert } from "../../components/ui/alert";
-import { Button } from "../../components/ui/button";
 import { Skeleton } from "../../components/ui/skeleton";
 import { useT } from "../../i18n/i18n-context";
 import { CommentComposer } from "../comments/comment-composer";
 import { useCommentErrorMessage } from "../comments/comment-errors";
-import { CommentThread } from "../comments/comment-thread";
-import type { MentionCandidate } from "../comments/mention-suggestions";
-import {
-	type ThreadActions,
-	useThreadActions,
-} from "../comments/thread-actions";
+import { useThreadActions } from "../comments/thread-actions";
 import { useCommentActions } from "../comments/use-comments";
 import { usePeople } from "../comments/use-people";
+import { PullRequestChangeItem, ThreadList } from "./pull-request-change-item";
 import { usePullRequestThreads } from "./use-pull-requests";
 
 export interface PullRequestThreadsProps {
@@ -26,37 +20,6 @@ export interface PullRequestThreadsProps {
 	workspaceId: string | null;
 	/** A comment to bring into view (from a link). */
 	focusedCommentId: string | null;
-}
-
-interface ThreadListProps {
-	threads: readonly CommentThreadView[];
-	people: readonly MentionCandidate[];
-	actions: ThreadActions;
-	focusedCommentId: string | null;
-}
-
-function ThreadList({
-	threads,
-	people,
-	actions,
-	focusedCommentId,
-}: ThreadListProps) {
-	if (threads.length === 0) return null;
-	return (
-		<ol className="m-0 grid list-none gap-3 p-0">
-			{threads.map((thread) => (
-				<CommentThread
-					key={thread.id}
-					thread={thread}
-					people={people}
-					actions={actions}
-					focused={thread.comments.some(
-						(comment) => comment.id === focusedCommentId,
-					)}
-				/>
-			))}
-		</ol>
-	);
 }
 
 /**
@@ -114,55 +77,20 @@ export function PullRequestThreads({
 								(thread) => thread.changeKey === change.key,
 							);
 							return (
-								<li
+								<PullRequestChangeItem
 									key={change.key}
-									data-id="pull-request-change"
-									className="grid gap-2 rounded-md border border-border-subtle p-2"
-								>
-									<div className="flex flex-wrap items-center gap-2 text-sm">
-										<span className="flex-1">
-											{t(`versionControl.sync.${change.kind}`, {
-												kind: t(`versionControl.kinds.${change.entityKind}`),
-												name: change.name,
-											})}
-										</span>
-										{own.length > 0 ? (
-											<span className="text-muted text-xs">
-												{t("versionControl.pullRequests.changeComments", {
-													count: own.length,
-												})}
-											</span>
-										) : null}
-										<Button
-											size="sm"
-											variant="ghost"
-											data-id="pull-request-change-comment"
-											onClick={() => setCommenting(change.key)}
-										>
-											{t("versionControl.pullRequests.comment")}
-										</Button>
-									</div>
-									<ThreadList threads={own} {...list} />
-									{commenting === change.key ? (
-										<CommentComposer
-											label={t(
-												"versionControl.pullRequests.changeComposerLabel",
-												{
-													name: change.name,
-												},
-											)}
-											submitLabel={t("versionControl.pullRequests.send")}
-											people={people}
-											dataId="pull-request-change-composer"
-											autoFocus
-											onCancel={() => setCommenting(null)}
-											onSubmit={async (body) => {
-												await write(body, change.key);
-												setCommenting(null);
-											}}
-										/>
-									) : null}
-								</li>
+									pullRequestId={pullRequest.id}
+									change={change}
+									threads={own}
+									{...list}
+									commenting={commenting === change.key}
+									onComment={() => setCommenting(change.key)}
+									onCancel={() => setCommenting(null)}
+									onSubmit={async (body) => {
+										await write(body, change.key);
+										setCommenting(null);
+									}}
+								/>
 							);
 						})}
 					</ul>

@@ -96,6 +96,7 @@ export function PageHeader(props: PageHeaderProps) {
 					target={{ kind: "collection", id: page.collectionId }}
 					name={props.name}
 					role={props.canEdit ? "editor" : "viewer"}
+					sourceWorkspaceId={props.workspaceId}
 					onOpen={(collectionId) =>
 						openNode({ kind: "collection", collectionId, name: props.name })
 					}

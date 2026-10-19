@@ -91,9 +91,18 @@ export function useForkActions(target: ForkTarget) {
 	const afterSync = useAfterSync();
 	return {
 		create: useMutation({
-			mutationFn: (input: { label: string; workspaceId: string }) =>
-				createFork(target, input),
-			onSuccess: () => afterSync(target.kind, []),
+			mutationFn: (input: {
+				label: string;
+				workspaceId: string;
+				environmentIds?: string[];
+			}) => createFork(target, input),
+			onSuccess: async (_forkId, input) => {
+				await afterSync(target.kind, []);
+				// Environments forked along with a collection show up in its workspace.
+				if (input.environmentIds?.length) {
+					await client.invalidateQueries({ queryKey: ENVIRONMENTS_KEY });
+				}
+			},
 		}),
 		relabel: useMutation({
 			mutationFn: (label: string) => relabelFork(target, label),

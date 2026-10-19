@@ -22,6 +22,10 @@ export const versionControl: Messages["versionControl"] = {
 		personalOnly:
 			"Với vai trò Viewer của {kind} này, bạn chỉ fork được vào workspace cá nhân.",
 		noWorkspace: "Không có workspace nào bạn được thêm vào.",
+		environments: "Environment fork kèm",
+		environmentsHint:
+			"Mỗi environment thành một fork riêng, cùng nhãn. Tối đa {max}.",
+		noEnvironments: "Workspace này chưa có environment nào.",
 		submit: "Fork",
 		done: "Đã fork {name}",
 	},
@@ -55,6 +59,10 @@ export const versionControl: Messages["versionControl"] = {
 			mergeAndDelete: "Merge thay đổi rồi xoá fork này",
 		},
 		optionNeedsEditor: "Cần vai trò Editor ở fork này.",
+		mergeNeedsEditor:
+			"Merge vào {name} cần quyền Editor trên bản đó. Hãy tạo pull request thay thế.",
+		mergeNeedsEditorEnvironment:
+			"Merge vào {name} cần quyền Editor trên bản đó.",
 		pullDone: "Đã kéo thay đổi từ {name}",
 		mergeDone: "Đã merge vào {name}",
 		followUpFailed:
@@ -93,6 +101,10 @@ export const versionControl: Messages["versionControl"] = {
 		target: "Với vai trò Viewer, bạn chỉ fork được vào workspace cá nhân.",
 		conflicts: "Hãy chọn bản cho mọi xung đột trước.",
 		sourceGone: "Bản gốc không còn, hoặc bạn không mở được nó.",
+		environmentOutside:
+			"Chỉ environment trong workspace của collection mới fork kèm được.",
+		changeGone:
+			"Thay đổi này không còn trong pull request. Mở lại để cập nhật.",
 		forbidden: "Bạn không có quyền làm việc này.",
 		notFound: "Pull request không còn, hoặc bạn không mở được nó.",
 		closed: "Pull request này đã được merge hoặc bị từ chối.",

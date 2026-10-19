@@ -7,12 +7,9 @@ import {
 } from "@localman/shared/api-client";
 import type { ClientSession, Types } from "mongoose";
 import { elementNotFound } from "../access/access-policy.js";
-import { inWorkspaceTransaction } from "../workspaces/workspace-lock.js";
 import { requireWorkspace } from "../workspaces/workspace-roles.js";
-import {
-	assertEnvironmentRoom,
-	requireEnvironment,
-} from "./environment-access.js";
+import { requireEnvironment } from "./environment-access.js";
+import { insertEnvironment } from "./environment-insert.js";
 import {
 	EnvironmentModel,
 	type StoredEnvironment,
@@ -43,29 +40,6 @@ export async function loadEnvironment(
 	const doc = await EnvironmentModel.findById(id).lean<StoredEnvironment>();
 	if (!doc) throw elementNotFound();
 	return doc;
-}
-
-/**
- * Inserts under the workspace lock, within its room; returns the new id.
- * `alongside` writes more in the same transaction (a fork's link).
- */
-export async function insertEnvironment(
-	workspaceId: Types.ObjectId,
-	sub: string,
-	build: (id: Types.ObjectId) => Omit<NewEnvironment, "variables"> & {
-		variables: StoredVariable[];
-	},
-	alongside?: (id: Types.ObjectId, session: ClientSession) => Promise<void>,
-): Promise<Types.ObjectId> {
-	return inWorkspaceTransaction(workspaceId, async (session: ClientSession) => {
-		await assertEnvironmentRoom(workspaceId, session);
-		const doc = new EnvironmentModel({ workspaceId, createdBy: sub });
-		const fields = build(doc._id);
-		doc.set({ ...fields, color: fields.color ?? "grey", updatedBy: sub });
-		await doc.save({ session });
-		await alongside?.(doc._id, session);
-		return doc._id;
-	});
 }
 
 /** Admins and Editors of the workspace add environments (they edit them). */

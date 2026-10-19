@@ -27,7 +27,7 @@ import {
 	titleSchema,
 } from "./pull-request-views-schema.js";
 
-const PR_ACCESS =
+export const PR_ACCESS =
 	"404 PULL_REQUEST_NOT_FOUND when it does not exist or the caller cannot open its source collection.";
 const CLOSED = "409 PULL_REQUEST_CLOSED once it is merged or declined.";
 

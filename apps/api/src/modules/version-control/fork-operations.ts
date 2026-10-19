@@ -1,4 +1,5 @@
 import { defineOperation } from "@localman/operations";
+import { FORK_ENVIRONMENTS_MAX } from "@localman/shared/api-client";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
 import { requireCollection } from "../collections/collection-access.js";
@@ -37,6 +38,7 @@ import {
 import { relabelFork } from "./fork-relabel.js";
 import { labelSchema } from "./fork-views-schema.js";
 import { pullRequestCommentOperations } from "./pull-request-comment-operations.js";
+import { getPullRequestChangeDiffOperation } from "./pull-request-diff.js";
 import { pullRequestCoreOperations } from "./pull-request-operations.js";
 import { syncOperations } from "./sync-operations.js";
 
@@ -48,11 +50,21 @@ export const forkCollectionOperation = defineOperation({
 	method: "POST",
 	path: `${COLLECTION_PATH}/forks`,
 	summary: "Fork a collection",
-	description: `A copy (folders, requests, examples, variables) linked to its source. ${FORK} ${ACCESS_NOTE}`,
+	description: `A copy (folders, requests, examples, variables) linked to its source. ${FORK} \`environmentIds\` (up to ${FORK_ENVIRONMENTS_MAX}, of the collection's workspace, else 400 FORK_ENVIRONMENT_OUTSIDE_WORKSPACE) are forked along with it under the same label, each checked like fork_environment and counted as a fork before anything is created. ${ACCESS_NOTE}`,
 	input: z.object({
 		collectionId: collectionIdSchema,
 		label: labelSchema,
 		workspaceId: z.string().min(1).max(64),
+		environmentIds: z
+			.array(environmentIdSchema)
+			.max(FORK_ENVIRONMENTS_MAX)
+			.refine(
+				(ids) => new Set(ids.map((id) => id.toLowerCase())).size === ids.length,
+				{
+					message: "Each environment once",
+				},
+			)
+			.optional(),
 	}),
 	output: collectionDetailView,
 	scopes: [USER_SCOPE],
@@ -120,5 +132,6 @@ export const forkOperations = [
 		merge: mergeEnvironment,
 	}),
 	...pullRequestCoreOperations,
+	getPullRequestChangeDiffOperation,
 	...pullRequestCommentOperations,
 ];

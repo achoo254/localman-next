@@ -53,6 +53,9 @@ export const versionControlPullRequests = {
 		changeComments: { one: "{count} comment", other: "{count} comments" },
 		composerLabel: "Comment on this pull request",
 		changeComposerLabel: "Comment on {name}",
+		showDiff: "Show diff",
+		hideDiff: "Hide diff",
+		diffLabel: "Changes to {name}",
 		send: "Comment",
 	},
 } as const;

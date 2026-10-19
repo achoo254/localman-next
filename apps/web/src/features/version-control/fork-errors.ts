@@ -6,6 +6,8 @@ const CODES = {
 	FORK_TARGET_NOT_ALLOWED: "target",
 	MERGE_CONFLICTS: "conflicts",
 	FORK_SOURCE_UNAVAILABLE: "sourceGone",
+	FORK_ENVIRONMENT_OUTSIDE_WORKSPACE: "environmentOutside",
+	PULL_REQUEST_CHANGE_NOT_FOUND: "changeGone",
 	FORBIDDEN: "forbidden",
 	PULL_REQUEST_NOT_FOUND: "notFound",
 	PULL_REQUEST_CLOSED: "closed",

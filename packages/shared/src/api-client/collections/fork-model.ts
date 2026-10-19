@@ -4,6 +4,8 @@
  */
 
 export const FORK_LABEL_MAX = 64;
+/** Environments forked along with one collection, each counted as a fork. */
+export const FORK_ENVIRONMENTS_MAX = 5;
 
 /**
  * How a fork's changes reach its source: `merge` writes them to the
@@ -33,6 +35,8 @@ export interface ForkSourceView {
 	/** `null` when it is gone or the caller cannot open it. */
 	name: string | null;
 	available: boolean;
+	/** Whether the caller may merge this fork into it (Editor of the source). */
+	canMerge: boolean;
 }
 
 /** What makes a collection or environment a fork. */

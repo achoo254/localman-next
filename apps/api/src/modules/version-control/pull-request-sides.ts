@@ -35,14 +35,14 @@ export async function pullRequestSides(
 }
 
 /**
- * Its changes as a merge would make them now. `null` once merged or
- * declined, or when the fork is gone.
+ * The states of a live pull request and the merge it would make now.
+ * `null` once merged or declined, or when the fork is gone.
  */
-export async function livePreview(
+export async function liveMerge(
 	sub: string,
 	pr: StoredPullRequest,
 	source: CollectionAccess,
-): Promise<MergePreview | null> {
+) {
 	if (pr.status === "merged" || pr.status === "declined") return null;
 	const sides = await pullRequestSides(sub, pr, source);
 	if (!sides) return null;
@@ -52,13 +52,24 @@ export async function livePreview(
 		states.forkInSource,
 		states.source,
 	);
+	return { states, merge };
+}
+
+/** Its changes as a merge would make them now; `null` as for `liveMerge`. */
+export async function livePreview(
+	sub: string,
+	pr: StoredPullRequest,
+	source: CollectionAccess,
+): Promise<MergePreview | null> {
+	const live = await liveMerge(sub, pr, source);
+	if (!live) return null;
 	return mergePreview(
 		{
-			base: states.base,
-			source: states.forkInSource,
-			destination: states.source,
-			merged: merge.state,
+			base: live.states.base,
+			source: live.states.forkInSource,
+			destination: live.states.source,
+			merged: live.merge.state,
 		},
-		merge.conflicts,
+		live.merge.conflicts,
 	);
 }

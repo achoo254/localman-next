@@ -19,6 +19,8 @@ export interface ForkControlsProps {
 	target: ForkTarget;
 	name: string;
 	role: "editor" | "viewer";
+	/** A collection's workspace, for the environments its fork can take along. */
+	sourceWorkspaceId?: string;
 	/** Opens a collection or environment by id (a new fork). */
 	onOpen: (id: string) => void;
 }
@@ -32,7 +34,13 @@ export function ForkControls(props: ForkControlsProps) {
 	return enabled ? <Controls {...props} /> : null;
 }
 
-function Controls({ target, name, role, onOpen }: ForkControlsProps) {
+function Controls({
+	target,
+	name,
+	role,
+	sourceWorkspaceId,
+	onOpen,
+}: ForkControlsProps) {
 	const t = useT();
 	const status = useForkStatus(target);
 	const [dialog, setDialog] = useState<
@@ -104,6 +112,7 @@ function Controls({ target, name, role, onOpen }: ForkControlsProps) {
 					target={target}
 					name={name}
 					role={role}
+					sourceWorkspaceId={sourceWorkspaceId}
 					onClose={() => setDialog(null)}
 					onForked={onOpen}
 				/>
@@ -114,6 +123,7 @@ function Controls({ target, name, role, onOpen }: ForkControlsProps) {
 					direction={dialog}
 					source={source}
 					canEditFork={role === "editor"}
+					canMergeIntoSource={fork?.source.canMerge ?? false}
 					onClose={() => setDialog(null)}
 				/>
 			) : null}

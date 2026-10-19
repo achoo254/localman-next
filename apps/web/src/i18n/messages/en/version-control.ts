@@ -22,6 +22,10 @@ export const versionControl = {
 		personalOnly:
 			"As a Viewer of this {kind}, you can fork it into your personal workspace only.",
 		noWorkspace: "There's no workspace you can add to.",
+		environments: "Environments to fork along",
+		environmentsHint:
+			"Each one becomes its own fork with the same label. Up to {max}.",
+		noEnvironments: "This workspace has no environments.",
 		submit: "Fork",
 		done: "Forked {name}",
 	},
@@ -55,6 +59,10 @@ export const versionControl = {
 			mergeAndDelete: "Merge changes and delete this fork",
 		},
 		optionNeedsEditor: "Needs the Editor role on this fork.",
+		mergeNeedsEditor:
+			"Merging into {name} needs the Editor role on it. Create a pull request instead.",
+		mergeNeedsEditorEnvironment:
+			"Merging into {name} needs the Editor role on it.",
 		pullDone: "Pulled the changes from {name}",
 		mergeDone: "Merged into {name}",
 		followUpFailed:
@@ -95,6 +103,10 @@ export const versionControl = {
 		target: "As a Viewer, you can fork into your personal workspace only.",
 		conflicts: "Choose a version for every conflict first.",
 		sourceGone: "The source no longer exists, or you can't open it.",
+		environmentOutside:
+			"Only environments of the collection's workspace can come along.",
+		changeGone:
+			"This change is no longer part of the pull request. Reopen it to refresh.",
 		forbidden: "You're not allowed to do that.",
 		notFound: "This pull request no longer exists, or you can't open it.",
 		closed: "This pull request is already merged or declined.",

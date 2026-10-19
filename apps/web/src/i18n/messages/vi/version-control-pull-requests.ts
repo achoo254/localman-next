@@ -57,6 +57,9 @@ export const versionControlPullRequests: Pick<
 		changeComments: { one: "{count} bình luận", other: "{count} bình luận" },
 		composerLabel: "Bình luận về pull request này",
 		changeComposerLabel: "Bình luận về {name}",
+		showDiff: "Xem diff",
+		hideDiff: "Ẩn diff",
+		diffLabel: "Thay đổi của {name}",
 		send: "Bình luận",
 	},
 };

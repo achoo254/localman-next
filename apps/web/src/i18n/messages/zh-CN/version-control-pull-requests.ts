@@ -57,6 +57,9 @@ export const versionControlPullRequests: Pick<
 		changeComments: { one: "{count} 条评论", other: "{count} 条评论" },
 		composerLabel: "评论此 pull request",
 		changeComposerLabel: "评论 {name}",
+		showDiff: "查看 diff",
+		hideDiff: "隐藏 diff",
+		diffLabel: "{name} 的更改",
 		send: "评论",
 	},
 };

@@ -1,3 +1,4 @@
+import { elementRoleAllows } from "@localman/shared/access";
 import type {
 	ForkInfo,
 	ForkListItem,
@@ -13,11 +14,17 @@ import { type ForkKind, ForkModel, type StoredFork } from "./fork-model.js";
 /** Forks listed at most. */
 const FORKS_LISTED = 200;
 
-/** The element by id if `sub` holds a role on it, else `null`. */
-async function readable(sub: string, kind: ForkKind, id: Types.ObjectId) {
+/** The element by id and the role `sub` holds on it, or `null` without one. */
+async function withRole(sub: string, kind: ForkKind, id: Types.ObjectId) {
 	const element = await elementAdapter(kind)?.load(id.toHexString());
 	if (!element) return null;
-	return (await elementRoleOf(sub, element, { claim: false })) ? element : null;
+	const role = await elementRoleOf(sub, element, { claim: false });
+	return role ? { element, role } : null;
+}
+
+/** The element by id if `sub` holds a role on it, else `null`. */
+async function readable(sub: string, kind: ForkKind, id: Types.ObjectId) {
+	return (await withRole(sub, kind, id))?.element ?? null;
 }
 
 async function forkInfo(
@@ -26,7 +33,7 @@ async function forkInfo(
 	link: StoredFork,
 ): Promise<ForkInfo> {
 	const [source, names] = await Promise.all([
-		readable(sub, kind, link.sourceId),
+		withRole(sub, kind, link.sourceId),
 		displayNames([link.createdBy]),
 	]);
 	return {
@@ -36,8 +43,9 @@ async function forkInfo(
 		createdAt: link.createdAt.toISOString(),
 		source: {
 			id: link.sourceId.toHexString(),
-			name: source?.name ?? null,
+			name: source?.element.name ?? null,
 			available: source !== null,
+			canMerge: elementRoleAllows(kind, source?.role ?? null, "mergeFork"),
 		},
 	};
 }

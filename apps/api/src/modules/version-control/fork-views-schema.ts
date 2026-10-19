@@ -32,6 +32,7 @@ export const forkStatusView = z.object({
 				id: z.string(),
 				name: z.string().nullable(),
 				available: z.boolean(),
+				canMerge: z.boolean(),
 			}),
 		})
 		.nullable(),

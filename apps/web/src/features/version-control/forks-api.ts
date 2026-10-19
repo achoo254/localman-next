@@ -49,6 +49,7 @@ function statusOf(value: unknown): ForkStatus {
 							id: expectString(source, "id"),
 							name: optionalString(source, "name"),
 							available: expectBoolean(source, "available"),
+							canMerge: expectBoolean(source, "canMerge"),
 						},
 					}
 				: null,
@@ -79,7 +80,7 @@ export async function fetchForks(target: ForkTarget): Promise<ForkListItem[]> {
 /** Creates the fork; returns its id. */
 export async function createFork(
 	target: ForkTarget,
-	input: { label: string; workspaceId: string },
+	input: { label: string; workspaceId: string; environmentIds?: string[] },
 ): Promise<string> {
 	const data = expectRecord(
 		await apiRequest(`${pathOf(target)}/forks`, {
