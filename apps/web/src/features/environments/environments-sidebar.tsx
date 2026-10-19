@@ -87,7 +87,7 @@ export function EnvironmentsSidebar(props: EnvironmentsSidebarProps) {
 					{t("environments.sidebar.readOnly")}
 				</p>
 			)}
-			<div className="grid gap-1 p-2">
+			<div className="grid grid-cols-1 gap-1 p-2">
 				<button
 					type="button"
 					data-id="sidebar-envs-globals"
@@ -126,7 +126,7 @@ export function EnvironmentsSidebar(props: EnvironmentsSidebarProps) {
 						{t("environments.sidebar.empty")}
 					</p>
 				) : null}
-				<ul className="m-0 grid list-none gap-0.5 p-0">
+				<ul className="m-0 grid grid-cols-1 list-none gap-0.5 p-0">
 					{(list.data ?? []).map((environment) => (
 						<EnvironmentListRow
 							key={environment.id}

@@ -9,7 +9,11 @@ import { cn } from "../../lib/cn";
  */
 export const Tabs = RadixTabs.Root;
 
-/** Row of triggers over a bottom rule; scrolls sideways when too narrow. */
+/**
+ * Row of triggers over a bottom rule; scrolls sideways when too narrow.
+ * Never vertically: the triggers overlap the rule by a pixel (`-mb-px`),
+ * which `overflow-x-auto` alone would turn into a vertical scrollbar.
+ */
 export function TabsList({
 	className,
 	...rest
@@ -17,7 +21,7 @@ export function TabsList({
 	return (
 		<RadixTabs.List
 			className={cn(
-				"flex overflow-x-auto border-border-subtle border-b px-4 pt-2",
+				"flex overflow-x-auto overflow-y-hidden border-border-subtle border-b px-4 pt-2",
 				className,
 			)}
 			{...rest}
