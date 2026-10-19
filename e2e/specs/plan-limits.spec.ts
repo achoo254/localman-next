@@ -38,13 +38,17 @@ test("a Free owner at the project limit is told the limit, never gets a fourth p
 	// The client already counts three owned projects: the form never opens.
 	const limitText = `You've reached the limit of ${FREE_PROJECTS} projects on this account.`;
 	await page.getByTestId("projects-add").click();
-	await expect(page.getByText(limitText)).toBeVisible();
+	// The toast itself: Radix briefly repeats it in a screen-reader announcement.
+	const toasts = page.getByRole("region", { name: /Notifications/ });
+	await expect(toasts.getByText(limitText)).toBeVisible();
 	await expect(page.getByTestId("modal-new-project")).toHaveCount(0);
 	await expect(page.getByTestId("modal-subscription")).toHaveCount(0);
 
 	// The stale tab opens the form, and the server refuses with PLAN_LIMIT_REACHED.
 	await submitNewProject(stale, names[3] ?? "");
-	await expect(stale.getByText(limitText)).toBeVisible();
+	await expect(
+		stale.getByRole("region", { name: /Notifications/ }).getByText(limitText),
+	).toBeVisible();
 
 	await page.goto("/projects");
 	await expect(page.locator('a[data-id$="-open"]')).toHaveCount(FREE_PROJECTS);
