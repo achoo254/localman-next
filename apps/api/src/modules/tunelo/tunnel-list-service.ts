@@ -107,13 +107,14 @@ async function learnFromLink(
 
 /**
  * Every live tunnel of the user: their Tunelo account (session exchanged
- * for a `tunnels:read` token) and each linked machine (its link token), in
- * parallel. A source that fails is reported in `failures`, never fatal.
+ * for a `tunnels:read` token; only with a browser session, `null` skips it)
+ * and each linked machine (its link token), in parallel. A source that
+ * fails is reported in `failures`, never fatal.
  */
-async function fetchAll(
+export async function fetchAll(
 	runtime: TuneloRuntime,
 	userSub: string,
-	sessionId: string,
+	sessionId: string | null,
 ): Promise<LocalTunnelList> {
 	const { cipher } = runtime.deps;
 	// Links Tunelo refused before are not called again (`deadAt`).
@@ -124,9 +125,12 @@ async function fetchAll(
 	})
 		.select({ tokenSealed: 1, linkId: 1, deviceName: 1 })
 		.lean();
-	const account = readSource(runtime, { source: "account", linkId: null }, () =>
-		runtime.deps.accountTokens.accessTokenFor(sessionId),
-	);
+	const account =
+		sessionId === null
+			? null
+			: readSource(runtime, { source: "account", linkId: null }, () =>
+					runtime.deps.accountTokens.accessTokenFor(sessionId),
+				);
 	const linked = links.map(async (link) => {
 		const id = String(link._id);
 		const result = await readSource(
@@ -138,7 +142,7 @@ async function fetchAll(
 		await learnFromLink(id, link.deviceName, result);
 		return result;
 	});
-	const results = await Promise.all([account, ...linked]);
+	const results = await Promise.all(account ? [account, ...linked] : linked);
 	const seen = new Set<string>();
 	const tunnels: LocalTunnel[] = [];
 	for (const tunnel of results.flatMap((result) => result.tunnels)) {

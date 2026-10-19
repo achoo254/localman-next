@@ -8,10 +8,15 @@ import {
 	proxyRequestSchema,
 	proxyResponseSchema,
 } from "@localman/shared/api-client";
-import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import {
+	USER_SCOPE,
+	requireSubject,
+	sessionIdOf,
+} from "../../http/require-auth.js";
 import { type Logger, createLogger } from "../../logger.js";
 import { localmanDomainOf } from "../../tenancy/idp-tenant-directory.js";
 import { tenantSettings } from "../../tenancy/tenant-settings.js";
+import { routeLocalTarget } from "./local-target-route.js";
 import {
 	PROXY_CONCURRENCY,
 	type ProxyConcurrency,
@@ -35,6 +40,8 @@ export interface ProxyDependencies {
 	readonly logger: () => Logger;
 	/** Requests in flight; defaults to `PROXY_CONCURRENCY`. */
 	readonly concurrency?: ProxyConcurrency;
+	/** Where a local target goes; defaults to the user's tunnel (`routeLocalTarget`). */
+	readonly routeLocal?: typeof routeLocalTarget;
 }
 
 /**
@@ -58,11 +65,12 @@ function publicScheme(): string {
 	return new URL(tenantSettings().publicUrl).protocol.replace(":", "");
 }
 
-const DESCRIPTION = `Sends an HTTP request from the Localman server and returns the response, like the Send button of the API client. Give method, absolute http(s) url, headers as an ordered list of {name, value} (repeated names allowed; Cookie, User-Agent, Origin and Host may be set) and body: bodyType "text" for UTF-8 text, "base64" for bytes, "none" without body (GET and HEAD carry none). options: followRedirects (default true, at most 10), timeoutMs (1000–120000, default 30000), sendClientIp (default true: adds X-Forwarded-For, X-Real-IP and Forwarded with the caller's IP). Every request also carries X-Localman-Proxy: 1, and Host is forced to the URL's host for Localman mock URLs and Tunelo tunnel URLs. The response has status, headers in arrival order (Set-Cookie included, only shown), body as UTF-8 text or base64 (bodyEncoding), size, truncated (body cut at 10 MB), timings in ms {dns, connect, tls, ttfb, total} and finalUrl after redirects. Private, loopback and link-local targets (localhost, 10.x, 192.168.x, 169.254.169.254, fc00::/7…) and mail ports are refused with 403 PROXY_TARGET_BLOCKED; expose a local server with a Tunelo tunnel instead. Other failures: 502 PROXY_DNS_FAILED, PROXY_CONNECTION_FAILED (details.cause), PROXY_TOO_MANY_REDIRECTS, 504 PROXY_TIMEOUT. Every call counts toward the plan's monthly proxy requests (429 MONTHLY_QUOTA_EXCEEDED) and a per-account rate limit (429 RATE_LIMITED); at most ${PROXY_CONCURRENCY.perUser} requests of an account (${PROXY_CONCURRENCY.total} in all) run at once, more answer 429 PROXY_BUSY (details.scope user or server) without counting.`;
+const DESCRIPTION = `Sends an HTTP request from the Localman server and returns the response, like the Send button of the API client. Give method, absolute http(s) url, headers as an ordered list of {name, value} (repeated names allowed; Cookie, User-Agent, Origin and Host may be set) and body: bodyType "text" for UTF-8 text, "base64" for bytes, "none" without body (GET and HEAD carry none). options: followRedirects (default true, at most 10), timeoutMs (1000–120000, default 30000), sendClientIp (default true: adds X-Forwarded-For, X-Real-IP and Forwarded with the caller's IP). Every request also carries X-Localman-Proxy: 1, and Host is forced to the URL's host for Localman mock URLs and Tunelo tunnel URLs. The response has status, headers in arrival order (Set-Cookie included, only shown), body as UTF-8 text or base64 (bodyEncoding), size, truncated (body cut at 10 MB), timings in ms {dns, connect, tls, ttfb, total} and finalUrl after redirects. A local target (localhost, 127.x, a LAN address) goes through the user's tunnel like the Send button: the enabled tunnel URL saved for that host and port, else for localhost the one live Tunelo tunnel of that port (from machines linked with \`tunelo link\`; with an agent's token the account's own tunnels are not read); the path and query are kept and finalUrl shows the tunnel. Only HTTP tunnels count. Several tunnels for the port answer 409 PROXY_TUNNEL_AMBIGUOUS (send to one of the listed tunnel URLs directly); a Tunelo source that did not answer, with no tunnel found, 502 PROXY_TUNNEL_UNAVAILABLE; none answers 403 PROXY_TARGET_BLOCKED with how to open one (\`tunelo http <port>\`). Other private and link-local targets (169.254.169.254, fc00::/7…) and mail ports are refused with 403 PROXY_TARGET_BLOCKED. Other failures: 502 PROXY_DNS_FAILED, PROXY_CONNECTION_FAILED (details.cause), PROXY_TOO_MANY_REDIRECTS, 504 PROXY_TIMEOUT. Every call counts toward the plan's monthly proxy requests (429 MONTHLY_QUOTA_EXCEEDED) and a per-account rate limit (429 RATE_LIMITED); at most ${PROXY_CONCURRENCY.perUser} requests of an account (${PROXY_CONCURRENCY.total} in all) run at once, more answer 429 PROXY_BUSY (details.scope user or server) without counting.`;
 
 /** `client.sendRequest`; tests build it with their own guard and logger. */
 export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
 	const concurrency = deps.concurrency ?? createProxyConcurrency();
+	const routeLocal = deps.routeLocal ?? routeLocalTarget;
 	const sendRequest = defineOperation({
 		id: "client.sendRequest",
 		method: "POST",
@@ -86,16 +94,26 @@ export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
 			const started = performance.now();
 			const meta = { sub, host: loggedHost(input.url), method: input.method };
 			try {
+				// Counted like any refused target, then a local one goes
+				// through the user's tunnel.
 				await admitProxyRequest(sub);
-				const response = await forwardRequest(input, {
-					guard: deps.guard,
-					clientIp: ctx.clientIp,
-					forwardedProto: publicScheme(),
-					// The browser or agent gave up: stop the upstream request.
-					signal: ctx.signal,
-				});
+				const route = await routeLocal(sub, sessionIdOf(ctx), input.url);
+				const response = await forwardRequest(
+					{ ...input, url: route.url },
+					{
+						guard: deps.guard,
+						clientIp: ctx.clientIp,
+						forwardedProto: publicScheme(),
+						// The browser or agent gave up: stop the upstream request.
+						signal: ctx.signal,
+					},
+				);
 				const ms = Math.round(performance.now() - started);
-				deps.logger().info({ ...meta, status: response.status, ms }, "proxy");
+				// `via`: the tunnel a local target went through, for support.
+				const via = route.tunnel ? { via: route.tunnel } : {};
+				deps
+					.logger()
+					.info({ ...meta, ...via, status: response.status, ms }, "proxy");
 				return response;
 			} catch (error) {
 				const ms = Math.round(performance.now() - started);

@@ -1,7 +1,7 @@
 ---
 phase: 18
 title: "Localman MCP: đủ toolset cho API client, chia sẻ, cộng tác, công khai, đồng bộ và traffic"
-status: pending
+status: in-progress
 priority: P2
 effort: "M"
 dependencies: [16, 17, 19, 20, 21]
@@ -76,7 +76,7 @@ Operation của phase 10–16 và 19–21 đã khai báo qua registry nên tự 
 - [ ] T1 Mọi operation phase 10–16, 19, 20 đã có toolset và scope đúng
 - [ ] T2 Collection tools và revision "qua MCP"
 - [ ] T3 Environment tools che secret, `set_variable` local/shared đúng quyền
-- [ ] T4 `send_request`, import, collection đồng bộ từ mock
+- [ ] T4 `send_request`, import, collection đồng bộ từ mock (2026-10-19, làm trước: `send_request` tới localhost/LAN tự đi qua tunnel của user — ánh xạ đã lưu rồi tunnel của máy liên kết, token agent không đọc tunnel tài khoản; `import_collection` cho Postman v2.1/OpenAPI/cURL; thêm `generate_code_snippet` cho nút Code. Còn lại: collection đồng bộ từ mock, chờ phase 16)
 - [ ] T5 Tool mới đăng ký theo scope và toolset
 - [ ] T6 Mô tả scope `client:*` trên consent của IdP
 - [ ] T7 Integration pass, gồm test bắt buộc không lộ secret

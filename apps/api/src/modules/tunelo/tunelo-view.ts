@@ -76,7 +76,7 @@ export const LINK_EXEMPT =
 
 /** Exempt reason of the tunnel list. */
 export const LIST_EXEMPT =
-	"read by the browser's router to send a local address through the user's tunnel; the send_request tool runs on the server and cannot reach the user's machine";
+	"read by the browser's router with the session's IdP token; an agent needs no list: send_request routes a localhost target through the user's tunnel itself";
 
 export const tuneloOperationBase = {
 	scopes: [USER_SCOPE],

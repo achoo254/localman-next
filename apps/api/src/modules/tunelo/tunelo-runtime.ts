@@ -70,7 +70,7 @@ export function configureTunelo(
 	});
 }
 
-/** 503 when the server was started without Tunelo (never in `main.ts`). */
+/** 503 when the server was started without Tunelo (`TUNELO_ACCOUNTS_ENABLED` off). */
 export function tuneloRuntime(): TuneloRuntime {
 	if (!current) {
 		throw new OperationError(
@@ -80,4 +80,14 @@ export function tuneloRuntime(): TuneloRuntime {
 		);
 	}
 	return current;
+}
+
+/** The runtime, or `null` when the server was started without Tunelo. */
+export function tuneloRuntimeOrNull(): TuneloRuntime | null {
+	return current ?? null;
+}
+
+/** TEST ONLY. Back to a server started without Tunelo. */
+export function clearTuneloDeps(): void {
+	current = undefined;
 }

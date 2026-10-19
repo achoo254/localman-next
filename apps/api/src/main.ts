@@ -155,7 +155,11 @@ try {
 	notifications = createNotificationService(env, logger);
 	setNotificationService(notifications);
 	const auth = createAuthModule(authSettingsFromEnv(env), logger);
-	configureTunelo(auth, env.TUNELO_API_URL, logger);
+	// Off, Tunelo is never called: its operations are not served and the
+	// proxy routes a local target through saved tunnel URLs only.
+	if (env.TUNELO_ACCOUNTS_ENABLED) {
+		configureTunelo(auth, env.TUNELO_API_URL, logger);
+	}
 	const allowedOrigins = [env.PUBLIC_URL, env.WEB_ORIGIN];
 	const operations = servedOperations(registeredOperations, {
 		publicSharing: env.PUBLIC_SHARING_ENABLED,

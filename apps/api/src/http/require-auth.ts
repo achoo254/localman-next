@@ -59,13 +59,21 @@ export function requireSession(ctx: OperationContext): {
 	readonly sub: string;
 	readonly sessionId: string;
 } {
-	const auth = ctx.auth;
-	if (!auth || !("sessionId" in auth) || typeof auth.sessionId !== "string") {
+	const sessionId = sessionIdOf(ctx);
+	if (!ctx.auth || sessionId === null) {
 		throw new OperationError(
 			401,
 			"UNAUTHENTICATED",
 			"A browser session is required",
 		);
 	}
-	return { sub: auth.subjectId, sessionId: auth.sessionId };
+	return { sub: ctx.auth.subjectId, sessionId };
+}
+
+/** The browser session behind the call, `null` for a token (an agent). */
+export function sessionIdOf(ctx: OperationContext): string | null {
+	const auth = ctx.auth;
+	return auth && "sessionId" in auth && typeof auth.sessionId === "string"
+		? auth.sessionId
+		: null;
 }

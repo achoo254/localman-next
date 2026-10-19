@@ -184,7 +184,7 @@ API client tự tìm tunnel Tunelo của user (cùng tài khoản, hoặc máy �
 
 - **Bật:** thêm `tuneloAccounts` vào `released-features` và deploy; trên server đặt `TUNELO_ACCOUNTS_ENABLED=true` rồi `pm2 reload localman-api`.
 - **Kiểm sau khi bật:** `GET /api/v1/client/local-tunnels` trả 401 khi chưa đăng nhập (không phải 404); đăng nhập, chạy `tunelo http <port>` cùng tài khoản rồi gửi tới `http://localhost:<port>` thì badge "Qua Tunelo · <máy>".
-- **Tắt khẩn (rollback):** đặt `TUNELO_ACCOUNTS_ENABLED=false`, `pm2 reload localman-api`. Máy đã liên kết (`tunelo_links`) giữ nguyên; ánh xạ dán tay vẫn chạy.
+- **Tắt khẩn (rollback):** đặt `TUNELO_ACCOUNTS_ENABLED=false`, `pm2 reload localman-api`. Server không gọi Tunelo nữa (runtime không được cấu hình): `send_request` tới `localhost` chỉ còn đi qua ánh xạ dán tay. Máy đã liên kết (`tunelo_links`) giữ nguyên.
 
 ## Rollback
 

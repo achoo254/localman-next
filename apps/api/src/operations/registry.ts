@@ -1,6 +1,7 @@
 import type { AnyOperation } from "@localman/operations";
 import { accessOperations } from "../modules/access/access-operations.js";
 import { clientStoreOperations } from "../modules/api-client/client-store-operations.js";
+import { codeSnippetOperations } from "../modules/api-client/code-snippet-operations.js";
 import { proxyOperations } from "../modules/api-client/proxy-operations.js";
 import { getAccountUsage } from "../modules/billing/usage-operations.js";
 import { collaboratorOperations } from "../modules/collaborators/collaborator-operations.js";
@@ -87,6 +88,7 @@ export const operations: readonly AnyOperation[] = [
 	...webhookInboxOperations,
 	...callbackOperations,
 	...proxyOperations,
+	...codeSnippetOperations,
 	...clientStoreOperations,
 	// Served only while TUNELO_ACCOUNTS_ENABLED is on (`feature-gates.ts`).
 	...tuneloOperations,

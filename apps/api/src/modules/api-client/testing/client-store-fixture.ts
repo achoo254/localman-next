@@ -16,19 +16,20 @@ import {
 	connectTestMongo,
 } from "../../../test-support/test-mongo.js";
 import { clientStoreOperations } from "../client-store-operations.js";
+import { codeSnippetOperations } from "../code-snippet-operations.js";
 
 const ORIGIN = "https://localman.test";
 export const ALICE = "acc_alice";
 export const BOB = "acc_bob";
 
 /**
- * TEST ONLY. The dashboard app with just the client-store operations (they
- * join the registry later) and the session lookup stubbed by `x-test-sub`.
+ * TEST ONLY. The dashboard app with just the client-store and code snippet
+ * operations, and the session lookup stubbed by `x-test-sub`.
  */
 const app = createDashboardApp({
 	logger: createLogger("silent"),
 	allowedOrigins: [ORIGIN],
-	operations: clientStoreOperations,
+	operations: [...clientStoreOperations, ...codeSnippetOperations],
 	auth: {
 		router: Router(),
 		csrfExempt: [],

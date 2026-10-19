@@ -85,7 +85,7 @@ Dashboard và mock runtime là hai process riêng. Lý do: runtime công khai c�
 | 15 | [Chia sẻ công khai: public workspace, guest, nút Run, access key](phase-15-public-sharing.md) | M | 11, 12, 13, 14 | pending |
 | 16 | [Live Mock Sync: mock luôn đồng bộ với collection và environment](phase-16-live-mock-sync.md) | M | 12, 13, 14 | pending |
 | 17 | [Nền tảng MCP (toolsets, dry-run, coverage) cùng Mock MCP tức thì](phase-17-mock-mcp.md) — **chạy ngay sau 09, trước 10** | M | 5, 9 | in-progress |
-| 18 | [Localman MCP: đủ toolset cho API client, chia sẻ, cộng tác, đồng bộ, traffic](phase-18-localman-mcp-client-tools.md) | M | 16, 17, 19, 20, 21 | pending |
+| 18 | [Localman MCP: đủ toolset cho API client, chia sẻ, cộng tác, đồng bộ, traffic](phase-18-localman-mcp-client-tools.md) | M | 16, 17, 19, 20, 21 | in-progress |
 | 19 | [Mock power-ups: Faker thông minh, tạo resource từ JSON/OpenAPI/CSV, xuất type, chaos, response theo điều kiện](phase-19-mock-power-ups.md) | M | 4, 5, 6 | in-progress |
 | 20 | [Mock lai localhost, log request có replay, webhook inbox về localhost, mock callback](phase-20-mock-traffic-and-hybrid-localhost.md) | L | 5, 10 | completed |
 | 21 | [Client power-ups: secret local không rời trình duyệt, nối request không cần script, docs tự sinh](phase-21-client-power-ups.md) | M | 10, 13, 16 | pending |

@@ -28,7 +28,7 @@ const MIB = 1024 * 1024;
 const TREE_BODY_LIMIT = MAX_IMPORT_BYTES + 2 * MIB;
 /** 200 variables of up to 10,000 characters, scripts and description. */
 const ROOT_BODY_LIMIT = 3 * MIB;
-const LIMITS_NOTE = `409 COLLECTION_LIMIT_REACHED past ${COLLECTIONS_PER_WORKSPACE_MAX} collections in the workspace, 409 COLLECTION_NODES_LIMIT past ${COLLECTION_NODES_MAX} folders and requests, 413 DRAFT_TOO_LARGE for a request above the saved-draft cap.`;
+export const LIMITS_NOTE = `409 COLLECTION_LIMIT_REACHED past ${COLLECTIONS_PER_WORKSPACE_MAX} collections in the workspace, 409 COLLECTION_NODES_LIMIT past ${COLLECTION_NODES_MAX} folders and requests, 413 DRAFT_TOO_LARGE for a request above the saved-draft cap.`;
 
 export const createCollectionOperation = defineOperation({
 	id: "client.createCollection",

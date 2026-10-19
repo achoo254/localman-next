@@ -5,6 +5,7 @@ import {
 	favoriteCollectionOperation,
 	unfavoriteCollectionOperation,
 } from "./collection-favorite-operations.js";
+import { collectionImportOperations } from "./collection-import-operations.js";
 import { collectionNodeBatchOperations } from "./collection-node-batch-operations.js";
 import { collectionNodeOperations } from "./collection-node-operations.js";
 import { collectionReadOperations } from "./collection-read-operations.js";
@@ -22,6 +23,7 @@ export const collectionOperations: readonly AnyOperation[] = [
 	...collectionReadOperations,
 	searchCollectionsOperation,
 	...collectionWriteOperations,
+	...collectionImportOperations,
 	...collectionNodeOperations,
 	...collectionNodeBatchOperations,
 	favoriteCollectionOperation,

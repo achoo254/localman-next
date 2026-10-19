@@ -4,7 +4,10 @@ import request from "supertest";
 import { createDashboardApp } from "../../dashboard-server.js";
 import { type Logger, createLogger } from "../../logger.js";
 import type { ProxyConcurrency } from "./proxy-concurrency.js";
-import { createProxyOperations } from "./proxy-operations.js";
+import {
+	type ProxyDependencies,
+	createProxyOperations,
+} from "./proxy-operations.js";
 import { testGuard } from "./proxy-test-server.js";
 import type { SsrfGuard } from "./ssrf-guard.js";
 
@@ -17,6 +20,8 @@ export interface ProxyTestAppOptions {
 	readonly trustProxy?: string | false;
 	readonly logger?: Logger;
 	readonly concurrency?: ProxyConcurrency;
+	/** Where a local target goes; by default the URL is left as is. */
+	readonly routeLocal?: ProxyDependencies["routeLocal"];
 }
 
 /**
@@ -32,6 +37,11 @@ export function proxyTestApp(options: ProxyTestAppOptions = {}): Express {
 		operations: createProxyOperations({
 			guard: options.guard ?? testGuard(),
 			logger: () => logger,
+			// These tests aim the proxy at a local upstream through the guard;
+			// tunnel routing has its own tests (local-target-route.test.ts).
+			routeLocal:
+				options.routeLocal ??
+				(async (_sub, _session, url) => ({ url, tunnel: null })),
 			...(options.concurrency ? { concurrency: options.concurrency } : {}),
 		}),
 		auth: {

@@ -6,6 +6,12 @@ export const TUNNEL_LIST_TTL_MS = 10_000;
 /** A refresh ("Check again") waits until the list is this old. */
 export const TUNNEL_REFRESH_MIN_MS = 2_000;
 
+/**
+ * Key of a user's list read without a browser session (an agent's token):
+ * linked machines only, so it is kept apart from the full list.
+ */
+export const linkedOnlyKey = (userSub: string): string => `${userSub}#linked`;
+
 interface Entry {
 	readonly list: LocalTunnelList;
 	readonly at: number;
@@ -63,9 +69,11 @@ export class TunnelListCache {
 	}
 
 	drop(userSub: string): void {
-		const key = tenantKey(userSub);
-		this.entries.delete(key);
-		this.loading.delete(key);
+		for (const id of [userSub, linkedOnlyKey(userSub)]) {
+			const key = tenantKey(id);
+			this.entries.delete(key);
+			this.loading.delete(key);
+		}
 	}
 
 	private prune(): void {
