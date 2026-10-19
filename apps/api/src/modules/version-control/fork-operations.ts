@@ -8,7 +8,12 @@ import {
 	COLLECTION_PATH,
 	collectionIdSchema,
 } from "../collections/collection-read-operations.js";
+import {
+	AGENT_READ_NOTE,
+	collectionForCaller,
+} from "../collections/collection-secret-mask.js";
 import { collectionDetailView } from "../collections/collection-view.js";
+import { valuesForCaller } from "../environments/agent-secret-mask.js";
 import {
 	ENVIRONMENT_ACCESS_NOTE,
 	requireEnvironment,
@@ -50,7 +55,7 @@ export const forkCollectionOperation = defineOperation({
 	method: "POST",
 	path: `${COLLECTION_PATH}/forks`,
 	summary: "Fork a collection",
-	description: `A copy (folders, requests, examples, variables) linked to its source. ${FORK} \`environmentIds\` (up to ${FORK_ENVIRONMENTS_MAX}, of the collection's workspace, else 400 FORK_ENVIRONMENT_OUTSIDE_WORKSPACE) are forked along with it under the same label, each checked like fork_environment and counted as a fork before anything is created. ${ACCESS_NOTE}`,
+	description: `A copy (folders, requests, examples, variables) linked to its source. ${FORK} \`environmentIds\` (up to ${FORK_ENVIRONMENTS_MAX}, of the collection's workspace, else 400 FORK_ENVIRONMENT_OUTSIDE_WORKSPACE) are forked along with it under the same label, each checked like fork_environment and counted as a fork before anything is created. ${ACCESS_NOTE} ${AGENT_READ_NOTE}`,
 	input: z.object({
 		collectionId: collectionIdSchema,
 		label: labelSchema,
@@ -73,7 +78,10 @@ export const forkCollectionOperation = defineOperation({
 	mcp: true,
 	successStatus: 201,
 	handler: async (ctx, input) =>
-		forkCollection(requireSubject(ctx), input.collectionId, input),
+		collectionForCaller(
+			ctx,
+			await forkCollection(requireSubject(ctx), input.collectionId, input),
+		),
 });
 
 export const forkEnvironmentOperation = defineOperation({
@@ -94,7 +102,10 @@ export const forkEnvironmentOperation = defineOperation({
 	mcp: true,
 	successStatus: 201,
 	handler: async (ctx, input) =>
-		forkEnvironment(requireSubject(ctx), input.environmentId, input),
+		valuesForCaller(
+			ctx,
+			await forkEnvironment(requireSubject(ctx), input.environmentId, input),
+		),
 });
 
 export const forkOperations = [

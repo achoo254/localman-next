@@ -7,6 +7,10 @@ import {
 	collectionIdSchema,
 	workspaceIdSchema,
 } from "./collection-read-operations.js";
+import {
+	AGENT_READ_NOTE,
+	collectionForCaller,
+} from "./collection-secret-mask.js";
 import { COLLECTIONS_PER_WORKSPACE_MAX } from "./collection-store.js";
 import { collectionDetailView } from "./collection-view.js";
 import { TRASH_RETENTION_DAYS } from "./trash-access.js";
@@ -45,7 +49,7 @@ export const restoreCollectionOperation = defineOperation({
 	method: "POST",
 	path: `${TRASH_PATH}/restore`,
 	summary: "Restore a deleted collection into a workspace",
-	description: `Restores it with its folders, requests and shares into \`workspaceId\`, where the caller must be Admin or Editor (its original workspace while it exists, or another one). 409 TEAM_TO_PERSONAL for a team collection going to a personal workspace while its team workspace exists; 409 COLLECTION_LIMIT_REACHED past ${COLLECTIONS_PER_WORKSPACE_MAX} collections. ${MANAGERS}`,
+	description: `Restores it with its folders, requests and shares into \`workspaceId\`, where the caller must be Admin or Editor (its original workspace while it exists, or another one). 409 TEAM_TO_PERSONAL for a team collection going to a personal workspace while its team workspace exists; 409 COLLECTION_LIMIT_REACHED past ${COLLECTIONS_PER_WORKSPACE_MAX} collections. ${MANAGERS} ${AGENT_READ_NOTE}`,
 	input: z.object({
 		collectionId: collectionIdSchema,
 		workspaceId: workspaceIdSchema,
@@ -56,10 +60,13 @@ export const restoreCollectionOperation = defineOperation({
 	toolset: "client",
 	mcp: true,
 	handler: async (ctx, input) =>
-		restoreCollection(
-			requireSubject(ctx),
-			input.collectionId,
-			input.workspaceId,
+		collectionForCaller(
+			ctx,
+			await restoreCollection(
+				requireSubject(ctx),
+				input.collectionId,
+				input.workspaceId,
+			),
 		),
 });
 

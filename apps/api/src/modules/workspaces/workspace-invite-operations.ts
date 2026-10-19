@@ -38,6 +38,7 @@ export const inviteWorkspaceMemberOperation = defineOperation({
 	annotations: { readOnly: false, destructive: false, idempotent: false },
 	toolset: "sharing",
 	mcp: true,
+	mcpScope: "client:share",
 	successStatus: 201,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
@@ -72,6 +73,7 @@ export const createWorkspaceInviteLinkOperation = defineOperation({
 	annotations: { readOnly: false, destructive: false, idempotent: false },
 	toolset: "sharing",
 	mcp: true,
+	mcpScope: "client:share",
 	successStatus: 201,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);

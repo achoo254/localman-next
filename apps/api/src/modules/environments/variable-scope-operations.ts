@@ -3,6 +3,11 @@ import { localValuesPatchSchema } from "@localman/shared/api-client";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
 import {
+	localPatchForCaller,
+	localValuesForCaller,
+} from "./agent-secret-mask.js";
+import {
+	AGENT_KEEPS_LOCAL,
 	LOCAL_VALUES_BODY_LIMIT,
 	environmentIdSchema,
 	workspaceIdSchema,
@@ -14,6 +19,7 @@ import {
 	patchCollectionLocalValues,
 	setActiveEnvironment,
 } from "./scope-local-service.js";
+import { collectionSecrets } from "./scope-secret-keys.js";
 
 const ACTIVE_PATH = "/workspaces/:workspaceId/active-environment";
 const COLLECTION_LOCAL_PATH = "/collections/:collectionId/local-values";
@@ -80,9 +86,10 @@ export const getCollectionLocalValuesOperation = defineOperation({
 	toolset: "client",
 	mcp: true,
 	handler: async (ctx, input) => ({
-		localValues: await getCollectionLocalValues(
-			requireSubject(ctx),
-			input.collectionId,
+		localValues: await localValuesForCaller(
+			ctx,
+			await getCollectionLocalValues(requireSubject(ctx), input.collectionId),
+			() => collectionSecrets(input.collectionId),
 		),
 	}),
 });
@@ -92,8 +99,7 @@ export const setCollectionLocalValuesOperation = defineOperation({
 	method: "PATCH",
 	path: COLLECTION_LOCAL_PATH,
 	summary: "Set or reset your local values of a collection's variables",
-	description:
-		"Any role that can open the collection. `value: null` resets one to the collection's value; names not listed keep theirs. 409 LOCAL_VALUES_LIMIT past the cap.",
+	description: `Any role that can open the collection. \`value: null\` resets one to the collection's value; names not listed keep theirs. 409 LOCAL_VALUES_LIMIT past the cap. ${AGENT_KEEPS_LOCAL}`,
 	input: z.object({
 		collectionId: collectionIdSchema,
 		values: localValuesPatchSchema,
@@ -104,13 +110,21 @@ export const setCollectionLocalValuesOperation = defineOperation({
 	toolset: "client",
 	mcp: true,
 	bodyLimit: LOCAL_VALUES_BODY_LIMIT,
-	handler: async (ctx, input) => ({
-		localValues: await patchCollectionLocalValues(
-			requireSubject(ctx),
-			input.collectionId,
-			input.values,
-		),
-	}),
+	handler: async (ctx, input) => {
+		const secrets = () => collectionSecrets(input.collectionId);
+		const values = await localPatchForCaller(ctx, input.values, secrets);
+		return {
+			localValues: await localValuesForCaller(
+				ctx,
+				await patchCollectionLocalValues(
+					requireSubject(ctx),
+					input.collectionId,
+					values,
+				),
+				secrets,
+			),
+		};
+	},
 });
 
 export const variableScopeOperations = [

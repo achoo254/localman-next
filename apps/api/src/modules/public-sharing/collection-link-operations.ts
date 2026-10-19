@@ -62,6 +62,8 @@ export function collectionLinkOperations(spec: LinkKindSpec) {
 		annotations: { readOnly: false, destructive: false, idempotent: true },
 		toolset: "sharing",
 		mcp: true,
+		// Lets anyone with the link read it: the user grants agents that apart.
+		mcpScope: "client:share",
 		dryRun: true,
 		requiresConfirmation: true,
 		handler: async (ctx, { collectionId }) => {

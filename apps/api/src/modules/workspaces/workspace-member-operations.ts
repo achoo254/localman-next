@@ -57,6 +57,7 @@ export const updateWorkspaceMemberRoleOperation = defineOperation({
 	annotations: { readOnly: false, destructive: false, idempotent: true },
 	toolset: "sharing",
 	mcp: true,
+	mcpScope: "client:share",
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
 		const access = await requireWorkspace(
@@ -91,6 +92,7 @@ export const removeWorkspaceMemberOperation = defineOperation({
 	toolset: "sharing",
 	mcp: true,
 	dryRun: true,
+	requiresConfirmation: true,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
 		const access = await requireWorkspace(

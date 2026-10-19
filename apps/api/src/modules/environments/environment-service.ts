@@ -92,6 +92,8 @@ export interface SetVariablesOptions {
 	readonly ifUpdatedAt?: Date;
 	/** Name and colour written along. */
 	readonly root?: { readonly name: string; readonly color: EnvironmentColor };
+	/** An agent's write: a withheld secret sent back keeps its value. */
+	readonly keepWithheld?: boolean;
 }
 
 /**
@@ -108,7 +110,12 @@ export async function setEnvironmentVariables(
 	const { environmentId } = await requireEnvironment(sub, id, "edit");
 	const current = await loadEnvironment(environmentId);
 	const scope = environmentScope(environmentId);
-	const next = toStoredVariables(variables, current.variables, scope);
+	const next = toStoredVariables(
+		variables,
+		current.variables,
+		scope,
+		options.keepWithheld,
+	);
 	const secrets = secretKeysOf(next);
 	const types = typeChanges(secretKeysOf(current.variables), secrets);
 	await assertCanSeal(scope, types.newlySecret);

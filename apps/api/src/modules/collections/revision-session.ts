@@ -10,13 +10,15 @@ export interface SessionStart {
 
 interface Latest {
 	readonly authorId: string;
+	readonly via?: "mcp" | null;
 	readonly sessionStartSeq?: number | null;
 	readonly sessionStartAt?: Date | null;
 }
 
 /**
  * The session a revision `authorId` writes at `at` joins: that of the
- * newest revision when the same author wrote it and the session started
+ * newest revision when the same author wrote it through the same channel
+ * (an agent's changes are a session of their own) and the session started
  * at most `CHANGELOG_SESSION_WINDOW_MS` before; `null` starts a new one.
  * Read in the write's transaction (under the workspace lock), so the
  * newest revision cannot change meanwhile. A newest revision written
@@ -24,20 +26,26 @@ interface Latest {
  */
 export async function sessionToJoin(
 	collectionId: Types.ObjectId,
-	authorId: string,
+	writer: { authorId: string; via: "mcp" | null },
 	at: Date,
 	session: ClientSession,
 ): Promise<SessionStart | null> {
 	const latest = await CollectionRevisionModel.findOne(
 		{ collectionId },
-		{ authorId: 1, sessionStartSeq: 1, sessionStartAt: 1 },
+		{ authorId: 1, via: 1, sessionStartSeq: 1, sessionStartAt: 1 },
 	)
 		.session(session)
 		.sort({ seq: -1 })
 		.lean<Latest>();
 	const seq = latest?.sessionStartSeq;
 	const startedAt = latest?.sessionStartAt;
-	if (!latest || latest.authorId !== authorId || !seq || !startedAt) {
+	if (
+		!latest ||
+		latest.authorId !== writer.authorId ||
+		(latest.via ?? null) !== writer.via ||
+		!seq ||
+		!startedAt
+	) {
 		return null;
 	}
 	const elapsed = at.getTime() - startedAt.getTime();

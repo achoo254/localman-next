@@ -46,6 +46,8 @@ const revisionSchema = new Schema(
 		bytes: { type: Number, required: true },
 		sessionStartSeq: { type: Number },
 		sessionStartAt: { type: Date },
+		/** `"mcp"` when made through Localman MCP; absent from the web app. */
+		via: { type: String, enum: ["mcp"] },
 	},
 	{ collection: "collection_revisions", versionKey: false, minimize: false },
 );
@@ -89,4 +91,5 @@ export interface StoredRevision {
 	readonly bytes: number;
 	readonly sessionStartSeq?: number | null;
 	readonly sessionStartAt?: Date | null;
+	readonly via?: "mcp" | null;
 }

@@ -68,6 +68,7 @@ export const approveAccessRequestOperation = defineOperation({
 	annotations: { readOnly: false, destructive: false, idempotent: false },
 	toolset: "sharing",
 	mcp: true,
+	mcpScope: "client:share",
 	handler: async (ctx, input) =>
 		resolveAccessRequest(requireSubject(ctx), input.requestId, {
 			approve: true,

@@ -4,10 +4,21 @@ import {
 	variableListSchema,
 } from "@localman/shared/api-client";
 import { z } from "zod";
-import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import {
+	USER_SCOPE,
+	isAgentCall,
+	requireSubject,
+} from "../../http/require-auth.js";
+import {
+	localPatchForCaller,
+	localValuesForCaller,
+	valuesForCaller,
+} from "./agent-secret-mask.js";
 import { ENVIRONMENT_ACCESS_NOTE } from "./environment-access.js";
 import { deleteEnvironment } from "./environment-delete-service.js";
 import {
+	AGENT_KEEPS_LOCAL,
+	AGENT_KEEPS_SHARED,
 	ENVIRONMENT_PATH,
 	LOCAL_VALUES_BODY_LIMIT,
 	VARIABLES_BODY_LIMIT,
@@ -20,13 +31,14 @@ import {
 } from "./environment-service.js";
 import { environmentDetailView, localValueView } from "./environment-view.js";
 import { patchEnvironmentLocalValues } from "./scope-local-service.js";
+import { environmentSecrets } from "./scope-secret-keys.js";
 
 export const setEnvironmentVariablesOperation = defineOperation({
 	id: "client.setEnvironmentVariables",
 	method: "PUT",
 	path: `${ENVIRONMENT_PATH}/variables`,
 	summary: "Replace an environment's variables and shared values",
-	description: `Editors send every variable in order: name, type (\`secret\` is encrypted at rest), enabled, description and \`sharedValue\` (\`null\` leaves it unshared). Keep a variable's \`id\` to keep it; names must be unique. Viewers set local values with set_environment_local_values instead. 503 SECRET_STORAGE_UNAVAILABLE when a secret value cannot be encrypted. ${ENVIRONMENT_ACCESS_NOTE}`,
+	description: `Editors send every variable in order: name, type (\`secret\` is encrypted at rest), enabled, description and \`sharedValue\` (\`null\` leaves it unshared). Keep a variable's \`id\` to keep it; names must be unique. Viewers set local values with set_environment_local_values instead. 503 SECRET_STORAGE_UNAVAILABLE when a secret value cannot be encrypted. ${AGENT_KEEPS_SHARED} ${ENVIRONMENT_ACCESS_NOTE}`,
 	input: z.object({
 		environmentId: environmentIdSchema,
 		variables: variableListSchema,
@@ -38,10 +50,14 @@ export const setEnvironmentVariablesOperation = defineOperation({
 	mcp: true,
 	bodyLimit: VARIABLES_BODY_LIMIT,
 	handler: async (ctx, input) =>
-		setEnvironmentVariables(
-			requireSubject(ctx),
-			input.environmentId,
-			input.variables,
+		valuesForCaller(
+			ctx,
+			await setEnvironmentVariables(
+				requireSubject(ctx),
+				input.environmentId,
+				input.variables,
+				{ keepWithheld: isAgentCall(ctx) },
+			),
 		),
 });
 
@@ -50,7 +66,7 @@ export const setEnvironmentLocalValuesOperation = defineOperation({
 	method: "PATCH",
 	path: `${ENVIRONMENT_PATH}/local-values`,
 	summary: "Set or reset your local values in an environment",
-	description: `Any role. Local values are the caller's own and never sync to anyone else. \`value: null\` resets a variable to its shared value; names not listed keep theirs. 409 LOCAL_VALUES_LIMIT past the cap. ${ENVIRONMENT_ACCESS_NOTE}`,
+	description: `Any role. Local values are the caller's own and never sync to anyone else. \`value: null\` resets a variable to its shared value; names not listed keep theirs. 409 LOCAL_VALUES_LIMIT past the cap. ${AGENT_KEEPS_LOCAL} ${ENVIRONMENT_ACCESS_NOTE}`,
 	input: z.object({
 		environmentId: environmentIdSchema,
 		values: localValuesPatchSchema,
@@ -61,13 +77,21 @@ export const setEnvironmentLocalValuesOperation = defineOperation({
 	toolset: "client",
 	mcp: true,
 	bodyLimit: LOCAL_VALUES_BODY_LIMIT,
-	handler: async (ctx, input) => ({
-		localValues: await patchEnvironmentLocalValues(
-			requireSubject(ctx),
-			input.environmentId,
-			input.values,
-		),
-	}),
+	handler: async (ctx, input) => {
+		const secrets = () => environmentSecrets(input.environmentId);
+		const values = await localPatchForCaller(ctx, input.values, secrets);
+		return {
+			localValues: await localValuesForCaller(
+				ctx,
+				await patchEnvironmentLocalValues(
+					requireSubject(ctx),
+					input.environmentId,
+					values,
+				),
+				secrets,
+			),
+		};
+	},
 });
 
 export const duplicateEnvironmentOperation = defineOperation({
@@ -87,10 +111,13 @@ export const duplicateEnvironmentOperation = defineOperation({
 	mcp: true,
 	successStatus: 201,
 	handler: async (ctx, input) =>
-		duplicateEnvironment(
-			requireSubject(ctx),
-			input.environmentId,
-			input.workspaceId,
+		valuesForCaller(
+			ctx,
+			await duplicateEnvironment(
+				requireSubject(ctx),
+				input.environmentId,
+				input.workspaceId,
+			),
 		),
 });
 

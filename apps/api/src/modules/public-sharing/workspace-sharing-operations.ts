@@ -74,6 +74,7 @@ export const updateWorkspaceSharingOperation = defineOperation({
 	annotations: { readOnly: false, destructive: true, idempotent: true },
 	toolset: "sharing",
 	mcp: true,
+	mcpScope: "client:share",
 	dryRun: true,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);

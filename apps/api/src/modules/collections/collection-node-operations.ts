@@ -6,12 +6,21 @@ import {
 	nodeUpdateSchema,
 } from "@localman/shared/api-client";
 import { z } from "zod";
-import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import {
+	USER_SCOPE,
+	isAgentCall,
+	requireSubject,
+} from "../../http/require-auth.js";
 import {
 	ACCESS_NOTE,
 	COLLECTION_PATH,
 	collectionIdSchema,
 } from "./collection-read-operations.js";
+import {
+	AGENT_READ_NOTE,
+	AGENT_WRITE_NOTE,
+	nodeForCaller,
+} from "./collection-secret-mask.js";
 import { collectionNodeView } from "./collection-view.js";
 import {
 	NODE_BODY_LIMIT,
@@ -35,7 +44,7 @@ export const createCollectionNodeOperation = defineOperation({
 	method: "POST",
 	path: NODES_PATH,
 	summary: "Add a folder, request or example to a collection",
-	description: `${EDITORS} \`kind: "folder"\` with a name; \`kind: "request"\` with a name and its draft (method, url, params, headers, auth, body, scripts, settings); \`kind: "example"\` with a name, \`parentId\` a request node, the \`request\` sent and the \`response\` saved (status 100-599, statusText, headers, body of at most ${EXAMPLE_BODY_MAX} bytes of UTF-8, else 400 VALIDATION_ERROR; cut it before sending). Goes after \`afterId\` (a sibling, 400 INVALID_POSITION otherwise) or last. ${PARENT_NOTE} 409 COLLECTION_NODES_LIMIT when the collection is full; 413 DRAFT_TOO_LARGE or COLLECTION_TOO_LARGE. ${ACCESS_NOTE}`,
+	description: `${EDITORS} \`kind: "folder"\` with a name; \`kind: "request"\` with a name and its draft (method, url, params, headers, auth, body, scripts, settings); \`kind: "example"\` with a name, \`parentId\` a request node, the \`request\` sent and the \`response\` saved (status 100-599, statusText, headers, body of at most ${EXAMPLE_BODY_MAX} bytes of UTF-8, else 400 VALIDATION_ERROR; cut it before sending). Goes after \`afterId\` (a sibling, 400 INVALID_POSITION otherwise) or last. ${PARENT_NOTE} 409 COLLECTION_NODES_LIMIT when the collection is full; 413 DRAFT_TOO_LARGE or COLLECTION_TOO_LARGE. ${ACCESS_NOTE} ${AGENT_READ_NOTE}`,
 	input: createNodeInput,
 	output: collectionNodeView,
 	scopes: [USER_SCOPE],
@@ -45,7 +54,10 @@ export const createCollectionNodeOperation = defineOperation({
 	successStatus: 201,
 	bodyLimit: NODE_BODY_LIMIT,
 	handler: async (ctx, input) =>
-		createNode(requireSubject(ctx), input.collectionId, nodeOf(input)),
+		nodeForCaller(
+			ctx,
+			await createNode(requireSubject(ctx), input.collectionId, nodeOf(input)),
+		),
 });
 
 export const updateCollectionNodeOperation = defineOperation({
@@ -53,7 +65,7 @@ export const updateCollectionNodeOperation = defineOperation({
 	method: "PATCH",
 	path: NODE_PATH,
 	summary: "Edit a folder, request or example of a collection",
-	description: `${EDITORS} Omitted fields stay. Folders take name, description, auth (\`inherit\` takes the parent's) and scripts; requests take name, description and draft; examples take name, request and response (400 INVALID_NODE_FIELDS for a field of another kind; 413 DRAFT_TOO_LARGE, COLLECTION_TOO_LARGE). ${NODE_MISSING} ${ACCESS_NOTE}`,
+	description: `${EDITORS} Omitted fields stay. Folders take name, description, auth (\`inherit\` takes the parent's) and scripts; requests take name, description and draft; examples take name, request and response (400 INVALID_NODE_FIELDS for a field of another kind; 413 DRAFT_TOO_LARGE, COLLECTION_TOO_LARGE). ${NODE_MISSING} ${ACCESS_NOTE} ${AGENT_READ_NOTE} ${AGENT_WRITE_NOTE}`,
 	input: nodeUpdateSchema.extend({
 		collectionId: collectionIdSchema,
 		nodeId: nodeIdSchema,
@@ -66,7 +78,14 @@ export const updateCollectionNodeOperation = defineOperation({
 	bodyLimit: NODE_BODY_LIMIT,
 	handler: async (ctx, input) => {
 		const { collectionId, nodeId, ...update } = input;
-		return updateNode(requireSubject(ctx), collectionId, nodeId, update);
+		const node = await updateNode(
+			requireSubject(ctx),
+			collectionId,
+			nodeId,
+			update,
+			isAgentCall(ctx),
+		);
+		return nodeForCaller(ctx, node);
 	},
 });
 
@@ -75,7 +94,7 @@ export const moveCollectionNodeOperation = defineOperation({
 	method: "POST",
 	path: `${NODE_PATH}/move`,
 	summary: "Move a folder, request or example within a collection",
-	description: `${EDITORS} Drops the node under \`parentId\` between the siblings whose order keys are \`beforeOrder\` and \`afterOrder\` (null at either end); only the moved node is rewritten. An example only reorders under its own request (400 INVALID_PARENT for another parent). 400 INVALID_ORDER unless beforeOrder < afterOrder are valid keys; 400 MOVE_CYCLE for a folder moved into itself or its subfolders. ${PARENT_NOTE} ${NODE_MISSING} ${ACCESS_NOTE}`,
+	description: `${EDITORS} Drops the node under \`parentId\` between the siblings whose order keys are \`beforeOrder\` and \`afterOrder\` (null at either end); only the moved node is rewritten. An example only reorders under its own request (400 INVALID_PARENT for another parent). 400 INVALID_ORDER unless beforeOrder < afterOrder are valid keys; 400 MOVE_CYCLE for a folder moved into itself or its subfolders. ${PARENT_NOTE} ${NODE_MISSING} ${ACCESS_NOTE} ${AGENT_READ_NOTE}`,
 	input: nodeMoveSchema.extend({
 		collectionId: collectionIdSchema,
 		nodeId: nodeIdSchema,
@@ -87,7 +106,10 @@ export const moveCollectionNodeOperation = defineOperation({
 	mcp: true,
 	handler: async (ctx, input) => {
 		const { collectionId, nodeId, ...move } = input;
-		return moveNode(requireSubject(ctx), collectionId, nodeId, move);
+		return nodeForCaller(
+			ctx,
+			await moveNode(requireSubject(ctx), collectionId, nodeId, move),
+		);
 	},
 });
 

@@ -4,6 +4,11 @@ import type {
 	MergeConflictView,
 	MergePreview,
 } from "@localman/shared/api-client";
+import {
+	flaggedSecretKeys,
+	withholdCredentials,
+	withholdVariables,
+} from "../collections/collection-secret-mask.js";
 import type { CollectionState } from "../collections/revision-patch.js";
 import { ROOT_KEY } from "./collection-merge.js";
 import { type MergeConflict, sameContent } from "./three-way-merge.js";
@@ -82,5 +87,47 @@ export function mergePreview(
 	return {
 		changes: changesOf(states.destination, states.merged),
 		conflicts: conflicts.map((conflict) => conflictView(conflict, all)),
+	};
+}
+
+/** Tool descriptions of the previews `withholdPreviewSecrets` masks. */
+export const AGENT_PREVIEW =
+	'For an agent (a token, not the web app), conflicts carry no secret collection variable value and no credential typed into an auth (bearer token, basic password, API key value; a `{{variable}}` stays): both read as `""`.';
+
+/** A conflict on the collection's variables: its sides are whole lists. */
+const onVariables = (conflict: MergeConflictView): boolean =>
+	conflict.entityKind === "collection" && conflict.path === "variables";
+
+/**
+ * The preview as an agent (a token, not a browser session) reads it: in a
+ * conflict on the collection's variables, a variable secret on any side
+ * has its value blanked on every side; in every conflict, a credential
+ * typed into an auth is blanked. Environment previews never carry secret
+ * values, so this changes nothing there.
+ */
+export function withholdPreviewSecrets(preview: MergePreview): MergePreview {
+	const sides = preview.conflicts
+		.filter(onVariables)
+		.flatMap((conflict) => [
+			conflict.base,
+			conflict.source,
+			conflict.destination,
+		]);
+	const secrets = flaggedSecretKeys(...sides);
+	const isSecret = (key: string) => secrets.has(key);
+	return {
+		...preview,
+		conflicts: preview.conflicts.map((conflict) => {
+			const side = (value: unknown): unknown =>
+				withholdCredentials(
+					onVariables(conflict) ? withholdVariables(value, isSecret) : value,
+				);
+			return {
+				...conflict,
+				base: side(conflict.base),
+				source: side(conflict.source),
+				destination: side(conflict.destination),
+			};
+		}),
 	};
 }

@@ -19,6 +19,7 @@ export const changeView = z.object({
 	summary: z.string(),
 	hidden: z.boolean(),
 	restorable: z.boolean(),
+	viaMcp: z.boolean(),
 });
 
 export const changelogPageView = z.object({
@@ -83,6 +84,7 @@ export function toChange(
 		summary: rev.fields.join(", "),
 		hidden: rev.hidden,
 		restorable: rev.seq >= newestPartial,
+		viaMcp: rev.via === "mcp",
 	};
 }
 
@@ -134,6 +136,7 @@ export function joinsSession(
 	rev: RevisionMeta,
 ): boolean {
 	if (last.authorId !== rev.authorId) return false;
+	if ((last.via ?? null) !== (rev.via ?? null)) return false;
 	const mark = rev.sessionStartSeq;
 	if (typeof mark === "number") return first.sessionStartSeq === mark;
 	if (typeof first.sessionStartSeq === "number") return false;

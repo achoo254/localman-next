@@ -5,8 +5,19 @@ import {
 	variableListSchema,
 } from "@localman/shared/api-client";
 import { z } from "zod";
-import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
 import {
+	USER_SCOPE,
+	isAgentCall,
+	requireSubject,
+} from "../../http/require-auth.js";
+import {
+	localPatchForCaller,
+	localValuesForCaller,
+	valuesForCaller,
+} from "./agent-secret-mask.js";
+import {
+	AGENT_KEEPS_LOCAL,
+	AGENT_KEEPS_SHARED,
 	LOCAL_VALUES_BODY_LIMIT,
 	VALUES_NOTE,
 	VARIABLES_BODY_LIMIT,
@@ -18,6 +29,7 @@ import {
 	patchGlobalsLocalValues,
 	setGlobals,
 } from "./globals-service.js";
+import { globalsSecrets } from "./scope-secret-keys.js";
 
 const GLOBALS_PATH = "/workspaces/:workspaceId/globals";
 const MEMBERS_NOTE =
@@ -44,7 +56,10 @@ export const getGlobalsOperation = defineOperation({
 	toolset: "client",
 	mcp: true,
 	handler: async (ctx, input) =>
-		getGlobals(requireSubject(ctx), input.workspaceId),
+		valuesForCaller(
+			ctx,
+			await getGlobals(requireSubject(ctx), input.workspaceId),
+		),
 });
 
 export const setGlobalsOperation = defineOperation({
@@ -52,7 +67,7 @@ export const setGlobalsOperation = defineOperation({
 	method: "PUT",
 	path: GLOBALS_PATH,
 	summary: "Replace a workspace's global variables and shared values",
-	description: `Admins and Editors send every global in order, as for environments (403 FORBIDDEN for a Viewer). 503 SECRET_STORAGE_UNAVAILABLE when a secret value cannot be encrypted. ${MEMBERS_NOTE}`,
+	description: `Admins and Editors send every global in order, as for environments (403 FORBIDDEN for a Viewer). 503 SECRET_STORAGE_UNAVAILABLE when a secret value cannot be encrypted. ${AGENT_KEEPS_SHARED} ${MEMBERS_NOTE}`,
 	input: z.object({
 		workspaceId: workspaceIdSchema,
 		variables: variableListSchema,
@@ -64,7 +79,15 @@ export const setGlobalsOperation = defineOperation({
 	mcp: true,
 	bodyLimit: VARIABLES_BODY_LIMIT,
 	handler: async (ctx, input) =>
-		setGlobals(requireSubject(ctx), input.workspaceId, input.variables),
+		valuesForCaller(
+			ctx,
+			await setGlobals(
+				requireSubject(ctx),
+				input.workspaceId,
+				input.variables,
+				isAgentCall(ctx),
+			),
+		),
 });
 
 export const setGlobalsLocalValuesOperation = defineOperation({
@@ -72,7 +95,7 @@ export const setGlobalsLocalValuesOperation = defineOperation({
 	method: "PATCH",
 	path: `${GLOBALS_PATH}/local-values`,
 	summary: "Set or reset your local values of the globals",
-	description: `\`value: null\` resets a global to its shared value; names not listed keep theirs. 409 LOCAL_VALUES_LIMIT past the cap. ${MEMBERS_NOTE}`,
+	description: `\`value: null\` resets a global to its shared value; names not listed keep theirs. 409 LOCAL_VALUES_LIMIT past the cap. ${AGENT_KEEPS_LOCAL} ${MEMBERS_NOTE}`,
 	input: z.object({
 		workspaceId: workspaceIdSchema,
 		values: localValuesPatchSchema,
@@ -83,13 +106,21 @@ export const setGlobalsLocalValuesOperation = defineOperation({
 	toolset: "client",
 	mcp: true,
 	bodyLimit: LOCAL_VALUES_BODY_LIMIT,
-	handler: async (ctx, input) => ({
-		localValues: await patchGlobalsLocalValues(
-			requireSubject(ctx),
-			input.workspaceId,
-			input.values,
-		),
-	}),
+	handler: async (ctx, input) => {
+		const secrets = () => globalsSecrets(input.workspaceId);
+		const values = await localPatchForCaller(ctx, input.values, secrets);
+		return {
+			localValues: await localValuesForCaller(
+				ctx,
+				await patchGlobalsLocalValues(
+					requireSubject(ctx),
+					input.workspaceId,
+					values,
+				),
+				secrets,
+			),
+		};
+	},
 });
 
 export const globalsOperations = [

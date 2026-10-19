@@ -1,5 +1,6 @@
 import { CHANGELOG_REVISIONS_MAX } from "@localman/shared/api-client";
 import type { ClientSession, Types } from "mongoose";
+import { currentChannel } from "../../lib/call-channel.js";
 import { CollectionModel } from "./collection-model.js";
 import { CollectionRevisionModel } from "./collection-revision-model.js";
 import { type RevisionInput, builtRevision } from "./revision-patch.js";
@@ -54,7 +55,13 @@ export async function appendRevisions(
 	}
 	const first = (counters.revisionSeq ?? 0) + 1;
 	const at = new Date();
-	const start = (await sessionToJoin(collectionId, authorId, at, session)) ?? {
+	const via = currentChannel();
+	const start = (await sessionToJoin(
+		collectionId,
+		{ authorId, via },
+		at,
+		session,
+	)) ?? {
 		seq: first,
 		at,
 	};
@@ -67,6 +74,7 @@ export async function appendRevisions(
 			at,
 			sessionStartSeq: start.seq,
 			sessionStartAt: start.at,
+			...(via ? { via } : {}),
 		})),
 		{ session },
 	);

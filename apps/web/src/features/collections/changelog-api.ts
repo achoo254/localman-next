@@ -50,6 +50,7 @@ function changeOf(data: JsonRecord): ChangelogChange {
 		summary: expectString(data, "summary"),
 		hidden: expectBoolean(data, "hidden"),
 		restorable: expectBoolean(data, "restorable"),
+		viaMcp: data.viaMcp === true,
 	};
 }
 

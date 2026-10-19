@@ -51,6 +51,7 @@ export const collectionsChangelog: Pick<Messages["collections"], "changelog"> =
 			empty: "还没有修改。",
 			loadFailed: "无法加载 changelog。",
 			removedAccount: "已删除的账号",
+			viaMcp: "通过 MCP",
 			kinds: {
 				collection: "collection",
 				folder: "folder",

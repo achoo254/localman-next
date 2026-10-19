@@ -82,6 +82,7 @@ export const moveElementOperation = defineOperation({
 	annotations: { readOnly: false, destructive: false, idempotent: false },
 	toolset: "sharing",
 	mcp: true,
+	mcpScope: "client:share",
 	handler: async (ctx, input) =>
 		moveElement(
 			requireSubject(ctx),

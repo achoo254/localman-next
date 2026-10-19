@@ -56,6 +56,7 @@ export const collectionsChangelog = {
 		empty: "No changes yet.",
 		loadFailed: "We couldn't load the changelog.",
 		removedAccount: "Removed account",
+		viaMcp: "via MCP",
 		kinds: {
 			collection: "collection",
 			folder: "folder",

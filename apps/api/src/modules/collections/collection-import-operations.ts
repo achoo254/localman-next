@@ -17,6 +17,10 @@ import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
 import { takeOperationSlot } from "../../lib/operation-rate-limit.js";
 import { requireWorkspace } from "../workspaces/workspace-roles.js";
 import { workspaceIdSchema } from "./collection-read-operations.js";
+import {
+	AGENT_READ_NOTE,
+	collectionForCaller,
+} from "./collection-secret-mask.js";
 import { createCollection } from "./collection-service.js";
 import { collectionDetailView } from "./collection-view.js";
 import { LIMITS_NOTE } from "./collection-write-operations.js";
@@ -86,7 +90,7 @@ export const importCollectionOperation = defineOperation({
 	method: "POST",
 	path: "/workspaces/:workspaceId/collections/import",
 	summary: "Import a collection from Postman v2.1, OpenAPI 3 JSON or cURL text",
-	description: `Admins and Editors of the workspace. \`text\` is the file or command as written (at most ${MAX_IMPORT_BYTES} bytes): a Collection v2.1 JSON, an OpenAPI 3.x JSON document, or one cURL command; the format is detected like the import dialog of the web app. \`name\` renames the new collection. Answers the collection, the \`format\` found (${COLLECTION_IMPORT_FORMATS.join(", ")}) and \`warnings\` about what could not be carried over (code and the folder/request path). 400 IMPORT_FAILED with \`details.reason\` (INPUT_TOO_LARGE, EMPTY_INPUT, INVALID_JSON, YAML_NOT_SUPPORTED, UNKNOWN_FORMAT, UNSUPPORTED_VERSION, INVALID_CURL, UNTERMINATED_QUOTE, INVALID_DOCUMENT, TOO_COMPLEX, INVALID_TREE); 400 IMPORT_NOT_A_COLLECTION for an environment file (use import_environment). Counts toward the import rate limit (429 RATE_LIMITED). ${LIMITS_NOTE} 404 NOT_FOUND for a workspace the caller is not in.`,
+	description: `Admins and Editors of the workspace. \`text\` is the file or command as written (at most ${MAX_IMPORT_BYTES} bytes): a Collection v2.1 JSON, an OpenAPI 3.x JSON document, or one cURL command; the format is detected like the import dialog of the web app. \`name\` renames the new collection. Answers the collection, the \`format\` found (${COLLECTION_IMPORT_FORMATS.join(", ")}) and \`warnings\` about what could not be carried over (code and the folder/request path). 400 IMPORT_FAILED with \`details.reason\` (INPUT_TOO_LARGE, EMPTY_INPUT, INVALID_JSON, YAML_NOT_SUPPORTED, UNKNOWN_FORMAT, UNSUPPORTED_VERSION, INVALID_CURL, UNTERMINATED_QUOTE, INVALID_DOCUMENT, TOO_COMPLEX, INVALID_TREE); 400 IMPORT_NOT_A_COLLECTION for an environment file (use import_environment). Counts toward the import rate limit (429 RATE_LIMITED). ${LIMITS_NOTE} 404 NOT_FOUND for a workspace the caller is not in. ${AGENT_READ_NOTE}`,
 	input: z.object({
 		workspaceId: workspaceIdSchema,
 		text: z.string().min(1),
@@ -105,7 +109,13 @@ export const importCollectionOperation = defineOperation({
 	// JSON escaping can nearly double the text: past it, IMPORT_FAILED says
 	// INPUT_TOO_LARGE instead of the body parser's bare 413.
 	bodyLimit: IMPORT_BODY_LIMIT,
-	handler: async (ctx, input) => importCollection(requireSubject(ctx), input),
+	handler: async (ctx, input) => {
+		const result = await importCollection(requireSubject(ctx), input);
+		return {
+			...result,
+			collection: collectionForCaller(ctx, result.collection),
+		};
+	},
 });
 
 export const collectionImportOperations: readonly AnyOperation[] = [

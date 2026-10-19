@@ -6,6 +6,7 @@ import {
 } from "@localman/shared/api-client";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import { valuesForCaller } from "./agent-secret-mask.js";
 import {
 	ENVIRONMENT_ACCESS_NOTE,
 	registerEnvironmentAdapter,
@@ -76,7 +77,10 @@ export const createEnvironmentOperation = defineOperation({
 	bodyLimit: VARIABLES_BODY_LIMIT,
 	handler: async (ctx, input) => {
 		const { workspaceId, ...rest } = input;
-		return createEnvironment(requireSubject(ctx), workspaceId, rest);
+		return valuesForCaller(
+			ctx,
+			await createEnvironment(requireSubject(ctx), workspaceId, rest),
+		);
 	},
 });
 
@@ -93,7 +97,10 @@ export const getEnvironmentOperation = defineOperation({
 	toolset: "client",
 	mcp: true,
 	handler: async (ctx, input) =>
-		getEnvironment(requireSubject(ctx), input.environmentId),
+		valuesForCaller(
+			ctx,
+			await getEnvironment(requireSubject(ctx), input.environmentId),
+		),
 });
 
 export const updateEnvironmentOperation = defineOperation({
@@ -114,7 +121,10 @@ export const updateEnvironmentOperation = defineOperation({
 	mcp: true,
 	handler: async (ctx, input) => {
 		const { environmentId, ...update } = input;
-		return updateEnvironment(requireSubject(ctx), environmentId, update);
+		return valuesForCaller(
+			ctx,
+			await updateEnvironment(requireSubject(ctx), environmentId, update),
+		);
 	},
 });
 

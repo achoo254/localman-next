@@ -83,6 +83,9 @@ export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
 		annotations: { readOnly: false, destructive: false, idempotent: false },
 		toolset: "client",
 		mcp: true,
+		// Sending from the server is riskier than editing collections: the
+		// agent's token needs the IdP's `client:send` grant on top.
+		mcpScope: "client:send",
 		bodyLimit: MAX_PROXY_ENVELOPE_BYTES,
 		handler: async (ctx, input) => {
 			const sub = requireSubject(ctx);

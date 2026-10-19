@@ -1,15 +1,18 @@
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 import {
 	createResource,
 	deleteProject,
 	downloadExtension,
 	getResource,
 } from "./__fixtures__/sample-operations.js";
+import { defineOperation } from "./define-operation.js";
 import {
 	mcpScopesOf,
 	toMcpToolDescriptor,
 	toolNameOf,
 } from "./mcp-tool-descriptor.js";
+import { type McpExtraScope, scopeAreaOf } from "./types.js";
 
 describe("toMcpToolDescriptor", () => {
 	it("derives snake_case tool names from operation ids", () => {
@@ -88,5 +91,67 @@ describe("toMcpToolDescriptor", () => {
 
 	it("emits no tool for exempt operations", () => {
 		expect(toMcpToolDescriptor(downloadExtension)).toBeNull();
+	});
+});
+
+describe("MCP scopes from the toolset and the operation", () => {
+	const write = { readOnly: false, destructive: false, idempotent: false };
+	const sendLike = (mcpScope?: McpExtraScope) =>
+		defineOperation({
+			id: "client.sendThing",
+			method: "POST",
+			path: "/things",
+			summary: "Send a thing",
+			input: z.object({}),
+			output: z.object({}),
+			scopes: ["user"],
+			annotations: write,
+			toolset: "client",
+			mcp: true,
+			...(mcpScope ? { mcpScope } : {}),
+			handler: () => ({}),
+		});
+
+	it("adds the operation's mcpScope after the toolset scope", () => {
+		expect(toMcpToolDescriptor(sendLike("client:send"))?.scopes).toEqual([
+			"client:write",
+			"client:send",
+		]);
+		expect(toMcpToolDescriptor(sendLike())?.scopes).toEqual(["client:write"]);
+	});
+
+	it("refuses an unknown mcpScope or one on an operation without a tool", () => {
+		const base = sendLike("client:send");
+		// A registry loaded untyped can carry any string; the cast mimics it.
+		const unknownScope: unknown = "client:everything";
+		expect(() =>
+			defineOperation({
+				...base,
+				mcpScope: unknownScope as McpExtraScope,
+			}),
+		).toThrow(/`mcpScope` must be one of client:send/);
+		expect(() =>
+			defineOperation({ ...base, mcp: { exempt: "browser only" } }),
+		).toThrow(/`mcpScope` needs an MCP tool/);
+	});
+
+	it("gives sharing and public tools the client:* scopes", () => {
+		expect(scopeAreaOf("sharing")).toBe("client");
+		expect(scopeAreaOf("public")).toBe("client");
+		expect(scopeAreaOf("collab")).toBe("collab");
+		expect(
+			mcpScopesOf({
+				toolset: "sharing",
+				annotations: write,
+				createsCredential: true,
+			}),
+		).toEqual(["client:write", "credentials:write"]);
+		expect(
+			mcpScopesOf({
+				toolset: "public",
+				annotations: { ...write, readOnly: true },
+				createsCredential: false,
+			}),
+		).toEqual(["client:read"]);
 	});
 });

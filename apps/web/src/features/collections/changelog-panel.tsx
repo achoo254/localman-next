@@ -116,6 +116,14 @@ export function ChangelogPanel({ collectionId, canEdit }: ChangelogPanelProps) {
 								<span className="truncate font-semibold text-sm">
 									{session.authorName ??
 										t("collections.changelog.removedAccount")}
+									{session.changes[0]?.viaMcp ? (
+										<span
+											data-id="changelog-session-via-mcp"
+											className="ml-2 font-normal text-muted text-xs"
+										>
+											{t("collections.changelog.viaMcp")}
+										</span>
+									) : null}
 								</span>
 								<span className="text-muted text-xs">
 									{formatDate(session.to)} ·{" "}

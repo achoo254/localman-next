@@ -4,9 +4,17 @@ import {
 	nodesToCollectionTree,
 } from "@localman/shared/api-client";
 import { z } from "zod";
-import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import {
+	USER_SCOPE,
+	isAgentCall,
+	requireSubject,
+} from "../../http/require-auth.js";
 import { requireCollection } from "./collection-access.js";
 import { listCollections } from "./collection-list-service.js";
+import {
+	AGENT_READ_NOTE,
+	withholdCollectionSecrets,
+} from "./collection-secret-mask.js";
 import { getCollection } from "./collection-service.js";
 import { loadCollectionDetail } from "./collection-store.js";
 import {
@@ -43,15 +51,17 @@ export const getCollectionOperation = defineOperation({
 	method: "GET",
 	path: COLLECTION_PATH,
 	summary: "Get a collection with its folders and requests",
-	description: `The root (description, auth, scripts, variables the items inherit) and every folder and request as a flat list linked by parentId and ordered by \`order\` (compare as plain strings) within each parent. \`mockProject\` and \`relatedEnvironment\` (the linked environment, else the one shared with it: \`source\`) are \`null\` when none, gone or not readable by the caller. ${ACCESS_NOTE}`,
+	description: `The root (description, auth, scripts, variables the items inherit) and every folder and request as a flat list linked by parentId and ordered by \`order\` (compare as plain strings) within each parent. \`mockProject\` and \`relatedEnvironment\` (the linked environment, else the one shared with it: \`source\`) are \`null\` when none, gone or not readable by the caller. ${ACCESS_NOTE} ${AGENT_READ_NOTE}`,
 	input: z.object({ collectionId: collectionIdSchema }),
 	output: collectionDetailView,
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: true, destructive: false, idempotent: true },
 	toolset: "client",
 	mcp: true,
-	handler: async (ctx, input) =>
-		getCollection(requireSubject(ctx), input.collectionId),
+	handler: async (ctx, input) => {
+		const detail = await getCollection(requireSubject(ctx), input.collectionId);
+		return isAgentCall(ctx) ? withholdCollectionSecrets(detail) : detail;
+	},
 });
 
 /** A Collection v2.1 document; its items are written by the shared exporter. */

@@ -11,6 +11,7 @@ import {
 	CollectionNodeModel,
 	type StoredCollectionNode,
 } from "./collection-node-model.js";
+import { keepWithheldNodeAuth } from "./collection-secret-keep.js";
 import { assertNodeSize } from "./collection-store.js";
 import { toCollectionNode } from "./collection-view.js";
 import { findNode, nodeNotFound } from "./node-service.js";
@@ -83,13 +84,15 @@ function assertFields(kind: CollectionNode["kind"], update: NodeUpdate): void {
  * Edits a node's own fields (Editor): a folder its name, description,
  * auth and scripts, a request its name, description and draft, an
  * example its name, request and response. Runs under the workspace lock
- * with the collection's byte budget and a changelog entry.
+ * with the collection's byte budget and a changelog entry. `keepWithheld`
+ * (an agent's write): a credential sent back blank keeps its stored value.
  */
 export async function updateNode(
 	sub: string,
 	id: string,
 	nodeId: string,
-	update: NodeUpdate,
+	sent: NodeUpdate,
+	keepWithheld = false,
 ): Promise<CollectionNode> {
 	const { element, collectionId } = await requireCollection(sub, id, "edit");
 	const _id = (await findNode(collectionId, nodeId))._id;
@@ -99,6 +102,7 @@ export async function updateNode(
 			.lean<StoredCollectionNode>();
 		if (!stored) throw nodeNotFound();
 		const before = toCollectionNode(stored);
+		const update = keepWithheld ? keepWithheldNodeAuth(sent, before) : sent;
 		assertFields(before.kind, update);
 		const after = updatedNode(before, update);
 		assertNodeSize(after);

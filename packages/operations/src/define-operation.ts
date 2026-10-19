@@ -3,6 +3,7 @@ import { mcpProblemsOf } from "./mcp-coverage.js";
 import { isValidOperationPath, pathParamNames } from "./operation-path.js";
 import {
 	HTTP_METHODS,
+	MCP_EXTRA_SCOPES,
 	type OperationDefinition,
 	type OperationInputSchema,
 	type OperationSpec,
@@ -90,6 +91,15 @@ function structuralProblems(
 			problems.push(
 				"an operation that creates a credential cannot be public (empty `scopes`)",
 			);
+		}
+	}
+	if (spec.mcpScope !== undefined) {
+		if (!includes(MCP_EXTRA_SCOPES, spec.mcpScope)) {
+			problems.push(
+				`\`mcpScope\` must be one of ${MCP_EXTRA_SCOPES.join(", ")}`,
+			);
+		} else if (spec.mcp !== true) {
+			problems.push("`mcpScope` needs an MCP tool (`mcp: true`)");
 		}
 	}
 	if (

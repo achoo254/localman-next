@@ -14,7 +14,9 @@ import {
 	type SessionAuthenticator,
 	createSessionAuthResolver,
 } from "./http/require-auth.js";
+import { runInChannel } from "./lib/call-channel.js";
 import type { Logger } from "./logger.js";
+import { MCP_PATH } from "./modules/mcp/mcp-resource-metadata.js";
 import { createLogStreamRouter } from "./modules/mock-runtime/log-stream-routes.js";
 import { operations as registeredOperations } from "./operations/registry.js";
 
@@ -87,6 +89,18 @@ function bodyLimitsOf(
 	);
 }
 
+/**
+ * Localman MCP calls run in the `mcp` channel (changes they make are shown
+ * "via MCP"). Only `/mcp` itself: the router passes every other path on
+ * with `next()`, which must stay outside the channel.
+ */
+function inMcpChannel(mcp: RequestHandler): RequestHandler {
+	return (req, res, next) =>
+		req.path === MCP_PATH
+			? runInChannel("mcp", () => mcp(req, res, next))
+			: mcp(req, res, next);
+}
+
 /** Dashboard API (port 4000). Building the app never opens a socket. */
 export function createDashboardApp(options: DashboardAppOptions): Express {
 	const { auth } = options;
@@ -106,7 +120,7 @@ export function createDashboardApp(options: DashboardAppOptions): Express {
 		logger: options.logger,
 		trustProxy: options.trustProxy,
 		beforeBody: [
-			...(options.mcp ? [options.mcp] : []),
+			...(options.mcp ? [inMcpChannel(options.mcp)] : []),
 			createCsrfGuard({
 				allowedOrigins: options.allowedOrigins,
 				exempt: auth?.csrfExempt,

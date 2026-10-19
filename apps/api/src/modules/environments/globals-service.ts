@@ -84,11 +84,15 @@ export async function getGlobals(
 	return toGlobalsDetail(sub, await requireGlobals(sub, workspaceId));
 }
 
-/** Admins and Editors replace the globals (definitions and shared values). */
+/**
+ * Admins and Editors replace the globals (definitions and shared values).
+ * `keepWithheld`: an agent's write, see `toStoredVariables`.
+ */
 export async function setGlobals(
 	sub: string,
 	workspaceId: string,
 	variables: readonly VariableInput[],
+	keepWithheld = false,
 ): Promise<GlobalsDetail> {
 	const access = await requireGlobals(sub, workspaceId);
 	if (access.role !== "editor") {
@@ -103,7 +107,7 @@ export async function setGlobals(
 		workspaceId: access.workspaceId,
 	}).lean<StoredGlobals>();
 	const previous = current?.variables ?? [];
-	const next = toStoredVariables(variables, previous, scope);
+	const next = toStoredVariables(variables, previous, scope, keepWithheld);
 	const secrets = secretKeysOf(next);
 	const types = typeChanges(secretKeysOf(previous), secrets);
 	await assertCanSeal(scope, types.newlySecret);

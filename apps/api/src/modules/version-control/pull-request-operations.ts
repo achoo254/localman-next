@@ -1,12 +1,17 @@
 import { defineOperation } from "@localman/operations";
 import { z } from "zod";
-import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import {
+	USER_SCOPE,
+	isAgentCall,
+	requireSubject,
+} from "../../http/require-auth.js";
 import {
 	ACCESS_NOTE,
 	COLLECTION_PATH,
 	collectionIdSchema,
 } from "../collections/collection-read-operations.js";
 import { mergeOptionSchema, resolutionsSchema } from "./fork-views-schema.js";
+import { AGENT_PREVIEW, withholdPreviewSecrets } from "./merge-views.js";
 import { reviewerCandidates } from "./pull-request-people.js";
 import { getPullRequest, listPullRequests } from "./pull-request-read.js";
 import {
@@ -92,15 +97,22 @@ export const getPullRequestOperation = defineOperation({
 	method: "GET",
 	path: PULL_REQUEST_PATH,
 	summary: "Get a pull request with its changes",
-	description: `\`preview\` is what merging it would do now (changes, conflicts with their ids for \`resolutions\`); \`null\` once merged or declined, or when the fork is gone. Each change has a \`key\` that pull request comments use as \`changeKey\`. ${PR_ACCESS}`,
+	description: `\`preview\` is what merging it would do now (changes, conflicts with their ids for \`resolutions\`); \`null\` once merged or declined, or when the fork is gone. Each change has a \`key\` that pull request comments use as \`changeKey\`. ${AGENT_PREVIEW} ${PR_ACCESS}`,
 	input: z.object({ pullRequestId: pullRequestIdSchema }),
 	output: pullRequestDetailView,
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: true, destructive: false, idempotent: true },
 	toolset: "client",
 	mcp: true,
-	handler: async (ctx, input) =>
-		getPullRequest(requireSubject(ctx), input.pullRequestId),
+	handler: async (ctx, input) => {
+		const detail = await getPullRequest(
+			requireSubject(ctx),
+			input.pullRequestId,
+		);
+		return isAgentCall(ctx) && detail.preview
+			? { ...detail, preview: withholdPreviewSecrets(detail.preview) }
+			: detail;
+	},
 });
 
 export const updatePullRequestOperation = defineOperation({

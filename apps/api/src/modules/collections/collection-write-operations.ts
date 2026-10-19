@@ -9,7 +9,11 @@ import {
 	collectionUpdateSchema,
 } from "@localman/shared/api-client";
 import { z } from "zod";
-import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import {
+	USER_SCOPE,
+	isAgentCall,
+	requireSubject,
+} from "../../http/require-auth.js";
 import { duplicateCollection } from "./collection-duplicate-service.js";
 import {
 	ACCESS_NOTE,
@@ -17,8 +21,14 @@ import {
 	collectionIdSchema,
 	workspaceIdSchema,
 } from "./collection-read-operations.js";
-import { createCollection, updateCollection } from "./collection-service.js";
+import {
+	AGENT_READ_NOTE,
+	AGENT_WRITE_NOTE,
+	collectionForCaller,
+} from "./collection-secret-mask.js";
+import { createCollection } from "./collection-service.js";
 import { COLLECTIONS_PER_WORKSPACE_MAX } from "./collection-store.js";
+import { updateCollection } from "./collection-update-service.js";
 import { collectionDetailView } from "./collection-view.js";
 import { COLLECTION_TEMPLATES } from "./rest-crud-template.js";
 import { trashCollection } from "./trash-service.js";
@@ -35,7 +45,7 @@ export const createCollectionOperation = defineOperation({
 	method: "POST",
 	path: "/workspaces/:workspaceId/collections",
 	summary: "Create a collection in a workspace",
-	description: `Admins and Editors of the workspace. Send \`name\` for an empty collection, \`template: "rest-crud"\` for a folder of list, get, create, update and delete requests on {{baseUrl}}/items, or \`tree\` (an imported collection: folders, requests, auth, scripts, variables); \`name\` also renames a template or tree. \`mockProjectId\` links the mock project it is made from (shown as its related mock project; 400 INVALID_MOCK_PROJECT unless the caller can open that project). ${LIMITS_NOTE} 404 NOT_FOUND for a workspace the caller is not in.`,
+	description: `Admins and Editors of the workspace. Send \`name\` for an empty collection, \`template: "rest-crud"\` for a folder of list, get, create, update and delete requests on {{baseUrl}}/items, or \`tree\` (an imported collection: folders, requests, auth, scripts, variables); \`name\` also renames a template or tree. \`mockProjectId\` links the mock project it is made from (shown as its related mock project; 400 INVALID_MOCK_PROJECT unless the caller can open that project). ${LIMITS_NOTE} 404 NOT_FOUND for a workspace the caller is not in. ${AGENT_READ_NOTE}`,
 	input: z.object({
 		workspaceId: workspaceIdSchema,
 		name: z.string().trim().min(1).max(COLLECTION_NAME_MAX).optional(),
@@ -52,7 +62,10 @@ export const createCollectionOperation = defineOperation({
 	bodyLimit: TREE_BODY_LIMIT,
 	handler: async (ctx, input) => {
 		const { workspaceId, ...source } = input;
-		return createCollection(requireSubject(ctx), workspaceId, source);
+		return collectionForCaller(
+			ctx,
+			await createCollection(requireSubject(ctx), workspaceId, source),
+		);
 	},
 });
 
@@ -62,7 +75,7 @@ export const updateCollectionOperation = defineOperation({
 	path: COLLECTION_PATH,
 	summary:
 		"Edit a collection's name, description, auth, scripts, variables, tags, status or links",
-	description: `Editors. Omitted fields stay. \`auth\` is what top-level items inheriting auth receive (never \`inherit\` itself); scripts run before the folder's and the request's. \`linkedEnvironmentId\` sets its related environment (an environment of its workspace the caller can open, 400 INVALID_ENVIRONMENT_LINK otherwise; \`null\` for none): until an Editor sets it, the related environment is the one last shared together with the collection. \`mockProjectId\` (a project the caller can open, 400 INVALID_MOCK_PROJECT otherwise; \`null\` unlinks) sets its related mock project. Links are not recorded in the changelog. ${ACCESS_NOTE}`,
+	description: `Editors. Omitted fields stay. \`auth\` is what top-level items inheriting auth receive (never \`inherit\` itself); scripts run before the folder's and the request's. \`linkedEnvironmentId\` sets its related environment (an environment of its workspace the caller can open, 400 INVALID_ENVIRONMENT_LINK otherwise; \`null\` for none): until an Editor sets it, the related environment is the one last shared together with the collection. \`mockProjectId\` (a project the caller can open, 400 INVALID_MOCK_PROJECT otherwise; \`null\` unlinks) sets its related mock project. Links are not recorded in the changelog. ${ACCESS_NOTE} ${AGENT_READ_NOTE} ${AGENT_WRITE_NOTE}`,
 	input: collectionUpdateSchema.extend({ collectionId: collectionIdSchema }),
 	output: collectionDetailView,
 	scopes: [USER_SCOPE],
@@ -72,7 +85,15 @@ export const updateCollectionOperation = defineOperation({
 	bodyLimit: ROOT_BODY_LIMIT,
 	handler: async (ctx, input) => {
 		const { collectionId, ...update } = input;
-		return updateCollection(requireSubject(ctx), collectionId, update);
+		return collectionForCaller(
+			ctx,
+			await updateCollection(
+				requireSubject(ctx),
+				collectionId,
+				update,
+				isAgentCall(ctx),
+			),
+		);
 	},
 });
 
@@ -81,7 +102,7 @@ export const duplicateCollectionOperation = defineOperation({
 	method: "POST",
 	path: `${COLLECTION_PATH}/duplicate`,
 	summary: "Duplicate a collection",
-	description: `Copies the collection as "<name> Copy" with new folder and request ids into \`workspaceId\` (its own workspace by default), where the caller must be Admin or Editor. Viewers of the collection may duplicate it. The copy keeps its related mock project when the caller can open it, and its linked environment when it stays in the same workspace. ${LIMITS_NOTE} ${ACCESS_NOTE}`,
+	description: `Copies the collection as "<name> Copy" with new folder and request ids into \`workspaceId\` (its own workspace by default), where the caller must be Admin or Editor. Viewers of the collection may duplicate it. The copy keeps its related mock project when the caller can open it, and its linked environment when it stays in the same workspace. ${LIMITS_NOTE} ${ACCESS_NOTE} ${AGENT_READ_NOTE}`,
 	input: z.object({
 		collectionId: collectionIdSchema,
 		workspaceId: workspaceIdSchema.optional(),
@@ -93,10 +114,13 @@ export const duplicateCollectionOperation = defineOperation({
 	mcp: true,
 	successStatus: 201,
 	handler: async (ctx, input) =>
-		duplicateCollection(
-			requireSubject(ctx),
-			input.collectionId,
-			input.workspaceId,
+		collectionForCaller(
+			ctx,
+			await duplicateCollection(
+				requireSubject(ctx),
+				input.collectionId,
+				input.workspaceId,
+			),
 		),
 });
 

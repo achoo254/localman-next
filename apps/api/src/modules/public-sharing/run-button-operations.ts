@@ -57,6 +57,7 @@ export const createRunButtonOperation = defineOperation({
 	annotations: { readOnly: false, destructive: false, idempotent: false },
 	toolset: "sharing",
 	mcp: true,
+	mcpScope: "client:share",
 	dryRun: true,
 	requiresConfirmation: true,
 	successStatus: 201,

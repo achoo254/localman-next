@@ -54,6 +54,8 @@ export {
 	type HttpMethod,
 	LOWERCASE_METHOD,
 	type McpExposure,
+	type McpExtraScope,
+	MCP_EXTRA_SCOPES,
 	type OperationAnnotations,
 	type OperationContext,
 	type OperationDefinition,

@@ -11,6 +11,7 @@ import {
 	ACCESS_NOTE,
 	collectionIdSchema,
 } from "./collection-read-operations.js";
+import { AGENT_READ_NOTE, nodeForCaller } from "./collection-secret-mask.js";
 import { collectionNodeView } from "./collection-view.js";
 import { nodeIdSchema } from "./node-create-input.js";
 import { deleteNodes } from "./node-delete-service.js";
@@ -61,7 +62,7 @@ export const duplicateCollectionNodeOperation = defineOperation({
 	method: "POST",
 	path: `${NODE_PATH}/duplicate`,
 	summary: "Duplicate a folder, request or example with everything under it",
-	description: `${EDITORS} Copies the node and its subtree right after it, named "<name> Copy", with new ids, in one step: 409 COLLECTION_NODES_LIMIT or 413 COLLECTION_TOO_LARGE write nothing. Returns the new nodes (the copy of the node first, parents before children) to add to the collection as is. ${NODE_MISSING} ${ACCESS_NOTE}`,
+	description: `${EDITORS} Copies the node and its subtree right after it, named "<name> Copy", with new ids, in one step: 409 COLLECTION_NODES_LIMIT or 413 COLLECTION_TOO_LARGE write nothing. Returns the new nodes (the copy of the node first, parents before children) to add to the collection as is. ${NODE_MISSING} ${ACCESS_NOTE} ${AGENT_READ_NOTE}`,
 	input: z.object({ collectionId: collectionIdSchema, nodeId: nodeIdSchema }),
 	output: z.object({ nodes: z.array(collectionNodeView) }),
 	scopes: [USER_SCOPE],
@@ -69,13 +70,14 @@ export const duplicateCollectionNodeOperation = defineOperation({
 	toolset: "client",
 	mcp: true,
 	successStatus: 201,
-	handler: async (ctx, input) => ({
-		nodes: await duplicateNode(
+	handler: async (ctx, input) => {
+		const nodes = await duplicateNode(
 			requireSubject(ctx),
 			input.collectionId,
 			input.nodeId,
-		),
-	}),
+		);
+		return { nodes: nodes.map((node) => nodeForCaller(ctx, node)) };
+	},
 });
 
 export const bulkDeleteCollectionNodesOperation = defineOperation({

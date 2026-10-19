@@ -24,7 +24,8 @@ export interface McpToolDescriptor {
 	readonly toolset: Toolset;
 	/**
 	 * Every scope the MCP access token must carry: `<toolset>:read` or
-	 * `<toolset>:write`, plus `credentials:write` for credential minting.
+	 * `<toolset>:write`, plus `credentials:write` for credential minting
+	 * and the operation's `mcpScope` (e.g. `client:send`).
 	 * The operation's own `scopes` are still checked against the caller.
 	 */
 	readonly scopes: readonly string[];
@@ -56,11 +57,15 @@ export function toolDescriptionOf(op: {
 
 /** MCP token scopes a tool needs; see `McpToolDescriptor.scopes`. */
 export function mcpScopesOf(
-	op: Pick<AnyOperation, "toolset" | "annotations" | "createsCredential">,
+	op: Pick<
+		AnyOperation,
+		"toolset" | "annotations" | "createsCredential" | "mcpScope"
+	>,
 ): string[] {
 	const access = op.annotations.readOnly ? "read" : "write";
 	const scopes = [`${scopeAreaOf(op.toolset)}:${access}`];
 	if (op.createsCredential) scopes.push(CREDENTIALS_WRITE_SCOPE);
+	if (op.mcpScope !== undefined) scopes.push(op.mcpScope);
 	return scopes;
 }
 

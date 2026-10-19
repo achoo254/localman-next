@@ -1,7 +1,12 @@
 import { defineOperation } from "@localman/operations";
 import { CHANGELOG_REVISIONS_MAX } from "@localman/shared/api-client";
 import { z } from "zod";
-import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import {
+	USER_SCOPE,
+	isAgentCall,
+	requireSubject,
+} from "../../http/require-auth.js";
+import { collectionSecrets } from "../environments/scope-secret-keys.js";
 import { restoreToChange } from "./change-restore-service.js";
 import { CHANGELOG_PAGE } from "./changelog-page.js";
 import {
@@ -21,6 +26,13 @@ import {
 	COLLECTION_PATH,
 	collectionIdSchema,
 } from "./collection-read-operations.js";
+import {
+	AGENT_READ_NOTE,
+	collectionForCaller,
+	flaggedSecretKeys,
+	variablesOf,
+	withholdEntitySecrets,
+} from "./collection-secret-mask.js";
 import { collectionDetailView } from "./collection-view.js";
 
 const CHANGELOG_PATH = `${COLLECTION_PATH}/changelog`;
@@ -59,15 +71,33 @@ export const getCollectionChangeDiffOperation = defineOperation({
 	method: "GET",
 	path: `${REVISION_PATH}/diff`,
 	summary: "Show what one change of a collection changed",
-	description: `The entity (collection root, folder, request or example) right before and after the change, as JSON; \`null\` on the side where it did not exist. \`hidden: true\` when an Editor hid it: Editors and Admins still get the diff, Viewers get \`available: false\`, as when it was too large to keep. ${MISSING} ${ACCESS_NOTE}`,
+	description: `The entity (collection root, folder, request or example) right before and after the change, as JSON; \`null\` on the side where it did not exist. \`hidden: true\` when an Editor hid it: Editors and Admins still get the diff, Viewers get \`available: false\`, as when it was too large to keep. For an agent (a token, not the web app), a collection variable that is secret before, after or now, and a credential typed into an auth (bearer token, basic password, API key value; not a \`{{variable}}\`), read as \`""\`. ${MISSING} ${ACCESS_NOTE}`,
 	input: revisionInput,
 	output: diffView,
 	scopes: [USER_SCOPE],
 	annotations: { readOnly: true, destructive: false, idempotent: true },
 	toolset: "client",
 	mcp: true,
-	handler: async (ctx, input) =>
-		revisionDiff(requireSubject(ctx), input.collectionId, input.revisionId),
+	handler: async (ctx, input) => {
+		const diff = await revisionDiff(
+			requireSubject(ctx),
+			input.collectionId,
+			input.revisionId,
+		);
+		if (!isAgentCall(ctx)) return diff;
+		// Flags of both sides and of today: flipping one in history reveals nothing.
+		const flagged = flaggedSecretKeys(
+			variablesOf(diff.before),
+			variablesOf(diff.after),
+		);
+		const secretNow = await collectionSecrets(input.collectionId);
+		const isSecret = (key: string) => flagged.has(key) || secretNow(key);
+		return {
+			...diff,
+			before: withholdEntitySecrets(diff.before, isSecret),
+			after: withholdEntitySecrets(diff.after, isSecret),
+		};
+	},
 });
 
 function visibilityOperation(hidden: boolean) {
@@ -100,7 +130,7 @@ export const restoreCollectionChangeOperation = defineOperation({
 	method: "POST",
 	path: `${REVISION_PATH}/restore`,
 	summary: "Restore a collection to the state right after one change",
-	description: `Editors. Undoes every later change and records the result as one new change; nothing is deleted from the changelog. \`irreversible\` (also on dryRun) says the restore itself is too large to keep a diff: it could not be undone and would block restoring older changes. 409 REVISION_UNAVAILABLE when the change was trimmed away or a later one was too large to keep; 409 COLLECTION_NODES_LIMIT and 413 COLLECTION_TOO_LARGE as for edits. ${MISSING} ${ACCESS_NOTE}`,
+	description: `Editors. Undoes every later change and records the result as one new change; nothing is deleted from the changelog. \`irreversible\` (also on dryRun) says the restore itself is too large to keep a diff: it could not be undone and would block restoring older changes. 409 REVISION_UNAVAILABLE when the change was trimmed away or a later one was too large to keep; 409 COLLECTION_NODES_LIMIT and 413 COLLECTION_TOO_LARGE as for edits. ${MISSING} ${ACCESS_NOTE} ${AGENT_READ_NOTE}`,
 	input: revisionInput,
 	output: z.object({
 		dryRun: z.boolean(),
@@ -113,13 +143,19 @@ export const restoreCollectionChangeOperation = defineOperation({
 	toolset: "client",
 	mcp: true,
 	dryRun: true,
-	handler: async (ctx, input) =>
-		restoreToChange(
+	handler: async (ctx, input) => {
+		const result = await restoreToChange(
 			requireSubject(ctx),
 			input.collectionId,
 			input.revisionId,
 			ctx.dryRun,
-		),
+		);
+		return {
+			...result,
+			collection:
+				result.collection && collectionForCaller(ctx, result.collection),
+		};
+	},
 });
 
 export const getCollectionActivityOperation = defineOperation({

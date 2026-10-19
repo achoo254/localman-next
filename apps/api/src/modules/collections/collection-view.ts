@@ -140,7 +140,8 @@ export function toCollectionNode(node: StoredCollectionNode): CollectionNode {
  * Secret variable values and auth credentials are returned as stored to
  * everyone who may view the collection: "secret" is a masking flag for
  * the UI, not an access level. Only an exported file blanks them, since
- * it leaves Localman. `links` are resolved for the caller beforehand.
+ * it leaves Localman, and an agent's read (`collection-secret-mask.ts`).
+ * `links` are resolved for the caller beforehand.
  */
 export function toCollectionDetail(
 	root: StoredCollection,

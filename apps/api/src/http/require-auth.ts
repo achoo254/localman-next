@@ -77,3 +77,11 @@ export function sessionIdOf(ctx: OperationContext): string | null {
 		? auth.sessionId
 		: null;
 }
+
+/**
+ * True unless a browser session made the call: an agent token (Localman
+ * MCP OAuth, MCP tokens) never reads secret values back in plaintext.
+ */
+export function isAgentCall(ctx: OperationContext): boolean {
+	return sessionIdOf(ctx) === null;
+}

@@ -7,6 +7,7 @@ import {
 } from "@localman/shared/api-client";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import { valuesForCaller } from "./agent-secret-mask.js";
 import { ENVIRONMENT_ACCESS_NOTE } from "./environment-access.js";
 import {
 	ENVIRONMENT_PATH,
@@ -87,10 +88,13 @@ export const importEnvironmentOperation = defineOperation({
 	successStatus: 201,
 	bodyLimit: IMPORT_BODY_LIMIT,
 	handler: async (ctx, input) =>
-		importEnvironment(requireSubject(ctx), input.workspaceId, {
-			file: input.environment,
-			name: input.name,
-		}),
+		valuesForCaller(
+			ctx,
+			await importEnvironment(requireSubject(ctx), input.workspaceId, {
+				file: input.environment,
+				name: input.name,
+			}),
+		),
 });
 
 export const environmentTransferOperations = [

@@ -36,6 +36,7 @@ export const shareElementOperation = defineOperation({
 	annotations: { readOnly: false, destructive: false, idempotent: true },
 	toolset: "sharing",
 	mcp: true,
+	mcpScope: "client:share",
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
 		const { element } = await requireElement(
@@ -61,6 +62,7 @@ export const updateElementShareOperation = defineOperation({
 	annotations: { readOnly: false, destructive: false, idempotent: true },
 	toolset: "sharing",
 	mcp: true,
+	mcpScope: "client:share",
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
 		const { element } = await requireElement(

@@ -55,6 +55,7 @@ export const collectionsChangelog: Pick<Messages["collections"], "changelog"> =
 			empty: "Chưa có thay đổi nào.",
 			loadFailed: "Không tải được changelog.",
 			removedAccount: "Tài khoản đã xoá",
+			viaMcp: "qua MCP",
 			kinds: {
 				collection: "collection",
 				folder: "folder",

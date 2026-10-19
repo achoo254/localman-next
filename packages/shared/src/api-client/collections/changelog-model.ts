@@ -61,6 +61,8 @@ export interface ChangelogChange {
 	hidden: boolean;
 	/** "Restore to this change" can go back to it. */
 	restorable: boolean;
+	/** Made by an agent through Localman MCP, not in the web app. */
+	viaMcp: boolean;
 }
 
 export interface ChangelogSession {

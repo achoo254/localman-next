@@ -7,7 +7,11 @@ import type {
 	MergePreview,
 } from "@localman/shared/api-client";
 import { z } from "zod";
-import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import {
+	USER_SCOPE,
+	isAgentCall,
+	requireSubject,
+} from "../../http/require-auth.js";
 import {
 	forkListView,
 	forkStatusView,
@@ -17,6 +21,7 @@ import {
 	resolutionsSchema,
 } from "./fork-views-schema.js";
 import type { MergeFollowUp } from "./merge-follow-up.js";
+import { AGENT_PREVIEW, withholdPreviewSecrets } from "./merge-views.js";
 
 /** What differs between forking a collection and an environment. */
 export interface SyncKind {
@@ -125,12 +130,18 @@ export function syncOperations(kind: SyncKind): AnyOperation[] {
 					direction === "pull"
 						? "Preview pulling the source's changes into a fork"
 						: "Preview merging a fork's changes into its source",
-				description: `What would change on the ${direction === "pull" ? "fork" : "source"} and the conflicts to choose for. ${direction === "pull" ? "Editors of the fork" : "Editors of the source"}. ${PRO} ${note}`,
+				description: `What would change on the ${direction === "pull" ? "fork" : "source"} and the conflicts to choose for. ${direction === "pull" ? "Editors of the fork" : "Editors of the source"}. ${PRO} ${noun === "Collection" ? `${AGENT_PREVIEW} ` : ""}${note}`,
 				input: idInput,
 				output: mergePreviewView,
 				annotations: readOnly,
-				handler: async (ctx, input) =>
-					kind.preview(requireSubject(ctx), idOf(input), direction),
+				handler: async (ctx, input) => {
+					const preview = await kind.preview(
+						requireSubject(ctx),
+						idOf(input),
+						direction,
+					);
+					return isAgentCall(ctx) ? withholdPreviewSecrets(preview) : preview;
+				},
 			}),
 		),
 		defineOperation({

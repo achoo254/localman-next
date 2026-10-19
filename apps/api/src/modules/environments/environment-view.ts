@@ -24,7 +24,12 @@ export const variableView = z.object({
 	sharedHidden: z.boolean(),
 });
 
-export const localValueView = z.object({ key: z.string(), value: z.string() });
+/** `value: null, hidden: true` is a secret's value withheld from an agent. */
+export const localValueView = z.object({
+	key: z.string(),
+	value: z.string().nullable(),
+	hidden: z.boolean().optional(),
+});
 
 export const environmentSummaryView = z.object({
 	id: z.string(),

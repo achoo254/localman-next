@@ -21,6 +21,15 @@ export const DRY_RUN_QUERY_PARAM = "dryRun";
  */
 export const CREDENTIALS_WRITE_SCOPE = "credentials:write";
 
+/**
+ * Scopes an operation may add to its MCP tool with `mcpScope`, for
+ * actions riskier than their toolset's `write`. Each must be a scope the
+ * IdP grants for the MCP resource. `client:send`: send through the proxy;
+ * `client:share`: give someone access (step-up only, never advertised).
+ */
+export const MCP_EXTRA_SCOPES = ["client:send", "client:share"] as const;
+export type McpExtraScope = (typeof MCP_EXTRA_SCOPES)[number];
+
 /** MCP toolsets a client can enable; one per product area. */
 export const TOOLSETS = [
 	"mock",
@@ -41,14 +50,17 @@ export const TOOLSETS = [
 export type Toolset = (typeof TOOLSETS)[number];
 
 /**
- * Toolsets whose MCP tools use another toolset's OAuth scopes: the
- * `mock-advanced` and `traffic` (request log, inboxes, callbacks) tools
- * work on the same projects as `mock`, so a token with `mock:read` /
- * `mock:write` opens them without a new IdP scope.
+ * Toolsets whose MCP tools use another toolset's OAuth scopes, so a token
+ * opens them without a new IdP scope: the `mock-advanced` and `traffic`
+ * (request log, inboxes, callbacks) tools work on the same projects as
+ * `mock`; the `sharing` (workspaces, shares, collection links and keys)
+ * and `public` tools on the same collections as `client`.
  */
 const SCOPE_AREAS: Readonly<Partial<Record<Toolset, Toolset>>> = {
 	"mock-advanced": "mock",
 	traffic: "mock",
+	sharing: "client",
+	public: "client",
 };
 
 /** Prefix of the `<area>:read|write` MCP scopes of a toolset's tools. */
@@ -152,6 +164,8 @@ export interface OperationSpec<
 	 * also needs the `credentials:write` token scope.
 	 */
 	readonly createsCredential?: boolean;
+	/** Extra MCP token scope the tool needs on top of its toolset scope. */
+	readonly mcpScope?: McpExtraScope;
 	/**
 	 * The MCP tool must be confirmed: a `dry_run` call returns a
 	 * `confirm_token` the real call has to present. Only for changes with a

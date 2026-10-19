@@ -129,6 +129,8 @@ export const deleteWorkspaceOperation = defineOperation({
 	toolset: "sharing",
 	mcp: true,
 	dryRun: true,
+	// Environments and globals go for good: an agent must confirm first.
+	requiresConfirmation: true,
 	handler: async (ctx, input) => {
 		const sub = requireSubject(ctx);
 		const access = await requireWorkspace(

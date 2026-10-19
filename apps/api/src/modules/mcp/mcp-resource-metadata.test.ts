@@ -55,6 +55,7 @@ describe("protected resource metadata (RFC 9728)", () => {
 				"mock:write",
 				"client:read",
 				"client:write",
+				"client:send",
 			]),
 			bearer_methods_supported: ["header"],
 			resource_name: "Localman MCP",
@@ -103,9 +104,16 @@ describe("Bearer authentication of /mcp", () => {
 		expect(res.headers["www-authenticate"]).toContain(
 			'error="insufficient_scope"',
 		);
-		expect(res.headers["www-authenticate"]).toMatch(
-			/scope="mock:read mock:write client:\w+ client:\w+"/,
-		);
+		// Every scope that opens a tool, `client:send` (send_request)
+		// included; `credentials:write` only comes by step-up.
+		const scope = /scope="([^"]*)"/.exec(res.headers["www-authenticate"]);
+		expect(scope?.[1]?.split(" ").sort()).toEqual([
+			"client:read",
+			"client:send",
+			"client:write",
+			"mock:read",
+			"mock:write",
+		]);
 	});
 
 	it("never takes the session cookie instead of a Bearer token", async () => {
