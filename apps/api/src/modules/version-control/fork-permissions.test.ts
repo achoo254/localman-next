@@ -74,6 +74,15 @@ describe("permissions on a fork", () => {
 		expect(await canMerge(VIC, fork)).toBe(true);
 	});
 
+	it("does not offer the merge to a lapsed Pro", async () => {
+		const { fork } = await forked();
+		await UserModel.updateOne(
+			{ sub: EVE },
+			{ $set: { plan: "pro", planExpiresAt: new Date(Date.now() - 60_000) } },
+		);
+		expect(await canMerge(EVE, fork)).toBe(false);
+	});
+
 	it("lets a Viewer of the fork merge plainly but not update or delete it", async () => {
 		const { source, fork } = await forked();
 		await editorOn(source);

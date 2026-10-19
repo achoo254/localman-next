@@ -1,3 +1,4 @@
+import { limitsFor } from "@localman/shared";
 import { elementRoleAllows } from "@localman/shared/access";
 import type {
 	ForkInfo,
@@ -7,6 +8,7 @@ import type {
 import type { Types } from "mongoose";
 import { elementRoleOf } from "../access/access-policy.js";
 import { elementAdapter } from "../access/element-adapters.js";
+import { currentPlanOf } from "../billing/plan-guard.js";
 import { displayNames } from "../users/display-names.js";
 import { findLink } from "./fork-access.js";
 import { type ForkKind, ForkModel, type StoredFork } from "./fork-model.js";
@@ -32,9 +34,10 @@ async function forkInfo(
 	kind: ForkKind,
 	link: StoredFork,
 ): Promise<ForkInfo> {
-	const [source, names] = await Promise.all([
+	const [source, names, plan] = await Promise.all([
 		withRole(sub, kind, link.sourceId),
 		displayNames([link.createdBy]),
+		currentPlanOf(sub),
 	]);
 	return {
 		label: link.label,
@@ -45,7 +48,10 @@ async function forkInfo(
 			id: link.sourceId.toHexString(),
 			name: source?.element.name ?? null,
 			available: source !== null,
-			canMerge: elementRoleAllows(kind, source?.role ?? null, "mergeFork"),
+			// Editor of the source on a plan with forks (a lapsed Pro cannot).
+			canMerge:
+				limitsFor(plan).forkPrPublic &&
+				elementRoleAllows(kind, source?.role ?? null, "mergeFork"),
 		},
 	};
 }

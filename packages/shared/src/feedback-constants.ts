@@ -32,6 +32,7 @@ export type ContactStatus = (typeof CONTACT_STATUSES)[number];
 export const CONTACT_SOURCES = [
 	"landing",
 	"projects",
+	"api-client",
 	"account",
 	"admin",
 	"invite",

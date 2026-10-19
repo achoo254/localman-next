@@ -30,6 +30,7 @@ export const admin: Messages["admin"] = {
 		sources: {
 			landing: "Trang chủ",
 			projects: "Projects",
+			apiClient: "API client",
 			account: "Tài khoản",
 			admin: "Quản trị",
 			invite: "Lời mời",

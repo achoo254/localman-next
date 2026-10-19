@@ -24,6 +24,7 @@ const SOURCE_KEYS: Readonly<
 > = {
 	landing: "landing",
 	projects: "projects",
+	"api-client": "apiClient",
 	account: "account",
 	admin: "admin",
 	invite: "invite",

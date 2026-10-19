@@ -30,6 +30,7 @@ export const admin: Messages["admin"] = {
 		sources: {
 			landing: "首页",
 			projects: "Projects",
+			apiClient: "API client",
 			account: "账号",
 			admin: "管理",
 			invite: "邀请",

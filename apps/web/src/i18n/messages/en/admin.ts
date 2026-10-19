@@ -29,6 +29,7 @@ export const admin = {
 		sources: {
 			landing: "Home page",
 			projects: "Projects",
+			apiClient: "API client",
 			account: "Account",
 			admin: "Admin",
 			invite: "Invitation",

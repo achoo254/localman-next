@@ -47,6 +47,14 @@ export function CollectionActivity({ collectionId }: { collectionId: string }) {
 								<b>
 									{item.authorName ?? t("collections.changelog.removedAccount")}
 								</b>{" "}
+								{item.viaMcp ? (
+									<span
+										data-id="collection-activity-via-mcp"
+										className="text-muted"
+									>
+										({t("collections.changelog.viaMcp")}){" "}
+									</span>
+								) : null}
 								{describeChange(item, t)}
 							</span>
 							<span className="text-muted">{formatDate(item.at)}</span>
