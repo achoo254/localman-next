@@ -5,11 +5,14 @@ import {
 	listLinks,
 	revokeLink,
 } from "./api-client.js";
-import { loadConfig } from "./config.js";
+import { type TuneloConfig, loadConfig } from "./config.js";
+import { acceptsAccountToken } from "./credentials.js";
 import { printServerMigration, resolveServerUrl } from "./server-url.js";
 
 const NOT_NEEDED =
 	"Not needed: you are signed in, so Localman sees this machine's tunnels through your account.";
+const OTHER_SERVER_SESSION =
+	"Your sign-in is for another Tunelo server, so this machine's tunnels use its anonymous token. Run `tunelo login` to use your account here.";
 
 /** Names come from the server; never let them drive the terminal. */
 function printable(text: string): string {
@@ -22,22 +25,51 @@ function fail(message: string): never {
 	process.exit(1);
 }
 
+export type LinkContext =
+	| { kind: "not-needed" }
+	| { kind: "no-key" }
+	| { kind: "anonymous"; key: string; otherServerSession: boolean };
+
+/**
+ * Same rule as `tunelo http` (`resolveCredential`): a sign-in only counts
+ * when its token may go to this server. A session of another server (e.g.
+ * from before a domain move) leaves the tunnels on the anonymous token, so
+ * the machine still needs a link.
+ */
+export function linkContextOf(
+	config: Pick<TuneloConfig, "session" | "key">,
+	serverUrl: string,
+	envKey: string | undefined,
+): LinkContext {
+	const session = config.session;
+	if (session && acceptsAccountToken(serverUrl, session.issuer)) {
+		return { kind: "not-needed" };
+	}
+	const key = envKey ?? config.key;
+	if (!key) return { kind: "no-key" };
+	return { kind: "anonymous", key, otherServerSession: Boolean(session) };
+}
+
 /**
  * Links are for machines without an account: they need the anonymous token
  * saved by an older CLI or `tunelo login --legacy-key`.
  */
 function anonymousContext(): { baseUrl: string; key: string } {
-	const config = loadConfig();
-	if (config.session) {
+	const serverUrl = resolveServerUrl(undefined, printServerMigration);
+	const context = linkContextOf(
+		loadConfig(),
+		serverUrl,
+		process.env.TUNELO_KEY,
+	);
+	if (context.kind === "not-needed") {
 		console.log(`  ${NOT_NEEDED}`);
 		process.exit(0);
 	}
-	const key = process.env.TUNELO_KEY ?? config.key;
-	if (!key) fail("No anonymous token on this machine. Run `tunelo login`.");
-	return {
-		baseUrl: getApiBaseUrl(resolveServerUrl(undefined, printServerMigration)),
-		key,
-	};
+	if (context.kind === "no-key") {
+		fail("No anonymous token on this machine. Run `tunelo login`.");
+	}
+	if (context.otherServerSession) console.log(`  ${OTHER_SERVER_SESSION}`);
+	return { baseUrl: getApiBaseUrl(serverUrl), key: context.key };
 }
 
 export function registerLinkCommands(program: Command): void {

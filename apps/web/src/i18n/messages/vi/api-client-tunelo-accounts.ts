@@ -8,7 +8,7 @@ export const apiClientTuneloAccounts: Messages["apiClientTunelo"]["accounts"] =
 			"Header Authorization của request đã được dùng cho Basic Auth của tunnel, nên app của bạn có thể không nhận được nó.",
 		notice: {
 			stopped: "Tunnel của {key} đã dừng",
-			stoppedBody: "Chạy lại <code>{command}</code> rồi bấm kiểm tra lại.",
+			stoppedBody: "Chạy lại <code>{command}</code> rồi bấm Gửi lại.",
 			tcpOnly: "Chỉ có tunnel TCP cho {key}",
 			tcpOnlyBody:
 				"API client chỉ gửi được HTTP. Mở tunnel HTTP bằng <code>{command}</code>.",

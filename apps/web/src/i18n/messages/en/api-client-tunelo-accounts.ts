@@ -6,7 +6,7 @@ export const apiClientTuneloAccounts = {
 		"The request's Authorization header was used for the tunnel's Basic Auth, so your app may not receive it.",
 	notice: {
 		stopped: "The tunnel for {key} stopped",
-		stoppedBody: "Run <code>{command}</code> again, then check again.",
+		stoppedBody: "Run <code>{command}</code> again, then click Send again.",
 		tcpOnly: "Only a TCP tunnel serves {key}",
 		tcpOnlyBody:
 			"The API client sends HTTP only. Open an HTTP tunnel with <code>{command}</code>.",

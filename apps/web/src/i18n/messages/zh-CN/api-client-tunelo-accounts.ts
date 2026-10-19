@@ -8,7 +8,7 @@ export const apiClientTuneloAccounts: Messages["apiClientTunelo"]["accounts"] =
 			"请求的 Authorization 请求头已用于隧道的 Basic Auth，你的应用可能收不到它。",
 		notice: {
 			stopped: "{key} 的隧道已停止",
-			stoppedBody: "重新运行 <code>{command}</code>，然后再检查一次。",
+			stoppedBody: "重新运行 <code>{command}</code>，然后点击“重新发送”。",
 			tcpOnly: "{key} 只有 TCP 隧道",
 			tcpOnlyBody:
 				"API 客户端只能发送 HTTP。请用 <code>{command}</code> 打开 HTTP 隧道。",
