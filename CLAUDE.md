@@ -14,7 +14,7 @@ scripts/                 # check-mcp-coverage.ts, check-tokens.ts
 e2e/                     # Playwright: whole stack on fixed ports 46xx (support/stack.ts)
 ```
 
-Commands: `pnpm dev`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm e2e`, `pnpm check:mcp-coverage`, `pnpm check:tokens`, `pnpm check:i18n` (chạy kèm `pnpm lint`). Mỗi phase phải chạy sạch `pnpm lint && pnpm typecheck && pnpm test && pnpm check:mcp-coverage`.
+Commands: `pnpm dev`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm e2e`, `pnpm check:mcp-coverage`, `pnpm check:tokens`, `pnpm check:i18n` (chạy kèm `pnpm lint`). Mỗi phase phải sạch `pnpm lint && pnpm typecheck && pnpm test && pnpm check:mcp-coverage` và E2E. Máy dev 16 GB dùng chung: **không chạy full `pnpm test` hay `pnpm e2e` trên máy dev**. Local chỉ chạy `pnpm lint`, `pnpm typecheck` và đúng file test liên quan (`pnpm vitest run <file>`); bộ đầy đủ chạy trên CI (`.github/workflows/ci.yml`, kích hoạt khi push `main` hoặc mở PR): push rồi đọc kết quả bằng `gh run watch`, CI xanh mới báo xong. Tunelo cũng theo luật này: không chạy cả bộ `pnpm test:tunelo-e2e` trên máy dev.
 
 Quy tắc:
 - **API nghiệp vụ chỉ khai báo qua `defineOperation`** rồi thêm vào `apps/api/src/operations/registry.ts`; không viết route Express tay. Mọi operation có MCP tool, hoặc `mcp: { exempt: "<lý do>" }`. Xem `docs/operation-registry.md`.
