@@ -13,6 +13,7 @@
  * - `withProject` / `withWorkspace`: removed by the cascade of the owned
  *   project or of the workspace the account deletes.
  * - `notPersonal`: holds nothing that identifies the account.
+ * - `hashOnly`: the SHA-256 of the account id, kept after deletion.
  */
 export type AccountDataHandling =
 	| "deleted"
@@ -20,13 +21,15 @@ export type AccountDataHandling =
 	| "deletedAndAnonymized"
 	| "withProject"
 	| "withWorkspace"
-	| "notPersonal";
+	| "notPersonal"
+	| "hashOnly";
 
 export const ACCOUNT_DATA_POLICY: Readonly<
 	Record<string, AccountDataHandling>
 > = {
 	// Identity and sign-in.
 	User: "deleted",
+	DeletedAccount: "hashOnly",
 	Session: "deleted",
 	PushSubscription: "deleted",
 	AuditEvent: "deleted",
@@ -62,7 +65,8 @@ export const ACCOUNT_DATA_POLICY: Readonly<
 	OutboundJob: "withProject",
 	McpToken: "withProject",
 	Collaborator: "deletedAndAnonymized",
-	MemberRemoval: "deletedAndAnonymized",
+	// Kept: the owner's record that a removed member may not rejoin.
+	MemberRemoval: "anonymized",
 	MagicLink: "anonymized",
 	// Workspaces: the personal one and team ones the account is alone in
 	// are deleted; in the others the account leaves and its authorship of

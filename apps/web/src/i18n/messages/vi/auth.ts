@@ -21,6 +21,10 @@ export const auth: Messages["auth"] = {
 			title: "Đăng nhập không thành công",
 			text: "Có lỗi khi hoàn tất đăng nhập. Hãy thử lại.",
 		},
+		account_deleted: {
+			title: "Tài khoản Localman này đã bị xoá",
+			text: "Tài khoản {idpName} của bạn vẫn dùng được, nhưng tài khoản Localman và dữ liệu của nó đã bị xoá. Đăng nhập lại sẽ tạo một tài khoản mới, trống.",
+		},
 		rate_limited: {
 			title: "Thử đăng nhập quá nhiều lần",
 			text: "Bạn thử đăng nhập quá nhiều lần, vui lòng đợi một phút rồi thử lại.",
@@ -31,4 +35,5 @@ export const auth: Messages["auth"] = {
 		},
 	},
 	accountFallback: "Tài khoản",
+	createNewAccount: "Tạo tài khoản mới",
 };

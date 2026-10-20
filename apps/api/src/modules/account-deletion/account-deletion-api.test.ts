@@ -6,11 +6,17 @@ import {
 	OWNER,
 	useCollaboratorTestDb,
 } from "../collaborators/testing/collaborator-fixture.js";
+import { FeedbackModel } from "../feedback/feedback-model.js";
 import { UserModel } from "../users/user-model.js";
 import {
 	addWorkspaceMember,
 	createWorkspace,
 } from "../workspaces/testing/workspace-fixture.js";
+import {
+	releaseDeletionLock,
+	takeDeletionLock,
+	wasAccountDeleted,
+} from "./deleted-account-model.js";
 import {
 	OWN_ROW_COLLECTIONS,
 	countOwnRows,
@@ -103,5 +109,40 @@ describe("DELETE /users/me", () => {
 		const res = await deleteAs(OWNER, { confirm: "owner" });
 		expect(res.status).toBe(429);
 		expect(res.body.error.code).toBe("RATE_LIMITED");
+	});
+
+	it("refuses a second deletion of the same account while one runs", async () => {
+		expect(await takeDeletionLock(OWNER)).toBe(true);
+		const res = await deleteAs(OWNER, { confirm: "owner" });
+		expect(res.status).toBe(409);
+		expect(res.body.error.code).toBe("ACCOUNT_DELETION_IN_PROGRESS");
+		expect(await UserModel.exists({ sub: OWNER })).toBeTruthy();
+		await releaseDeletionLock(OWNER);
+		expect((await deleteAs(OWNER, { confirm: "owner" })).status).toBe(200);
+		expect(await wasAccountDeleted(OWNER)).toBe(true);
+		expect(await wasAccountDeleted(BOB)).toBe(false);
+	});
+
+	it("removes its Pro interest submissions from rows it does not own", async () => {
+		const submission = (userSub: string) => ({
+			at: new Date(),
+			userSub,
+			name: userSub,
+			source: "landing",
+			applied: true,
+			emailMatchesAccount: false,
+		});
+		const theirs = await FeedbackModel.create({
+			type: "pro_interest",
+			email: "shared@example.test",
+			userSub: BOB,
+			name: "Bob",
+			source: "landing",
+			consentAt: new Date(),
+			submissions: [submission(BOB), submission(OWNER)],
+		});
+		expect((await deleteAs(OWNER, { confirm: "owner" })).status).toBe(200);
+		const kept = await FeedbackModel.findById(theirs._id).lean();
+		expect(kept?.submissions?.map((entry) => entry.userSub)).toEqual([BOB]);
 	});
 });

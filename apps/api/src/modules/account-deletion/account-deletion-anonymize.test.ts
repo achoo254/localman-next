@@ -80,4 +80,25 @@ describe("account deletion in team content it leaves", () => {
 			],
 		});
 	});
+
+	it("keeps one anonymous reviewer when another deleted reviewer is there", async () => {
+		const pr = await PullRequestModel.create({
+			sourceId: new Types.ObjectId(),
+			forkId: new Types.ObjectId(),
+			title: "Two deleted reviewers",
+			authorId: EVE,
+			reviewers: [
+				{ userId: DELETED_USER, decision: "approved" },
+				{ userId: ADA, decision: "approved" },
+				{ userId: EVE },
+			],
+		});
+		const res = await as(ADA).send("delete", "/users/me", { confirm: "ada" });
+		expect(res.status, JSON.stringify(res.body)).toBe(200);
+		const after = await PullRequestModel.findById(pr._id).lean();
+		expect(after?.reviewers.map((entry) => entry.userId)).toEqual([
+			DELETED_USER,
+			EVE,
+		]);
+	});
 });

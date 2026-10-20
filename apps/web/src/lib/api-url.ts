@@ -22,6 +22,11 @@ export interface LoginOptions {
 	prompt?: "create" | "none";
 	/** Language the IdP pages should use (sent on as `ui_locales`). */
 	locale?: Locale;
+	/**
+	 * The visitor chose to make a new account after theirs was deleted;
+	 * without it the callback stops at that choice.
+	 */
+	recreate?: boolean;
 }
 
 /** Only root-relative in-app paths are allowed back (no open redirect). */
@@ -33,6 +38,7 @@ export function loginUrl({
 	returnTo,
 	prompt,
 	locale,
+	recreate,
 }: LoginOptions = {}): string {
 	const params: string[] = [];
 	if (returnTo && isSafeReturnPath(returnTo)) {
@@ -40,6 +46,7 @@ export function loginUrl({
 	}
 	if (prompt) params.push(`prompt=${prompt}`);
 	if (locale) params.push(`locale=${encodeURIComponent(locale)}`);
+	if (recreate) params.push("recreate=1");
 	const query = params.length > 0 ? `?${params.join("&")}` : "";
 	return apiUrl(`/auth/login${query}`);
 }

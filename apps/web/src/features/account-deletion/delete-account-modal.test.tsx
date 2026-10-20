@@ -125,4 +125,53 @@ describe("DeleteAccountModal", () => {
 		).toBeInTheDocument();
 		expect(navigation.reloadAt).not.toHaveBeenCalled();
 	});
+
+	it("treats a lost answer as done once the session is gone", async () => {
+		let deleted = false;
+		mockFetch({
+			"DELETE /api/v1/users/me": (call) => {
+				if (call.query.get("dryRun") === "true") return { body: summary() };
+				deleted = true;
+				// The proxy gave up before the deletion answered.
+				return { status: 504, body: { error: { code: "X", message: "x" } } };
+			},
+			"GET /api/v1/users/me": () =>
+				deleted
+					? {
+							status: 401,
+							body: { error: { code: "UNAUTHENTICATED", message: "" } },
+						}
+					: { status: 200, body: {} },
+		});
+		renderModal();
+		const user = userEvent.setup();
+		await user.type(await screen.findByRole("textbox"), "minhanh");
+		await user.click(confirmButton());
+		await waitFor(() =>
+			expect(navigation.reloadAt).toHaveBeenCalledWith(
+				"/account/delete?deleted=1",
+			),
+		);
+	});
+
+	it("keeps the dialog open when the answer was lost but the account is still there", async () => {
+		mockFetch({
+			"DELETE /api/v1/users/me": (call) =>
+				call.query.get("dryRun") === "true"
+					? { body: summary() }
+					: {
+							status: 502,
+							body: {
+								error: { code: "BAD_GATEWAY", message: "Upstream failed." },
+							},
+						},
+			"GET /api/v1/users/me": { body: {} },
+		});
+		renderModal();
+		const user = userEvent.setup();
+		await user.type(await screen.findByRole("textbox"), "minhanh");
+		await user.click(confirmButton());
+		expect(await screen.findByText("Upstream failed.")).toBeInTheDocument();
+		expect(navigation.reloadAt).not.toHaveBeenCalled();
+	});
 });

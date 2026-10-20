@@ -1,3 +1,4 @@
+import { OperationError } from "@localman/operations";
 import type { Types } from "mongoose";
 import { CollectionModel } from "../collections/collection-model.js";
 import { IN_TRASH } from "../collections/trash-access.js";
@@ -92,25 +93,43 @@ export function countCollectionsOf(
 }
 
 /**
- * Deletes a workspace for good: every collection in it is purged at once
- * (nobody else could restore it), then, under the workspace lock, its
- * environments, globals, member rows and the workspace itself. A
- * collection created in between goes to the trash with the workspace
- * and the trash purge job removes it.
+ * Deletes a workspace for good. Under the workspace lock it checks again
+ * that no one else is a member (someone who joined since the plan makes
+ * the deletion stop with a retryable 409, nothing deleted), then moves
+ * every collection to the trash and deletes the environments, globals,
+ * member rows and the workspace. Only after that commit are its trashed
+ * collections purged (nobody else could restore them); one that fails is
+ * left to the trash purge job.
  */
 async function deleteWorkspaceForGood(
 	workspaceId: Types.ObjectId,
+	sub: string,
 ): Promise<void> {
-	const ids = await CollectionModel.find({ workspaceId }, { _id: 1 }).lean<
-		{ _id: Types.ObjectId }[]
-	>();
-	for (const { _id } of ids) await purgeCollection(_id, {});
 	await inWorkspaceTransaction(workspaceId, async (session) => {
+		const others = await WorkspaceMemberModel.countDocuments({
+			workspaceId,
+			status: "accepted",
+			userId: { $ne: sub },
+		}).session(session);
+		if (others > 0) throw workspaceChanged();
 		await trashWorkspaceCollections(workspaceId, DELETED_USER, session);
 		await deleteWorkspaceEnvironments(workspaceId, session);
 		await WorkspaceModel.deleteOne({ _id: workspaceId }, { session });
 		await WorkspaceMemberModel.deleteMany({ workspaceId }, { session });
 	});
+	const ids = await CollectionModel.find(
+		{ workspaceId, ...IN_TRASH },
+		{ _id: 1 },
+	).lean<{ _id: Types.ObjectId }[]>();
+	for (const { _id } of ids) await purgeCollection(_id);
+}
+
+function workspaceChanged(): OperationError {
+	return new OperationError(
+		409,
+		"ACCOUNT_DELETION_CONFLICT",
+		"A workspace changed while your account was being deleted; try again",
+	);
 }
 
 /**
@@ -123,7 +142,7 @@ export async function applyWorkspacePlan(
 	plan: WorkspacePlan,
 ): Promise<void> {
 	for (const workspace of plan.toDelete) {
-		await deleteWorkspaceForGood(workspace._id);
+		await deleteWorkspaceForGood(workspace._id, sub);
 	}
 	for (const access of plan.toLeave) {
 		await leaveWorkspace(access, sub, false);

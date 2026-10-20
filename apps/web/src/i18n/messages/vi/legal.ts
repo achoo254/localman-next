@@ -30,7 +30,7 @@ export const legal: Messages["legal"] = {
 		intro:
 			"Bạn có thể tự xoá tài khoản Localman và dữ liệu của nó bất cứ lúc nào, ngay trên web app. Trang này nói cách làm và điều gì sẽ xảy ra.",
 		deleted:
-			"Đã xoá tài khoản Localman của bạn. Đăng nhập lại sẽ tạo một tài khoản mới, trống.",
+			"Đã xoá tài khoản Localman của bạn. Nếu đăng nhập lại, bạn sẽ được hỏi trước khi tạo một tài khoản mới, trống.",
 		howTitle: "Cách xoá",
 		how: "- Đăng nhập Localman.\n- Trong menu tài khoản, mở <b>Tài khoản và hạn mức</b>.\n- Ở mục <b>Xoá tài khoản</b>, chọn <b>Xoá tài khoản…</b>, xem lại những gì sẽ bị xoá, gõ username của bạn rồi xác nhận.",
 		openAccount: "Tới trang Tài khoản",
@@ -40,7 +40,7 @@ export const legal: Messages["legal"] = {
 		blocked:
 			"Nếu bạn là Admin duy nhất của một workspace team còn thành viên khác, hãy cho một thành viên khác làm Admin (hoặc gỡ các thành viên khác) trước. Màn hình xoá liệt kê các workspace đó.",
 		keptTitle: "Những gì còn lại, và trong bao lâu",
-		kept: "- Cơ sở dữ liệu được sao lưu mỗi đêm và giữ 14 bản gần nhất, nên dữ liệu đã xoá có thể còn trong bản sao lưu tối đa 14 ngày.\n- Thông báo người khác đã nhận về việc bạn làm giữ nguyên chữ lúc gửi cho tới khi hết hạn (90 ngày).\n- Tin bạn gửi qua form góp ý khi chưa đăng nhập không gắn được với tài khoản của bạn; hãy yêu cầu xoá qua form.",
+		kept: "- Chỉ mã băm của mã tài khoản, để khi đăng nhập lại bạn được hỏi trước khi tạo tài khoản mới và không được thêm một lần hạn mức mở rộng.\n- Cơ sở dữ liệu được sao lưu mỗi đêm và giữ 14 bản gần nhất, nên dữ liệu đã xoá có thể còn trong bản sao lưu tối đa 14 ngày.\n- Thông báo người khác đã nhận về việc bạn làm giữ nguyên chữ lúc gửi cho tới khi hết hạn (90 ngày).\n- Tin bạn gửi qua form góp ý khi chưa đăng nhập không gắn được với tài khoản của bạn; hãy yêu cầu xoá qua form.",
 		idpTitle: "Tài khoản đăng nhập {idpName}",
 		idp: "Localman không giữ mật khẩu của bạn: bạn đăng nhập bằng tài khoản {idpName}, tài khoản mà các ứng dụng khác cũng có thể dùng. Xoá tài khoản Localman không xoá tài khoản đó. Muốn xoá cả nó, hãy vào <idpDelete>trang tài khoản {idpName}</idpDelete>.",
 		noAccessTitle: "Yêu cầu qua email, không cần đăng nhập",

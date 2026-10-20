@@ -30,6 +30,15 @@ test("a user deletes their account from Account and stays signed out", async ({
 	expect((await probe).status()).toBe(401);
 	await expect(page.getByTestId("topbar-login")).toBeVisible();
 	expect(new URL(page.url()).pathname).toBe("/docs/quick-start");
+
+	// Signing in again with the live IdP session stops at a choice; only the
+	// click makes a new, empty account.
+	await page.getByTestId("topbar-login").click();
+	await page.waitForURL("**/?authError=account_deleted");
+	await expect(page.getByTestId("landing-auth-error")).toBeVisible();
+	await page.getByTestId("landing-auth-error-recreate").click();
+	await page.waitForURL("**/projects");
+	await expect(page.getByTestId("projects-add")).toBeVisible();
 });
 
 test("the legal pages and the deletion page open without signing in", async ({

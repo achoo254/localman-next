@@ -12,6 +12,7 @@ import { deletePushSubscriptionsOfSessions } from "../notifications/push-subscri
 import { syncUserFromUserInfo } from "../users/user-sync.js";
 import { authCookies } from "./auth-cookies.js";
 import { createAuthRouter } from "./auth-routes.js";
+import { clearCookiesOnAccountDeletion } from "./deleted-account-sign-in.js";
 import type { OidcApi } from "./oidc-api.js";
 import { OidcClient } from "./oidc-client.js";
 import { SessionRefresher } from "./session-refresher.js";
@@ -130,6 +131,7 @@ export function createAuthModule(
 		loginLimitPerMinute: settings.loginLimitPerMinute,
 		serverLimitPerMinute: settings.serverLimitPerMinute,
 	});
+	router.use(clearCookiesOnAccountDeletion(cookies));
 	// Both authenticate otherwise (signed token, Basic + SET). The audit path
 	// is exempt even when unconfigured so it answers 404, not 403.
 	const csrfExempt = [

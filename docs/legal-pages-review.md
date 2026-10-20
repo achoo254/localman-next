@@ -41,6 +41,7 @@ Tên miền, tên tài khoản IdP và host Tunelo trong chữ là tham số the
 | P29 | Quyền: xuất collection/environment, sửa/xoá, chọn kênh thông báo, xoá tài khoản ở Tài khoản; xoá tài khoản IdP ở trang IdP | `system-architecture.md` (export v2.1, `exportEnvironment`, tuỳ chọn thông báo); ADR-0007; `auth-next/src/account-portal/account-delete-page.ts` (`/account/delete`) |
 | P31 | "Máy chủ đặt tại Việt Nam", chỉ hiện cho dịch vụ hoandat.com (`isPrimaryService`) | Jev duyệt 20/10/2026: whois `103.72.98.65` → VN, iNET; IP server ở `docs/deployment-guide.md` |
 | P32 | Email liên hệ `quocdat254@gmail.com` (trên `/privacy`, `/terms`, `/account/delete`) | Jev duyệt 20/10/2026: địa chỉ công khai sẵn trên trang quyền riêng tư của Miu và trang của chat; `SUPPORT_EMAIL` ở `apps/web/src/lib/legal.ts` |
+| P33 | Sau khi xoá chỉ giữ mã băm của account ID, để đăng nhập lại được hỏi trước khi tạo tài khoản mới và không được thêm hạn mức mở rộng | ADR-0007 mục 9 (Jev 20/10/2026); `apps/api/src/modules/account-deletion/deleted-account-model.ts` |
 | P30 | Bảo mật: HTTPS; cookie phiên HttpOnly; token đăng nhập, secret, link token Tunelo mã hoá; token lời mời, access key, MCP token chỉ lưu hash | `system-architecture.md` "Phiên", "Environments và biến", "`tunelo_links`", "Cộng tác viên" (SHA-256), "Chia sẻ công khai" (`collection_access_keys` chỉ SHA-256); `mcp/mcp-token-model.ts` |
 
 ## Điều khoản (`legalTerms`)
@@ -70,7 +71,7 @@ Tên miền, tên tài khoản IdP và host Tunelo trong chữ là tham số the
 | D4 | Chặn khi là Admin duy nhất của workspace có thành viên khác | ADR-0007 mục 3 |
 | D5 | Backup 14 ngày; thông báo người khác đã nhận giữ chữ tới 90 ngày; tin góp ý khi chưa đăng nhập không gắn được tài khoản | P28, P23; ADR-0007 "Đánh đổi" |
 | D6 | Tài khoản IdP không bị xoá, link tới trang xoá của IdP | ADR-0007 mục 2 |
-| D7 | Đăng nhập lại sau khi xoá tạo tài khoản mới rỗng | ADR-0007 "Đánh đổi" |
+| D7 | Đăng nhập lại sau khi xoá được hỏi trước khi tạo tài khoản mới rỗng; giữ mã băm account ID | ADR-0007 mục 9 |
 | D8 | Không đăng nhập được: gửi email tới địa chỉ liên hệ kèm username Localman và email tài khoản IdP (hoặc dùng form); không cam kết thời hạn | Jev duyệt 20/10/2026; P32 |
 | D9 | Liên hệ: email (P32) hoặc form "Góp ý / Liên hệ" | P32; `system-architecture.md` "Form góp ý / liên hệ" |
 | D10 | Modal xoá nêu số project đang chia sẻ và số người mất quyền vào chúng (`sharedProjects`, `projectMembers` của dry run) | ADR-0007 mục 4 (Jev 0.97) |

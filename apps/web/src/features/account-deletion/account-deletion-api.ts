@@ -1,4 +1,4 @@
-import { apiRequest, withDryRun } from "../../lib/api-client";
+import { ApiError, apiRequest, withDryRun } from "../../lib/api-client";
 import {
 	expectArray,
 	expectNumber,
@@ -54,7 +54,30 @@ export async function previewAccountDeletion(): Promise<AccountDeletionSummary> 
 	);
 }
 
-/** Deletes the account; `confirm` is the username typed back. */
+/**
+ * Whether the deletion went through although its answer was lost: a
+ * long deletion can outlive the proxy's timeout (network error or 5xx),
+ * yet the account is gone once the session no longer works (401).
+ */
+async function deletedAnyway(error: unknown): Promise<boolean> {
+	if (!(error instanceof ApiError)) return false;
+	if (error.status !== 0 && error.status < 500) return false;
+	try {
+		await apiRequest("/api/v1/users/me", { redirectOnUnauthorized: false });
+		return false;
+	} catch (check) {
+		return check instanceof ApiError && check.status === 401;
+	}
+}
+
+/**
+ * Deletes the account; `confirm` is the username typed back. Resolves
+ * also when the answer was lost but the account is gone.
+ */
 export async function deleteAccount(confirm: string): Promise<void> {
-	await apiRequest(PATH, { method: "DELETE", body: { confirm } });
+	try {
+		await apiRequest(PATH, { method: "DELETE", body: { confirm } });
+	} catch (error) {
+		if (!(await deletedAnyway(error))) throw error;
+	}
 }

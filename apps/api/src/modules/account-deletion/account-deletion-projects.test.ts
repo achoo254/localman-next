@@ -2,11 +2,15 @@ import { describe, expect, it } from "vitest";
 import "../../db/register-models.js";
 import { as } from "../../test-support/dashboard-test-app.js";
 import { CollaboratorModel } from "../collaborators/collaborator-model.js";
+import { MemberRemovalModel } from "../collaborators/member-removal-model.js";
 import {
 	BOB,
 	OWNER,
+	accept,
 	addMember,
+	collaboratorsPath,
 	createProject,
+	magicToken,
 	useCollaboratorTestDb,
 } from "../collaborators/testing/collaborator-fixture.js";
 import { ProjectModel } from "../projects/project-model.js";
@@ -82,5 +86,30 @@ describe("account deletion and mock projects", () => {
 		expect(await ProjectModel.exists({ _id: owned })).toBeNull();
 		expect(await ResourceModel.countDocuments({ projectId: owned })).toBe(0);
 		expect(await UserModel.exists({ sub: OWNER })).toBeNull();
+	});
+
+	it("keeps the owner's removal of a member who deletes their account", async () => {
+		const projectId = await createProject(OWNER, "Kept out");
+		const link = await magicToken(OWNER, projectId);
+		expect((await accept(BOB, link)).status).toBe(200);
+		const row = await CollaboratorModel.findOne({
+			projectId,
+			inviteeUserId: BOB,
+		}).lean();
+		const removed = await as(OWNER).send(
+			"delete",
+			collaboratorsPath(projectId, `/${row?._id.toHexString()}`),
+		);
+		expect(removed.status).toBe(200);
+
+		const res = await as(BOB).send("delete", "/users/me", { confirm: "bob" });
+		expect(res.status, JSON.stringify(res.body)).toBe(200);
+		expect(await MemberRemovalModel.countDocuments({ userSub: BOB })).toBe(1);
+
+		// The same IdP account signs in again: the magic link still refuses it.
+		await UserModel.create({ sub: BOB, username: "bob" });
+		const again = await accept(BOB, link);
+		expect(again.status).toBe(403);
+		expect(again.body.error.code).toBe("REMOVED_BY_OWNER");
 	});
 });

@@ -14,6 +14,7 @@ export interface LoginLinkProps
 export function LoginLink({
 	returnTo,
 	prompt,
+	recreate,
 	onClick,
 	...rest
 }: LoginLinkProps) {
@@ -21,9 +22,13 @@ export function LoginLink({
 		onClick?.(event);
 		if (event.defaultPrevented || !isPlainLeftClick(event)) return;
 		event.preventDefault();
-		navigateToLogin({ returnTo, prompt });
+		navigateToLogin({ returnTo, prompt, recreate });
 	}
 	return (
-		<a href={loginUrl({ returnTo, prompt })} onClick={handleClick} {...rest} />
+		<a
+			href={loginUrl({ returnTo, prompt, recreate })}
+			onClick={handleClick}
+			{...rest}
+		/>
 	);
 }

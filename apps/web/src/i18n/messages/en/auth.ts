@@ -21,6 +21,10 @@ export const auth = {
 			title: "Sign-in failed",
 			text: "Something went wrong while finishing sign-in. Please try again.",
 		},
+		account_deleted: {
+			title: "This Localman account was deleted",
+			text: "Your {idpName} account still works, but its Localman account and data were deleted. Signing in again creates a new, empty account.",
+		},
 		rate_limited: {
 			title: "Too many sign-in attempts",
 			text: "You tried to sign in too many times. Please wait a minute and try again.",
@@ -32,4 +36,6 @@ export const auth = {
 	},
 	/** Shown when the user has no name, username or email. */
 	accountFallback: "Account",
+	/** After `account_deleted`: signs in and makes a new, empty account. */
+	createNewAccount: "Create a new account",
 } as const;

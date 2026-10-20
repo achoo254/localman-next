@@ -20,6 +20,7 @@ const loginTransactionSchema = new Schema(
 		codeVerifier: { type: String, required: true },
 		returnTo: { type: String, required: true },
 		silent: { type: Boolean, default: false },
+		recreate: { type: Boolean, default: false },
 		expiresAt: { type: Date, required: true, expires: 0 },
 	},
 	{ collection: "login_transactions", versionKey: false },
@@ -38,12 +39,18 @@ export interface LoginTransaction {
 	readonly returnTo: string;
 	/** `prompt=none`: a refusal sends the browser back without an error. */
 	readonly silent: boolean;
+	/**
+	 * The visitor chose "Create a new account" after a deletion: the
+	 * callback may make an account for an IdP subject deleted before.
+	 */
+	readonly recreate: boolean;
 }
 
 /** A new pending sign-in, not stored yet (see `saveLoginTransaction`). */
 export function newLoginTransaction(
 	returnTo: string,
 	silent: boolean,
+	recreate = false,
 ): LoginTransaction & { cookieValue: string } {
 	return {
 		cookieValue: randomBytes(32).toString("base64url"),
@@ -52,6 +59,7 @@ export function newLoginTransaction(
 		codeVerifier: oidc.randomPKCECodeVerifier(),
 		returnTo,
 		silent,
+		recreate,
 	};
 }
 
@@ -89,5 +97,6 @@ export async function consumeLoginTransaction(
 		codeVerifier: found.codeVerifier,
 		returnTo: found.returnTo,
 		silent: found.silent === true,
+		recreate: found.recreate === true,
 	};
 }

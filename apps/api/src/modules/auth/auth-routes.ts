@@ -14,6 +14,7 @@ import {
 	redirectWithError,
 } from "./auth-redirects.js";
 import { registerBackchannelLogout } from "./backchannel-logout-route.js";
+import { refusedAsDeleted } from "./deleted-account-sign-in.js";
 import {
 	consumeLoginTransaction,
 	newLoginTransaction,
@@ -66,7 +67,8 @@ export function createAuthRouter(options: AuthRoutesOptions): Router {
 				}
 				res.cookie(cookies.ssoTried.name, "1", cookies.ssoTried.options);
 			}
-			const transaction = newLoginTransaction(returnTo, silent);
+			const recreate = req.query.recreate === "1";
+			const transaction = newLoginTransaction(returnTo, silent, recreate);
 			let url: URL;
 			try {
 				url = await oidc.authorizationUrl({
@@ -135,6 +137,7 @@ export function createAuthRouter(options: AuthRoutesOptions): Router {
 			const sub = tokens.claims?.sub;
 			if (!sub) throw new Error("ID token has no subject");
 			const sid = tokens.claims?.sid;
+			if (await refusedAsDeleted(res, cookies, sub, transaction)) return;
 			try {
 				await syncUserFromUserInfo(
 					await oidc.userInfo(tokens.accessToken, sub),

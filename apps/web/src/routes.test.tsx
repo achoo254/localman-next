@@ -115,6 +115,21 @@ describe("route guards", () => {
 		expect(await screen.findByRole("alert")).toHaveTextContent(title);
 	});
 
+	it("offers to make a new account after a deletion, only on a click", async () => {
+		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
+		renderRoutes(routes, "/?authError=account_deleted");
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"This Localman account was deleted",
+		);
+		expect(
+			screen.getByRole("link", { name: "Create a new account" }),
+		).toHaveAttribute(
+			"href",
+			expect.stringMatching(/\/auth\/login\?.*recreate=1/),
+		);
+		expect(navigateToLogin).not.toHaveBeenCalled();
+	});
+
 	it("ignores unknown authError values", async () => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		renderRoutes(routes, "/?authError=<script>");

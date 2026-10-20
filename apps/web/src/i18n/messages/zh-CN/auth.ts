@@ -21,6 +21,10 @@ export const auth: Messages["auth"] = {
 			title: "登录失败",
 			text: "完成登录时出错。请重试。",
 		},
+		account_deleted: {
+			title: "此 Localman 账号已删除",
+			text: "你的 {idpName} 账号仍可使用，但其 Localman 账号和数据已被删除。再次登录将创建一个新的空账号。",
+		},
 		rate_limited: {
 			title: "登录尝试次数过多",
 			text: "你尝试登录的次数过多，请等待一分钟后重试。",
@@ -31,4 +35,5 @@ export const auth: Messages["auth"] = {
 		},
 	},
 	accountFallback: "账号",
+	createNewAccount: "创建新账号",
 };

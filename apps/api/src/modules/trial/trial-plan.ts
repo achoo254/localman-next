@@ -1,6 +1,7 @@
 import { OperationError } from "@localman/operations";
 import { type PlanId, TRIAL_DAYS } from "@localman/shared";
 import { type Logger, createLogger } from "../../logger.js";
+import { wasAccountDeleted } from "../account-deletion/deleted-account-model.js";
 import { effectivePlan } from "../billing/plan-guard.js";
 import { signedOut } from "../users/me-view.js";
 import { UserModel } from "../users/user-model.js";
@@ -70,6 +71,8 @@ export async function startTrial(sub: string, now: Date): Promise<Date> {
  * that has not ended). One conditional write, so repeated or concurrent
  * calls start it at most once. `null` when nothing changed. Never throws:
  * a failed write must not fail the sign-in, and the next refresh retries.
+ * An account made again after a deletion of the same IdP account gets
+ * none (docs/decisions/0007): deleting is not a way to a second period.
  */
 export async function autoStartTrial(
 	sub: string,
@@ -78,6 +81,7 @@ export async function autoStartTrial(
 	const endsAt = saigonDayEndAfter(now, TRIAL_DAYS);
 	let modifiedCount: number;
 	try {
+		if (await wasAccountDeleted(sub)) return null;
 		({ modifiedCount } = await UserModel.updateOne(
 			{
 				sub,

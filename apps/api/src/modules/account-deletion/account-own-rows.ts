@@ -7,7 +7,6 @@ import { AuditEventModel } from "../audit/audit-event-model.js";
 import { SessionModel } from "../auth/session-model.js";
 import { UsageCounterModel } from "../billing/usage-counter-model.js";
 import { CollaboratorModel } from "../collaborators/collaborator-model.js";
-import { MemberRemovalModel } from "../collaborators/member-removal-model.js";
 import { CollectionFavoriteModel } from "../collections/collection-favorite-model.js";
 import { ActiveEnvironmentModel } from "../environments/active-environment-model.js";
 import { LocalVariableValueModel } from "../environments/local-variable-value-model.js";
@@ -55,7 +54,15 @@ const OWN_ROWS: ReadonlyArray<readonly [string, Erase]> = [
 	],
 	[
 		"feedback (pro interest)",
-		(sub) => FeedbackModel.deleteMany({ type: "pro_interest", userSub: sub }),
+		async (sub) => {
+			// Rows keyed by an email someone else owns keep their row and
+			// lose only this account's submissions.
+			await FeedbackModel.updateMany(
+				{ type: "pro_interest", "submissions.userSub": sub },
+				{ $pull: { submissions: { userSub: sub } } },
+			);
+			return FeedbackModel.deleteMany({ type: "pro_interest", userSub: sub });
+		},
 	],
 	[
 		"feedback (contact)",
@@ -90,12 +97,13 @@ const OWN_ROWS: ReadonlyArray<readonly [string, Erase]> = [
 		(sub) =>
 			WorkspaceMemberModel.deleteMany({ userId: sub, status: "pending" }),
 	],
-	// Membership of other people's mock projects ends.
+	// Membership of other people's mock projects ends. `member_removals`
+	// stays: it is the owner's record that this person may not rejoin
+	// through the magic link, and the same IdP account can sign in again.
 	[
 		"collaborators",
 		(sub) => CollaboratorModel.deleteMany({ inviteeUserId: sub }),
 	],
-	["member_removals", (sub) => MemberRemovalModel.deleteMany({ userSub: sub })],
 	// Publishing stops anyway once its creator holds no role.
 	[
 		"collection_links",

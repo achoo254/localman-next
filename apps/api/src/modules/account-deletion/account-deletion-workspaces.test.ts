@@ -20,6 +20,7 @@ import { UserModel } from "../users/user-model.js";
 import { WorkspaceMemberModel } from "../workspaces/workspace-member-model.js";
 import { WorkspaceModel } from "../workspaces/workspace-model.js";
 import { DELETED_USER } from "./account-references.js";
+import { applyWorkspacePlan, planWorkspaces } from "./account-workspaces.js";
 
 useCollectionTestDb();
 
@@ -129,5 +130,26 @@ describe("account deletion and workspaces", () => {
 			deletedBy: DELETED_USER,
 			trashEditors: [EVE],
 		});
+	});
+
+	it("stops, deleting nothing, when someone joined a workspace since the plan", async () => {
+		const solo = await teamWorkspace({ [ADA]: "admin" }, "Solo");
+		const kept = await createAs(ADA, solo.toHexString(), { name: "Kept" });
+		const plan = await planWorkspaces(ADA);
+		expect(plan.toDelete).toHaveLength(1);
+		await WorkspaceMemberModel.create({
+			workspaceId: solo,
+			userId: EVE,
+			role: "editor",
+			status: "accepted",
+			invitedBy: ADA,
+		});
+		await expect(applyWorkspacePlan(ADA, plan)).rejects.toMatchObject({
+			status: 409,
+			code: "ACCOUNT_DELETION_CONFLICT",
+		});
+		expect(await WorkspaceModel.exists({ _id: solo })).toBeTruthy();
+		const collection = await CollectionModel.findById(kept.id).lean();
+		expect(collection?.deletedAt).toBeUndefined();
 	});
 });

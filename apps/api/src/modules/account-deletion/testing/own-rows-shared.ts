@@ -2,7 +2,6 @@ import { Types } from "mongoose";
 import { AccessRequestModel } from "../../access/access-request-model.js";
 import { ElementRoleModel } from "../../access/element-role-model.js";
 import { CollaboratorModel } from "../../collaborators/collaborator-model.js";
-import { MemberRemovalModel } from "../../collaborators/member-removal-model.js";
 import { CollectionFavoriteModel } from "../../collections/collection-favorite-model.js";
 import { ActiveEnvironmentModel } from "../../environments/active-environment-model.js";
 import { LocalVariableValueModel } from "../../environments/local-variable-value-model.js";
@@ -103,17 +102,6 @@ export const SHARED_ROWS: readonly OwnRow[] = [
 				invitedBy: "acc_someone",
 			}),
 		(sub) => CollaboratorModel.countDocuments({ inviteeUserId: sub }),
-	],
-	[
-		"member_removals",
-		(sub) =>
-			MemberRemovalModel.create({
-				projectId: new Types.ObjectId(),
-				userSub: sub,
-				removedBy: "acc_someone",
-				removedAt: new Date(),
-			}),
-		(sub) => MemberRemovalModel.countDocuments({ userSub: sub }),
 	],
 	[
 		"collection_links",

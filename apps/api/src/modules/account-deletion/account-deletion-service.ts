@@ -24,6 +24,11 @@ import {
 	planWorkspaces,
 	purgeOrphanedTrash,
 } from "./account-workspaces.js";
+import {
+	markAccountDeleted,
+	releaseDeletionLock,
+	takeDeletionLock,
+} from "./deleted-account-model.js";
 
 /** What deleting the account would do (the dry run), or did. */
 export interface AccountDeletionSummary {
@@ -85,12 +90,21 @@ export async function previewAccountDeletion(
 	};
 }
 
+function inProgress(): OperationError {
+	return new OperationError(
+		409,
+		"ACCOUNT_DELETION_IN_PROGRESS",
+		"Your account is already being deleted; wait a moment and reload",
+	);
+}
+
 /**
- * Deletes the account's Localman data (docs/decisions/0007): refuses
- * while a team workspace would be left without an Admin; then ends every
- * session, deletes owned projects and workspaces it is alone in, leaves
- * the others, deletes its own rows, anonymizes it in team content,
- * revokes its Tunelo links and deletes the user row last. Every step is
+ * Deletes the account's Localman data (docs/decisions/0007), one deletion
+ * per account at a time (a second one answers 409 in progress). Nothing
+ * is touched before the workspace check passes on the plan that is then
+ * applied: workspaces first (each re-checked under its lock), then every
+ * session, owned projects, own rows, anonymization, Tunelo links, and
+ * the user row last, after the hashed tombstone. Every step is
  * idempotent: a deletion that fails half way leaves the user row, so
  * signing in again and deleting again finishes it. The IdP account is
  * not touched (it is deleted at the IdP).
@@ -98,24 +112,34 @@ export async function previewAccountDeletion(
 export async function deleteAccount(
 	sub: string,
 ): Promise<AccountDeletionSummary> {
-	const summary = await previewAccountDeletion(sub);
-	if (summary.blockedWorkspaces.length > 0) {
-		throw blocked(summary.blockedWorkspaces.length);
+	if (!(await takeDeletionLock(sub))) throw inProgress();
+	try {
+		return await deleteLocked(sub);
+	} finally {
+		await releaseDeletionLock(sub);
 	}
+}
+
+async function deleteLocked(sub: string): Promise<AccountDeletionSummary> {
+	const summary = await previewAccountDeletion(sub);
+	const plan = await planWorkspaces(sub);
+	if (plan.blocked.length > 0) throw blocked(plan.blocked.length);
+	await applyWorkspacePlan(sub, plan);
 	const counts: ErasedCount[] = [...(await revokeSessions(sub))];
 	forgetKnownSubject(sub);
 	for (const project of await ownedProjects(sub)) {
 		await deleteProjectCascade(project);
 	}
-	const plan = await planWorkspaces(sub);
-	if (plan.blocked.length > 0) throw blocked(plan.blocked.length);
-	await applyWorkspacePlan(sub, plan);
 	const purgedTrash = await purgeOrphanedTrash(sub);
 	counts.push(...(await deleteOwnRows(sub)));
 	counts.push(...(await anonymizeReferences(sub)));
 	counts.push(await revokeTunnelLinks(sub));
 	await deleteOwnerLock(sub);
+	await markAccountDeleted(sub);
 	const user = await UserModel.deleteOne({ sub });
+	// Again after the row is gone: an MCP request in between would have
+	// cached the subject as known for its TTL.
+	forgetKnownSubject(sub);
 	counts.push({ collection: "users", count: user.deletedCount });
 	accountDeletionLog().info(
 		{

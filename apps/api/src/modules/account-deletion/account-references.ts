@@ -105,15 +105,7 @@ const REFERENCES: ReadonlyArray<readonly [string, Rewrite]> = [
 	["pull_requests.authorId", replaceIn(pullRequests, "authorId")],
 	["pull_requests.mergedBy", replaceIn(pullRequests, "mergedBy")],
 	["pull_requests.notified", pullFrom(pullRequests, "notified")],
-	[
-		"pull_requests.reviewers",
-		(sub) =>
-			PullRequestModel.updateMany(
-				{ "reviewers.userId": sub },
-				{ $set: { "reviewers.$[mine].userId": DELETED_USER } },
-				{ ...KEEP_TIMESTAMPS, arrayFilters: [{ "mine.userId": sub }] },
-			),
-	],
+	["pull_requests.reviewers", anonymizeReviewer],
 	[
 		"workspace_members.invitedBy",
 		replaceIn(
@@ -158,6 +150,28 @@ const REFERENCES: ReadonlyArray<readonly [string, Rewrite]> = [
 		replaceIn((f, u) => TrialExtensionModel.updateMany(f, u), "decidedBy"),
 	],
 ];
+
+/**
+ * A reviewer entry becomes `DELETED_USER`, but a pull request keeps at
+ * most one such entry: where one exists already (another deleted
+ * reviewer), this account's entry is removed, so neither the list nor its
+ * approvals hold the same anonymous reviewer twice.
+ */
+async function anonymizeReviewer(
+	sub: string,
+): Promise<{ modifiedCount: number }> {
+	const dropped = await PullRequestModel.updateMany(
+		{ "reviewers.userId": { $all: [sub, DELETED_USER] } },
+		{ $pull: { reviewers: { userId: sub } } },
+		KEEP_TIMESTAMPS,
+	);
+	const renamed = await PullRequestModel.updateMany(
+		{ "reviewers.userId": sub },
+		{ $set: { "reviewers.$[mine].userId": DELETED_USER } },
+		{ ...KEEP_TIMESTAMPS, arrayFilters: [{ "mine.userId": sub }] },
+	);
+	return { modifiedCount: dropped.modifiedCount + renamed.modifiedCount };
+}
 
 /** Anonymizes the account in shared content; counts per field. */
 export async function anonymizeReferences(sub: string): Promise<ErasedCount[]> {

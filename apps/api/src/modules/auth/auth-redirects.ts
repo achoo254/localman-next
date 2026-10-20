@@ -8,7 +8,8 @@ export type AuthErrorCode =
 	| "login_expired"
 	| "login_failed"
 	| "idp_unavailable"
-	| "rate_limited";
+	| "rate_limited"
+	| "account_deleted";
 
 export function redirectWithError(res: Response, code: AuthErrorCode): void {
 	res.redirect(303, `/?authError=${code}`);
