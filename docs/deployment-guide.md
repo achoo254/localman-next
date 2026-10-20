@@ -125,7 +125,7 @@ seq 1 100 | xargs -P 20 -I % curl -s -o /dev/null -w '%{http_code}\n' "$MOCK_URL
 
 Bật theo thứ tự, mỗi bước là thao tác trên prod chỉ làm khi được yêu cầu:
 
-1. IdP đã cài `00-tenants-http.conf`, `tenants-acme.conf` và provisioner (repo `hoandat-auth`, `docs/deployment-guide.md`).
+1. IdP đã cài `00-tenants-http.conf`, `tenants-acme.conf` và provisioner (repo `auth-next`, `docs/deployment-guide.md`).
 2. Lấy khoá `localman-web` từ IdP (`node --env-file=.env dist/app-client-key.mjs localman-web <file>`) và secret `localman:` của `INTERNAL_API_CREDENTIALS`; điền `IDP_INTERNAL_URL`, `IDP_INTERNAL_SECRET`, `IDP_LOOPBACK_URL`, `LOCALMAN_CLIENT_KEY` vào `/opt/localman/.env` (mẫu ở `infra/localman/.env.production.example`), rồi chạy lại `bash /opt/localman/infra/switch-release.sh "$(basename "$(readlink /opt/localman/current)")"`: nó cài `localman-tenants.conf` (chỉ khi có cả map của IdP lẫn `IDP_INTERNAL_URL`), chạy `nginx -t`, reload nginx và API. Lần khởi động này gỡ index cũ không có `tenantId`. Từ đó `switch-release.sh` từ chối quay về release chưa có tenant cho tới khi bỏ `IDP_INTERNAL_URL`.
 3. Kiểm: `curl -s --resolve localman.<domain>:443:127.0.0.1 https://localman.<domain>/api/v1/tenant` trả tên và domain của tenant; host không phải tenant nhận 421.
 

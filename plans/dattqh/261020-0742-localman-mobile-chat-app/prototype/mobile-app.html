@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Localman Mobile prototype</title>
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   LOCALMAN DESIGN TOKENS
+   The ONLY file in the repo allowed to hold colour literals and raw px
+   spacing values. Every other stylesheet and component references these
+   custom properties (enforced by `pnpm check:tokens`).
+
+   Colour source: Radix Colors v3 (@radix-ui/colors@3.0.0, MIT).
+     accent violet · neutral slate · secondary accent plum
+     success green · warning amber · error red · info blue
+   Step usage: 1–2 app background · 3–5 component background ·
+   6–8 borders · 9–10 solid fills · 11 low-contrast text and icons ·
+   12 high-contrast text. Dark values come from the matching *Dark scale.
+
+   HTTP method / data-viz labels use step 11 of a hue; the semantic
+   status tokens stay reserved for alerts, badges and destructive actions:
+     GET → --c-viz-green    POST → --c-viz-amber   PUT → --c-viz-blue
+     PATCH → --c-viz-violet DELETE → --c-viz-red   HEAD/OPTIONS → --c-viz-grey
+     --c-viz-cyan: example rows and environment colour dots only.
+   Diff add/remove use viz-green / viz-red tints.
+
+   Soft labels (text on a tinted background: badges, method chips, route
+   pills) use the matching *-text token. Light = step 12 of the scale,
+   because step 11 drops below 4.5:1 on an 8–12% tint; dark = step 11.
+     --c-viz-{green,amber,blue,cyan,violet,red,grey}-text
+     --c-{success,warning,error,info}-text
+   Plain step-11 text stays on solid surfaces (≥4.6:1 on white). Do not
+   put --c-success / --c-warning text on --c-bg or --c-surface-subtle:
+   light green-11 / amber-11 drop to 4.49 / 4.38:1 on slate-2.
+
+   Text pairings: --c-on-primary sits on --c-primary-solid; --c-on-tone
+   sits on solid step-11 fills (error, success, warning, accent).
+
+   Blocks: [1] light (default) · [2] dark via OS preference unless
+   data-theme="light" · [3] dark forced by data-theme="dark".
+   Blocks [2] and [3] must stay identical; `pnpm check:tokens` fails
+   when they drift apart.
+   ===================================================================== */
+
+/* [1] light (default) + theme-independent scales */
+:root {
+	--font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+	--font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas,
+		monospace;
+
+	--radius-xs: 4px;
+	--radius-sm: 8px;
+	--radius-md: 12px;
+	--radius-lg: 16px;
+	--radius-xl: 24px;
+	--radius-full: 999px;
+
+	--dur-fast: 150ms;
+	--dur-base: 200ms;
+	--dur-slow: 300ms;
+	--ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+	--ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+	--ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
+	/* Entrance travel distances: modal slides in from -20px, popovers and
+	   toasts from one or two spacing steps. */
+	--motion-modal-offset: -20px;
+
+	--space-1: 4px;
+	--space-2: 8px;
+	--space-3: 12px;
+	--space-4: 16px;
+	--space-5: 24px;
+	--space-6: 32px;
+	--space-7: 48px;
+	--space-8: 64px;
+	--space-9: 96px;
+	--gutter: 16px;
+	--container: 1120px;
+	--topbar-h: 64px;
+	/* Modals sit this far below the viewport top. */
+	--modal-offset-top: min(8vh, 72px);
+	/* Tabler outline icons render at this stroke width. */
+	--icon-stroke: 1.5;
+	/* Signature background grid cell. */
+	--grid-size: 100px;
+
+	color-scheme: light;
+	--c-bg: #f9f9fb; /* slate-2 */
+	--c-grid: #e8e8ec; /* slate-4 */
+	--c-surface: #ffffff;
+	--c-surface-subtle: #f9f9fb; /* slate-2 */
+	--c-text: #1c2024; /* slate-12 */
+	--c-text-muted: #60646c; /* slate-11 */
+	--c-icon-muted: #60646c; /* slate-11 */
+	--c-border-strong: #8b8d98; /* slate-9: form-control outlines, switch track */
+	--c-border: #cdced6; /* slate-7 */
+	--c-border-subtle: #d9d9e0; /* slate-6 */
+	--c-bar-track: #e8e8ec; /* slate-4 */
+	--c-primary: #6550b9; /* violet-11: text, icons, borders, tints */
+	--c-primary-solid: #6e56cf; /* violet-9 */
+	--c-primary-solid-hover: #654dc4; /* violet-10 */
+	--c-on-primary: #ffffff;
+	--c-accent: #953ea3; /* plum-11 */
+	--c-info: #0d74ce; /* blue-11 */
+	--c-success: #218358; /* green-11 */
+	--c-warning: #ab6400; /* amber-11 */
+	--c-error: #ce2c31; /* red-11 */
+	--c-on-tone: #ffffff;
+	--c-success-text: #193b2d; /* green-12 */
+	--c-warning-text: #4f3422; /* amber-12 */
+	--c-error-text: #641723; /* red-12 */
+	--c-info-text: #113264; /* blue-12 */
+	--c-backdrop: rgb(28 32 36 / 0.45); /* slate-12 */
+	--shadow-sm: 0 1px 2px rgb(28 32 36 / 0.05), 0 1px 3px rgb(28 32 36 / 0.06);
+	--shadow-md: 0 8px 24px -6px rgb(28 32 36 / 0.14);
+	--shadow-lg: 0 24px 48px -12px rgb(28 32 36 / 0.3);
+	/* Derived from the colour tokens, so they follow the active theme. */
+	--shadow-glow-primary: 0 6px 16px -6px
+		color-mix(in srgb, var(--c-primary) 60%, transparent);
+	--shadow-glow-error: 0 6px 16px -6px
+		color-mix(in srgb, var(--c-error) 60%, transparent);
+	--shadow-focus-primary: 0 0 0 3px
+		color-mix(in srgb, var(--c-primary) 22%, transparent);
+	--shadow-focus-error: 0 0 0 3px
+		color-mix(in srgb, var(--c-error) 22%, transparent);
+
+	/* data-viz (light, step 11) */
+	--c-viz-green: #218358;
+	--c-viz-amber: #ab6400;
+	--c-viz-blue: #0d74ce;
+	--c-viz-violet: #6550b9;
+	--c-viz-red: #ce2c31;
+	--c-viz-grey: #60646c;
+	--c-viz-cyan: #107d98;
+	/* soft-label text (light, step 12) */
+	--c-viz-green-text: #193b2d;
+	--c-viz-amber-text: #4f3422;
+	--c-viz-blue-text: #113264;
+	--c-viz-cyan-text: #0d3c48;
+	--c-viz-violet-text: #2f265f;
+	--c-viz-red-text: #641723;
+	--c-viz-grey-text: #1c2024;
+}
+
+@media (min-width: 768px) {
+	:root {
+		--gutter: 24px;
+	}
+}
+
+/* Dark scale map: bg slate-1 · grid slate-3 · surface slate-2 · text slate-12 ·
+   muted slate-11 · border-strong slate-9 · border slate-7 · subtle slate-6 ·
+   track slate-4 · primary violet-11 · solid violet-9 · solid hover uses the
+   light violet-10 (dark violet-10 drops a white label to 4.4:1) ·
+   accent plum-11 · info blue-11 · success green-11 · warning amber-11 ·
+   error red-11 · on-tone slate-1 · viz cyan-11 ·
+   every *-text token = step 11 in dark */
+
+/* [2] dark via OS preference unless the user forced light */
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		color-scheme: dark;
+		--c-bg: #111113;
+		--c-grid: #212225;
+		--c-surface: #18191b;
+		--c-surface-subtle: #111113;
+		--c-text: #edeef0;
+		--c-text-muted: #b0b4ba;
+		--c-icon-muted: #b0b4ba;
+		--c-border-strong: #696e77;
+		--c-border: #43484e;
+		--c-border-subtle: #363a3f;
+		--c-bar-track: #272a2d;
+		--c-primary: #baa7ff;
+		--c-primary-solid: #6e56cf;
+		--c-primary-solid-hover: #654dc4;
+		--c-on-primary: #ffffff;
+		--c-accent: #e796f3;
+		--c-info: #70b8ff;
+		--c-success: #3dd68c;
+		--c-warning: #ffca16;
+		--c-error: #ff9592;
+		--c-on-tone: #111113;
+		--c-success-text: #3dd68c;
+		--c-warning-text: #ffca16;
+		--c-error-text: #ff9592;
+		--c-info-text: #70b8ff;
+		--c-backdrop: rgb(0 0 0 / 0.65);
+		--shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+		--shadow-md: 0 8px 24px -6px rgb(0 0 0 / 0.6);
+		--shadow-lg: 0 24px 48px -12px rgb(0 0 0 / 0.8);
+		--c-viz-green: #3dd68c;
+		--c-viz-amber: #ffca16;
+		--c-viz-blue: #70b8ff;
+		--c-viz-violet: #baa7ff;
+		--c-viz-red: #ff9592;
+		--c-viz-grey: #b0b4ba;
+		--c-viz-cyan: #4ccce6;
+		--c-viz-green-text: #3dd68c;
+		--c-viz-amber-text: #ffca16;
+		--c-viz-blue-text: #70b8ff;
+		--c-viz-cyan-text: #4ccce6;
+		--c-viz-violet-text: #baa7ff;
+		--c-viz-red-text: #ff9592;
+		--c-viz-grey-text: #b0b4ba;
+	}
+}
+
+/* [3] dark forced by data-theme="dark" (keep identical to [2]) */
+:root[data-theme="dark"] {
+	color-scheme: dark;
+	--c-bg: #111113;
+	--c-grid: #212225;
+	--c-surface: #18191b;
+	--c-surface-subtle: #111113;
+	--c-text: #edeef0;
+	--c-text-muted: #b0b4ba;
+	--c-icon-muted: #b0b4ba;
+	--c-border-strong: #696e77;
+	--c-border: #43484e;
+	--c-border-subtle: #363a3f;
+	--c-bar-track: #272a2d;
+	--c-primary: #baa7ff;
+	--c-primary-solid: #6e56cf;
+	--c-primary-solid-hover: #654dc4;
+	--c-on-primary: #ffffff;
+	--c-accent: #e796f3;
+	--c-info: #70b8ff;
+	--c-success: #3dd68c;
+	--c-warning: #ffca16;
+	--c-error: #ff9592;
+	--c-on-tone: #111113;
+	--c-success-text: #3dd68c;
+	--c-warning-text: #ffca16;
+	--c-error-text: #ff9592;
+	--c-info-text: #70b8ff;
+	--c-backdrop: rgb(0 0 0 / 0.65);
+	--shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+	--shadow-md: 0 8px 24px -6px rgb(0 0 0 / 0.6);
+	--shadow-lg: 0 24px 48px -12px rgb(0 0 0 / 0.8);
+	--c-viz-green: #3dd68c;
+	--c-viz-amber: #ffca16;
+	--c-viz-blue: #70b8ff;
+	--c-viz-violet: #baa7ff;
+	--c-viz-red: #ff9592;
+	--c-viz-grey: #b0b4ba;
+	--c-viz-cyan: #4ccce6;
+	--c-viz-green-text: #3dd68c;
+	--c-viz-amber-text: #ffca16;
+	--c-viz-blue-text: #70b8ff;
+	--c-viz-cyan-text: #4ccce6;
+	--c-viz-violet-text: #baa7ff;
+	--c-viz-red-text: #ff9592;
+	--c-viz-grey-text: #b0b4ba;
+}
+
+:root[data-theme="light"] {
+	color-scheme: light;
+}
+
+/* Reduced motion: every duration token collapses to 1ms so components that
+   read the tokens stop animating without per-component overrides. */
+@media (prefers-reduced-motion: reduce) {
+	:root {
+		--dur-fast: 1ms;
+		--dur-base: 1ms;
+		--dur-slow: 1ms;
+	}
+}
+
+/* ---------- prototype styles (tokens only) ---------- */
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+	font-family: var(--font-sans);
+	background: var(--c-surface-subtle);
+	color: var(--c-text);
+	-webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+input, textarea { font: inherit; color: inherit; }
+.mono { font-family: var(--font-mono); }
+.muted { color: var(--c-text-muted); }
+
+.stage {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: var(--space-6);
+	max-width: var(--container);
+	margin: 0 auto;
+	padding: var(--space-6) var(--gutter);
+	align-items: start;
+}
+@media (max-width: 860px) {
+	.stage { grid-template-columns: 1fr; justify-items: center; }
+	.notes { order: 2; }
+}
+.notes h1 { font-size: 1.5rem; margin: 0 0 var(--space-2); }
+.notes p, .notes li { line-height: 1.55; color: var(--c-text-muted); font-size: 0.9375rem; }
+.notes h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c-text-muted); margin: var(--space-5) 0 var(--space-2); }
+.controls { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.chip-btn {
+	border: 1px solid var(--c-border);
+	background: var(--c-surface);
+	border-radius: var(--radius-full);
+	padding: var(--space-1) var(--space-3);
+	font-size: 0.8125rem;
+}
+.chip-btn[aria-pressed="true"] { background: var(--c-primary-solid); color: var(--c-on-primary); border-color: var(--c-primary-solid); }
+
+/* ---------- phone ---------- */
+.phone {
+	width: 390px;
+	max-width: 100%;
+	height: 812px;
+	border: 10px solid var(--c-text);
+	border-radius: 48px;
+	background: var(--c-bg);
+	overflow: hidden;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	box-shadow: var(--shadow-lg);
+}
+.statusbar {
+	height: 44px; flex: none;
+	display: flex; align-items: center; justify-content: space-between;
+	padding: 0 var(--space-5);
+	font-size: 0.8125rem; font-weight: 600;
+}
+.screen { flex: 1; display: none; flex-direction: column; min-height: 0; }
+.screen.on { display: flex; }
+
+.navbar {
+	flex: none;
+	display: flex; align-items: center; gap: var(--space-2);
+	padding: var(--space-2) var(--space-4);
+	border-bottom: 1px solid var(--c-border-subtle);
+	background: var(--c-surface);
+	min-height: 52px;
+}
+.navbar h2 { font-size: 1.0625rem; margin: 0; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.navbar .sub { display: block; font-size: 0.75rem; font-weight: 400; color: var(--c-text-muted); }
+.large-title { font-size: 1.75rem; font-weight: 700; padding: var(--space-3) var(--space-4) var(--space-2); margin: 0; }
+.icon-btn { width: 36px; height: 36px; border-radius: var(--radius-full); display: grid; place-items: center; color: var(--c-primary); }
+.icon-btn svg, .tab svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: var(--icon-stroke); fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+.search {
+	margin: 0 var(--space-4) var(--space-2);
+	background: var(--c-bar-track);
+	border-radius: var(--radius-sm);
+	padding: var(--space-2) var(--space-3);
+	color: var(--c-text-muted); font-size: 0.9375rem;
+}
+.scroll { flex: 1; overflow-y: auto; min-height: 0; }
+
+/* chat-list rows */
+.row {
+	display: flex; gap: var(--space-3); align-items: center;
+	padding: var(--space-3) var(--space-4);
+	width: 100%; text-align: left;
+	border-bottom: 1px solid var(--c-border-subtle);
+}
+.row:active { background: var(--c-surface); }
+.avatar {
+	width: 48px; height: 48px; flex: none; border-radius: var(--radius-full);
+	display: grid; place-items: center; font-weight: 700;
+	background: var(--c-surface); border: 1px solid var(--c-border); color: var(--c-primary);
+}
+.avatar.sm { width: 36px; height: 36px; font-size: 0.8125rem; }
+.row-main { flex: 1; min-width: 0; }
+.row-top { display: flex; justify-content: space-between; gap: var(--space-2); }
+.row-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-time { font-size: 0.75rem; color: var(--c-text-muted); flex: none; }
+.row-preview { font-size: 0.875rem; color: var(--c-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.badge {
+	min-width: 20px; height: 20px; border-radius: var(--radius-full);
+	background: var(--c-primary-solid); color: var(--c-on-primary);
+	font-size: 0.6875rem; font-weight: 700; display: inline-grid; place-items: center; padding: 0 var(--space-1);
+}
+.section-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--c-text-muted); padding: var(--space-3) var(--space-4) var(--space-1); }
+
+/* method chips */
+.m { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 700; padding: 2px var(--space-1); border-radius: var(--radius-xs); }
+.m-get { color: var(--c-viz-green-text); background: color-mix(in srgb, var(--c-viz-green) 14%, transparent); }
+.m-post { color: var(--c-viz-amber-text); background: color-mix(in srgb, var(--c-viz-amber) 14%, transparent); }
+.m-put { color: var(--c-viz-blue-text); background: color-mix(in srgb, var(--c-viz-blue) 14%, transparent); }
+.m-delete { color: var(--c-viz-red-text); background: color-mix(in srgb, var(--c-viz-red) 14%, transparent); }
+.st-ok { color: var(--c-success-text); }
+.st-warn { color: var(--c-warning-text); }
+.st-err { color: var(--c-error-text); }
+
+/* segmented */
+.seg { display: flex; margin: var(--space-2) var(--space-4); background: var(--c-bar-track); border-radius: var(--radius-sm); padding: 2px; flex: none; }
+.seg button { flex: 1; padding: var(--space-1) 0; border-radius: var(--radius-xs); font-size: 0.8125rem; font-weight: 600; color: var(--c-text-muted); }
+.seg button[aria-selected="true"] { background: var(--c-surface); color: var(--c-text); box-shadow: var(--shadow-sm); }
+
+/* conversation */
+.convo { padding: var(--space-3) var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); }
+.day { align-self: center; font-size: 0.75rem; color: var(--c-text-muted); background: var(--c-surface); border: 1px solid var(--c-border-subtle); border-radius: var(--radius-full); padding: 2px var(--space-3); margin: var(--space-2) 0; }
+.bubble {
+	max-width: 86%;
+	border-radius: var(--radius-lg);
+	padding: var(--space-2) var(--space-3);
+	font-size: 0.875rem; line-height: 1.45;
+	word-break: break-word;
+}
+.bubble.out { align-self: flex-end; background: var(--c-primary-solid); color: var(--c-on-primary); border-bottom-right-radius: var(--radius-xs); }
+.bubble.in { align-self: flex-start; background: var(--c-surface); border: 1px solid var(--c-border-subtle); border-bottom-left-radius: var(--radius-xs); }
+.bubble.out .m { background: color-mix(in srgb, var(--c-on-primary) 18%, transparent); color: var(--c-on-primary); }
+.bubble .meta { font-size: 0.6875rem; opacity: 0.75; margin-top: var(--space-1); display: flex; gap: var(--space-2); justify-content: flex-end; }
+.bubble pre {
+	margin: var(--space-2) 0 0; padding: var(--space-2);
+	background: var(--c-surface-subtle); border-radius: var(--radius-sm);
+	font-family: var(--font-mono); font-size: 0.75rem; white-space: pre-wrap; max-height: 160px; overflow: hidden;
+	border: 1px solid var(--c-border-subtle);
+}
+.bubble .actions { display: flex; gap: var(--space-3); margin-top: var(--space-2); font-size: 0.75rem; color: var(--c-primary); font-weight: 600; }
+.bubble.out .actions { color: var(--c-on-primary); }
+.typing { align-self: flex-start; color: var(--c-text-muted); font-size: 0.8125rem; padding: var(--space-1) var(--space-3); }
+.live { display: inline-flex; align-items: center; gap: var(--space-1); font-size: 0.75rem; color: var(--c-success-text); }
+.live::before { content: ""; width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--c-success); }
+
+/* composer */
+.composer {
+	flex: none; border-top: 1px solid var(--c-border-subtle); background: var(--c-surface);
+	padding: var(--space-2) var(--space-3) var(--space-3);
+}
+.composer-env { display: flex; gap: var(--space-2); font-size: 0.75rem; color: var(--c-text-muted); margin-bottom: var(--space-2); overflow-x: auto; }
+.pill { border: 1px solid var(--c-border); border-radius: var(--radius-full); padding: 2px var(--space-2); white-space: nowrap; }
+.pill.on { border-color: var(--c-primary); color: var(--c-primary); }
+.composer-row { display: flex; align-items: flex-end; gap: var(--space-2); }
+.method-btn { flex: none; height: 40px; padding: 0 var(--space-2); border-radius: var(--radius-sm); border: 1px solid var(--c-border); }
+.url-input {
+	flex: 1; min-width: 0; height: 40px; border-radius: var(--radius-full);
+	border: 1px solid var(--c-border); background: var(--c-bg); padding: 0 var(--space-3);
+	font-family: var(--font-mono); font-size: 0.8125rem;
+}
+.send-btn { flex: none; width: 40px; height: 40px; border-radius: var(--radius-full); background: var(--c-primary-solid); color: var(--c-on-primary); display: grid; place-items: center; }
+.send-btn svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+/* tab bar */
+.tabbar {
+	flex: none; display: grid; grid-template-columns: repeat(4, 1fr);
+	border-top: 1px solid var(--c-border-subtle); background: var(--c-surface);
+	padding: var(--space-1) 0 var(--space-5);
+}
+.tab { display: grid; justify-items: center; gap: 2px; font-size: 0.6875rem; color: var(--c-text-muted); padding-top: var(--space-1); position: relative; }
+.tab[aria-selected="true"] { color: var(--c-primary); }
+.tab .badge { position: absolute; top: 0; left: 55%; height: 16px; min-width: 16px; font-size: 0.625rem; }
+
+/* sheet */
+.sheet-backdrop { position: absolute; inset: 0; background: var(--c-backdrop); display: none; }
+.sheet-backdrop.on { display: block; }
+.sheet {
+	position: absolute; left: 0; right: 0; bottom: 0;
+	background: var(--c-surface); border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+	padding: var(--space-2) var(--space-4) var(--space-6);
+	transform: translateY(100%); transition: transform var(--dur-slow) var(--ease-decelerate);
+}
+.sheet.on { transform: none; }
+.grabber { width: 40px; height: 5px; border-radius: var(--radius-full); background: var(--c-border); margin: 0 auto var(--space-3); }
+.sheet h3 { margin: 0 0 var(--space-3); font-size: 1rem; }
+.kv { display: grid; grid-template-columns: 1fr 1.4fr; gap: var(--space-2); font-family: var(--font-mono); font-size: 0.75rem; margin-bottom: var(--space-3); }
+.kv span { border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: var(--space-2); }
+.methods { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-3); }
+.methods button { padding: var(--space-1) var(--space-2); border: 1px solid var(--c-border); border-radius: var(--radius-sm); }
+.body-area { width: 100%; height: 96px; border: 1px solid var(--c-border); border-radius: var(--radius-sm); background: var(--c-bg); font-family: var(--font-mono); font-size: 0.75rem; padding: var(--space-2); }
+
+/* sign in */
+.signin { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: var(--space-4); padding: var(--space-6); text-align: center; }
+.logo { width: 72px; height: 72px; border-radius: var(--radius-lg); background: var(--c-primary-solid); color: var(--c-on-primary); display: grid; place-items: center; font-size: 2rem; font-weight: 800; }
+.primary-btn { width: 100%; height: 48px; border-radius: var(--radius-md); background: var(--c-primary-solid); color: var(--c-on-primary); font-weight: 600; }
+.ghost-btn { width: 100%; height: 48px; border-radius: var(--radius-md); border: 1px solid var(--c-border); font-weight: 600; }
+
+.list-plain { padding: var(--space-2) 0; }
+.setting { display: flex; justify-content: space-between; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--c-border-subtle); }
+.bubble.out pre { background: color-mix(in srgb, var(--c-on-primary) 14%, transparent); color: var(--c-on-primary); border-color: transparent; }
+.bubble.out .st-err, .bubble.out .st-ok, .bubble.out .st-warn { color: var(--c-on-primary); }
+</style>
+</head>
+<body>
+<main class="stage">
+	<section class="notes" aria-label="Ghi chú prototype">
+		<h1>Localman Mobile, prototype</h1>
+		<p>Bản nháp giao diện app mobile (Capacitor bọc giao diện React) theo kiểu app chat. Bấm thẳng trong khung điện thoại để đi qua các màn: danh sách giống danh sách cuộc trò chuyện, chạm vào để mở màn chi tiết toàn màn hình, nút quay lại ở góc trái, thanh tab ở đáy.</p>
+		<h2>Prototype controls: review aid only</h2>
+		<div class="controls" role="group" aria-label="Nhảy tới màn">
+			<button class="chip-btn" data-jump="signin">Đăng nhập</button>
+			<button class="chip-btn" data-jump="projects">Dự án</button>
+			<button class="chip-btn" data-jump="project">Log + Inbox</button>
+			<button class="chip-btn" data-jump="client">Client</button>
+			<button class="chip-btn" data-jump="chat">Hội thoại request</button>
+			<button class="chip-btn" data-jump="notifs">Thông báo</button>
+			<button class="chip-btn" data-jump="me">Tài khoản</button>
+		</div>
+		<h2>Giao diện</h2>
+		<div class="controls" role="group" aria-label="Theme">
+			<button class="chip-btn" data-theme-set="light">Sáng</button>
+			<button class="chip-btn" data-theme-set="dark">Tối</button>
+		</div>
+		<h2>Điểm cần duyệt</h2>
+		<ul>
+			<li><b>Dự án</b> hiển thị như danh sách chat. Dòng xem trước là request gần nhất, badge đếm số request mới từ lúc bạn mở lần cuối.</li>
+			<li><b>Log của mock</b> chạy theo dòng thời gian và nhận trực tiếp qua SSE. Request đến nằm bên trái, response mock trả về nằm bên phải.</li>
+			<li><b>Client</b>: mỗi request đã lưu là một "cuộc trò chuyện". Gõ URL ở ô dưới đáy rồi gửi; request của bạn là bong bóng tím, response là bong bóng xám có status, thời gian và kích thước.</li>
+			<li>Nút <b>+</b> mở bottom sheet để sửa method, header, body. Hàng pill phía trên ô soạn dùng để chọn environment.</li>
+			<li>Bong bóng response có ba thao tác: <i>Xem đầy đủ</i>, <i>Sao chép</i>, <i>Gửi lại</i>.</li>
+		</ul>
+	</section>
+
+	<div class="phone" id="phone" aria-label="Khung điện thoại">
+		<div class="statusbar"><span>9:41</span><span>5G ▮▮▮</span></div>
+
+		<!-- sign in -->
+		<section class="screen" data-screen="signin">
+			<div class="signin">
+				<div class="logo">L</div>
+				<h2 style="margin:0">Localman</h2>
+				<p class="muted" style="margin:0">Mock API, API client và log request ngay trên điện thoại.</p>
+				<button class="primary-btn" data-go="projects">Đăng nhập với auth.hoandat.com</button>
+				<p class="muted" style="font-size:0.75rem;margin:0">Mở trình duyệt hệ thống, đăng nhập, xác nhận rồi tự quay lại app.</p>
+			</div>
+		</section>
+
+		<!-- projects list -->
+		<section class="screen" data-screen="projects" data-tab="projects">
+			<div class="navbar" style="border:0">
+				<h2></h2>
+				<button class="icon-btn" aria-label="Tạo dự án"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+			</div>
+			<h1 class="large-title">Dự án</h1>
+			<div class="search">Tìm dự án, endpoint…</div>
+			<div class="scroll">
+				<button class="row" data-go="project">
+					<div class="avatar">SH</div>
+					<div class="row-main">
+						<div class="row-top"><span class="row-title">shop-api</span><span class="row-time">vừa xong</span></div>
+						<div class="row-preview"><span class="m m-post">POST</span> /orders · 201 · 38 ms</div>
+					</div>
+					<span class="badge">12</span>
+				</button>
+				<button class="row" data-go="project">
+					<div class="avatar">PY</div>
+					<div class="row-main">
+						<div class="row-top"><span class="row-title">payment-sandbox</span><span class="row-time">9:12</span></div>
+						<div class="row-preview">Inbox <b>stripe-events</b>: payment_intent.succeeded</div>
+					</div>
+					<span class="badge">3</span>
+				</button>
+				<button class="row" data-go="project">
+					<div class="avatar">CR</div>
+					<div class="row-main">
+						<div class="row-top"><span class="row-title">crm-demo</span><span class="row-time">Hôm qua</span></div>
+						<div class="row-preview"><span class="m m-get">GET</span> /customers?page=2 · 200</div>
+					</div>
+				</button>
+				<button class="row" data-go="project">
+					<div class="avatar">IO</div>
+					<div class="row-main">
+						<div class="row-top"><span class="row-title">iot-telemetry</span><span class="row-time">T2</span></div>
+						<div class="row-preview muted">Chưa có request nào</div>
+					</div>
+				</button>
+			</div>
+		</section>
+
+		<!-- project detail: log / inbox timeline -->
+		<section class="screen" data-screen="project" data-tab="projects">
+			<div class="navbar">
+				<button class="icon-btn" data-go="projects" aria-label="Quay lại"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+				<div class="avatar sm">SH</div>
+				<h2>shop-api<span class="sub"><span class="live">Đang nhận trực tiếp</span></span></h2>
+				<button class="icon-btn" aria-label="Thông tin dự án"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+			</div>
+			<div class="seg" role="tablist">
+				<button role="tab" aria-selected="true" data-seg="log">Log request</button>
+				<button role="tab" aria-selected="false" data-seg="inbox">Webhook inbox</button>
+			</div>
+			<div class="scroll" data-pane="log">
+				<div class="convo">
+					<div class="day">Hôm nay</div>
+					<div class="bubble in"><span class="m m-get">GET</span> <span class="mono">/products?limit=20</span><div class="meta"><span>iPhone · 14.161.x.x</span><span>9:38</span></div></div>
+					<div class="bubble out"><b>200</b> · 1,2 KB · 22 ms<pre>[{ "id": 1, "name": "Áo thun", … }]</pre><div class="meta"><span>Mock</span></div></div>
+					<div class="bubble in"><span class="m m-post">POST</span> <span class="mono">/orders</span><pre>{ "productId": 1, "qty": 2 }</pre><div class="meta"><span>curl</span><span>9:40</span></div></div>
+					<div class="bubble out"><b>201</b> · 214 B · 38 ms<pre>{ "orderId": "ord_8KQ", "status": "pending" }</pre><div class="actions"><button>Phát lại</button><button>Mở trong Client</button></div></div>
+					<div class="bubble in"><span class="m m-delete">DELETE</span> <span class="mono">/orders/ord_1</span><div class="meta"><span>9:41</span></div></div>
+					<div class="bubble out"><b class="st-err">404</b> · Không có route khớp<div class="meta"><span>Mock</span></div></div>
+				</div>
+			</div>
+			<div class="scroll" data-pane="inbox" hidden>
+				<div class="section-label">2 / 2 inbox (gói Free)</div>
+				<button class="row"><div class="avatar sm">ST</div><div class="row-main"><div class="row-top"><span class="row-title">stripe-events</span><span class="row-time">9:12</span></div><div class="row-preview">payment_intent.succeeded · chuyển tiếp tới Tunelo</div></div><span class="badge">3</span></button>
+				<button class="row"><div class="avatar sm">GH</div><div class="row-main"><div class="row-top"><span class="row-title">github-hooks</span><span class="row-time">Hôm qua</span></div><div class="row-preview">push · main</div></div></button>
+				<div class="convo">
+					<div class="day">stripe-events · Hôm nay</div>
+					<div class="bubble in"><span class="m m-post">POST</span> payment_intent.succeeded<pre>{ "id": "evt_3Q…", "amount": 250000 }</pre><div class="actions"><button>Xem header</button><button>Gửi lại</button></div><div class="meta"><span>Stripe/1.0</span><span>9:12</span></div></div>
+				</div>
+			</div>
+			
+		</section>
+
+		<!-- client: collections as chat list -->
+		<section class="screen" data-screen="client" data-tab="client">
+			<div class="navbar" style="border:0"><h2></h2><button class="icon-btn" data-go="chat" aria-label="Request mới"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button></div>
+			<h1 class="large-title">Client</h1>
+			<div class="search">Tìm request trong workspace "Cá nhân"…</div>
+			<div class="scroll">
+				<div class="section-label">Shop API · collection</div>
+				<button class="row" data-go="chat"><span class="m m-post">POST</span><div class="row-main"><div class="row-top"><span class="row-title">Tạo đơn hàng</span><span class="row-time">9:40</span></div><div class="row-preview"><span class="st-ok">201</span> · { "orderId": "ord_8KQ" … }</div></div></button>
+				<button class="row" data-go="chat"><span class="m m-get">GET</span><div class="row-main"><div class="row-top"><span class="row-title">Danh sách sản phẩm</span><span class="row-time">9:38</span></div><div class="row-preview"><span class="st-ok">200</span> · [{ "id": 1, "name": "Áo thun" …</div></div></button>
+				<button class="row" data-go="chat"><span class="m m-put">PUT</span><div class="row-main"><div class="row-top"><span class="row-title">Cập nhật tồn kho</span><span class="row-time">Hôm qua</span></div><div class="row-preview"><span class="st-warn">409</span> · Phiên bản đã cũ</div></div></button>
+				<div class="section-label">Auth · collection</div>
+				<button class="row" data-go="chat"><span class="m m-post">POST</span><div class="row-main"><div class="row-top"><span class="row-title">Lấy token</span><span class="row-time">T6</span></div><div class="row-preview"><span class="st-ok">200</span> · access_token: [đã che]</div></div></button>
+			</div>
+		</section>
+
+		<!-- request conversation -->
+		<section class="screen" data-screen="chat" data-tab="client">
+			<div class="navbar">
+				<button class="icon-btn" data-go="client" aria-label="Quay lại"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+				<h2>Tạo đơn hàng<span class="sub">Shop API · qua proxy Localman</span></h2>
+				<button class="icon-btn" aria-label="Lưu"><svg viewBox="0 0 24 24"><path d="M6 4h10l4 4v12H6z"/><path d="M9 4v5h6"/></svg></button>
+			</div>
+			<div class="scroll" id="chatScroll">
+				<div class="convo" id="convo">
+					<div class="day">Hôm nay</div>
+					<div class="bubble out"><span class="m">POST</span> <span class="mono">{{baseUrl}}/orders</span><pre>{ "productId": 1, "qty": 2 }</pre><div class="meta"><span>Staging</span><span>9:40</span></div></div>
+					<div class="bubble in"><b class="st-ok">201 Created</b> · 214 B · 38 ms<pre>{
+  "orderId": "ord_8KQ",
+  "status": "pending",
+  "total": 250000
+}</pre><div class="actions"><button>Xem đầy đủ</button><button>Sao chép</button><button>Gửi lại</button></div></div>
+				</div>
+			</div>
+			<div class="composer">
+				<div class="composer-env"><span class="pill">Không env</span><span class="pill on">Staging</span><span class="pill">Production</span><span class="pill">+ header (2)</span></div>
+				<div class="composer-row">
+					<button class="icon-btn" id="openSheet" aria-label="Sửa method, header, body"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+					<button class="method-btn m m-post" id="methodBtn">POST</button>
+					<input class="url-input" id="urlInput" value="{{baseUrl}}/orders" aria-label="URL">
+					<button class="send-btn" id="sendBtn" aria-label="Gửi"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+				</div>
+			</div>
+		</section>
+
+		<!-- notifications -->
+		<section class="screen" data-screen="notifs" data-tab="notifs">
+			<div class="navbar" style="border:0"><h2></h2><button class="icon-btn" style="width:auto;font-size:0.875rem">Đọc hết</button></div>
+			<h1 class="large-title">Thông báo</h1>
+			<div class="scroll">
+				<div class="row"><div class="avatar sm">!</div><div class="row-main"><div class="row-top"><span class="row-title">shop-api sắp hết lượt mock</span><span class="row-time">8:02</span></div><div class="row-preview">Đã dùng 92% hạn mức tháng này</div></div><span class="badge">•</span></div>
+				<div class="row"><div class="avatar sm">MA</div><div class="row-main"><div class="row-top"><span class="row-title">Mai bình luận trong "Tạo đơn hàng"</span><span class="row-time">Hôm qua</span></div><div class="row-preview">"Status 201 hay 200 nhỉ?"</div></div></div>
+				<div class="row"><div class="avatar sm">IN</div><div class="row-main"><div class="row-top"><span class="row-title">Bạn được mời vào workspace "Team A"</span><span class="row-time">T2</span></div><div class="row-preview">Chạm để chấp nhận</div></div></div>
+			</div>
+		</section>
+
+		<!-- me -->
+		<section class="screen" data-screen="me" data-tab="me">
+			<h1 class="large-title" style="margin-top:var(--space-6)">Tài khoản</h1>
+			<div class="row" style="border:0"><div class="avatar">HD</div><div class="row-main"><div class="row-title">Hoàn Đạt</div><div class="row-preview">Gói Free · workspace "Cá nhân"</div></div></div>
+			<div class="list-plain">
+				<div class="setting"><span>Ngôn ngữ</span><span class="muted">Tiếng Việt ›</span></div>
+				<div class="setting"><span>Giao diện</span><span class="muted">Theo hệ thống ›</span></div>
+				<div class="setting"><span>Gửi phản hồi</span><span class="muted">›</span></div>
+				<button class="setting" style="width:100%" data-go="signin"><span class="st-err">Đăng xuất</span><span></span></button>
+			</div>
+		</section>
+
+		<!-- tab bar -->
+		<nav class="tabbar" id="tabbar" role="tablist" aria-label="Tab chính">
+			<button class="tab" role="tab" data-go="projects" data-tabname="projects"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>Dự án<span class="badge">15</span></button>
+			<button class="tab" role="tab" data-go="client" data-tabname="client"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Client</button>
+			<button class="tab" role="tab" data-go="notifs" data-tabname="notifs"><svg viewBox="0 0 24 24"><path d="M6 17V11a6 6 0 0 1 12 0v6l2 2H4z"/><path d="M10 21h4"/></svg>Thông báo<span class="badge">1</span></button>
+			<button class="tab" role="tab" data-go="me" data-tabname="me"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Tài khoản</button>
+		</nav>
+
+		<div class="sheet-backdrop" id="backdrop"></div>
+		<div class="sheet" id="sheet" role="dialog" aria-label="Sửa request">
+			<div class="grabber"></div>
+			<h3>Request</h3>
+			<div class="methods" id="methods">
+				<button class="m m-get">GET</button><button class="m m-post">POST</button><button class="m m-put">PUT</button><button class="m m-delete">DELETE</button>
+			</div>
+			<div class="section-label" style="padding-left:0">Header</div>
+			<div class="kv"><span>Content-Type</span><span>application/json</span><span>Authorization</span><span>Bearer {{token}}</span></div>
+			<div class="section-label" style="padding-left:0">Body (JSON)</div>
+			<textarea class="body-area" id="bodyInput">{ "productId": 1, "qty": 2 }</textarea>
+			<button class="primary-btn" id="closeSheet" style="margin-top:var(--space-3)">Xong</button>
+		</div>
+	</div>
+</main>
+
+<script>
+(function () {
+	var phone = document.getElementById("phone");
+	var tabbar = document.getElementById("tabbar");
+	var noTabs = { signin: true, chat: true };
+
+	function show(name) {
+		phone.querySelectorAll(".screen").forEach(function (s) {
+			s.classList.toggle("on", s.dataset.screen === name);
+		});
+		var cur = phone.querySelector('.screen[data-screen="' + name + '"]');
+		tabbar.style.display = noTabs[name] ? "none" : "grid";
+		var tab = cur && cur.dataset.tab;
+		tabbar.querySelectorAll(".tab").forEach(function (t) {
+			t.setAttribute("aria-selected", String(t.dataset.tabname === tab));
+		});
+		document.querySelectorAll("[data-jump]").forEach(function (b) {
+			b.setAttribute("aria-pressed", String(b.dataset.jump === name));
+		});
+		if (name === "chat") scrollChat();
+	}
+
+	document.addEventListener("click", function (e) {
+		var go = e.target.closest("[data-go]");
+		if (go) show(go.dataset.go);
+		var jump = e.target.closest("[data-jump]");
+		if (jump) show(jump.dataset.jump);
+		var th = e.target.closest("[data-theme-set]");
+		if (th) {
+			document.documentElement.dataset.theme = th.dataset.themeSet;
+			document.querySelectorAll("[data-theme-set]").forEach(function (b) {
+				b.setAttribute("aria-pressed", String(b === th));
+			});
+		}
+		var seg = e.target.closest("[data-seg]");
+		if (seg) {
+			seg.parentElement.querySelectorAll("[data-seg]").forEach(function (b) {
+				b.setAttribute("aria-selected", String(b === seg));
+			});
+			phone.querySelectorAll("[data-pane]").forEach(function (p) {
+				p.hidden = p.dataset.pane !== seg.dataset.seg;
+			});
+		}
+	});
+
+	var sheet = document.getElementById("sheet");
+	var backdrop = document.getElementById("backdrop");
+	function sheetOn(on) { sheet.classList.toggle("on", on); backdrop.classList.toggle("on", on); }
+	document.getElementById("openSheet").onclick = function () { sheetOn(true); };
+	document.getElementById("methodBtn").onclick = function () { sheetOn(true); };
+	document.getElementById("closeSheet").onclick = function () { sheetOn(false); };
+	backdrop.onclick = function () { sheetOn(false); };
+
+	var methodBtn = document.getElementById("methodBtn");
+	document.getElementById("methods").addEventListener("click", function (e) {
+		var b = e.target.closest("button");
+		if (!b) return;
+		methodBtn.textContent = b.textContent;
+		methodBtn.className = "method-btn " + b.className;
+	});
+
+	var convo = document.getElementById("convo");
+	function scrollChat() {
+		var s = document.getElementById("chatScroll");
+		s.scrollTop = s.scrollHeight;
+	}
+	function el(cls, html) {
+		var d = document.createElement("div");
+		d.className = cls;
+		d.innerHTML = html;
+		return d;
+	}
+	function esc(s) {
+		return s.replace(/[&<>"]/g, function (c) {
+			return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+		});
+	}
+	document.getElementById("sendBtn").onclick = function () {
+		var method = methodBtn.textContent;
+		var url = document.getElementById("urlInput").value;
+		var body = document.getElementById("bodyInput").value;
+		var hasBody = method !== "GET" && method !== "DELETE";
+		convo.appendChild(el("bubble out",
+			'<span class="m">' + esc(method) + '</span> <span class="mono">' + esc(url) + "</span>" +
+			(hasBody ? "<pre>" + esc(body) + "</pre>" : "") +
+			'<div class="meta"><span>Staging</span><span>vừa xong</span></div>'));
+		var typing = el("typing", "Đang chờ response…");
+		convo.appendChild(typing);
+		scrollChat();
+		setTimeout(function () {
+			typing.remove();
+			var ok = method !== "DELETE";
+			convo.appendChild(el("bubble in",
+				(ok ? '<b class="st-ok">200 OK</b> · 186 B · 41 ms' : '<b class="st-err">404 Not Found</b> · 61 B · 19 ms') +
+				"<pre>" + (ok ? '{\n  "ok": true,\n  "received": "' + esc(method) + '"\n}' : '{ "error": { "code": "NOT_FOUND" } }') + "</pre>" +
+				'<div class="actions"><button>Xem đầy đủ</button><button>Sao chép</button><button>Gửi lại</button></div>'));
+			scrollChat();
+		}, 700);
+	};
+
+	show("projects");
+})();
+</script>
+</body>
+</html>

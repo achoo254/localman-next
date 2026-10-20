@@ -2,11 +2,11 @@
 
 - **Ngày:** 2026-10-13
 - **Trạng thái:** Đã chốt và chạy production từ 13/10/2026 (dữ liệu, chọn tenant theo Host, đăng nhập, thông báo, web, nginx `localman-tenants.conf`); còn e2e hai tenant, Turnstile và Telegram cho tenant khác
-- **Người quyết định:** dattqh (Localman phục vụ mọi domain đã nhận ở IdP `hoandat-auth`, hoandat.com là tenant số 1 không đổi hành vi; Pro/trial ở tenant mới như hoandat, owner của tenant là admin của tenant). Thiết kế theo `docs/decisions/0006-tenants-by-domain.md` của repo `hoandat-auth`.
+- **Người quyết định:** dattqh (Localman phục vụ mọi domain đã nhận ở IdP `auth-next`, hoandat.com là tenant số 1 không đổi hành vi; Pro/trial ở tenant mới như hoandat, owner của tenant là admin của tenant). Thiết kế theo `docs/decisions/0006-tenants-by-domain.md` của repo `auth-next`.
 
 ## Bối cảnh
 
-IdP `hoandat-auth` cho người dùng nhận domain riêng (tenant): `auth.<domain>`, `localman.<domain>`, `*.localman.<domain>`, `tunnel.<domain>`. Localman có 41 model mongoose, không có lớp repository, khoảng 700 chỗ gọi model rải rác; nhiều khoá đang duy nhất toàn hệ thống (`Project.secret`, hash token mời, endpoint Web Push…). Sửa từng chỗ gọi để thêm `tenantId` thì dễ sót, và một chỗ sót là lộ dữ liệu giữa tenant.
+IdP `auth-next` cho người dùng nhận domain riêng (tenant): `auth.<domain>`, `localman.<domain>`, `*.localman.<domain>`, `tunnel.<domain>`. Localman có 41 model mongoose, không có lớp repository, khoảng 700 chỗ gọi model rải rác; nhiều khoá đang duy nhất toàn hệ thống (`Project.secret`, hash token mời, endpoint Web Push…). Sửa từng chỗ gọi để thêm `tenantId` thì dễ sót, và một chỗ sót là lộ dữ liệu giữa tenant.
 
 ## Quyết định
 

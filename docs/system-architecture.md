@@ -38,7 +38,7 @@ apps/api/src/main.ts
 
 ## Đăng nhập và phiên
 
-Localman không giữ mật khẩu. User đăng nhập ở IdP dùng chung `auth.hoandat.com` (repo `hoandat-auth`, hợp đồng ở `docs/integration-guide.md` của repo đó); Localman là client OIDC confidential `localman-web` (`apps/api/src/modules/auth/`).
+Localman không giữ mật khẩu. User đăng nhập ở IdP dùng chung `auth.hoandat.com` (repo `auth-next`, hợp đồng ở `docs/integration-guide.md` của repo đó); Localman là client OIDC confidential `localman-web` (`apps/api/src/modules/auth/`).
 
 - **Đăng nhập:** `GET /auth/login` tạo `state`, `nonce`, PKCE verifier, dựng URL tới IdP (scope `openid profile email telegram`, không `offline_access`, không `resource`, nên access token là opaque và làm được subject của token exchange), rồi mới lưu transaction ở `login_transactions` (TTL 10 phút). Trình duyệt chỉ giữ một handle ngẫu nhiên trong cookie `lm_login` (SameSite=Lax). Giới hạn 20 lần mỗi phút cho mỗi IP, callback có bộ đếm riêng cùng mức (mỗi callback tiêu một transaction); vượt thì 303 về `/?authError=rate_limited`. IdP không phản hồi thì 303 về `/?authError=idp_unavailable`. Cả hai là điều hướng trình duyệt nên không trả JSON.
 - **`returnTo` và link nội bộ:** chỉ nhận path bắt đầu bằng một `/`. Path được chuẩn hoá như trình duyệt (dot segment, `%2e`) rồi kiểm lại, nên `/.//evil.com` hay `/%2E%2E//evil.com` (chuẩn hoá thành `//evil.com`) bị chặn và về `/projects`. Luật này nằm ở `http/internal-path.ts`, dùng chung cho `link` của thông báo.

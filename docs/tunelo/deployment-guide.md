@@ -2,14 +2,16 @@
 
 ## Release & Deploy
 
-Repo được host trên GitHub: `achoo254/tunelo`. CLI và server được phát hành theo
-hai đường riêng.
+Tunelo nằm trong monorepo `localman-next` (GitHub `achoo254/localman-next`): server ở
+`apps/tunelo-server`, CLI ở `packages/tunelo-cli`, code dùng chung ở `packages/tunelo-shared`
+(xem [system-architecture.md](../system-architecture.md)). Repo riêng `achoo254/tunelo` cũ đã xoá.
+CLI và server được phát hành theo hai đường riêng.
 
 ### CLI — publish lên npm (GitHub Actions)
 
 CLI phát hành công khai trên npm với tên gói **`tunelo`**
 (<https://www.npmjs.com/package/tunelo>). Workflow
-`.github/workflows/publish-cli.yml` chạy khi đẩy git tag `vX.Y.Z`: kiểm tra tag
+`.github/workflows/tunelo-publish-cli.yml` chạy khi đẩy git tag `tunelo-vX.Y.Z`: kiểm tra tag
 khớp version → `pnpm lint` → `pnpm test` → `pnpm build:tunelo-cli` → `npm publish`
 từ `packages/tunelo-cli/dist`.
 
@@ -155,7 +157,7 @@ the tenant's own (`tunelo login --server https://tunnel.inetdev.io.vn`).
 ## Tenants (domains claimed at the IdP)
 
 Tunelo serves `tunnel.<domain>` and `*.tunnel.<domain>` of every domain claimed at the
-IdP (`hoandat-auth`, ADR 0006) from the same process. The primary tenant (hoandat.com)
+IdP (`auth-next`, ADR 0006) from the same process. The primary tenant (hoandat.com)
 comes from `TUNNEL_DOMAINS`, `AUTH_ISSUER`, `AUTH_AUDIENCE` and never needs the IdP's
 internal API; another tenant is looked up there by Host (cached, last answer kept while
 the IdP is down). Tunnels, cache, TCP ports in tunnel lists, keys, links, usage and
