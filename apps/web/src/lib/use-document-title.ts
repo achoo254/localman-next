@@ -1,4 +1,4 @@
-import { brand } from "@localman/brand";
+import { brand } from "@localman/shared/brand";
 import { useEffect } from "react";
 
 /**

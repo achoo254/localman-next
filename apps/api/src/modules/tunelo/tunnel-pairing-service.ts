@@ -1,5 +1,5 @@
-import { brand } from "@localman/brand";
 import { OperationError } from "@localman/operations";
+import { brand } from "@localman/shared/brand";
 import { takeOperationSlot } from "../../lib/operation-rate-limit.js";
 import { TuneloApiError } from "./tunelo-api.js";
 import {

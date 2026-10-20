@@ -10,8 +10,8 @@ apps/api/                # Express 5: dashboard API (:4000) và mock runtime (:4
 packages/operations/     # defineOperation → route REST, MCP tool, OpenAPI 3.1
 packages/shared/         # @localman/shared, plan-limits.ts là nguồn duy nhất của hạn mức
 packages/design-tokens/  # tokens.css, nơi duy nhất chứa literal màu (kèm SVG icon và badge)
-packages/brand/          # @localman/brand: đọc brand.config.json, sinh manifest + icon (pnpm brand:gen)
-scripts/                 # check-mcp-coverage.ts, check-tokens.ts, check-brand.ts
+packages/brand/generated/ # manifest + icon do pnpm brand:gen sinh (scripts/brand-gen.ts, gói @shared-next/brand)
+scripts/                 # check-mcp-coverage.ts, check-tokens.ts, brand-gen.ts
 e2e/                     # Playwright: whole stack on fixed ports 46xx (support/stack.ts)
 ```
 
@@ -22,7 +22,7 @@ Quy tắc:
 - **Hạn mức gói** chỉ đọc qua `limitsFor(plan)` từ `@localman/shared`. `Infinity` thành `null` khi `JSON.stringify`, nên map tường minh trước khi trả cho client.
 - **UI** chỉ dùng token và utility Tailwind đã map (`bg-surface`, `text-fg`, `text-muted`…), không hex/rgb/px khoảng cách. Dùng primitive trong `apps/web/src/components/ui/` trước khi tạo mới. Xem `docs/design-system.md`.
 - **Chữ người dùng thấy** đi qua `t()` (`apps/web/src/i18n/`): English là nguồn và mặc định, kèm `zh-CN` và `vi`; không hard-code chuỗi, không nêu tên đối thủ. Xem `docs/i18n.md`.
-- **Tên sản phẩm, bundle id, mẫu host** chỉ khai trong `brand.config.json`; code đọc `brand.appName` từ `@localman/brand`, không viết cứng `"Localman"` (`check:brand` chặn). Xem `docs/decisions/0006-brand-config-and-product-name.md`.
+- **Tên sản phẩm, bundle id, mẫu host** chỉ khai trong `brand.config.json`; code đọc `brand.appName` từ `@localman/shared/brand`, không viết cứng `"Localman"` (`check:brand`, CLI của `@shared-next/brand`, chặn). Mã thương hiệu (schema, generator, check) nằm ở gói dùng chung `@shared-next/brand` (repo `shared-next`), không sửa tại chỗ; desktop chỉ là PWA. Xem `docs/decisions/0006-brand-config-and-product-name.md`.
 - **Favicon/manifest/icon cài app của web** nối sẵn (`apps/web/src/config/brand-install-assets.ts`) nhưng tắt bằng `"webInstall": false` trong `brand.config.json` vì icon còn là dấu tạm; tắt thì `dist` không đổi. Bật khi có icon thiết kế: thay SVG trong `packages/design-tokens`, `pnpm brand:gen`, đặt `"webInstall": true`, thêm MIME `webmanifest` cho nginx; các bước đủ ở mục "Cách thay đổi" của ADR-0006.
 - Lỗi API theo dạng `{ error: { code, message } }`; không lộ stack ra client, không log secret.
 - Internal package `@localman/*` là source-only TS (`exports` trỏ vào `src/index.ts`); import tương đối dùng đuôi `.js` (NodeNext), trừ `apps/web` (Bundler).

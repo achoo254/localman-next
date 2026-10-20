@@ -14,6 +14,9 @@ importers:
       '@playwright/test':
         specifier: ^1.64.0
         version: 1.64.0
+      '@shared-next/brand':
+        specifier: github:achoo254/shared-next#v0.2.0&path:/packages/brand
+        version: https://codeload.github.com/achoo254/shared-next/tar.gz/2dfb78942308f36f459ef861fbb57489402c3eb5#path:/packages/brand
       '@types/node':
         specifier: ^22.15.0
         version: 22.20.5
@@ -32,6 +35,9 @@ importers:
       nanoid:
         specifier: ^5.0.0
         version: 5.1.16
+      playwright:
+        specifier: 1.64.0
+        version: 1.64.0
       tsx:
         specifier: ^4.20.0
         version: 4.23.15
@@ -53,9 +59,6 @@ importers:
       '@faker-js/faker':
         specifier: ^10.6.0
         version: 10.6.0
-      '@localman/brand':
-        specifier: workspace:*
-        version: link:../../packages/brand
       '@localman/operations':
         specifier: workspace:*
         version: link:../../packages/operations
@@ -259,9 +262,6 @@ importers:
       '@lezer/highlight':
         specifier: ^1.2.5
         version: 1.2.5
-      '@localman/brand':
-        specifier: workspace:*
-        version: link:../../packages/brand
       '@localman/design-tokens':
         specifier: workspace:*
         version: link:../../packages/design-tokens
@@ -302,6 +302,9 @@ importers:
         specifier: ^7.6.0
         version: 7.18.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
     devDependencies:
+      '@shared-next/brand':
+        specifier: github:achoo254/shared-next#v0.2.0&path:/packages/brand
+        version: https://codeload.github.com/achoo254/shared-next/tar.gz/2dfb78942308f36f459ef861fbb57489402c3eb5#path:/packages/brand
       '@tailwindcss/vite':
         specifier: ^4.1.0
         version: 4.3.3(vite@7.3.7(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))
@@ -336,15 +339,6 @@ importers:
         specifier: ^7.1.0
         version: 7.3.7(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15)
 
-  packages/brand:
-    devDependencies:
-      ajv:
-        specifier: 8.20.0
-        version: 8.20.0
-      playwright:
-        specifier: 1.64.0
-        version: 1.64.0
-
   packages/design-tokens:
     dependencies:
       '@radix-ui/colors':
@@ -375,9 +369,9 @@ importers:
       '@faker-js/faker':
         specifier: ^10.6.0
         version: 10.6.0
-      '@localman/brand':
-        specifier: workspace:*
-        version: link:../brand
+      '@shared-next/brand':
+        specifier: github:achoo254/shared-next#v0.2.0&path:/packages/brand
+        version: https://codeload.github.com/achoo254/shared-next/tar.gz/2dfb78942308f36f459ef861fbb57489402c3eb5#path:/packages/brand
       fractional-indexing:
         specifier: ^4.0.0
         version: 4.0.0
@@ -1826,6 +1820,12 @@ packages:
 
   '@scure/base@2.4.0':
     resolution: {integrity: sha512-thZ1TuJwFwBblOhgsjDKvvGirBxNp+wSvY/DR6tJBJOTDhdAAcHJ8Vbr2eFnqaxeca4+t0i9KBf+uHYGWwZORg==}
+
+  '@shared-next/brand@https://codeload.github.com/achoo254/shared-next/tar.gz/2dfb78942308f36f459ef861fbb57489402c3eb5#path:/packages/brand':
+    resolution: {gitHosted: true, path: /packages/brand, tarball: https://codeload.github.com/achoo254/shared-next/tar.gz/2dfb78942308f36f459ef861fbb57489402c3eb5}
+    version: 0.2.0
+    engines: {node: '>=22.12'}
+    hasBin: true
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -5230,6 +5230,10 @@ snapshots:
     optional: true
 
   '@scure/base@2.4.0': {}
+
+  '@shared-next/brand@https://codeload.github.com/achoo254/shared-next/tar.gz/2dfb78942308f36f459ef861fbb57489402c3eb5#path:/packages/brand':
+    dependencies:
+      ajv: 8.20.0
 
   '@standard-schema/spec@1.1.0': {}
 

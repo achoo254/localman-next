@@ -9,28 +9,32 @@
  *   theme-color and iOS home-screen title in the head of index.html;
  * - serves those files at the site root in dev and emits them in builds:
  *   the icons pnpm brand:gen writes to packages/brand/generated/icons/, the
- *   brand SVG, and manifest.webmanifest (generateManifests, the content
- *   pnpm brand:gen writes to generated/web.webmanifest.json; the brand
- *   package's generated.test.ts keeps the two equal).
+ *   brand SVG, and manifest.webmanifest (the web.webmanifest.json pnpm
+ *   brand:gen writes there; scripts/brand/localman-brand.test.ts keeps it
+ *   equal to the brand).
  *
  * With "webInstall": false (the default while the icon is a placeholder) the
  * plugin has no hooks, so the build output is the same as without it.
  * docs/decisions/0006-brand-config-and-product-name.md says how to turn it on.
  */
 import { readFileSync } from "node:fs";
-import type { BrandConfig } from "@localman/brand";
-import type { Plugin } from "vite";
-// A relative path, not "@localman/brand/build": Vite bundles the config's
-// relative imports (esbuild maps the package's ".js" specifiers to its .ts
-// sources) but leaves workspace packages to Node, which cannot.
 import {
+	type BrandConfigWith,
+	DEFAULT_FAVICON_SVG,
 	FAVICON_ICO,
-	FAVICON_SVG,
 	RASTER_ICONS,
-	generateManifests,
 	loadBrandConfig,
 	webIconFiles,
-} from "../../../../packages/brand/src/build";
+} from "@shared-next/brand/build";
+import type { Plugin } from "vite";
+
+/** The brand fields the plugin reads beyond the schema's required ones. */
+export type InstallBrand = BrandConfigWith<"webInstall" | "colors.primary">;
+
+/** Repository root: the directory of brand.config.json and its icon paths. */
+export const BRAND_ROOT = new URL("../../../../", import.meta.url);
+/** Where pnpm brand:gen writes web.webmanifest.json and icons/. */
+export const GENERATED_DIR = new URL("packages/brand/generated/", BRAND_ROOT);
 
 export const MANIFEST_PATH = "manifest.webmanifest";
 const PLUGIN_NAME = "localman:brand-install-assets";
@@ -58,21 +62,28 @@ function contentType(path: string): string {
 	return CONTENT_TYPES[extension] ?? "application/octet-stream";
 }
 
+/** The manifest pnpm brand:gen wrote, compact (the file is indented for git). */
+function generatedManifest(): string {
+	const file = new URL("web.webmanifest.json", GENERATED_DIR);
+	return `${JSON.stringify(JSON.parse(readFileSync(file, "utf8")))}\n`;
+}
+
 /** URL path (no leading slash) to file contents, read on use so pnpm brand:gen shows up without a restart. */
-export function installFiles(
-	brand: BrandConfig,
+function installFiles(
+	brand: InstallBrand,
 ): ReadonlyMap<string, () => Buffer | string> {
-	const manifest = `${JSON.stringify(generateManifests(brand)["web.webmanifest.json"])}\n`;
+	const icons = webIconFiles(brand, {
+		root: BRAND_ROOT,
+		generatedDir: GENERATED_DIR,
+	});
 	return new Map<string, () => Buffer | string>([
-		...webIconFiles(brand).map(
-			(icon) => [icon.path, () => readFileSync(icon.file)] as const,
-		),
-		[MANIFEST_PATH, () => manifest],
+		...icons.map((icon) => [icon.path, () => readFileSync(icon.file)] as const),
+		[MANIFEST_PATH, generatedManifest],
 	]);
 }
 
 /** Head tags that link the files of installFiles. */
-export function installHeadTags(brand: BrandConfig): string {
+function installHeadTags(brand: InstallBrand): string {
 	const appleTouch = RASTER_ICONS.find((icon) =>
 		icon.file.startsWith("apple-touch-icon"),
 	);
@@ -82,7 +93,7 @@ export function installHeadTags(brand: BrandConfig): string {
 	// Browsers with SVG favicons take the SVG; the others fall back to the ICO.
 	return [
 		`<link rel="icon" href="/${FAVICON_ICO}" sizes="16x16 32x32 48x48">`,
-		`<link rel="icon" href="/${FAVICON_SVG}" type="image/svg+xml">`,
+		`<link rel="icon" href="/${DEFAULT_FAVICON_SVG}" type="image/svg+xml">`,
 		`<link rel="apple-touch-icon" href="/${appleTouch.file}" sizes="${appleTouch.size}x${appleTouch.size}">`,
 		`<link rel="manifest" href="/${MANIFEST_PATH}">`,
 		`<meta name="theme-color" content="${escapeHtml(brand.colors.primary)}">`,
@@ -91,7 +102,9 @@ export function installHeadTags(brand: BrandConfig): string {
 }
 
 export function brandInstallAssets(
-	brand: BrandConfig = loadBrandConfig(),
+	brand: InstallBrand = loadBrandConfig(BRAND_ROOT, {
+		require: ["webInstall", "colors.primary"],
+	}),
 ): Plugin {
 	if (!brand.webInstall) return { name: PLUGIN_NAME };
 	const files = installFiles(brand);

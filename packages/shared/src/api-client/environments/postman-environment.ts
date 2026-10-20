@@ -1,10 +1,10 @@
+import { z } from "zod";
 /**
  * Environments as Postman exports and imports them (`*.postman_environment.json`).
  * Only shared values travel: local values never leave their owner, and a
  * secret is always written blank (its type is kept). Pure, no Node API.
  */
-import { brand } from "@localman/brand";
-import { z } from "zod";
+import { brand } from "../../brand.js";
 import {
 	ENVIRONMENT_NAME_MAX,
 	ENVIRONMENT_VARIABLES_MAX,

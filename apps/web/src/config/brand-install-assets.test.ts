@@ -9,26 +9,29 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { type BrandConfig, brand } from "@localman/brand";
-import { webIconFiles } from "@localman/brand/build";
+import { brand } from "@localman/shared/brand";
+import { webIconFiles } from "@shared-next/brand/build";
 import { type Rollup, build, createServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { MANIFEST_PATH, brandInstallAssets } from "./brand-install-assets";
+import {
+	BRAND_ROOT,
+	GENERATED_DIR,
+	type InstallBrand,
+	MANIFEST_PATH,
+	brandInstallAssets,
+} from "./brand-install-assets";
 
-const on: BrandConfig = { ...brand, webInstall: true };
-const off: BrandConfig = { ...brand, webInstall: false };
+const on: InstallBrand = { ...brand, webInstall: true };
+const off: InstallBrand = { ...brand, webInstall: false };
 const INDEX_HTML =
 	"<!doctype html>\n<html>\n\t<head>\n\t\t<title>Fixture</title>\n\t</head>\n\t<body></body>\n</html>\n";
 /** What pnpm brand:gen wrote; the plugin must serve exactly this. */
 const generatedManifest: unknown = JSON.parse(
-	readFileSync(
-		new URL(
-			"../../../../packages/brand/generated/web.webmanifest.json",
-			import.meta.url,
-		),
-		"utf8",
-	),
+	readFileSync(new URL("web.webmanifest.json", GENERATED_DIR), "utf8"),
 );
+/** Every icon the site serves, from the shared package directly. */
+const iconFiles = (config: InstallBrand) =>
+	webIconFiles(config, { root: BRAND_ROOT, generatedDir: GENERATED_DIR });
 
 let root = "";
 beforeAll(() => {
@@ -44,7 +47,7 @@ function isOutput(value: unknown): value is Rollup.RollupOutput {
 
 /** Files a production build of the fixture page writes, by name. */
 async function buildFiles(
-	config: BrandConfig,
+	config: InstallBrand,
 ): Promise<Map<string, string | Uint8Array>> {
 	const result = await build({
 		root,
@@ -79,7 +82,7 @@ describe("brandInstallAssets", () => {
 
 	it("on: emits the generated manifest and every icon, linked after the title", async () => {
 		const files = await buildFiles(on);
-		const icons = webIconFiles(on);
+		const icons = iconFiles(on);
 		expect([...files.keys()].sort()).toEqual(
 			["index.html", MANIFEST_PATH, ...icons.map((icon) => icon.path)].sort(),
 		);
@@ -127,7 +130,7 @@ describe("brandInstallAssets", () => {
 			expect(await manifest.json()).toEqual(generatedManifest);
 			const png = await get("icon-192.png");
 			expect(png.headers.get("content-type")).toBe("image/png");
-			const icon = webIconFiles(on).find((f) => f.path === "icon-192.png");
+			const icon = iconFiles(on).find((f) => f.path === "icon-192.png");
 			if (icon === undefined) throw new Error("no icon-192.png in the brand");
 			expect(Buffer.from(await png.arrayBuffer())).toEqual(
 				readFileSync(icon.file),

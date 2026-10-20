@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { brand } from "@localman/brand";
+import { brand } from "@localman/shared/brand";
 import { describe, expect, it } from "vitest";
 
 /**

@@ -8,6 +8,7 @@
 		"./access": "./src/access-permissions.ts",
 		"./api-client": "./src/api-client/index.ts",
 		"./api-client/script-sandbox": "./src/api-client/script-sandbox/index.ts",
+		"./brand": "./src/brand.ts",
 		"./constants": "./src/constants.ts",
 		"./endpoint-behavior": "./src/endpoint-behavior.ts",
 		"./faker-catalog": "./src/faker-method-catalog.ts",
@@ -19,7 +20,7 @@
 	},
 	"dependencies": {
 		"@faker-js/faker": "^10.6.0",
-		"@localman/brand": "workspace:*",
+		"@shared-next/brand": "github:achoo254/shared-next#v0.2.0&path:/packages/brand",
 		"fractional-indexing": "^4.0.0",
 		"quickjs-emscripten-core": "0.32.0",
 		"zod": "^4.6.5"
