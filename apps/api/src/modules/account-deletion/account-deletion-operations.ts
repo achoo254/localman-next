@@ -16,6 +16,7 @@ const DELETION_RATE_LIMIT = { max: 5, windowMs: 60 * 60_000 } as const;
 const summary = z.object({
 	ownedProjects: z.number().int(),
 	sharedProjects: z.number().int(),
+	projectMembers: z.number().int(),
 	workspacesDeleted: z.number().int(),
 	workspacesLeft: z.number().int(),
 	collectionsDeleted: z.number().int(),
@@ -48,7 +49,7 @@ export const deleteMyAccount = defineOperation({
 	path: "/users/me",
 	summary: "Delete the signed-in user's Localman account",
 	description:
-		"Deletes the account's Localman data for good: owned mock projects with everything in them, the personal workspace and team workspaces with no other member (their collections and environments), the API client history, drafts and settings, notifications, linked Tunelo machines (revoked at Tunelo) and every session. In team workspaces it keeps, the account leaves and its name is removed from what it wrote (comments, changelog, collections). The sign-in account at the identity provider is not deleted. Call with dryRun first: it returns the counts and `blockedWorkspaces`, team workspaces where the account is the only Admin of other members; while any is listed the deletion answers 409 ACCOUNT_DELETION_BLOCKED (make another member Admin first). The deletion needs `confirm` equal to the account's username (400 CONFIRMATION_MISMATCH otherwise) and a browser session. 429 RATE_LIMITED past 5 deletions an hour.",
+		"Deletes the account's Localman data for good: owned mock projects with everything in them (`sharedProjects` of them have other members, `projectMembers` people, who lose access), the personal workspace and team workspaces with no other member (their collections and environments), the API client history, drafts and settings, notifications, linked Tunelo machines (revoked at Tunelo) and every session. In team workspaces it keeps, the account leaves and its name is removed from what it wrote (comments, changelog, collections). The sign-in account at the identity provider is not deleted. Call with dryRun first: it returns the counts and `blockedWorkspaces`, team workspaces where the account is the only Admin of other members; while any is listed the deletion answers 409 ACCOUNT_DELETION_BLOCKED (make another member Admin first). The deletion needs `confirm` equal to the account's username (400 CONFIRMATION_MISMATCH otherwise) and a browser session. 429 RATE_LIMITED past 5 deletions an hour.",
 	input: z.object({ confirm: z.string().max(200).optional() }),
 	output: summary.extend({ dryRun: z.boolean(), deleted: z.boolean() }),
 	scopes: [USER_SCOPE],

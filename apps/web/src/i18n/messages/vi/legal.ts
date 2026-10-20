@@ -12,7 +12,18 @@ export const legal: Messages["legal"] = {
 		"Khi đăng ký, bạn đồng ý với <terms>Điều khoản</terms> và <privacy>Chính sách quyền riêng tư</privacy>.",
 	contact: {
 		title: "Liên hệ",
-		body: "Câu hỏi hoặc yêu cầu về dữ liệu của bạn hay các điều khoản này: dùng “Góp ý / Liên hệ” ở cuối mọi trang của Localman. Localman không có email liên hệ; hãy để lại cách liên lạc trong form nếu bạn muốn được trả lời.",
+		body: "Câu hỏi hoặc yêu cầu về dữ liệu của bạn hay các điều khoản này: gửi email tới <email>{email}</email>, hoặc dùng “Góp ý / Liên hệ” ở cuối mọi trang của Localman (để lại cách liên lạc nếu bạn muốn được trả lời).",
+	},
+	pending: {
+		title: "Đang cập nhật",
+		body: "Các phần sau chưa được viết; sẽ được bổ sung tại đây:",
+		items: {
+			operator: "Ai vận hành Localman (pháp nhân)",
+			minimumAge: "Độ tuổi tối thiểu để dùng Localman",
+			liability: "Giới hạn trách nhiệm",
+			governingLaw: "Luật áp dụng và giải quyết tranh chấp",
+			logRetention: "Thời gian giữ log của server",
+		},
 	},
 	accountDelete: {
 		title: "Xoá tài khoản Localman",
@@ -32,8 +43,8 @@ export const legal: Messages["legal"] = {
 		kept: "- Cơ sở dữ liệu được sao lưu mỗi đêm và giữ 14 bản gần nhất, nên dữ liệu đã xoá có thể còn trong bản sao lưu tối đa 14 ngày.\n- Thông báo người khác đã nhận về việc bạn làm giữ nguyên chữ lúc gửi cho tới khi hết hạn (90 ngày).\n- Tin bạn gửi qua form góp ý khi chưa đăng nhập không gắn được với tài khoản của bạn; hãy yêu cầu xoá qua form.",
 		idpTitle: "Tài khoản đăng nhập {idpName}",
 		idp: "Localman không giữ mật khẩu của bạn: bạn đăng nhập bằng tài khoản {idpName}, tài khoản mà các ứng dụng khác cũng có thể dùng. Xoá tài khoản Localman không xoá tài khoản đó. Muốn xoá cả nó, hãy vào <idpDelete>trang tài khoản {idpName}</idpDelete>.",
-		noAccessTitle: "Không đăng nhập được?",
+		noAccessTitle: "Yêu cầu qua email, không cần đăng nhập",
 		noAccess:
-			"Dùng “Góp ý / Liên hệ” ở cuối trang này: cho biết tài khoản bạn muốn xoá và cách liên lạc với bạn.",
+			"Nếu không đăng nhập được, hãy gửi email tới <email>{email}</email> để yêu cầu xoá tài khoản. Ghi rõ username Localman và địa chỉ email của tài khoản {idpName} để tìm được tài khoản. Bạn cũng có thể dùng “Góp ý / Liên hệ” ở cuối trang này.",
 	},
 };

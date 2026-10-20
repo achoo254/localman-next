@@ -17,6 +17,8 @@ export interface AccountDeletionSummary {
 	ownedProjects: number;
 	/** Owned projects other people are members of. */
 	sharedProjects: number;
+	/** People who are members of those projects and lose them. */
+	projectMembers: number;
 	workspacesDeleted: number;
 	workspacesLeft: number;
 	collectionsDeleted: number;
@@ -31,6 +33,7 @@ function parseSummary(value: unknown): AccountDeletionSummary {
 	return {
 		ownedProjects: expectNumber(data, "ownedProjects"),
 		sharedProjects: expectNumber(data, "sharedProjects"),
+		projectMembers: expectNumber(data, "projectMembers"),
 		workspacesDeleted: expectNumber(data, "workspacesDeleted"),
 		workspacesLeft: expectNumber(data, "workspacesLeft"),
 		collectionsDeleted: expectNumber(data, "collectionsDeleted"),

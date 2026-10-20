@@ -30,8 +30,11 @@ export const account: Messages["account"] = {
 			other: "{count} mock project bạn sở hữu, cùng dữ liệu của chúng",
 		},
 		sharedProjects: {
+			other: "{count} project trong số đó đang được chia sẻ với người khác",
+		},
+		projectMembers: {
 			other:
-				"{count} project trong số đó đang được chia sẻ: thành viên cũng mất quyền truy cập",
+				"{count} người là thành viên của các project đó sẽ mất quyền truy cập",
 		},
 		workspaces: {
 			other:

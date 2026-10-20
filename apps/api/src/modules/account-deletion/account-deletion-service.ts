@@ -31,6 +31,8 @@ export interface AccountDeletionSummary {
 	readonly ownedProjects: number;
 	/** Of those, the ones other people are members of. */
 	readonly sharedProjects: number;
+	/** People who are members of those projects and lose them. */
+	readonly projectMembers: number;
 	/** The personal workspace and team workspaces with no other member. */
 	readonly workspacesDeleted: number;
 	/** Team workspaces the account leaves; their content stays. */
@@ -62,14 +64,20 @@ export async function previewAccountDeletion(
 		{ owner: sub, ...LIVE_PROJECT },
 		{ _id: 1 },
 	).lean<{ _id: StoredProject["_id"] }[]>();
+	const owned = projects.map((project) => project._id);
 	const shared = await CollaboratorModel.distinct("projectId", {
-		projectId: { $in: projects.map((project) => project._id) },
+		projectId: { $in: owned },
+		status: "accepted",
+	});
+	const members = await CollaboratorModel.distinct("inviteeUserId", {
+		projectId: { $in: owned },
 		status: "accepted",
 	});
 	const plan = await planWorkspaces(sub);
 	return {
 		ownedProjects: projects.length,
 		sharedProjects: shared.length,
+		projectMembers: members.length,
 		workspacesDeleted: plan.toDelete.length,
 		workspacesLeft: plan.toLeave.length,
 		collectionsDeleted: await countCollectionsOf(plan.toDelete),

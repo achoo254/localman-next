@@ -1,6 +1,6 @@
 # Văn bản pháp lý công khai: danh sách claim và nguồn
 
-> **Bản nháp — chờ chủ sở hữu duyệt.** Nội dung `/privacy`, `/terms` và `/account/delete` chưa được owner duyệt. Không deploy trước khi owner xác nhận từng dòng dưới đây, trả lời mục "Cần owner quyết định", rồi đặt `LEGAL_EFFECTIVE_DATE` (`apps/web/src/lib/legal.ts`) bằng ngày duyệt và đổi dòng này thành "Đã duyệt ngày …".
+> **Đã duyệt ngày 20/10/2026** bởi Jev (owner uỷ quyền), cho đăng như trang của chat. `LEGAL_EFFECTIVE_DATE` = 2026-10-20 (`apps/web/src/lib/legal.ts`). Các mục chưa có căn cứ hiện trong hộp "Đang cập nhật" của trang, không viết bịa; xem "Còn thiếu" ở cuối.
 
 Chữ nằm ở `apps/web/src/i18n/messages/{en,vi,zh-CN}/legal*.ts` (English là nguồn) và `account.ts` (`account.delete`). Trang: `apps/web/src/pages/legal/`. Mọi claim chỉ rút từ repo; câu không có nguồn trong repo được đánh dấu **owner** (là cam kết/quy định, không phải sự thật kỹ thuật). Sửa chữ thì sửa bảng này cùng lúc.
 
@@ -39,6 +39,8 @@ Tên miền, tên tài khoản IdP và host Tunelo trong chữ là tham số the
 | P27 | Project không hoạt động 90 ngày có thể bị owner xoá khi chủ có hạn mức thường | `system-architecture.md` "Dọn project bỏ hoang" (`cleanup:abandoned`, mặc định 90 ngày, chạy tay) |
 | P28 | Backup mỗi đêm, giữ 14 bản trên server, dữ liệu đã xoá còn tối đa 14 ngày | `docs/deployment-guide.md` bảng đầu, dòng Backup (cron 02:45, 14 bản, `/opt/localman/backups`) |
 | P29 | Quyền: xuất collection/environment, sửa/xoá, chọn kênh thông báo, xoá tài khoản ở Tài khoản; xoá tài khoản IdP ở trang IdP | `system-architecture.md` (export v2.1, `exportEnvironment`, tuỳ chọn thông báo); ADR-0007; `auth-next/src/account-portal/account-delete-page.ts` (`/account/delete`) |
+| P31 | "Máy chủ đặt tại Việt Nam", chỉ hiện cho dịch vụ hoandat.com (`isPrimaryService`) | Jev duyệt 20/10/2026: whois `103.72.98.65` → VN, iNET; IP server ở `docs/deployment-guide.md` |
+| P32 | Email liên hệ `quocdat254@gmail.com` (trên `/privacy`, `/terms`, `/account/delete`) | Jev duyệt 20/10/2026: địa chỉ công khai sẵn trên trang quyền riêng tư của Miu và trang của chat; `SUPPORT_EMAIL` ở `apps/web/src/lib/legal.ts` |
 | P30 | Bảo mật: HTTPS; cookie phiên HttpOnly; token đăng nhập, secret, link token Tunelo mã hoá; token lời mời, access key, MCP token chỉ lưu hash | `system-architecture.md` "Phiên", "Environments và biến", "`tunelo_links`", "Cộng tác viên" (SHA-256), "Chia sẻ công khai" (`collection_access_keys` chỉ SHA-256); `mcp/mcp-token-model.ts` |
 
 ## Điều khoản (`legalTerms`)
@@ -55,7 +57,7 @@ Tên miền, tên tài khoản IdP và host Tunelo trong chữ là tham số the
 | T8 | Có rate limit, hạn mức tháng, chặn mạng nội bộ và cổng mail | `system-architecture.md` "Proxy của API client" (SSRF, cổng 25/465/587) |
 | T9 | Cấm vượt giới hạn, làm quá tải, tấn công | **owner** |
 | T10 | Project không hoạt động 90 ngày, thùng rác 30 ngày | P25, P27 |
-| T11 | Dịch vụ "như hiện có", có thể thay đổi/ngừng, không bảo đảm | **owner** |
+| T11 | Dịch vụ có thể thay đổi, gián đoạn, ngừng, tính năng có thể bị tắt (đã bỏ câu "như hiện có"/không bảo đảm: thuộc "giới hạn trách nhiệm", đang cập nhật) | cờ tính năng (`infra/localman/released-features`), cổng server ở `docs/deployment-guide.md`; Jev duyệt |
 | T12 | Xoá tài khoản bất cứ lúc nào; có thể khoá tài khoản vi phạm | ADR-0007; khoá tài khoản: **owner** (Localman chưa có chức năng khoá) |
 
 ## Trang xoá tài khoản (`legal.accountDelete`) và modal (`account.delete`)
@@ -69,16 +71,23 @@ Tên miền, tên tài khoản IdP và host Tunelo trong chữ là tham số the
 | D5 | Backup 14 ngày; thông báo người khác đã nhận giữ chữ tới 90 ngày; tin góp ý khi chưa đăng nhập không gắn được tài khoản | P28, P23; ADR-0007 "Đánh đổi" |
 | D6 | Tài khoản IdP không bị xoá, link tới trang xoá của IdP | ADR-0007 mục 2 |
 | D7 | Đăng nhập lại sau khi xoá tạo tài khoản mới rỗng | ADR-0007 "Đánh đổi" |
-| D8 | Không đăng nhập được thì gửi yêu cầu qua "Góp ý / Liên hệ" | kênh có sẵn ("Form góp ý / liên hệ"); việc owner xử lý yêu cầu là **owner** |
-| D9 | Liên hệ: Localman không có email liên hệ, dùng form | `system-architecture.md` "Form góp ý / liên hệ" ("Thay cho địa chỉ email liên hệ") |
+| D8 | Không đăng nhập được: gửi email tới địa chỉ liên hệ kèm username Localman và email tài khoản IdP (hoặc dùng form); không cam kết thời hạn | Jev duyệt 20/10/2026; P32 |
+| D9 | Liên hệ: email (P32) hoặc form "Góp ý / Liên hệ" | P32; `system-architecture.md` "Form góp ý / liên hệ" |
+| D10 | Modal xoá nêu số project đang chia sẻ và số người mất quyền vào chúng (`sharedProjects`, `projectMembers` của dry run) | ADR-0007 mục 4 (Jev 0.97) |
 
-## Cần owner quyết định trước khi deploy
+## Quyết định của Jev (20/10/2026)
 
-1. **Người vận hành:** tên pháp lý (cá nhân/công ty) và địa chỉ đứng tên chính sách. Văn bản hiện chỉ nói "người vận hành Localman".
-2. **Vị trí máy chủ** (server `.65`): quốc gia đặt máy. Repo không ghi.
-3. **Thời gian giữ log pm2/nginx:** repo chỉ nói `pm2-logrotate` xoay log, không ghi số ngày; nginx access log (có IP) không được mô tả. Nếu có, cần thêm vào P11/P28.
-4. **Độ tuổi tối thiểu** và **luật áp dụng / giải quyết tranh chấp**: không có trong repo nên chưa viết.
-5. **Kênh liên hệ chính thức:** chỉ có form góp ý (không email). Store thường yêu cầu email hoặc URL hỗ trợ; cân nhắc thêm email.
-6. Các dòng **owner** ở bảng Điều khoản (T3, T4, T9, T11, T12).
-7. Quy tắc workspace/project khi xoá tài khoản và sự kiện `account.deleted` của IdP: xem "Câu hỏi mở" của ADR-0007.
-8. Văn bản đang nói "Localman miễn phí" và tránh nhắc gói/giá theo ADR-0002; khi thương mại hoá phải sửa T2, P2, P22, P27.
+- Các dòng **owner** ở bảng trên (T3, T4, T9, T12) được duyệt đăng như hiện có; T11 đã bỏ phần trách nhiệm.
+- Email liên hệ và đường xoá không cần đăng nhập bằng email (P32, D8); vị trí máy chủ Việt Nam chỉ cho hoandat.com (P31).
+
+## Còn thiếu (hộp "Đang cập nhật" trên trang)
+
+Không có căn cứ trong repo hay quyết định nào, nên trang chỉ liệt kê, không viết nội dung:
+
+1. **Pháp nhân vận hành** (tên, địa chỉ) — `/privacy`, `/terms`.
+2. **Độ tuổi tối thiểu** — `/privacy`, `/terms`.
+3. **Giới hạn trách nhiệm** — `/terms`.
+4. **Luật áp dụng và giải quyết tranh chấp** — `/terms`.
+5. **Thời gian giữ log server** (pm2-logrotate chưa ghi số ngày; nginx access log có IP chưa được mô tả) — `/privacy`.
+
+Khi có quyết định: thêm section, bỏ mục tương ứng khỏi `pending` trong `pages/legal/legal-page.tsx`, đổi `LEGAL_EFFECTIVE_DATE`, và thêm dòng nguồn vào bảng trên. Văn bản tránh nhắc gói/giá theo ADR-0002; khi thương mại hoá phải sửa T2, P2, P22, P27.

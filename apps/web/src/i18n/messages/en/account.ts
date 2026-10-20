@@ -33,8 +33,13 @@ export const account = {
 			other: "{count} mock projects you own, with their data",
 		},
 		sharedProjects: {
-			one: "{count} of them is shared: its members lose access too",
-			other: "{count} of them are shared: their members lose access too",
+			one: "{count} of them is shared with other people",
+			other: "{count} of them are shared with other people",
+		},
+		projectMembers: {
+			one: "{count} person who is a member of those projects loses access to them",
+			other:
+				"{count} people who are members of those projects lose access to them",
 		},
 		workspaces: {
 			one: "{count} workspace: your personal one, or a team with no other member",

@@ -30,7 +30,7 @@ export const legalTerms: Messages["legalTerms"] = {
 	},
 	service: {
 		title: "服务",
-		body: "Localman 按现状提供。服务可能变更、中断或停止，功能也可能被关闭。我们不保证服务始终可用或没有错误。",
+		body: "Localman 可能变更、中断或停止，功能也可能被关闭。",
 	},
 	end: {
 		title: "终止",

@@ -151,6 +151,7 @@ describe("AccountPage quota meters", () => {
 				Response.json({
 					ownedProjects: 0,
 					sharedProjects: 0,
+					projectMembers: 0,
 					workspacesDeleted: 1,
 					workspacesLeft: 0,
 					collectionsDeleted: 0,

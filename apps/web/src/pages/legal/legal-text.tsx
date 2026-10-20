@@ -4,7 +4,11 @@ import { ExternalLink } from "../../components/ui/external-link";
 import type { MessageKey, ParamsOf } from "../../i18n/message-types";
 import { type TagRenderers, renderRich } from "../../i18n/rich-text";
 import type { Translate } from "../../i18n/translate";
-import { LEGAL_PATHS, PROCESSOR_POLICY_URLS } from "../../lib/legal";
+import {
+	LEGAL_PATHS,
+	PROCESSOR_POLICY_URLS,
+	SUPPORT_EMAIL,
+} from "../../lib/legal";
 import {
 	type TenantInfo,
 	idpAccountDeleteUrlOf,
@@ -17,7 +21,7 @@ export const TEXT_LINK =
 
 /** What the legal texts may name: the hosts of this domain and its account. */
 export type LegalParams = Readonly<
-	Record<"appHost" | "idpName" | "idpHost" | "tunnelHost", string>
+	Record<"appHost" | "idpName" | "idpHost" | "tunnelHost" | "email", string>
 >;
 
 /** Keys whose placeholders, if any, are all `LegalParams`. */
@@ -59,6 +63,7 @@ export function legalParamsOf(tenant: TenantInfo): LegalParams {
 		idpName: tenant.displayName,
 		idpHost: hostOf(tenant.idpOrigin),
 		tunnelHost: tenant.tunnelDomain ?? "Tunelo",
+		email: SUPPORT_EMAIL,
 	};
 }
 
@@ -89,6 +94,11 @@ export function useLegalTags(): TagRenderers {
 		...(tenant.tunnelDomain
 			? { tunelo: external(`https://${tenant.tunnelDomain}`) }
 			: {}),
+		email: (chunk) => (
+			<a href={`mailto:${SUPPORT_EMAIL}`} className={TEXT_LINK}>
+				{chunk}
+			</a>
+		),
 		privacy: internal(LEGAL_PATHS.privacy),
 		terms: internal(LEGAL_PATHS.terms),
 		accountDelete: internal(LEGAL_PATHS.accountDelete),

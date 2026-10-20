@@ -40,6 +40,7 @@ describe("DELETE /users/me (dry run)", () => {
 			deleted: false,
 			ownedProjects: 1,
 			sharedProjects: 0,
+			projectMembers: 0,
 			workspacesLeft: 0,
 			blockedWorkspaces: [],
 		});

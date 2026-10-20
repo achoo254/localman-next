@@ -47,7 +47,11 @@ describe("account deletion and mock projects", () => {
 
 		const preview = await deleteOwner(true);
 		expect(preview.status, JSON.stringify(preview.body)).toBe(200);
-		expect(preview.body).toMatchObject({ ownedProjects: 1, sharedProjects: 1 });
+		expect(preview.body).toMatchObject({
+			ownedProjects: 1,
+			sharedProjects: 1,
+			projectMembers: 1,
+		});
 
 		const res = await deleteOwner();
 		expect(res.status, JSON.stringify(res.body)).toBe(200);

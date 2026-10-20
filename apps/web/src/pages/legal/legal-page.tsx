@@ -3,9 +3,10 @@ import { cardClassName } from "../../components/ui/card";
 import { useI18n } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
 import { cn } from "../../lib/cn";
-import { LEGAL_EFFECTIVE_DATE } from "../../lib/legal";
+import { LEGAL_EFFECTIVE_DATE, isPrimaryService } from "../../lib/legal";
 import { useTenantInfo } from "../../lib/tenant-info";
 import { useAppTitle } from "../../lib/use-document-title";
+import { LegalPendingNotice, type PendingItem } from "./legal-pending";
 import {
 	type LegalKey,
 	TEXT_LINK,
@@ -27,6 +28,7 @@ const PRIVACY_SECTIONS: readonly Section[] = [
 		"legalPrivacy.processors.title",
 		"legalPrivacy.processors.body",
 	],
+	["location", "legalPrivacy.location.title", "legalPrivacy.location.body"],
 	["retention", "legalPrivacy.retention.title", "legalPrivacy.retention.body"],
 	["choices", "legalPrivacy.rights.title", "legalPrivacy.rights.body"],
 	["security", "legalPrivacy.security.title", "legalPrivacy.security.body"],
@@ -50,20 +52,29 @@ const DOCS = {
 		title: "legalPrivacy.title",
 		intro: "legalPrivacy.intro",
 		sections: PRIVACY_SECTIONS,
+		pending: ["operator", "minimumAge", "logRetention"],
 	},
 	terms: {
 		title: "legalTerms.title",
 		intro: "legalTerms.intro",
 		sections: TERMS_SECTIONS,
+		pending: ["operator", "minimumAge", "liability", "governingLaw"],
 	},
 } as const satisfies Record<
 	LegalDoc,
-	{ title: LegalKey; intro: LegalKey; sections: readonly Section[] }
+	{
+		title: LegalKey;
+		intro: LegalKey;
+		sections: readonly Section[];
+		pending: readonly PendingItem[];
+	}
 >;
 
 /**
  * `/privacy` and `/terms`: public, no sign-in, in the language on screen.
- * The hosts and account name follow the domain the visitor is on.
+ * The hosts and account name follow the domain the visitor is on; the
+ * server location is stated only for the hoandat.com service, where it
+ * is known.
  */
 export function LegalPage({ doc }: { doc: LegalDoc }) {
 	const { t, formatDate } = useI18n();
@@ -71,6 +82,9 @@ export function LegalPage({ doc }: { doc: LegalDoc }) {
 	const tags = useLegalTags();
 	const text = (key: LegalKey) => legalText(t, key, params);
 	const page = DOCS[doc];
+	const sections = page.sections.filter(
+		([id]) => id !== "location" || isPrimaryService(params.appHost),
+	);
 	useAppTitle(text(page.title));
 	return (
 		<article data-id={`legal-${doc}`} className="mx-auto grid max-w-3xl gap-4">
@@ -87,7 +101,11 @@ export function LegalPage({ doc }: { doc: LegalDoc }) {
 				)}
 			>
 				<p className="m-0">{renderRich(text(page.intro), tags)}</p>
-				{page.sections.map(([id, title, body]) => (
+				<LegalPendingNotice
+					items={page.pending}
+					data-id={`legal-${doc}-pending`}
+				/>
+				{sections.map(([id, title, body]) => (
 					<section
 						key={id}
 						id={id}
@@ -111,7 +129,7 @@ export function LegalPage({ doc }: { doc: LegalDoc }) {
 					<h2 id="contact-title" className="m-0 font-bold font-mono text-base">
 						{t("legal.contact.title")}
 					</h2>
-					<p className="m-0">{t("legal.contact.body")}</p>
+					<p className="m-0">{renderRich(text("legal.contact.body"), tags)}</p>
 				</section>
 			</div>
 			<LegalLinks data-id={`legal-${doc}-links`} linkClassName={TEXT_LINK} />

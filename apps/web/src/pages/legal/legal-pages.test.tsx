@@ -29,6 +29,17 @@ describe("public legal pages", () => {
 		expect(
 			screen.getByRole("link", { name: "What deletion removes" }),
 		).toHaveAttribute("href", "/account/delete");
+		// The hoandat.com service states where its servers are.
+		expect(
+			screen.getByRole("heading", { name: "Where the data is" }),
+		).toBeInTheDocument();
+		expect(screen.getByText(/are in Vietnam/)).toBeInTheDocument();
+		const pending = document.querySelector('[data-id="legal-privacy-pending"]');
+		expect(pending).toHaveTextContent("Being updated");
+		expect(pending).toHaveTextContent("How long server logs are kept");
+		expect(
+			screen.getByRole("link", { name: "quocdat254@gmail.com" }),
+		).toHaveAttribute("href", "mailto:quocdat254@gmail.com");
 	});
 
 	it("serves the terms to a guest", async () => {
@@ -39,6 +50,12 @@ describe("public legal pages", () => {
 		expect(
 			screen.getByRole("link", { name: "Privacy Policy" }),
 		).toHaveAttribute("href", "/privacy");
+		expect(
+			document.querySelector('[data-id="legal-terms-pending"]'),
+		).toHaveTextContent("Governing law and disputes");
+		expect(
+			screen.getByRole("link", { name: "quocdat254@gmail.com" }),
+		).toHaveAttribute("href", "mailto:quocdat254@gmail.com");
 	});
 
 	it("explains account deletion at a stable public address", async () => {
@@ -59,6 +76,13 @@ describe("public legal pages", () => {
 		expect(
 			document.querySelector('[data-id="legal-account-deleted"]'),
 		).toBeNull();
+		// Deletion without signing in: by email, with username and IdP email.
+		expect(
+			screen.getByRole("link", { name: "quocdat254@gmail.com" }),
+		).toHaveAttribute("href", "mailto:quocdat254@gmail.com");
+		expect(
+			screen.getByText(/Localman username and the email address/),
+		).toBeInTheDocument();
 	});
 
 	it("confirms a deletion that just happened", async () => {

@@ -32,6 +32,9 @@ export function DeletionSummary({
 		summary.sharedProjects > 0
 			? t("account.delete.sharedProjects", { count: summary.sharedProjects })
 			: null,
+		summary.projectMembers > 0
+			? t("account.delete.projectMembers", { count: summary.projectMembers })
+			: null,
 		summary.workspacesDeleted > 0
 			? t("account.delete.workspaces", { count: summary.workspacesDeleted })
 			: null,

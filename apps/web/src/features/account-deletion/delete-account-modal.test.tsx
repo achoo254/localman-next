@@ -16,6 +16,7 @@ const summary = (overrides: Record<string, unknown> = {}) => ({
 	deleted: false,
 	ownedProjects: 2,
 	sharedProjects: 1,
+	projectMembers: 2,
 	workspacesDeleted: 1,
 	workspacesLeft: 1,
 	collectionsDeleted: 3,
@@ -58,7 +59,12 @@ describe("DeleteAccountModal", () => {
 			await screen.findByText("2 mock projects you own, with their data"),
 		).toBeInTheDocument();
 		expect(
-			screen.getByText("1 of them is shared: its members lose access too"),
+			screen.getByText("1 of them is shared with other people"),
+		).toBeInTheDocument();
+		expect(
+			screen.getByText(
+				"2 people who are members of those projects lose access to them",
+			),
 		).toBeInTheDocument();
 		expect(
 			screen.getByText("3 collections in them, with their requests"),

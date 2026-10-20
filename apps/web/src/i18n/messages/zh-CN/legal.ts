@@ -12,7 +12,18 @@ export const legal: Messages["legal"] = {
 		"注册即表示你同意<terms>使用条款</terms>和<privacy>隐私政策</privacy>。",
 	contact: {
 		title: "联系方式",
-		body: "关于你的数据或这些条款的问题或请求：请使用 Localman 每个页面底部的“反馈 / 联系”。Localman 没有联系邮箱；如需回复，请在表单中留下联系方式。",
+		body: "关于你的数据或这些条款的问题或请求：发送邮件至 <email>{email}</email>，或使用 Localman 每个页面底部的“反馈 / 联系”（如需回复，请留下联系方式）。",
+	},
+	pending: {
+		title: "更新中",
+		body: "以下部分尚未撰写，之后会在此补充：",
+		items: {
+			operator: "Localman 的运营者（法律主体）",
+			minimumAge: "使用 Localman 的最低年龄",
+			liability: "责任限制",
+			governingLaw: "适用法律与争议解决",
+			logRetention: "服务器日志的保留时长",
+		},
 	},
 	accountDelete: {
 		title: "删除你的 Localman 账号",
@@ -31,8 +42,8 @@ export const legal: Messages["legal"] = {
 		kept: "- 数据库每晚备份，并保留最近 14 份，因此已删除的数据最多可能在备份中保留 14 天。\n- 其他人收到的关于你操作的通知会保留发送时的文字，直到过期（90 天）。\n- 你未登录时通过反馈表单发送的消息无法与账号关联；如需删除，请通过表单提出。",
 		idpTitle: "你的 {idpName} 登录账号",
 		idp: "Localman 不保存你的密码：你使用 {idpName} 账号登录，其他应用也可能使用该账号。删除 Localman 账号不会删除它。如需一并删除，请前往<idpDelete>你的 {idpName} 账号页面</idpDelete>。",
-		noAccessTitle: "无法登录？",
+		noAccessTitle: "无需登录，通过邮件申请",
 		noAccess:
-			"请使用本页底部的“反馈 / 联系”：说明你要删除的账号以及联系你的方式。",
+			"如果无法登录，请发送邮件至 <email>{email}</email> 申请删除账号。请注明你的 Localman 用户名和 {idpName} 账号的邮箱地址，以便找到该账号。你也可以使用本页底部的“反馈 / 联系”。",
 	},
 };

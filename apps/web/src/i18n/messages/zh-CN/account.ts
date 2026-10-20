@@ -30,7 +30,10 @@ export const account: Messages["account"] = {
 			other: "你拥有的 {count} 个 mock project 及其数据",
 		},
 		sharedProjects: {
-			other: "其中 {count} 个已共享：其成员也会失去访问权限",
+			other: "其中 {count} 个已与他人共享",
+		},
+		projectMembers: {
+			other: "这些 project 的 {count} 位成员将失去访问权限",
 		},
 		workspaces: {
 			other: "{count} 个 workspace：你的个人 workspace，以及没有其他成员的团队",

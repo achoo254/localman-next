@@ -32,7 +32,7 @@ export const legalTerms = {
 	},
 	service: {
 		title: "The service",
-		body: "Localman is provided as is. It may change, be interrupted or stop, and features may be turned off. We do not promise it is always available or free of errors.",
+		body: "Localman may change, be interrupted or stop, and features may be turned off.",
 	},
 	end: {
 		title: "Ending",

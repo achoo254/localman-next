@@ -18,7 +18,18 @@ export const legal = {
 		"By signing up you agree to the <terms>Terms</terms> and the <privacy>Privacy Policy</privacy>.",
 	contact: {
 		title: "Contact",
-		body: "Questions or requests about your data or these terms: use “Feedback / Contact” at the bottom of any Localman page. Localman has no contact email; add a way to reach you in the form if you want an answer.",
+		body: "Questions or requests about your data or these terms: email <email>{email}</email>, or use “Feedback / Contact” at the bottom of any Localman page (leave a way to reach you if you want an answer).",
+	},
+	pending: {
+		title: "Being updated",
+		body: "These parts are not written yet; they will be added here:",
+		items: {
+			operator: "Who operates Localman (the legal entity)",
+			minimumAge: "The minimum age to use Localman",
+			liability: "Limits of liability",
+			governingLaw: "Governing law and disputes",
+			logRetention: "How long server logs are kept",
+		},
 	},
 	accountDelete: {
 		title: "Delete your Localman account",
@@ -38,8 +49,8 @@ export const legal = {
 		kept: "- Database backups are taken every night and the latest 14 are kept, so deleted data can remain in a backup for up to 14 days.\n- Notifications other people received about your actions keep the text they were sent with until they expire (90 days).\n- Messages you sent with the feedback form while signed out cannot be linked to your account; ask through the form to have them deleted.",
 		idpTitle: "Your {idpName} sign-in account",
 		idp: "Localman does not have your password: you sign in with your {idpName} account, which other apps may also use. Deleting your Localman account leaves it in place. To delete it as well, go to <idpDelete>your {idpName} account page</idpDelete>.",
-		noAccessTitle: "Can't sign in?",
+		noAccessTitle: "Ask by email, without signing in",
 		noAccess:
-			"Use “Feedback / Contact” at the bottom of this page: say which account you want deleted and how to reach you.",
+			"If you can't sign in, email <email>{email}</email> and ask for your account to be deleted. Give your Localman username and the email address of your {idpName} account, so the account can be found. You can also use “Feedback / Contact” at the bottom of this page.",
 	},
 } as const;

@@ -16,6 +16,10 @@ export const legalPrivacy: Messages["legalPrivacy"] = {
 		title: "还有谁会收到数据",
 		body: "- <b>{idpName} 账号服务</b>（<idp>{idpHost}</idp>）：为你登录，并向 Localman 发送上述账号信息。它是独立的服务，有自己的账号页面。\n- <b>Cloudflare</b>：为 Localman 提供 DNS，并承载网页应用和 dashboard API 的流量。你未登录提交表单时，Cloudflare Turnstile 会检查你不是机器人。对 mock API 子域名的 request 不经过 Cloudflare。<cloudflare>Cloudflare 隐私政策</cloudflare>。\n- <b>Telegram</b>：仅当你开启 Telegram 通知时，通知内容才会通过 Telegram 的 bot API 发送到你关联的聊天。任何人提交反馈表单时，一段简短摘录（最多 300 个字符）和已遮盖的联系地址会发送到运营者的 Telegram 聊天。<telegram>Telegram 隐私政策</telegram>。\n- <b>你浏览器的推送服务</b>（由浏览器厂商提供）：仅当你开启 Web Push 时，它会把通知送达你的设备。\n- <b>Tunelo</b>（<tunelo>{tunnelHost}</tunelo>）：仅当你在 Localman 中使用 Tunelo 时，Localman 会读取你的 tunnel 列表，并通过你的 tunnel 向本地应用发送 request。\n- <b>你指定的地址：</b>你通过 API client proxy、mock upstream、callback 和 inbox 转发发送的 request，会按你设置的内容发往你设置的地址。",
 	},
+	location: {
+		title: "数据存放位置",
+		body: "位于 {appHost} 的 Localman 服务器设在越南，你的数据存储在那里；上面列出的服务可能按其自身政策在其他地方处理数据。",
+	},
 	retention: {
 		title: "我们保留多久",
 		body: "- <b>账号、project、collection 和设置：</b>直到你删除它们或删除账号。\n- <b>Mock request 日志：</b>标准额度下 7 天，享有扩展额度期间 30 天，且每个 project 最多保留最新的 20,000 条。\n- <b>API client 历史：</b>90 天，最多 500 条。\n- <b>通知：</b>90 天。\n- <b>会话：</b>30 天未使用即结束，最长 90 天。\n- <b>已删除的 collection：</b>在回收站保留 30 天。\n- <b>反馈和联系消息：</b>直到运营者删除。\n- <b>无活动的 project：</b>所有者处于标准额度时，90 天无活动的 project 可能会被运营者删除。\n- <b>备份：</b>数据库每晚备份，服务器上保留最近 14 份，因此已删除的数据最多可能在备份中保留 14 天。",
