@@ -2,7 +2,7 @@ import { Navigate, type RouteObject } from "react-router";
 import { LandingPage } from "../pages/landing/landing-page";
 import { lazyPage } from "./lazy-page";
 
-/** Pages of the public layout (landing, invitations, docs). */
+/** Pages of the public layout (landing, invitations, docs, legal). */
 export const publicRoutes: RouteObject[] = [
 	// The landing stays reachable once signed in: its header and hero
 	// turn into "Open app" instead of moving the user away.
@@ -42,6 +42,24 @@ export const publicRoutes: RouteObject[] = [
 		element: lazyPage(
 			() => import("../pages/run/run-button-page"),
 			"RunButtonPage",
+		),
+	},
+	// Legal pages: public, at stable paths the app stores link to.
+	{
+		path: "privacy",
+		element: lazyPage(() => import("../pages/legal/legal-page"), "PrivacyPage"),
+	},
+	{
+		path: "terms",
+		element: lazyPage(() => import("../pages/legal/legal-page"), "TermsPage"),
+	},
+	// How to delete an account (store "account deletion URL"); public even
+	// though `/account` itself needs a session.
+	{
+		path: "account/delete",
+		element: lazyPage(
+			() => import("../pages/legal/account-delete-page"),
+			"AccountDeletePage",
 		),
 	},
 	// Design-system reference page kept for comparing with the prototype.

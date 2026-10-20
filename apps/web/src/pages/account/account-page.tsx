@@ -4,6 +4,8 @@ import { Link } from "react-router";
 import { Alert } from "../../components/ui/alert";
 import { Button, buttonClassName } from "../../components/ui/button";
 import { useFeatures } from "../../config/features";
+import { DeleteAccountSection } from "../../features/account-deletion/delete-account-section";
+import { useCurrentUser } from "../../features/auth/use-current-user";
 import { NOTIFICATION_SETTINGS_PATH } from "../../features/notifications/notification-bell";
 import {
 	type AccountUsage,
@@ -25,13 +27,14 @@ type UsageState =
 
 /**
  * `/account`: until when the extended limits last (when they do), the
- * limits the account is above, and this month's meters. No plan, price
- * or upgrade: the product is not sold yet.
+ * limits the account is above, this month's meters and, last, deleting
+ * the account. No plan, price or upgrade: the product is not sold yet.
  */
 export function AccountPage() {
 	const { t, formatDate } = useI18n();
 	useAppTitle(t("account.title"));
 	const flags = useFeatures();
+	const session = useCurrentUser();
 	const [state, setState] = useState<UsageState>({ status: "loading" });
 	// Held its minimum time even when the usage comes back sooner.
 	const skeleton = useDelayedFlag(state.status === "loading");
@@ -95,6 +98,9 @@ export function AccountPage() {
 				</div>
 			) : null}
 			{usage && !skeleton ? <AccountMeters usage={usage} /> : null}
+			{session.status === "authenticated" && session.user.username ? (
+				<DeleteAccountSection username={session.user.username} />
+			) : null}
 		</section>
 	);
 }

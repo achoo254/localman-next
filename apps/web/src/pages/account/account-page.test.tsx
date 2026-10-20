@@ -1,4 +1,5 @@
 import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FeaturesContext, NO_FEATURES } from "../../config/features";
 import { resetCurrentUserCache } from "../../features/auth/use-current-user";
@@ -136,5 +137,32 @@ describe("AccountPage quota meters", () => {
 		expect(document.body).not.toHaveTextContent(
 			/\b(plan|pricing|upgrade|Pro)\b/i,
 		);
+	});
+
+	it("ends with deleting the account, which runs the dry run first", async () => {
+		renderAccount(usage());
+		const open = await screen.findByRole("button", { name: "Delete account…" });
+		expect(
+			screen.getByRole("link", { name: "What is deleted" }),
+		).toHaveAttribute("href", "/account/delete");
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () =>
+				Response.json({
+					ownedProjects: 0,
+					sharedProjects: 0,
+					workspacesDeleted: 1,
+					workspacesLeft: 0,
+					collectionsDeleted: 0,
+					blockedWorkspaces: [],
+					dryRun: true,
+					deleted: false,
+				}),
+			),
+		);
+		await userEvent.setup().click(open);
+		expect(
+			await screen.findByLabelText(/Type your username minhanh to confirm/),
+		).toBeInTheDocument();
 	});
 });

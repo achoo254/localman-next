@@ -32,3 +32,15 @@ export function trySilentSignIn(
 	navigateToLogin({ returnTo: currentPath(), prompt: "none" });
 	return true;
 }
+
+/**
+ * Forgets that this browser signed in before (a deleted account): no
+ * silent sign-in would bring the visitor back as a new, empty account
+ * while the IdP session lasts. The hint is readable by the web, so the web
+ * can expire it, with the attributes the API set it with.
+ */
+export function forgetSilentSignIn(): void {
+	const expired = "=; Max-Age=0; Path=/; SameSite=Lax";
+	document.cookie = `__Host-${HINT_COOKIE}${expired}; Secure`;
+	document.cookie = `${HINT_COOKIE}${expired}`;
+}

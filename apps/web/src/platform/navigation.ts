@@ -31,6 +31,14 @@ export function navigateToLogin(options: LoginOptions = {}): void {
 }
 
 /**
+ * Loads an in-app page from scratch (no state of the current one kept),
+ * e.g. after the account was deleted.
+ */
+export function reloadAt(path: string): void {
+	window.location.assign(path);
+}
+
+/**
  * The URL when it is an absolute http(s) address, else null. Links built
  * from data (mock URLs, IdP pages) must never run `javascript:` or open
  * `data:`/`file:` documents.

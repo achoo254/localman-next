@@ -87,9 +87,9 @@ export class SubscriptionSlots {
 }
 
 /**
- * Subjects whose user row is known to exist. Rows are never deleted, so
- * a hit skips the upsert; entries expire after 10 minutes, at most
- * 10 000 are kept.
+ * Subjects whose user row is known to exist, so a hit skips the upsert;
+ * entries expire after 10 minutes, at most 10 000 are kept. Deleting an
+ * account forgets its subject (`forgetKnownSubject`).
  */
 const knownSubjects = new TtlLruCache<true>(10_000, 10 * 60_000);
 
@@ -104,4 +104,9 @@ export async function ensureKnownSubject(subject: string): Promise<void> {
 /** TEST ONLY. Forgets the known subjects (tests empty the users collection). */
 export function clearKnownSubjects(): void {
 	knownSubjects.clear();
+}
+
+/** A deleted account: its next MCP request upserts a fresh user row. */
+export function forgetKnownSubject(subject: string): void {
+	knownSubjects.delete(tenantKey(subject));
 }

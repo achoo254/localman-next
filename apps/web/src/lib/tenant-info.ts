@@ -80,3 +80,8 @@ export function useTenantInfo(): TenantInfo {
 export function idpAccountUrlOf(info: TenantInfo): string {
 	return `${info.idpOrigin}/account`;
 }
+
+/** IdP page that deletes the sign-in account itself (not Localman's data). */
+export function idpAccountDeleteUrlOf(info: TenantInfo): string {
+	return `${idpAccountUrlOf(info)}/delete`;
+}

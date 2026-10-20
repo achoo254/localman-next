@@ -34,7 +34,7 @@ const notificationPreferencesSchema = new Schema(
 );
 
 notificationPreferencesSchema.plugin(tenantScopePlugin);
-const NotificationPreferencesModel = mongoose.model(
+export const NotificationPreferencesModel = mongoose.model(
 	"NotificationPreferences",
 	notificationPreferencesSchema,
 );

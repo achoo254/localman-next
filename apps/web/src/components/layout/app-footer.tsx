@@ -5,14 +5,15 @@ import { FeedbackForm } from "../../features/feedback/feedback-form";
 import { useT } from "../../i18n/i18n-context";
 import { LanguageSwitcher } from "../../i18n/language-switcher";
 import { ThemeToggle } from "../theme/theme-toggle";
+import { LegalLinks } from "./legal-links";
 
 const FOOTER_LINK =
 	"inline-flex min-h-11 cursor-pointer items-center rounded-sm font-mono font-semibold text-primary underline-offset-4 hover:underline";
 
 /**
  * Page footer: the landing ("Localman home"), Docs, the
- * "Feedback / Contact" form (in place of a contact email) and the language
- * switcher.
+ * "Feedback / Contact" form (in place of a contact email), the legal pages
+ * and the language switcher.
  */
 export function AppFooter() {
 	const t = useT();
@@ -46,6 +47,7 @@ export function AppFooter() {
 					>
 						{t("layout.footer.feedback")}
 					</button>
+					<LegalLinks data-id="app-footer-legal" linkClassName={FOOTER_LINK} />
 					<LanguageSwitcher data-id="app-footer-language" />
 					{/* The top bar hides its theme switch below 640px. */}
 					<div className="sm:hidden">

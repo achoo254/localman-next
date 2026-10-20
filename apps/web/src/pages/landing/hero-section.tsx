@@ -1,13 +1,18 @@
 import { limitsFor } from "@localman/shared/constants";
+import { Link } from "react-router";
 import { Badge } from "../../components/ui/badge";
 import { buttonClassName } from "../../components/ui/button";
 import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
 import { cn } from "../../lib/cn";
+import { LEGAL_PATHS } from "../../lib/legal";
 import { AuthErrorAlert } from "./auth-error-alert";
 import { HeroPreview } from "./hero-preview";
 import { StartCta } from "./start-cta";
+
+/** Terms and Privacy links in the sign-up note under the hero's buttons. */
+const LEGAL_LINK = "text-fg underline underline-offset-4 hover:no-underline";
 
 const CODE_WORD = "font-mono text-primary";
 
@@ -73,6 +78,23 @@ export function HeroSection({ howItWorksHref }: { howItWorksHref: string }) {
 					{apiClient && proxy !== null
 						? t("landing.hero.noteLocalhost", { ...limits, proxy })
 						: t("landing.hero.noteMock", limits)}
+				</p>
+				<p
+					data-id="landing-hero-legal"
+					className="m-0 text-[0.8125rem] text-muted"
+				>
+					{renderRich(t("legal.signUpNote"), {
+						terms: (chunk) => (
+							<Link to={LEGAL_PATHS.terms} className={LEGAL_LINK}>
+								{chunk}
+							</Link>
+						),
+						privacy: (chunk) => (
+							<Link to={LEGAL_PATHS.privacy} className={LEGAL_LINK}>
+								{chunk}
+							</Link>
+						),
+					})}
 				</p>
 			</div>
 			<HeroPreview localhost={apiClient} />

@@ -66,3 +66,8 @@ export async function inOwnerTransaction<T>(
 		return work(session);
 	});
 }
+
+/** Drops the owner lock of a deleted account (its key holds the `sub`). */
+export async function deleteOwnerLock(ownerSub: string): Promise<void> {
+	await WorkspaceLockModel.deleteOne({ _id: `owner:${ownerSub}` });
+}

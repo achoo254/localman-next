@@ -16,6 +16,9 @@ import { feedback } from "./feedback";
 import { invite } from "./invite";
 import { landing } from "./landing";
 import { layout } from "./layout";
+import { legal } from "./legal";
+import { legalPrivacy } from "./legal-privacy";
+import { legalTerms } from "./legal-terms";
 import { limits } from "./limits";
 import { mcp } from "./mcp";
 import { mockCallbacks } from "./mock-callbacks";
@@ -84,4 +87,7 @@ export const zhCN: Messages = {
 	collections,
 	publicSharing,
 	versionControl,
+	legal,
+	legalPrivacy,
+	legalTerms,
 };

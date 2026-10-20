@@ -327,6 +327,15 @@ Thay cho địa chỉ email liên hệ: link "Góp ý / Liên hệ" ở `AppFoot
 - Sau khi lưu, owner nhận tin Telegram (kind `feedback.contact`, throttle riêng như form Pro): loại, trích nội dung tối đa 300 ký tự trên một dòng (bỏ ký tự điều khiển, zero-width, bidi và U+061C; phá link: `https://` thành `hxxps://`, dấu chấm trong tên miền thành `[.]`, chèn word joiner sau `@`, `#` và `/` đầu lệnh bot để Telegram không tạo link hay mention), liên hệ đã che, đăng nhập hay khách, nguồn; không có tên. Tin gửi dạng văn bản thường, không `parse_mode`.
 - Admin (`guard: ownerOnly`, có MCP tool): `admin.listContactMessages` (`GET /admin/contact-messages`, mới nhất trước, lọc `status` và `category`, phân trang tới trang 10.000), `admin.updateContactMessageStatus` (`PUT /admin/contact-messages/:messageId/status`, `new` → `read` → `resolved`; lùi về `new` xoá `readAt` và `resolvedAt`) và `admin.deleteContactMessage` (`DELETE /admin/contact-messages/:messageId`, `dryRun`, xoá hẳn nội dung, tên và địa chỉ liên hệ; dùng cho spam hoặc khi người gửi yêu cầu). Không có TTL: tin ở lại tới khi owner xoá. Trang web `/admin/feedback` ("Hộp thư góp ý"), nút xoá có xác nhận và chạy dry run trước.
 
+## Xoá tài khoản và trang pháp lý
+
+Quyết định và bảng xoá/ẩn danh theo model: [ADR-0007](decisions/0007-account-deletion.md).
+
+- **API:** `users.deleteAccount` (`DELETE /api/v1/users/me`, `apps/api/src/modules/account-deletion/`, miễn MCP). `?dryRun=true` trả số project (và số đang chia sẻ), workspace sẽ xoá/rời, collection sẽ purge và `blockedWorkspaces`. Xoá thật cần phiên trình duyệt, `confirm` bằng username, 5 lượt mỗi giờ; là Admin duy nhất của workspace team còn thành viên khác thì 409 `ACCOUNT_DELETION_BLOCKED`. Xoá mọi phiên trước, xoá `users` cuối cùng; không đụng tài khoản IdP.
+- **Phân loại model:** `ACCOUNT_DATA_POLICY` (`account-data-policy.ts`); test fail khi model mới chưa được phân loại.
+- **Web:** mục "Delete account" cuối `/account` (modal chạy dry run, gõ username). Xoá xong web gỡ Web Push, trang đã lưu, cookie gợi ý SSO rồi tải `/account/delete?deleted=1`.
+- **Trang công khai** (không cần đăng nhập, `pages/legal/`): `/privacy`, `/terms`, `/account/delete` (URL xoá tài khoản cho store). Footer mọi trang và ghi chú dưới nút đăng ký ở hero link tới chúng. Chữ ở namespace `legal`, `legalPrivacy`, `legalTerms`; mọi claim và nguồn ở [legal-pages-review.md](legal-pages-review.md) (bản nháp chờ owner duyệt).
+
 ## Cấu hình sản phẩm
 
 Ngoài biến nền tảng, `apps/api/src/config/feature-env.ts` đọc `MOCK_BASE_DOMAIN`, `MOCK_RATE_LIMIT_PER_SECRET`, `MOCK_RATE_LIMIT_PER_IP`, `MOCK_WRITE_RATE_LIMIT_PER_SECRET`, `MOCK_RESPONSE_BYTES_PER_SECOND` (truyền thẳng cho mock app), `OWNER_SUBS`, `OWNER_TELEGRAM_CHAT_ID`, `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `TURNSTILE_VERIFY_URL` và `PUBLIC_SHARING_ENABLED` (cổng của [chia sẻ công khai](#chia-sẻ-công-khai), đọc thẳng trong `main.ts`) (xem `.env.example`). Operation được khai báo tĩnh nên đọc các giá trị này qua `config/runtime-settings.ts`, do `main.ts` cài khi khởi động.
