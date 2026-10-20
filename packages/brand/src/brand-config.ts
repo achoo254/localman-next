@@ -10,6 +10,12 @@ export interface BrandConfig {
 	};
 	readonly icon: string;
 	readonly iconMaskable: string;
+	/**
+	 * Whether the web app links, serves and emits the manifest and icons
+	 * (apps/web/src/config/brand-install-assets.ts). Off until the icon is
+	 * designed; not in chat-next, which always ships them.
+	 */
+	readonly webInstall: boolean;
 	readonly appIds: {
 		readonly ios: string;
 		readonly android: string;

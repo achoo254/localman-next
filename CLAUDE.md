@@ -23,6 +23,7 @@ Quy tắc:
 - **UI** chỉ dùng token và utility Tailwind đã map (`bg-surface`, `text-fg`, `text-muted`…), không hex/rgb/px khoảng cách. Dùng primitive trong `apps/web/src/components/ui/` trước khi tạo mới. Xem `docs/design-system.md`.
 - **Chữ người dùng thấy** đi qua `t()` (`apps/web/src/i18n/`): English là nguồn và mặc định, kèm `zh-CN` và `vi`; không hard-code chuỗi, không nêu tên đối thủ. Xem `docs/i18n.md`.
 - **Tên sản phẩm, bundle id, mẫu host** chỉ khai trong `brand.config.json`; code đọc `brand.appName` từ `@localman/brand`, không viết cứng `"Localman"` (`check:brand` chặn). Xem `docs/decisions/0006-brand-config-and-product-name.md`.
+- **Favicon/manifest/icon cài app của web** nối sẵn (`apps/web/src/config/brand-install-assets.ts`) nhưng tắt bằng `"webInstall": false` trong `brand.config.json` vì icon còn là dấu tạm; tắt thì `dist` không đổi. Bật khi có icon thiết kế: thay SVG trong `packages/design-tokens`, `pnpm brand:gen`, đặt `"webInstall": true`, thêm MIME `webmanifest` cho nginx; các bước đủ ở mục "Cách thay đổi" của ADR-0006.
 - Lỗi API theo dạng `{ error: { code, message } }`; không lộ stack ra client, không log secret.
 - Internal package `@localman/*` là source-only TS (`exports` trỏ vào `src/index.ts`); import tương đối dùng đuôi `.js` (NodeNext), trừ `apps/web` (Bundler).
 - TypeScript strict, không `any` (dùng `unknown` + type guard), không non-null assertion `!`, named exports, file kebab-case, ≤ 200 dòng.

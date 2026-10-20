@@ -12,6 +12,7 @@
 		"colors",
 		"icon",
 		"iconMaskable",
+		"webInstall",
 		"appIds",
 		"urlScheme",
 		"primaryTenant",
@@ -42,6 +43,10 @@
 			"description": "Full-bleed icon (SVG) whose artwork stays inside the central 80% circle: manifest maskable icons and the Apple touch icon.",
 			"type": "string",
 			"pattern": "^[a-z0-9][a-z0-9/._-]*\\.svg$"
+		},
+		"webInstall": {
+			"description": "Whether apps/web links, serves and emits the web manifest and icons of packages/brand/generated (favicon, Apple touch icon, install prompt). false until a designed icon replaces the placeholder; with false the web build is unchanged. See docs/decisions/0006-brand-config-and-product-name.md.",
+			"type": "boolean"
 		},
 		"appIds": {
 			"type": "object",

@@ -10,6 +10,7 @@
 	},
 	"icon": "packages/design-tokens/app-icon.svg",
 	"iconMaskable": "packages/design-tokens/app-icon-maskable.svg",
+	"webInstall": false,
 	"appIds": {
 		"ios": "com.hoandat.localman",
 		"android": "com.hoandat.localman",

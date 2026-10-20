@@ -33,6 +33,14 @@ describe("brand.config.json", () => {
 		).toThrow(/appIds\/ios.*colors\/primary|colors\/primary.*appIds\/ios/s);
 	});
 
+	it("requires webInstall, an explicit boolean switch", () => {
+		const { webInstall: _webInstall, ...missing } = loaded;
+		expect(() => parseBrandConfig(missing)).toThrow(/webInstall/);
+		expect(() => parseBrandConfig({ ...loaded, webInstall: "false" })).toThrow(
+			/webInstall must be boolean/,
+		);
+	});
+
 	it("copies its colours from the design tokens, the one colour source", () => {
 		const darkStart = tokensCss.indexOf("@media (prefers-color-scheme: dark)");
 		expect(darkStart).toBeGreaterThan(0);
