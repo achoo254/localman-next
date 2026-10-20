@@ -27,6 +27,7 @@
 		"@fontsource/jetbrains-mono": "^5.2.0",
 		"@jitl/quickjs-wasmfile-release-sync": "0.32.0",
 		"@lezer/highlight": "^1.2.5",
+		"@localman/brand": "workspace:*",
 		"@localman/design-tokens": "workspace:*",
 		"@localman/shared": "workspace:*",
 		"@radix-ui/react-context-menu": "^2.3.8",

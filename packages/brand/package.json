@@ -1,0 +1,19 @@
+{
+	"name": "@localman/brand",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./build": "./src/build.ts"
+	},
+	"scripts": {
+		"generate": "tsx src/generate-cli.ts",
+		"test": "vitest run",
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"ajv": "8.20.0",
+		"playwright": "1.64.0"
+	}
+}

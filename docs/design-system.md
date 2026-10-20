@@ -4,7 +4,7 @@ Localman dùng design system riêng, không lấy từ bên thứ ba. Prototype 
 
 ## Token
 
-- **Nguồn duy nhất:** `packages/design-tokens/tokens.css`. Đây là file duy nhất được chứa literal màu (hex, `rgb()`).
+- **Nguồn duy nhất:** `packages/design-tokens/tokens.css`. Đây là file duy nhất được chứa literal màu (hex, `rgb()`), ngoài các SVG cùng package (badge, icon app). `colors` trong `brand.config.json` là bản sao của `--c-primary-solid` và `--c-bg`, giữ bằng nhau bằng test của `@localman/brand`.
 - **Màu:** Radix Colors v3 (MIT). Màu chủ đạo violet, màu xám slate, accent phụ plum; success green, warning amber, error red, info blue. Ý nghĩa các bước: 1–2 nền app, 3–5 nền component, 6–8 viền, 9–10 màu đặc, 11 chữ độ tương phản thấp, 12 chữ độ tương phản cao.
 - **Nhãn soft** (chữ trên nền tint như badge, method chip): dùng token `*-text`, ở light là step 12 để đạt ≥ 4.5:1.
 - **Chữ success/warning ở light** chỉ đặt trên `--c-surface`; trên `--c-bg` chúng chỉ đạt khoảng 4.4:1.

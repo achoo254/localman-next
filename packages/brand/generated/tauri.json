@@ -1,0 +1,13 @@
+{
+	"productName": "Localman",
+	"identifier": "com.hoandat.localman",
+	"plugins": {
+		"deep-link": {
+			"desktop": {
+				"schemes": [
+					"com.hoandat.localman"
+				]
+			}
+		}
+	}
+}

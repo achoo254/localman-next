@@ -3,7 +3,7 @@ import { cn } from "../../lib/cn";
 
 export type WordmarkProps = Omit<ComponentProps<"span">, "children">;
 
-/** "Localman" in bold JetBrains Mono; "Local" uses violet step 11. */
+/** The Localman logotype in bold JetBrains Mono; "Local" uses violet step 11. */
 export function Wordmark({ className, ...rest }: WordmarkProps) {
 	return (
 		<span

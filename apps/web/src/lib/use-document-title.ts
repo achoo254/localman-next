@@ -1,3 +1,4 @@
+import { brand } from "@localman/brand";
 import { useEffect } from "react";
 
 /**
@@ -14,9 +15,9 @@ export function useDocumentTitle(title: string): void {
 	}, [title]);
 }
 
-/** Title of an app page: "{page} · Localman". */
+/** Title of an app page: "{page} · {appName}". */
 export function appTitle(page: string): string {
-	return `${page} · Localman`;
+	return `${page} · ${brand.appName}`;
 }
 
 /** Sets the tab title of an app page (see `appTitle`). */

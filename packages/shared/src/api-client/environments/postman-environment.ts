@@ -3,6 +3,7 @@
  * Only shared values travel: local values never leave their owner, and a
  * secret is always written blank (its type is kept). Pure, no Node API.
  */
+import { brand } from "@localman/brand";
 import { z } from "zod";
 import {
 	ENVIRONMENT_NAME_MAX,
@@ -50,7 +51,7 @@ export function toPostmanEnvironment(
 		})),
 		_postman_variable_scope: "environment",
 		_postman_exported_at: exportedAt.toISOString(),
-		_postman_exported_using: "Localman",
+		_postman_exported_using: brand.appName,
 	};
 }
 

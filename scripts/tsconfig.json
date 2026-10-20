@@ -10,6 +10,8 @@
 		"check-tokens/**/*.ts",
 		"check-i18n.ts",
 		"check-i18n/**/*.ts",
+		"check-brand.ts",
+		"check-brand/**/*.ts",
 		"check-mcp-docs/**/*.ts",
 		"nginx-log-map/**/*.ts"
 	]

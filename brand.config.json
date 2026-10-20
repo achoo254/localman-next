@@ -1,0 +1,26 @@
+{
+	"$schema": "./brand.config.schema.json",
+	"appName": "Localman",
+	"shortName": "Localman",
+	"description": "Spin up a stateful mock REST API in minutes: declare resources, generate data with Faker.js, nest relations and get CRUD endpoints right away.",
+	"colors": {
+		"primary": "#6e56cf",
+		"background": "#f9f9fb",
+		"backgroundDark": "#111113"
+	},
+	"icon": "packages/design-tokens/app-icon.svg",
+	"iconMaskable": "packages/design-tokens/app-icon-maskable.svg",
+	"appIds": {
+		"ios": "com.hoandat.localman",
+		"android": "com.hoandat.localman",
+		"desktop": "com.hoandat.localman"
+	},
+	"urlScheme": "com.hoandat.localman",
+	"primaryTenant": {
+		"domain": "hoandat.com",
+		"issuer": "https://auth.hoandat.com"
+	},
+	"hostTemplates": {
+		"web": "localman.{domain}"
+	}
+}

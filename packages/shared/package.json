@@ -19,6 +19,7 @@
 	},
 	"dependencies": {
 		"@faker-js/faker": "^10.6.0",
+		"@localman/brand": "workspace:*",
 		"fractional-indexing": "^4.0.0",
 		"quickjs-emscripten-core": "0.32.0",
 		"zod": "^4.6.5"

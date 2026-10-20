@@ -22,7 +22,7 @@ const apiKeySchema = new Schema(
 		// tunnels of `linkedDeviceId` and can never open one.
 		scopes: { type: [String], default: [] },
 		linkedDeviceId: { type: String, default: null, index: true },
-		// Who holds a link token (e.g. "Localman"), shown in `tunelo links`.
+		// Who holds a link token (e.g. the Localman web app), shown in `tunelo links`.
 		clientName: { type: String, default: "" },
 		status: { type: String, enum: ["active", "revoked"], default: "active" },
 		maxTunnels: { type: Number, default: 3 },

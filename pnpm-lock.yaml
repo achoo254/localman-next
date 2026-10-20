@@ -53,6 +53,9 @@ importers:
       '@faker-js/faker':
         specifier: ^10.6.0
         version: 10.6.0
+      '@localman/brand':
+        specifier: workspace:*
+        version: link:../../packages/brand
       '@localman/operations':
         specifier: workspace:*
         version: link:../../packages/operations
@@ -256,6 +259,9 @@ importers:
       '@lezer/highlight':
         specifier: ^1.2.5
         version: 1.2.5
+      '@localman/brand':
+        specifier: workspace:*
+        version: link:../../packages/brand
       '@localman/design-tokens':
         specifier: workspace:*
         version: link:../../packages/design-tokens
@@ -330,6 +336,15 @@ importers:
         specifier: ^7.1.0
         version: 7.3.7(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15)
 
+  packages/brand:
+    devDependencies:
+      ajv:
+        specifier: 8.20.0
+        version: 8.20.0
+      playwright:
+        specifier: 1.64.0
+        version: 1.64.0
+
   packages/design-tokens:
     dependencies:
       '@radix-ui/colors':
@@ -360,6 +375,9 @@ importers:
       '@faker-js/faker':
         specifier: ^10.6.0
         version: 10.6.0
+      '@localman/brand':
+        specifier: workspace:*
+        version: link:../brand
       fractional-indexing:
         specifier: ^4.0.0
         version: 4.0.0

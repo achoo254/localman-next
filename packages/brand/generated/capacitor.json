@@ -1,0 +1,8 @@
+{
+	"appId": "com.hoandat.localman",
+	"appName": "Localman",
+	"android": {
+		"applicationId": "com.hoandat.localman"
+	},
+	"urlScheme": "com.hoandat.localman"
+}

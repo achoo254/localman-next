@@ -10,7 +10,7 @@
 	"scripts": {
 		"dev": "pnpm --parallel --filter @localman/web --filter @localman/api dev",
 		"build": "pnpm -r build",
-		"lint": "biome check . && pnpm check:i18n",
+		"lint": "biome check . && pnpm check:i18n && pnpm check:tokens && pnpm check:brand",
 		"lint:fix": "biome check --fix .",
 		"typecheck": "pnpm -r --workspace-concurrency=1 typecheck && tsc -p scripts/tsconfig.json && tsc -p e2e/tsconfig.json",
 		"e2e": "playwright test --config e2e/playwright.config.ts",
@@ -19,6 +19,8 @@
 		"check:mcp-coverage": "tsx scripts/check-mcp-coverage.ts",
 		"check:tokens": "tsx scripts/check-tokens.ts",
 		"check:i18n": "tsx scripts/check-i18n.ts",
+		"check:brand": "tsx scripts/check-brand.ts",
+		"brand:gen": "pnpm --filter @localman/brand generate",
 		"dev:tunelo-server": "pnpm --filter @tunelo/shared build && tsx watch --env-file=apps/tunelo-server/.env apps/tunelo-server/src/server.ts",
 		"dev:tunelo-cli": "pnpm --filter tunelo dev",
 		"build:tunelo-server": "tsx scripts/tunelo/build-server.ts",

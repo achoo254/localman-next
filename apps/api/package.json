@@ -17,6 +17,7 @@
 	},
 	"dependencies": {
 		"@faker-js/faker": "^10.6.0",
+		"@localman/brand": "workspace:*",
 		"@localman/operations": "workspace:*",
 		"@localman/shared": "workspace:*",
 		"@localman/tenancy": "workspace:*",

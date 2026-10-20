@@ -1,3 +1,4 @@
+import { brand } from "@localman/brand";
 import { OperationError } from "@localman/operations";
 import { takeOperationSlot } from "../../lib/operation-rate-limit.js";
 import { TuneloApiError } from "./tunelo-api.js";
@@ -17,7 +18,7 @@ import {
 } from "./tunnel-link-service.js";
 
 /** Name Tunelo shows on the machine (`tunelo link` asks to approve it). */
-const CLIENT_NAME = "Localman";
+const CLIENT_NAME = brand.appName;
 /**
  * Pairings of one user waiting at once: Tunelo opens few per client IP
  * (this server's, shared by every user), so one user must not take them all.

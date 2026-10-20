@@ -1,0 +1,94 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "brand.config.schema.json",
+	"title": "Brand configuration",
+	"description": "Product name, identifiers and hosts of Localman. Renaming the product means editing this file, running pnpm brand:gen and rebuilding; scripts/check-brand.ts rejects the product name hard-coded in code. Colours mirror packages/design-tokens/tokens.css (a test keeps them equal).",
+	"type": "object",
+	"additionalProperties": false,
+	"required": [
+		"appName",
+		"shortName",
+		"description",
+		"colors",
+		"icon",
+		"iconMaskable",
+		"appIds",
+		"urlScheme",
+		"primaryTenant",
+		"hostTemplates"
+	],
+	"properties": {
+		"$schema": { "type": "string" },
+		"appName": { "type": "string", "minLength": 1, "maxLength": 40 },
+		"shortName": { "type": "string", "minLength": 1, "maxLength": 12 },
+		"description": { "type": "string", "minLength": 1, "maxLength": 200 },
+		"colors": {
+			"description": "Copies of design tokens: primary is --c-primary-solid, background the light --c-bg, backgroundDark the dark --c-bg.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["primary", "background", "backgroundDark"],
+			"properties": {
+				"primary": { "$ref": "#/$defs/hexColor" },
+				"background": { "$ref": "#/$defs/hexColor" },
+				"backgroundDark": { "$ref": "#/$defs/hexColor" }
+			}
+		},
+		"icon": {
+			"description": "Path of the master icon (SVG), relative to the repository root: favicon and PNG icons. It holds colour literals, so it lives in packages/design-tokens.",
+			"type": "string",
+			"pattern": "^[a-z0-9][a-z0-9/._-]*\\.svg$"
+		},
+		"iconMaskable": {
+			"description": "Full-bleed icon (SVG) whose artwork stays inside the central 80% circle: manifest maskable icons and the Apple touch icon.",
+			"type": "string",
+			"pattern": "^[a-z0-9][a-z0-9/._-]*\\.svg$"
+		},
+		"appIds": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["ios", "android", "desktop"],
+			"properties": {
+				"ios": { "$ref": "#/$defs/reverseDomain" },
+				"android": { "$ref": "#/$defs/reverseDomain" },
+				"desktop": { "$ref": "#/$defs/reverseDomain" }
+			}
+		},
+		"urlScheme": {
+			"description": "Private-use URI scheme (RFC 8252) for deep links of the native shells.",
+			"$ref": "#/$defs/reverseDomain"
+		},
+		"primaryTenant": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["domain", "issuer"],
+			"properties": {
+				"domain": { "$ref": "#/$defs/domain" },
+				"issuer": { "type": "string", "pattern": "^https://[a-z0-9.-]+$" }
+			}
+		},
+		"hostTemplates": {
+			"description": "Hosts of one tenant; {domain} is the tenant's domain.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["web"],
+			"properties": {
+				"web": { "$ref": "#/$defs/hostTemplate" }
+			}
+		}
+	},
+	"$defs": {
+		"hexColor": { "type": "string", "pattern": "^#[0-9a-f]{6}$" },
+		"reverseDomain": {
+			"type": "string",
+			"pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9-]*){2,}$"
+		},
+		"domain": {
+			"type": "string",
+			"pattern": "^([a-z0-9]([a-z0-9-]*[a-z0-9])?\\.)+[a-z]{2,}$"
+		},
+		"hostTemplate": {
+			"type": "string",
+			"pattern": "^([a-z0-9-]+\\.)+\\{domain\\}$"
+		}
+	}
+}
