@@ -9,6 +9,7 @@ export default defineConfig({
 			"brand/**/*.test.ts",
 			"check-mcp-docs/**/*.test.ts",
 			"nginx-log-map/**/*.test.ts",
+			"nginx-real-ip/**/*.test.ts",
 		],
 	},
 });
