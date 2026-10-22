@@ -42,11 +42,28 @@ Tunelo is a multi-tenant tunnel proxy with user management, TOTP 2FA, and persis
     [Client CLI / Portal SPA] → WebSocket → Tunnel Server → localhost:PORT
 ```
 
+> **Current authentication** is described in [Accounts via the shared IdP](#accounts-via-the-shared-idp) below. The v0.3 sections further down (email/password users, TOTP, server-side device codes, `/api/auth/*`, `/api/keys/*`) describe a removed design; the current API surface is listed in `apps/tunelo-server/src/api/create-api-router.ts`.
+
+## Accounts via the shared IdP
+
+Tunelo has no accounts of its own. Users sign in at the shared IdP (`auth.hoandat.com`, or `auth.<domain>` for another tenant); the server only verifies the IdP's access tokens. Rationale and trade-offs: [ADR-0004](../decisions/tunelo/0004-accounts-via-central-idp.md).
+
+**CLI sign-in (`tunelo login`)** — OAuth Device Authorization Grant (RFC 8628):
+
+1. CLI discovers the IdP endpoints and requests a device code as client `tunelo-cli` with scopes `tunnels:open tunnels:read` (plus `openid offline_access`) and `resource` = the Tunelo server (`packages/tunelo-cli/src/device-login.ts`, `idp-client.ts`).
+2. User opens the verification URL, signs in at the IdP and approves the code shown in the terminal.
+3. CLI polls the IdP token endpoint, stores the refresh token in `~/.tunelo/config.json` (0600), and refreshes the access token before each WebSocket connect (`idp-session.ts`).
+4. The access token (JWT) goes in the WS `auth` message. The server verifies `iss`, `aud`, `typ`, `exp` and the `tunnels:open` scope against the IdP's JWKS (`apps/tunelo-server/src/auth/idp-token-verifier.ts`, `auth/token-authenticator.ts`) and registers the tunnel under the account's `sub`. Auth happens once per connection, so an open tunnel survives token expiry.
+
+**Anonymous tokens** (`tunelo_…`, CLI 1.6.x and `tunelo login --legacy-key`) are accepted while `AUTH_MODE=hybrid` until `LEGACY_TOKEN_CUTOFF` (`TUNELO_AUTH_004` after it); new anonymous device sign-ins are closed (`TUNELO_DEVICE_004`). `AUTH_MODE=legacy` is the rollback switch (`apps/tunelo-server/src/config/auth-config.ts`).
+
+**Listing tunnels (`GET /api/tunnels`)** — `apps/tunelo-server/src/api/tunnel-list-routes.ts`:
+
+- Account JWT with `tunnels:read`: every live HTTP and TCP tunnel of that account, on all machines. Localman gets this token by exchanging the user's session at the IdP (RFC 8693, `apps/api/src/modules/auth/token-exchange.ts`).
+- Link token: the tunnels of the one anonymous machine that approved it via `tunelo link <code>` (`/api/links/*`, `apps/tunelo-server/src/api/link-routes.ts`).
+- Response rows come from the in-memory registries (`tunnel-directory.ts`) and never carry keys or hashes. With more than one server instance each would see only its own tunnels — see ADR-0004.
+
 ## Components
-
-### Overview (Device Code Auth Flow — v0.3.1)
-
-Starting from v0.3.1, Tunelo supports **Device Code Authorization Flow** — a browser-based authentication pattern similar to GitHub's `gh auth login`. This replaces manual CLI prompts and improves user experience.
 
 ### 1. nginx (Reverse Proxy)
 
@@ -223,7 +240,9 @@ Types and constants shared between server and client.
 8. Portal: Display API key (one-time, never shown again) → user copies to clipboard
 9. User closes portal, returns to CLI → enters API key → tunnel connects
 
-### 2. Device Code Authorization Flow (v0.3.1)
+### 2. Device Code Authorization Flow (v0.3.1 — superseded)
+
+Replaced by the IdP device flow in [Accounts via the shared IdP](#accounts-via-the-shared-idp); kept for history only.
 
 CLI requests device code for browser-based authentication (like `gh auth login`):
 

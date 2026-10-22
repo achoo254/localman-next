@@ -1,7 +1,7 @@
 ---
 title: "MongoDB Access Token Management"
 description: "Multi-tenant SaaS with self-service key management, MongoDB-backed auth replacing keys.json"
-status: pending
+status: superseded
 priority: P1
 effort: 40h
 branch: feat/mongodb-access-management
@@ -10,6 +10,8 @@ created: 2026-03-28
 ---
 
 # MongoDB Access Token Management
+
+> Superseded (23/10/2026): bỏ user/org/admin theo `260718-1634-tokenless-device-auth`, rồi đăng nhập qua IdP chung (`plans/dattqh/261008-1325-central-auth-idp`). Phần còn dùng: `apps/tunelo-server/src/key-store/mongo-key-store.ts`, `db/models/api-key-model.ts`, `auth/token-hash.ts`.
 
 ## Overview
 

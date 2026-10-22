@@ -1,5 +1,7 @@
 # Edge cache Phase 1 — bật nginx proxy_cache trước Node relay
 
+**Trạng thái (23/10/2026):** superseded bởi `260724-1332-redis-response-cache` (cache trong Node relay); `infra/tunelo/nginx.conf` không dùng `proxy_cache`.
+
 **Tier:** S–M (2 file chạm: `infra/nginx.conf` + `packages/shared/src/http-headers.ts`; 1 file sửa nhỏ `request-relay.ts`). Không migration, không breaking contract.
 
 **Mục tiêu:** Cache các response tĩnh cacheable ngay tại nginx trên VPS tunnel (.65), để reload trang / nhiều user cùng tunnel không phải round-trip qua WS xuống máy client. Tôn trọng `Cache-Control` của origin, cô lập tenant bằng cache key có `$host`, và **không phá** SSE/chunked streaming đã ship (commit `9cb33bc`, `b20c5cc`).

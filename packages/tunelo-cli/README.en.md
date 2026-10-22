@@ -86,79 +86,66 @@ tunelo update --check   # only check, do not install
 
 Upgrading from the old `@dattqh/tunelo` (installed from a GitLab registry)? See [README.md](./README.md#chuyển-từ-bản-cũ-dattqhtunelo-cài-từ-gitlab-registry) for the one-time migration.
 
-### Prerequisites
+### Upgrading from 1.6.x to 1.7.0
 
-- Node.js 20+
-- pnpm 9+
-
-### Install & Build
+- The default server is now `tunnel.hoandat.com`. A saved config pointing at `tunnel.inetdev.io.vn` is moved to the new server on first run.
+- Sign in with your account instead of the old Approve page. Old anonymous tokens still work, but `tunelo whoami` reminds you to sign in; run `tunelo login` once so this machine's tunnels belong to your account:
 
 ```bash
-git clone <repo-url> && cd tunelo
-pnpm install
-pnpm build
+npm i -g tunelo@latest && tunelo login
 ```
 
-### Run Server (Development)
+### Step 1 — sign in
 
 ```bash
-pnpm dev:server
+tunelo login
+#   Sign in to Tunelo in your browser:
+#   https://auth.hoandat.com/device?user_code=...
+#   Confirm the code: ABCD-EFGH
+#   Waiting for approval...
 ```
 
-Server starts on port 3001 by default. Configure via `.env`:
+The browser opens `auth.hoandat.com`: sign in with Google or GitHub (skipped if you already have a session), check that the code matches the terminal, then allow this machine. The CLI stores a refresh token in `~/.tunelo/config.json` (mode 600) and refreshes the access token whenever it opens a tunnel. Each machine is its own device; review or sign out machines at [auth.hoandat.com/account](https://auth.hoandat.com/account).
+
+- Already signed in: `tunelo login` says so and stops; `--force` signs in again.
+- Tunelo on another domain (claimed at `auth.hoandat.com/claim`): `tunelo login --server https://tunnel.<domain>`. The CLI signs in at `https://auth.<domain>` (derived from the server name) and makes that server the default. Account tokens are only sent to the Tunelo of the account's own domain.
+- No browser (CI): `tunelo login --legacy-key <token>`, or `--legacy-key` with the token in `TUNELO_KEY` (anonymous token).
+
+### Step 2 — open a tunnel
 
 ```bash
-cp .env.example .env
-# Edit TUNNEL_PORT, API_KEYS_FILE as needed
+tunelo http 3000
+# => https://<random>.tunnel.hoandat.com  →  http://localhost:3000
+
+tunelo http 3000 -s myapp        # specific subdomain → https://myapp.tunnel.hoandat.com
+tunelo http 3000:web 5000:api    # several tunnels, one subdomain per port
+tunelo http 8080 -a user:pass    # protect the tunnel with Basic Auth
+tunelo tcp 5432                  # TCP tunnel (e.g. PostgreSQL)
 ```
 
-### API Keys
-
-Create a `keys.json` file (see `apps/tunelo-server/keys.json.example`):
-
-```json
-{
-  "keys": ["tk_your_secret_key"]
-}
-```
-
-Keys are stored hashed (SHA-256) in memory — never compared in plaintext.
-
-### Run Client
-
-```bash
-# Connect local port 3000 to a tunnel
-npx tunelo http 3000 --key tk_your_secret_key --server ws://localhost:3001
-
-# Or with a specific subdomain
-npx tunelo http 3000 --subdomain myapp --key tk_your_secret_key
-```
-
-### Save Config (avoid repeating flags)
-
-```bash
-npx tunelo config --key tk_your_secret_key --server wss://tunnel.hoandat.com
-npx tunelo http 3000   # uses saved config
-```
+Press `Ctrl+C` to stop.
 
 ## CLI Usage
 
-```
-tunelo http <port>              Create HTTP tunnel to local port
-  -s, --subdomain <name>        Request specific subdomain
-  -k, --key <apikey>            API key
-  --server <url>                Server URL (default: wss://tunnel.hoandat.com)
+| Command | What it does |
+|---------|--------------|
+| `tunelo login [--force] [--server <url>] [--legacy-key [token]]` | Sign in with your account (device flow in the browser) |
+| `tunelo whoami [--server <url>]` | Which account (or anonymous token) this machine uses |
+| `tunelo logout` | Revoke this machine's sign-in and remove its tokens |
+| `tunelo http <ports...>` | HTTP tunnel(s); `<port>` or `<port>:<subdomain>`, see `tunelo http --help` |
+| `tunelo tcp <port> [--remote-port <port>]` | TCP tunnel |
+| `tunelo status` | List tunnels running on this machine |
+| `tunelo kill <pid\|subdomain\|all>` | Stop a running tunnel |
+| `tunelo watch [pid\|subdomain\|URL]` | Follow a running tunnel's requests from another terminal (`-n`, `--status 5xx`, `--path <text>`, `--headers`, `--body`). Since 1.9.0 |
+| `tunelo link <code>` | Let Localman see this machine's tunnels without an account (anonymous machines only) |
+| `tunelo links` / `tunelo links revoke <id>` | List or revoke this machine's links |
+| `tunelo mcp` | Run an MCP server (stdio) so AI agents can open tunnels |
+| `tunelo update [--check]` | Update to the latest version |
+| `tunelo config --server <url>` / `--key <token>` / `--show` | Set the default server, set an anonymous token, show config |
 
-tunelo tcp <port>               Create TCP tunnel to local port
-  --remote-port <port>          Request specific remote port
+Config priority: CLI flags (`--key`, `--server`) > env vars (`TUNELO_KEY`, `TUNELO_SERVER`) > `~/.tunelo/config.json`.
 
-tunelo config                   Set default configuration
-  -k, --key <apikey>            Save default API key
-  -s, --server <url>            Save default server URL
-  --show                        Show current config
-```
-
-Config priority: CLI flags > env vars (`TUNELO_KEY`, `TUNELO_SERVER`) > `~/.tunelo/config.json`
+Changes per version: [CHANGELOG.md](./CHANGELOG.md).
 
 ## Project Structure
 

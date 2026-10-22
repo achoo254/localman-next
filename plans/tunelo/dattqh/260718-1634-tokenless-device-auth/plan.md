@@ -1,5 +1,7 @@
 # Bỏ admin/account — xác thực bằng access token paste
 
+**Trạng thái (23/10/2026):** xong. `GET /api/verify` (`apps/tunelo-server/src/api/verify-routes.ts`), không còn router admin/dashboard, CLI `verifyKey`. Về sau `tunelo login` chuyển sang device flow của IdP chung (`plans/dattqh/261008-1156-tunelo-accounts-and-tunnel-list`), paste token chỉ còn là nhánh cũ.
+
 **Mục tiêu:** Bỏ hẳn account/admin/login/dashboard. End-user: cài CLI → `tunelo login` → paste access token (BE sinh, lưu Mongo) → `tunelo http`. Server validate token; không có user.
 
 **Flow chốt:**

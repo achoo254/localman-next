@@ -2,7 +2,7 @@
 
 **Tier:** M–L (server: 4 file cache mới + tests, sửa `request-relay.ts` + `tunnel-manager.ts`; infra: `nginx.conf` revert tenant cache, `valkey.conf` mới, `.env` + ecosystem; 1 ADR). Không migration, **không đổi WS protocol / public contract** → client không cần sửa.
 
-**Trạng thái:** ✅ ĐÃ TRIỂN KHAI & VERIFY trên staging `.65` (2026-07-24). Code chạy manual-deploy (rsync bundle), **chưa commit/push git** — chờ chốt để CI đồng bộ. Code review: 1 Critical (C1) + 1 Medium (M1) đã fix; test 77 pass.
+**Trạng thái:** ✅ xong. Triển khai và verify trên `.65` (2026-07-24); code đã commit (`99f4cec`, `d413559`, `a2bfca0`, rà 23/10/2026). Code review: 1 Critical (C1) + 1 Medium (M1) đã fix; test 77 pass.
 
 ## Mục tiêu
 

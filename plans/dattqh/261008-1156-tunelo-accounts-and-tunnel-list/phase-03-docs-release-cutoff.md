@@ -50,8 +50,8 @@ dependencies: [1, 2]
 | T11 | Review cuối phase | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 ADR 0004 và `system-architecture.md` đã cập nhật
-- [ ] T2 README VI/EN, changelog và bảng mã lỗi trong `CLAUDE.md` đã cập nhật
+- [x] T1 ADR 0004 và `system-architecture.md` đã cập nhật
+- [x] T2 README VI/EN, changelog và bảng mã lỗi trong `CLAUDE.md` đã cập nhật
 - [x] T3 nginx và `certbot-setup.sh` dùng domain mới, Option B mặc định
 - [x] T4 Workflow publish đúng tag và thư mục
 - [x] T5 DNS và cert wildcard `*.tunnel.hoandat.com` đã có sau khi user xác nhận, timer gia hạn bật
@@ -81,3 +81,8 @@ dependencies: [1, 2]
   - T6: server chạy `AUTH_MODE=hybrid` (mặc định), `LEGACY_TOKEN_CUTOFF` vẫn trống, chờ user chốt ngày.
   - T8 và Verification: phần "Localman nhận tunnel theo tài khoản" chờ T8b của Localman phase 10.
   - T10 (2.0.0) theo ngày cutoff; T11 review cuối phase.
+
+## Cập nhật 23/10/2026
+- T1 xong: thêm `docs/decisions/tunelo/0004-accounts-via-central-idp.md`; `docs/tunelo/system-architecture.md` có mục "Accounts via the shared IdP" (device flow qua IdP, `GET /api/tunnels`) và ghi rõ các mục v0.3 phía dưới là thiết kế đã bỏ.
+- T2 xong: `packages/tunelo-cli/README.en.md` có `login`/`whoami`/`link` và bảng lệnh như bản tiếng Việt; thêm `packages/tunelo-cli/CHANGELOG.md` cho 1.7.0, 1.8.0, 1.9.0, 1.9.1 (npm `latest=1.9.1`).
+- Ngày `LEGACY_TOKEN_CUTOFF` vẫn chờ user chốt (T6); khi có ngày thì cập nhật README, changelog và mục "Việc còn mở" của ADR 0004.
