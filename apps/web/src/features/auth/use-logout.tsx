@@ -1,5 +1,6 @@
 import { type ReactNode, useRef, useState } from "react";
 import { logoutUrl } from "../../lib/api-url";
+import { isNativeBuild } from "../../platform/native/native-build";
 import { forgetSavedPages } from "../collections/page-storage";
 import { releasePushSubscriptionForLogout } from "../notifications/release-push-on-logout";
 
@@ -28,6 +29,14 @@ export function useLogout(formDataId: string): Logout {
 		setBusy(true);
 		await releasePushSubscriptionForLogout();
 		forgetSavedPages();
+		if (isNativeBuild) {
+			// The shell ends its own session; the browser's IdP session stays.
+			const { signOutOnDevice } = await import(
+				"../../platform/native/mobile-sign-out"
+			);
+			await signOutOnDevice();
+			return;
+		}
 		formRef.current?.submit();
 	}
 

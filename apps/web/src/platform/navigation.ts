@@ -5,6 +5,8 @@
  */
 import { activeTranslator } from "../i18n/active-translator";
 import { type LoginOptions, loginUrl } from "../lib/api-url";
+import { appConfig } from "../lib/app-config";
+import { isNativeBuild } from "./native/native-build";
 
 /** Path, query and hash of the current page, used as `returnTo`. */
 export function currentPath(): string {
@@ -17,7 +19,9 @@ export function currentPath(): string {
  * API) for sharing outside the app.
  */
 export function appPageUrl(path: string): string {
-	return new URL(path, window.location.origin).href;
+	// The shell's own origin (capacitor://localhost) means nothing to others.
+	const base = isNativeBuild ? appConfig.apiBaseUrl : window.location.origin;
+	return new URL(path, base).href;
 }
 
 /**
@@ -25,9 +29,15 @@ export function appPageUrl(path: string): string {
  * pages open in the language on screen unless `options.locale` says else.
  */
 export function navigateToLogin(options: LoginOptions = {}): void {
-	window.location.assign(
-		loginUrl({ locale: activeTranslator().locale, ...options }),
-	);
+	const withLocale = { locale: activeTranslator().locale, ...options };
+	if (isNativeBuild) {
+		// The shell signs in through the system browser, never this WebView.
+		void import("./native/mobile-sign-in").then(({ signInOnDevice }) =>
+			signInOnDevice(withLocale),
+		);
+		return;
+	}
+	window.location.assign(loginUrl(withLocale));
 }
 
 /**

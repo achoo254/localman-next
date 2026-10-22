@@ -1,0 +1,24 @@
+{
+	"name": "@localman/mobile",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "iOS and Android shell (Capacitor) around the full Localman web app",
+	"scripts": {
+		"build:web": "bash scripts/build-native-web.sh",
+		"sync": "pnpm build:web && cap sync",
+		"open:ios": "cap open ios",
+		"open:android": "cap open android"
+	},
+	"dependencies": {
+		"@aparajita/capacitor-secure-storage": "8.0.1",
+		"@capacitor/android": "8.5.3",
+		"@capacitor/app": "8.1.2",
+		"@capacitor/core": "8.5.3",
+		"@capacitor/ios": "8.5.3",
+		"@shared-next/capacitor-system-auth": "github:achoo254/shared-next#v0.3.0&path:/packages/capacitor-system-auth"
+	},
+	"devDependencies": {
+		"@capacitor/cli": "8.5.3"
+	}
+}

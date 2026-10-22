@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyLists/1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Sign-in ends on https://localman.hoandat.com/m/auth/callback: webcredentials lets
+	     ASWebAuthenticationSession accept that https callback, applinks opens the app from
+	     the link (docs/decisions/0005-mobile-session-handoff.md). The server serves the
+	     matching apple-app-site-association. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:localman.hoandat.com</string>
+		<string>webcredentials:localman.hoandat.com</string>
+	</array>
+</dict>
+</plist>

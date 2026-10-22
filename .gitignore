@@ -18,3 +18,6 @@ e2e/test-results/
 
 # Claude local state and skills (ops skills name servers and credential entries; never pushed)
 .claude/
+
+# Web build packaged into the iOS/Android shell (apps/mobile)
+apps/web/dist-native/

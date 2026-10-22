@@ -17,6 +17,8 @@ import {
 	expectRecord,
 	expectString,
 } from "../../../lib/json-guards";
+import { mobileAuthHeaders } from "../../../platform/native/mobile-session";
+import { isNativeBuild } from "../../../platform/native/native-build";
 
 export interface SavedDraft {
 	tabId: string;
@@ -110,9 +112,13 @@ export async function saveDraftOnLeave(
 ): Promise<void> {
 	const response = await fetch(apiUrl(draftPath(tabId)), {
 		method: "PUT",
-		headers: { Accept: "application/json", "Content-Type": "application/json" },
+		headers: {
+			Accept: "application/json",
+			"Content-Type": "application/json",
+			...mobileAuthHeaders(),
+		},
 		body: json,
-		credentials: "same-origin",
+		credentials: isNativeBuild ? "omit" : "same-origin",
 		keepalive: true,
 	});
 	if (response.ok) return;

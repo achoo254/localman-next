@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { mobileAuthHeaders } from "../../platform/native/mobile-session";
+import { isNativeBuild } from "../../platform/native/native-build";
+import { openEventStream } from "../../platform/native/native-event-stream";
 import { logStreamUrl } from "./request-log-api";
 import { type LogSummary, parseLogEvent } from "./request-log-parse";
 
@@ -40,42 +43,64 @@ export function useLogStream({
 	const openedFor = useRef<string | null>(null);
 
 	useEffect(() => {
-		if (!enabled || typeof EventSource === "undefined") return;
+		if (!enabled) return;
+		if (!isNativeBuild && typeof EventSource === "undefined") return;
 		const key = `${projectId}?${query}`;
-		let source: EventSource | null = null;
+		let close: (() => void) | null = null;
 		let retryTimer: number | undefined;
 		let failures = 0;
-		const connect = () => {
+		const opened = () => {
+			failures = 0;
+			setDown(false);
+			if (openedFor.current === key) handlers.current.onResume();
+			openedFor.current = key;
+		};
+		const received = (data: unknown) => {
+			const line = typeof data === "string" ? parseLogEvent(data) : null;
+			if (line) handlers.current.onLine(line);
+		};
+		const retryLater = () => {
+			const delay =
+				STREAM_RETRY_MS[Math.min(failures, STREAM_RETRY_MS.length - 1)];
+			failures += 1;
+			retryTimer = window.setTimeout(connect, delay);
+		};
+		// The iOS/Android shell signs requests with a Bearer token, which
+		// EventSource cannot send: it reads the same stream over fetch.
+		const connectNative = () =>
+			openEventStream(logStreamUrl(projectId, query), mobileAuthHeaders(), {
+				onOpen: opened,
+				onEvent: (event, data) => {
+					if (event === "log") received(data);
+				},
+				onClose: () => {
+					setDown(true);
+					retryLater();
+				},
+			});
+		const connectBrowser = () => {
 			const current = new EventSource(logStreamUrl(projectId, query), {
 				withCredentials: true,
 			});
-			source = current;
-			current.onopen = () => {
-				failures = 0;
-				setDown(false);
-				if (openedFor.current === key) handlers.current.onResume();
-				openedFor.current = key;
-			};
+			current.onopen = opened;
 			current.addEventListener("log", (event) => {
-				if (!(event instanceof MessageEvent)) return;
-				const data: unknown = event.data;
-				const line = typeof data === "string" ? parseLogEvent(data) : null;
-				if (line) handlers.current.onLine(line);
+				if (event instanceof MessageEvent) received(event.data);
 			});
 			current.onerror = () => {
 				setDown(true);
 				if (current.readyState !== EventSource.CLOSED) return;
 				current.close();
-				const delay =
-					STREAM_RETRY_MS[Math.min(failures, STREAM_RETRY_MS.length - 1)];
-				failures += 1;
-				retryTimer = window.setTimeout(connect, delay);
+				retryLater();
 			};
+			return () => current.close();
 		};
+		function connect() {
+			close = isNativeBuild ? connectNative() : connectBrowser();
+		}
 		connect();
 		return () => {
 			window.clearTimeout(retryTimer);
-			source?.close();
+			close?.();
 			setDown(false);
 		};
 	}, [enabled, projectId, query]);

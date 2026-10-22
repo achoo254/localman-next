@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Localman</string>
+    <string name="title_activity_main">Localman</string>
+    <string name="package_name">com.hoandat.localman</string>
+    <string name="custom_url_scheme">com.hoandat.localman</string>
+</resources>

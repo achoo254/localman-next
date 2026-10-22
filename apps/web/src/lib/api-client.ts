@@ -1,4 +1,6 @@
 import { activeTranslator } from "../i18n/active-translator";
+import { mobileAuthHeaders } from "../platform/native/mobile-session";
+import { isNativeBuild } from "../platform/native/native-build";
 import { currentPath, navigateToLogin } from "../platform/navigation";
 import { apiUrl } from "./api-url";
 import { isRecord } from "./json-guards";
@@ -71,7 +73,10 @@ export async function apiRequest(
 		signal,
 	}: ApiRequestOptions = {},
 ): Promise<unknown> {
-	const headers: Record<string, string> = { Accept: "application/json" };
+	const headers: Record<string, string> = {
+		Accept: "application/json",
+		...mobileAuthHeaders(),
+	};
 	if (body !== undefined) headers["Content-Type"] = "application/json";
 
 	let response: Response;
@@ -80,7 +85,8 @@ export async function apiRequest(
 			method,
 			headers,
 			body: body === undefined ? undefined : JSON.stringify(body),
-			credentials: "same-origin",
+			// The iOS/Android shell is another origin and signs with a token.
+			credentials: isNativeBuild ? "omit" : "same-origin",
 			signal,
 		});
 	} catch (cause) {

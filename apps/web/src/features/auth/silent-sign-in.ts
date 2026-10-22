@@ -1,3 +1,4 @@
+import { isNativeBuild } from "../../platform/native/native-build";
 import { currentPath, navigateToLogin } from "../../platform/navigation";
 
 /**
@@ -25,6 +26,8 @@ export function trySilentSignIn(
 	cookies: string = document.cookie,
 	search: string = window.location.search,
 ): boolean {
+	// The shell keeps its session in the secure store: nothing to retry.
+	if (isNativeBuild) return false;
 	if (!hasCookie(cookies, HINT_COOKIE) || hasCookie(cookies, TRIED_COOKIE)) {
 		return false;
 	}

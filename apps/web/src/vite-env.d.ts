@@ -7,4 +7,6 @@ interface ImportMetaEnv {
 	readonly VITE_IDP_ORIGIN?: string;
 	/** Released features, comma-separated (see src/config/features.ts). */
 	readonly VITE_FEATURES?: string;
+	/** "true" in the build packaged into the iOS/Android shell (apps/mobile). */
+	readonly VITE_NATIVE?: string;
 }
