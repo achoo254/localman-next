@@ -35,6 +35,7 @@ import {
 	SET_MEDIA_TYPE,
 	verifySecurityEvent,
 } from "./security-event-token.js";
+import { acceptNotServedTenantEvent } from "./tenant-lifecycle-event.js";
 
 /** A SET is well under a kilobyte; anything bigger is not one. */
 const BODY_LIMIT = "32kb";
@@ -118,13 +119,24 @@ async function verified(
 	}
 }
 
+/** The IdP sends the event's `jti` as `Idempotency-Key`, when it sends one. */
+function checkIdempotencyKey(header: unknown, event: AuditEvent): void {
+	if (header !== undefined && header !== event.jti) {
+		throw invalidEvent("Idempotency-Key does not match the event jti");
+	}
+}
+
 /**
  * `POST /internal/audit-events`: the IdP pushes credential events as
  * signed SETs (integration guide, section 10). Authenticated by HTTP Basic
  * and the IdP's signature, so exempt from the CSRF origin check. Answers
  * 202 once stored; a redelivered `jti` is acknowledged without being
  * applied again. Every tenant's events come here (the IdP has one
- * intake); each is verified and applied in the tenant of its `iss`. Mounted only when AUDIT_CLIENT_ID/SECRET are configured.
+ * intake); each is verified and applied in the tenant of its `iss`.
+ * Lifecycle events of a tenant no longer served here (migrating,
+ * self-hosted, suspended, released) cannot be verified, since the IdP
+ * stops publishing that tenant's keys: they are checked without the
+ * signature and only recorded (`tenant-lifecycle-event.ts`). Mounted only when AUDIT_CLIENT_ID/SECRET are configured.
  */
 export function registerAuditEventsRoute(
 	router: Router,
@@ -152,13 +164,19 @@ export function registerAuditEventsRoute(
 			// One intake for every tenant: the SET's issuer names the tenant,
 			// whose keys and data the event is then handled with.
 			const tenant = await tenantOfSet(unverifiedIssuer(token), oidc);
-			if (!tenant) throw invalidEvent("The security event token is invalid");
+			if (!tenant) {
+				// A tenant no longer served here: only its lifecycle events.
+				const status = await acceptNotServedTenantEvent(token.trim(), {
+					idempotencyKey: req.headers["idempotency-key"],
+					audience: options.audience,
+					logger,
+				});
+				res.status(202).json({ status });
+				return;
+			}
 			const status = await runInTenant(tenant, async () => {
 				const event = await verified(token.trim(), oidc, options, logger);
-				const idempotencyKey = req.headers["idempotency-key"];
-				if (idempotencyKey !== undefined && idempotencyKey !== event.jti) {
-					throw invalidEvent("Idempotency-Key does not match the event jti");
-				}
+				checkIdempotencyKey(req.headers["idempotency-key"], event);
 				if (await wasAuditEventReceived(event.jti)) return "duplicate";
 				await applyAuditEvent(event, logger);
 				await recordAuditEvent(event);
