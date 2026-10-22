@@ -186,6 +186,16 @@ API client tự tìm tunnel Tunelo của user (cùng tài khoản, hoặc máy �
 - **Kiểm sau khi bật:** `GET /api/v1/client/local-tunnels` trả 401 khi chưa đăng nhập (không phải 404); đăng nhập, chạy `tunelo http <port>` cùng tài khoản rồi gửi tới `http://localhost:<port>` thì badge "Qua Tunelo · <máy>".
 - **Tắt khẩn (rollback):** đặt `TUNELO_ACCOUNTS_ENABLED=false`, `pm2 reload localman-api`. Server không gọi Tunelo nữa (runtime không được cấu hình): `send_request` tới `localhost` chỉ còn đi qua ánh xạ dán tay. Máy đã liên kết (`tunelo_links`) giữ nguyên.
 
+## Đăng nhập app native (`MOBILE_IOS_TEAM_ID`, `MOBILE_ANDROID_CERT_SHA256`)
+
+App iOS/Android đăng nhập qua trình duyệt hệ thống rồi nhận mã ở `https://<host>/m/auth/callback` (Universal Links / App Links), xem [ADR-0005](decisions/0005-mobile-session-handoff.md). Hệ điều hành chỉ mở app khi host phục vụ tệp liên kết, nên luồng này tắt cho tới khi có ít nhất một biến:
+
+- `MOBILE_IOS_TEAM_ID`: Apple Team ID 10 ký tự (công khai; app id là `<team>.` + `appIds.ios` của `brand.config.json`). Có biến này thì `/.well-known/apple-app-site-association` trả `applinks` (chỉ `/m/auth/callback`) và `webcredentials`.
+- `MOBILE_ANDROID_CERT_SHA256`: SHA-256 của cert ký Android dạng `AA:BB:…`, nhiều giá trị cách nhau bằng dấu phẩy (upload key và khoá Play App Signing). Có biến này thì `/.well-known/assetlinks.json` trả Digital Asset Links cho `appIds.android`.
+- **nginx:** `localman-app.inc` có `location =` cho `/m/auth/callback` và hai tệp `.well-known`, proxy tới API; thiếu chúng thì `/m/` rơi vào mock runtime và `.well-known` rơi vào SPA. Không có redirect: Apple tải tệp qua CDN của họ và không theo redirect.
+- **Bật:** đặt biến trong `/opt/localman/.env`, `pm2 reload localman-api`. **Kiểm:** `curl -sI https://localman.hoandat.com/.well-known/apple-app-site-association` trả 200 `application/json` (chưa cấu hình: 404); `GET /m/auth/callback` trả trang HTML dự phòng; preflight `OPTIONS /api/v1/users/me` với `Origin: capacitor://localhost` trả 204 có `Access-Control-Allow-Origin: capacitor://localhost` và không có `Access-Control-Allow-Credentials`.
+- **Tắt khẩn:** xoá hai biến, `pm2 reload localman-api`. Phiên mobile đã cấp vẫn chạy tới khi hết hạn hoặc bị đăng xuất; muốn chấm dứt ngay thì xoá trong Mongo các document `sessions` có `client: "mobile"`.
+
 ## Rollback
 
 - Code: đổi symlink về một release còn giữ (tối đa 5 bản). Script cài lại nginx conf của release đó (CSP khớp `index.html` của nó), đổi symlink, reload nginx và pm2, kiểm health:

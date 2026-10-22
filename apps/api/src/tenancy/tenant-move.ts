@@ -26,6 +26,7 @@ import {
 export const COLLECTIONS_NOT_MOVED: ReadonlySet<string> = new Set([
 	"sessions",
 	"login_transactions",
+	"mobile_handoffs",
 	"logout_token_jtis",
 	"magic_links",
 	"rate_limit_windows",

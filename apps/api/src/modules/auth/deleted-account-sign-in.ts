@@ -2,7 +2,7 @@ import type { RequestHandler, Response } from "express";
 import { wasAccountDeleted } from "../account-deletion/deleted-account-model.js";
 import { UserModel } from "../users/user-model.js";
 import { type AuthCookies, clearCookie } from "./auth-cookies.js";
-import { redirectWithError } from "./auth-redirects.js";
+import { redirectToSignInError } from "./auth-redirects.js";
 import type { LoginTransaction } from "./login-transaction.js";
 
 /**
@@ -30,11 +30,12 @@ export async function refusedAsDeleted(
 	res: Response,
 	cookies: AuthCookies,
 	sub: string,
-	transaction: Pick<LoginTransaction, "recreate">,
+	transaction: Pick<LoginTransaction, "recreate" | "mobile">,
 ): Promise<boolean> {
 	if (!(await refusesDeletedAccount(sub, transaction))) return false;
 	clearCookie(res, cookies.ssoHint);
-	redirectWithError(res, "account_deleted");
+	// The app cannot offer "Create a new account": it shows the error.
+	redirectToSignInError(res, transaction, "account_deleted");
 	return true;
 }
 

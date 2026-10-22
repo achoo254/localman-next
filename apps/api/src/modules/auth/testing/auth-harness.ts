@@ -8,6 +8,7 @@ import { createLogger } from "../../../logger.js";
 import { WebPushChannel } from "../../notifications/channels/web-push-channel.js";
 import { setNotificationService } from "../../notifications/notification-runtime.js";
 import { NotificationService } from "../../notifications/notification-service.js";
+import type { MobileAppSettings } from "../app-link-association.js";
 import { type AuthModule, createAuthModule } from "../auth-module.js";
 import { type FakeAccount, type FakeIdp, startFakeIdp } from "./fake-idp.js";
 import { TestBrowser } from "./test-browser.js";
@@ -75,7 +76,9 @@ export function cookieFrom(res: Response, name: string): string | undefined {
  * sockets: the IdP must reach the app for back-channel logout. MongoDB
  * must already be connected (see test-support/test-mongo.ts).
  */
-export async function startAuthHarness(): Promise<AuthHarness> {
+export async function startAuthHarness(
+	options: { readonly mobile?: MobileAppSettings } = {},
+): Promise<AuthHarness> {
 	const logger = createLogger("silent");
 	const clientSecret = randomBytes(24).toString("base64url");
 	const idpServer = createServer();
@@ -91,6 +94,7 @@ export async function startAuthHarness(): Promise<AuthHarness> {
 			// Tests sign in far more often than a person would.
 			loginLimitPerMinute: 10_000,
 			audit: AUDIT_CREDENTIALS,
+			mobile: options.mobile,
 		},
 		logger,
 	);

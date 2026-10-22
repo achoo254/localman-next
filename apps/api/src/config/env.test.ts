@@ -54,6 +54,7 @@ describe("parseEnv", () => {
 			TUNELO_ACCOUNTS_ENABLED: false,
 			TURNSTILE_VERIFY_URL:
 				"https://challenges.cloudflare.com/turnstile/v0/siteverify",
+			MOBILE_ANDROID_CERT_SHA256: [],
 		});
 	});
 

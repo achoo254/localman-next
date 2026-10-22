@@ -1,6 +1,7 @@
 import { OperationError } from "@localman/operations";
 import type { RequestHandler } from "express";
 import { tenantSettings } from "../tenancy/tenant-settings.js";
+import { bearerTokenOf } from "./bearer-token.js";
 
 const SAFE_METHODS: ReadonlySet<string> = new Set(["GET", "HEAD", "OPTIONS"]);
 
@@ -20,6 +21,13 @@ export interface CsrfGuardOptions {
  * on a sibling subdomain (same site), so the Origin is checked as well:
  * a mutation must carry an allowed `Origin` or `Sec-Fetch-Site: same-origin`.
  * Runs before body parsing so a forged request is never parsed.
+ *
+ * A request with `Authorization: Bearer` and no `Cookie` header at all
+ * (the native app's mobile session) skips the Origin check: a browser
+ * never attaches that header on its own, a cross-origin page can set it
+ * only after a CORS preflight that only the app origins pass, and the
+ * token is not ambient, so a forged request cannot carry it. A Bearer
+ * request that also carries cookies is checked like any other.
  */
 export function createCsrfGuard(options: CsrfGuardOptions): RequestHandler {
 	const origins = new Set(options.allowedOrigins);
@@ -30,6 +38,10 @@ export function createCsrfGuard(options: CsrfGuardOptions): RequestHandler {
 			return;
 		}
 		if (exempt.has(`${req.method} ${req.path}`)) {
+			next();
+			return;
+		}
+		if (bearerTokenOf(req) !== undefined && req.headers.cookie === undefined) {
 			next();
 			return;
 		}

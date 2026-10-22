@@ -87,7 +87,12 @@ async function open(
 			{ max },
 		);
 	}
-	const release = streams.add(sub, res);
+	// Remembered so that ending the session (sign-out) ends the stream.
+	const sessionId =
+		"sessionId" in auth && typeof auth.sessionId === "string"
+			? auth.sessionId
+			: undefined;
+	const release = streams.add(sub, res, sessionId);
 	res.status(200);
 	res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
 	res.setHeader("Cache-Control", "no-store");

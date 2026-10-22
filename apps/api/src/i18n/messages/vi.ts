@@ -1,4 +1,5 @@
 import type { ServerMessages } from "./en.js";
+import { mobileSignInVi } from "./mobile-sign-in-vi.js";
 import { trialVi } from "./trial-vi.js";
 
 /** Vietnamese server texts: the wording Localman used before i18n. */
@@ -144,6 +145,7 @@ export const vi: ServerMessages = {
 		callbackDns: "Không phân giải được tên host của URL callback.",
 	},
 	trial: trialVi,
+	mobileSignIn: mobileSignInVi,
 	ownerAlerts: {
 		suppressed: (count) =>
 			`(và ${count} lượt khác chưa báo vì vượt giới hạn tin báo)`,

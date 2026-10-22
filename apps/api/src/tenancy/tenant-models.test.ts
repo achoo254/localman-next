@@ -29,7 +29,13 @@ describe("tenant-owned models", () => {
 	it("every model is tenant-scoped, and every index but TTL and the queue's leads with tenantId", () => {
 		const names = mongoose.modelNames();
 		expect(names).toEqual(
-			expect.arrayContaining(["Session", "AuditEvent", "Project", "User"]),
+			expect.arrayContaining([
+				"Session",
+				"MobileHandoff",
+				"AuditEvent",
+				"Project",
+				"User",
+			]),
 		);
 		expect(names.length).toBeGreaterThanOrEqual(41);
 		for (const name of names) {

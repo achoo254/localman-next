@@ -2,7 +2,8 @@ import { setTimeout as sleep } from "node:timers/promises";
 import type { Logger } from "../../logger.js";
 import type { OidcApi } from "./oidc-api.js";
 import { authUnavailableError, oauthErrorCode } from "./oidc-errors.js";
-import type { Session, SessionStore } from "./session-store.js";
+import type { Session } from "./session-model.js";
+import type { SessionStore } from "./session-store.js";
 
 /** Refresh this long before the access token expires. */
 export const REFRESH_MARGIN_MS = 60_000;

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { parseKeyring } from "../modules/auth/token-cipher.js";
 import { checkFeatureEnv, featureEnvShape } from "./feature-env.js";
+import { mobileEnvShape } from "./mobile-env.js";
 import { checkTenantEnv, tenantEnvShape } from "./tenant-env.js";
 import { type TrustProxy, parseTrustProxy } from "./trust-proxy.js";
 
@@ -105,6 +106,7 @@ const envSchema = z
 			.optional(),
 		...featureEnvShape,
 		...tenantEnvShape,
+		...mobileEnvShape,
 	})
 	.superRefine((env, ctx) => {
 		checkFeatureEnv(env, ctx);

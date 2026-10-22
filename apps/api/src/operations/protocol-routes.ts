@@ -19,6 +19,10 @@ export interface ProtocolRoute {
 }
 
 const OIDC_BROWSER_REDIRECT = "luồng redirect OIDC trên trình duyệt";
+const MOBILE_SIGN_IN =
+	"đăng nhập của app native qua trình duyệt hệ thống (session handoff), không phải thao tác nghiệp vụ";
+const APP_ASSOCIATION_EXEMPT =
+	"tệp công khai để iOS/Android xác minh app được mở link của host, không phải thao tác của user";
 const RESOURCE_METADATA_EXEMPT =
 	"tài liệu OAuth Protected Resource Metadata (RFC 9728) công khai để agent tìm IdP trước khi có token, không phải thao tác của user";
 
@@ -27,6 +31,18 @@ export const AUTH_PATHS = {
 	callback: "/auth/callback",
 	logout: "/auth/logout",
 	backchannelLogout: "/auth/backchannel-logout",
+	/** Native app sign-in (docs/decisions/0005-mobile-session-handoff.md). */
+	mobileConfirm: "/auth/mobile/confirm",
+	mobileToken: "/auth/mobile/token",
+	mobileLogout: "/auth/mobile/logout",
+	/** Verified https callback of the app (Universal Links / App Links). */
+	mobileCallback: "/m/auth/callback",
+} as const;
+
+/** Files that associate the native apps with a dashboard host. */
+export const MOBILE_PATHS = {
+	appleAssociation: "/.well-known/apple-app-site-association",
+	androidAssetLinks: "/.well-known/assetlinks.json",
 } as const;
 
 /** Server-to-server endpoints called by the IdP. */
@@ -84,6 +100,48 @@ export const PROTOCOL_ROUTES: readonly ProtocolRoute[] = [
 		summary: "Back-channel logout token from the IdP",
 		mcpExempt:
 			"IdP gọi server-to-server (OIDC Back-Channel Logout), không phải thao tác của user",
+	},
+	{
+		server: "dashboard",
+		methods: ["POST"],
+		path: AUTH_PATHS.mobileConfirm,
+		summary: "Continue or cancel a native app sign-in (confirmation page)",
+		mcpExempt: MOBILE_SIGN_IN,
+	},
+	{
+		server: "dashboard",
+		methods: ["POST"],
+		path: AUTH_PATHS.mobileToken,
+		summary: "Redeem a one-time handoff code (PKCE S256) for a mobile session",
+		mcpExempt: MOBILE_SIGN_IN,
+	},
+	{
+		server: "dashboard",
+		methods: ["POST"],
+		path: AUTH_PATHS.mobileLogout,
+		summary: "End the mobile session of the Bearer token",
+		mcpExempt: MOBILE_SIGN_IN,
+	},
+	{
+		server: "dashboard",
+		methods: ["GET"],
+		path: AUTH_PATHS.mobileCallback,
+		summary: "Fallback page of the app callback when no app opened it",
+		mcpExempt: MOBILE_SIGN_IN,
+	},
+	{
+		server: "dashboard",
+		methods: ["GET"],
+		path: MOBILE_PATHS.appleAssociation,
+		summary: "Apple App Site Association (applinks, webcredentials)",
+		mcpExempt: APP_ASSOCIATION_EXEMPT,
+	},
+	{
+		server: "dashboard",
+		methods: ["GET"],
+		path: MOBILE_PATHS.androidAssetLinks,
+		summary: "Android Digital Asset Links",
+		mcpExempt: APP_ASSOCIATION_EXEMPT,
 	},
 	{
 		server: "dashboard",

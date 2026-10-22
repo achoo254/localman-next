@@ -9,6 +9,7 @@ import {
 import type { Express, RequestHandler, Router } from "express";
 import { type RouteBodyLimit, createBaseApp } from "./http/create-base-app.js";
 import { createCsrfGuard } from "./http/csrf-guard.js";
+import { mobileCors } from "./http/mobile-cors.js";
 import { noStore } from "./http/no-store.js";
 import {
 	type SessionAuthenticator,
@@ -121,6 +122,8 @@ export function createDashboardApp(options: DashboardAppOptions): Express {
 		trustProxy: options.trustProxy,
 		beforeBody: [
 			...(options.mcp ? [inMcpChannel(options.mcp)] : []),
+			// Before the CSRF guard, so its 403 is readable by the app too.
+			mobileCors(),
 			createCsrfGuard({
 				allowedOrigins: options.allowedOrigins,
 				exempt: auth?.csrfExempt,

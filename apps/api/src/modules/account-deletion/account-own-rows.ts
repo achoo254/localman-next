@@ -4,6 +4,7 @@ import { ClientSettingsModel } from "../api-client/client-settings-model.js";
 import { DraftModel } from "../api-client/draft-model.js";
 import { HistoryModel } from "../api-client/history-model.js";
 import { AuditEventModel } from "../audit/audit-event-model.js";
+import { MobileHandoffModel } from "../auth/mobile-handoff-model.js";
 import { SessionModel } from "../auth/session-model.js";
 import { UsageCounterModel } from "../billing/usage-counter-model.js";
 import { CollaboratorModel } from "../collaborators/collaborator-model.js";
@@ -137,8 +138,11 @@ export async function deleteOwnRows(sub: string): Promise<ErasedCount[]> {
 export async function revokeSessions(sub: string): Promise<ErasedCount[]> {
 	const sessions = await SessionModel.deleteMany({ sub });
 	const devices = await PushSubscriptionModel.deleteMany({ userSub: sub });
+	// A native app sign-in still waiting must not open a session afterwards.
+	const handoffs = await MobileHandoffModel.deleteMany({ sub });
 	return [
 		{ collection: "sessions", count: sessions.deletedCount },
 		{ collection: "push_subscriptions", count: devices.deletedCount },
+		{ collection: "mobile_handoffs", count: handoffs.deletedCount },
 	];
 }

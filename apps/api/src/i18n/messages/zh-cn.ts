@@ -1,4 +1,5 @@
 import type { ServerMessages } from "./en.js";
+import { mobileSignInZhCN } from "./mobile-sign-in-zh-cn.js";
 import { trialZhCN } from "./trial-zh-cn.js";
 
 const monthName = new Intl.DateTimeFormat("zh-CN", {
@@ -149,6 +150,7 @@ export const zhCN: ServerMessages = {
 		callbackDns: "无法解析 callback 的主机名。",
 	},
 	trial: trialZhCN,
+	mobileSignIn: mobileSignInZhCN,
 	ownerAlerts: {
 		suppressed: (count) => `（另有 ${count} 条因超出提醒上限未发送）`,
 		contactCategories: {

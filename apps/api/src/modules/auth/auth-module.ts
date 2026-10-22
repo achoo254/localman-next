@@ -1,5 +1,6 @@
 import type { Request, Router } from "express";
 import type { Env } from "../../config/env.js";
+import { bearerTokenOf } from "../../http/bearer-token.js";
 import { readCookie } from "../../http/cookies.js";
 import type { Logger } from "../../logger.js";
 import {
@@ -8,15 +9,19 @@ import {
 } from "../../operations/protocol-routes.js";
 import { registerAuditEventsRoute } from "../audit/audit-events-route.js";
 import type { BasicCredentials } from "../audit/basic-credentials.js";
+import { logStreams } from "../mock-runtime/log-stream-registry.js";
 import { deletePushSubscriptionsOfSessions } from "../notifications/push-subscription-model.js";
 import { syncUserFromUserInfo } from "../users/user-sync.js";
+import type { MobileAppSettings } from "./app-link-association.js";
 import { authCookies } from "./auth-cookies.js";
 import { createAuthRouter } from "./auth-routes.js";
 import { clearCookiesOnAccountDeletion } from "./deleted-account-sign-in.js";
+import { MobileHandoffStore } from "./mobile-handoff-model.js";
 import type { OidcApi } from "./oidc-api.js";
 import { OidcClient } from "./oidc-client.js";
+import type { Session } from "./session-model.js";
 import { SessionRefresher } from "./session-refresher.js";
-import { type Session, SessionStore } from "./session-store.js";
+import { SessionStore } from "./session-store.js";
 import type { TenantIdpSettings } from "./tenant-idp.js";
 import { TenantOidcClients } from "./tenant-oidc-clients.js";
 import { TokenCipher, parseKeyring } from "./token-cipher.js";
@@ -37,6 +42,8 @@ export interface AuthSettings {
 	readonly audit?: BasicCredentials;
 	/** Reaching the IdP for other tenants; only the primary one without it. */
 	readonly tenantIdp?: TenantIdpSettings;
+	/** Native apps that may sign in; none: the mobile sign-in is off. */
+	readonly mobile?: MobileAppSettings;
 }
 
 export interface AuthModule {
@@ -65,6 +72,10 @@ export function authSettingsFromEnv(env: Env): AuthSettings {
 		publicUrl: env.PUBLIC_URL,
 		sessionEncryptionKey: env.SESSION_ENCRYPTION_KEY,
 		tenantIdp: tenantIdpFromEnv(env),
+		mobile: {
+			iosTeamId: env.MOBILE_IOS_TEAM_ID,
+			androidCertSha256: env.MOBILE_ANDROID_CERT_SHA256,
+		},
 		audit:
 			env.AUDIT_CLIENT_ID && env.AUDIT_CLIENT_SECRET
 				? {
@@ -106,12 +117,11 @@ export function createAuthModule(
 		settings.tenantIdp,
 	);
 	const tokenCipher = new TokenCipher(keyring);
-	// Push devices registered by a session stop with it.
-	const sessions = new SessionStore(
-		tokenCipher,
-		logger,
-		deletePushSubscriptionsOfSessions,
-	);
+	// Push devices and live logs of a session stop with it.
+	const sessions = new SessionStore(tokenCipher, logger, async (ids) => {
+		logStreams.endSessions(ids);
+		await deletePushSubscriptionsOfSessions(ids);
+	});
 	const refresher = new SessionRefresher({
 		store: sessions,
 		oidc,
@@ -128,14 +138,18 @@ export function createAuthModule(
 		sessions,
 		cookies,
 		logger,
+		handoffs: new MobileHandoffStore(tokenCipher),
+		mobile: settings.mobile,
 		loginLimitPerMinute: settings.loginLimitPerMinute,
 		serverLimitPerMinute: settings.serverLimitPerMinute,
 	});
 	router.use(clearCookiesOnAccountDeletion(cookies));
 	// Both authenticate otherwise (signed token, Basic + SET). The audit path
-	// is exempt even when unconfigured so it answers 404, not 403.
+	// is exempt even when unconfigured so it answers 404, not 403. The app
+	// redeems its code with code + PKCE verifier, without Origin or cookie.
 	const csrfExempt = [
 		`POST ${AUTH_PATHS.backchannelLogout}`,
+		`POST ${AUTH_PATHS.mobileToken}`,
 		`POST ${INTERNAL_PATHS.auditEvents}`,
 	];
 	if (settings.audit) {
@@ -150,9 +164,14 @@ export function createAuthModule(
 
 	return {
 		router,
+		// A Bearer token is the app's session and only that: no fallback
+		// to the cookie, and a browser's cookie value is no Bearer token.
 		authenticate: async (req) => {
+			const bearer = bearerTokenOf(req);
 			const value = readCookie(req, cookies.session.name);
-			const session = value ? await sessions.findByCookie(value) : null;
+			let session: Session | null = null;
+			if (bearer !== undefined) session = await sessions.findByBearer(bearer);
+			else if (value) session = await sessions.findByCookie(value);
 			return session ? refresher.ensureFresh(session) : null;
 		},
 		csrfExempt,

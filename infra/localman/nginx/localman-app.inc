@@ -106,6 +106,29 @@
         proxy_pass http://127.0.0.1:4000;
     }
 
+    # Native app sign-in (docs/decisions/0005-mobile-session-handoff.md).
+    # The app's verified callback: iOS/Android hand it to the app; when
+    # none takes it, the API answers a fallback page. Exact match, so it
+    # wins over the mock fallback below (project secrets are 24
+    # characters, never "auth").
+    location = /m/auth/callback {
+        add_header X-Robots-Tag "noindex" always;
+        proxy_pass http://127.0.0.1:4000;
+    }
+
+    # App association files, from the API (404 until MOBILE_IOS_TEAM_ID or
+    # MOBILE_ANDROID_CERT_SHA256 is set). Apple's CDN and Android fetch
+    # them: JSON, no redirect, never the SPA's index.html.
+    location = /.well-known/apple-app-site-association {
+        add_header X-Robots-Tag "noindex" always;
+        proxy_pass http://127.0.0.1:4000;
+    }
+
+    location = /.well-known/assetlinks.json {
+        add_header X-Robots-Tag "noindex" always;
+        proxy_pass http://127.0.0.1:4000;
+    }
+
     # Mock fallback https://localman.<domain>/m/{secret}{prefix}/...
     # Same origin as the dashboard, while the answer is the project's
     # (hybrid upstream, webhook inbox): the runtime sends a sandbox CSP

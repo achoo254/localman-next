@@ -1,3 +1,4 @@
+import { mobileSignInEn } from "./mobile-sign-in-en.js";
 import { trialEn } from "./trial-en.js";
 
 /** Values of an invitation; `inviter` is `null` when the owner has no name. */
@@ -245,6 +246,8 @@ export const en = {
 	},
 	/** The Pro trial: reminders, extension requests and decisions. */
 	trial: trialEn,
+	/** Native app sign-in pages (confirmation, callback fallback). */
+	mobileSignIn: mobileSignInEn,
 	ownerAlerts: {
 		suppressed: (count: number): string =>
 			`(and ${count} more not sent because of the alert limit)`,

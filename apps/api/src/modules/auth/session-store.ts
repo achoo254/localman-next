@@ -1,7 +1,14 @@
 import { createHash, randomBytes } from "node:crypto";
-import { z } from "zod";
 import type { Logger } from "../../logger.js";
-import { SessionModel } from "./session-model.js";
+import {
+	type NewSession,
+	type Session,
+	type SessionClient,
+	SessionModel,
+	type SessionTokens,
+	type StoredSession,
+	sessionTokens,
+} from "./session-model.js";
 import { type TokenCipher, TokenCipherError } from "./token-cipher.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -9,50 +16,19 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const SESSION_IDLE_MS = 30 * DAY_MS;
 export const SESSION_MAX_MS = 90 * DAY_MS;
 
-const sessionTokens = z.object({
-	accessToken: z.string().min(1),
-	refreshToken: z.string().min(1).optional(),
-	idToken: z.string().min(1).optional(),
-});
-export type SessionTokens = z.output<typeof sessionTokens>;
-
-export interface Session {
-	/** SHA-256 of the cookie value; safe to log and to reference elsewhere. */
-	readonly id: string;
-	readonly sub: string;
-	readonly sid?: string;
-	readonly tokens: SessionTokens;
-	readonly accessTokenExpiresAt: Date;
-	readonly expiresAt: Date;
-}
-
-export interface NewSession {
-	readonly sub: string;
-	readonly sid?: string;
-	readonly tokens: SessionTokens;
-	readonly accessTokenExpiresAt: Date;
-}
-
-interface StoredSession {
-	_id: string;
-	sub: string;
-	sid?: string | null;
-	tokens: string;
-	accessTokenExpiresAt: Date;
-	expiresAt: Date;
-	createdAt?: Date;
-}
-
 export function hashSessionToken(cookieValue: string): string {
 	return createHash("sha256").update(cookieValue, "utf8").digest("hex");
 }
 
-/** Server-side sessions in MongoDB; tokens are encrypted at rest. */
 /** Runs after sessions were deleted, e.g. to drop their push devices. */
 export type SessionsEndedHook = (
 	sessionIds: readonly string[],
 ) => Promise<void>;
 
+/** A session token: 32 random bytes in base64url. */
+const TOKEN_FORMAT = /^[A-Za-z0-9_-]{43}$/;
+
+/** Server-side sessions in MongoDB; tokens are encrypted at rest. */
 export class SessionStore {
 	constructor(
 		private readonly cipher: TokenCipher,
@@ -60,29 +36,53 @@ export class SessionStore {
 		private readonly onEnded?: SessionsEndedHook,
 	) {}
 
-	/** Creates a session; returns the cookie value (shown only here). */
-	async create(input: NewSession): Promise<{ cookieValue: string }> {
+	/**
+	 * Creates a session; returns its token (shown only here): the cookie
+	 * value of a browser, the Bearer token of the app.
+	 */
+	async create(
+		input: NewSession,
+	): Promise<{ cookieValue: string; expiresAt: Date }> {
 		const cookieValue = randomBytes(32).toString("base64url");
 		const id = hashSessionToken(cookieValue);
+		const expiresAt = new Date(Date.now() + SESSION_IDLE_MS);
 		await SessionModel.create({
 			_id: id,
 			sub: input.sub,
 			sid: input.sid,
+			client: input.client ?? "web",
 			tokens: this.seal(id, input.tokens),
 			accessTokenExpiresAt: input.accessTokenExpiresAt,
-			expiresAt: new Date(Date.now() + SESSION_IDLE_MS),
+			expiresAt,
 		});
-		return { cookieValue };
+		return { cookieValue, expiresAt };
 	}
 
-	async findByCookie(cookieValue: string): Promise<Session | null> {
-		if (!/^[A-Za-z0-9_-]{43}$/.test(cookieValue)) return null;
-		return this.findById(hashSessionToken(cookieValue));
+	/** A browser's session; an app's token in a cookie is not one. */
+	findByCookie(cookieValue: string): Promise<Session | null> {
+		return this.findByToken(cookieValue, { client: { $ne: "mobile" } });
 	}
 
-	async findById(id: string): Promise<Session | null> {
+	/** The app's session; a browser's cookie as a Bearer token is not one. */
+	findByBearer(token: string): Promise<Session | null> {
+		return this.findByToken(token, { client: "mobile" });
+	}
+
+	findById(id: string): Promise<Session | null> {
+		return this.findOpen({ _id: id });
+	}
+
+	private findByToken(
+		token: string,
+		client: { client: SessionClient | { $ne: SessionClient } },
+	): Promise<Session | null> {
+		if (!TOKEN_FORMAT.test(token)) return Promise.resolve(null);
+		return this.findOpen({ _id: hashSessionToken(token), ...client });
+	}
+
+	private async findOpen(filter: object): Promise<Session | null> {
 		const stored = await SessionModel.findOne({
-			_id: id,
+			...filter,
 			expiresAt: { $gt: new Date() },
 		}).lean<StoredSession>();
 		return stored ? this.open(stored) : null;
@@ -191,6 +191,7 @@ export class SessionStore {
 			id: stored._id,
 			sub: stored.sub,
 			sid: stored.sid ?? undefined,
+			client: stored.client ?? "web",
 			tokens,
 			accessTokenExpiresAt: stored.accessTokenExpiresAt,
 			expiresAt: stored.expiresAt,

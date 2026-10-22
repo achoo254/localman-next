@@ -2,6 +2,7 @@ import { ClientSettingsModel } from "../../api-client/client-settings-model.js";
 import { DraftModel } from "../../api-client/draft-model.js";
 import { HistoryModel } from "../../api-client/history-model.js";
 import { AuditEventModel } from "../../audit/audit-event-model.js";
+import { MobileHandoffModel } from "../../auth/mobile-handoff-model.js";
 import { SessionModel } from "../../auth/session-model.js";
 import { UsageCounterModel } from "../../billing/usage-counter-model.js";
 import { ContactMessageModel } from "../../feedback/contact-message-model.js";
@@ -25,6 +26,20 @@ export const PERSONAL_ROWS: readonly OwnRow[] = [
 				expiresAt: new Date(Date.now() + 60_000),
 			}),
 		(sub) => SessionModel.countDocuments({ sub }),
+	],
+	[
+		"mobile_handoffs",
+		(sub) =>
+			MobileHandoffModel.create({
+				_id: `handoff-${sub}`,
+				sub,
+				tokens: "sealed",
+				accessTokenExpiresAt: new Date(),
+				codeChallenge: "c".repeat(43),
+				appState: "s".repeat(22),
+				expiresAt: new Date(Date.now() + 60_000),
+			}),
+		(sub) => MobileHandoffModel.countDocuments({ sub }),
 	],
 	[
 		"push_subscriptions",

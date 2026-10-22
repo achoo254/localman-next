@@ -92,14 +92,29 @@ App ──Authorization: Bearer──▶ /api/v1/*  và  /api/v1/projects/:id/re
 
 ## Todo
 
-- [ ] ADR 0005
-- [ ] Model handoff và test tenant
-- [ ] Nhánh login và callback cho mobile, trang xác nhận
-- [ ] Endpoint token và logout, csrfExempt, rate limit, PROTOCOL_ROUTES
-- [ ] Bearer trong authenticate và CSRF guard
-- [ ] File association theo tenant
-- [ ] Test và SAST
-- [ ] Cập nhật system-architecture và deployment-guide
+- [x] ADR 0005
+- [x] Model handoff và test tenant
+- [x] Nhánh login và callback cho mobile, trang xác nhận
+- [x] Endpoint token và logout, csrfExempt, rate limit, PROTOCOL_ROUTES
+- [x] Bearer trong authenticate và CSRF guard
+- [x] File association theo tenant
+- [x] CORS cho WebView của app (bổ sung 23/10/2026)
+- [x] Test
+- [ ] SAST module auth (`/ak:security`) và CI xanh sau khi push
+- [x] Cập nhật system-architecture và deployment-guide
+
+## Ghi chú triển khai (23/10/2026)
+
+Làm xong phía server, chưa commit, chưa deploy. Khác bản thiết kế ở trên:
+
+- **App không dùng `CapacitorHttp`** (Jev 23/10/2026): app bọc toàn bộ web và đọc SSE bằng `fetch`, nên API có CORS cho đúng `capacitor://localhost` và `https://localhost` trên `/api/v1/*`, `/auth/mobile/token`, `/auth/mobile/logout`, không bao giờ kèm credentials (`apps/api/src/http/mobile-cors.ts`). Test `no-cors.test.ts` vì vậy thành `mobile-cors.test.ts`: origin khác và route cookie không có header CORS.
+- **Env:** `MOBILE_IOS_TEAM_ID` (Team ID; app id ghép với `appIds.ios` của `brand.config.json`) thay cho `MOBILE_IOS_APP_ID`, và `MOBILE_ANDROID_CERT_SHA256`. AASA có cả `applinks` lẫn `webcredentials`.
+- **Trang xác nhận** là form POST `/auth/mobile/confirm` (Tiếp tục/Huỷ). Trang chờ tối đa 5 phút; sau Tiếp tục mã chỉ đổi được trong 60 giây.
+- **Đóng SSE:** hook kết thúc phiên của `SessionStore` đóng stream của phiên đó cho mọi cách kết thúc phiên, không riêng logout mobile.
+- **nginx:** thêm `location =` cho `/m/auth/callback` và hai tệp `.well-known` (trước đó `/m/` tới mock runtime, `.well-known` tới SPA).
+- Xoá tài khoản xoá luôn `mobile_handoffs` của user; chuyển tenant không mang collection này theo.
+
+Test chạy riêng đều xanh: `mobile-handoff.test.ts`, `mobile-session.test.ts`, `app-link-association.test.ts`, `csrf-guard-bearer.test.ts`, `mobile-cors.test.ts`, `mobile-env.test.ts`, cùng các test auth, log stream, xoá tài khoản, tenant hiện có. Còn lại: SAST, CI, và chỉnh dev proxy của web (`apps/web/src/config/dev-api-proxy.ts`) nếu cần thử luồng qua Vite.
 
 ## Success Criteria
 

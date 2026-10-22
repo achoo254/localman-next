@@ -33,6 +33,8 @@ Bối cảnh: từ 2026-10-19 sản phẩm đang trong đợt marketing và nghi
 
 ## Phases
 
+> **23/10/2026 (Jev, độ tin 1.0): phase 2–6 bị thay thế.** App Localman bọc **toàn bộ web `apps/web`** trong Capacitor, không làm giao diện mobile kiểu app chat riêng. Xem `hoandat-app/plans/dattqh/261023-0620-mobile-apps-all-products/plan.md` (`/Users/hoandat/inet-gitlab/hoandat-app/plans/dattqh/261023-0620-mobile-apps-all-products/plan.md`). Phase 1 (session handoff phía server) giữ nguyên thiết kế và đã làm, có thêm CORS cho WebView vì app gọi API bằng `fetch` (xem ADR-0005).
+
 | # | Phase | Tier | Status |
 |---|-------|------|--------|
 | 1 | [Đăng nhập cho app native (session handoff)](./phase-01-mobile-session-handoff-api.md) | M | Pending |

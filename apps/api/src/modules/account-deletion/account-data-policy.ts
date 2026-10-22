@@ -31,6 +31,8 @@ export const ACCOUNT_DATA_POLICY: Readonly<
 	User: "deleted",
 	DeletedAccount: "hashOnly",
 	Session: "deleted",
+	// A pending native app sign-in (minutes): sealed IdP tokens of `sub`.
+	MobileHandoff: "deleted",
 	PushSubscription: "deleted",
 	AuditEvent: "deleted",
 	// Sign-in handshakes (10 minutes) and replay guards hold no `sub`.
