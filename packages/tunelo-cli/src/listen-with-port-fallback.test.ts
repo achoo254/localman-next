@@ -32,6 +32,24 @@ async function reserveEphemeralPort(): Promise<number> {
 	return port;
 }
 
+/**
+ * Hold two adjacent ports, `first` and `first + 1`. Another process (a
+ * busy CI runner) may already own the port after a random free one, so
+ * retry with a new pair until both bind; returns `first`.
+ */
+async function reserveAdjacentPorts(): Promise<number> {
+	for (let attempt = 0; attempt < 20; attempt++) {
+		const first = await reserveEphemeralPort();
+		const next = newServer();
+		const second = await listenWithPortFallback(next, first + 1, {
+			maxAttempts: 1,
+		});
+		if (second.port === first + 1) return first;
+		await new Promise<void>((resolve) => next.close(() => resolve()));
+	}
+	throw new Error("could not hold two adjacent free ports");
+}
+
 describe("listenWithPortFallback", () => {
 	it("binds the preferred port when it is free", async () => {
 		const free = await reserveEphemeralPort();
@@ -55,9 +73,7 @@ describe("listenWithPortFallback", () => {
 	});
 
 	it("falls back to an ephemeral port when every candidate is taken", async () => {
-		const first = await reserveEphemeralPort();
-		const second = await listenWithPortFallback(newServer(), first + 1);
-		expect(second.port).toBe(first + 1);
+		const first = await reserveAdjacentPorts();
 
 		// Only two candidates are probed, and both are already bound.
 		const result = await listenWithPortFallback(newServer(), first, {
