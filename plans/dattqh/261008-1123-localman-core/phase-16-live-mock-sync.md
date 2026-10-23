@@ -70,7 +70,7 @@ Làm keyword phụ của Localman (Jev 0.90, xem `../reports/competitive-261008-
 - [x] T5 UI badge, dialog, banner, nút "Mở collection đồng bộ"
 - [x] T6 Integration pass (`sync-link.test.ts`, `sync-changes.test.ts`, 13 test)
 - [x] T7 E2E đổi tên resource pass (CI run 40001911892, `live-mock-sync.spec.ts` 7,9 s)
-- [ ] T8 Staging deploy và cờ `features.liveMockSync` bật sau khi user xác nhận
+- [ ] T8 Staging deploy và cờ `features.liveMockSync` bật sau khi user xác nhận (24/10 01:35: code đã lên production, release `20261023-183501-951ee9320676`, cổng `LIVE_MOCK_SYNC_ENABLED` và cờ web `liveMockSync` vẫn tắt theo Jev 0,67 "deploy, bật sau khi kiểm tay"; backup trước deploy `localman-20261024-013453.archive.gz`; kiểm sau deploy: trang 200, CSP 5 hash, `/internal` 403, `mock-sync` 404, pm2 online, 0 lỗi. Còn: kiểm tay rồi bật cả hai cờ và deploy lại)
 - [x] T9 Review không còn finding mức high (24/10: 3 vòng review độc lập; đã sửa 2 high, 4 medium, các low; còn một low ghi nhận: sau khi đổi secret, path tự đặt của Editor có thể bị đè một lần)
 - [x] Verification: unit mapper và merge (user sửa header, mock đổi path ra cả hai thay đổi) pass
 - [x] Verification: integration chuỗi thêm, đổi tên, tắt endpoint, xoá resource; banner xung đột và "Giữ bản của tôi" đúng
