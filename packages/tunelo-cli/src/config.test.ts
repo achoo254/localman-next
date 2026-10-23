@@ -13,14 +13,18 @@ import { useTempHome } from "./test-support/temp-home.js";
 
 useTempHome();
 
+// Windows has no POSIX permission bits: files report 0o666 and directories
+// 0o777 whatever the requested mode, so these mode-only tests run on POSIX.
+const posixModes = process.platform === "win32" ? test.skip : test;
+
 describe("config file", () => {
-	test("is written owner-only, directory included", () => {
+	posixModes("is written owner-only, directory included", () => {
 		saveConfig({ key: "tunelo_x" });
 		expect(statSync(getConfigPath()).mode & 0o777).toBe(0o600);
 		expect(statSync(getConfigDir()).mode & 0o777).toBe(0o700);
 	});
 
-	test("tightens a file an older CLI left world-readable", () => {
+	posixModes("tightens a file an older CLI left world-readable", () => {
 		mkdirSync(getConfigDir(), { recursive: true });
 		writeFileSync(getConfigPath(), "{}", { mode: 0o644 });
 		saveConfig({ key: "tunelo_x" });

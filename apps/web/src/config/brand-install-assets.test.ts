@@ -35,8 +35,12 @@ const iconFiles = (config: InstallBrand) =>
 
 let root = "";
 beforeAll(() => {
-	// Real path: on macOS tmpdir() is a symlink, which Vite resolves.
-	root = realpathSync(mkdtempSync(join(tmpdir(), "brand-install-assets-")));
+	// Real path: on macOS tmpdir() is a symlink and on Windows an 8.3 short
+	// name (C:\Users\NAME~1), which Vite resolves; only realpath.native expands
+	// the short name.
+	root = realpathSync.native(
+		mkdtempSync(join(tmpdir(), "brand-install-assets-")),
+	);
 	writeFileSync(join(root, "index.html"), INDEX_HTML);
 });
 afterAll(() => rmSync(root, { recursive: true, force: true }));

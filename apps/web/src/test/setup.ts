@@ -6,9 +6,11 @@ import { afterEach } from "vitest";
  * GitHub's shared runners can take longer than Testing Library's default
  * second to show UI that appears after a request or a timer. On CI (CI is
  * set there) findBy* and waitFor wait up to 5 s; what they assert is the
- * same, they only wait longer before failing.
+ * same, they only wait longer before failing. Windows gets the same budget:
+ * the first import of a lazy route transforms for seconds there.
  */
-configure({ asyncUtilTimeout: process.env.CI ? 5_000 : 1_000 });
+const slowHost = Boolean(process.env.CI) || process.platform === "win32";
+configure({ asyncUtilTimeout: slowHost ? 5_000 : 1_000 });
 
 /*
  * React Router's data router builds a `Request` (Node/undici) with an

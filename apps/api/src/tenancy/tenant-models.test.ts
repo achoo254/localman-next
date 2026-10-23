@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, sep } from "node:path";
 import mongoose from "mongoose";
 import { describe, expect, it } from "vitest";
 import "../db/register-models.js";
@@ -58,7 +58,8 @@ describe("tenant-owned models", () => {
 				const text = readFileSync(path, "utf8");
 				return BYPASS.test(text);
 			})
-			.map((path) => relative(SRC, path))
+			// POSIX separators so the list below reads the same on Windows.
+			.map((path) => relative(SRC, path).split(sep).join("/"))
 			.sort();
 		expect(callers).toEqual(
 			[
