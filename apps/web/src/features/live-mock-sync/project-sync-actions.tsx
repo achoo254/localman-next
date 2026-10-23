@@ -64,12 +64,16 @@ export function ProjectSyncActions({ project }: { project: Project }) {
 			{ projectId: project.id, workspaceId: current.id, names: syncNamesOf(t) },
 			{
 				onSuccess: async ({ collectionId }) => {
-					const detail = await fetchCollection(collectionId);
-					toast.show({
-						tone: "success",
-						title: t("liveMockSync.project.created", { name: detail.name }),
-					});
-					open({ id: detail.id, name: detail.name });
+					try {
+						const detail = await fetchCollection(collectionId);
+						toast.show({
+							tone: "success",
+							title: t("liveMockSync.project.created", { name: detail.name }),
+						});
+						open({ id: detail.id, name: detail.name });
+					} catch (error) {
+						toast.show({ tone: "error", title: errorMessage(error) });
+					}
 				},
 				onError: (error) =>
 					toast.show({ tone: "error", title: errorMessage(error) }),

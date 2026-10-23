@@ -7,7 +7,7 @@ import { ModalFooter } from "../../components/ui/modal-footer";
 import { Skeleton, SkeletonRegion } from "../../components/ui/skeleton";
 import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
-import { errorMessage } from "../../lib/api-client";
+import { ApiError, errorMessage } from "../../lib/api-client";
 import { ConflictList } from "../version-control/conflict-list";
 import { useSyncActions, useSyncConflictsPreview } from "./use-live-mock-sync";
 
@@ -44,6 +44,12 @@ export function SyncConflictDialog({
 					title: t("liveMockSync.conflicts.done", { name: sourceName }),
 				});
 				onClose();
+			},
+			// The mock changed meanwhile: show its new conflicts.
+			onError: (error) => {
+				if (error instanceof ApiError && error.code === "MERGE_CONFLICTS") {
+					void preview.refetch();
+				}
 			},
 		});
 	return (

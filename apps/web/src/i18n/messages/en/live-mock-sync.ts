@@ -21,6 +21,8 @@ export const liveMockSync = {
 			"What you edit yourself (headers, body, scripts) stays. When the mock changes the same thing, you choose. Requests the mock no longer serves move to the _removed folder.",
 		needEditor:
 			"Only Editors of both the mock project and the collection turn the sync on or off.",
+		urlChanged:
+			"The mock project's secret changed. Live Mock Sync does not copy the new mock URL into the shared environment; update baseUrl yourself if everyone here may use it.",
 		save: "Save",
 		stopped:
 			"Sync turned off. {name} is now an ordinary collection and keeps its content.",

@@ -25,6 +25,8 @@ export interface SyncStatus {
 	canManage: boolean;
 	/** Editor of the collection: chooses for conflicts. */
 	canResolve: boolean;
+	/** The project secret changed: baseUrl needs updating by hand. */
+	mockUrlChanged: boolean;
 }
 
 /** Names of what the sync writes, `{name}` standing for the resource. */
@@ -65,6 +67,7 @@ function parseStatus(value: unknown): SyncStatus {
 		conflicts: expectNumber(data, "conflicts"),
 		canManage: expectBoolean(data, "canManage"),
 		canResolve: expectBoolean(data, "canResolve"),
+		mockUrlChanged: expectBoolean(data, "mockUrlChanged"),
 	};
 }
 

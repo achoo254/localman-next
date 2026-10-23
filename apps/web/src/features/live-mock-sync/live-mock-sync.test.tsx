@@ -28,6 +28,7 @@ const status = (overrides: object = {}) => ({
 	conflicts: 0,
 	canManage: true,
 	canResolve: true,
+	mockUrlChanged: false,
 	...overrides,
 });
 

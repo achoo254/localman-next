@@ -19,7 +19,8 @@ export function SyncConflictBanner({
 	collectionName,
 }: SyncConflictBannerProps) {
 	const t = useT();
-	const status = useSyncStatus(collectionId);
+	// Always on the collection page: it follows syncs for the page.
+	const status = useSyncStatus(collectionId, true);
 	const [open, setOpen] = useState(false);
 	const sync = status.data;
 	if (!sync || sync.conflicts === 0) return null;

@@ -1,9 +1,14 @@
 /** Live Mock Sync status, conflicts, turning it off, and new synced collections. */
-import type { ConflictSide } from "@localman/shared/api-client";
+import type {
+	CollectionDetail,
+	ConflictSide,
+} from "@localman/shared/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useFeatures } from "../../config/features";
-import { COLLECTIONS_KEY } from "../collections/use-collections";
+import { fetchCollection } from "../collections/collections-api";
+import { COLLECTIONS_KEY, collectionKey } from "../collections/use-collections";
+import { useRefreshBoundTabs } from "../collections/use-refresh-bound-tabs";
 import { ENVIRONMENTS_KEY } from "../environments/use-environments";
 import { useAfterSync } from "../version-control/use-forks";
 import { useWorkspacesEnabled } from "../workspaces/use-workspaces-enabled";
@@ -31,13 +36,40 @@ export function useLiveMockSyncEnabled(): boolean {
 }
 
 /**
- * The collection's sync (`null`: not synced), checked again every
- * `SYNC_POLL_MS`; when a sync changed it, the collection and its tabs
- * are refreshed.
+ * After a sync in the background (someone changed the mock): the
+ * collection, its open tabs and environments are fetched again. Unsaved
+ * edits stay, on pages and in tabs: nobody asked for this change here.
  */
-export function useSyncStatus(collectionId: string) {
+function useRefreshAfterBackgroundSync() {
+	const client = useQueryClient();
+	const refreshTabs = useRefreshBoundTabs();
+	return useCallback(
+		async (collectionId: string) => {
+			const detail = await client
+				.fetchQuery<CollectionDetail>({
+					queryKey: collectionKey(collectionId),
+					queryFn: () => fetchCollection(collectionId),
+					staleTime: 0,
+				})
+				.catch(() => null);
+			if (detail) refreshTabs(detail);
+			await client.invalidateQueries({
+				queryKey: [...COLLECTIONS_KEY, "list"],
+			});
+			await client.invalidateQueries({ queryKey: ENVIRONMENTS_KEY });
+		},
+		[client, refreshTabs],
+	);
+}
+
+/**
+ * The collection's sync (`null`: not synced), checked again every
+ * `SYNC_POLL_MS`. With `follow` (one place per page), a sync that changed
+ * the collection or its environment refreshes them.
+ */
+export function useSyncStatus(collectionId: string, follow = false) {
 	const enabled = useLiveMockSyncEnabled();
-	const afterSync = useAfterSync();
+	const refresh = useRefreshAfterBackgroundSync();
 	const query = useQuery({
 		queryKey: syncKey(collectionId),
 		queryFn: () => fetchSyncStatus(collectionId),
@@ -50,10 +82,10 @@ export function useSyncStatus(collectionId: string) {
 		if (count === null) return;
 		const before = seen.current;
 		seen.current = count;
-		if (before !== null && count > before) {
-			void afterSync("collection", [collectionId]);
+		if (follow && before !== null && count > before) {
+			void refresh(collectionId);
 		}
-	}, [count, collectionId, afterSync]);
+	}, [count, collectionId, follow, refresh]);
 	return query;
 }
 

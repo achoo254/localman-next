@@ -71,8 +71,9 @@ export async function computeSync(
  * Applies the mock's changes to the collection as one `sync` change by
  * Live Mock Sync (in the workspace's transaction, so edits and other syncs
  * wait their turn). Clashes left without a choice keep the collection's
- * value and the old base, so they show again until resolved; everything
- * else is applied. Writes nothing when nothing changed.
+ * value and their old base value, so they show again until resolved;
+ * everything else is applied and becomes the base. Writes nothing to the
+ * collection when nothing changed.
  */
 export async function syncLink(
 	linkId: Types.ObjectId,
@@ -88,7 +89,17 @@ export async function syncLink(
 			.lean<StoredSyncLink>();
 		if (!link) return { status: "skipped" } as const;
 		const computed = await computeSync(link, resolutions, session);
-		if (!computed) return { status: "skipped" } as const;
+		if (!computed) {
+			// The project is gone: nothing can be chosen any more.
+			if (link.conflicts > 0) {
+				await SyncLinkModel.updateOne(
+					{ _id: link._id },
+					{ $set: { conflicts: 0 } },
+					{ session },
+				);
+			}
+			return { status: "skipped" } as const;
+		}
 		const { outcome, side, current } = computed;
 		const changed = !sameContent(current, outcome.target);
 		if (changed) {
@@ -97,28 +108,29 @@ export async function syncLink(
 				LIVE_MOCK_SYNC_AUTHOR,
 				session,
 				{ current, target: outcome.target },
-				{ action: "sync", entityName: side.project.name, dryRun: false },
+				// The collection's own name: its readers may not read the project.
+				{ action: "sync", entityName: current.root.name, dryRun: false },
 			);
 		}
-		await syncEnvironment(
+		const environment = await syncEnvironment(
 			link.environmentId,
 			{ baseUrl: link.baseUrl, idVariables: link.idVariables },
 			side.variables,
 			session,
 		);
-		const settled = outcome.unresolved.length === 0;
-		if (settled) await saveSyncBase(link._id, outcome.theirs, session);
+		await saveSyncBase(link._id, outcome.nextBase, session);
 		await SyncLinkModel.updateOne(
 			{ _id: link._id },
 			{
 				$set: {
 					pairs: outcome.pairs,
-					baseUrl: side.variables.baseUrl,
+					baseUrl: environment.baseUrl,
 					idVariables: [...side.variables.idVariables],
 					lastSyncedAt: new Date(),
 					conflicts: outcome.unresolved.length,
 				},
-				...(changed ? { $inc: { syncCount: 1 } } : {}),
+				// Counted so open pages refresh the collection and environment.
+				...(changed || environment.changed ? { $inc: { syncCount: 1 } } : {}),
 			},
 			{ session },
 		);

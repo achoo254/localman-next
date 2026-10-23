@@ -22,6 +22,8 @@ export const liveMockSync: Messages["liveMockSync"] = {
 			"Phần bạn tự sửa (header, body, script) được giữ. Mock đổi trúng chỗ đó thì bạn chọn. Request bị gỡ khỏi mock chuyển vào folder _removed.",
 		needEditor:
 			"Chỉ Editor của cả project mock lẫn collection mới bật hoặc tắt đồng bộ.",
+		urlChanged:
+			"Secret của project mock đã đổi. Live Mock Sync không chép URL mock mới vào environment dùng chung; hãy tự cập nhật baseUrl nếu mọi người ở đây được dùng nó.",
 		save: "Lưu",
 		stopped:
 			"Đã tắt đồng bộ. {name} giờ là collection thường, nội dung giữ nguyên.",

@@ -179,4 +179,102 @@ describe("mergeMockChanges", () => {
 		expect(folder?.name).toBe("posts");
 		expect(out.target.nodes[folder?.parentId ?? ""]?.name).toBe("users");
 	});
+
+	describe("while a clash waits for a choice", () => {
+		/** Eve edits the list URL, the mock renames users and turns POST on. */
+		function clashed() {
+			const endpoints = completeEndpoints([
+				{ method: "POST", path: "/:res", enabled: false },
+			]);
+			const start = mockToCollection(
+				[users("users", endpoints)],
+				DEFAULT_SYNC_NAMES,
+			);
+			const { collection, pairs } = madeFrom(start);
+			const mine = requestOf(collection, pairs, list);
+			collection.nodes[mine.id] = {
+				...mine,
+				draft: { ...mine.draft, url: "{{baseUrl}}/people" },
+			};
+			const mapped = mockToCollection([users("members")], DEFAULT_SYNC_NAMES);
+			const out = mergeMockChanges(
+				{ base: start, mapped, collection, pairs, names: DEFAULT_SYNC_NAMES },
+				fresh,
+			);
+			expect(out.unresolved).toEqual([`${list}:draft.url`]);
+			return { out, mapped };
+		}
+		const again = (
+			out: ReturnType<typeof mergeMockChanges>,
+			mapped: MockNodes,
+			collection: CollectionState,
+		) =>
+			mergeMockChanges(
+				{
+					base: out.nextBase,
+					mapped,
+					collection,
+					pairs: out.pairs,
+					names: DEFAULT_SYNC_NAMES,
+				},
+				fresh,
+			);
+
+		it("keeps the clash open on the next sync", () => {
+			const { out, mapped } = clashed();
+			expect(again(out, mapped, out.target).unresolved).toEqual([
+				`${list}:draft.url`,
+			]);
+		});
+
+		it("does not bring back a request the user deleted", () => {
+			const { out, mapped } = clashed();
+			const added = requestOf(out.target, out.pairs, "mock:u:POST:collection");
+			const nodes = { ...out.target.nodes };
+			delete nodes[added.id];
+			for (const node of Object.values(nodes)) {
+				if (node.parentId === added.id) delete nodes[node.id];
+			}
+			const next = again(out, mapped, { ...out.target, nodes });
+			expect(next.target.nodes[added.id]).toBeUndefined();
+			expect(
+				Object.values(next.target.nodes).some(
+					(n) => n.name === "Create in members",
+				),
+			).toBe(false);
+		});
+
+		it("merges a new request's draft field by field", () => {
+			const { out, mapped } = clashed();
+			const added = requestOf(out.target, out.pairs, "mock:u:POST:collection");
+			const header = { id: "h", key: "X-Trace", value: "1", enabled: true };
+			const nodes = {
+				...out.target.nodes,
+				[added.id]: { ...added, draft: { ...added.draft, headers: [header] } },
+			};
+			const next = again(out, mapped, { ...out.target, nodes });
+			expect(next.unresolved).toEqual([`${list}:draft.url`]);
+			expect(
+				requestOf(next.target, next.pairs, "mock:u:POST:collection").draft
+					.headers,
+			).toEqual([header]);
+		});
+
+		it("keeps an applied field the user set back", () => {
+			const { out, mapped } = clashed();
+			const get = requestOf(out.target, out.pairs, "mock:u:GET:item");
+			expect(get.draft.url).toBe("{{baseUrl}}/members/{{memberId}}");
+			const nodes = {
+				...out.target.nodes,
+				[get.id]: {
+					...get,
+					draft: { ...get.draft, url: "{{baseUrl}}/users/{{userId}}" },
+				},
+			};
+			const next = again(out, mapped, { ...out.target, nodes });
+			expect(
+				requestOf(next.target, next.pairs, "mock:u:GET:item").draft.url,
+			).toBe("{{baseUrl}}/users/{{userId}}");
+		});
+	});
 });

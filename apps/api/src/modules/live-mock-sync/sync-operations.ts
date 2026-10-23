@@ -35,7 +35,7 @@ const base = {
 const readOnly = { readOnly: true, destructive: false, idempotent: true };
 
 const ABOUT =
-	"Live Mock Sync keeps a collection in step with a mock project: about 2 seconds after a resource is added, renamed, nested, deleted or its schema, endpoints or the project's prefix change, the collection's requests follow (author Live Mock Sync in the changelog). What a user edited in a request stays; a mock change to the same field is a conflict that keeps the user's value until resolved. Requests the mock stops serving move to the `_removed` folder.";
+	"Live Mock Sync keeps a collection in step with a mock project: about 2 seconds after a resource is added, renamed, nested, deleted or its schema, endpoints or the project's prefix change, the collection's requests follow (author Live Mock Sync in the changelog). What a user edited in a request stays; a mock change to the same field is a conflict that keeps the user's value until resolved. Requests the mock stops serving move to the `_removed` folder. The environment's baseUrl follows the project's prefix, never a rotated secret (`mockUrlChanged` then says it needs updating by hand).";
 
 const statusView = z.object({
 	collectionId: z.string(),
@@ -46,6 +46,7 @@ const statusView = z.object({
 	conflicts: z.number().int(),
 	canManage: z.boolean(),
 	canResolve: z.boolean(),
+	mockUrlChanged: z.boolean(),
 });
 
 export const liveMockSyncOperations: readonly AnyOperation[] = [

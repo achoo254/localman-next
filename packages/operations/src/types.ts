@@ -53,9 +53,8 @@ export type Toolset = (typeof TOOLSETS)[number];
  * Toolsets whose MCP tools use another toolset's OAuth scopes, so a token
  * opens them without a new IdP scope: the `mock-advanced` and `traffic`
  * (request log, inboxes, callbacks) tools work on the same projects as
- * `mock`; the `sharing` (workspaces, shares, collection links and keys)
- * and `public` tools on the same collections as `client`, and `sync`
- * (Live Mock Sync) on collections too.
+ * `mock`; the `sharing` (workspaces, shares, collection links and keys),
+ * `public` and `sync` tools on the same collections as `client`.
  */
 const SCOPE_AREAS: Readonly<Partial<Record<Toolset, Toolset>>> = {
 	"mock-advanced": "mock",

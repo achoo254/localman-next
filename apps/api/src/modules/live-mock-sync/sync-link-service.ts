@@ -13,9 +13,11 @@ import {
 	ProjectModel,
 	type StoredProject,
 } from "../projects/project-model.js";
+import { mockBaseUrlOf } from "../projects/project-view.js";
 import { conflictsLeft } from "../version-control/fork-access.js";
 import { mergePreview } from "../version-control/merge-views.js";
 import type { MergeSide } from "../version-control/three-way-merge.js";
+import { mockOriginOf } from "./sync-environment.js";
 import {
 	type StoredSyncLink,
 	SyncLinkModel,
@@ -36,6 +38,11 @@ export interface SyncStatus {
 	readonly canManage: boolean;
 	/** Editors of the collection choose for conflicts. */
 	readonly canResolve: boolean;
+	/**
+	 * The project secret changed since the environment got its baseUrl:
+	 * the sync does not write the new one there (rotating cuts access).
+	 */
+	readonly mockUrlChanged: boolean;
 }
 
 function notSynced(): OperationError {
@@ -106,6 +113,10 @@ export async function syncStatus(
 		// A gone project leaves the choice to the collection's Editors.
 		canManage: collectionEditor && (found === null || found.editor),
 		canResolve: collectionEditor,
+		mockUrlChanged:
+			found !== null &&
+			mockOriginOf(link.baseUrl) !==
+				mockOriginOf(mockBaseUrlOf(found.project.secret, found.project.prefix)),
 	};
 }
 

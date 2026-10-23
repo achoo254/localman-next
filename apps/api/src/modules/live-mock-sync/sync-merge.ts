@@ -7,6 +7,7 @@ import type {
 } from "../version-control/three-way-merge.js";
 import type { MockNodes } from "./mock-to-collection-mapper.js";
 import { withRemoved } from "./removed-nodes.js";
+import { settledBase } from "./settled-base.js";
 import { isMockKey } from "./sync-keys.js";
 import type { SyncNames } from "./sync-names.js";
 
@@ -33,8 +34,10 @@ export interface SyncOutcome {
 	/** The collection to write (node ids, new nodes with fresh ids). */
 	readonly target: CollectionState;
 	readonly pairs: SyncPair[];
-	/** The mock side merged now: the next base once nothing is left open. */
+	/** The mock side merged now. */
 	readonly theirs: MockNodes;
+	/** The base of the next sync: `theirs` but for the clashes left open. */
+	readonly nextBase: MockNodes;
 	/** In key space, for the preview. */
 	readonly views: {
 		readonly base: CollectionState;
@@ -92,10 +95,12 @@ export function mergeMockChanges(
 		...inputs.pairs.filter((pair) => existing.has(pair.n)),
 		...[...renamed].map(([k, n]) => ({ k, n })),
 	];
+	const open = merge.conflicts.filter((c) => merge.unresolved.includes(c.id));
 	return {
 		target: state,
 		pairs,
 		theirs,
+		nextBase: settledBase(inputs.base, theirs, open),
 		views: { ...views, merged: merge.state },
 		conflicts: merge.conflicts,
 		unresolved: merge.unresolved,

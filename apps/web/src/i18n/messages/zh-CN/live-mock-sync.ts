@@ -22,6 +22,8 @@ export const liveMockSync: Messages["liveMockSync"] = {
 			"你自己修改的部分（header、body、script）会保留。mock 改到同一处时由你选择。mock 不再提供的 request 会移到 _removed folder。",
 		needEditor:
 			"只有同时是 mock project 和 collection 的 Editor 才能开启或关闭同步。",
+		urlChanged:
+			"Mock project 的 secret 已更改。Live Mock Sync 不会把新的 mock URL 写入共享的 environment；如果这里的所有人都可以使用它，请自行更新 baseUrl。",
 		save: "保存",
 		stopped: "已关闭同步。{name} 现在是普通 collection，内容保持不变。",
 	},

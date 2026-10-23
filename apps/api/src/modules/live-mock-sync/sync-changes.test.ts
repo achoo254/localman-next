@@ -175,6 +175,29 @@ describe("following the mock", () => {
 		const baseUrl = environment.variables.find((v) => v.key === "baseUrl");
 		expect(baseUrl?.sharedValue).toMatch(/\/v2$/);
 	});
+	it("never writes a rotated secret into the shared environment", async () => {
+		const s = await syncedUsers();
+		const before = (await environmentOf(EVE, s.environment)).variables.find(
+			(v) => v.key === "baseUrl",
+		)?.sharedValue;
+		const rotated = await as(EVE).send(
+			"post",
+			`/projects/${s.project}/rotate-secret`,
+			{},
+		);
+		expect(rotated.status, JSON.stringify(rotated.body)).toBe(200);
+		await renameResource(s, "members");
+		await syncNow(s.project);
+		const after = (await environmentOf(EVE, s.environment)).variables.find(
+			(v) => v.key === "baseUrl",
+		)?.sharedValue;
+		expect(after).toBe(before);
+		const status = await as(EVE).get(`/collections/${s.collection}/mock-sync`);
+		expect(status.body.mockUrlChanged).toBe(true);
+		// The requests still follow the rename.
+		const detail = await collectionOf(EVE, s.collection);
+		expect(requestNamed(detail, "List members")).toBeDefined();
+	});
 });
 
 describe("LiveMockSyncJob", () => {

@@ -69,7 +69,7 @@ export async function syncedUsers(): Promise<Synced> {
 }
 
 /** What the debounced job does, at once. */
-export const syncNow = (project: string): Promise<void> =>
+export const syncNow = (project: string): Promise<boolean> =>
 	syncProject(project, createLogger("silent"));
 
 export async function collectionOf(

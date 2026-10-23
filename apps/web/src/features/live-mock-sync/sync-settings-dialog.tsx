@@ -78,6 +78,11 @@ export function SyncSettingsDialog({
 						{t("liveMockSync.settings.needEditor")}
 					</Alert>
 				)}
+				{sync.mockUrlChanged ? (
+					<Alert tone="warning" data-id="modal-sync-settings-url-changed">
+						{t("liveMockSync.settings.urlChanged")}
+					</Alert>
+				) : null}
 				<div className="flex items-start justify-between gap-3">
 					<div className="grid gap-1">
 						<strong id={toggleId}>{t("liveMockSync.settings.toggle")}</strong>
