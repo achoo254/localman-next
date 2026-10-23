@@ -69,12 +69,12 @@ Làm keyword phụ của Localman (Jev 0.90, xem `../reports/competitive-261008-
 - [x] T4 Sync service: merge 3 chiều, debounce, `_removed`, conflict, quyền, tắt đồng bộ, fork (ADR-0008)
 - [x] T5 UI badge, dialog, banner, nút "Mở collection đồng bộ"
 - [x] T6 Integration pass (`sync-link.test.ts`, `sync-changes.test.ts`, 13 test)
-- [ ] T7 E2E đổi tên resource pass
+- [x] T7 E2E đổi tên resource pass (CI run 40001911892, `live-mock-sync.spec.ts` 7,9 s)
 - [ ] T8 Staging deploy và cờ `features.liveMockSync` bật sau khi user xác nhận
-- [ ] T9 Review không còn finding mức high
+- [x] T9 Review không còn finding mức high (24/10: 3 vòng review độc lập; đã sửa 2 high, 4 medium, các low; còn một low ghi nhận: sau khi đổi secret, path tự đặt của Editor có thể bị đè một lần)
 - [x] Verification: unit mapper và merge (user sửa header, mock đổi path ra cả hai thay đổi) pass
 - [x] Verification: integration chuỗi thêm, đổi tên, tắt endpoint, xoá resource; banner xung đột và "Giữ bản của tôi" đúng
-- [ ] Verification: E2E `users` thành `members` nhận 200 ở path mới
+- [x] Verification: E2E `users` thành `members` nhận 200 ở path mới
 - [x] Mọi dòng trong bảng hành vi có test tương ứng (example lấy từ schema thay vì dữ liệu, lý do ở ADR-0008 mục 6)
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
+- [x] `pnpm lint && pnpm typecheck && pnpm test` sạch (CI `91de637`: 761 file, 5.258 test; E2E 54 test)
 - [x] `pnpm check:mcp-coverage` pass (237 operation, 192 tool)
