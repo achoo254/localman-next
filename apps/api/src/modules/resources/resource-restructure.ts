@@ -4,6 +4,7 @@ import { inProjectTransaction } from "../projects/project-lock.js";
 import type { StoredProject } from "../projects/project-model.js";
 import { RecordModel } from "./record-model.js";
 import { deleteResourceDependents } from "./resource-dependents.js";
+import { emitResourceChanged } from "./resource-events.js";
 import { ResourceModel, type StoredResource } from "./resource-model.js";
 import {
 	assertDefinitionFits,
@@ -57,7 +58,7 @@ export async function deleteResource(
 			count: r.count,
 		}));
 	if (dryRun) return describe(plan(await loadResources(project._id)));
-	return inProjectTransaction(project._id, async (session) => {
+	const deleted = await inProjectTransaction(project._id, async (session) => {
 		const subtree = plan(await loadResources(project._id, session));
 		const ids = subtree.map((r) => r._id);
 		await RecordModel.deleteMany({ resourceId: { $in: ids } }, { session });
@@ -70,6 +71,8 @@ export async function deleteResource(
 		);
 		return describe(subtree);
 	});
+	emitResourceChanged(project._id);
+	return deleted;
 }
 
 export interface MoveResult extends ResourceSnapshot {
@@ -130,7 +133,7 @@ export async function moveResource(
 		const { target, subtree } = plan(resources);
 		return { resource: target, resources, changes: changesOf(subtree) };
 	}
-	return inProjectTransaction(project._id, async (session) => {
+	const moved = await inProjectTransaction(project._id, async (session) => {
 		const before = await loadResources(project._id, session);
 		const { target, unchanged, schema, parentKey, subtree } = plan(before);
 		if (unchanged) return { resource: target, resources: before, changes: [] };
@@ -157,4 +160,6 @@ export async function moveResource(
 		const after = await snapshotAfterWrite(project._id, target._id, session);
 		return { ...after, changes: changesOf(subtree) };
 	});
+	emitResourceChanged(project._id);
+	return moved;
 }

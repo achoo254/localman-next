@@ -8,6 +8,7 @@ import {
 import { type ClientSession, Types } from "mongoose";
 import { inProjectTransaction } from "../projects/project-lock.js";
 import type { StoredProject } from "../projects/project-model.js";
+import { emitResourceChanged } from "./resource-events.js";
 import { ResourceModel, type StoredResource } from "./resource-model.js";
 import {
 	assertRecordsFree,
@@ -56,7 +57,7 @@ export async function createResource(
 	input: ResourceCreate,
 ): Promise<ResourceSnapshot> {
 	assertTemplateFits(input.template);
-	return withResourceSlots(
+	const snapshot = await withResourceSlots(
 		project.owner,
 		project._id,
 		1,
@@ -102,6 +103,8 @@ export async function createResource(
 			return snapshotAfterWrite(project._id, id, session);
 		},
 	);
+	emitResourceChanged(project._id);
+	return snapshot;
 }
 
 /**
@@ -117,7 +120,7 @@ export async function updateResource(
 	input: ResourceUpdate,
 ): Promise<ResourceSnapshot> {
 	assertTemplateFits(input.template);
-	return inProjectTransaction(project._id, async (session) => {
+	const snapshot = await inProjectTransaction(project._id, async (session) => {
 		const resources = await loadResources(project._id, session);
 		const target = findResource(resources, resourceId);
 		const problem = attachProblem(toTreeNodes(resources), {
@@ -170,4 +173,6 @@ export async function updateResource(
 		);
 		return snapshotAfterWrite(project._id, target._id, session);
 	});
+	emitResourceChanged(project._id);
+	return snapshot;
 }

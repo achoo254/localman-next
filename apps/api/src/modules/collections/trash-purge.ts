@@ -5,6 +5,7 @@ import { ElementRoleModel } from "../access/element-role-model.js";
 import { CommentModel } from "../comments/comment-model.js";
 import { deleteScopeLocalValues } from "../environments/local-values.js";
 import { collectionScope } from "../environments/scope-local-service.js";
+import { dropSyncLinkOf } from "../live-mock-sync/sync-link-model.js";
 import { CollectionAccessKeyModel } from "../public-sharing/collection-access-key-model.js";
 import { CollectionLinkModel } from "../public-sharing/collection-link-model.js";
 import { RunButtonModel } from "../public-sharing/run-button-model.js";
@@ -70,6 +71,7 @@ export async function purgeCollection(
 		await CollectionLinkModel.deleteMany({ collectionId }, { session });
 		await CollectionAccessKeyModel.deleteMany({ collectionId }, { session });
 		await RunButtonModel.deleteMany({ collectionId }, { session });
+		await dropSyncLinkOf(collectionId, session);
 		await deleteScopeLocalValues([collectionScope(collectionId)], session);
 		return true;
 	});

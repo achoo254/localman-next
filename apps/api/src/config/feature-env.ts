@@ -142,6 +142,12 @@ export const featureEnvShape = {
 	 */
 	TUNELO_ACCOUNTS_ENABLED: offByDefault,
 	/**
+	 * Live Mock Sync: collections that follow a mock project. Off: its
+	 * operations are neither routed nor offered as MCP tools (links made
+	 * while it was on keep syncing).
+	 */
+	LIVE_MOCK_SYNC_ENABLED: offByDefault,
+	/**
 	 * Tunelo API for every tenant, e.g. a local Tunelo in dev or a fake in
 	 * E2E (https only in production). Unset: each tenant's own
 	 * `https://tunnel.<domain>`.

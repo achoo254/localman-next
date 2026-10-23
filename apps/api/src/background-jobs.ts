@@ -1,6 +1,7 @@
 import type { Logger } from "./logger.js";
 import { backfillExampleSearchNames } from "./modules/collections/example-search-backfill.js";
 import { CollectionTrashJob } from "./modules/collections/trash-purge-job.js";
+import { LiveMockSyncJob } from "./modules/live-mock-sync/sync-job.js";
 import { TombstoneSweeper } from "./modules/projects/tombstone-sweeper.js";
 import { TrialReminderJob } from "./modules/trial/trial-reminders.js";
 import { WatchDigestJob } from "./modules/watch/watch-digest-job.js";
@@ -33,6 +34,8 @@ export function createBackgroundJobs(
 	const collectionTrash = new CollectionTrashJob(logger);
 	// Watchers hear about others' collection changes, about once a minute.
 	const watchDigest = options.watchDigest ? new WatchDigestJob(logger) : null;
+	// Collections linked to a mock follow its resources, 2 s after a change.
+	const liveMockSync = new LiveMockSyncJob(logger);
 	// Once per start: older examples get the folded name search uses.
 	let backfill: Promise<void> | undefined;
 	return {
@@ -41,6 +44,7 @@ export function createBackgroundJobs(
 			trialReminders.start();
 			collectionTrash.start();
 			watchDigest?.start();
+			liveMockSync.start();
 			backfill ??= forEachTenant(logger, () =>
 				backfillExampleSearchNames(logger),
 			);
@@ -51,6 +55,7 @@ export function createBackgroundJobs(
 				trialReminders.stop(),
 				collectionTrash.stop(),
 				watchDigest?.stop(),
+				liveMockSync.stop(),
 				backfill,
 			]);
 		},

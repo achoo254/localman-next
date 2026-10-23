@@ -26,8 +26,8 @@ const stateRequests = (state: CollectionState): number =>
 
 /** How a whole-collection write is recorded. */
 export interface StateWrite {
-	/** `restore`, `merge` or `pull`. */
-	readonly action: "restore" | "merge" | "pull";
+	/** `restore`, `merge`, `pull` or `sync` (Live Mock Sync). */
+	readonly action: "restore" | "merge" | "pull" | "sync";
 	/** Shown in the changelog; the collection's name when absent. */
 	readonly entityName?: string;
 	readonly dryRun: boolean;

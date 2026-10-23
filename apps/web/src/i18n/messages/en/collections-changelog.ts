@@ -74,6 +74,7 @@ export const collectionsChangelog = {
 			restore: "Restored the collection to an earlier change",
 			merge: "Merged changes from the fork {name}",
 			pull: "Pulled changes from {name}",
+			sync: "Synced with the mock project {name}",
 		},
 		fields: {
 			name: "name",

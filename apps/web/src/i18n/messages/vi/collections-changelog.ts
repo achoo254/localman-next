@@ -73,6 +73,7 @@ export const collectionsChangelog: Pick<Messages["collections"], "changelog"> =
 				restore: "Đã khôi phục collection về một thay đổi trước đó",
 				merge: "Đã merge thay đổi từ fork {name}",
 				pull: "Đã kéo thay đổi từ {name}",
+				sync: "Đã đồng bộ với project mock {name}",
 			},
 			fields: {
 				name: "tên",

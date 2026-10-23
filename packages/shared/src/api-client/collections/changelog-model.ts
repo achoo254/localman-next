@@ -19,6 +19,8 @@ export const CHANGELOG_ACTIONS = [
 	"merge",
 	/** The source's changes pulled into a fork (`entityName` is the source). */
 	"pull",
+	/** Live Mock Sync applied the mock's changes (`entityName` is the project). */
+	"sync",
 ] as const;
 
 /** Actions that rewrite the whole collection in one change. */
@@ -26,6 +28,7 @@ export const WHOLE_COLLECTION_ACTIONS: readonly ChangelogAction[] = [
 	"restore",
 	"merge",
 	"pull",
+	"sync",
 ];
 export type ChangelogAction = (typeof CHANGELOG_ACTIONS)[number];
 

@@ -43,7 +43,7 @@ describe("project clone and delete", () => {
 			dryRun: true,
 		});
 		// Registration order follows module imports; compare as a set.
-		expect(preview.body.dependents).toHaveLength(9);
+		expect(preview.body.dependents).toHaveLength(10);
 		expect(preview.body.dependents).toEqual(
 			expect.arrayContaining([
 				{ kind: "resources", count: 0 },
@@ -54,6 +54,7 @@ describe("project clone and delete", () => {
 				{ kind: "mcpTokens", count: 0 },
 				{ kind: "webhookInboxes", count: 0 },
 				{ kind: "callbacks", count: 0 },
+				{ kind: "syncedCollections", count: 0 },
 				{ kind: "stub-rows", count: 1 },
 			]),
 		);

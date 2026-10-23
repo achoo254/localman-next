@@ -54,13 +54,15 @@ export type Toolset = (typeof TOOLSETS)[number];
  * opens them without a new IdP scope: the `mock-advanced` and `traffic`
  * (request log, inboxes, callbacks) tools work on the same projects as
  * `mock`; the `sharing` (workspaces, shares, collection links and keys)
- * and `public` tools on the same collections as `client`.
+ * and `public` tools on the same collections as `client`, and `sync`
+ * (Live Mock Sync) on collections too.
  */
 const SCOPE_AREAS: Readonly<Partial<Record<Toolset, Toolset>>> = {
 	"mock-advanced": "mock",
 	traffic: "mock",
 	sharing: "client",
 	public: "client",
+	sync: "client",
 };
 
 /** Prefix of the `<area>:read|write` MCP scopes of a toolset's tools. */

@@ -166,6 +166,7 @@ try {
 		comments: env.COMMENTS_ENABLED,
 		forks: env.FORKS_ENABLED,
 		tuneloAccounts: env.TUNELO_ACCOUNTS_ENABLED,
+		liveMockSync: env.LIVE_MOCK_SYNC_ENABLED,
 	});
 	const dashboard = createDashboardApp({
 		logger,

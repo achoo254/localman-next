@@ -69,6 +69,7 @@ export const collectionsChangelog: Pick<Messages["collections"], "changelog"> =
 				restore: "将 collection 恢复到了之前的某次修改",
 				merge: "合并了 fork {name} 的修改",
 				pull: "拉取了 {name} 的修改",
+				sync: "已与 mock project {name} 同步",
 			},
 			fields: {
 				name: "名称",

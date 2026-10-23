@@ -14,6 +14,7 @@ const ALL_ON = {
 	comments: true,
 	forks: true,
 	tuneloAccounts: true,
+	liveMockSync: true,
 };
 const SHARING_OFF = { ...ALL_ON, publicSharing: false };
 

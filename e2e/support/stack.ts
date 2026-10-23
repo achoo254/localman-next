@@ -82,6 +82,7 @@ function apiEnv(mongoUri: string, oidcSecret: string): NodeJS.ProcessEnv {
 		COMMENTS_ENABLED: "true",
 		FORKS_ENABLED: "true",
 		TUNELO_ACCOUNTS_ENABLED: "true",
+		LIVE_MOCK_SYNC_ENABLED: "true",
 		TUNELO_API_URL: TUNELO_ORIGIN, // the fake Tunelo for every tenant
 	};
 }
@@ -111,6 +112,7 @@ const UNRELEASED_FEATURES = [
 	"comments",
 	"forks",
 	"tuneloAccounts",
+	"liveMockSync",
 ];
 
 /**

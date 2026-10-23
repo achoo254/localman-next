@@ -10,6 +10,7 @@ import { Types } from "mongoose";
 import { currentPlanOf } from "../billing/plan-guard.js";
 import type { StoredProject } from "../projects/project-model.js";
 import { type PreparedRecords, prepareRecords } from "./record-input.js";
+import { emitResourceChanged } from "./resource-events.js";
 import type { PlannedResource } from "./resource-import-plan.js";
 import { ResourceModel, type StoredResource } from "./resource-model.js";
 import { withResourceSlots } from "./resource-quota.js";
@@ -101,7 +102,7 @@ export async function createImportedResources(
 ): Promise<ImportedResources> {
 	const ids = new Map(plan.map((r) => [r.key, new Types.ObjectId()]));
 	const idOf = (key: string): string => ids.get(key)?.toHexString() ?? "";
-	return withResourceSlots(
+	const imported = await withResourceSlots(
 		project.owner,
 		project._id,
 		plan.length,
@@ -167,4 +168,6 @@ export async function createImportedResources(
 			return { created, resources };
 		},
 	);
+	emitResourceChanged(project._id);
+	return imported;
 }

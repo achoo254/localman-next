@@ -44,6 +44,7 @@ export function describeChange(
 			return t(`collections.changelog.describe.${change.action}`);
 		case "merge":
 		case "pull":
+		case "sync":
 			return t(`collections.changelog.describe.${change.action}`, { name });
 		case "create":
 		case "move":

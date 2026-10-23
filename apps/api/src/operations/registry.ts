@@ -21,6 +21,7 @@ import {
 	getProInterestFormConfig,
 	submitProInterest,
 } from "../modules/feedback/pro-interest-operations.js";
+import { liveMockSyncOperations } from "../modules/live-mock-sync/sync-operations.js";
 import { mcpTokenOperations } from "../modules/mcp/mcp-token-operations.js";
 import { callbackOperations } from "../modules/mock-callbacks/callback-operations.js";
 import { trafficOperations } from "../modules/mock-runtime/traffic-operations.js";
@@ -119,4 +120,6 @@ export const operations: readonly AnyOperation[] = [
 	getTenantInfo,
 	// Served only while PUBLIC_SHARING_ENABLED is on (`feature-gates.ts`).
 	...publicSharingOperations,
+	// Served only while LIVE_MOCK_SYNC_ENABLED is on (`feature-gates.ts`).
+	...liveMockSyncOperations,
 ];
