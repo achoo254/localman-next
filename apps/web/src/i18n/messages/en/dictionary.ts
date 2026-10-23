@@ -19,6 +19,7 @@ import { legal } from "./legal";
 import { legalPrivacy } from "./legal-privacy";
 import { legalTerms } from "./legal-terms";
 import { limits } from "./limits";
+import { liveMockSync } from "./live-mock-sync";
 import { mcp } from "./mcp";
 import { mockCallbacks } from "./mock-callbacks";
 import { notifications } from "./notifications";
@@ -89,6 +90,7 @@ export const en = {
 	collections,
 	publicSharing,
 	versionControl,
+	liveMockSync,
 	legal,
 	legalPrivacy,
 	legalTerms,

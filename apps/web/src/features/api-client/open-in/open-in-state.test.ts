@@ -7,6 +7,7 @@ describe("readOpenInApiClient", () => {
 			{ projectId: "p1" },
 			{ projectId: "p1", resourceId: "r1" },
 			{ projectId: "p1", logId: "l1" },
+			{ projectId: "p1", collection: { id: "c1", name: "Shop" } },
 		]) {
 			expect(readOpenInApiClient(openInApiClientState(target))).toEqual(target);
 		}
@@ -19,6 +20,19 @@ describe("readOpenInApiClient", () => {
 		expect(read({ projectId: "p 1" })).toBeNull();
 		expect(read({ projectId: "p1", logId: "../x" })).toBeNull();
 		expect(read({ projectId: "p1", resourceId: "r1", logId: "l1" })).toBeNull();
+		expect(
+			read({ projectId: "p1", collection: { id: "c/1", name: "A" } }),
+		).toBeNull();
+		expect(
+			read({ projectId: "p1", collection: { id: "c1", name: "" } }),
+		).toBeNull();
+		expect(
+			read({
+				projectId: "p1",
+				resourceId: "r1",
+				collection: { id: "c1", name: "A" },
+			}),
+		).toBeNull();
 		expect(readOpenInApiClient(null)).toBeNull();
 	});
 });

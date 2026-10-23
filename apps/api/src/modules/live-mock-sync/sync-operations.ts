@@ -45,6 +45,7 @@ const statusView = z.object({
 	syncCount: z.number().int(),
 	conflicts: z.number().int(),
 	canManage: z.boolean(),
+	canResolve: z.boolean(),
 });
 
 export const liveMockSyncOperations: readonly AnyOperation[] = [

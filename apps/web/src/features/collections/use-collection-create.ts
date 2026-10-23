@@ -16,6 +16,11 @@ import {
 	mockRequestsOf,
 } from "../api-client/open-in/mock-requests";
 import { fetchMockUrls } from "../api-client/open-in/mock-urls-api";
+import { syncNamesOf } from "../live-mock-sync/sync-names";
+import {
+	useCreateSyncedCollection,
+	useLiveMockSyncEnabled,
+} from "../live-mock-sync/use-live-mock-sync";
 import { useCurrentWorkspace } from "../workspaces/current-workspace";
 import { collectionErrorMessage, translatedError } from "./collection-errors";
 import {
@@ -23,7 +28,7 @@ import {
 	fitTree,
 	mockProjectTree,
 } from "./collection-trees";
-import type { CollectionSource } from "./collections-api";
+import { type CollectionSource, fetchCollection } from "./collections-api";
 import { useCreateCollection } from "./use-collection-mutations";
 
 function fallbackNames(t: Translate): FallbackNames {
@@ -56,6 +61,8 @@ export function useCollectionCreate(
 	const t = useT();
 	const toast = useToast();
 	const create = useCreateCollection(workspaceId);
+	const liveMockSync = useLiveMockSyncEnabled();
+	const createSynced = useCreateSyncedCollection();
 	const fail = useCallback(
 		(error: unknown) =>
 			toast.show({ tone: "error", title: collectionErrorMessage(error, t) }),
@@ -75,7 +82,28 @@ export function useCollectionCreate(
 			return false;
 		}
 	};
+	// With Live Mock Sync the collection keeps following the project.
+	const synced = async (projectId: string) => {
+		try {
+			const made = await createSynced.mutateAsync({
+				projectId,
+				workspaceId,
+				names: syncNamesOf(t),
+			});
+			const detail = await fetchCollection(made.collectionId);
+			toast.show({
+				tone: "success",
+				title: t("liveMockSync.project.created", { name: detail.name }),
+			});
+			onCreated(detail, false);
+			return true;
+		} catch (error) {
+			fail(error);
+			return false;
+		}
+	};
 	const fromMock = async (projectId: string, projectName: string) => {
+		if (liveMockSync) return synced(projectId);
 		const nameOf: MockRequestNamer = (kind, name) =>
 			t(`apiClientOpen.names.${kind}`, { name });
 		try {
@@ -90,7 +118,7 @@ export function useCollectionCreate(
 		}
 	};
 	return {
-		pending: create.isPending,
+		pending: create.isPending || createSynced.isPending,
 		blank: () => run({ name: t("collections.defaults.collection") }, true),
 		template: () => run({ template: "rest-crud" }, false),
 		fromMock,

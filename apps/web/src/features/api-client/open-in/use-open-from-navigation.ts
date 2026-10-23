@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router";
 import { useToast } from "../../../components/ui/toast";
 import { useT } from "../../../i18n/i18n-context";
 import { errorMessage } from "../../../lib/api-client";
+import { useOpenCollectionNode } from "../../collections/open-node";
 import {
 	useWorkbenchActions,
 	useWorkbenchState,
@@ -14,7 +15,8 @@ import { useOpenMockRequests } from "./use-open-mock-requests";
 
 /**
  * Opens the requests the project page asked for in `location.state`, once:
- * a request log line as one tab, or a project's / resource's mock requests.
+ * a request log line as one tab, a project's / resource's mock requests,
+ * or the page of a collection synced with the project.
  * Waits until the saved drafts are restored, so the tab cap counts them,
  * then clears the state with a `replace` navigation: a reload or going
  * back to this entry does not open the tabs again.
@@ -27,6 +29,7 @@ export function useOpenFromNavigation(): void {
 	const restoring = useWorkbenchState().syncStatus.state === "loading";
 	const { openTab } = useWorkbenchActions();
 	const { open } = useOpenMockRequests();
+	const openNode = useOpenCollectionNode();
 	const openLogLine = useCallback(
 		async (projectId: string, logId: string) => {
 			const fail = (description?: string) => {
@@ -66,10 +69,18 @@ export function useOpenFromNavigation(): void {
 		handledKey.current = location.key;
 		const { pathname, search, hash } = location;
 		void navigate({ pathname, search, hash }, { replace: true, state: null });
+		if (target.collection) {
+			openNode({
+				kind: "collection",
+				collectionId: target.collection.id,
+				name: target.collection.name,
+			});
+			return;
+		}
 		if (target.logId === undefined) {
 			void open(target);
 			return;
 		}
 		void openLogLine(target.projectId, target.logId);
-	}, [restoring, location, navigate, open, openLogLine]);
+	}, [restoring, location, navigate, open, openLogLine, openNode]);
 }

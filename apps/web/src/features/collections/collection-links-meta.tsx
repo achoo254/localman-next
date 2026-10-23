@@ -13,6 +13,8 @@ import { ColorDot } from "../environments/environment-color";
 import { useEnvironmentList } from "../environments/use-environments";
 import { useEnvironmentsEnabled } from "../environments/use-environments-enabled";
 import { useOpenVariablesPage } from "../environments/use-open-variables-page";
+import { SyncBadge } from "../live-mock-sync/sync-badge";
+import { useLiveMockSyncEnabled } from "../live-mock-sync/use-live-mock-sync";
 import { useLinkEnvironment } from "./use-link-environment";
 
 const LINK =
@@ -98,6 +100,7 @@ export function CollectionLinksMeta({
 }: CollectionLinksMetaProps) {
 	const t = useT();
 	const environments = useEnvironmentsEnabled();
+	const liveMockSync = useLiveMockSyncEnabled();
 	const project = detail.mockProject;
 	return (
 		<>
@@ -105,7 +108,7 @@ export function CollectionLinksMeta({
 				<EnvironmentRow detail={detail} canEdit={canEditEnvironment} />
 			) : null}
 			<dt className="text-muted">{t("collections.links.mockProject")}</dt>
-			<dd className="m-0 min-w-0">
+			<dd className="m-0 grid min-w-0 justify-items-start gap-1">
 				{project ? (
 					<Link
 						to={`/projects/${encodeURIComponent(project.id)}`}
@@ -118,6 +121,7 @@ export function CollectionLinksMeta({
 				) : (
 					<NotLinked />
 				)}
+				{liveMockSync && project ? <SyncBadge detail={detail} /> : null}
 			</dd>
 		</>
 	);

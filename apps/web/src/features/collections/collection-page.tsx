@@ -18,6 +18,8 @@ import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { AuthForm } from "../api-client/request/auth-form";
 import { ScriptsEditor } from "../api-client/scripts/scripts-tab";
 import type { CollectionPageTab } from "../api-client/workbench/workbench-tab-types";
+import { SyncConflictBanner } from "../live-mock-sync/sync-conflict-banner";
+import { useLiveMockSyncEnabled } from "../live-mock-sync/use-live-mock-sync";
 import { CollectionActivity } from "./collection-activity";
 import { collectionErrorMessage } from "./collection-errors";
 import { CollectionShareDialog } from "./collection-share-dialog";
@@ -38,6 +40,7 @@ const COLLECTION_AUTH: readonly AuthType[] = AUTH_TYPES.filter(
 export function CollectionPage({ page }: { page: CollectionPageTab }) {
 	const t = useT();
 	const model = usePageModel(page);
+	const liveMockSync = useLiveMockSyncEnabled();
 	const [sharing, setSharing] = useState(false);
 	const skeleton = useDelayedFlag(model.query.isPending);
 	const { detail, fields } = model;
@@ -103,6 +106,12 @@ export function CollectionPage({ page }: { page: CollectionPageTab }) {
 			<div className="grid gap-3 p-4">
 				{readOnly ? (
 					<Alert tone="info">{t("collections.page.readOnly")}</Alert>
+				) : null}
+				{isCollection && liveMockSync ? (
+					<SyncConflictBanner
+						collectionId={detail.id}
+						collectionName={detail.name}
+					/>
 				) : null}
 				<Tabs defaultValue="overview">
 					<TabsList aria-label={t("collections.page.tabs.label")}>

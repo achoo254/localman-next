@@ -14,6 +14,15 @@ export interface ConflictListProps {
 	onChoose: (choices: Record<string, ConflictSide>) => void;
 	/** "Source is …; destination is …", for this direction. */
 	sides: string;
+	/** Names of the sides other than Keep Source / Keep Destination. */
+	labels?: ConflictLabels;
+}
+
+export interface ConflictLabels {
+	source: string;
+	destination: string;
+	allSource: string;
+	allDestination: string;
 }
 
 /**
@@ -45,8 +54,15 @@ export function ConflictList({
 	choices,
 	onChoose,
 	sides,
+	labels,
 }: ConflictListProps) {
 	const t = useT();
+	const names: ConflictLabels = labels ?? {
+		source: t("versionControl.conflicts.keepSource"),
+		destination: t("versionControl.conflicts.keepDestination"),
+		allSource: t("versionControl.conflicts.keepAllSource"),
+		allDestination: t("versionControl.conflicts.keepAllDestination"),
+	};
 	const all = (side: ConflictSide) =>
 		onChoose(
 			Object.fromEntries(conflicts.map((conflict) => [conflict.id, side])),
@@ -63,7 +79,7 @@ export function ConflictList({
 					data-id="modal-conflicts-keep-all-source"
 					onClick={() => all("source")}
 				>
-					{t("versionControl.conflicts.keepAllSource")}
+					{names.allSource}
 				</Button>
 				<Button
 					size="sm"
@@ -71,7 +87,7 @@ export function ConflictList({
 					data-id="modal-conflicts-keep-all-dest"
 					onClick={() => all("destination")}
 				>
-					{t("versionControl.conflicts.keepAllDestination")}
+					{names.allDestination}
 				</Button>
 			</div>
 			<p className="m-0 text-muted text-xs">
@@ -109,9 +125,7 @@ export function ConflictList({
 										/>
 										<span className="grid min-w-0 flex-1 gap-1">
 											<span className="font-semibold text-xs">
-												{side === "source"
-													? t("versionControl.conflicts.keepSource")
-													: t("versionControl.conflicts.keepDestination")}
+												{side === "source" ? names.source : names.destination}
 											</span>
 											<Value
 												value={conflict[side]}

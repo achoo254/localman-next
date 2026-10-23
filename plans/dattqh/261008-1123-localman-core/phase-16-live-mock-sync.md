@@ -1,7 +1,7 @@
 ---
 phase: 16
 title: "Live Mock Sync: mock có trạng thái luôn đồng bộ với collection và environment"
-status: pending
+status: in-progress
 priority: P1
 effort: "M"
 dependencies: [12, 13, 14]
@@ -63,18 +63,18 @@ Làm keyword phụ của Localman (Jev 0.90, xem `../reports/competitive-261008-
 | T9 | Review cuối phase | code-reviewer | — | toàn phase |
 
 ### Checklist
-- [ ] T1 Spec badge, dialog, banner đã chốt theo prototype
-- [ ] T2 Mapper có snapshot cho route phẳng, lồng 3 cấp, prefix, endpoint tắt
-- [ ] T3 `resource.changed` phát sau mỗi lần ghi
-- [ ] T4 Sync service: merge 3 chiều, debounce, `_removed`, conflict, quyền, tắt đồng bộ, fork
-- [ ] T5 UI badge, dialog, banner, nút "Mở collection đồng bộ"
-- [ ] T6 Integration pass
+- [x] T1 Spec badge, dialog, banner đã chốt theo prototype (24/10: badge "Đồng bộ với mock" cạnh mock project, dialog Live Mock Sync có công tắc tắt đồng bộ, banner "Mock đã đổi field bạn đã sửa" mở bộ chọn "Lấy từ mock"/"Giữ bản của tôi"; nút "Tạo/Mở collection đồng bộ" đặt ở header project như prototype, không ở node-actions/card endpoint; project và environment chỉ xem, không đổi trong dialog)
+- [x] T2 Mapper có snapshot cho route phẳng, lồng 3 cấp, endpoint tắt; prefix nằm trong `baseUrl` của environment (test `sync-changes.test.ts`)
+- [x] T3 `resource.changed` phát sau mỗi lần ghi (resource, import, xoá, lồng lại, prefix)
+- [x] T4 Sync service: merge 3 chiều, debounce, `_removed`, conflict, quyền, tắt đồng bộ, fork (ADR-0008)
+- [x] T5 UI badge, dialog, banner, nút "Mở collection đồng bộ"
+- [x] T6 Integration pass (`sync-link.test.ts`, `sync-changes.test.ts`, 13 test)
 - [ ] T7 E2E đổi tên resource pass
 - [ ] T8 Staging deploy và cờ `features.liveMockSync` bật sau khi user xác nhận
 - [ ] T9 Review không còn finding mức high
-- [ ] Verification: unit mapper và merge (user sửa header, mock đổi path ra cả hai thay đổi) pass
-- [ ] Verification: integration chuỗi thêm, đổi tên, tắt endpoint, xoá resource; banner xung đột và "Giữ bản của tôi" đúng
+- [x] Verification: unit mapper và merge (user sửa header, mock đổi path ra cả hai thay đổi) pass
+- [x] Verification: integration chuỗi thêm, đổi tên, tắt endpoint, xoá resource; banner xung đột và "Giữ bản của tôi" đúng
 - [ ] Verification: E2E `users` thành `members` nhận 200 ở path mới
-- [ ] Mọi dòng trong bảng hành vi có test tương ứng
+- [x] Mọi dòng trong bảng hành vi có test tương ứng (example lấy từ schema thay vì dữ liệu, lý do ở ADR-0008 mục 6)
 - [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
-- [ ] `pnpm check:mcp-coverage` pass
+- [x] `pnpm check:mcp-coverage` pass (237 operation, 192 tool)

@@ -2,6 +2,7 @@ import { OperationError } from "@localman/operations";
 import { elementRoleAllows } from "@localman/shared/access";
 import type { MergePreview } from "@localman/shared/api-client";
 import mongoose, { type Types } from "mongoose";
+import { takeOperationSlot } from "../../lib/operation-rate-limit.js";
 import {
 	type CollectionAccess,
 	requireCollection,
@@ -33,6 +34,8 @@ export interface SyncStatus {
 	readonly conflicts: number;
 	/** Editors of both the collection and the project turn it off. */
 	readonly canManage: boolean;
+	/** Editors of the collection choose for conflicts. */
+	readonly canResolve: boolean;
 }
 
 function notSynced(): OperationError {
@@ -102,6 +105,7 @@ export async function syncStatus(
 		conflicts: link.conflicts,
 		// A gone project leaves the choice to the collection's Editors.
 		canManage: collectionEditor && (found === null || found.editor),
+		canResolve: collectionEditor,
 	};
 }
 
@@ -134,6 +138,8 @@ export async function previewSync(
 	collectionId: string,
 ): Promise<MergePreview> {
 	const { link } = await requireLink(sub, collectionId, "view");
+	// Reads both sides whole, like a fork's preview: the same limit.
+	await takeOperationSlot("sync", sub, collectionId);
 	const computed = await computeSync(link);
 	if (!computed) return { changes: [], conflicts: [] };
 	const { views, conflicts } = computed.outcome;
@@ -159,6 +165,7 @@ export async function resolveSync(
 	resolutions: Readonly<Record<string, MergeSide>>,
 ): Promise<SyncStatus> {
 	const { link } = await requireLink(sub, collectionId, "edit");
+	await takeOperationSlot("sync", sub, collectionId);
 	const computed = await computeSync(link, resolutions);
 	if (computed && computed.outcome.unresolved.length > 0) {
 		throw conflictsLeft(computed.outcome.unresolved);
