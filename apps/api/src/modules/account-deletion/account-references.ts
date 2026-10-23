@@ -9,6 +9,7 @@ import { CollectionRevisionModel } from "../collections/collection-revision-mode
 import { CommentModel } from "../comments/comment-model.js";
 import { EnvironmentModel } from "../environments/environment-model.js";
 import { GlobalVariablesModel } from "../environments/global-variables-model.js";
+import { SyncLinkModel } from "../live-mock-sync/sync-link-model.js";
 import { TrialExtensionModel } from "../trial/trial-extension-model.js";
 import { ForkModel } from "../version-control/fork-model.js";
 import { PullRequestModel } from "../version-control/pull-request-model.js";
@@ -99,6 +100,13 @@ const REFERENCES: ReadonlyArray<readonly [string, Rewrite]> = [
 		"forks.createdBy",
 		replaceIn(
 			(f, u) => ForkModel.updateMany(f, u, KEEP_TIMESTAMPS),
+			"createdBy",
+		),
+	],
+	[
+		"live_mock_sync_links.createdBy",
+		replaceIn(
+			(f, u) => SyncLinkModel.updateMany(f, u, KEEP_TIMESTAMPS),
 			"createdBy",
 		),
 	],

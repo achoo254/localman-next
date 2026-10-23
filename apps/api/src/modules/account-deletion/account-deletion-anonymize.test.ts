@@ -12,6 +12,7 @@ import {
 	useCollectionTestDb,
 } from "../collections/testing/collection-fixture.js";
 import { CommentModel } from "../comments/comment-model.js";
+import { SyncLinkModel } from "../live-mock-sync/sync-link-model.js";
 import { PullRequestModel } from "../version-control/pull-request-model.js";
 import { DELETED_USER } from "./account-references.js";
 
@@ -43,6 +44,15 @@ describe("account deletion in team content it leaves", () => {
 			notified: [ADA],
 			mergedBy: ADA,
 		});
+		const link = await SyncLinkModel.create({
+			collectionId: created.id,
+			projectId: new Types.ObjectId(),
+			workspaceId: new Types.ObjectId(ws),
+			createdBy: ADA,
+			names: {},
+			baseUrl: "https://mock.test",
+			lastSyncedAt: new Date(),
+		});
 		const before = await CollectionModel.findById(created.id).lean();
 
 		const res = await as(ADA).send("delete", "/users/me", { confirm: "ada" });
@@ -70,6 +80,9 @@ describe("account deletion in team content it leaves", () => {
 			resolvedBy: DELETED_USER,
 			mentions: [EVE],
 		});
+		expect((await SyncLinkModel.findById(link._id).lean())?.createdBy).toBe(
+			DELETED_USER,
+		);
 		expect(await PullRequestModel.findById(pr._id).lean()).toMatchObject({
 			authorId: EVE,
 			mergedBy: DELETED_USER,

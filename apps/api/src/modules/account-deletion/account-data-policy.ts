@@ -84,6 +84,9 @@ export const ACCOUNT_DATA_POLICY: Readonly<
 	GlobalVariables: "anonymized",
 	Fork: "anonymized",
 	ForkBaseNode: "withWorkspace",
+	// Who linked a collection to its mock; the base holds no account.
+	LiveMockSyncLink: "anonymized",
+	LiveMockSyncBaseNode: "notPersonal",
 	PullRequest: "anonymized",
 	ElementRole: "deletedAndAnonymized",
 	AccessRequest: "deletedAndAnonymized",
