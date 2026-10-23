@@ -16,7 +16,13 @@
     </style>
 
 
+    <!-- Launch screen in the brand colours (values/ and values-night/brand_colors.xml, pnpm brand:gen):
+         Android 12+ draws the icon on splash_background; older versions show the splash bitmaps. -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/splash_icon_background</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
 </resources>

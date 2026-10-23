@@ -22,6 +22,7 @@ Tên Localman, màu chủ đạo, bundle id `com.hoandat.localman` (app mobile C
    - Công tắc là trường `webInstall` (boolean, bắt buộc, schema kiểm) trong `brand.config.json`, không phải biến môi trường: brand config là nguồn duy nhất, giá trị nằm trong git và đi theo build. Đang là `false`.
    - Plugin Vite `apps/web/src/config/brand-install-assets.ts` (phỏng theo `chat-next/apps/web/vite-brand.ts`) đọc công tắc lúc build. Bật thì nó chèn sau `<title>` của `index.html` các thẻ favicon ICO + SVG, Apple touch icon, `manifest`, `theme-color`, `apple-mobile-web-app-title`; phục vụ ở dev và emit khi build `manifest.webmanifest` (bản gọn của `generated/web.webmanifest.json`) cùng `icon.svg`, `favicon.ico`, PNG trong `packages/brand/generated/icons/`. Tắt thì plugin không có hook nào: `dist` giống hệt từng byte với khi chưa có plugin (đã so danh sách 123 file, sha256 `index.html` và thẻ trong `<head>` trước/sau).
    - `brand-install-assets.test.ts` chạy Vite thật: tắt thì build chỉ ra `index.html` nguyên vẹn; bật (truyền cấu hình có `webInstall: true`, không sửa file) thì có manifest, đủ icon, đủ thẻ, và dev server trả đúng Content-Type. Test cũng khẳng định `brand.config.json` đang tắt, nên bật là một thay đổi có chủ đích.
+8. **App iOS/Android dùng dấu tạm ngay** (cập nhật 23/10/2026): cửa hàng không nhận app không có icon, và chờ icon thiết kế thì chặn phát hành. `pnpm brand:gen` vẽ thêm từ hai SVG và `colors`: icon App Store 1024 không alpha, icon Android (adaptive nền/hình/monochrome và mipmap cũ), màn chờ sáng/tối của hai nền tảng, icon 512 và feature graphic của Play (`docs/store/play/`). Code ở `scripts/brand/native-assets*.ts` (gói dùng chung chưa có tùy chọn native, không sửa tại chỗ); hash nguồn ghi ở `apps/mobile/brand-assets-source.json`, `scripts/brand/native-assets.test.ts` báo cũ. `app-icon-maskable.svg` phải giữ quy ước: phần tử vẽ đầu tiên là `<rect>` phủ cả canvas (lớp nền adaptive), phần sau là hình (lớp trước). Có icon thiết kế thì thay SVG, `pnpm brand:gen`, commit, rồi gửi bản build mới lên hai cửa hàng (icon cửa hàng lấy từ build; ảnh Play tải lại bằng tay). Chi tiết: `docs/mobile-app.md`.
 
 ## Lý do (tại sao)
 
@@ -37,7 +38,7 @@ Tên Localman, màu chủ đạo, bundle id `com.hoandat.localman` (app mobile C
 
 ## Cách thay đổi
 
-- Đổi tên, màu, icon: sửa `brand.config.json` (màu: sửa `tokens.css` trước), chạy `pnpm brand:gen`, build lại.
+- Đổi tên, màu, icon: sửa `brand.config.json` (màu: sửa `tokens.css` trước), chạy `pnpm brand:gen` (ghi cả icon/màn chờ của `apps/mobile` và ảnh Play), build lại.
 - Đổi bundle id: cửa hàng ứng dụng coi là app khác; cần kế hoạch chuyển người dùng.
 - **Bật manifest và icon trên web** (khi đã có icon thiết kế), trong cùng một thay đổi:
   1. Thay `packages/design-tokens/app-icon.svg` (bo góc, cho favicon và icon "any") và `app-icon-maskable.svg` (tràn viền, hình nằm trong vòng tròn 80% ở giữa) bằng bản thiết kế; chỉ dùng màu nút chính (`--c-primary-solid`, `--c-on-primary`), `scripts/brand/localman-brand.test.ts` kiểm.
