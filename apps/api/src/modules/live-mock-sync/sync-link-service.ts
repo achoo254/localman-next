@@ -1,124 +1,20 @@
 import { OperationError } from "@localman/operations";
-import { elementRoleAllows } from "@localman/shared/access";
 import type { MergePreview } from "@localman/shared/api-client";
 import mongoose, { type Types } from "mongoose";
 import { takeOperationSlot } from "../../lib/operation-rate-limit.js";
-import {
-	type CollectionAccess,
-	requireCollection,
-} from "../collections/collection-access.js";
-import { roleAllows, roleIn } from "../projects/project-access.js";
-import {
-	LIVE_PROJECT,
-	ProjectModel,
-	type StoredProject,
-} from "../projects/project-model.js";
-import { mockBaseUrlOf } from "../projects/project-view.js";
+import { requireCollection } from "../collections/collection-access.js";
+import type { StoredProject } from "../projects/project-model.js";
 import { conflictsLeft } from "../version-control/fork-access.js";
 import { mergePreview } from "../version-control/merge-views.js";
 import type { MergeSide } from "../version-control/three-way-merge.js";
-import { mockOriginOf } from "./sync-environment.js";
-import {
-	type StoredSyncLink,
-	SyncLinkModel,
-	deleteSyncLink,
-} from "./sync-link-model.js";
+import { SyncLinkModel, deleteSyncLink } from "./sync-link-model.js";
 import { computeSync, syncLink } from "./sync-service.js";
-
-export interface SyncStatus {
-	readonly collectionId: string;
-	/** `null` when the project is gone or the caller cannot read it. */
-	readonly project: { readonly id: string; readonly name: string } | null;
-	readonly environmentId: string | null;
-	readonly lastSyncedAt: string;
-	readonly syncCount: number;
-	/** Clashes waiting for a choice. */
-	readonly conflicts: number;
-	/** Editors of both the collection and the project turn it off. */
-	readonly canManage: boolean;
-	/** Editors of the collection choose for conflicts. */
-	readonly canResolve: boolean;
-	/**
-	 * The project secret changed since the environment got its baseUrl:
-	 * the sync does not write the new one there (rotating cuts access).
-	 */
-	readonly mockUrlChanged: boolean;
-}
-
-function notSynced(): OperationError {
-	return new OperationError(
-		404,
-		"NOT_SYNCED",
-		"This collection is not synced with a mock project",
-	);
-}
-
-interface LinkAccess {
-	readonly access: CollectionAccess;
-	readonly link: StoredSyncLink;
-}
-
-async function requireLink(
-	sub: string,
-	collectionId: string,
-	action: "view" | "edit",
-): Promise<LinkAccess> {
-	const access = await requireCollection(sub, collectionId, action);
-	const link = await SyncLinkModel.findOne({
-		collectionId: access.collectionId,
-	}).lean<StoredSyncLink>();
-	if (!link) throw notSynced();
-	return { access, link };
-}
-
-/** The live project and whether the caller edits it (`null`: gone). */
-async function projectFor(
-	sub: string,
-	link: StoredSyncLink,
-): Promise<{
-	project: StoredProject;
-	editor: boolean;
-	reader: boolean;
-} | null> {
-	const project = await ProjectModel.findOne({
-		_id: link.projectId,
-		...LIVE_PROJECT,
-	}).lean<StoredProject>();
-	if (!project) return null;
-	const role = await roleIn({ sub }, project);
-	return {
-		project,
-		editor: roleAllows(role, "editResources"),
-		reader: roleAllows(role, "read"),
-	};
-}
-
-export async function syncStatus(
-	sub: string,
-	collectionId: string,
-): Promise<SyncStatus> {
-	const { access, link } = await requireLink(sub, collectionId, "view");
-	const found = await projectFor(sub, link);
-	const collectionEditor = elementRoleAllows("collection", access.role, "edit");
-	return {
-		collectionId: access.collectionId.toHexString(),
-		project:
-			found?.reader === true
-				? { id: found.project._id.toHexString(), name: found.project.name }
-				: null,
-		environmentId: link.environmentId?.toHexString() ?? null,
-		lastSyncedAt: link.lastSyncedAt.toISOString(),
-		syncCount: link.syncCount,
-		conflicts: link.conflicts,
-		// A gone project leaves the choice to the collection's Editors.
-		canManage: collectionEditor && (found === null || found.editor),
-		canResolve: collectionEditor,
-		mockUrlChanged:
-			found !== null &&
-			mockOriginOf(link.baseUrl) !==
-				mockOriginOf(mockBaseUrlOf(found.project.secret, found.project.prefix)),
-	};
-}
+import {
+	type SyncStatus,
+	projectFor,
+	requireLink,
+	syncStatus,
+} from "./sync-status.js";
 
 /**
  * Turns the sync off (Editors of the collection and of the project, or of

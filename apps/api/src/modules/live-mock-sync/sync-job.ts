@@ -84,6 +84,8 @@ export class LiveMockSyncJob {
 	): void {
 		const key = `${tenant.id}:${projectId}`;
 		const before = this.pending.get(key);
+		// A change already waiting syncs sooner than the retry would.
+		if (retry && before) return;
 		if (before) clearTimeout(before.timer);
 		const now = Date.now();
 		const since = before?.since ?? now;

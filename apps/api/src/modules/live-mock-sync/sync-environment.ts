@@ -44,6 +44,21 @@ export function mockOriginOf(url: string): string {
 	}
 }
 
+/** The environment's own `baseUrl` (not a secret); `null` when there is none. */
+export async function environmentBaseUrl(
+	environmentId: Types.ObjectId | null,
+	session?: ClientSession,
+): Promise<string | null> {
+	if (environmentId === null) return null;
+	const environment = await EnvironmentModel.findById(environmentId)
+		.session(session ?? null)
+		.lean<StoredEnvironment>();
+	const variable = environment?.variables.find(
+		(v) => v.key === BASE_URL_VARIABLE && !v.sealed,
+	);
+	return variable?.value ?? null;
+}
+
 /** What a sync did to the environment. */
 export interface EnvironmentSync {
 	/** The `baseUrl` it now stands for (the old one while the secret differs). */
@@ -56,7 +71,8 @@ export interface EnvironmentSync {
  * owns alone: `baseUrl` follows the mock's prefix only while it still
  * holds the value the last sync wrote and the project secret is the same
  * (after a rotation the new secret is never written into an environment
- * the whole workspace reads, so rotating keeps cutting access), and an id
+ * the whole workspace reads, so rotating keeps cutting access; once an
+ * Editor writes the new URL there, it follows again), and an id
  * variable is added once per new resource (one the user deleted is not
  * added back). A missing environment is skipped.
  */
@@ -66,22 +82,33 @@ export async function syncEnvironment(
 	wanted: MockVariables,
 	session: ClientSession,
 ): Promise<EnvironmentSync> {
-	const sameSecret =
-		mockOriginOf(before.baseUrl) === mockOriginOf(wanted.baseUrl);
-	const baseUrl = sameSecret ? wanted.baseUrl : before.baseUrl;
-	const unchanged = { baseUrl, changed: false };
-	if (environmentId === null) return unchanged;
+	const target = mockOriginOf(wanted.baseUrl);
+	if (environmentId === null)
+		return { baseUrl: wanted.baseUrl, changed: false };
 	const environment = await EnvironmentModel.findById(environmentId)
 		.session(session)
 		.lean<StoredEnvironment>();
-	if (!environment) return unchanged;
+	if (!environment) return { baseUrl: wanted.baseUrl, changed: false };
+	const held = environment.variables.find(
+		(v) => v.key === BASE_URL_VARIABLE && !v.sealed,
+	)?.value;
+	// After a rotation, once an Editor put the new mock URL there by hand,
+	// it is what the sync follows from then on.
+	const caughtUp =
+		mockOriginOf(before.baseUrl) !== target &&
+		held !== undefined &&
+		held !== null &&
+		mockOriginOf(held) === target;
+	const from = caughtUp && held ? held : before.baseUrl;
+	const sameSecret = mockOriginOf(from) === target;
+	const baseUrl = sameSecret ? wanted.baseUrl : from;
 	let changed = false;
 	const variables = environment.variables.map((variable) => {
 		const follows =
 			variable.key === BASE_URL_VARIABLE &&
 			!variable.sealed &&
-			variable.value === before.baseUrl &&
-			before.baseUrl !== baseUrl;
+			variable.value === from &&
+			from !== baseUrl;
 		if (!follows) return variable;
 		changed = true;
 		return { ...variable, value: baseUrl };
@@ -93,7 +120,7 @@ export async function syncEnvironment(
 		variables.push(plainVariable(key, "1"));
 		changed = true;
 	}
-	if (!changed) return unchanged;
+	if (!changed) return { baseUrl, changed: false };
 	await EnvironmentModel.updateOne(
 		{ _id: environmentId },
 		{ $set: { variables, updatedBy: LIVE_MOCK_SYNC_AUTHOR } },

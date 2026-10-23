@@ -197,6 +197,40 @@ describe("following the mock", () => {
 		// The requests still follow the rename.
 		const detail = await collectionOf(EVE, s.collection);
 		expect(requestNamed(detail, "List members")).toBeDefined();
+
+		// An Editor puts the new mock URL there: the warning goes and
+		// baseUrl follows the prefix again.
+		const urls = await as(EVE).get(`/projects/${s.project}/mock-urls`);
+		const fresh = urls.body.mockBaseUrl as string;
+		const environment = await environmentOf(EVE, s.environment);
+		const put = await as(EVE).send(
+			"put",
+			`/environments/${s.environment}/variables`,
+			{
+				variables: environment.variables.map((v) => ({
+					id: v.id,
+					key: v.key,
+					type: v.type,
+					enabled: v.enabled,
+					description: v.description,
+					sharedValue: v.key === "baseUrl" ? fresh : v.sharedValue,
+				})),
+			},
+		);
+		expect(put.status, JSON.stringify(put.body)).toBe(200);
+		expect(
+			(await as(EVE).get(`/collections/${s.collection}/mock-sync`)).body
+				.mockUrlChanged,
+		).toBe(false);
+		await as(EVE).send("put", `/projects/${s.project}`, {
+			name: "Shop",
+			prefix: "/v2",
+		});
+		await syncNow(s.project);
+		const moved = (await environmentOf(EVE, s.environment)).variables.find(
+			(v) => v.key === "baseUrl",
+		)?.sharedValue;
+		expect(moved).toBe(`${fresh}/v2`);
 	});
 });
 

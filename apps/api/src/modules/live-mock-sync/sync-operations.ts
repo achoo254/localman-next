@@ -20,10 +20,10 @@ import {
 	previewSync,
 	resolveSync,
 	stopSync,
-	syncStatus,
 	syncedCollectionsOf,
 } from "./sync-link-service.js";
 import { DEFAULT_SYNC_NAMES, syncNamesSchema } from "./sync-names.js";
+import { syncStatus } from "./sync-status.js";
 import "./sync-project-dependent.js";
 
 const collectionId = z.string().min(1).max(64);
