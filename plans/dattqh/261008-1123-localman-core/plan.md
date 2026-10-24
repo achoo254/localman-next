@@ -88,7 +88,7 @@ Dashboard và mock runtime là hai process riêng. Lý do: runtime công khai c�
 | 18 | [Localman MCP: đủ toolset cho API client, chia sẻ, cộng tác, đồng bộ, traffic](phase-18-localman-mcp-client-tools.md) | M | 16, 17, 19, 20, 21 | in-progress |
 | 19 | [Mock power-ups: Faker thông minh, tạo resource từ JSON/OpenAPI/CSV, xuất type, chaos, response theo điều kiện](phase-19-mock-power-ups.md) | M | 4, 5, 6 | in-progress |
 | 20 | [Mock lai localhost, log request có replay, webhook inbox về localhost, mock callback](phase-20-mock-traffic-and-hybrid-localhost.md) | L | 5, 10 | completed |
-| 21 | [Client power-ups: secret local không rời trình duyệt, nối request không cần script, docs tự sinh](phase-21-client-power-ups.md) | M | 10, 13, 16 | pending |
+| 21 | [Client power-ups: secret local không rời trình duyệt, nối request không cần script, docs tự sinh](phase-21-client-power-ups.md) | M | 10, 13, 16 | done |
 | 22 | [Browser extension: gửi request vượt CORS, cùng bộ công cụ cookie, storage, network, performance cho tab đang mở](phase-22-browser-extension.md) | L | 10 | cancelled |
 | 23 | [Extension: tiện ích mở rộng (cache/SW, console, tạm tắt CORS, giả lập thiết bị, sửa header, xem JSON, thay response bằng mock)](phase-23-extension-utilities.md) | M | 22 | cancelled |
 
