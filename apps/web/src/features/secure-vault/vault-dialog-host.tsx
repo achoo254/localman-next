@@ -11,6 +11,7 @@ import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { ENVIRONMENTS_KEY } from "../environments/use-environments";
 import { AGENT_USES_KEY } from "./agent-use/agent-use-api";
+import { useLegacyMigration } from "./use-legacy-migration";
 import { VaultCreateDialog } from "./vault-create-dialog";
 import {
 	type VaultDialog,
@@ -45,6 +46,8 @@ export function VaultDialogHost({ children }: { children: ReactNode }) {
 	const toast = useToast();
 	const client = useQueryClient();
 	const [shown, setShown] = useState<Shown | null>(null);
+	// Pre-vault secret values move in whenever the vault opens here.
+	useLegacyMigration();
 	// Read by close handlers that run right after a hand-over (reset →
 	// create) and before the re-render: the state there would be stale.
 	const current = useRef<Shown | null>(null);

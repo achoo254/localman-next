@@ -3,7 +3,6 @@
  * on): never synced, used instead of the shared value when they send.
  * Any role may set them, Viewers included.
  */
-import type { LocalValue } from "@localman/shared/api-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
@@ -12,15 +11,11 @@ import {
 	collectionLocalKey,
 	useCollectionLocalValues,
 } from "../environments/use-environments";
-import {
-	collectionLocalTarget,
-	setCollectionLocalValues,
-} from "../environments/variable-scopes-api";
+import { setCollectionLocalValues } from "../environments/variable-scopes-api";
 import {
 	agentCopyKeys,
 	withAgentCopies,
 } from "../secure-vault/agent-use/agent-copy";
-import { useResealLegacy } from "../secure-vault/use-reseal-legacy";
 import {
 	collectionScope,
 	openLocalValues,
@@ -81,13 +76,6 @@ export function useCollectionLocal(
 					: { tone: "error", title: collectionErrorMessage(error, t) },
 			),
 	});
-	const localKey = collectionLocalKey(collectionId ?? "");
-	useResealLegacy(
-		collectionId ? collectionLocalTarget(collectionId, secretKeys) : null,
-		query.data ?? [],
-		() => client.getQueryData<LocalValue[]>(localKey),
-		(values) => client.setQueryData(localKey, values),
-	);
 	useVaultValues();
 	const opened = collectionId
 		? openLocalValues(collectionScope(collectionId), query.data ?? [])

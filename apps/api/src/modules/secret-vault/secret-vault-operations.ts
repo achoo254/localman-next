@@ -3,6 +3,7 @@ import { secretVaultParamsSchema } from "@localman/shared/api-client";
 import { z } from "zod";
 import { USER_SCOPE, requireSession } from "../../http/require-auth.js";
 import { agentSecretUseOperations } from "./agent-secret-use-operations.js";
+import { legacyValuesOperations } from "./legacy-values-operations.js";
 import {
 	countSecretVaultValues,
 	createSecretVault,
@@ -80,4 +81,5 @@ export const secretVaultOperations: readonly AnyOperation[] = [
 	createSecretVaultOperation,
 	resetSecretVaultOperation,
 	...agentSecretUseOperations,
+	...legacyValuesOperations,
 ];

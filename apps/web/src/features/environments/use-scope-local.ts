@@ -3,7 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { withAgentCopies } from "../secure-vault/agent-use/agent-copy";
 import { useAgentUse } from "../secure-vault/agent-use/use-agent-use";
 import { openScopeValues } from "../secure-vault/open-scope-values";
-import { useResealLegacy } from "../secure-vault/use-reseal-legacy";
 import { type LocalTarget, useVaultValues } from "../secure-vault/vault-codec";
 import {
 	type LocalValueWrite,
@@ -61,12 +60,5 @@ export function useScopeLocal(input: ScopeLocalInput) {
 			),
 		);
 	};
-	useResealLegacy(
-		targetOf(agent.secrets),
-		input.localValues,
-		() =>
-			client.getQueryData<{ localValues: LocalValue[] }>(cacheKey)?.localValues,
-		store,
-	);
 	return { localValues, agent, saveLocal };
 }

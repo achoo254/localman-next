@@ -13,11 +13,7 @@ import {
 } from "../secure-vault/vault-codec";
 import { parseLocalValues } from "./environment-parsers";
 import { environmentPath, workspacePath } from "./environments-api";
-import {
-	inLocalQueue,
-	latestAnswer,
-	rememberAnswer,
-} from "./local-write-queue";
+import { inLocalQueue } from "./local-write-queue";
 
 /**
  * `value: null` resets a variable to its shared value; `agentValue` is
@@ -43,9 +39,7 @@ async function sendLocal(
 		}),
 		"local values",
 	);
-	const saved = parseLocalValues(data.localValues);
-	rememberAnswer(target.path, saved);
-	return saved;
+	return parseLocalValues(data.localValues);
 }
 
 /**
@@ -58,21 +52,6 @@ export function patchLocal(
 	values: LocalValueWrite[],
 ): Promise<LocalValue[]> {
 	return inLocalQueue(target.path, () => sendLocal(target, values));
-}
-
-/**
- * Writes worked out at their turn in the scope's queue, from the last
- * answer of the writes before (`undefined`: none running, read the
- * cache). `null` when `build` finds nothing to write.
- */
-export function patchLocalWhenDue(
-	target: LocalTarget,
-	build: (latest: LocalValue[] | undefined) => LocalValueWrite[],
-): Promise<LocalValue[] | null> {
-	return inLocalQueue(target.path, async () => {
-		const writes = build(latestAnswer(target.path));
-		return writes.length > 0 ? sendLocal(target, writes) : null;
-	});
 }
 
 export const environmentLocalTarget = (
