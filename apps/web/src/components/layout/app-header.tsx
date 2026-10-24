@@ -14,6 +14,7 @@ import { cn } from "../../lib/cn";
 import { Wordmark } from "../brand/wordmark";
 import { buttonClassName } from "../ui/button";
 import { AccountControls } from "./account-controls";
+import { EcosystemAppSwitcher } from "./ecosystem-app-switcher";
 
 const NAV_LINK_CLASS = cn(
 	buttonClassName({ variant: "ghost", size: "sm" }),
@@ -24,7 +25,8 @@ const NAV_LINK_CLASS = cn(
  * Signed-in top bar: wordmark and the product nav (Mock API, API Client
  * behind its flag) and, on API client pages, the workspace switcher on the
  * left; Docs, language, the secret vault lock (behind its flag),
- * notification bell and account menu on the right. `wide` spans the full width (the workbench).
+ * notification bell, the switcher to the other apps and the account menu
+ * on the right. `wide` spans the full width (the workbench).
  */
 export function AppHeader({
 	user,
@@ -93,6 +95,7 @@ export function AppHeader({
 					</div>
 					{vault ? <VaultHeaderButton /> : null}
 					<NotificationBell />
+					<EcosystemAppSwitcher />
 					<AccountControls user={user} />
 				</div>
 			</div>

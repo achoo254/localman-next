@@ -51,6 +51,20 @@ describe("AppHeader", () => {
 		expect(container).not.toHaveTextContent(/plan/i);
 	});
 
+	it("puts the app switcher between the bell and the account trigger", () => {
+		renderHeader();
+		const bell = screen.getByRole("button", { name: "Notifications" });
+		const switcher = screen.getByRole("button", { name: "Switch app" });
+		const account = screen.getByRole("button", { name: "Minh Anh · Account" });
+		expect(
+			bell.compareDocumentPosition(switcher) & Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+		expect(
+			switcher.compareDocumentPosition(account) &
+				Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+	});
+
 	it.each([
 		["Email", "account-email"],
 		["Sign-in methods", "account-sign-in"],
