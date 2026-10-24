@@ -79,6 +79,8 @@ export interface Interpolator {
 	apply(template: string): string;
 	unresolved(): string[];
 	secretsUsed(): string[];
+	/** The values it filled in for those secrets. */
+	secretValues(): string[];
 }
 
 /**
@@ -91,6 +93,7 @@ export function createInterpolator(
 	const lookup = buildLookup(context);
 	const unresolved = new Set<string>();
 	const secrets = new Set<string>();
+	const secretValues = new Set<string>();
 
 	const apply = (template: string): string =>
 		template.replace(VARIABLE_PATTERN, (match, raw: string) => {
@@ -107,7 +110,10 @@ export function createInterpolator(
 				unresolved.add(name);
 				return match;
 			}
-			if (found.secret) secrets.add(name);
+			if (found.secret) {
+				secrets.add(name);
+				secretValues.add(found.value);
+			}
 			return found.value;
 		});
 
@@ -115,6 +121,7 @@ export function createInterpolator(
 		apply,
 		unresolved: () => [...unresolved],
 		secretsUsed: () => [...secrets],
+		secretValues: () => [...secretValues],
 	};
 }
 

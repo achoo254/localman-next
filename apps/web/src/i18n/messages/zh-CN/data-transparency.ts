@@ -103,7 +103,7 @@ export const dataTransparency: Messages["dataTransparency"] = {
 		body: "每个请求一行，只有以下字段。从不记录路径、查询参数、请求头或正文。",
 		fields: {
 			sub: "你的账户 ID",
-			host: "按发送时的目标主机，mock API 的 secret 标签被遮盖",
+			host: "目标主机，其中的 secret 和 mock API 的 secret 标签被遮盖",
 			method: "方法",
 			status: "响应状态",
 			error: "或错误代码",

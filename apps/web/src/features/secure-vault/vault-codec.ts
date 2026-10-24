@@ -113,13 +113,29 @@ export function openLocalValues(
 /** Shorter copies are not looked for: they would match by chance. */
 const COPY_MIN_LENGTH = 4;
 
+/** A value of the vault opened on this page, with its variable's name. */
+export interface OpenVaultSecret {
+	readonly name: string;
+	readonly value: string;
+}
+
 /**
- * The plaintext of every value of the vault opened on this page, while it
- * is unlocked: to catch a copy of one about to leave the vault.
+ * Every value of the vault opened on this page, while it is unlocked and
+ * long enough to be looked for: to catch a copy of one about to leave
+ * the vault (a script's write, a request that would go to the proxy).
  */
-export function openVaultValues(): string[] {
+export function openVaultSecrets(): OpenVaultSecret[] {
 	if (!vaultKey()) return [];
-	return [...plain.values()].filter((value) => value.length >= COPY_MIN_LENGTH);
+	return [...plain].flatMap(([id, value]) => {
+		// `id` is the scope, the name and the ciphertext (`cacheId`).
+		const name = id.split("\u0000")[1] ?? "";
+		return value.length >= COPY_MIN_LENGTH ? [{ name, value }] : [];
+	});
+}
+
+/** The plaintext of `openVaultSecrets`. */
+export function openVaultValues(): string[] {
+	return openVaultSecrets().map(({ value }) => value);
 }
 
 /** A value of the vault opened on this page, while it is unlocked. */

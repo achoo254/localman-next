@@ -1,5 +1,8 @@
 import { OperationError } from "@localman/operations";
-import type { SecretVaultParams } from "@localman/shared/api-client";
+import {
+	type SecretVaultParams,
+	VAULT_PREFIX,
+} from "@localman/shared/api-client";
 import { LocalVariableValueModel } from "../environments/local-variable-value-model.js";
 import {
 	SecretVaultModel,
@@ -53,9 +56,26 @@ export async function createSecretVault(
 	return params;
 }
 
+/**
+ * The person's local values that only the vault can open: those marked
+ * `vault`, and a ciphertext stored as it is without the mark (written
+ * while its variable was not yet a secret on the server, e.g. renamed or
+ * flagged in a draft not saved yet). A value the server sealed itself is
+ * never one: its stored text is the server's ciphertext.
+ */
+function vaultValuesOf(sub: string) {
+	return {
+		userId: sub,
+		$or: [
+			{ vault: true },
+			{ sealed: { $ne: true }, value: { $regex: `^${VAULT_PREFIX}` } },
+		],
+	};
+}
+
 /** How many local values a reset would delete (the vault's ciphertexts). */
 export async function countSecretVaultValues(sub: string): Promise<number> {
-	return LocalVariableValueModel.countDocuments({ userId: sub, vault: true });
+	return LocalVariableValueModel.countDocuments(vaultValuesOf(sub));
 }
 
 /**
@@ -66,10 +86,9 @@ export async function countSecretVaultValues(sub: string): Promise<number> {
 export async function resetSecretVault(
 	sub: string,
 ): Promise<{ deletedValues: number }> {
-	const { deletedCount } = await LocalVariableValueModel.deleteMany({
-		userId: sub,
-		vault: true,
-	});
+	const { deletedCount } = await LocalVariableValueModel.deleteMany(
+		vaultValuesOf(sub),
+	);
 	await SecretVaultModel.deleteOne({ userId: sub });
 	return { deletedValues: deletedCount };
 }

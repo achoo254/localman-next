@@ -93,7 +93,7 @@ Thời gian giữ và các trường log không viết tay: trang đọc `@local
 | Y9 | Log request mock gồm request, response, query, header, body; Authorization, Cookie, Set-Cookie, X-API-Key và header tự chọn thành `[redacted]` | như P5 |
 | Y10 | Log của máy chủ: chỉ các trường `REQUEST_LOG_FIELDS` (route mock là path với secret bị che); lỗi thêm một dòng ghi lỗi | `apps/api/src/http/request-log.ts`, `mock-runtime/mock-http.ts` (`mockRouteOf`), `http/error-handler.ts`; `http/request-log-policy.test.ts` |
 | Y11 | Log của web server phía trước: IP, thời điểm, method, path (query ẩn), status, kích thước, trình duyệt, thời gian; không host, Referer, cookie | `infra/localman/nginx/localman-http.conf` (`log_format localman`); `http/request-log-policy.test.ts` |
-| Y12 | Log của proxy: chỉ các trường `PROXY_LOG_FIELDS`; host đích ghi như đã gửi (secret người dùng đặt trong host không bị che), chỉ che nhãn secret của host mock | `proxy-operations.ts`, `proxy-log-policy.test.ts` |
+| Y12 | Log của proxy: chỉ các trường `PROXY_LOG_FIELDS`; host đích che secret mà trình duyệt điền vào host (`logMask` của envelope) hay máy chủ điền cho agent, và nhãn secret của host mock | `packages/shared/src/api-client/proxy-envelope.ts` (`logMask`); `proxy-operations.ts`, `proxy-log-policy.test.ts` |
 | Y13 | Sao lưu hằng đêm toàn bộ cơ sở dữ liệu trên cùng máy chủ | `legalPrivacy.retention` (Backups); `infra/localman/backup-localman-db.sh` |
 | Y14 | Không dịch vụ phân tích, theo dõi, báo lỗi; không quảng cáo | như P13; `apps/web/src/lib/no-telemetry.test.ts` quét mã nguồn web, api và packages |
 

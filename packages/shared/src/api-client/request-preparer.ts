@@ -44,6 +44,11 @@ export interface PreparedRequest {
 	body: PreparedBody;
 	/** Secret variables whose values are in the URL, headers or body. */
 	secretsUsed: string[];
+	/**
+	 * Their values, to hide them where the request is shown or logged;
+	 * absent where nothing was filled in by this preparer.
+	 */
+	secretValues?: string[];
 	/** `{{names}}` left as typed. */
 	unresolved: string[];
 }
@@ -122,6 +127,7 @@ export function prepareRequest(
 		headers,
 		body,
 		secretsUsed: interpolator.secretsUsed(),
+		secretValues: interpolator.secretValues(),
 		unresolved: interpolator.unresolved(),
 	};
 }

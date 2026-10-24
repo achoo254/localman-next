@@ -12,6 +12,7 @@ import {
 	rewriteToTunnel,
 } from "@localman/shared/api-client";
 import { activeTranslator } from "../../../i18n/active-translator";
+import { openVaultSecrets } from "../../secure-vault/vault-codec";
 import { proxyHop } from "../workbench/proxy-hop";
 import {
 	CANCELLED,
@@ -63,7 +64,11 @@ async function consent(
 	// on its own: the user never picked that tunnel or its machine.
 	const chosen = why === "manual" && ctx.routeChosen && !routerFound;
 	if (chosen || ctx.snapshot.secretHosts.has(host)) return true;
-	const parts = sensitiveParts(ctx.ready.toSend, ctx.ready.prepared);
+	const parts = sensitiveParts(
+		ctx.ready.toSend,
+		ctx.ready.prepared,
+		openVaultSecrets(),
+	);
 	if (parts.length === 0) return true;
 	const { signal } = ctx.input;
 	const target = ctx.target.local?.key ?? ctx.target.host;

@@ -103,7 +103,7 @@ export const dataTransparency: Messages["dataTransparency"] = {
 		body: "Mỗi request một dòng, chỉ với các trường này. Không bao giờ có path, query, header hay body.",
 		fields: {
 			sub: "ID tài khoản của bạn",
-			host: "host đích như đã gửi, nhãn secret của mock API bị che",
+			host: "host đích, secret trong đó và nhãn secret của mock API bị che",
 			method: "method",
 			status: "status của response",
 			error: "hoặc mã lỗi",

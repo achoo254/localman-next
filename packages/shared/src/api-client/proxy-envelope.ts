@@ -83,6 +83,12 @@ export const proxyRequestSchema = z
 			})
 			.default(DEFAULT_OPTIONS),
 		variables: proxyVariablesSchema.optional(),
+		/**
+		 * Values to hide in Localman's own log line of this request: the
+		 * browser lists the secrets it filled into the URL's host. Never
+		 * forwarded.
+		 */
+		logMask: z.array(z.string().min(1).max(4096)).max(20).optional(),
 	})
 	.superRefine((envelope, ctx) => {
 		// With `variables` the URL may be a template; the server checks it
@@ -157,11 +163,16 @@ export function toProxyEnvelope(
 			: body.kind === "text"
 				? { body: body.text, bodyType: "text" as const }
 				: { body: bytesToBase64(body.bytes), bodyType: "base64" as const };
+	const host = parseHttpUrl(prepared.url)?.hostname ?? "";
+	const logMask = (prepared.secretValues ?? [])
+		.filter((value) => value !== "" && host.includes(value.toLowerCase()))
+		.slice(0, 20);
 	return {
 		method: prepared.method,
 		url: prepared.url,
 		headers: prepared.headers.map(({ name, value }) => ({ name, value })),
 		...encoded,
+		...(logMask.length > 0 ? { logMask } : {}),
 		options: {
 			followRedirects: settings.followRedirects,
 			timeoutMs: settings.timeoutMs,

@@ -53,4 +53,19 @@ describe("sensitiveParts", () => {
 		});
 		expect(partsOf(draft)).toEqual([]);
 	});
+
+	it("names a vault secret copied into the request by another way", () => {
+		// A script put the token's value in a plain header: no {{token}} left.
+		const draft = createRequestDraft({
+			url: "https://api.test/x",
+			headers: [header("X-Trace", "vault-value-81c2")],
+		});
+		const vault = [
+			{ name: "token", value: "vault-value-81c2" },
+			{ name: "other", value: "not-in-request" },
+		];
+		expect(sensitiveParts(draft, prepareRequest(draft), vault)).toEqual([
+			"{{token}}",
+		]);
+	});
 });

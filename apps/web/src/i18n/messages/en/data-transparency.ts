@@ -107,7 +107,7 @@ export const dataTransparency = {
 		body: "One line per request, with these fields only. Never the path, the query, headers or bodies.",
 		fields: {
 			sub: "your account ID",
-			host: "the destination host as sent, a mock API's secret label masked",
+			host: "the destination host, the secrets in it and a mock API's secret label masked",
 			method: "the method",
 			status: "the response status",
 			error: "or the error code",

@@ -126,4 +126,21 @@ describe("proxy response envelope", () => {
 		const result = proxyResponseSchema.safeParse({ bodyEncoding: "hex" });
 		expect(result.success).toBe(false);
 	});
+
+	it("lists only the secrets in the host for the proxy's log, never others", () => {
+		const env = toProxyEnvelope(
+			{
+				...prepared({ kind: "none" }),
+				url: "https://tenant-7c1f.api.test/a?key=query-value-1",
+				secretValues: ["tenant-7c1f", "query-value-1"],
+			},
+			DEFAULT_REQUEST_SETTINGS,
+		);
+		expect(env.logMask).toEqual(["tenant-7c1f"]);
+		const plain = toProxyEnvelope(
+			prepared({ kind: "none" }),
+			DEFAULT_REQUEST_SETTINGS,
+		);
+		expect(plain).not.toHaveProperty("logMask");
+	});
 });

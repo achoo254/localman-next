@@ -23,10 +23,25 @@ function sensitiveQuery(url: string): string[] {
 	return names;
 }
 
-/** Names to show (`Authorization`, `X-API-Key`, `?access_token`, `{{token}}`), no values. */
+/** The texts of a prepared request a value can be copied into. */
+function preparedTexts(prepared: PreparedRequest): string[] {
+	return [
+		prepared.url,
+		...prepared.headers.map((header) => header.value),
+		prepared.body.kind === "text" ? prepared.body.text : "",
+	];
+}
+
+/**
+ * Names to show (`Authorization`, `X-API-Key`, `?access_token`, `{{token}}`),
+ * no values. `vault`: values of the vault open now; one copied into the
+ * request by another way than its `{{name}}` (a script, a temporary
+ * variable) counts as that secret too.
+ */
 export function sensitiveParts(
 	draft: ApiRequestDraft,
 	prepared: PreparedRequest,
+	vault: readonly { name: string; value: string }[] = [],
 ): string[] {
 	const parts: string[] = [];
 	const add = (name: string): void => {
@@ -43,5 +58,9 @@ export function sensitiveParts(
 	}
 	for (const name of sensitiveQuery(prepared.url)) add(name);
 	for (const name of prepared.secretsUsed) add(`{{${name}}}`);
+	const texts = preparedTexts(prepared);
+	for (const { name, value } of vault) {
+		if (texts.some((text) => text.includes(value))) add(`{{${name}}}`);
+	}
 	return parts;
 }

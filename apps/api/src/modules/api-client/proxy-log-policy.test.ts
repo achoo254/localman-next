@@ -47,4 +47,16 @@ describe("the proxy logs only what the data policy says", () => {
 		expect(entry?.error).toBe("PROXY_TARGET_BLOCKED");
 		expect(unlistedKeys()).toEqual([]);
 	});
+
+	it("hides the secrets the browser filled into the host, and never forwards them", async () => {
+		logs.lines.length = 0;
+		const res = await postProxy(app, {
+			method: "GET",
+			url: `${server.origin}/where`,
+			logMask: ["127.0.0.1"],
+		}).expect(200);
+		const [entry] = logs.entries("proxy");
+		expect(entry?.host).toBe("[secret]");
+		expect(JSON.stringify(res.body)).not.toContain("logMask");
+	});
 });

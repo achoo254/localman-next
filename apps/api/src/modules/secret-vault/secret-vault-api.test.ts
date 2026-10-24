@@ -79,4 +79,31 @@ describe("secret vault parameters", () => {
 		const left = await LocalVariableValueModel.find({ userId: EVE }).lean();
 		expect(left.map((row) => row.key)).toEqual(["host"]);
 	});
+
+	it("reset also drops a ciphertext saved before its name was a secret", async () => {
+		const ws = (await teamOfThree()).toHexString();
+		// "apiKey" was flagged secret in a draft not saved yet: the browser
+		// sealed its value, the server stored it unmarked.
+		const env = await createEnvironmentAs(EVE, ws, {
+			name: "Staging",
+			variables: [variableInput("apiKey", ""), variableInput("host", "")],
+		});
+		await createVaultAs(EVE);
+		const local = await as(EVE).send(
+			"patch",
+			`/environments/${env.id}/local-values`,
+			{
+				values: [
+					{ key: "apiKey", value: fakeCiphertext() },
+					{ key: "host", value: "local.test" },
+				],
+			},
+		);
+		expect(local.status, JSON.stringify(local.body)).toBe(200);
+		const preview = await as(EVE).send("delete", `${VAULT}?dryRun=true`);
+		expect(preview.body).toEqual({ deletedValues: 1, dryRun: true });
+		await as(EVE).send("delete", VAULT).expect(200);
+		const left = await LocalVariableValueModel.find({ userId: EVE }).lean();
+		expect(left.map((row) => row.key)).toEqual(["host"]);
+	});
 });
