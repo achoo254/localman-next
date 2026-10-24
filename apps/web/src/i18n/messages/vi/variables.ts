@@ -12,6 +12,11 @@ export const variables: Messages["variables"] = {
 		empty: "(rỗng)",
 		secret: "Giá trị secret đã được che",
 		withheld: "Bị ẩn với bạn: đặt giá trị local của riêng bạn để dùng biến này",
+		locked: "Đã khoá",
+		lockedValue: "Đang khoá trong kho",
+		lockedNote:
+			"Giá trị local của biến secret này ({scope}) nằm trong kho đang khoá. Request dùng <code>{token}</code> sẽ dừng, không gửi, cho tới khi mở kho.",
+		unlock: "Mở kho",
 		openEnvironment: "Mở {name}",
 		openGlobals: "Mở globals",
 		noValue: "(chưa có giá trị)",

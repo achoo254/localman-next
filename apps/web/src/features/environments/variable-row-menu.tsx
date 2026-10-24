@@ -14,8 +14,20 @@ import {
 	DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import { useT } from "../../i18n/i18n-context";
-import { canReset, canUnshare, shareActionOf } from "./variable-batch";
-import { type VariableRow, currentValue } from "./variable-rows";
+import { AgentUseMenuItems } from "../secure-vault/agent-use/agent-use-menu-items";
+import type { AgentUseScope } from "../secure-vault/agent-use/agent-use-types";
+import type { VaultStatus } from "../secure-vault/vault-session";
+import {
+	canReset,
+	canUnshare,
+	isShared,
+	shareActionOf,
+} from "./variable-batch";
+import {
+	type VariableRow,
+	agentSubjectOf,
+	currentValue,
+} from "./variable-rows";
 
 export interface VariableRowMenuProps {
 	row: VariableRow;
@@ -27,18 +39,33 @@ export interface VariableRowMenuProps {
 	onUnshare: () => void;
 	onCopy: (value: string) => void;
 	onDelete: () => void;
+	/** `null` with the `secretVault` flag off. */
+	vault: VaultStatus | null;
+	/** "Let agents use" of a secret row, else `null`. */
+	agentUse: AgentUseScope | null;
 }
 
 /**
  * More of one variable: share the local value (or update the shared one
  * with it), reset the local value, unshare, copy the value in use, delete.
- * Only what applies to the row is offered.
+ * Only what applies to the row is offered. A local value locked in the
+ * vault cannot be read: sharing or copying it waits until it is unlocked.
  */
 export function VariableRowMenu(props: VariableRowMenuProps) {
 	const t = useT();
 	const { row, canEdit } = props;
 	const value = currentValue(row);
 	const shareAction = shareActionOf(row, canEdit);
+	const locked = row.locked === true;
+	const lockedHint = locked ? (
+		<span className="ml-auto pl-3 text-muted text-xs">
+			{t(
+				props.vault === "none"
+					? "agentUse.vault.needCreate"
+					: "agentUse.vault.needUnlock",
+			)}
+		</span>
+	) : null;
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger
@@ -49,6 +76,26 @@ export function VariableRowMenu(props: VariableRowMenuProps) {
 				<IconDots size={16} aria-hidden="true" />
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
+				{props.agentUse ? (
+					<AgentUseMenuItems
+						scope={props.agentUse}
+						subject={agentSubjectOf(row)}
+					/>
+				) : null}
+				{locked && canEdit ? (
+					<DropdownMenuItem
+						disabled
+						data-id={
+							isShared(row) ? "var-menu-update-shared" : "var-menu-share"
+						}
+						icon={<IconCloudUpload size={16} aria-hidden="true" />}
+					>
+						{isShared(row)
+							? t("environments.table.updateShared")
+							: t("environments.table.shareValue")}
+						{lockedHint}
+					</DropdownMenuItem>
+				) : null}
 				{shareAction ? (
 					<DropdownMenuItem
 						data-id={
@@ -85,12 +132,13 @@ export function VariableRowMenu(props: VariableRowMenuProps) {
 				<DropdownMenuItem
 					data-id="var-menu-copy"
 					icon={<IconCopy size={16} aria-hidden="true" />}
-					disabled={value === null}
+					disabled={value === null || locked}
 					onSelect={() => {
-						if (value !== null) props.onCopy(value);
+						if (value !== null && !locked) props.onCopy(value);
 					}}
 				>
 					{t("environments.table.copyValue")}
+					{lockedHint}
 				</DropdownMenuItem>
 				{canEdit && !row.localOnly ? (
 					<>

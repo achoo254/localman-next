@@ -6,27 +6,55 @@ import { Button } from "../../components/ui/button";
 import { IconButton } from "../../components/ui/icon-button";
 import { Skeleton } from "../../components/ui/skeleton";
 import { useT } from "../../i18n/i18n-context";
+import { useUnlockVault, useVaultUi } from "./use-vault-ui";
 import {
 	type VariableRow,
 	currentValue,
 	draftsOf,
+	lockedKeysOf,
 	mergedLocal,
 	rowsOf,
 } from "./variable-rows";
 
 const MASK = "••••••••";
 
+/** A value locked in the vault: a send using it stops until unlocked. */
+function LockedValue({ name }: { name: string }) {
+	const t = useT();
+	const unlock = useUnlockVault();
+	return (
+		<span className="flex min-w-0 items-center gap-1">
+			<Badge tone="warning" data-id="vars-quick-locked">
+				{t("agentUse.vault.badge")}
+			</Badge>
+			<Button
+				size="sm"
+				variant="ghost"
+				aria-haspopup="dialog"
+				aria-label={t("agentUse.vault.cell.lockedLabel", { name })}
+				data-id="vars-quick-unlock"
+				onClick={() => unlock()}
+			>
+				{t("agentUse.vault.unlock")}
+			</Button>
+		</span>
+	);
+}
+
 /** One variable: name, the value in use (masked for a secret), its source. */
-function PaneRow({ row }: { row: VariableRow }) {
+function PaneRow({ row, vaultUi }: { row: VariableRow; vaultUi: boolean }) {
 	const t = useT();
 	const [revealed, setRevealed] = useState(false);
 	const { variable } = row;
 	const value = currentValue(row);
 	const secret = variable.type === "secret";
 	const withheld = row.local === undefined && variable.sharedHidden;
+	const locked = vaultUi && row.locked === true;
 	let shown: ReactNode;
 	if (!variable.enabled) {
 		shown = <i className="text-muted">{t("environments.quick.off")}</i>;
+	} else if (locked) {
+		shown = <LockedValue name={variable.key} />;
 	} else if (withheld) {
 		shown = <Badge tone="neutral">{t("environments.table.hidden")}</Badge>;
 	} else if (value === null) {
@@ -49,7 +77,11 @@ function PaneRow({ row }: { row: VariableRow }) {
 				<span className="min-w-0 truncate" data-id="vars-quick-value">
 					{shown}
 				</span>
-				{secret && variable.enabled && !withheld && value !== null ? (
+				{secret &&
+				variable.enabled &&
+				!withheld &&
+				!locked &&
+				value !== null ? (
 					<IconButton
 						size="sm"
 						variant="ghost"
@@ -105,8 +137,13 @@ export interface VariablesPaneSectionProps {
 export function VariablesPaneSection(props: VariablesPaneSectionProps) {
 	const t = useT();
 	const { scope } = props;
+	const vaultUi = useVaultUi() !== null;
 	const rows = scope
-		? rowsOf(draftsOf(scope.variables), mergedLocal(scope.localValues, {}))
+		? rowsOf(
+				draftsOf(scope.variables),
+				mergedLocal(scope.localValues, {}),
+				lockedKeysOf(scope.localValues),
+			)
 		: [];
 	let body: ReactNode;
 	if (props.empty)
@@ -127,7 +164,7 @@ export function VariablesPaneSection(props: VariablesPaneSectionProps) {
 		body = (
 			<ul className="m-0 grid list-none p-0">
 				{rows.map((row) => (
-					<PaneRow key={row.variable.rowId} row={row} />
+					<PaneRow key={row.variable.rowId} row={row} vaultUi={vaultUi} />
 				))}
 			</ul>
 		);

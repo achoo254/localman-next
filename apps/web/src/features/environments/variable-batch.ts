@@ -23,13 +23,15 @@ export function isShared(row: VariableRow): boolean {
 /**
  * Whether the row offers Share value or Update shared value: an Editor
  * with a local value that differs from the shared one. A local value
- * without a definition is shared as a new variable.
+ * without a definition is shared as a new variable. A value locked in the
+ * vault cannot be read, so it is never shared (it would share "").
  */
 export function shareActionOf(
 	row: VariableRow,
 	canEdit: boolean,
 ): ShareAction | null {
 	if (!canEdit || row.local === undefined || row.sync !== "edited") return null;
+	if (row.locked) return null;
 	return isShared(row) && !row.localOnly ? "update" : "share";
 }
 

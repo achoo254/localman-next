@@ -2,6 +2,8 @@ import { Link, NavLink, useLocation } from "react-router";
 import { useFeatures } from "../../config/features";
 import type { CurrentUser } from "../../features/auth/current-user";
 import { NotificationBell } from "../../features/notifications/notification-bell";
+import { useSecretVaultEnabled } from "../../features/secure-vault/use-secret-vault-enabled";
+import { VaultHeaderButton } from "../../features/secure-vault/vault-header-button";
 import {
 	WorkspaceSwitcher,
 	isWorkspaceRoute,
@@ -21,8 +23,8 @@ const NAV_LINK_CLASS = cn(
 /**
  * Signed-in top bar: wordmark and the product nav (Mock API, API Client
  * behind its flag) and, on API client pages, the workspace switcher on the
- * left; Docs, language, notification bell, plan and account menu on the
- * right. `wide` spans the full width (the workbench).
+ * left; Docs, language, the secret vault lock (behind its flag),
+ * notification bell and account menu on the right. `wide` spans the full width (the workbench).
  */
 export function AppHeader({
 	user,
@@ -30,6 +32,7 @@ export function AppHeader({
 }: { user: CurrentUser; wide?: boolean }) {
 	const t = useT();
 	const { apiClient } = useFeatures();
+	const vault = useSecretVaultEnabled();
 	// Workspace settings and shared elements belong to the API client too.
 	const apiClientActive = isWorkspaceRoute(useLocation().pathname);
 	return (
@@ -88,6 +91,7 @@ export function AppHeader({
 					<div className="max-sm:hidden">
 						<LanguageSwitcher data-id="topbar-language" compact />
 					</div>
+					{vault ? <VaultHeaderButton /> : null}
 					<NotificationBell />
 					<AccountControls user={user} />
 				</div>

@@ -8,25 +8,17 @@ import { useT } from "../../i18n/i18n-context";
 import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { useWorkbenchActions } from "../api-client/workbench/workbench-context";
 import type { VariablesPageTab } from "../api-client/workbench/workbench-tab-types";
-import {
-	environmentScope,
-	openLocalValues,
-	secretNames,
-	useVaultValues,
-} from "../secure-vault/vault-codec";
 import { ShareDialog } from "../sharing/share-dialog";
 import { isNotFound } from "../sharing/sharing-errors";
 import { combinedStatus } from "./combined-status";
 import { DeleteEnvironmentModal } from "./delete-environment-modal";
 import { EnvironmentHeader } from "./environment-header";
 import { setEnvironmentVariables } from "./environments-api";
-import { setEnvironmentLocalValues } from "./local-values-api";
 import { useExportEnvironment } from "./use-environment-file";
+import { useEnvironmentLocal } from "./use-environment-local";
 import { useEnvironmentMeta } from "./use-environment-meta";
 import {
-	environmentKey,
 	storeEnvironment,
-	storeLocalValues,
 	useActiveEnvironment,
 	useEnvironment,
 	useSetActiveEnvironment,
@@ -54,23 +46,14 @@ function EnvironmentEditor({
 		environment,
 		pageId,
 	);
-	useVaultValues();
+	const { localValues, agent, saveLocal } = useEnvironmentLocal(environment);
 	const editor = useVariableEditor({
 		variables: environment.variables,
-		localValues: openLocalValues(environmentScope(id), environment.localValues),
+		localValues,
 		canEdit: environment.role === "editor",
 		saveShared: async (writes) =>
 			storeEnvironment(client, await setEnvironmentVariables(id, writes)),
-		saveLocal: async (values) =>
-			storeLocalValues(
-				client,
-				environmentKey(id),
-				await setEnvironmentLocalValues(
-					id,
-					values,
-					secretNames(environment.variables),
-				),
-			),
+		saveLocal,
 	});
 	const bulk = useVariableBulk(editor);
 	const exportFile = useExportEnvironment();
@@ -112,9 +95,11 @@ function EnvironmentEditor({
 				<VariableTable
 					editor={editor}
 					caption={t("environments.table.caption", { name: environment.name })}
+					agentUse={agent.scope}
 				/>
 			</div>
 			{bulk.dialogs}
+			{agent.dialog}
 			<ShareDialog
 				elementType="environment"
 				elementId={id}

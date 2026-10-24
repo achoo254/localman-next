@@ -8,9 +8,11 @@ import { Button } from "../../components/ui/button";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
 import { cn } from "../../lib/cn";
+import { useVaultUi } from "../environments/use-vault-ui";
 import { ScopeBadge, shownValue } from "./scope-badge";
 import type { ApplyVariable } from "./use-apply-variable";
 import { VariableAddForm } from "./variable-add-form";
+import { LockedVariableCard } from "./variable-card-locked";
 import { type VariableKind, resolutionsOf } from "./variable-kinds";
 import type { ScopeChoice } from "./variable-targets";
 
@@ -38,6 +40,7 @@ const VALUE_BOX =
  */
 export function VariableCard(props: VariableCardProps) {
 	const t = useT();
+	const vaultUi = useVaultUi() !== null;
 	const { name, kind, layers } = props;
 	const { winner, overridden } = resolutionsOf(layers).get(name.trim()) ?? {
 		winner: null,
@@ -89,8 +92,17 @@ export function VariableCard(props: VariableCardProps) {
 		);
 	}
 
-	const value = shownValue(winner, t);
 	const scope = t(`variables.scope.${winner.kind}`);
+	if (winner.locked && vaultUi) {
+		return (
+			<LockedVariableCard
+				name={name}
+				scope={winner.label ? `${scope} · ${winner.label}` : scope}
+				onDone={props.onDone}
+			/>
+		);
+	}
+	const value = shownValue(winner, t);
 	return (
 		<div className="grid gap-2">
 			{head(<ScopeBadge scope={winner.kind} />)}

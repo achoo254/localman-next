@@ -4,6 +4,7 @@
  * a definition. Pure, so the table and its tests read the same rules.
  */
 import type { LocalValue, VariableView } from "@localman/shared/api-client";
+import type { AgentUseSubject } from "../secure-vault/agent-use/agent-use-types";
 import type { VariableWrite } from "./environments-api";
 
 /** A variable being edited; new ones have no server id yet. */
@@ -29,6 +30,11 @@ export interface VariableRow {
 	localOnly: boolean;
 	/** `edited`: the local value differs from the shared one. */
 	sync: "synced" | "edited";
+	/**
+	 * The local value is in the vault and cannot be read now (`local` is
+	 * then empty): it cannot be shown, copied or shared until unlocked.
+	 */
+	locked?: true;
 }
 
 export function draftsOf(variables: readonly VariableView[]): DraftVariable[] {
@@ -55,9 +61,11 @@ export function blankDraft(rowId: string): DraftVariable {
 	};
 }
 
+/** `locked`: names whose local value is locked in the vault. */
 export function rowsOf(
 	drafts: readonly DraftVariable[],
 	local: ReadonlyMap<string, string>,
+	locked: ReadonlySet<string> = new Set(),
 ): VariableRow[] {
 	const defined = drafts.map((variable): VariableRow => {
 		const localKey = variable.savedKey ?? variable.key;
@@ -71,6 +79,7 @@ export function rowsOf(
 			local: own,
 			localOnly: false,
 			sync: edited ? "edited" : "synced",
+			...(own !== undefined && locked.has(localKey) ? { locked: true } : {}),
 		};
 	});
 	const names = new Set(
@@ -94,6 +103,21 @@ export function rowsOf(
 			};
 		});
 	return [...defined, ...extra];
+}
+
+/**
+ * Names whose local value is locked in the vault, unless an edit not
+ * saved yet replaced it (`pending`).
+ */
+export function lockedKeysOf(
+	saved: readonly LocalValue[],
+	pending: Readonly<Record<string, unknown>> = {},
+): Set<string> {
+	return new Set(
+		saved
+			.filter((entry) => entry.locked && !Object.hasOwn(pending, entry.key))
+			.map((entry) => entry.key),
+	);
 }
 
 /** Local values after unsaved edits (`null`: reset to shared). */
@@ -141,48 +165,6 @@ export function currentValue(row: VariableRow): string | null {
 	return row.local ?? row.variable.sharedValue;
 }
 
-/**
- * Server variables merged into the drafts being edited: saved rows keep
- * their row id (a new row matched by name takes the server id but keeps
- * its row, so its inputs stay mounted), and rows the server does not
- * have yet (no name, a duplicate name) stay where they were.
- */
-export function mergeDrafts(
-	current: readonly DraftVariable[],
-	server: readonly VariableView[],
-): DraftVariable[] {
-	const byId = new Map(
-		current.filter((v) => !v.isNew).map((v) => [v.id, v] as const),
-	);
-	const fresh = current.filter((v) => v.isNew);
-	const duplicates = duplicateNames(current);
-	const used = new Set<string>();
-	const merged = server.map((variable): DraftVariable => {
-		const known = byId.get(variable.id);
-		// Renamed to a name in use: not savable yet, so the typing stays.
-		if (known && duplicates.has(known.key.trim())) {
-			used.add(known.rowId);
-			return { ...known, savedKey: variable.key };
-		}
-		const matched =
-			known ??
-			fresh.find((v) => !used.has(v.rowId) && v.key.trim() === variable.key);
-		if (matched) used.add(matched.rowId);
-		return {
-			...variable,
-			rowId: matched?.rowId ?? variable.id,
-			isNew: false,
-			savedKey: variable.key,
-		};
-	});
-	// Unsaved rows go back near where they were typed.
-	current.forEach((variable, index) => {
-		if (!variable.isNew || used.has(variable.rowId)) return;
-		merged.splice(Math.min(index, merged.length), 0, variable);
-	});
-	return merged;
-}
-
 /** Saved rows whose name changed: their local values move once saved. */
 export function renamesOf(
 	drafts: readonly DraftVariable[],
@@ -192,4 +174,16 @@ export function renamesOf(
 		const from = variable.savedKey;
 		return from !== null && to !== "" && from !== to ? [{ from, to }] : [];
 	});
+}
+
+/** A secret row as "Let agents use" needs it (by its saved name). */
+export function agentSubjectOf(row: VariableRow): AgentUseSubject {
+	const { variable } = row;
+	const local = row.local ?? "";
+	return {
+		key: row.localKey,
+		local: row.locked || local === "" ? null : local,
+		hasLocal: row.locked === true || local !== "",
+		hasShared: variable.sharedHidden || (variable.sharedValue ?? "") !== "",
+	};
 }

@@ -1,10 +1,9 @@
 /**
  * Editing of an environment's or the globals' variables. Editors change
  * definitions and shared values; everyone changes their own local values.
- * Both save on their own once typing pauses (`usePageAutosave`), in order,
- * so a late answer never overwrites a newer edit. Server data is merged
- * into the drafts (`mergeDrafts`), keeping rows not saved yet; a rename
- * moves the caller's local value only after the new name is saved.
+ * Both autosave in order (`usePageAutosave`): a late answer never wins.
+ * Server data is merged into the drafts (`mergeDrafts`), keeping unsaved
+ * rows; a rename moves the local value once the new name is saved.
  */
 import type { LocalValue, VariableView } from "@localman/shared/api-client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -18,13 +17,14 @@ import {
 	sharedDrafts,
 	unsharedDrafts,
 } from "./variable-batch";
+import { mergeDrafts } from "./variable-drafts-merge";
 import {
 	type DraftVariable,
 	type VariableRow,
 	blankDraft,
 	draftsOf,
 	duplicateNames,
-	mergeDrafts,
+	lockedKeysOf,
 	mergedLocal,
 	rowsOf,
 	toWrites,
@@ -94,6 +94,8 @@ export function useVariableEditor(options: VariableEditorOptions) {
 		[localValues, local.pending],
 	);
 	localRef.current = localMap;
+	// Values locked in the vault read as empty; their rows say so.
+	const locked = lockedKeysOf(localValues, local.pending);
 	const duplicates = useMemo(() => duplicateNames(drafts), [drafts]);
 
 	const commit = useCallback(
@@ -180,7 +182,7 @@ export function useVariableEditor(options: VariableEditorOptions) {
 	}, [shared.flush, local.flush]);
 
 	return {
-		rows: rowsOf(drafts, localMap),
+		rows: rowsOf(drafts, localMap, locked),
 		duplicates,
 		canEdit,
 		editVariable,

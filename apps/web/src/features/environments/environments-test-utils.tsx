@@ -5,7 +5,11 @@ import type {
 } from "@localman/shared/api-client";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { FeaturesContext, NO_FEATURES } from "../../config/features";
+import {
+	type FeatureFlags,
+	FeaturesContext,
+	NO_FEATURES,
+} from "../../config/features";
 import { ApiClientScreen } from "../../pages/api-client/api-client-screen";
 import { makeUser } from "../../test/fixtures";
 import { type MockRoute, mockFetch } from "../../test/mock-fetch";
@@ -119,7 +123,10 @@ function TestWorkbench() {
 /** `/api-client` with the team workspace chosen and environments on. */
 export function renderEnvironments(
 	routes: Record<string, MockRoute>,
-	{ role = "admin" }: { role?: Workspace["role"] } = {},
+	{
+		role = "admin",
+		flags = ENV_FLAGS,
+	}: { role?: Workspace["role"]; flags?: FeatureFlags } = {},
 ) {
 	chooseWorkspace(TEAM.id);
 	const api = mockFetch({
@@ -140,7 +147,7 @@ export function renderEnvironments(
 			{
 				path: "/api-client",
 				element: (
-					<FeaturesContext value={ENV_FLAGS}>
+					<FeaturesContext value={flags}>
 						<TestWorkbench />
 					</FeaturesContext>
 				),

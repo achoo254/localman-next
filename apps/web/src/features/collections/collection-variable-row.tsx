@@ -5,6 +5,8 @@ import { IconButton } from "../../components/ui/icon-button";
 import { controlClassName } from "../../components/ui/input";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
+import { AgentUseControl } from "../secure-vault/agent-use/agent-use-control";
+import type { AgentUseScope } from "../secure-vault/agent-use/agent-use-types";
 import { LocalValueCell } from "./local-value-cell";
 import type { CollectionLocal } from "./use-collection-local";
 
@@ -18,6 +20,8 @@ export interface CollectionVariableRowProps {
 	canEdit: boolean;
 	/** The caller's own values (environments on), else `null`. */
 	local: CollectionLocal | null;
+	/** "Let agents use" of the collection; `null` while it does not apply. */
+	agentUse: AgentUseScope | null;
 	onChange: (patch: Partial<VariableEntry>) => void;
 	onRemove: () => void;
 }
@@ -31,6 +35,7 @@ export function CollectionVariableRow(props: CollectionVariableRowProps) {
 	const t = useT();
 	const { variable: v, index, canEdit, local } = props;
 	const keyAtFocus = useRef("");
+	const key = v.key.trim();
 	const name = v.key.trim() || t("apiClient.table.rowN", { n: index + 1 });
 	const sharedLabel = local
 		? "environments.table.sharedOf"
@@ -65,10 +70,24 @@ export function CollectionVariableRow(props: CollectionVariableRowProps) {
 				<LocalValueCell
 					entry={v}
 					label={name}
-					value={local.valueOf(v.key.trim())}
+					value={local.valueOf(key)}
+					locked={local.lockedOf(key)}
 					ready={local.ready}
 					className={VARIABLE_CELL}
-					onSave={(value) => local.save(v.key.trim(), value)}
+					onSave={(value) => local.save(key, value)}
+					after={
+						props.agentUse && v.secret && key !== "" ? (
+							<AgentUseControl
+								scope={props.agentUse}
+								subject={{
+									key,
+									local: local.valueOf(key) || null,
+									hasLocal: local.lockedOf(key) || !!local.valueOf(key),
+									hasShared: v.value !== "",
+								}}
+							/>
+						) : null
+					}
 				/>
 			) : null}
 			<td className={VARIABLE_CELL}>

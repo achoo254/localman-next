@@ -1,6 +1,7 @@
 import type { SourceMessages } from "../../i18n/message-types";
 import type { Translate } from "../../i18n/translate";
 import { ApiError, errorMessage } from "../../lib/api-client";
+import { VaultLockedError } from "../secure-vault/vault-session";
 
 type ErrorKey =
 	`collections.errors.${keyof SourceMessages["collections"]["errors"]}`;
@@ -30,9 +31,11 @@ const KEYS: Readonly<Record<string, ErrorKey>> = {
 /**
  * Translated message for `error`: the mapped code, else the client's own
  * messages (network, bad response). API messages are English only, so an
- * unmapped API code gets the generic fallback.
+ * unmapped API code gets the generic fallback. A save that needed the
+ * vault while the user kept it closed says so calmly.
  */
 export function collectionErrorMessage(error: unknown, t: Translate): string {
+	if (error instanceof VaultLockedError) return t("agentUse.vault.saveLocked");
 	if (!(error instanceof ApiError)) return errorMessage(error);
 	const key = Object.hasOwn(KEYS, error.code) ? KEYS[error.code] : undefined;
 	if (key) return t(key);

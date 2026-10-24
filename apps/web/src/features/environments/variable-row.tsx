@@ -7,23 +7,29 @@ import { controlClassName } from "../../components/ui/input";
 import { Switch } from "../../components/ui/switch";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
+import type { AgentUseScope } from "../secure-vault/agent-use/agent-use-types";
+import type { VaultStatus } from "../secure-vault/vault-session";
 import type { VariableEditor } from "./use-variable-editor";
+import { VariableLocalCell } from "./variable-local-cell";
 import { VariableRowMenu } from "./variable-row-menu";
 import type { VariableRow as Row } from "./variable-rows";
 
 const CELL = "border-border-subtle border-b px-1 py-1 align-middle";
 const FIELD = cn(controlClassName, "min-h-9 min-w-24 px-2 text-xs");
-const MASK = "••••••••";
 
 export interface VariableRowProps {
 	row: Row;
 	index: number;
 	editor: VariableEditor;
 	onCopy: (value: string) => void;
+	/** `null` with the `secretVault` flag off. */
+	vault: VaultStatus | null;
+	agentUse: AgentUseScope | null;
 }
 
 /** One variable: name, local value, shared value, description, type, on, status. */
-export function VariableRow({ row, index, editor, onCopy }: VariableRowProps) {
+export function VariableRow(props: VariableRowProps) {
+	const { row, index, editor, onCopy, vault, agentUse } = props;
 	const t = useT();
 	const [revealed, setRevealed] = useState(false);
 	const { variable } = row;
@@ -33,9 +39,6 @@ export function VariableRow({ row, index, editor, onCopy }: VariableRowProps) {
 	const name =
 		variable.key.trim() || t("environments.table.rowN", { n: index + 1 });
 	const duplicate = editor.duplicates.has(variable.key.trim());
-	const sharedPlaceholder = variable.sharedHidden
-		? MASK
-		: (variable.sharedValue ?? "");
 	return (
 		<tr data-id="var-table-row" data-key={variable.key}>
 			<td className={CELL}>
@@ -53,24 +56,16 @@ export function VariableRow({ row, index, editor, onCopy }: VariableRowProps) {
 					}
 				/>
 			</td>
-			<td className={CELL}>
-				<input
-					type={hidden ? "password" : "text"}
-					autoComplete="off"
-					value={row.local ?? ""}
-					placeholder={hidden && sharedPlaceholder ? MASK : sharedPlaceholder}
-					disabled={row.localKey.trim() === ""}
-					aria-label={t("environments.table.localOf", { name })}
-					data-id="var-table-value"
-					className={cn(FIELD, "font-mono")}
-					onChange={(e) =>
-						editor.editLocal(
-							row.localKey,
-							e.target.value === "" ? null : e.target.value,
-						)
-					}
-				/>
-			</td>
+			<VariableLocalCell
+				row={row}
+				name={name}
+				hidden={hidden}
+				editor={editor}
+				vault={vault}
+				agentUse={agentUse}
+				className={CELL}
+				fieldClassName={FIELD}
+			/>
 			<td className={CELL}>
 				{variable.sharedHidden ? (
 					<Badge data-id="var-table-shared" tone="neutral">
@@ -178,6 +173,8 @@ export function VariableRow({ row, index, editor, onCopy }: VariableRowProps) {
 					row={row}
 					canEdit={editor.canEdit}
 					label={name}
+					vault={vault}
+					agentUse={secret && !variable.isNew ? agentUse : null}
 					onShare={() => editor.shareRows([row])}
 					onReset={() => editor.resetRows([row])}
 					onUnshare={() => editor.unshareRows([row])}

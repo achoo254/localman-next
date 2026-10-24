@@ -37,6 +37,10 @@ export function useVariableBulk(editor: VariableEditor): VariableBulk {
 	const viewerTitle = editor.canEdit
 		? undefined
 		: t("environments.bulk.editorsOnly");
+	// Values locked in the vault cannot be read, so they are never shared.
+	const lockedOut = editor.canEdit
+		? editor.rows.filter((row) => row.locked).length
+		: 0;
 	const confirm = async (run: () => void) => {
 		run();
 		await editor.flush();
@@ -81,6 +85,11 @@ export function useVariableBulk(editor: VariableEditor): VariableBulk {
 			{viewerTitle ? (
 				<DropdownMenuLabel data-id="vars-more-editors-only">
 					{viewerTitle}
+				</DropdownMenuLabel>
+			) : null}
+			{lockedOut > 0 ? (
+				<DropdownMenuLabel data-id="vars-more-locked">
+					{t("agentUse.vault.skipped", { count: lockedOut })}
 				</DropdownMenuLabel>
 			) : null}
 		</>

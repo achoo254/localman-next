@@ -12,6 +12,11 @@ export const variables: Messages["variables"] = {
 		empty: "（空）",
 		secret: "secret 值已隐藏",
 		withheld: "对你隐藏：设置你自己的 local 值即可使用",
+		locked: "已锁定",
+		lockedValue: "已锁在密钥库中",
+		lockedNote:
+			"这个 secret 的本地值（{scope}）在已锁定的密钥库中。使用 <code>{token}</code> 的请求会停止、不发送，直到你解锁。",
+		unlock: "解锁密钥库",
 		openEnvironment: "打开 {name}",
 		openGlobals: "打开 globals",
 		noValue: "（无值）",

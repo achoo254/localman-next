@@ -32,6 +32,9 @@ export function shownValue(
 	candidate: VariableCandidate,
 	t: Translate,
 ): { text: string; muted: boolean } {
+	if (candidate.locked) {
+		return { text: t("variables.tooltip.lockedValue"), muted: true };
+	}
 	if (candidate.withheld) {
 		return { text: t("variables.tooltip.withheld"), muted: true };
 	}

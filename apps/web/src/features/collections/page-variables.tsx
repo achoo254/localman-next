@@ -9,7 +9,8 @@ import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
 import { cn } from "../../lib/cn";
 import { useEnvironmentsEnabled } from "../environments/use-environments-enabled";
-import { secretNames } from "../secure-vault/vault-codec";
+import { VaultNotice } from "../environments/vault-notice";
+import { useAgentUse } from "../secure-vault/agent-use/use-agent-use";
 import { CollectionVariableRow } from "./collection-variable-row";
 import { useCollectionLocal } from "./use-collection-local";
 
@@ -32,9 +33,15 @@ export function PageVariables(props: PageVariablesProps) {
 	const t = useT();
 	const { canEdit } = props;
 	const localOn = useEnvironmentsEnabled();
+	const agent = useAgentUse(
+		localOn ? { kind: "collection", id: props.collectionId } : null,
+		props.variables,
+		[],
+	);
 	const local = useCollectionLocal(
 		localOn ? props.collectionId : null,
-		secretNames(props.variables),
+		agent.secrets,
+		agent.keys,
 	);
 	const [variables, setVariables] = useState(() => [...props.variables]);
 	const change = (next: VariableEntry[]) => {
@@ -49,6 +56,14 @@ export function PageVariables(props: PageVariablesProps) {
 		change(variables.map((v, i) => (i === index ? { ...v, ...patch } : v)));
 	return (
 		<div className="grid gap-3">
+			{localOn ? (
+				<VaultNotice
+					hasSecrets={variables.some((v) => v.secret === true)}
+					lockedCount={
+						variables.filter((v) => local.lockedOf(v.key.trim())).length
+					}
+				/>
+			) : null}
 			<p className="m-0 text-muted text-xs">
 				{renderRich(
 					t("collections.page.variables.hint", { example: "{{baseUrl}}" }),
@@ -100,6 +115,7 @@ export function PageVariables(props: PageVariablesProps) {
 								index={index}
 								canEdit={canEdit}
 								local={localOn ? local : null}
+								agentUse={agent.scope}
 								onChange={(patch) => set(index, patch)}
 								onRemove={() => change(variables.filter((_, i) => i !== index))}
 							/>
@@ -126,6 +142,7 @@ export function PageVariables(props: PageVariablesProps) {
 					{t("collections.page.variables.add")}
 				</Button>
 			) : null}
+			{agent.dialog}
 		</div>
 	);
 }

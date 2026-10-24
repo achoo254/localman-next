@@ -12,11 +12,14 @@ import {
 	useCollectionLocalValues,
 } from "../environments/use-environments";
 import { setCollectionLocalValues } from "../environments/variable-scopes-api";
+import { withAgentCopies } from "../secure-vault/agent-use/agent-copy";
+import { useResealLegacy } from "../secure-vault/use-reseal-legacy";
 import {
 	collectionScope,
 	openLocalValues,
 	useVaultValues,
 } from "../secure-vault/vault-codec";
+import { VaultLockedError } from "../secure-vault/vault-session";
 import { collectionErrorMessage } from "./collection-errors";
 
 export interface CollectionLocal {
@@ -24,6 +27,8 @@ export interface CollectionLocal {
 	ready: boolean;
 	/** The caller's value of `key`, `null` when they use the shared one. */
 	valueOf: (key: string) => string | null;
+	/** The caller's value of `key` is locked in the vault (unreadable now). */
+	lockedOf: (key: string) => boolean;
 	/** `null` goes back to the shared value. */
 	save: (key: string, value: string | null) => void;
 	/** A renamed variable: its own value follows (unless the name has one). */
@@ -32,11 +37,13 @@ export interface CollectionLocal {
 
 /**
  * `collectionId` is `null` while local values are off. `secretKeys`: the
- * variables flagged secret, whose values the vault encrypts.
+ * variables flagged secret, whose values the vault encrypts. `agentKeys`:
+ * those the caller lets agents use; a new value of one carries its copy.
  */
 export function useCollectionLocal(
 	collectionId: string | null,
 	secretKeys: ReadonlySet<string> = new Set(),
+	agentKeys: ReadonlySet<string> = new Set(),
 ): CollectionLocal {
 	const client = useQueryClient();
 	const toast = useToast();
@@ -46,12 +53,26 @@ export function useCollectionLocal(
 		// One at a time, in order: a late answer never overwrites a newer one.
 		scope: { id: `collection-local-${collectionId ?? ""}` },
 		mutationFn: (writes: LocalValueWrite[]) =>
-			setCollectionLocalValues(collectionId ?? "", writes, secretKeys),
+			setCollectionLocalValues(
+				collectionId ?? "",
+				withAgentCopies(writes, agentKeys),
+				secretKeys,
+			),
 		onSuccess: (values) =>
 			client.setQueryData(collectionLocalKey(collectionId ?? ""), values),
 		onError: (error) =>
-			toast.show({ tone: "error", title: collectionErrorMessage(error, t) }),
+			toast.show(
+				error instanceof VaultLockedError
+					? { tone: "info", title: t("agentUse.vault.saveLockedTitle") }
+					: { tone: "error", title: collectionErrorMessage(error, t) },
+			),
 	});
+	useResealLegacy(
+		collectionId ? collectionScope(collectionId) : null,
+		query.data ?? [],
+		secretKeys,
+		(writes) => mutation.mutateAsync(writes),
+	);
 	useVaultValues();
 	const opened = collectionId
 		? openLocalValues(collectionScope(collectionId), query.data ?? [])
@@ -63,6 +84,7 @@ export function useCollectionLocal(
 	return {
 		ready: query.isSuccess,
 		valueOf: (key) => values.get(key) ?? null,
+		lockedOf: (key) => opened.some((v) => v.key === key && v.locked === true),
 		save: (key, value) => mutation.mutate([{ key, value }]),
 		move: (from, to) => {
 			const value = values.get(from);

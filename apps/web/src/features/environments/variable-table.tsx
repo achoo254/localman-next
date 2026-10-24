@@ -7,8 +7,11 @@ import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import { copyText } from "../../platform/clipboard";
+import type { AgentUseScope } from "../secure-vault/agent-use/agent-use-types";
 import type { VariableEditor } from "./use-variable-editor";
+import { useVaultUi } from "./use-vault-ui";
 import { VariableRow } from "./variable-row";
+import { VaultNotice } from "./vault-notice";
 
 const HEAD = "px-1 py-2 text-left font-mono font-semibold text-muted text-xs";
 
@@ -16,15 +19,22 @@ export interface VariableTableProps {
 	editor: VariableEditor;
 	/** Caption read by screen readers ("Variables of Staging"). */
 	caption: string;
+	/** "Let agents use" of the scope; `null` while it does not apply. */
+	agentUse?: AgentUseScope | null;
 }
 
 /**
  * Variables with the caller's local values next to the shared ones, a
  * filter by name, and Add variable for Editors.
  */
-export function VariableTable({ editor, caption }: VariableTableProps) {
+export function VariableTable({
+	editor,
+	caption,
+	agentUse = null,
+}: VariableTableProps) {
 	const t = useT();
 	const toast = useToast();
+	const vault = useVaultUi();
 	const [filter, setFilter] = useState("");
 	const query = filter.trim().toLowerCase();
 	const rows = query
@@ -43,6 +53,10 @@ export function VariableTable({ editor, caption }: VariableTableProps) {
 	const defined = editor.rows.filter((row) => !row.localOnly).length;
 	return (
 		<div className="grid gap-3">
+			<VaultNotice
+				hasSecrets={editor.rows.some((row) => row.variable.type === "secret")}
+				lockedCount={editor.rows.filter((row) => row.locked).length}
+			/>
 			<div className="flex flex-wrap items-center gap-3">
 				<label className="relative block w-full max-w-72">
 					<span className="sr-only">{t("environments.table.filter")}</span>
@@ -108,6 +122,8 @@ export function VariableTable({ editor, caption }: VariableTableProps) {
 								index={index}
 								editor={editor}
 								onCopy={(value) => void copy(value)}
+								vault={vault}
+								agentUse={agentUse}
 							/>
 						))}
 					</tbody>

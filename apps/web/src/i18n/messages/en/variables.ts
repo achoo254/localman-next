@@ -11,6 +11,11 @@ export const variables = {
 		empty: "(empty)",
 		secret: "Secret value hidden",
 		withheld: "Hidden from you: set your own local value to use it",
+		locked: "Locked",
+		lockedValue: "Locked in the vault",
+		lockedNote:
+			"Your local value of this secret ({scope}) is in the locked vault. Requests using <code>{token}</code> stop without sending until you unlock it.",
+		unlock: "Unlock vault",
 		openEnvironment: "Open {name}",
 		openGlobals: "Open globals",
 		noValue: "(no value)",

@@ -151,6 +151,11 @@ export function resetVaultSession(): void {
 	setState({ status: "loading", params: null }, null);
 }
 
+/** The vault as known so far, without asking the server (no request). */
+export function useKnownVaultState(): VaultState {
+	return useSyncExternalStore(subscribeVault, vaultState, vaultState);
+}
+
 export function useVaultState(): VaultState {
 	const snapshot = useSyncExternalStore(subscribeVault, vaultState, vaultState);
 	useEffect(() => {
