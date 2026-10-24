@@ -9,7 +9,7 @@ import { signIn, uniqueSuffix, uniqueUsername } from "../support/session.js";
  * Mock Sync; sending to the mock is covered by the MCP tests, since the
  * E2E mock lives on a loopback port the proxy refuses.)
  */
-test("an agent drives mock, sharing, fork, pull request and merge with tools only", async ({
+test("an agent drives mock, Live Mock Sync, sharing, fork, pull request and merge with tools only", async ({
 	page,
 }) => {
 	const suffix = uniqueSuffix();
@@ -21,6 +21,7 @@ test("an agent drives mock, sharing, fork, pull request and merge with tools onl
 		"traffic",
 		"client",
 		"sharing",
+		"sync",
 	]);
 	try {
 		// A mock project with one resource, called once: its log lists it.
@@ -28,7 +29,10 @@ test("an agent drives mock, sharing, fork, pull request and merge with tools onl
 			name: `Agent shop ${suffix}`,
 		});
 		const projectId = String(project.id);
-		await callTool(agent, "create_resource", { projectId, name: "users" });
+		const resource = await callTool(agent, "create_resource", {
+			projectId,
+			name: "users",
+		});
 		const urls = await callTool(agent, "get_mock_urls", { projectId });
 		const [users] = urls.resources as { collectionUrl: string }[];
 		const mocked = await fetch(users?.collectionUrl ?? "");
@@ -56,6 +60,38 @@ test("an agent drives mock, sharing, fork, pull request and merge with tools onl
 			workspaceId: String(team.id),
 		});
 		expect(JSON.stringify(members)).toContain(username);
+
+		// A collection that follows the mock: renaming the resource moves
+		// its requests to the new path, by Live Mock Sync.
+		const synced = await callTool(agent, "create_synced_collection", {
+			projectId,
+			workspaceId: String(team.id),
+		});
+		const syncedId = String(synced.collectionId);
+		await callTool(agent, "update_resource", {
+			projectId,
+			resourceId: String(resource.id),
+			name: "members",
+		});
+		await expect
+			.poll(
+				async () => {
+					const detail = await callTool(agent, "get_collection", {
+						collectionId: syncedId,
+					});
+					const nodes = detail.nodes as {
+						name: string;
+						draft?: { url: string };
+					}[];
+					return nodes.find((n) => n.name === "List members")?.draft?.url;
+				},
+				{ timeout: 15_000 },
+			)
+			.toBe("{{baseUrl}}/members");
+		const sync = await callTool(agent, "get_collection_sync", {
+			collectionId: syncedId,
+		});
+		expect(sync).toMatchObject({ conflicts: 0, mockUrlChanged: false });
 
 		// Fork into the personal workspace, add a request, pull request, merge.
 		const listed = await callTool(agent, "list_workspaces", {});
