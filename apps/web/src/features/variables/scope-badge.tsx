@@ -10,6 +10,7 @@ const TONE: Record<SuggestionScope, BadgeTone> = {
 	environment: "primary",
 	temporary: "warning",
 	dynamic: "accent",
+	response: "success",
 };
 
 /** Where a variable's value comes from, in the colour of its scope. */

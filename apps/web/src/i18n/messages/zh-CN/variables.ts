@@ -7,6 +7,13 @@ export const variables: Messages["variables"] = {
 		environment: "Environment",
 		temporary: "临时",
 		dynamic: "动态",
+		response: "响应",
+	},
+	reference: {
+		note: "<b>{request}</b> 最近一次响应中 <code>{path}</code> 处的值；当该响应早于 {ttl} 秒时，发送此请求会先重新发送“{request}”。",
+		value: "当前值",
+		notSent: "此标签页中尚未发送“{request}”：发送此请求会先发送它。",
+		missing: "“{request}”的最近一次响应在此路径没有值。",
 	},
 	tooltip: {
 		empty: "（空）",

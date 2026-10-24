@@ -6,6 +6,7 @@
  */
 import type { ResolverLayer } from "@localman/shared/api-client";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import type { ReferenceSuggestion } from "./response-suggestions";
 import {
 	type AnchorRect,
 	type SuggestRequest,
@@ -36,14 +37,26 @@ const HIDE_DELAY_MS = 200;
 const sameRect = (a: DOMRect, b: DOMRect): boolean =>
 	a.left === b.left && a.top === b.top && a.width === b.width;
 
-export function useAssistPopups(layers: readonly ResolverLayer[]) {
+const NO_REFERENCES = (): ReferenceSuggestion[] => [];
+
+/**
+ * `references`: the `{{response …}}` suggestions of the tab, read when the
+ * list opens or its query changes (kept responses are not React state).
+ */
+export function useAssistPopups(
+	layers: readonly ResolverLayer[],
+	references: () => ReferenceSuggestion[] = NO_REFERENCES,
+) {
 	const [card, setCard] = useState<CardState | null>(null);
 	const [suggest, setSuggest] = useState<SuggestState | null>(null);
 	const [selection, setSelection] = useState<SelectionState | null>(null);
 	const [modalValue, setModalValue] = useState<string | null>(null);
 	const items = useMemo<VariableSuggestion[]>(
-		() => (suggest ? suggestionsFor(layers, suggest.query) : []),
-		[layers, suggest],
+		() =>
+			suggest
+				? suggestionsFor(layers, suggest.query, undefined, references())
+				: [],
+		[layers, suggest, references],
 	);
 	const latest = useRef({ card, suggest, selection, items });
 	latest.current = { card, suggest, selection, items };

@@ -1,4 +1,5 @@
 import type {
+	KeptResponse,
 	ResolverLayer,
 	VariableScopeKind,
 } from "@localman/shared/api-client";
@@ -13,6 +14,7 @@ import type { ApplyVariable } from "./use-apply-variable";
 import type { useAssistPopups } from "./use-assist-popups";
 import { CONTEXT_SHORTCUT } from "./variable-assist-context";
 import { VariableCard } from "./variable-card";
+import { ReferenceCard } from "./variable-card-reference";
 import type { VariableKind } from "./variable-kinds";
 import { VariableSuggest } from "./variable-suggest";
 import type { ScopeChoice, VariableTargets } from "./variable-targets";
@@ -24,6 +26,8 @@ export interface AssistPopupsProps {
 	choices: readonly ScopeChoice[];
 	targets: VariableTargets;
 	apply: ApplyVariable;
+	/** The last response of a request of the tab's collection, by name. */
+	keptFor: (requestName: string) => KeptResponse | undefined;
 }
 
 /** The hover card, `{{` suggestions, "Set as variable" button and modal. */
@@ -34,6 +38,7 @@ export function AssistPopups({
 	choices,
 	targets,
 	apply,
+	keptFor,
 }: AssistPopupsProps) {
 	const t = useT();
 	const { openEnvironment, openGlobals } = useOpenVariablesPage();
@@ -103,15 +108,19 @@ export function AssistPopups({
 						closeCard(false);
 					}}
 				>
-					<VariableCard
-						name={card.name}
-						kind={classify(card.name)}
-						layers={layers}
-						choices={choices}
-						apply={apply}
-						openScope={openScope}
-						onDone={() => closeCard(true)}
-					/>
+					{classify(card.name) === "reference" ? (
+						<ReferenceCard expression={card.name} keptFor={keptFor} />
+					) : (
+						<VariableCard
+							name={card.name}
+							kind={classify(card.name)}
+							layers={layers}
+							choices={choices}
+							apply={apply}
+							openScope={openScope}
+							onDone={() => closeCard(true)}
+						/>
+					)}
 				</FloatingCard>
 			) : null}
 			{suggest ? (

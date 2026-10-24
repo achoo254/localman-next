@@ -80,6 +80,10 @@ const variableTheme = EditorView.theme({
 		color: "var(--c-accent)",
 		backgroundColor: "color-mix(in srgb, var(--c-accent) 12%, transparent)",
 	},
+	".cm-var-reference": {
+		color: "var(--c-success-text)",
+		backgroundColor: "color-mix(in srgb, var(--c-success) 12%, transparent)",
+	},
 	".cm-var-undeclared": {
 		color: "var(--c-error-text)",
 		backgroundColor: "color-mix(in srgb, var(--c-error) 10%, transparent)",

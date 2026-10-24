@@ -4,6 +4,7 @@ import type { WorkbenchTab } from "../api-client/workbench/workbench-types";
 import { AssistPopups } from "./assist-popups";
 import { useApplyVariable } from "./use-apply-variable";
 import { useAssistPopups } from "./use-assist-popups";
+import { useReferenceRequests } from "./use-reference-requests";
 import { useResponseSelection } from "./use-response-selection";
 import { useVariableScopes } from "./use-variable-scopes";
 import {
@@ -11,7 +12,7 @@ import {
 	type VariableAssistData,
 	VariableAssistDataContext,
 } from "./variable-assist-context";
-import { variableClassifier } from "./variable-kinds";
+import { dynamicVariableNames, variableClassifier } from "./variable-kinds";
 import { type VariableTargets, scopeChoices } from "./variable-targets";
 
 export interface VariableAssistProviderProps {
@@ -22,6 +23,7 @@ export interface VariableAssistProviderProps {
 }
 
 const NO_LAYERS: readonly ResolverLayer[] = [];
+const noKeptResponse = () => undefined;
 const NO_TARGETS: VariableTargets = {
 	workspaceId: null,
 	environment: null,
@@ -42,12 +44,24 @@ export function VariableAssistProvider({
 	const scopes = useVariableScopes(tab);
 	const layers = scopes?.layers ?? NO_LAYERS;
 	const targets = scopes?.targets ?? NO_TARGETS;
-	const popups = useAssistPopups(layers);
+	const references = useReferenceRequests(tab);
+	const popups = useAssistPopups(layers, references?.suggest);
 	const apply = useApplyVariable(tab.id, targets);
 	const choices = useMemo(() => scopeChoices(targets), [targets]);
+	const referenceNames = references?.names ?? null;
 	const data = useMemo<VariableAssistData | null>(
-		() => (scopes ? { layers, classify: variableClassifier(layers) } : null),
-		[scopes, layers],
+		() =>
+			scopes
+				? {
+						layers,
+						classify: variableClassifier(
+							layers,
+							dynamicVariableNames(),
+							referenceNames,
+						),
+					}
+				: null,
+		[scopes, layers, referenceNames],
 	);
 	useResponseSelection(popups.actions, data !== null);
 
@@ -63,6 +77,7 @@ export function VariableAssistProvider({
 						choices={choices}
 						targets={targets}
 						apply={apply}
+						keptFor={references?.keptFor ?? noKeptResponse}
 					/>
 				) : null}
 			</VariableAssistDataContext>

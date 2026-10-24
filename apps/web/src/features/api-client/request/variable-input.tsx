@@ -37,6 +37,7 @@ const KIND_CLASS: Record<VariableKind, string> = {
 	withheld:
 		"bg-warning/12 text-warning-text underline decoration-warning decoration-dotted underline-offset-3",
 	dynamic: "bg-accent/12 text-accent",
+	reference: "bg-success/12 text-success-text",
 	undeclared:
 		"bg-error/10 text-error-text underline decoration-error decoration-wavy underline-offset-3",
 };

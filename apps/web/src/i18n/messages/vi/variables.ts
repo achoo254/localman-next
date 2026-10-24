@@ -7,6 +7,15 @@ export const variables: Messages["variables"] = {
 		environment: "Environment",
 		temporary: "Biến tạm",
 		dynamic: "Biến động",
+		response: "Response",
+	},
+	reference: {
+		note: "Giá trị tại <code>{path}</code> của response gần nhất của <b>{request}</b>; khi response đó cũ hơn {ttl} giây, gửi request này sẽ gửi lại “{request}” trước.",
+		value: "Giá trị hiện tại",
+		notSent:
+			"“{request}” chưa được gửi trong tab này: gửi request này sẽ gửi nó trước.",
+		missing:
+			"Response gần nhất của “{request}” không có giá trị ở đường dẫn này.",
 	},
 	tooltip: {
 		empty: "(rỗng)",

@@ -6,6 +6,14 @@ export const variables = {
 		environment: "Environment",
 		temporary: "Temporary",
 		dynamic: "Dynamic",
+		response: "Response",
+	},
+	reference: {
+		note: "The value at <code>{path}</code> of the last response of <b>{request}</b>; sending this request sends “{request}” again first when that response is older than {ttl} s.",
+		value: "Value now",
+		notSent:
+			"“{request}” has not been sent in this tab yet: sending this request sends it first.",
+		missing: "The last response of “{request}” has no value at this path.",
 	},
 	tooltip: {
 		empty: "(empty)",

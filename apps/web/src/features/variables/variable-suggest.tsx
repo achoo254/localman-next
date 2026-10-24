@@ -47,7 +47,9 @@ export function VariableSuggest({
 				className="grid max-h-72 min-w-72 max-w-96 overflow-y-auto p-1"
 			>
 				{items.map((item, index) => {
-					const preview = item.winner ? shownValue(item.winner, t).text : "";
+					const preview = item.winner
+						? shownValue(item.winner, t).text
+						: (item.preview ?? "");
 					return (
 						<div
 							key={item.name}
