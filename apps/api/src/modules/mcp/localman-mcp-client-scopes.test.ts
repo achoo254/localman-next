@@ -90,7 +90,7 @@ describe("send_request needs client:send over Localman MCP", () => {
 describe("sharing tools over Localman MCP with the client:* scopes", () => {
 	it("are offered to a client:read token, and mock tools are not", async () => {
 		const client = await connect("client:read");
-		expect(await toolsetNames(client)).toEqual(["client", "sharing"]);
+		expect(await toolsetNames(client)).toEqual(["client", "sharing", "sync"]);
 		const names = await toolNames(client);
 		expect(names).not.toContain("list_projects");
 		expect(names).not.toContain("list_workspaces");
