@@ -13,11 +13,13 @@ import type {
 	SaveScopes,
 	ScopeSaveResult,
 } from "../api-client/workbench/send-hooks";
+import { collectionKey } from "../collections/use-collections";
+import { secretNames } from "../secure-vault/vault-codec";
 import { useCurrentWorkspace } from "../workspaces/current-workspace";
 import {
 	setEnvironmentLocalValues,
 	setGlobalsLocalValues,
-} from "./environments-api";
+} from "./local-values-api";
 import {
 	activeEnvironmentKey,
 	collectionLocalKey,
@@ -42,6 +44,12 @@ export async function saveScriptScopes(
 ): Promise<ScopeSaveResult> {
 	const { workspaceId, environmentId, collectionId } = targets;
 	const saves: Promise<unknown>[] = [];
+	const secretsIn = (key: readonly unknown[]) =>
+		secretNames(
+			client.getQueryData<{
+				variables: { key: string; type?: string; secret?: boolean }[];
+			}>(key)?.variables ?? [],
+		);
 	const dropped: ScopeSaveResult["dropped"] = [];
 	if (changes.environment.length > 0 && !environmentId) {
 		dropped.push("environment");
@@ -51,24 +59,34 @@ export async function saveScriptScopes(
 	}
 	if (changes.globals.length > 0) {
 		saves.push(
-			setGlobalsLocalValues(workspaceId, changes.globals).then((values) =>
+			setGlobalsLocalValues(
+				workspaceId,
+				changes.globals,
+				secretsIn(globalsKey(workspaceId)),
+			).then((values) =>
 				storeLocalValues(client, globalsKey(workspaceId), values),
 			),
 		);
 	}
 	if (changes.environment.length > 0 && environmentId) {
 		saves.push(
-			setEnvironmentLocalValues(environmentId, changes.environment).then(
-				(values) =>
-					storeLocalValues(client, environmentKey(environmentId), values),
+			setEnvironmentLocalValues(
+				environmentId,
+				changes.environment,
+				secretsIn(environmentKey(environmentId)),
+			).then((values) =>
+				storeLocalValues(client, environmentKey(environmentId), values),
 			),
 		);
 	}
 	if (changes.collectionVariables.length > 0 && collectionId) {
 		saves.push(
-			setCollectionLocalValues(collectionId, changes.collectionVariables).then(
-				(values) =>
-					client.setQueryData(collectionLocalKey(collectionId), values),
+			setCollectionLocalValues(
+				collectionId,
+				changes.collectionVariables,
+				secretsIn(collectionKey(collectionId)),
+			).then((values) =>
+				client.setQueryData(collectionLocalKey(collectionId), values),
 			),
 		);
 	}

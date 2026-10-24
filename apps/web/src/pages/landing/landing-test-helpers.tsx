@@ -20,6 +20,7 @@ export const ALL_FEATURES: FeatureFlags = Object.freeze({
 	forks: true,
 	tuneloAccounts: true,
 	projectDocs: true,
+	secretVault: true,
 });
 
 /** Renders `element` at `/` under the app providers and the given flags. */

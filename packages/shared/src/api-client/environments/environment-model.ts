@@ -75,6 +75,11 @@ export interface LocalValue {
 	value: string;
 	/** The user let agents use this vault value (ADR-0009). */
 	agentUse?: boolean;
+	/**
+	 * Set by the web, never sent: a vault value it cannot decrypt now (the
+	 * vault is locked). It counts as withheld, so a send using it stops.
+	 */
+	locked?: boolean;
 }
 
 export interface EnvironmentSummary {

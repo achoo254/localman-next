@@ -11,6 +11,7 @@ import {
 	type ScriptScopeValues,
 	type VariableScope,
 	prepareRequest,
+	resolveVariable,
 	withScriptScopes,
 } from "@localman/shared/api-client";
 import type { ScriptRunner } from "@localman/shared/api-client/script-sandbox";
@@ -111,7 +112,13 @@ export async function prepareSend(
 		: undefined;
 	const withheld = withheldUsed(layers, toSend, variables);
 	if (withheld) {
-		const message = t("apiClient.send.secretWithheld", { name: withheld });
+		// Locked in the vault: unlocking it (lock button) lets it go.
+		const locked =
+			layers && resolveVariable(withheld, layers).winner?.locked === true;
+		const message = t(
+			locked ? "apiClient.send.secretLocked" : "apiClient.send.secretWithheld",
+			{ name: withheld },
+		);
 		return {
 			ok: false,
 			settled: failed({ code: "SECRET_WITHHELD", message, preScript }),

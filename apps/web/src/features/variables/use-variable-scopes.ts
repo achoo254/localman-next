@@ -15,6 +15,7 @@ import {
 	useGlobals,
 } from "../environments/use-environments";
 import { useEnvironmentsEnabled } from "../environments/use-environments-enabled";
+import { useVaultValues } from "../secure-vault/vault-codec";
 import { useCurrentWorkspace } from "../workspaces/current-workspace";
 import {
 	type VariableTargets,
@@ -43,6 +44,8 @@ export function useVariableScopes(
 	).data;
 	const collectionLocal = useCollectionLocalValues(collectionId).data;
 	const { temporary } = tab;
+	// Decrypted vault values landing (or the vault locking) redraw the layers.
+	const vaultValues = useVaultValues();
 
 	return useMemo(() => {
 		if (!enabled) return null;
@@ -50,6 +53,7 @@ export function useVariableScopes(
 			globals,
 			collection,
 			collectionLocal,
+			collectionId: collectionId ?? undefined,
 			environment,
 			temporary,
 		});
@@ -94,5 +98,6 @@ export function useVariableScopes(
 		collectionLocal,
 		environment,
 		temporary,
+		vaultValues,
 	]);
 }

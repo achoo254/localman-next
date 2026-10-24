@@ -6,12 +6,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
-import type { LocalValueWrite } from "../environments/environments-api";
+import type { LocalValueWrite } from "../environments/local-values-api";
 import {
 	collectionLocalKey,
 	useCollectionLocalValues,
 } from "../environments/use-environments";
 import { setCollectionLocalValues } from "../environments/variable-scopes-api";
+import {
+	collectionScope,
+	openLocalValues,
+	useVaultValues,
+} from "../secure-vault/vault-codec";
 import { collectionErrorMessage } from "./collection-errors";
 
 export interface CollectionLocal {
@@ -25,9 +30,13 @@ export interface CollectionLocal {
 	move: (from: string, to: string) => void;
 }
 
-/** `collectionId` is `null` while local values are off. */
+/**
+ * `collectionId` is `null` while local values are off. `secretKeys`: the
+ * variables flagged secret, whose values the vault encrypts.
+ */
 export function useCollectionLocal(
 	collectionId: string | null,
+	secretKeys: ReadonlySet<string> = new Set(),
 ): CollectionLocal {
 	const client = useQueryClient();
 	const toast = useToast();
@@ -37,13 +46,20 @@ export function useCollectionLocal(
 		// One at a time, in order: a late answer never overwrites a newer one.
 		scope: { id: `collection-local-${collectionId ?? ""}` },
 		mutationFn: (writes: LocalValueWrite[]) =>
-			setCollectionLocalValues(collectionId ?? "", writes),
+			setCollectionLocalValues(collectionId ?? "", writes, secretKeys),
 		onSuccess: (values) =>
 			client.setQueryData(collectionLocalKey(collectionId ?? ""), values),
 		onError: (error) =>
 			toast.show({ tone: "error", title: collectionErrorMessage(error, t) }),
 	});
-	const values = new Map((query.data ?? []).map((v) => [v.key, v.value]));
+	useVaultValues();
+	const opened = collectionId
+		? openLocalValues(collectionScope(collectionId), query.data ?? [])
+		: [];
+	// A value locked in the vault reads as none here and cannot move.
+	const values = new Map(
+		opened.filter((v) => !v.locked).map((v) => [v.key, v.value]),
+	);
 	return {
 		ready: query.isSuccess,
 		valueOf: (key) => values.get(key) ?? null,

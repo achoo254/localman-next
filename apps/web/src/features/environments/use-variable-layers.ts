@@ -9,6 +9,12 @@ import { extractUsedVariables } from "@localman/shared/api-client";
 import { type QueryKey, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import type { VariablesOf } from "../api-client/workbench/send-hooks";
+import {
+	collectionScope,
+	environmentScope,
+	globalsScope,
+	settleLocalValues,
+} from "../secure-vault/vault-codec";
 import { buildVariableLayers } from "../variables/variable-targets";
 import { useCurrentWorkspace } from "../workspaces/current-workspace";
 import { fetchEnvironment, fetchGlobals } from "./environments-api";
@@ -95,10 +101,26 @@ export function useVariableLayers(): VariablesOf | undefined {
 						)
 					: [],
 			]);
+			const collectionId =
+				tab.source && context ? tab.source.collectionId : undefined;
+			// Vault values decrypted before the layers are built (open vault).
+			await Promise.all([
+				settleLocalValues(globalsScope(workspaceId), globals.localValues),
+				environment
+					? settleLocalValues(
+							environmentScope(environment.id),
+							environment.localValues,
+						)
+					: null,
+				collectionId
+					? settleLocalValues(collectionScope(collectionId), collectionLocal)
+					: null,
+			]);
 			return buildVariableLayers({
 				globals,
 				collection: context ? { variables: context.variables } : undefined,
 				collectionLocal,
+				collectionId,
 				environment: environment ?? undefined,
 				// The tab's temporary layer goes on top in useSendTab.
 				temporary: [],

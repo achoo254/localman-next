@@ -10,7 +10,8 @@ import type { LocalValue, VariableView } from "@localman/shared/api-client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePageAutosave } from "../collections/use-page-autosave";
 import { combinedStatus } from "./combined-status";
-import type { LocalValueWrite, VariableWrite } from "./environments-api";
+import type { VariableWrite } from "./environments-api";
+import type { LocalValueWrite } from "./local-values-api";
 import {
 	localWritesAfterSave,
 	resetPatch,

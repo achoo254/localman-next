@@ -2,6 +2,8 @@ import type { Messages } from "../../message-types";
 
 export const apiClientSend: Messages["apiClient"]["send"] = {
 	preScriptFailed: "Chưa gửi: script pre-request đã dừng. {reason}",
+	secretLocked:
+		"Chưa gửi: request dùng {name}, giá trị của biến này đang khoá trong kho secret của bạn. Mở kho bằng nút khoá rồi gửi lại.",
 	secretWithheld:
 		"Chưa gửi: request dùng {name}, một secret chỉ Editor xem được. Hãy đặt giá trị local của riêng bạn cho biến này trong environment rồi gửi lại.",
 	scopesDropped:

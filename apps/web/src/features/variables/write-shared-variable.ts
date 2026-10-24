@@ -15,14 +15,16 @@ import {
 } from "../collections/collections-api";
 import { collectionKey } from "../collections/use-collections";
 import {
-	type LocalValueWrite,
 	fetchEnvironment,
 	fetchGlobals,
-	setEnvironmentLocalValues,
 	setEnvironmentVariables,
 	setGlobals,
-	setGlobalsLocalValues,
 } from "../environments/environments-api";
+import {
+	type LocalValueWrite,
+	setEnvironmentLocalValues,
+	setGlobalsLocalValues,
+} from "../environments/local-values-api";
 import {
 	collectionLocalKey,
 	environmentKey,

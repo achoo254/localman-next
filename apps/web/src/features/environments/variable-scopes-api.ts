@@ -8,15 +8,13 @@ import type {
 } from "@localman/shared/api-client";
 import { apiRequest } from "../../lib/api-client";
 import { expectRecord } from "../../lib/json-guards";
+import { collectionScope } from "../secure-vault/vault-codec";
 import {
 	parseActiveEnvironment,
 	parseLocalValues,
 } from "./environment-parsers";
-import {
-	type LocalValueWrite,
-	patchLocal,
-	workspacePath,
-} from "./environments-api";
+import { workspacePath } from "./environments-api";
+import { type LocalValueWrite, patchLocal } from "./local-values-api";
 
 export async function fetchActiveEnvironment(
 	workspaceId: string,
@@ -51,9 +49,18 @@ export async function fetchCollectionLocalValues(
 	return parseLocalValues(data.localValues);
 }
 
+/** `secretKeys`: the collection's variables flagged secret. */
 export function setCollectionLocalValues(
 	collectionId: string,
 	values: LocalValueWrite[],
+	secretKeys: ReadonlySet<string> = new Set(),
 ): Promise<LocalValue[]> {
-	return patchLocal(collectionLocalPath(collectionId), values);
+	return patchLocal(
+		{
+			path: collectionLocalPath(collectionId),
+			scope: collectionScope(collectionId),
+			secretKeys,
+		},
+		values,
+	);
 }

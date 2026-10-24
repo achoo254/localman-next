@@ -736,7 +736,17 @@ select.input{cursor:pointer}
 .vault-cell .mask{letter-spacing:.12em}
 .vault-cell .cta{margin-left:auto;color:var(--c-primary);font-weight:600;white-space:nowrap}
 .vault-notice .stack-sm{justify-items:start}
-.agent-shared{display:inline-flex;align-items:center;gap:2px;flex:none;padding:0 4px;font-family:var(--font-mono);font-size:11px;color:var(--c-text-muted);cursor:help}
+.agent-hosts{display:inline-flex;align-items:center;gap:4px;flex:none;max-width:170px;min-height:26px;padding:0 8px;border:1px solid color-mix(in srgb,var(--c-primary) 35%,var(--c-surface));border-radius:var(--radius-full);background:color-mix(in srgb,var(--c-primary) 8%,var(--c-surface));color:var(--c-primary);font-family:var(--font-mono);font-size:11px;font-weight:600;cursor:pointer}
+.agent-hosts:hover{border-color:var(--c-primary)}
+.agent-hosts[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
+@media (pointer:coarse){.agent-hosts{min-height:40px}}
+.host-input{font-size:12px;min-height:88px}
+.host-errors{margin:0;padding-left:18px;display:grid;gap:2px}
+/* keep name/shared/description/type readable when a row carries the agent host chip */
+.vt td:first-child{min-width:130px}
+.vt td:has(> [data-input="var-shared"]),.vt td:has(> .prose-input){min-width:120px}
+.vt .c-type{min-width:136px}
+.vt .val-cell{max-width:320px}
 .pp-field{position:relative}
 .pp-field .input{padding-right:40px}
 .pp-field .btn-icon{position:absolute;right:2px;top:2px;width:32px;height:32px;min-height:32px}
@@ -1448,7 +1458,7 @@ function seedEnvs() {
   return [
     { id: 'e1', name: 'Staging', color: 'green', workspaceId: 'ws-team', createdBy: 'me', createdAt: '2026-08-12T09:10:00', forkOf: null, forkCount: 1, vars: [
       V('baseUrl', 'https://a1b2c3d4.localman.hoandat.com/api/v1', null, { desc: 'Mock runtime của project shop-demo' }),
-      V('token', 'eyJhbGciOiJIUzI1NiJ9.c3RhZ2luZy10ZWFt.Qm9n', 'eyJhbGciOiJIUzI1NiJ9.bWluaC1hbmgtbG9jYWw.c2ln', { type: 'secret', desc: 'JWT dùng chung cho team', agentUse: true }),
+      V('token', 'eyJhbGciOiJIUzI1NiJ9.c3RhZ2luZy10ZWFt.Qm9n', 'eyJhbGciOiJIUzI1NiJ9.bWluaC1hbmgtbG9jYWw.c2ln', { type: 'secret', desc: 'JWT dùng chung cho team', agentHosts: ['api.shop.example.com', '*.staging.shop.example.com', 'billing.hoandat.com'] }),
       V('userId', '1', '2', { desc: 'User mặc định' }),
       V('apiKey', 'sk_test_51HxLocalmanDemo9f3a', null, { desc: 'Key sandbox của cổng thanh toán' }),
       V('adminPass', null, 'mat-khau-rieng', { type: 'secret', desc: 'Chỉ local, chưa share' }),
@@ -3804,7 +3814,7 @@ IN['var-shared'] = (el) => { const { row, v } = varFromRow(el); v.shared = el.va
 IN['var-desc'] = (el) => { const { v } = varFromRow(el); v.desc = el.value; };
 CH['var-type'] = (el) => {
   const { v } = varFromRow(el); const to = el.value;
-  const apply = () => { v.type = to; if (to !== 'secret') v.agentUse = false; refresh('editor'); };
+  const apply = () => { v.type = to; if (to !== 'secret') v.agentHosts = null; refresh('editor'); };
   if (v.local === null || vaultOpen() || (to !== 'secret' && v.type !== 'secret')) { apply(); return; }
   el.value = v.type;
   const why = to === 'secret' ? `Đổi <code>${esc(v.key)}</code> sang secret sẽ mã hoá giá trị local của nó bằng kho secret.` : `Đổi <code>${esc(v.key)}</code> về default cần giải mã giá trị local của nó.`;
@@ -3815,29 +3825,39 @@ CH['var-enabled'] = (el) => { const { v } = varFromRow(el); v.enabled = el.check
 A['var-reveal'] = (b) => { const { v } = varFromRow(b); const i = state.revealed.indexOf(v.id); if (i === -1) state.revealed.push(v.id); else state.revealed.splice(i, 1); refresh('editor'); };
 A['var-add'] = (b) => { varsOf(b.dataset.scope).push(V('', null, '')); refresh('editor'); const inputs = $$(`[data-scope-table="${b.dataset.scope}"] [data-input="var-key"]`); inputs[inputs.length - 1].focus(); };
 A['var-row-menu'] = (b) => {
-  const { v, vars } = varFromRow(b); const ed = canEdit(); const dis = ed ? {} : { disabled: true, title: 'Chỉ Editor sửa được giá trị shared' };
+  const { row, v, vars } = varFromRow(b); const ed = canEdit(); const dis = ed ? {} : { disabled: true, title: 'Chỉ Editor sửa được giá trị shared' };
   const needVault = v.type === 'secret' && !vaultOpen() ? { disabled: true, title: vaultNeedHint() } : {};
   const lockedLocal = localLocked(v) ? needVault : {};
   openMenu(b, [
-    ...(v.type === 'secret' && v.local !== null ? [{ label: 'Cho agent dùng', checked: !!v.agentUse, ...needVault, meta: vaultOpen() ? '' : (state.vault.status === 'none' ? 'Cần tạo kho' : 'Mở kho để đổi'), dataId: 'var-menu-agent', onClick: () => toggleAgentUse(v) }, 'sep'] : []),
-    { label: 'Update shared value', icon: 'cloud-check', ...dis, ...(ed && v.local === null ? { disabled: true, title: 'Không có giá trị local để đẩy lên' } : {}), ...(ed ? lockedLocal : {}), dataId: 'var-menu-update-shared', onClick: () => { v.shared = v.local; v.local = null; v.agentUse = false; refresh('editor'); toast(`Đã cập nhật shared value của <code>${esc(v.key)}</code>`); } },
-    { label: 'Reset value', icon: 'restore', disabled: v.local === null || v.shared === null, title: 'Đưa giá trị local về giá trị shared', dataId: 'var-menu-reset', onClick: () => { v.local = null; v.agentUse = false; refresh('editor'); toast(`Đã reset <code>${esc(v.key)}</code> về giá trị shared`, 'info'); } },
+    ...agentMenuItems(v, row.dataset.scope),
+    { label: 'Update shared value', icon: 'cloud-check', ...dis, ...(ed && v.local === null ? { disabled: true, title: 'Không có giá trị local để đẩy lên' } : {}), ...(ed ? lockedLocal : {}), dataId: 'var-menu-update-shared', onClick: () => { v.shared = v.local; v.local = null; v.agentHosts = null; refresh('editor'); toast(`Đã cập nhật shared value của <code>${esc(v.key)}</code>`); } },
+    { label: 'Reset value', icon: 'restore', disabled: v.local === null || v.shared === null, title: 'Đưa giá trị local về giá trị shared', dataId: 'var-menu-reset', onClick: () => { v.local = null; v.agentHosts = null; refresh('editor'); toast(`Đã reset <code>${esc(v.key)}</code> về giá trị shared`, 'info'); } },
     v.shared === null
-      ? { label: 'Share value', icon: 'share', ...dis, ...(ed ? lockedLocal : {}), dataId: 'var-menu-share', onClick: () => { v.shared = v.local ?? ''; v.local = null; v.agentUse = false; refresh('editor'); toast(`Đã share <code>${esc(v.key)}</code>`); } }
+      ? { label: 'Share value', icon: 'share', ...dis, ...(ed ? lockedLocal : {}), dataId: 'var-menu-share', onClick: () => { v.shared = v.local ?? ''; v.local = null; v.agentHosts = null; refresh('editor'); toast(`Đã share <code>${esc(v.key)}</code>`); } }
       : { label: 'Unshare', icon: 'lock', ...dis, ...(ed ? needVault : {}), dataId: 'var-menu-unshare', onClick: () => { v.local = valueOf(v); v.shared = null; refresh('editor'); toast(`Đã unshare <code>${esc(v.key)}</code>: giá trị chỉ còn ở local của bạn`, 'info'); } },
     { label: 'Copy', icon: 'copy', ...lockedLocal, dataId: 'var-menu-copy', onClick: () => copyText(valueOf(v)) },
     'sep',
     { label: 'Xoá biến', icon: 'trash', danger: true, ...dis, dataId: 'var-menu-delete', onClick: () => { vars.splice(vars.indexOf(v), 1); refresh('editor'); } },
   ], { label: `Biến ${v.key}` });
 };
+function agentMenuItems(v, scopeRef) {
+  if (v.type !== 'secret' || !agentHasValue(v)) return [];
+  const gate = agentNeedsVault(v) ? { disabled: true, title: `${vaultNeedHint()} (giá trị local)`, meta: state.vault.status === 'none' ? 'Cần tạo kho' : 'Mở kho để đổi' } : {};
+  if (!agentOn(v)) return [{ label: 'Cho agent dùng…', icon: 'robot', ...gate, dataId: 'var-menu-agent', onClick: () => agentUseDialog(v, scopeRef) }, 'sep'];
+  return [
+    { label: 'Sửa host cho agent', icon: 'robot', meta: `${v.agentHosts.length} host`, ...gate, dataId: 'var-menu-agent-hosts', onClick: () => agentUseDialog(v, scopeRef) },
+    { label: 'Tắt cho agent dùng', icon: 'x', ...gate, dataId: 'var-menu-agent-off', onClick: () => agentOff(v) },
+    'sep',
+  ];
+}
 function bulkVarMenu(b, scopeRef) {
   const vars = varsOf(scopeRef); const ed = canEdit(); const dis = ed ? {} : { disabled: true, title: 'Chỉ Editor' };
   const sealed = (v) => v.type === 'secret' && !vaultOpen();
   const skipped = (n) => (n ? `, bỏ qua ${n} biến secret vì kho chưa mở` : '');
   return [
-    { label: 'Share all', icon: 'share', ...dis, dataId: 'vars-more-share-all', onClick: () => { let n = 0; vars.forEach((v) => { if (v.shared === null) { if (localLocked(v)) { n++; return; } v.shared = v.local ?? ''; v.local = null; v.agentUse = false; } }); refresh('editor'); toast(`Đã share mọi biến${skipped(n)}`); } },
-    { label: 'Update all shared values', icon: 'cloud-check', ...dis, dataId: 'vars-more-update-all', onClick: () => { let n = 0; vars.forEach((v) => { if (v.local !== null) { if (localLocked(v)) { n++; return; } v.shared = v.local; v.local = null; v.agentUse = false; } }); refresh('editor'); toast(`Đã cập nhật mọi shared value${skipped(n)}`); } },
-    { label: 'Reset all shared values', icon: 'restore', title: 'Đưa mọi giá trị local về giá trị shared', dataId: 'vars-more-reset-all', onClick: () => { vars.forEach((v) => { if (v.shared !== null) { v.local = null; v.agentUse = false; } }); refresh('editor'); toast('Đã reset mọi giá trị local về shared', 'info'); } },
+    { label: 'Share all', icon: 'share', ...dis, dataId: 'vars-more-share-all', onClick: () => { let n = 0; vars.forEach((v) => { if (v.shared === null) { if (localLocked(v)) { n++; return; } v.shared = v.local ?? ''; v.local = null; v.agentHosts = null; } }); refresh('editor'); toast(`Đã share mọi biến${skipped(n)}`); } },
+    { label: 'Update all shared values', icon: 'cloud-check', ...dis, dataId: 'vars-more-update-all', onClick: () => { let n = 0; vars.forEach((v) => { if (v.local !== null) { if (localLocked(v)) { n++; return; } v.shared = v.local; v.local = null; v.agentHosts = null; } }); refresh('editor'); toast(`Đã cập nhật mọi shared value${skipped(n)}`); } },
+    { label: 'Reset all shared values', icon: 'restore', title: 'Đưa mọi giá trị local về giá trị shared', dataId: 'vars-more-reset-all', onClick: () => { vars.forEach((v) => { if (v.shared !== null) { v.local = null; v.agentHosts = null; } }); refresh('editor'); toast('Đã reset mọi giá trị local về shared', 'info'); } },
     { label: 'Unshare all', icon: 'lock', ...dis, dataId: 'vars-more-unshare-all', onClick: () => { let n = 0; vars.forEach((v) => { if (sealed(v)) { n++; return; } v.local = valueOf(v); v.shared = null; }); refresh('editor'); toast(`Đã unshare mọi biến${skipped(n)}`, 'info'); } },
     'sep',
     { label: 'Cột Description', checked: state.varCols.desc, dataId: 'vars-more-col-desc', onClick: () => { state.varCols.desc = !state.varCols.desc; refresh('editor'); } },
@@ -3909,7 +3929,7 @@ const vaultNeedHint = () => (state.vault.status === 'none' ? 'Cần tạo kho se
 const allVarLists = () => [state.globals, ...state.envs.map((e) => e.vars), ...state.collections.map((c) => c.vars)];
 function secretLocalEntries() {
   const out = [];
-  const scan = (vars, where) => vars.forEach((v) => { if (v.type === 'secret' && v.local !== null) out.push({ v, where }); });
+  const scan = (vars, where) => vars.forEach((v) => { if (v.type === 'secret' && v.local !== null && v.local !== '') out.push({ v, where }); });
   scan(state.globals, 'Globals');
   state.envs.forEach((e) => scan(e.vars, `environment ${e.name}`));
   state.collections.forEach((c) => scan(c.vars, `collection ${c.name}`));
@@ -3952,20 +3972,113 @@ function vaultCellHTML(v) {
   }
   return `<button type="button" class="vault-cell" data-action="vault-unlock" aria-label="${has ? `Giá trị local của ${k} đã khoá. Mở kho để xem` : `Chưa có giá trị local cho ${k}. Mở kho để đặt`}" data-id="var-table-value-locked">${icon('lock', 14)}${has ? '<span class="mask" aria-hidden="true">••••••••</span>' : '<span class="ellipsis">Chưa có giá trị local</span>'}<span class="cta">${has ? 'Mở kho để xem' : 'Mở kho để đặt'}</span></button>`;
 }
-/* Agent toggle exists only for a local value in the vault. Shared secret values are already usable by agents
-   (the server fills them in, the agent never sees them), so shared-only rows show a hint instead. */
-const AGENT_SHARED_HINT = 'Agent dùng giá trị shared mà không thấy nó';
-function agentCtlHTML(v) {
-  if (v.local !== null) return agentBtnHTML(v);
-  if (v.shared === null) return '';
-  return `<span class="agent-shared" role="img" aria-label="${AGENT_SHARED_HINT}" title="${AGENT_SHARED_HINT}" data-id="var-table-agent-shared">${icon('robot', 12)}shared</span>`;
+/* "Cho agent dùng" applies to every secret variable that has a value (local or shared). The agent picks the URL,
+   so the user lists the hosts the server may fill this secret into. v.agentHosts: string[] (on) | null (off).
+   A LOCAL value needs the vault open (the server keeps an extra server-encrypted copy); shared values do not. */
+const AGENT_MAX_HOSTS = 20;
+const LOCALMAN_HOSTS = [APP_HOST, 'tunnel.hoandat.com'];
+const HOST_PATTERN_RE = /^(\*\.)?(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
+const agentOn = (v) => !!(v.agentHosts && v.agentHosts.length);
+const hasVal = (x) => x !== null && x !== undefined && x !== '';
+const agentHasValue = (v) => hasVal(v.local) || hasVal(v.shared);
+const agentNeedsVault = (v) => hasVal(v.local) && !vaultOpen();
+/* True when the pattern names or covers a Localman host: the app, mock *.localman…, Tunelo tunnel.… */
+function isLocalmanHost(pattern) {
+  const wild = pattern.startsWith('*.'); const base = wild ? pattern.slice(2) : pattern;
+  return LOCALMAN_HOSTS.some((L) => base === L || base.endsWith(`.${L}`) || (wild && L.endsWith(`.${base}`)));
 }
-function agentBtnHTML(v) {
-  const on = !!v.agentUse; const open = vaultOpen();
-  const hint = open
-    ? (on ? 'Cho agent dùng giá trị local: đang bật. Server giữ bản sao mã hoá để agent gửi request. Bấm để tắt' : 'Cho agent dùng giá trị local: đang tắt. Bấm để bật')
-    : `Cho agent dùng: ${on ? 'đang bật' : 'đang tắt'}. ${vaultNeedHint()}`;
-  return `<button type="button" class="btn btn-minimal btn-icon agent-btn" data-action="var-agent" aria-pressed="${on}" ${open ? '' : 'aria-disabled="true"'} aria-label="Cho agent dùng ${esc(v.key)}" title="${hint}" data-id="var-table-agent">${icon('robot', 14)}</button>`;
+/* One host per line. Returns valid hosts plus per-line errors shown right under the field. */
+function parseAgentHosts(text) {
+  const hosts = []; const errors = []; const seen = new Map();
+  String(text).split('\n').forEach((raw, i) => {
+    const h = raw.trim().toLowerCase(); const line = i + 1;
+    if (!h) return;
+    let msg = '';
+    if (/^[a-z][a-z0-9+.-]*:\/\//.test(h) || /[/:?#]/.test(h)) msg = 'chỉ nhập host, không kèm https://, cổng hay đường dẫn';
+    else if (!HOST_PATTERN_RE.test(h)) msg = 'không phải host hợp lệ (ví dụ api.example.com hoặc *.example.com)';
+    else if (isLocalmanHost(h)) msg = 'Secret không bao giờ được gửi tới host của Localman';
+    else if (seen.has(h)) msg = `trùng dòng ${seen.get(h)}`;
+    if (msg) { errors.push({ line, host: h, msg }); return; }
+    seen.set(h, line); hosts.push(h);
+  });
+  return { hosts, errors };
+}
+const hostOf = (val) => { if (!val || String(val).includes('{{')) return null; try { return new URL(val).hostname.toLowerCase(); } catch (_e) { return null; } };
+const suggestable = (h) => !!h && HOST_PATTERN_RE.test(h) && !isLocalmanHost(h);
+/* Hosts from {{baseUrl}}-style variables: the variable's own scope first, then every environment, globals, collections. */
+function agentHostSuggestions(scopeRef) {
+  const fromVars = (vars) => vars.filter((x) => /base|url|host/i.test(x.key)).flatMap((x) => [hostOf(x.local), hostOf(x.shared)]);
+  const own = scopeRef ? fromVars(varsOf(scopeRef)) : [];
+  const rest = [...state.envs.flatMap((e) => fromVars(e.vars)), ...fromVars(state.globals), ...state.collections.flatMap((c) => fromVars(c.vars))];
+  const ownValid = own.filter(suggestable);
+  return { prefill: ownValid[0] || null, all: [...new Set([...ownValid, ...rest.filter(suggestable)])] };
+}
+const agentHostsLabel = (hosts) => `${hosts[0]}${hosts.length > 1 ? ` +${hosts.length - 1}` : ''}`;
+function agentCtlHTML(v) {
+  if (!agentHasValue(v)) return '';
+  const locked = agentNeedsVault(v); const on = agentOn(v); const k = esc(v.key);
+  const dis = locked ? `aria-disabled="true" title="Cho agent dùng: ${on ? 'đang bật' : 'đang tắt'}. ${vaultNeedHint()} (giá trị local)"` : '';
+  if (on) {
+    return `<button type="button" class="agent-hosts" data-action="var-agent" ${dis} aria-label="Cho agent dùng ${k}: đang bật cho ${v.agentHosts.length} host (${esc(v.agentHosts.join(', '))}). Bấm để sửa host" ${locked ? '' : `title="Agent được dùng ${k} khi gửi tới: ${esc(v.agentHosts.join(', '))}"`} data-id="var-table-agent-hosts">${icon('robot', 12)}<span class="ellipsis">${esc(agentHostsLabel(v.agentHosts))}</span></button>`;
+  }
+  return `<button type="button" class="btn btn-minimal btn-icon agent-btn" data-action="var-agent" aria-pressed="false" ${dis} aria-label="Cho agent dùng ${k}" ${locked ? '' : 'title="Cho agent dùng: đang tắt. Bấm để chọn host được phép"'} data-id="var-table-agent">${icon('robot', 14)}</button>`;
+}
+A['var-agent'] = (b) => {
+  const { row, v } = varFromRow(b);
+  if (agentNeedsVault(v)) { toast(`${state.vault.status === 'none' ? 'Tạo kho secret' : 'Mở kho secret'} để đổi <b>Cho agent dùng</b> của giá trị local.`, 'info'); return; }
+  agentUseDialog(v, row.dataset.scope);
+};
+function agentOff(v) {
+  const local = hasVal(v.local);
+  v.agentHosts = null; refresh('editor');
+  toast(`Đã tắt <b>Cho agent dùng</b> cho <code>${esc(v.key)}</code>.${local ? ' Server đã xoá bản mã hoá dành cho agent.' : ''} Agent gửi request có biến này sẽ không được điền giá trị.`, 'info');
+}
+/* Enable (off → on) or edit the allowed-host list (on). */
+function agentUseDialog(v, scopeRef) {
+  const k = esc(v.key); const editing = agentOn(v); const local = hasVal(v.local);
+  const sug = agentHostSuggestions(scopeRef);
+  const initial = editing ? v.agentHosts.join('\n') : (sug.prefill || '');
+  openModal({
+    title: editing ? 'Sửa host cho agent' : 'Cho agent dùng biến secret', size: 'md', dataId: 'modal-var-agent',
+    body: `<p class="small">Agent AI kết nối qua Localman MCP gửi được request dùng <code>{{${k}}}</code>, nhưng server chỉ điền secret này vào request tới đúng các host bạn liệt kê. Agent không bao giờ thấy giá trị.</p>
+      <div class="field"><label class="label" for="va-hosts">Host được phép (mỗi dòng một host)</label>
+        <textarea class="input host-input" id="va-hosts" rows="4" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="va-hosts-help va-hosts-err" data-id="modal-var-agent-hosts">${esc(initial)}</textarea>
+        <ul class="error-text host-errors" id="va-hosts-err" aria-live="polite" data-id="modal-var-agent-hosts-error"></ul>
+        <p class="help" id="va-hosts-help"><span data-id="modal-var-agent-hosts-count"></span> Ví dụ <code>api.example.com</code>, hoặc <code>*.example.com</code> cho mọi subdomain. Không dùng được host của Localman.</p>
+        ${sug.all.length ? `<div class="row row-wrap" role="group" aria-label="Gợi ý host từ baseUrl" data-id="modal-var-agent-suggestions"><span class="xs muted">Gợi ý từ baseUrl:</span>${sug.all.slice(0, 6).map((h) => `<button type="button" class="btn btn-secondary btn-sm" data-host="${esc(h)}" data-id="modal-var-agent-suggest">${icon('plus', 12)}${esc(h)}</button>`).join('')}</div>` : ''}</div>
+      ${local
+        ? `<div class="alert alert-warning" data-id="modal-var-agent-note">${icon('alert-triangle', 18)}<div><strong>Giá trị local của bạn không còn chỉ nằm trong trình duyệt</strong>
+          <span class="small">Máy chủ giữ thêm một bản mã hoá giá trị local của bạn (bằng khoá của server, không cần passphrase) để điền vào request của agent. Tắt, xoá giá trị local hoặc đặt lại kho thì bản này bị xoá.</span></div></div>`
+        : `<div class="alert alert-info" data-id="modal-var-agent-note">${icon('users', 18)}<div><strong>Chỉ agent của chính bạn</strong>
+          <span class="small">Bật ở đây chỉ cho agent của bạn dùng giá trị shared. Người khác trong team muốn agent của họ dùng thì phải tự bật, với danh sách host của họ.</span></div></div>`}
+      <ul class="vault-list" data-id="modal-var-agent-facts"><li>Request tới host ngoài danh sách: server không điền secret này.</li><li>Redirect sang host khác không được theo.</li><li>Chỉ bạn bật, tắt hay sửa danh sách được, trong trình duyệt. Agent không tự làm được.</li></ul>`,
+    foot: `${editing ? `<button type="button" class="btn btn-minimal" data-act="agent-off" data-id="modal-var-agent-off">Tắt cho agent dùng</button><span class="spacer"></span>` : ''}
+      ${footBtns('Huỷ', editing ? 'Lưu host' : `${icon('robot', 16)}Cho agent dùng`, { dataId: 'modal-var-agent-confirm' })}`,
+    onMount: (m, entry) => {
+      const ta = $('#va-hosts', m); const btn = $('[data-modal-primary]', m); const err = $('#va-hosts-err', m); const count = $('[data-id="modal-var-agent-hosts-count"]', m);
+      let parsed = parseAgentHosts(ta.value);
+      const check = () => {
+        parsed = parseAgentHosts(ta.value);
+        const over = parsed.hosts.length + parsed.errors.length > AGENT_MAX_HOSTS;
+        err.innerHTML = [...parsed.errors.map((e) => `<li>Dòng ${e.line} · <code>${esc(e.host)}</code>: ${esc(e.msg)}</li>`), ...(over ? [`<li>Tối đa ${AGENT_MAX_HOSTS} host</li>`] : [])].join('');
+        ta.setAttribute('aria-invalid', String(parsed.errors.length > 0 || over));
+        count.textContent = parsed.hosts.length ? `${parsed.hosts.length}/${AGENT_MAX_HOSTS} host.` : 'Cần ít nhất 1 host.';
+        btn.disabled = !parsed.hosts.length || parsed.errors.length > 0 || over;
+        $$('[data-host]', m).forEach((b) => { b.disabled = parsed.hosts.includes(b.dataset.host); });
+      };
+      ta.addEventListener('input', check);
+      $$('[data-host]', m).forEach((b) => b.addEventListener('click', () => {
+        ta.value = `${ta.value.replace(/\s+$/, '')}${ta.value.trim() ? '\n' : ''}${b.dataset.host}`; check(); ta.focus();
+      }));
+      check();
+      const off = $('[data-act="agent-off"]', m);
+      if (off) off.addEventListener('click', () => { closeModal(entry); agentOff(v); });
+      btn.addEventListener('click', () => {
+        v.agentHosts = parsed.hosts; closeModal(entry); refresh('editor');
+        toast(editing ? `Đã lưu ${parsed.hosts.length} host cho agent của <code>${k}</code>` : `Agent dùng được <code>${k}</code> khi gửi tới ${parsed.hosts.length} host (không thấy giá trị)`);
+      });
+    },
+  });
 }
 function vaultNoticeHTML(vars) {
   const secrets = vars.filter((v) => v.type === 'secret');
@@ -3987,34 +4100,6 @@ A['vault-create-for-var'] = (b) => {
     onDone: () => { const inp = $(`[data-var-row="${v.id}"][data-scope="${scope}"] [data-input="var-local"]`); if (inp) inp.focus(); },
   });
 };
-A['var-agent'] = (b) => {
-  const { v } = varFromRow(b);
-  if (!vaultOpen()) { toast(`${state.vault.status === 'none' ? 'Tạo kho secret' : 'Mở kho secret'} để bật hoặc tắt <b>Cho agent dùng</b>.`, 'info'); return; }
-  toggleAgentUse(v);
-};
-function toggleAgentUse(v) {
-  if (v.agentUse) {
-    v.agentUse = false; refresh('editor');
-    toast(`Đã tắt <b>Cho agent dùng</b> cho <code>${esc(v.key)}</code>. Server đã xoá bản sao; agent gửi request có biến này sẽ coi như chưa đặt.`, 'info');
-    return;
-  }
-  agentUseDialog(v);
-}
-function agentUseDialog(v) {
-  const k = esc(v.key);
-  openModal({
-    title: 'Cho agent dùng biến secret?', size: 'md', dataId: 'modal-var-agent',
-    body: `<p class="small">Bật cho <code>${k}</code> thì agent AI kết nối qua Localman MCP gửi được request dùng <b>giá trị local của bạn</b> cho <code>{{${k}}}</code>. Agent không bao giờ đọc được giá trị: server điền giá trị vào request lúc gửi.</p>
-      <div class="alert alert-warning" data-id="modal-var-agent-note">${icon('alert-triangle', 18)}<div><strong>Giá trị local của bạn không còn chỉ nằm trong trình duyệt</strong>
-        <span class="small">Server Localman giữ thêm một bản sao giá trị local của bạn, mã hoá bằng khoá của server, để dùng khi agent gửi request. Bản sao này không cần passphrase của bạn.</span></div></div>
-      <ul class="vault-list" data-id="modal-var-agent-facts"><li>Chỉ bạn bật hoặc tắt được, trong trình duyệt. Agent không tự bật được.</li><li>Tắt, xoá giá trị local hoặc đặt lại kho thì server xoá bản sao ngay.</li><li>Giá trị shared của biến (nếu có) agent vẫn dùng được như trước, không cần công tắc này.</li></ul>`,
-    foot: footBtns('Huỷ', `${icon('robot', 16)}Cho agent dùng`, { dataId: 'modal-var-agent-confirm' }),
-    onMount: (m, entry) => $('[data-modal-primary]', m).addEventListener('click', () => {
-      v.agentUse = true; closeModal(entry); refresh('editor');
-      toast(`Agent dùng được giá trị local của <code>${k}</code> khi gửi request (không đọc được giá trị)`);
-    }),
-  });
-}
 
 /* ---- dialogs: create, unlock, reset ---- */
 function ppFieldHTML(id, label, dataId, { autocomplete = 'new-password', after = '', describedby = '' } = {}) {
@@ -4103,7 +4188,7 @@ function unlockVaultDialog({ reason = '', onDone = null } = {}) {
   });
 }
 function resetVaultDialog() {
-  const list = secretLocalEntries(); const agentN = list.filter((x) => x.v.agentUse).length;
+  const list = secretLocalEntries(); const agentN = list.filter((x) => agentOn(x.v)).length;
   openModal({
     title: 'Đặt lại kho secret', size: 'md', dataId: 'modal-vault-reset',
     body: `<p class="small">Không có cách khôi phục passphrase. Đặt lại sẽ xoá kho hiện tại, sau đó bạn tạo kho mới với passphrase mới.</p>
@@ -4117,7 +4202,7 @@ function resetVaultDialog() {
       const btn = $('[data-modal-primary]', m);
       $('#vr-confirm', m).addEventListener('input', (e) => { btn.disabled = e.target.value.trim().toLowerCase() !== 'reset'; });
       btn.addEventListener('click', () => {
-        list.forEach((x) => { x.v.local = null; x.v.agentUse = false; });
+        list.forEach((x) => { x.v.local = null; x.v.agentHosts = null; });
         state.vault = { status: 'none', passphrase: null, stash: null }; state.revealed = [];
         closeModal(entry); rerenderVault();
         toast(`Đã xoá kho cũ${list.length ? ` và ${list.length} giá trị local` : ''}`, 'info');
@@ -5774,11 +5859,11 @@ A['proto-demo'] = (b) => {
 function setVaultSim(v, { quiet = false } = {}) {
   const V0 = state.vault;
   if (v === 'none' && V0.status !== 'none') {
-    V0.stash = secretLocalEntries().map((x) => ({ id: x.v.id, local: x.v.local, agentUse: !!x.v.agentUse }));
-    V0.stash.forEach((x) => { const sv = allVarLists().flat().find((y) => y.id === x.id); sv.local = null; sv.agentUse = false; });
+    V0.stash = secretLocalEntries().map((x) => ({ id: x.v.id, local: x.v.local, agentHosts: x.v.agentHosts || null }));
+    V0.stash.forEach((x) => { const sv = allVarLists().flat().find((y) => y.id === x.id); sv.local = null; sv.agentHosts = null; });
     V0.passphrase = null;
   } else if (v !== 'none' && V0.status === 'none') {
-    (V0.stash || []).forEach((x) => { const sv = allVarLists().flat().find((y) => y.id === x.id); if (sv && sv.local === null) { sv.local = x.local; sv.agentUse = x.agentUse; } });
+    (V0.stash || []).forEach((x) => { const sv = allVarLists().flat().find((y) => y.id === x.id); if (sv && sv.local === null) { sv.local = x.local; sv.agentHosts = x.agentHosts; } });
     V0.stash = null; V0.passphrase = V0.passphrase || VAULT_DEMO_PASSPHRASE;
   }
   V0.status = v; if (v !== 'unlocked') state.revealed = [];
@@ -5803,7 +5888,7 @@ A['proto-vault-open'] = (b) => {
     if (k === 'create') createVaultDialog();
     else if (k === 'unlock') unlockVaultDialog();
     else if (k === 'reset') resetVaultDialog();
-    else if (k === 'agent') { const v = envById('e1').vars.find((x) => x.key === 'adminPass'); if (v) { if (v.local === null) v.local = 'mat-khau-rieng'; v.agentUse = false; refresh('editor'); agentUseDialog(v); } }
+    else if (k === 'agent') { const v = envById('e1').vars.find((x) => x.key === 'adminPass'); if (v) { if (v.local === null) v.local = 'mat-khau-rieng'; v.agentHosts = null; refresh('editor'); agentUseDialog(v, 'env:e1'); } }
   });
 };
 A['proto-reset'] = () => { const theme = state.theme; state = seedState(); state.theme = theme; closeAllModals(); syncProto(); location.hash = '#/workspace'; render(); toast('Đã reset dữ liệu demo', 'info'); };

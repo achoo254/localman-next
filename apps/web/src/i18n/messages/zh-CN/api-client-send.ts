@@ -2,6 +2,8 @@ import type { Messages } from "../../message-types";
 
 export const apiClientSend: Messages["apiClient"]["send"] = {
 	preScriptFailed: "未发送：pre-request script 已停止。{reason}",
+	secretLocked:
+		"未发送：它使用了 {name}，其值锁在你的 secret 保险库中。请用锁按钮解锁保险库，然后重新发送。",
 	secretWithheld:
 		"未发送：它使用了 {name}，这是只有 Editor 能查看的 secret。请在 environment 中为它设置你自己的本地值，然后重新发送。",
 	scopesDropped:

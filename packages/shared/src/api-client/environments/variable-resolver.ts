@@ -22,6 +22,8 @@ export interface ScopeVariable {
 	source: "local" | "shared" | "none";
 	/** A secret whose shared value is hidden from the caller (no local value). */
 	withheld: boolean;
+	/** Withheld because the caller's own value is locked in the vault. */
+	locked?: boolean;
 }
 
 export interface ResolverLayer {
@@ -43,6 +45,19 @@ export interface VariableResolution {
 	overridden: VariableCandidate[];
 }
 
+/** A variable whose own value is locked in the vault. */
+function lockedVariable(key: string, secret: boolean): ScopeVariable {
+	return {
+		key,
+		value: null,
+		enabled: true,
+		secret,
+		source: "none",
+		withheld: true,
+		locked: true,
+	};
+}
+
 /**
  * A scope's variables with the caller's local values applied. A local
  * value without a definition (set by a script) counts as a plain variable
@@ -53,9 +68,20 @@ export function scopeVariables(
 	localValues: readonly LocalValue[],
 ): ScopeVariable[] {
 	const local = new Map(localValues.map((entry) => [entry.key, entry.value]));
+	const locked = new Set(
+		localValues.filter((entry) => entry.locked).map((entry) => entry.key),
+	);
 	const defined = variables.map((variable): ScopeVariable => {
 		const own = local.get(variable.key);
 		const secret = variable.type === "secret";
+		if (locked.has(variable.key)) {
+			// The caller's own value wins but cannot be read now: nothing
+			// stands in for it, as for a withheld secret.
+			return {
+				...lockedVariable(variable.key, secret),
+				enabled: variable.enabled,
+			};
+		}
 		if (own !== undefined) {
 			const base = { key: variable.key, enabled: variable.enabled, secret };
 			return { ...base, value: own, source: "local", withheld: false };
@@ -73,14 +99,17 @@ export function scopeVariables(
 	const extra = localValues
 		.filter((entry) => !names.has(entry.key))
 		.map(
-			(entry): ScopeVariable => ({
-				key: entry.key,
-				value: entry.value,
-				enabled: true,
-				secret: false,
-				source: "local",
-				withheld: false,
-			}),
+			(entry): ScopeVariable =>
+				entry.locked
+					? lockedVariable(entry.key, true)
+					: {
+							key: entry.key,
+							value: entry.value,
+							enabled: true,
+							secret: false,
+							source: "local",
+							withheld: false,
+						},
 		);
 	return [...defined, ...extra];
 }

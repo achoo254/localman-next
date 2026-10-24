@@ -16,6 +16,7 @@ import {
 	type TemporaryVariable,
 	temporaryLayer,
 } from "../api-client/workbench/temporary-variables";
+import { openScopeValues } from "../secure-vault/vault-codec";
 
 export const TARGET_SCOPES = [
 	"environment",
@@ -69,6 +70,8 @@ export interface LayerSources {
 		| { name?: string; variables: readonly VariableEntry[] }
 		| undefined;
 	collectionLocal: readonly LocalValue[] | undefined;
+	/** Id of the bound collection, to read its vault values. */
+	collectionId?: string | undefined;
 	environment: EnvironmentDetail | undefined;
 	temporary: readonly TemporaryVariable[];
 }
@@ -84,7 +87,10 @@ export function buildVariableLayers(sources: LayerSources): ResolverLayer[] {
 	if (globals) {
 		layers.push({
 			kind: "global",
-			variables: scopeVariables(globals.variables, globals.localValues),
+			variables: scopeVariables(
+				globals.variables,
+				openScopeValues("global", globals.workspaceId, globals.localValues),
+			),
 		});
 	}
 	if (collection) {
@@ -93,7 +99,11 @@ export function buildVariableLayers(sources: LayerSources): ResolverLayer[] {
 			...(collection.name ? { label: collection.name } : {}),
 			variables: entryVariables(
 				collection.variables,
-				sources.collectionLocal ?? [],
+				openScopeValues(
+					"collection",
+					sources.collectionId ?? "",
+					sources.collectionLocal ?? [],
+				),
 			),
 		});
 	}
@@ -101,7 +111,10 @@ export function buildVariableLayers(sources: LayerSources): ResolverLayer[] {
 		layers.push({
 			kind: "environment",
 			label: environment.name,
-			variables: scopeVariables(environment.variables, environment.localValues),
+			variables: scopeVariables(
+				environment.variables,
+				openScopeValues("environment", environment.id, environment.localValues),
+			),
 		});
 	}
 	if (sources.temporary.length > 0) {

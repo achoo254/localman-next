@@ -9,6 +9,7 @@ import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
 import { cn } from "../../lib/cn";
 import { useEnvironmentsEnabled } from "../environments/use-environments-enabled";
+import { secretNames } from "../secure-vault/vault-codec";
 import { CollectionVariableRow } from "./collection-variable-row";
 import { useCollectionLocal } from "./use-collection-local";
 
@@ -31,7 +32,10 @@ export function PageVariables(props: PageVariablesProps) {
 	const t = useT();
 	const { canEdit } = props;
 	const localOn = useEnvironmentsEnabled();
-	const local = useCollectionLocal(localOn ? props.collectionId : null);
+	const local = useCollectionLocal(
+		localOn ? props.collectionId : null,
+		secretNames(props.variables),
+	);
 	const [variables, setVariables] = useState(() => [...props.variables]);
 	const change = (next: VariableEntry[]) => {
 		const saved = (rows: readonly VariableEntry[]) =>

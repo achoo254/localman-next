@@ -25,6 +25,7 @@ dependencies: [10, 13, 16]
 | Vault bắt buộc hay tự bật | **Bắt buộc**: server từ chối giá trị local của biến secret không phải bản mã `lmv1:` | 0,61 (0,22, thấp; áp ở T5, user có thể đổi trước khi T5 làm) |
 | Agent qua MCP ghi giá trị local của biến secret | **Từ chối**, lỗi nói rõ secret của user nằm trong vault của trình duyệt | 0,57 (0,14, thấp; áp ở T5) |
 | T5 làm UI trước khi có prototype | **Prototype trước** (T1, phần vault), user duyệt rồi mới code UI; phía server T5, T5b làm ngay | 0,93 (0,86) |
+| Làm UI web khi prototype chưa được duyệt | **User yêu cầu làm UI ngay** (24/10/2026, "làm tiếp UI web của kho secret luôn"); prototype phần vault vẫn là tham chiếu, user xem UI thật thay cho duyệt prototype | user |
 | Vault phủ scope nào | **Cả ba**: environment, globals và collection (biến collection gắn `secret`) | 0,78 (0,56) |
 | Phát hành | **Sau cổng** `SECRET_VAULT_ENABLED` (tắt mặc định) và cờ web `secretVault` | 1,0 |
 | Đọc bản mã khi vault đang khoá | **Không tự hỏi**: giá trị coi như chưa đặt, có nút mở khoá | 0,54 (0,08, gần hoà với "hỏi một lần mỗi phiên") |

@@ -2,6 +2,12 @@ import { IconEye, IconWorld } from "@tabler/icons-react";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { IconButton } from "../../components/ui/icon-button";
 import { useT } from "../../i18n/i18n-context";
+import {
+	environmentScope,
+	globalsScope,
+	openLocalValues,
+	useVaultValues,
+} from "../secure-vault/vault-codec";
 import { ColorDot } from "./environment-color";
 import {
 	useActiveEnvironment,
@@ -25,7 +31,26 @@ function PaneBody({ workspaceId, temporary, onOpenPage }: PaneBodyProps) {
 	const environment = useEnvironment(environmentId);
 	const globals = useGlobals(workspaceId);
 	const { openEnvironment, openGlobals } = useOpenVariablesPage();
-	const env = environment.data;
+	useVaultValues();
+	const shown = environment.data;
+	const env = shown
+		? {
+				...shown,
+				localValues: openLocalValues(
+					environmentScope(shown.id),
+					shown.localValues,
+				),
+			}
+		: undefined;
+	const globalsShown = globals.data
+		? {
+				...globals.data,
+				localValues: openLocalValues(
+					globalsScope(globals.data.workspaceId),
+					globals.data.localValues,
+				),
+			}
+		: undefined;
 	return (
 		<div className="grid gap-3">
 			{temporary}
@@ -81,7 +106,7 @@ function PaneBody({ workspaceId, temporary, onOpenPage }: PaneBodyProps) {
 					openGlobals(workspaceId);
 					onOpenPage();
 				}}
-				scope={globals.data}
+				scope={globalsShown}
 				failed={globals.isError}
 			/>
 			<p className="m-0 text-muted text-xs">{t("environments.quick.hint")}</p>

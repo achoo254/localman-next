@@ -9,7 +9,6 @@ import type {
 	EnvironmentDetail,
 	EnvironmentSummary,
 	GlobalsDetail,
-	LocalValue,
 	VariableType,
 } from "@localman/shared/api-client";
 import { apiRequest } from "../../lib/api-client";
@@ -22,7 +21,6 @@ import {
 	parseEnvironmentFile,
 	parseEnvironmentSummary,
 	parseGlobals,
-	parseLocalValues,
 } from "./environment-parsers";
 
 export const workspacePath = (workspaceId: string, suffix: string): string =>
@@ -39,9 +37,6 @@ export interface VariableWrite {
 	description: string;
 	sharedValue: string | null;
 }
-
-/** `value: null` resets a variable to its shared value. */
-export type LocalValueWrite = { key: string; value: string | null };
 
 export async function fetchEnvironments(
 	workspaceId: string,
@@ -124,24 +119,6 @@ export async function setEnvironmentVariables(
 	);
 }
 
-export async function patchLocal(
-	path: string,
-	values: LocalValueWrite[],
-): Promise<LocalValue[]> {
-	const data = expectRecord(
-		await apiRequest(path, { method: "PATCH", body: { values } }),
-		"local values",
-	);
-	return parseLocalValues(data.localValues);
-}
-
-export function setEnvironmentLocalValues(
-	id: string,
-	values: LocalValueWrite[],
-): Promise<LocalValue[]> {
-	return patchLocal(`${environmentPath(id)}/local-values`, values);
-}
-
 export async function duplicateEnvironment(
 	id: string,
 ): Promise<EnvironmentDetail> {
@@ -190,11 +167,4 @@ export async function setGlobals(
 			body: { variables },
 		}),
 	);
-}
-
-export function setGlobalsLocalValues(
-	workspaceId: string,
-	values: LocalValueWrite[],
-): Promise<LocalValue[]> {
-	return patchLocal(workspacePath(workspaceId, "globals/local-values"), values);
 }

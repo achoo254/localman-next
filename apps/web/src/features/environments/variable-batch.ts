@@ -5,7 +5,7 @@
  * the editor read the same rules: an "all" action applies the single-row
  * action to every row that offers it.
  */
-import type { LocalValueWrite } from "./environments-api";
+import type { LocalValueWrite } from "./local-values-api";
 import {
 	type DraftVariable,
 	type VariableRow,

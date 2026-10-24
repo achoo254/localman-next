@@ -1,7 +1,8 @@
 import type { LocalValue, VariableView } from "@localman/shared/api-client";
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { LocalValueWrite, VariableWrite } from "./environments-api";
+import type { VariableWrite } from "./environments-api";
+import type { LocalValueWrite } from "./local-values-api";
 import {
 	type VariableEditorOptions,
 	useVariableEditor,

@@ -8,15 +8,19 @@ import { useT } from "../../i18n/i18n-context";
 import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { useWorkbenchActions } from "../api-client/workbench/workbench-context";
 import type { VariablesPageTab } from "../api-client/workbench/workbench-tab-types";
+import {
+	environmentScope,
+	openLocalValues,
+	secretNames,
+	useVaultValues,
+} from "../secure-vault/vault-codec";
 import { ShareDialog } from "../sharing/share-dialog";
 import { isNotFound } from "../sharing/sharing-errors";
 import { combinedStatus } from "./combined-status";
 import { DeleteEnvironmentModal } from "./delete-environment-modal";
 import { EnvironmentHeader } from "./environment-header";
-import {
-	setEnvironmentLocalValues,
-	setEnvironmentVariables,
-} from "./environments-api";
+import { setEnvironmentVariables } from "./environments-api";
+import { setEnvironmentLocalValues } from "./local-values-api";
 import { useExportEnvironment } from "./use-environment-file";
 import { useEnvironmentMeta } from "./use-environment-meta";
 import {
@@ -50,9 +54,10 @@ function EnvironmentEditor({
 		environment,
 		pageId,
 	);
+	useVaultValues();
 	const editor = useVariableEditor({
 		variables: environment.variables,
-		localValues: environment.localValues,
+		localValues: openLocalValues(environmentScope(id), environment.localValues),
 		canEdit: environment.role === "editor",
 		saveShared: async (writes) =>
 			storeEnvironment(client, await setEnvironmentVariables(id, writes)),
@@ -60,7 +65,11 @@ function EnvironmentEditor({
 			storeLocalValues(
 				client,
 				environmentKey(id),
-				await setEnvironmentLocalValues(id, values),
+				await setEnvironmentLocalValues(
+					id,
+					values,
+					secretNames(environment.variables),
+				),
 			),
 	});
 	const bulk = useVariableBulk(editor);

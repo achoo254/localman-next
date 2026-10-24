@@ -15,7 +15,14 @@ import { useT } from "../../i18n/i18n-context";
 import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import type { VariablesPageTab } from "../api-client/workbench/workbench-tab-types";
 import { PageSaveState } from "../collections/page-save-state";
-import { setGlobals, setGlobalsLocalValues } from "./environments-api";
+import {
+	globalsScope,
+	openLocalValues,
+	secretNames,
+	useVaultValues,
+} from "../secure-vault/vault-codec";
+import { setGlobals } from "./environments-api";
+import { setGlobalsLocalValues } from "./local-values-api";
 import { globalsKey, storeLocalValues, useGlobals } from "./use-environments";
 import { useVariableBulk } from "./use-variable-bulk";
 import { useVariableEditor } from "./use-variable-editor";
@@ -26,9 +33,13 @@ function GlobalsEditor({ globals }: { globals: GlobalsDetail }) {
 	const client = useQueryClient();
 	const { workspaceId } = globals;
 	const canEdit = globals.role === "editor";
+	useVaultValues();
 	const editor = useVariableEditor({
 		variables: globals.variables,
-		localValues: globals.localValues,
+		localValues: openLocalValues(
+			globalsScope(workspaceId),
+			globals.localValues,
+		),
 		canEdit,
 		saveShared: async (writes) => {
 			client.setQueryData(
@@ -40,7 +51,11 @@ function GlobalsEditor({ globals }: { globals: GlobalsDetail }) {
 			storeLocalValues(
 				client,
 				globalsKey(workspaceId),
-				await setGlobalsLocalValues(workspaceId, values),
+				await setGlobalsLocalValues(
+					workspaceId,
+					values,
+					secretNames(globals.variables),
+				),
 			),
 	});
 	const bulk = useVariableBulk(editor);

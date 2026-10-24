@@ -1,5 +1,6 @@
 import { account } from "./account";
 import { admin } from "./admin";
+import { agentUse } from "./agent-use";
 import { apiClient } from "./api-client";
 import { apiClientOpen } from "./api-client-open";
 import { apiClientRouting } from "./api-client-routing";
@@ -34,6 +35,7 @@ import { resourceImport } from "./resource-import";
 import { resourceRules } from "./resource-rules";
 import { resourceTree } from "./resource-tree";
 import { resources } from "./resources";
+import { secretVault } from "./secret-vault";
 import { sharing } from "./sharing";
 import { subscription } from "./subscription";
 import { trafficLog } from "./traffic-log";
@@ -93,6 +95,8 @@ export const en = {
 	versionControl,
 	liveMockSync,
 	projectDocs,
+	secretVault,
+	agentUse,
 	legal,
 	legalPrivacy,
 	legalTerms,

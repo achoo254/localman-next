@@ -15,7 +15,9 @@
  * own and links anonymous machines; the API serves it only with
  * `TUNELO_ACCOUNTS_ENABLED`) and `projectDocs` (public docs of mock
  * projects at `/p/<slug>/docs`; the API serves them only with
- * `PROJECT_DOCS_ENABLED`).
+ * `PROJECT_DOCS_ENABLED`) and `secretVault` (the browser vault of local
+ * secret values and letting agents use secrets; needs `environments`, the
+ * API serves it only with `SECRET_VAULT_ENABLED`).
  *
  * Set at build time in `VITE_FEATURES`, a comma-separated list such as
  * `apiClient,mockMcp`. Everything is off by default. No React here:
@@ -35,6 +37,7 @@ export interface FeatureFlags {
 	readonly forks: boolean;
 	readonly tuneloAccounts: boolean;
 	readonly projectDocs: boolean;
+	readonly secretVault: boolean;
 }
 
 export type FeatureName = keyof FeatureFlags;
@@ -53,6 +56,7 @@ export const NO_FEATURES: FeatureFlags = Object.freeze({
 	forks: false,
 	tuneloAccounts: false,
 	projectDocs: false,
+	secretVault: false,
 });
 
 function isFeatureName(value: string): value is FeatureName {
