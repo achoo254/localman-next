@@ -11,7 +11,7 @@ import {
 	isJsonObject,
 	renderJsonTemplate,
 } from "@localman/shared";
-import { runFakerMethod } from "@localman/shared/faker-methods";
+import { fakerForField, runFakerMethod } from "@localman/shared/faker-methods";
 import { ByteMeter, type ResourceRef, dataTooLarge } from "./data-size.js";
 
 /** What generation needs of a resource. */
@@ -51,7 +51,13 @@ function fieldValue(
 ): JsonValue | undefined {
 	switch (field.type) {
 		case "Faker.js":
-			return runFakerMethod(field.fakerMethod ?? "", faker) ?? null;
+			// A Vietnamese name (ho_ten, sdt, dia_chi) gets Vietnamese values.
+			return (
+				runFakerMethod(
+					field.fakerMethod ?? "",
+					fakerForField(field.name, faker),
+				) ?? null
+			);
 		case "String":
 			return `${field.name} ${index}`;
 		case "Number":

@@ -1,4 +1,4 @@
-import { Faker, base, en } from "@faker-js/faker";
+import { Faker, base, en, vi } from "@faker-js/faker";
 import { OperationError } from "@localman/operations";
 import { describe, expect, it } from "vitest";
 import { generateRecords } from "./data-generator.js";
@@ -60,6 +60,28 @@ describe("generateRecords", () => {
 		expect(generateRecords(spec, 3, null, seeded())).toEqual(
 			generateRecords(spec, 3, null, seeded()),
 		);
+	});
+
+	it("fills Vietnamese-named fields from Faker's vi locale, family name first", () => {
+		const spec = {
+			schema: [
+				{ name: "ho_ten", type: "Faker.js", fakerMethod: "name.fullName" },
+				{ name: "fullName", type: "Faker.js", fakerMethod: "name.fullName" },
+			] as const,
+			template: null,
+			parentKey: null,
+			resource: REF,
+		};
+		const families = new Set(vi.person?.last_name?.generic ?? []);
+		const firstWord = (value: unknown) => String(value).split(" ")[0] ?? "";
+		const records = generateRecords(spec, 20, null, seeded());
+		for (const { data } of records) {
+			expect(families.has(firstWord(data.ho_ten))).toBe(true);
+		}
+		expect(
+			records.every(({ data }) => families.has(firstWord(data.fullName))),
+		).toBe(false);
+		expect(generateRecords(spec, 20, null, seeded())).toEqual(records);
 	});
 
 	it("spreads children over the parent records and needs at least one", () => {

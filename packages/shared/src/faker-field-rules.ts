@@ -147,3 +147,12 @@ export const FAKER_FIELD_RULES: readonly FakerFieldRule[] = Object.freeze([
 	anywhere("uuid|guid", "datatype.uuid"),
 	only("end", "id", "datatype.uuid", "datatype.number"),
 ]);
+
+/**
+ * Vietnamese words of the rules above (no diacritics, tokens joined) that
+ * mark a field as holding Vietnamese data: a name with one of them as a
+ * whole run (`ho_ten`, `soDienThoai`, `dia_chi`, `ten_cong_ty`) is filled
+ * from Faker's `vi` locale (`isVietnameseFieldName`, `fakerForField`).
+ */
+export const VIETNAMESE_FIELD_WORDS =
+	"ten|hoten|hovaten|tendaydu|hotendaydu|tendem|ho|sdt|sodienthoai|dienthoai|sodt|didong|sodidong|diachi|sonha|duong|thanhpho|tinh|tinhthanh|quan|huyen|quanhuyen|congty|tencongty|doanhnghiep|gioitinh|ngaysinh|sinhnhat|nghenghiep|chucvu";
