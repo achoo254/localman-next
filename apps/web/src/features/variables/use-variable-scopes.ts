@@ -47,6 +47,7 @@ export function useVariableScopes(
 	// Decrypted vault values landing (or the vault locking) redraw the layers.
 	const vaultValues = useVaultValues();
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: `vaultValues` changes when vault values decrypt or lock; `buildVariableLayers` reads them from the codec's cache.
 	return useMemo(() => {
 		if (!enabled) return null;
 		const layers = buildVariableLayers({
@@ -96,6 +97,7 @@ export function useVariableScopes(
 		globals,
 		collection,
 		collectionLocal,
+		collectionId,
 		environment,
 		temporary,
 		vaultValues,
