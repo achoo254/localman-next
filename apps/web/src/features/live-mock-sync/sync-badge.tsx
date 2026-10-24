@@ -22,7 +22,7 @@ export function SyncBadge({ detail }: { detail: CollectionDetail }) {
 				type="button"
 				data-id="collection-meta-sync"
 				title={t("liveMockSync.badge.title", { name })}
-				className="inline-flex min-h-7 w-fit items-center gap-1 rounded-full border border-primary/40 bg-primary/8 px-2 text-primary text-xs hover:bg-primary/14"
+				className="inline-flex min-h-7 w-fit items-center gap-1 whitespace-nowrap rounded-full border border-primary/40 bg-primary/8 px-2 text-primary text-xs hover:bg-primary/14"
 				onClick={() => setOpen(true)}
 			>
 				<IconRefresh size={12} aria-hidden="true" />

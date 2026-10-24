@@ -108,7 +108,7 @@ export function CollectionLinksMeta({
 				<EnvironmentRow detail={detail} canEdit={canEditEnvironment} />
 			) : null}
 			<dt className="text-muted">{t("collections.links.mockProject")}</dt>
-			<dd className="m-0 grid min-w-0 justify-items-start gap-1">
+			<dd className="m-0 min-w-0">
 				{project ? (
 					<Link
 						to={`/projects/${encodeURIComponent(project.id)}`}
@@ -121,8 +121,14 @@ export function CollectionLinksMeta({
 				) : (
 					<NotLinked />
 				)}
-				{liveMockSync && project ? <SyncBadge detail={detail} /> : null}
 			</dd>
+			{liveMockSync && project ? (
+				// A second value of the mock project, across both columns: the
+				// value column is too narrow for it.
+				<dd className="col-span-2 m-0">
+					<SyncBadge detail={detail} />
+				</dd>
+			) : null}
 		</>
 	);
 }
