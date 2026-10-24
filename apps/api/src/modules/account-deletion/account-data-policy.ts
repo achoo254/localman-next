@@ -54,6 +54,8 @@ export const ACCOUNT_DATA_POLICY: Readonly<
 	LocalVariableValue: "deleted",
 	// Vault parameters (salt, check ciphertext) of the person.
 	SecretVault: "deleted",
+	// Secrets the person let their agents use, with the allowed hosts.
+	AgentSecretUse: "deleted",
 	ActiveEnvironment: "deleted",
 	CollectionFavorite: "deleted",
 	CollectionWatch: "deleted",

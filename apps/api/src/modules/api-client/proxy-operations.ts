@@ -92,7 +92,10 @@ export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
 		handler: async (ctx, input) => {
 			const sub = requireSubject(ctx);
 			// `{{variables}}` filled first: a send stopped there costs nothing.
-			const { request, secrets } = await fillVariables(sub, input);
+			const { request, secrets, redirectAllowed } = await fillVariables(
+				sub,
+				input,
+			);
 			// Before the quota: a request refused as busy costs nothing.
 			const slot = concurrency.acquire(sub);
 			if (!slot.ok) {
@@ -106,6 +109,15 @@ export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
 				// through the user's tunnel.
 				await admitProxyRequest(sub);
 				const route = await routeLocal(sub, sessionIdOf(ctx), request.url);
+				// A local target goes through a tunnel: Localman's host, never
+				// a place for a filled secret.
+				if (redirectAllowed && !redirectAllowed(new URL(route.url))) {
+					throw new OperationError(
+						409,
+						"AGENT_HOST_NOT_ALLOWED",
+						"These secrets may not be sent through a tunnel",
+					);
+				}
 				const response = await forwardRequest(
 					{ ...request, url: route.url },
 					{
@@ -114,6 +126,7 @@ export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
 						forwardedProto: publicScheme(),
 						// The browser or agent gave up: stop the upstream request.
 						signal: ctx.signal,
+						...(redirectAllowed ? { redirectAllowed } : {}),
 					},
 				);
 				const ms = Math.round(performance.now() - started);

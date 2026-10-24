@@ -25,6 +25,11 @@ export interface ForwardOptions {
 	readonly forwardedProto: string;
 	/** Aborts when the caller goes away; the upstream request stops too. */
 	readonly signal?: AbortSignal;
+	/**
+	 * Whether a redirect may be followed; when not, its 3xx is the answer.
+	 * Set when the server filled secrets, which may only reach allowed hosts.
+	 */
+	readonly redirectAllowed?: (to: URL) => boolean;
 }
 
 /** The request of one hop; redirects derive the next one from it. */
@@ -153,7 +158,11 @@ export async function forwardRequest(
 				signal,
 			);
 			const status = response.statusCode ?? 0;
-			const next = followRedirects ? redirectTarget(response, state.url) : null;
+			const target = followRedirects
+				? redirectTarget(response, state.url)
+				: null;
+			const next =
+				target && (options.redirectAllowed?.(target) ?? true) ? target : null;
 			if (next) {
 				response.resume();
 				response.destroy();

@@ -36,7 +36,20 @@ const [sendRequest] = createProxyOperations({
 const SHARED = "shared-s3cret-91ab";
 const COPY = "agent-copy-s3cret-5d2e";
 
-/** Eve's workspace with an environment: `base` (plain) and secret `token`. */
+/** Eve lets her agents use `token` of an environment, toward the test server. */
+async function letAgentsUse(env: string): Promise<void> {
+	const res = await as(EVE).send(
+		"put",
+		`/agent-secret-uses/environment/${env}/token`,
+		{ hosts: ["127.0.0.1"] },
+	);
+	expect(res.status, JSON.stringify(res.body)).toBe(200);
+}
+
+/**
+ * Eve's workspace with an environment: `base` (plain) and secret `token`,
+ * which her agents may use toward the test server.
+ */
 async function workspace() {
 	const ws = (await teamOfThree()).toHexString();
 	const env = await createEnvironmentAs(EVE, ws, {
@@ -46,6 +59,7 @@ async function workspace() {
 			variableInput("token", SHARED, { type: "secret" }),
 		],
 	});
+	await letAgentsUse(env.id);
 	return { ws, env: env.id };
 }
 
@@ -148,6 +162,7 @@ describe("send_request filling variables for an agent", () => {
 				variableInput("token", spaced, { type: "secret" }),
 			],
 		});
+		await letAgentsUse(env.id);
 		const res = await send(ws, env.id);
 		expect(res.finalUrl).toBe(`${server.origin}/echo?t=[secret]`);
 		expect(echoOf(res.body).path).toBe("/echo?t=[secret]");

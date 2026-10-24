@@ -30,7 +30,7 @@ dependencies: [10, 13, 16]
 | Đọc bản mã khi vault đang khoá | **Không tự hỏi**: giá trị coi như chưa đặt, có nút mở khoá | 0,54 (0,08, gần hoà với "hỏi một lần mỗi phiên") |
 | Xuất bản sao lưu đã mã hoá | **Để sau**, không làm trong T5 | 0,97 (0,94) |
 | Gửi request dùng giá trị local đang khoá trong vault | **Dừng và đề nghị mở kho**, như secret bị giấu; không quay về giá trị shared (user có thể cố ý đặt giá trị riêng, ví dụ token của tài khoản khác) | 0,98 (0,96) |
-| "Cho agent dùng" áp cho giá trị nào | Chỉ **giá trị local trong vault**; giá trị shared của secret agent đã dùng được sẵn (máy chủ điền, không trả về) | theo ADR-0009 mục 3 |
+| "Cho agent dùng" áp cho giá trị nào | ~~Chỉ giá trị local trong vault~~ → **mọi secret (shared lẫn local), kèm danh sách host được phép**; không bao giờ host của Localman; redirect chỉ theo khi host mới đạt điều kiện (review 24/10: agent tự chọn URL nên có thể gửi secret đi nơi khác) | user chọn, Jev 0,84 |
 | Agent qua MCP dùng secret | **Dùng mà không đọc** (user chọn 24/10/2026, Jev 1,0): `send_request` nhận `{{biến}}` kèm environment, máy chủ thay rồi che giá trị trong response; giá trị shared dùng ngay, giá trị trong vault chỉ khi user bật "Cho agent dùng" cho từng biến. Chi tiết: ADR-0009 | user + Jev 1,0 |
 | Dẫn xuất khoá | **PBKDF2-SHA256, 600.000 vòng**, WebCrypto, không thêm dependency | 0,97 |
 | Giá trị local cũ (server mã hoá) | **Mã hoá lại khi đặt passphrase**: trình duyệt đọc một lần rồi ghi lại dạng `lmv1:` | 0,99 |
@@ -85,7 +85,7 @@ dependencies: [10, 13, 16]
 - [x] T3 `response-references` có TTL, gửi lại, phát hiện vòng lặp (24/10: `packages/shared/src/api-client/response-references.ts` thuần; workbench giữ response cuối của mỗi request trong bộ nhớ, gửi lại nguồn khi hết TTL như tab của nó, nối tối đa 5 request; chỉ dùng trong request đã lưu vào collection)
 - [x] T4 Module docs có ETag và trang public qua registry (24/10: `apps/api/src/modules/project-docs/`; operation chưa đặt được header nên trả `version` là hash nội dung thay cho ETag HTTP; docs không bao giờ có URL mock vì chứa secret, path trên `{baseUrl}` (Jev: publish bật tay 0,96; path `/p/<slug>/docs` 0,71; URL mock: placeholder, hoà 0,47 với "chủ project chọn", chọn placeholder vì ưu tiên riêng tư); cổng `PROJECT_DOCS_ENABLED`, cờ web `projectDocs`)
 - [ ] T5 Vault nối vào environment editor; server chặn PUT thiếu `lmv1:` (24/10: phía máy chủ xong sau cổng `SECRET_VAULT_ENABLED`: thông số kho `secret_vaults`, luật ghi `local-vault-rules.ts`, đặt lại kho; prototype phần vault đã thêm vào `prototype/api-client.html`, chờ user duyệt rồi mới làm UI web)
-- [ ] T5b (24/10: phía máy chủ xong, `agent-variable-fill.ts`, `secret-mask.ts`, test `agent-variable-send.test.ts`; còn công tắc "Cho agent dùng" ở UI) Agent gửi request có secret qua MCP: nhận 200, không thấy giá trị trong response, lỗi hay log; biến vault chưa bật "Cho agent dùng" bị từ chối; agent không bật được công tắc
+- [ ] T5b (24/10: phía máy chủ xong, `agent-variable-fill.ts`, `agent-secret-destination.ts`, `secret-mask.ts`, `agent_secret_uses` + operation bật/tắt kèm host; test `agent-variable-send.test.ts`, `agent-secret-destination.test.ts`; còn công tắc "Cho agent dùng" kèm ô host ở UI) Agent gửi request có secret qua MCP: nhận 200, không thấy giá trị trong response, lỗi hay log; biến vault chưa bật "Cho agent dùng" bị từ chối; agent không bật được công tắc
 - [ ] T6 `data-policy` một nguồn và trang minh bạch dữ liệu
 - [ ] T7 Trang docs public và gợi ý `{{response …}}`
 - [ ] T8 E2E pass

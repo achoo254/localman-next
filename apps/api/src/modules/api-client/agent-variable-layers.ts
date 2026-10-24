@@ -29,6 +29,8 @@ interface UsableLocals {
 	readonly locked: Set<string>;
 	/** Agent copies filled in: masked whatever the variable's type now. */
 	readonly copies: string[];
+	/** Names whose value is an agent copy. */
+	readonly copied: Set<string>;
 }
 
 /**
@@ -51,6 +53,7 @@ async function usableLocals(
 		: new Map<string, string>();
 	const locked = new Set<string>();
 	const used: string[] = [];
+	const copied = new Set<string>();
 	const usable = values.flatMap((entry): LocalValue[] => {
 		if (!owned(entry)) return [entry];
 		const copy = copies.get(entry.key);
@@ -59,9 +62,10 @@ async function usableLocals(
 			return [];
 		}
 		used.push(copy);
+		copied.add(entry.key);
 		return [{ key: entry.key, value: copy }];
 	});
-	return { values: usable, locked, copies: used };
+	return { values: usable, locked, copies: used, copied };
 }
 
 const secretNames = (variables: readonly VariableView[]): Set<string> =>
@@ -105,6 +109,10 @@ export interface Layers {
 	readonly locked: Map<string, Set<string>>;
 	/** Agent copies in use, always masked. */
 	readonly copies: string[];
+	/** Names backed by an agent copy, per layer kind. */
+	readonly copied: Map<string, Set<string>>;
+	/** The stored scope of each layer kind (`environment:<id>`...). */
+	readonly scopes: Map<string, string>;
 }
 
 /**
@@ -118,6 +126,8 @@ export async function buildLayers(
 	const layers: ResolverLayer[] = [];
 	const locked = new Map<string, Set<string>>();
 	const copies: string[] = [];
+	const copied = new Map<string, Set<string>>();
+	const scopes = new Map<string, string>();
 	const add = async (
 		kind: ResolverLayer["kind"],
 		scope: string,
@@ -128,6 +138,8 @@ export async function buildLayers(
 		const usable = await usableLocals(sub, scope, local, vaultKeys);
 		locked.set(kind, usable.locked);
 		copies.push(...usable.copies);
+		copied.set(kind, usable.copied);
+		scopes.set(kind, scope);
 		layers.push({
 			kind,
 			variables: lockIn(build(usable.values), usable.locked),
@@ -177,5 +189,5 @@ export async function buildLayers(
 			(values) => scopeVariables(environment.variables, values),
 		);
 	}
-	return { layers, locked, copies };
+	return { layers, locked, copies, copied, scopes };
 }

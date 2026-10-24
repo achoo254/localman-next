@@ -7,6 +7,7 @@ import {
 } from "@localman/shared/api-client";
 import type { ClientSession } from "mongoose";
 import { elementNotFound } from "../access/access-policy.js";
+import { AgentSecretUseModel } from "../secret-vault/agent-secret-use-model.js";
 import { secretVaultEnabled } from "../secret-vault/secret-vault-gate.js";
 import { alignLocalSealing } from "./local-reseal.js";
 import {
@@ -184,4 +185,6 @@ export async function deleteScopeLocalValues(
 		{ scope: { $in: scopes } },
 		{ session },
 	);
+	// And what people let their agents use there.
+	await AgentSecretUseModel.deleteMany({ scope: { $in: scopes } }, { session });
 }

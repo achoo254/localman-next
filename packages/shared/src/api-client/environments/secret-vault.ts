@@ -50,3 +50,40 @@ export const secretVaultParamsSchema = z.object({
 	check: z.string().refine(isVaultCiphertext, "must be an lmv1: ciphertext"),
 });
 export type SecretVaultParams = z.infer<typeof secretVaultParamsSchema>;
+
+/** Hosts one secret may be sent to by agents (ADR-0009). */
+export const AGENT_HOSTS_MAX = 20;
+
+const HOST_LABEL = "[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?";
+const AGENT_HOST = new RegExp(
+	`^(?:\\*\\.)?(?:${HOST_LABEL}\\.)*${HOST_LABEL}$`,
+);
+
+/** A host (`api.example.com`) or every subdomain of one (`*.example.com`). */
+export const agentHostSchema = z
+	.string()
+	.trim()
+	.toLowerCase()
+	.max(253)
+	.regex(
+		AGENT_HOST,
+		"must be a host name such as api.example.com or *.example.com",
+	);
+
+export const agentHostsSchema = z
+	.array(agentHostSchema)
+	.min(1)
+	.max(AGENT_HOSTS_MAX);
+
+/** Whether `host` (any case, no port) is one of `patterns`. */
+export function agentHostAllowed(
+	host: string,
+	patterns: readonly string[],
+): boolean {
+	const name = host.toLowerCase().replace(/\.$/, "");
+	return patterns.some((pattern) =>
+		pattern.startsWith("*.")
+			? name.endsWith(pattern.slice(1)) && name.length > pattern.length - 1
+			: name === pattern,
+	);
+}

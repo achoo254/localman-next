@@ -7,6 +7,7 @@ import {
 	resolveVariable,
 } from "@localman/shared/api-client";
 import { secretVaultEnabled } from "../secret-vault/secret-vault-gate.js";
+import { assertSecretDestination } from "./agent-secret-destination.js";
 import { buildLayers } from "./agent-variable-layers.js";
 
 export interface FilledRequest {
@@ -14,6 +15,8 @@ export interface FilledRequest {
 	readonly request: ProxyRequest;
 	/** Values of secret variables filled in: never shown to the caller. */
 	readonly secrets: readonly string[];
+	/** Where a redirect may lead once secrets are filled; unset otherwise. */
+	readonly redirectAllowed?: (to: URL) => boolean;
 }
 
 /**
@@ -22,7 +25,9 @@ export interface FilledRequest {
  * them; a vault value only when the user lets agents use it. A name the
  * caller may not use stops the send (409 `SECRET_WITHHELD`, `details.keys`,
  * `details.vault` for those locked in the vault); any other unknown name
- * stays as typed. Without `variables` the request goes as it is.
+ * stays as typed. A filled secret must be let to agents, for the request's
+ * host (`assertSecretDestination`). Without `variables` the request goes
+ * as it is.
  */
 export async function fillVariables(
 	sub: string,
@@ -37,7 +42,8 @@ export async function fillVariables(
 			"Filling variables on the server is not available on this server",
 		);
 	}
-	const { layers, locked, copies } = await buildLayers(sub, refs);
+	const built = await buildLayers(sub, refs);
+	const { layers, locked, copies } = built;
 	const interpolator = createInterpolator({
 		scopes: [interpolationScope(layers)],
 	});
@@ -93,5 +99,19 @@ export async function fillVariables(
 			`The ${String(field)} is not valid once variables are filled`,
 		);
 	}
-	return { request: checked.data, secrets };
+	const templates = [
+		request.url,
+		...request.headers.map((header) => header.value),
+		...(request.bodyType === "text" && request.body ? [request.body] : []),
+	];
+	const redirectAllowed = await assertSecretDestination(
+		sub,
+		templates,
+		built,
+		checked.data.url,
+		secrets,
+	);
+	return redirectAllowed
+		? { request: checked.data, secrets, redirectAllowed }
+		: { request: checked.data, secrets };
 }
