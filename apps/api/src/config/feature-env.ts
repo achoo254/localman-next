@@ -141,12 +141,7 @@ export const featureEnvShape = {
 	/** Live Mock Sync, project docs; off: not routed nor MCP tools. */
 	LIVE_MOCK_SYNC_ENABLED: offByDefault,
 	PROJECT_DOCS_ENABLED: offByDefault,
-	/**
-	 * The browser vault of local secret values and agents using secrets
-	 * without reading them (ADR-0009). Off: the vault operations are not
-	 * routed, local values are saved as before and `send_request` does not
-	 * fill variables.
-	 */
+	/** Browser secret vault and agents using secrets (ADR-0009); off: not routed. */
 	SECRET_VAULT_ENABLED: offByDefault,
 	/**
 	 * Tunelo API for every tenant, e.g. a local Tunelo in dev or a fake in

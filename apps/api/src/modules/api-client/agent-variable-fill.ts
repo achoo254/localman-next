@@ -6,9 +6,8 @@ import {
 	proxyRequestSchema,
 	resolveVariable,
 } from "@localman/shared/api-client";
-import { runtimeSettings } from "../../config/runtime-settings.js";
+import { secretVaultEnabled } from "../secret-vault/secret-vault-gate.js";
 import { buildLayers } from "./agent-variable-layers.js";
-import { maskSecrets } from "./secret-mask.js";
 
 export interface FilledRequest {
 	/** The request to send, `{{variables}}` filled and checked again. */
@@ -31,22 +30,23 @@ export async function fillVariables(
 ): Promise<FilledRequest> {
 	const { variables: refs, ...request } = input;
 	if (!refs) return { request, secrets: [] };
-	if (!runtimeSettings().secretVault) {
+	if (!secretVaultEnabled()) {
 		throw new OperationError(
 			404,
 			"SECRET_VAULT_DISABLED",
 			"Filling variables on the server is not available on this server",
 		);
 	}
-	const { layers, locked } = await buildLayers(sub, refs);
+	const { layers, locked, copies } = await buildLayers(sub, refs);
 	const interpolator = createInterpolator({
 		scopes: [interpolationScope(layers)],
 	});
 	const filled = {
 		...request,
 		url: interpolator.apply(request.url),
+		// Header names cannot hold braces (schema), so only values are filled.
 		headers: request.headers.map((header) => ({
-			name: interpolator.apply(header.name),
+			name: header.name,
 			value: interpolator.apply(header.value),
 		})),
 		body:
@@ -78,19 +78,19 @@ export async function fillVariables(
 			entry.value,
 		]),
 	);
-	const secrets = interpolator
-		.secretsUsed()
-		.flatMap((name) => values.get(name) ?? []);
+	const secrets = [
+		...interpolator.secretsUsed().flatMap((name) => values.get(name) ?? []),
+		...copies,
+	];
 	const checked = proxyRequestSchema.safeParse(filled);
 	if (!checked.success) {
-		const issue = checked.error.issues[0];
+		// Only where, never why: a reason (too long, a line break) would say
+		// something about a secret's value.
+		const field = checked.error.issues[0]?.path[0] ?? "request";
 		throw new OperationError(
 			400,
 			"VALIDATION_ERROR",
-			maskSecrets(
-				`${issue?.path.join(".") ?? "request"}: ${issue?.message ?? "invalid"} after filling variables`,
-				secrets,
-			),
+			`The ${String(field)} is not valid once variables are filled`,
 		);
 	}
 	return { request: checked.data, secrets };

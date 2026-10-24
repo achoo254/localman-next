@@ -61,7 +61,13 @@ export async function alignLocalSealing(
 			{
 				updateOne: {
 					filter: { _id: row._id },
-					update: { $set: { value, sealed: seal } },
+					// No longer a secret: it leaves the vault and agents lose the copy.
+					update: seal
+						? { $set: { value, sealed: seal } }
+						: {
+								$set: { value, sealed: seal, vault: false },
+								$unset: { agentValue: "" as const },
+							},
 				},
 			},
 		];

@@ -3,6 +3,7 @@ import {
 	type ProxyRequest,
 	type ResolverLayer,
 	type ScopeVariable,
+	type VariableView,
 	entryVariables,
 	isVaultCiphertext,
 	scopeVariables,
@@ -23,31 +24,52 @@ import {
 } from "../environments/local-values.js";
 import { collectionScope } from "../environments/scope-local-service.js";
 
+interface UsableLocals {
+	readonly values: LocalValue[];
+	readonly locked: Set<string>;
+	/** Agent copies filled in: masked whatever the variable's type now. */
+	readonly copies: string[];
+}
+
 /**
- * Local values as the server may use them for an agent (ADR-0009): a vault
- * ciphertext becomes its agent copy, or `locked` when the user did not let
- * agents use it.
+ * Local values as the server may use them for an agent (ADR-0009). A
+ * person's own value of a secret (`vaultKeys`, or any vault ciphertext) is
+ * used only through the copy they let agents use, else `locked`: that
+ * covers values saved before the vault, too. A copy stays a secret even if
+ * its variable stopped being one or lost its definition.
  */
 async function usableLocals(
 	sub: string,
 	scope: string,
 	values: readonly LocalValue[],
-): Promise<{ values: LocalValue[]; locked: Set<string> }> {
-	const vault = values.filter((entry) => isVaultCiphertext(entry.value));
-	const copies =
-		vault.length > 0 ? await readAgentCopies(sub, scope) : new Map();
+	vaultKeys: ReadonlySet<string>,
+): Promise<UsableLocals> {
+	const owned = (entry: LocalValue) =>
+		vaultKeys.has(entry.key) || isVaultCiphertext(entry.value);
+	const copies = values.some(owned)
+		? await readAgentCopies(sub, scope)
+		: new Map<string, string>();
 	const locked = new Set<string>();
+	const used: string[] = [];
 	const usable = values.flatMap((entry): LocalValue[] => {
-		if (!isVaultCiphertext(entry.value)) return [entry];
+		if (!owned(entry)) return [entry];
 		const copy = copies.get(entry.key);
 		if (copy === undefined) {
 			locked.add(entry.key);
 			return [];
 		}
+		used.push(copy);
 		return [{ key: entry.key, value: copy }];
 	});
-	return { values: usable, locked };
+	return { values: usable, locked, copies: used };
 }
+
+const secretNames = (variables: readonly VariableView[]): Set<string> =>
+	new Set(
+		variables
+			.filter((variable) => variable.type === "secret")
+			.map((variable) => variable.key),
+	);
 
 /** A locked vault value wins like a withheld secret: nothing stands in. */
 function lockIn(
@@ -81,6 +103,8 @@ export interface Layers {
 	readonly layers: ResolverLayer[];
 	/** Names locked in the vault, per layer kind. */
 	readonly locked: Map<string, Set<string>>;
+	/** Agent copies in use, always masked. */
+	readonly copies: string[];
 }
 
 /**
@@ -93,14 +117,17 @@ export async function buildLayers(
 ): Promise<Layers> {
 	const layers: ResolverLayer[] = [];
 	const locked = new Map<string, Set<string>>();
+	const copies: string[] = [];
 	const add = async (
 		kind: ResolverLayer["kind"],
 		scope: string,
 		local: readonly LocalValue[],
+		vaultKeys: ReadonlySet<string>,
 		build: (values: LocalValue[]) => ScopeVariable[],
 	) => {
-		const usable = await usableLocals(sub, scope, local);
+		const usable = await usableLocals(sub, scope, local, vaultKeys);
 		locked.set(kind, usable.locked);
+		copies.push(...usable.copies);
 		layers.push({
 			kind,
 			variables: lockIn(build(usable.values), usable.locked),
@@ -111,6 +138,7 @@ export async function buildLayers(
 		"global",
 		globalsScope(globals.workspaceId),
 		globals.localValues,
+		secretNames(globals.variables),
 		(values) => scopeVariables(globals.variables, values),
 	);
 	if (refs.collectionId) {
@@ -123,11 +151,15 @@ export async function buildLayers(
 			variables: 1,
 		}).lean<Pick<StoredCollection, "variables">>();
 		const scope = collectionScope(collectionId);
+		const entries = stored?.variables ?? [];
 		await add(
 			"collection",
 			scope,
 			await readLocalValues(sub, scope),
-			(values) => entryVariables(stored?.variables ?? [], values),
+			new Set(
+				entries.filter((entry) => entry.secret).map((entry) => entry.key),
+			),
+			(values) => entryVariables(entries, values),
 		);
 	}
 	if (refs.environmentId) {
@@ -141,8 +173,9 @@ export async function buildLayers(
 			"environment",
 			environmentScope(environmentId),
 			environment.localValues,
+			secretNames(environment.variables),
 			(values) => scopeVariables(environment.variables, values),
 		);
 	}
-	return { layers, locked };
+	return { layers, locked, copies };
 }

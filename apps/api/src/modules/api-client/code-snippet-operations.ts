@@ -39,7 +39,11 @@ export const generateCodeSnippet = defineOperation({
 	description: `Code that sends \`request\` (the same envelope as send_request: method, url, headers, body, bodyType; options are ignored) in \`target\`: ${SNIPPET_TARGETS.join(", ")}. Like the Code button of the API client, but nothing is resolved: put values in yourself, {{variables}} stay as written. \`syntax\` names the language for highlighting; \`bodyOmitted\` is true when a base64 body is not UTF-8 text and the code leaves it out. Nothing is stored and no request is sent.`,
 	input: z.object({
 		target: z.enum(SNIPPET_TARGETS),
-		request: proxyRequestSchema,
+		// Nothing is filled here, so `variables` (and a template URL) is refused.
+		request: proxyRequestSchema.refine(
+			(request) => request.variables === undefined,
+			{ path: ["variables"], message: "variables are not filled in snippets" },
+		),
 	}),
 	output: z.object({
 		code: z.string(),

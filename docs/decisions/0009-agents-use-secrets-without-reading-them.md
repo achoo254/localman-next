@@ -28,5 +28,7 @@
 ## Hệ quả
 
 - Lời hứa "Secret không rời trình duyệt" đúng với mọi biến chưa bật "Cho agent dùng"; câu chữ marketing và trang minh bạch dữ liệu phải nói phần ngoại lệ.
-- Che response chỉ bắt được giá trị nguyên văn; upstream biến đổi giá trị (base64, băm) thì không che được. Ghi điều này trong mô tả tool.
+- Che response bắt giá trị nguyên văn và các dạng máy chủ hay kiểu dội lại thường tạo ra (mã hoá URL ở path, query, form; thoát ký tự JSON; mọi kiểu hoa thường). Upstream biến đổi khác (base64, băm, cắt nhỏ) thì không che được; mô tả tool ghi rõ.
+- **Rủi ro còn mở (review 24/10, chưa chốt):** agent tự chọn nơi gửi, nên lớp che không ngăn được việc agent gửi secret tới máy chủ của bên thứ ba, hoặc ghi secret vào chỗ lưu (resource của mock, log request) rồi đọc lại ở lần gọi khác. Vì vậy cổng `SECRET_VAULT_ENABLED` chưa được bật cho tới khi user chọn cách xử lý (giới hạn host đích cho từng secret, hay chấp nhận và ghi rõ rủi ro).
+- Giá trị local của secret lưu trước khi có vault không được agent dùng; bản cho agent luôn bị che kể cả khi biến thôi là secret, và bị bỏ khi biến thôi là secret.
 - Việc cần làm nằm ở plan phase 21 (T5 và T5b).

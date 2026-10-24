@@ -1,8 +1,4 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import {
-	configureRuntime,
-	runtimeSettings,
-} from "../../config/runtime-settings.js";
 import { as } from "../../test-support/dashboard-test-app.js";
 import { EVE } from "../access/testing/access-fixture.js";
 import { registerCollectionAdapter } from "../collections/collection-adapter.js";
@@ -17,6 +13,7 @@ import {
 	useEnvironmentTestDb,
 	variableInput,
 } from "../environments/testing/environment-fixture.js";
+import { configureSecretVault } from "./secret-vault-gate.js";
 import {
 	createVaultAs,
 	fakeCiphertext,
@@ -149,7 +146,7 @@ describe("local values of secret variables with the vault on", () => {
 
 describe("local values with the vault off", () => {
 	it("saves them as before and refuses copies for agents", async () => {
-		configureRuntime({ ...runtimeSettings(), secretVault: false });
+		configureSecretVault(false);
 		const id = await environment();
 		const plain = await patch(id, [{ key: "token", value: "plain-s3cret" }]);
 		expect(plain.status).toBe(200);

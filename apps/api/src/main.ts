@@ -33,6 +33,7 @@ import {
 	type NotificationService,
 	createNotificationService,
 } from "./modules/notifications/notification-service.js";
+import { configureSecretVault } from "./modules/secret-vault/secret-vault-gate.js";
 import { configureTunelo } from "./modules/tunelo/tunelo-runtime.js";
 import { servedOperations } from "./operations/feature-gates.js";
 import { operations as registeredOperations } from "./operations/registry.js";
@@ -151,6 +152,7 @@ try {
 	// documents get the primary tenant first.
 	await migrateToTenants(logger, env.IDP_INTERNAL_URL !== undefined);
 	configureRuntime(runtimeSettingsFromEnv(env));
+	configureSecretVault(env.SECRET_VAULT_ENABLED);
 	configureTenancy(env, logger);
 	notifications = createNotificationService(env, logger);
 	setNotificationService(notifications);

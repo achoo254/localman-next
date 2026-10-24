@@ -1,8 +1,4 @@
 import { describe, expect, it } from "vitest";
-import {
-	configureRuntime,
-	runtimeSettings,
-} from "../../config/runtime-settings.js";
 import { createLogger } from "../../logger.js";
 import { as } from "../../test-support/dashboard-test-app.js";
 import { EVE } from "../access/testing/access-fixture.js";
@@ -13,6 +9,7 @@ import {
 	useEnvironmentTestDb,
 	variableInput,
 } from "../environments/testing/environment-fixture.js";
+import { configureSecretVault } from "../secret-vault/secret-vault-gate.js";
 import {
 	createVaultAs,
 	fakeCiphertext,
@@ -106,9 +103,59 @@ describe("send_request filling variables for an agent", () => {
 		]);
 	});
 
+	it("never shows a copy once its variable stops being a secret", async () => {
+		const { ws, env } = await workspace();
+		await createVaultAs(EVE);
+		await as(EVE).send("patch", `/environments/${env}/local-values`, {
+			values: [{ key: "token", value: fakeCiphertext(), agentValue: COPY }],
+		});
+		const retyped = await as(EVE).send(
+			"put",
+			`/environments/${env}/variables`,
+			{
+				variables: [
+					variableInput("base", server.origin),
+					variableInput("token", "", { type: "default" }),
+				],
+			},
+		);
+		expect(retyped.status, JSON.stringify(retyped.body)).toBe(200);
+		const outcome = await send(ws, env).catch((error: unknown) => error);
+		expect(JSON.stringify(outcome)).not.toContain(COPY);
+		expect(outcome).toMatchObject({ status: 409, code: "SECRET_WITHHELD" });
+	});
+
+	it("does not use a secret's local value saved before the vault", async () => {
+		const { ws, env } = await workspace();
+		configureSecretVault(false);
+		await as(EVE).send("patch", `/environments/${env}/local-values`, {
+			values: [{ key: "token", value: "legacy-local-s3cret" }],
+		});
+		configureSecretVault(true);
+		await expect(send(ws, env)).rejects.toMatchObject({
+			status: 409,
+			details: { vault: "token" },
+		});
+	});
+
+	it("masks the secret in the URL the server encoded", async () => {
+		const ws = (await teamOfThree()).toHexString();
+		const spaced = "s3cret with spaces é";
+		const env = await createEnvironmentAs(EVE, ws, {
+			name: "Encoded",
+			variables: [
+				variableInput("base", server.origin),
+				variableInput("token", spaced, { type: "secret" }),
+			],
+		});
+		const res = await send(ws, env.id);
+		expect(res.finalUrl).toBe(`${server.origin}/echo?t=[secret]`);
+		expect(echoOf(res.body).path).toBe("/echo?t=[secret]");
+	});
+
 	it("is not offered while the vault is off", async () => {
 		const { ws, env } = await workspace();
-		configureRuntime({ ...runtimeSettings(), secretVault: false });
+		configureSecretVault(false);
 		await expect(send(ws, env)).rejects.toMatchObject({
 			status: 404,
 			code: "SECRET_VAULT_DISABLED",

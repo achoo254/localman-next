@@ -1,16 +1,12 @@
 import { randomBytes } from "node:crypto";
-import { beforeEach, expect } from "vitest";
-import {
-	configureRuntime,
-	runtimeSettings,
-} from "../../../config/runtime-settings.js";
+import { afterEach, beforeEach, expect } from "vitest";
 import { as } from "../../../test-support/dashboard-test-app.js";
+import { configureSecretVault } from "../secret-vault-gate.js";
 
 /** TEST ONLY. Turns `SECRET_VAULT_ENABLED` on, keeping the other settings. */
 export function useSecretVaultOn(): void {
-	beforeEach(() => {
-		configureRuntime({ ...runtimeSettings(), secretVault: true });
-	});
+	beforeEach(() => configureSecretVault(true));
+	afterEach(() => configureSecretVault(false));
 }
 
 /** TEST ONLY. A well-formed `lmv1:` ciphertext (random, it never opens). */

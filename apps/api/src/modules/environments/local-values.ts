@@ -7,6 +7,7 @@ import {
 } from "@localman/shared/api-client";
 import type { ClientSession } from "mongoose";
 import { elementNotFound } from "../access/access-policy.js";
+import { secretVaultEnabled } from "../secret-vault/secret-vault-gate.js";
 import { alignLocalSealing } from "./local-reseal.js";
 import {
 	LocalVariableValueModel,
@@ -107,9 +108,10 @@ export async function patchLocalValues(
 	stateOf: () => Promise<ScopeState>,
 	writer: LocalWriter = BROWSER_WRITER,
 ): Promise<LocalValue[]> {
-	const { exists, secretKeys, vaultKeys } = await stateOf();
+	const { exists, secretKeys, vaultKeys = secretKeys } = await stateOf();
 	if (!exists) throw elementNotFound();
-	await assertVaultRules(userId, patch, vaultKeys ?? secretKeys, writer);
+	await assertVaultRules(userId, patch, vaultKeys, writer);
+	const vaultOn = secretVaultEnabled();
 	const last = new Map(patch.map((entry) => [entry.key, entry]));
 	const removed = [...last.values()].flatMap((entry) =>
 		entry.value === null ? [entry.key] : [],
@@ -134,7 +136,9 @@ export async function patchLocalValues(
 		const stored = sealed
 			? sealSecret(value, localSlot(userId, scope, key))
 			: value;
-		const fields = { value: stored, sealed, vault: isVaultCiphertext(value) };
+		// In the vault: a secret's ciphertext while the vault runs (a reset drops it).
+		const vault = vaultOn && vaultKeys.has(key) && isVaultCiphertext(value);
+		const fields = { value: stored, sealed, vault };
 		// A new value without its copy stops the old copy: never stale.
 		const update =
 			typeof agentValue === "string"
