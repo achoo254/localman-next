@@ -54,3 +54,16 @@ export async function callTool(
 	}
 	return structuredOf(result);
 }
+
+/** Calls a tool that must fail; answers its error content as text. */
+export async function callToolFailing(
+	client: Client,
+	name: string,
+	args: object,
+): Promise<string> {
+	const result = await client.callTool({ name, arguments: { ...args } });
+	if (!result.isError) {
+		throw new Error(`${name} succeeded: ${JSON.stringify(result.content)}`);
+	}
+	return JSON.stringify(result.content);
+}
