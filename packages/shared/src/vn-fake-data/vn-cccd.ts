@@ -8,9 +8,14 @@ export interface VnCccdProvince {
 
 /**
  * Province codes that open a citizen ID card number (CCCD): the place of
- * birth registration, one code per province of the 63-province map
- * (Circular 07/2016/TT-BCA). Cards issued before the 2025 merger keep
- * them, so they are the codes real numbers carry.
+ * birth registration, one code per province of the 63-province map. The
+ * 12-digit structure was set by Circular 07/2016/TT-BCA, replaced by
+ * Circular 59/2021/TT-BCA (in force 1 July 2021) with the same structure;
+ * the Law on Identification 2023 (26/2023/QH15) keeps the 12-digit
+ * personal identification number, and the new identity cards carry it
+ * unchanged. Numbers already issued keep these codes after the 2025
+ * merger, so a fake person's code is independent of the 34-province
+ * address the generator gives.
  */
 export const VN_CCCD_PROVINCES: readonly VnCccdProvince[] = [
 	["001", "Hà Nội"],
