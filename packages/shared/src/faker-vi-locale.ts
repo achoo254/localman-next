@@ -8,8 +8,15 @@ import { VN_MIDDLE_NAMES } from "./vn-fake-data/vn-names-data.js";
 import { VN_MOBILE_PREFIXES } from "./vn-fake-data/vn-phone.js";
 import { VN_PROVINCES, VN_STREETS } from "./vn-fake-data/vn-places-data.js";
 
-/** The 34 provinces and centrally run cities, as people write them. */
-const PROVINCE_NAMES = VN_PROVINCES.map((place) => place.name);
+/** Names of the places of one kind, as people write them. */
+const namesOf = (kind: "city" | "province"): string[] =>
+	VN_PROVINCES.filter((place) => place.kind === kind).map(
+		(place) => place.name,
+	);
+
+/** `thanh_pho` asks for a city, `tinh` for a province: keep them apart. */
+const CITY_NAMES = namesOf("city");
+const PROVINCE_NAMES = namesOf("province");
 
 /** Every sample ward once, "Phường …" as in an address. */
 const WARDS = [...new Set(VN_PROVINCES.flatMap((place) => place.wards))].map(
@@ -26,9 +33,10 @@ const WARDS = [...new Set(VN_PROVINCES.flatMap((place) => place.wards))].map(
  * - mobile numbers on prefixes in use (Faker's include landlines and
  *   retired prefixes);
  * - places from `vn-places-data.ts`: Vietnamese streets without English
- *   suffixes ("12 Lê Lợi", not "7809 Tô Inlet"), cities and provinces of
- *   the 34-province map since 1 July 2025 ("Hải Phòng", not "Haiphong" or
- *   "Quảng Bình"), sample wards for `county` (districts are gone);
+ *   suffixes ("12 Lê Lợi", not "7809 Tô Inlet"), the 6 centrally run cities
+ *   for `city` and the 28 provinces for `state`, on the map since 1 July
+ *   2025 ("Hải Phòng", not "Haiphong"; "Quảng Trị", not "Quảng Bình"),
+ *   sample wards for `county` (districts are gone);
  * - job titles "role department" from `vn-job-data.ts` (`vi` has none).
  *
  * English still fills what no Vietnamese field asks for (internet,
@@ -65,7 +73,7 @@ export const VI_LOCALE: LocaleDefinition[] = [
 				normal: "{{location.buildingNumber}} {{location.street}}",
 				full: "{{location.buildingNumber}} {{location.street}}, {{location.city}}",
 			},
-			city_name: PROVINCE_NAMES,
+			city_name: CITY_NAMES,
 			city_pattern: ["{{location.city_name}}"],
 			state: PROVINCE_NAMES,
 			// Vietnam has no customary short forms of province names.

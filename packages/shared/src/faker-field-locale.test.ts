@@ -126,11 +126,13 @@ describe("fakerForField places and jobs", () => {
 		}
 	});
 
-	it("takes thanh_pho and tinh from the 34 provinces only", () => {
+	it("takes thanh_pho from the 6 cities and tinh from the 28 provinces", () => {
 		const cities = valuesOf("thanh_pho", "address.city");
 		const states = valuesOf("tinh", "address.state");
-		for (const place of [...cities, ...states]) {
-			expect(provinces.has(place), place).toBe(true);
+		const kindOf = new Map(VN_PROVINCES.map((p) => [p.name, p.kind]));
+		for (const place of cities) expect(kindOf.get(place), place).toBe("city");
+		for (const place of states) {
+			expect(kindOf.get(place), place).toBe("province");
 		}
 		// Old-map names and Faker's English spellings never show.
 		for (const old of ["Haiphong", "Hanoi", "Quảng Bình", "Đắk Nông"]) {
