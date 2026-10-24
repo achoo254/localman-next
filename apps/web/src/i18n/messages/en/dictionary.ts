@@ -25,6 +25,7 @@ import { mockCallbacks } from "./mock-callbacks";
 import { notifications } from "./notifications";
 import { primitives } from "./primitives";
 import { projectDetail } from "./project-detail";
+import { projectDocs } from "./project-docs";
 import { projects } from "./projects";
 import { publicSharing } from "./public-sharing";
 import { resourceChaos } from "./resource-chaos";
@@ -91,6 +92,7 @@ export const en = {
 	publicSharing,
 	versionControl,
 	liveMockSync,
+	projectDocs,
 	legal,
 	legalPrivacy,
 	legalTerms,

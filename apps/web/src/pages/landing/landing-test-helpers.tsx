@@ -19,6 +19,7 @@ export const ALL_FEATURES: FeatureFlags = Object.freeze({
 	comments: true,
 	forks: true,
 	tuneloAccounts: true,
+	projectDocs: true,
 });
 
 /** Renders `element` at `/` under the app providers and the given flags. */

@@ -35,6 +35,15 @@ export const publicRoutes: RouteObject[] = [
 			"PublicCollectionPage",
 		),
 	},
+	// The published docs of a mock project; read-only, no sign-in
+	// (`projectDocs` flag, home otherwise).
+	{
+		path: "p/:slug/docs",
+		element: lazyPage(
+			() => import("../pages/public/public-docs-page"),
+			"PublicDocsPage",
+		),
+	},
 	// "Run in Localman" badges land here; public so the page can explain
 	// before asking to sign in (`publicSharing` flag, home otherwise).
 	{

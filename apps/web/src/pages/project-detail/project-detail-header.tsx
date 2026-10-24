@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { Button } from "../../components/ui/button";
 import type { MemberDialogKind } from "../../features/collaborators/project-member-dialogs";
 import { ProjectSyncActions } from "../../features/live-mock-sync/project-sync-actions";
+import { DocsPublishButton } from "../../features/project-docs/docs-publish-dialog";
 import { useT } from "../../i18n/i18n-context";
 import type { Project } from "../projects/projects-api";
 
@@ -49,6 +50,7 @@ export function ProjectDetailHeader({
 			</nav>
 			<div className="flex flex-wrap items-center gap-2">
 				<ProjectSyncActions project={project} />
+				<DocsPublishButton projectId={project.id} />
 				<Button
 					size="sm"
 					data-id="project-detail-collaborators"

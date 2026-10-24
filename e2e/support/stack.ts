@@ -114,6 +114,7 @@ const UNRELEASED_FEATURES = [
 	"forks",
 	"tuneloAccounts",
 	"liveMockSync",
+	"projectDocs",
 ];
 
 /**
