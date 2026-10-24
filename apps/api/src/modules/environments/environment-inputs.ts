@@ -22,4 +22,4 @@ export const AGENT_KEEPS_SHARED =
 	"Called with an agent token, a secret sent back as `sharedValue: null` (as an agent reads it) keeps its stored value; send a value to replace it.";
 /** Set operations of local values (environments, globals, collections). */
 export const AGENT_KEEPS_LOCAL =
-	"Called with an agent token, `value: null` for a secret (as an agent reads it) keeps your local value instead of resetting it.";
+	"Called with an agent token, `value: null` for a secret (as an agent reads it) keeps your local value instead of resetting it. When the server runs the secret vault, local values of secret variables are encrypted in the user's browser: an agent cannot write them (403 SECRET_VAULT_AGENT_WRITE), a browser writes them as `lmv1:` ciphertext (409 SECRET_VAULT_REQUIRED otherwise), and `agentUse: true` marks one the user lets agents use through send_request `variables`.";

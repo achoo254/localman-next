@@ -1,7 +1,11 @@
 import { defineOperation } from "@localman/operations";
 import { localValuesPatchSchema } from "@localman/shared/api-client";
 import { z } from "zod";
-import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
+import {
+	USER_SCOPE,
+	isAgentCall,
+	requireSubject,
+} from "../../http/require-auth.js";
 import {
 	localPatchForCaller,
 	localValuesForCaller,
@@ -120,6 +124,7 @@ export const setCollectionLocalValuesOperation = defineOperation({
 					requireSubject(ctx),
 					input.collectionId,
 					values,
+					{ agent: isAgentCall(ctx) },
 				),
 				secrets,
 			),

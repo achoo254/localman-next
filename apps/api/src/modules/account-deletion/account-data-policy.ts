@@ -52,6 +52,8 @@ export const ACCOUNT_DATA_POLICY: Readonly<
 	ContactMessage: "deleted",
 	TunnelLink: "deleted",
 	LocalVariableValue: "deleted",
+	// Vault parameters (salt, check ciphertext) of the person.
+	SecretVault: "deleted",
 	ActiveEnvironment: "deleted",
 	CollectionFavorite: "deleted",
 	CollectionWatch: "deleted",

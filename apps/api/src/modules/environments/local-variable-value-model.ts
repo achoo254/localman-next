@@ -16,6 +16,11 @@ const localVariableValueSchema = new Schema(
 		key: { type: String, required: true },
 		value: { type: String, required: true },
 		sealed: { type: Boolean, default: false },
+		// `value` is a browser vault ciphertext (`lmv1:`): a vault reset drops it.
+		vault: { type: Boolean, default: false },
+		// The copy of a vault value agents may use (ADR-0009), sealed in
+		// slot `agentSlot`; only the owner's browser sets it.
+		agentValue: { type: String, default: undefined },
 	},
 	{ collection: "local_variable_values", timestamps: true, versionKey: false },
 );
@@ -36,4 +41,6 @@ export interface StoredLocalValue {
 	readonly key: string;
 	readonly value: string;
 	readonly sealed?: boolean;
+	readonly vault?: boolean;
+	readonly agentValue?: string;
 }

@@ -116,6 +116,7 @@ export const setGlobalsLocalValuesOperation = defineOperation({
 					requireSubject(ctx),
 					input.workspaceId,
 					values,
+					{ agent: isAgentCall(ctx) },
 				),
 				secrets,
 			),

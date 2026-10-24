@@ -45,6 +45,10 @@ export function openSecret(sealed: string, slot: string): string | null {
 	}
 }
 
+/** Slot of the copy of a vault value that agents may use (ADR-0009). */
+export const agentSlot = (userId: string, scope: string, key: string): string =>
+	`agent:${userId}:${scope}:${key}`;
+
 /** Slot of a shared value: the scope and the variable's stable id. */
 export const sharedSlot = (scope: string, variableId: string): string =>
 	`shared:${scope}:${variableId}`;

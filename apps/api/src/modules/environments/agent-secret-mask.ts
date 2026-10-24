@@ -11,6 +11,7 @@ export interface LocalValueOutput {
 	readonly key: string;
 	readonly value: string | null;
 	readonly hidden?: boolean;
+	readonly agentUse?: boolean;
 }
 
 /** Tells whether a variable name is a secret in the scope being read. */
@@ -35,7 +36,14 @@ export function withholdLocalValues(
 	isSecret: SecretTest,
 ): LocalValueOutput[] {
 	return values.map((entry) =>
-		isSecret(entry.key) ? { key: entry.key, value: null, hidden: true } : entry,
+		isSecret(entry.key)
+			? {
+					key: entry.key,
+					value: null,
+					hidden: true,
+					...(entry.agentUse ? { agentUse: true } : {}),
+				}
+			: entry,
 	);
 }
 

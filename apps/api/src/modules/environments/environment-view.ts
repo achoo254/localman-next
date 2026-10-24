@@ -29,6 +29,7 @@ export const localValueView = z.object({
 	key: z.string(),
 	value: z.string().nullable(),
 	hidden: z.boolean().optional(),
+	agentUse: z.boolean().optional(),
 });
 
 export const environmentSummaryView = z.object({

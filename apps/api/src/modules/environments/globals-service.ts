@@ -24,6 +24,7 @@ import {
 	typeChanges,
 } from "./local-reseal.js";
 import { patchLocalValues, readLocalValues } from "./local-values.js";
+import { BROWSER_WRITER, type LocalWriter } from "./local-vault-rules.js";
 import {
 	secretKeysOf,
 	toStoredVariables,
@@ -128,6 +129,7 @@ export async function patchGlobalsLocalValues(
 	sub: string,
 	workspaceId: string,
 	patch: LocalValuesPatch,
+	writer: LocalWriter = BROWSER_WRITER,
 ): Promise<LocalValue[]> {
 	const access = await requireGlobals(sub, workspaceId);
 	return patchLocalValues(
@@ -147,5 +149,6 @@ export async function patchGlobalsLocalValues(
 				secretKeys: secretKeysOf(stored?.variables ?? []),
 			};
 		},
+		writer,
 	);
 }

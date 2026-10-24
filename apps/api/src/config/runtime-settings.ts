@@ -87,6 +87,8 @@ export interface RuntimeSettings {
 	readonly tunnelDomains: readonly string[];
 	/** Keys of secret variables at rest; `null`: they cannot be saved. */
 	readonly variableKeyring: Keyring | null;
+	/** `SECRET_VAULT_ENABLED`: vault rules on local values, agent variables. */
+	readonly secretVault: boolean;
 	/**
 	 * Public sharing. Per client IP before any lookup, so guessing link
 	 * ids or keys writes one counter per address, never one per guess;
@@ -137,6 +139,7 @@ export const DEFAULT_RUNTIME_SETTINGS: RuntimeSettings = Object.freeze({
 	proxyBlockedCidrs: [],
 	tunnelDomains: [],
 	variableKeyring: null,
+	secretVault: false,
 	publicSharingRateLimit: {
 		publicLinkPerIp: perMinute(60),
 		signedInPerUser: perMinute(60),
@@ -186,6 +189,7 @@ export function runtimeSettingsFromEnv(env: Env): RuntimeSettings {
 		variableKeyring: env.VARIABLE_ENCRYPTION_KEY
 			? parseKeyring(env.VARIABLE_ENCRYPTION_KEY)
 			: null,
+		secretVault: env.SECRET_VAULT_ENABLED,
 		turnstile:
 			TURNSTILE_SITE_KEY && TURNSTILE_SECRET_KEY
 				? {

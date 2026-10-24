@@ -13,6 +13,7 @@ import {
 	VARIABLE_TYPES,
 	VARIABLE_VALUE_MAX,
 } from "./environment-model.js";
+import { VAULT_CIPHERTEXT_MAX, isVaultCiphertext } from "./secret-vault.js";
 
 export const environmentNameSchema = z
 	.string()
@@ -64,11 +65,29 @@ export const variableListSchema = z
 		});
 	});
 
+/** A plain local value, or a vault ciphertext of one (longer). */
+const localValue = z
+	.string()
+	.max(VAULT_CIPHERTEXT_MAX)
+	.refine(
+		(value) => value.length <= VARIABLE_VALUE_MAX || isVaultCiphertext(value),
+		`must be at most ${VARIABLE_VALUE_MAX} characters`,
+	);
+
 /**
  * Local values to set, by name; `value: null` removes one (the variable
  * goes back to its shared value). Names not listed keep their value.
+ * `agentValue` (browser only, ADR-0009): the plaintext of a vault value
+ * that agents may use, kept encrypted by the server; `null` stops it.
+ * Setting a new `value` without it stops it too, so a copy never goes stale.
  */
 export const localValuesPatchSchema = z
-	.array(z.object({ key: variableKey, value: variableValue.nullable() }))
+	.array(
+		z.object({
+			key: variableKey,
+			value: localValue.nullable(),
+			agentValue: variableValue.nullable().optional(),
+		}),
+	)
 	.max(LOCAL_VALUES_MAX);
 export type LocalValuesPatch = z.infer<typeof localValuesPatchSchema>;

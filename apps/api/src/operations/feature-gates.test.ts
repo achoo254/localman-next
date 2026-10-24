@@ -16,6 +16,7 @@ const ALL_ON = {
 	tuneloAccounts: true,
 	liveMockSync: true,
 	projectDocs: true,
+	secretVault: true,
 };
 const SHARING_OFF = { ...ALL_ON, publicSharing: false };
 

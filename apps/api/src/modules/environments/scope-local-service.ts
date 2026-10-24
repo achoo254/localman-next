@@ -7,7 +7,10 @@ import type {
 import type { Types } from "mongoose";
 import { requireCollection } from "../collections/collection-access.js";
 import { toObjectId } from "../collections/collection-ids.js";
-import { CollectionModel } from "../collections/collection-model.js";
+import {
+	CollectionModel,
+	type StoredCollection,
+} from "../collections/collection-model.js";
 import { ActiveEnvironmentModel } from "./active-environment-model.js";
 import { requireEnvironment } from "./environment-access.js";
 import {
@@ -16,6 +19,7 @@ import {
 	environmentScope,
 } from "./environment-model.js";
 import { patchLocalValues, readLocalValues } from "./local-values.js";
+import { BROWSER_WRITER, type LocalWriter } from "./local-vault-rules.js";
 import { secretKeysOf } from "./variable-store.js";
 
 /** Anyone who uses the environment sets their own local values in it. */
@@ -23,6 +27,7 @@ export async function patchEnvironmentLocalValues(
 	sub: string,
 	id: string,
 	patch: LocalValuesPatch,
+	writer: LocalWriter = BROWSER_WRITER,
 ): Promise<LocalValue[]> {
 	const { environmentId } = await requireEnvironment(
 		sub,
@@ -42,6 +47,7 @@ export async function patchEnvironmentLocalValues(
 				secretKeys: secretKeysOf(stored?.variables ?? []),
 			};
 		},
+		writer,
 	);
 }
 
@@ -51,8 +57,9 @@ export const collectionScope = (id: Types.ObjectId): string =>
 
 /**
  * The caller's local values of a collection's variables. Collection
- * variables are not encrypted (their secret flag only masks the UI), so
- * neither are these.
+ * variables are not encrypted by the server (their secret flag only masks
+ * the UI), so neither are these; with the vault on, a flagged one's local
+ * value is a browser ciphertext like any secret's.
  */
 export async function getCollectionLocalValues(
 	sub: string,
@@ -66,16 +73,28 @@ export async function patchCollectionLocalValues(
 	sub: string,
 	id: string,
 	patch: LocalValuesPatch,
+	writer: LocalWriter = BROWSER_WRITER,
 ): Promise<LocalValue[]> {
 	const { collectionId } = await requireCollection(sub, id, "view");
 	return patchLocalValues(
 		sub,
 		collectionScope(collectionId),
 		patch,
-		async () => ({
-			exists: (await CollectionModel.exists({ _id: collectionId })) !== null,
-			secretKeys: new Set<string>(),
-		}),
+		async () => {
+			const stored = await CollectionModel.findById(collectionId, {
+				variables: 1,
+			}).lean<Pick<StoredCollection, "variables">>();
+			return {
+				exists: stored !== null,
+				secretKeys: new Set<string>(),
+				vaultKeys: new Set(
+					(stored?.variables ?? [])
+						.filter((variable) => variable.secret === true)
+						.map((variable) => variable.key),
+				),
+			};
+		},
+		writer,
 	);
 }
 

@@ -168,6 +168,7 @@ try {
 		tuneloAccounts: env.TUNELO_ACCOUNTS_ENABLED,
 		liveMockSync: env.LIVE_MOCK_SYNC_ENABLED,
 		projectDocs: env.PROJECT_DOCS_ENABLED,
+		secretVault: env.SECRET_VAULT_ENABLED,
 	});
 	const dashboard = createDashboardApp({
 		logger,

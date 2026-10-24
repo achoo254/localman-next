@@ -5,7 +5,6 @@
  * `pm.environment.set` changes the current value: a set becomes a local
  * value, an unset or clear resets the name to its shared value.
  */
-import type { LocalValue } from "./environment-model.js";
 import type { ResolverLayer } from "./variable-resolver.js";
 
 /** The scopes `lm.globals`, `lm.collectionVariables`, `lm.environment` show. */
@@ -17,10 +16,15 @@ export interface ScriptScopeValues {
 
 export type ScriptScopeName = keyof ScriptScopeValues;
 
-/** A local value to set, or `value: null` to reset it to the shared one. */
-export type LocalValueWrite = Omit<LocalValue, "value"> & {
+/**
+ * A local value to set, or `value: null` to reset it to the shared one.
+ * `agentValue`: see `localValuesPatchSchema`.
+ */
+export interface LocalValueWrite {
+	key: string;
 	value: string | null;
-};
+	agentValue?: string | null;
+}
 
 export type ScriptScopeChanges = Record<ScriptScopeName, LocalValueWrite[]>;
 

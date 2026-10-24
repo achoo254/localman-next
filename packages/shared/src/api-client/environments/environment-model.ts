@@ -71,7 +71,10 @@ export interface VariableView extends SharedVariable {
 /** One local value of the caller, by variable name. */
 export interface LocalValue {
 	key: string;
+	/** For a secret, a vault ciphertext (`lmv1:`) once the vault is on. */
 	value: string;
+	/** The user let agents use this vault value (ADR-0009). */
+	agentUse?: boolean;
 }
 
 export interface EnvironmentSummary {

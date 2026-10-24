@@ -50,6 +50,7 @@ import { resourceDataOperations } from "../modules/resources/resource-data-opera
 import { createResourceFromSchema } from "../modules/resources/resource-import-operations.js";
 import { resourceOperations } from "../modules/resources/resource-operations.js";
 import { resourceTreeOperations } from "../modules/resources/resource-tree-operations.js";
+import { secretVaultOperations } from "../modules/secret-vault/secret-vault-operations.js";
 import { getTenantInfo } from "../modules/tenant-info/tenant-info-operation.js";
 import { trialAdminOperations } from "../modules/trial/trial-admin-operations.js";
 import { trialOperations } from "../modules/trial/trial-operations.js";
@@ -125,4 +126,6 @@ export const operations: readonly AnyOperation[] = [
 	...liveMockSyncOperations,
 	// Served only while PROJECT_DOCS_ENABLED is on (`feature-gates.ts`).
 	...projectDocsOperations,
+	// Served only while SECRET_VAULT_ENABLED is on (`feature-gates.ts`).
+	...secretVaultOperations,
 ];

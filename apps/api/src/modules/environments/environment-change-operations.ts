@@ -87,6 +87,7 @@ export const setEnvironmentLocalValuesOperation = defineOperation({
 					requireSubject(ctx),
 					input.environmentId,
 					values,
+					{ agent: isAgentCall(ctx) },
 				),
 				secrets,
 			),

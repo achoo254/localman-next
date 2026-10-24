@@ -20,6 +20,7 @@ import { CollectionAccessKeyModel } from "../public-sharing/collection-access-ke
 import { CollectionLinkModel } from "../public-sharing/collection-link-model.js";
 import { RunButtonImportModel } from "../public-sharing/run-button-import-model.js";
 import { RunButtonModel } from "../public-sharing/run-button-model.js";
+import { SecretVaultModel } from "../secret-vault/secret-vault-model.js";
 import { TrialExtensionModel } from "../trial/trial-extension-model.js";
 import { CollectionWatchModel } from "../watch/watch-model.js";
 import { WorkspaceMemberModel } from "../workspaces/workspace-member-model.js";
@@ -74,6 +75,7 @@ const OWN_ROWS: ReadonlyArray<readonly [string, Erase]> = [
 		"local_variable_values",
 		(sub) => LocalVariableValueModel.deleteMany({ userId: sub }),
 	],
+	["secret_vaults", (sub) => SecretVaultModel.deleteMany({ userId: sub })],
 	[
 		"active_environments",
 		(sub) => ActiveEnvironmentModel.deleteMany({ userId: sub }),
