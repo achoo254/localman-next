@@ -28,6 +28,7 @@ Mọi script nằm ở [`infra/localman/`](../infra/localman/); tài liệu này
 ## Trạng thái hiện tại
 
 - Chứng chỉ: đã chuyển sang `dns-cloudflare` bằng `certbot reconfigure` ngày 2026-10-09, hết hạn 2027-01-07 (certbot timer gia hạn trước 30 ngày). Token Cloudflare chỉ có quyền DNS Edit trên `hoandat.com`, giới hạn IP `103.72.98.65`, nằm ở `/etc/letsencrypt/cloudflare-localman.ini` (600).
+- Kho secret (ADR-0009) bật từ 24/10/2026: `SECRET_VAULT_ENABLED=true` trong `/opt/localman/.env` (bản trước đó `.env.bak-20261024-131033`) và cờ web `secretVault` trong `released-features`, release `20261024-061038-ef90efbce6b0`, backup DB ngay trước `localman-20261024-131033`. Không tắt lại khi người dùng đã có giá trị `lmv1:`: thiếu kho, web hiện và gửi nguyên bản mã.
 - **Việc còn mở:** backup chỉ nằm trên chính server `.65`. Chưa có đích lưu ngoài server (mất ổ hay mất server là mất cả dữ liệu lẫn backup); cần chọn đích (ví dụ object storage) rồi thêm bước đẩy bản dump.
 
 ## Chuẩn bị trước khi deploy

@@ -90,7 +90,7 @@ dependencies: [10, 13, 16]
 - [ ] T6 `data-policy` một nguồn và trang minh bạch dữ liệu
 - [ ] T7 Trang docs public và gợi ý `{{response …}}`
 - [x] T8 E2E pass (24/10: `e2e/specs/secret-vault.spec.ts` (mọi trao đổi với Localman không chứa giá trị secret, thiết bị khác thấy khoá tới khi nhập passphrase; bắt được lỗi `finalUrl` của lịch sử gửi URL đã thay biến lên server, đã sửa), `secret-vault-agent.spec.ts` (agent chỉ dùng sau khi bật, đúng host, không ghi được, không đọc được; gửi thành công tới upstream để unit test vì proxy từ chối loopback của stack E2E), `project-docs.spec.ts`, `response-references.spec.ts`; 15/15 pass cùng spec biến và workbench, chạy trên Mac vì stack E2E không chạy trên Windows)
-- [ ] T9 Staging deploy và khối landing bật sau khi user xác nhận
+- [ ] T9 Staging deploy và khối landing bật sau khi user xác nhận (24/10: Localman không có staging; user chọn bật kho trên production: `SECRET_VAULT_ENABLED=true` + cờ `secretVault`, release `20261024-061038-ef90efbce6b0`, backup DB `localman-20261024-131033`. Khối landing "Secret không rời trình duyệt" chưa có, chờ T6)
 - [ ] T10 Review không còn finding mức high
 - [ ] Verification: unit `vault-crypto` (round-trip, passphrase sai, bản mã khác nhau) và test chặn PUT secret thiếu `lmv1:` pass
 - [ ] Verification: `response-references` nối 3 request, hết TTL gửi lại, vòng lặp báo lỗi
