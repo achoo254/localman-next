@@ -9,6 +9,8 @@ export const LEGAL_PATHS = {
 	terms: "/terms",
 	/** Stable public page on how to delete an account (store listings link it). */
 	accountDelete: "/account/delete",
+	/** Where the data of the API client lives (`secretVault` flag). */
+	yourData: "/your-data",
 } as const;
 
 /** Query `/account/delete` gets after a deletion, to confirm it there. */

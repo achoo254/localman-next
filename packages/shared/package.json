@@ -10,6 +10,7 @@
 		"./api-client/script-sandbox": "./src/api-client/script-sandbox/index.ts",
 		"./brand": "./src/brand.ts",
 		"./constants": "./src/constants.ts",
+		"./data-policy": "./src/data-policy.ts",
 		"./endpoint-behavior": "./src/endpoint-behavior.ts",
 		"./faker-catalog": "./src/faker-method-catalog.ts",
 		"./faker-methods": "./src/faker-methods.ts",

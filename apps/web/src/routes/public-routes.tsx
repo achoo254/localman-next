@@ -71,6 +71,15 @@ export const publicRoutes: RouteObject[] = [
 		path: "terms",
 		element: lazyPage(() => import("../pages/legal/legal-page"), "TermsPage"),
 	},
+	// Where the data of the API client lives: public, read before signing
+	// up (`secretVault` flag, home otherwise).
+	{
+		path: "your-data",
+		element: lazyPage(
+			() => import("../pages/legal/data-transparency-page"),
+			"DataTransparencyPage",
+		),
+	},
 	// How to delete an account (store "account deletion URL"); public even
 	// though `/account` itself needs a session.
 	{

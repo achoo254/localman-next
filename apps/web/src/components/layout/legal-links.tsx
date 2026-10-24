@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import { LEGAL_PATHS } from "../../lib/legal";
@@ -13,7 +14,16 @@ const LINKS = [
 	},
 ] as const;
 
-/** "Privacy · Terms · Delete account": the footer and the legal pages. */
+const YOUR_DATA = {
+	id: "your-data",
+	to: LEGAL_PATHS.yourData,
+	labelKey: "dataTransparency.nav",
+} as const;
+
+/**
+ * "Privacy · Terms · Delete account", and "Your data" while the vault its
+ * page promises is released: the footer and the legal pages.
+ */
 export function LegalLinks({
 	linkClassName,
 	className,
@@ -24,13 +34,15 @@ export function LegalLinks({
 	"data-id": string;
 }) {
 	const t = useT();
+	const { secretVault } = useFeatures();
+	const links = secretVault ? [...LINKS, YOUR_DATA] : LINKS;
 	return (
 		<nav
 			aria-label={t("legal.nav.label")}
 			data-id={dataId}
 			className={cn("flex flex-wrap items-center gap-4", className)}
 		>
-			{LINKS.map(({ id, to, labelKey }) => (
+			{links.map(({ id, to, labelKey }) => (
 				<Link
 					key={id}
 					to={to}

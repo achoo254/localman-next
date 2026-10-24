@@ -76,6 +76,27 @@ Tên miền, tên tài khoản IdP và host Tunelo trong chữ là tham số the
 | D9 | Liên hệ: email (P32) hoặc form "Góp ý / Liên hệ" | P32; `system-architecture.md` "Form góp ý / liên hệ" |
 | D10 | Modal xoá nêu số project đang chia sẻ và số người mất quyền vào chúng (`sharedProjects`, `projectMembers` của dry run) | ADR-0007 mục 4 (Jev 0.97) |
 
+## Dữ liệu của bạn nằm ở đâu (`dataTransparency`, trang `/your-data`)
+
+Thời gian giữ và các trường log không viết tay: trang đọc `@localman/shared/data-policy`, test của API và web giữ nguồn đó đúng với code (`docs/system-architecture.md`, mục "Chính sách dữ liệu một nguồn"). Nơi lưu và lời mô tả là chữ viết tay; bảng dưới là nguồn của chúng.
+
+| # | Claim | Nguồn |
+|---|---|---|
+| Y1 | Giá trị riêng của biến secret mã hoá trong trình duyệt bằng passphrase; máy chủ chỉ giữ bản mã gắn tên và phạm vi, không mở được; quên passphrase là mất; giá trị lưu trước khi có kho còn mã hoá bằng khoá máy chủ tới lần đầu kho mở | `apps/web/src/features/secure-vault/vault-crypto.ts`, `vault-migration.ts`; `environments/local-vault-rules.ts`; ADR-0009 |
+| Y2 | Khoá nằm trong bộ nhớ trình duyệt, không gửi đi | `vault-key-store.ts` (`CryptoKey` không trích xuất được, IndexedDB) |
+| Y3 | Request gửi thẳng khi trình duyệt gửi được; khi tự chuyển một request mang secret hay credential sang proxy thì hỏi trước. Không hỏi khi tab đặt Proxy, host luôn cho phép, hay "Send through proxy" sau lần gửi lỗi (nêu ở phần ngoại lệ) | `api-client/routing/route-plan.ts`, `route-hops.ts`, `routed-response-panel.tsx`, `sensitive-parts.ts`, `secret-consent-modal.tsx`; E2E `api-client-routing.spec.ts` |
+| Y4 | Request đã điền biến và response của lượt gửi thẳng không tới máy chủ; lịch sử giữ request như đã viết (credential gõ thẳng bị để trống), status, thời gian, kích thước, nơi dừng sau redirect (không query) | `workbench/record-send.ts` (`redirectedTo`, `redactDraft`); `history-service.ts`; E2E `secret-vault.spec.ts` kiểm mọi trao đổi với máy chủ |
+| Y5 | Tab request lưu như đã viết; credential gõ thẳng được lưu như đã gõ | `api-client/draft-*.ts` (draft không qua `redactDraft`) |
+| Y6 | Proxy gửi giúp rồi chuyển response lại, không lưu; request tới ứng dụng trên máy đi qua tunnel Tunelo, web server của tunnel ghi path và query | `proxy-operations.ts` (không ghi DB); `local-target-route.ts`; `infra/tunelo/nginx.conf` (log mặc định `combined`) |
+| Y7 | Secret cho agent dùng: bản sao mã hoá bằng khoá máy chủ, chỉ cho host đã liệt kê, không cho agent xem, che trong câu trả lời; giá trị dưới 4 ký tự hay bị API biến đổi có thể lọt | ADR-0009; `agent-secret-destination.ts`, `secret-mask.ts`; mô tả tool `send_request` |
+| Y8 | Giá trị dùng chung của secret mã hoá bằng khoá máy chủ; Viewer không nhận | `system-architecture.md` mục "Secret" (`sharedHidden`) |
+| Y9 | Log request mock gồm request, response, query, header, body; Authorization, Cookie, Set-Cookie, X-API-Key và header tự chọn thành `[redacted]` | như P5 |
+| Y10 | Log của máy chủ: chỉ các trường `REQUEST_LOG_FIELDS` (route mock là path với secret bị che); lỗi thêm một dòng ghi lỗi | `apps/api/src/http/request-log.ts`, `mock-runtime/mock-http.ts` (`mockRouteOf`), `http/error-handler.ts`; `http/request-log-policy.test.ts` |
+| Y11 | Log của web server phía trước: IP, thời điểm, method, path (query ẩn), status, kích thước, trình duyệt, thời gian; không host, Referer, cookie | `infra/localman/nginx/localman-http.conf` (`log_format localman`); `http/request-log-policy.test.ts` |
+| Y12 | Log của proxy: chỉ các trường `PROXY_LOG_FIELDS`; host đích chỉ che nhãn secret của host mock | `proxy-operations.ts`, `proxy-log-policy.test.ts` |
+| Y13 | Sao lưu hằng đêm toàn bộ cơ sở dữ liệu trên cùng máy chủ | `legalPrivacy.retention` (Backups); `infra/localman/backup-localman-db.sh` |
+| Y14 | Không dịch vụ phân tích, theo dõi, báo lỗi; không quảng cáo | như P13; `apps/web/src/lib/no-telemetry.test.ts` quét mã nguồn web, api và packages |
+
 ## Quyết định của Jev (20/10/2026)
 
 - Các dòng **owner** ở bảng trên (T3, T4, T9, T12) được duyệt đăng như hiện có; T11 đã bỏ phần trách nhiệm.

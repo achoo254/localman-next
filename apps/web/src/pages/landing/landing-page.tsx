@@ -18,12 +18,16 @@ const LiveMockSyncSection = lazy(async () => ({
 const MockMcpSection = lazy(async () => ({
 	default: (await import("./mock-mcp-section")).MockMcpSection,
 }));
+const SecretsStaySection = lazy(async () => ({
+	default: (await import("./secrets-stay-section")).SecretsStaySection,
+}));
 const VnFakeDataTeaser = lazy(async () => ({
 	default: (await import("./vn-fake-data-teaser")).VnFakeDataTeaser,
 }));
 
 /**
- * Public landing: hero, flagged feature blocks, schema,
+ * Public landing: hero, flagged feature blocks (Live Mock Sync, Mock MCP,
+ * secrets staying in the browser), schema,
  * relations, "And more", the fake data tool link (flagged) and the
  * closing call to action. The footer comes
  * from `AppLayout`. The tab title follows the hero message; `index.html`
@@ -52,6 +56,11 @@ export function LandingPage() {
 			{flags.mockMcp ? (
 				<Suspense fallback={null}>
 					<MockMcpSection />
+				</Suspense>
+			) : null}
+			{flags.secretVault ? (
+				<Suspense fallback={null}>
+					<SecretsStaySection />
 				</Suspense>
 			) : null}
 			<DataModelingDemo />

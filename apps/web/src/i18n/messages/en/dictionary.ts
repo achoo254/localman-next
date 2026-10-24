@@ -10,6 +10,7 @@ import { auth } from "./auth";
 import { collaborators } from "./collaborators";
 import { collections } from "./collections";
 import { common } from "./common";
+import { dataTransparency } from "./data-transparency";
 import { docs } from "./docs";
 import { environments } from "./environments";
 import { feedback } from "./feedback";
@@ -98,6 +99,7 @@ export const en = {
 	projectDocs,
 	secretVault,
 	agentUse,
+	dataTransparency,
 	vnFakeData,
 	legal,
 	legalPrivacy,
