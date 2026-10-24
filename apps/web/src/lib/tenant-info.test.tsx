@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import { mockFetch } from "../test/mock-fetch";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { type MockReply, mockFetch } from "../test/mock-fetch";
 import {
 	DEFAULT_TENANT_INFO,
 	idpAccountUrlOf,
@@ -29,5 +29,47 @@ describe("useTenantInfo", () => {
 		expect(calls.filter((call) => call.path === "/api/v1/tenant")).toHaveLength(
 			1,
 		);
+	});
+});
+
+describe("useLoadedTenantInfo", () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	/** A fresh store: the module keeps what it read for the page's lifetime. */
+	async function renderLoaded(reply: MockReply) {
+		vi.resetModules();
+		const { calls } = mockFetch({ "GET /api/v1/tenant": reply });
+		const { useLoadedTenantInfo } = await import("./tenant-info");
+		const requests = () =>
+			calls.filter((call) => call.path === "/api/v1/tenant").length;
+		const view = renderHook(() => useLoadedTenantInfo());
+		await waitFor(() => expect(requests()).toBe(1));
+		return { ...view, useLoadedTenantInfo, requests };
+	}
+
+	it("is null until the API answers, then the domain the page is on", async () => {
+		const { result } = await renderLoaded({ body: ACME });
+		await waitFor(() => expect(result.current).toEqual(ACME));
+	});
+
+	it.each([
+		[
+			"the API fails",
+			{ status: 500, body: { error: { code: "INTERNAL", message: "x" } } },
+		],
+		[
+			"the answer has no idpOrigin",
+			{ body: { ...ACME, idpOrigin: undefined } },
+		],
+	])("stays null, never the primary domain, when %s", async (_, reply) => {
+		const { result, useLoadedTenantInfo, requests } = await renderLoaded(reply);
+		// Only a settled failure lets the next component ask again.
+		await waitFor(() => {
+			renderHook(() => useLoadedTenantInfo());
+			expect(requests()).toBe(2);
+		});
+		expect(result.current).toBeNull();
 	});
 });

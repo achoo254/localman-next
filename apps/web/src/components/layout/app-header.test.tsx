@@ -7,11 +7,20 @@ import { type MockRoute, mockFetch } from "../../test/mock-fetch";
 import { renderRoutes } from "../../test/render-app";
 import { AppHeader } from "./app-header";
 
+const TENANT = {
+	displayName: "hoandat",
+	idpOrigin: "https://auth.hoandat.com",
+	publicUrl: "https://localman.hoandat.com",
+	mockBaseDomain: "localman.hoandat.com",
+	tunnelDomain: "tunnel.hoandat.com",
+};
+
 function renderHeader(
 	user = makeUser(),
 	extra: Record<string, MockRoute> = {},
 ) {
 	const api = mockFetch({
+		"GET /api/v1/tenant": { body: TENANT },
 		"GET /api/v1/notifications": {
 			body: { items: [], nextCursor: null, unreadCount: 0 },
 		},
@@ -51,10 +60,10 @@ describe("AppHeader", () => {
 		expect(container).not.toHaveTextContent(/plan/i);
 	});
 
-	it("puts the app switcher between the bell and the account trigger", () => {
+	it("puts the app switcher between the bell and the account trigger", async () => {
 		renderHeader();
 		const bell = screen.getByRole("button", { name: "Notifications" });
-		const switcher = screen.getByRole("button", { name: "Switch app" });
+		const switcher = await screen.findByRole("button", { name: "Switch app" });
 		const account = screen.getByRole("button", { name: "Minh Anh · Account" });
 		expect(
 			bell.compareDocumentPosition(switcher) & Node.DOCUMENT_POSITION_FOLLOWING,

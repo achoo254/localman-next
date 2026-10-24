@@ -4,16 +4,24 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { I18nContext } from "../../i18n/i18n-context";
 import { en } from "../../i18n/messages/en/dictionary";
 import { createTranslator } from "../../i18n/translate";
-import { DEFAULT_TENANT_INFO, type TenantInfo } from "../../lib/tenant-info";
+import type { TenantInfo } from "../../lib/tenant-info";
 import {
 	EcosystemAppSwitcher,
 	tenantDomainOfIdp,
 } from "./ecosystem-app-switcher";
 
-const state = vi.hoisted(() => ({
-	native: false,
-	idpOrigin: "https://auth.hoandat.com",
-}));
+const { PRIMARY_IDP_ORIGIN, state } = vi.hoisted(() => {
+	const PRIMARY_IDP_ORIGIN = "https://auth.hoandat.com";
+	return {
+		PRIMARY_IDP_ORIGIN,
+		state: {
+			native: false,
+			/** False: /api/v1/tenant has not answered (or failed). */
+			loaded: true,
+			idpOrigin: PRIMARY_IDP_ORIGIN,
+		},
+	};
+});
 
 vi.mock("../../platform/native/native-build", () => ({
 	get isNativeBuild() {
@@ -25,10 +33,10 @@ vi.mock("../../lib/tenant-info", async (importOriginal) => {
 	const actual = await importOriginal<typeof import("../../lib/tenant-info")>();
 	return {
 		...actual,
-		useTenantInfo: (): TenantInfo => ({
-			...actual.DEFAULT_TENANT_INFO,
-			idpOrigin: state.idpOrigin,
-		}),
+		useLoadedTenantInfo: (): TenantInfo | null =>
+			state.loaded
+				? { ...actual.DEFAULT_TENANT_INFO, idpOrigin: state.idpOrigin }
+				: null,
 	};
 });
 
@@ -58,6 +66,13 @@ describe("tenantDomainOfIdp", () => {
 		["http://localhost:4000", null],
 		["https://idp.acme.example", null],
 		["not a url", null],
+		["https://auth.hoandat.com:8443", null],
+		["https://auth.hoandat.com.", null],
+		["https://auth.", null],
+		["https://auth.localhost", null],
+		["https://auth.under_score.example", null],
+		["https://auth.xn--bcher-kva.example/", "xn--bcher-kva.example"],
+		["https://AUTH.Acme.Example", "acme.example"],
 	])("reads %s as %s", (origin, domain) => {
 		expect(tenantDomainOfIdp(origin)).toBe(domain);
 	});
@@ -66,7 +81,8 @@ describe("tenantDomainOfIdp", () => {
 describe("EcosystemAppSwitcher", () => {
 	afterEach(() => {
 		state.native = false;
-		state.idpOrigin = DEFAULT_TENANT_INFO.idpOrigin;
+		state.loaded = true;
+		state.idpOrigin = PRIMARY_IDP_ORIGIN;
 		vi.restoreAllMocks();
 	});
 
@@ -108,6 +124,19 @@ describe("EcosystemAppSwitcher", () => {
 		state.idpOrigin = "http://localhost:4000";
 		const { container } = renderSwitcher();
 		expect(container).toBeEmptyDOMElement();
+	});
+
+	it("keeps the button's place, with nothing to click, until the domain is known", () => {
+		state.loaded = false;
+		const { container } = renderSwitcher();
+		expect(screen.queryByRole("button")).toBeNull();
+		expect(screen.queryByRole("link")).toBeNull();
+		const placeholder = container.querySelector(
+			'[data-id="topbar-app-switcher-placeholder"]',
+		);
+		expect(placeholder).toHaveAttribute("aria-hidden", "true");
+		expect(placeholder).not.toHaveAttribute("tabindex");
+		expect(placeholder).toBeEmptyDOMElement();
 	});
 
 	it("opens a link in the system browser from the native shell", async () => {

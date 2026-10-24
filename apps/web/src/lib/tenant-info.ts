@@ -76,6 +76,19 @@ export function useTenantInfo(): TenantInfo {
 	);
 }
 
+/**
+ * The domain's account name and hosts once the API has answered; null
+ * before that, in prerendered markup and while the API cannot answer. For
+ * what must never show the primary domain's defaults on another tenant.
+ */
+export function useLoadedTenantInfo(): TenantInfo | null {
+	return useSyncExternalStore(
+		subscribe,
+		() => loaded ?? null,
+		() => null,
+	);
+}
+
 /** IdP page for linked sign-in methods (Google, GitHub, Telegram) and sessions. */
 export function idpAccountUrlOf(info: TenantInfo): string {
 	return `${info.idpOrigin}/account`;
