@@ -111,6 +111,9 @@ export function VnFakeDataPreview({
 				/>
 				<VnFakeDataActions type={type} records={records} />
 			</div>
+			<p data-id="vn-fake-data-csv-note" className="m-0 text-muted text-sm">
+				{t("vnFakeData.actions.csvNote")}
+			</p>
 			{view === "table" ? (
 				<FakeDataTable type={type} records={records} />
 			) : (

@@ -75,6 +75,8 @@ export const vnFakeData: Messages["vnFakeData"] = {
 		copyBlocked:
 			"Trình duyệt đã chặn bộ nhớ tạm. Hãy tải file JSON thay vì sao chép.",
 		downloaded: "Đã tải {file}.",
+		csvNote:
+			"Ứng dụng bảng tính có thể bỏ số 0 đầu và dấu + của các số trong CSV; hãy nhập các cột đó dạng văn bản.",
 	},
 	nudge: {
 		title: "Dùng dữ liệu này làm mock API",

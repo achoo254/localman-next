@@ -117,6 +117,10 @@ describe("/tools/vn-fake-data", () => {
 		await user.click(screen.getByRole("button", { name: "Download CSV" }));
 		const [file, csv] = vi.mocked(downloadText).mock.calls[0] ?? [];
 		expect(file).toBe("fake-person.csv");
+		// Spreadsheets mangle numbers such as "0912…": the page says so.
+		expect(
+			screen.getByText(/drop leading zeros and the \+ of numbers/),
+		).toBeInTheDocument();
 		expect(csv?.startsWith("﻿fullName,gender,dateOfBirth,cccd\r\n")).toBe(true);
 	});
 });

@@ -80,6 +80,8 @@ export const vnFakeData = {
 		copyBlocked:
 			"Your browser blocked the clipboard. Download the JSON instead.",
 		downloaded: "Downloaded {file}.",
+		csvNote:
+			"Spreadsheet apps may drop leading zeros and the + of numbers in a CSV; import those columns as text.",
 	},
 	nudge: {
 		title: "Use this data as a mock API",

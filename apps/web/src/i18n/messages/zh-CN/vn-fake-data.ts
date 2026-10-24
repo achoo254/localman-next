@@ -74,6 +74,8 @@ export const vnFakeData: Messages["vnFakeData"] = {
 		copied: { other: "已将 {count} 条记录复制为 JSON。" },
 		copyBlocked: "浏览器阻止了剪贴板。请改为下载 JSON。",
 		downloaded: "已下载 {file}。",
+		csvNote:
+			"电子表格应用打开 CSV 时可能去掉数字开头的 0 和 +；请将这些列作为文本导入。",
 	},
 	nudge: {
 		title: "将这些数据用作 mock API",

@@ -9,7 +9,6 @@ import { HeroSection } from "./hero-section";
 import { MoreFeaturesSection } from "./more-features-section";
 import { RelationsDemo } from "./relations-demo";
 import { StartCta } from "./start-cta";
-import { VnFakeDataTeaser } from "./vn-fake-data-teaser";
 
 // Flagged blocks load on demand, so an unreleased feature adds nothing to
 // the landing bundle until its flag is on.
@@ -18,6 +17,9 @@ const LiveMockSyncSection = lazy(async () => ({
 }));
 const MockMcpSection = lazy(async () => ({
 	default: (await import("./mock-mcp-section")).MockMcpSection,
+}));
+const VnFakeDataTeaser = lazy(async () => ({
+	default: (await import("./vn-fake-data-teaser")).VnFakeDataTeaser,
 }));
 
 /**
@@ -55,7 +57,11 @@ export function LandingPage() {
 			<DataModelingDemo />
 			<RelationsDemo />
 			<MoreFeaturesSection />
-			{flags.vnFakeData ? <VnFakeDataTeaser /> : null}
+			{flags.vnFakeData ? (
+				<Suspense fallback={null}>
+					<VnFakeDataTeaser />
+				</Suspense>
+			) : null}
 			<CtaBand />
 		</>
 	);

@@ -188,6 +188,12 @@
         try_files /tools-vn-fake-data.html /index.html;
     }
 
+    # The prerendered file itself is no second URL of the page. try_files
+    # above serves it inside that location, so this never catches it.
+    location = /tools-vn-fake-data.html {
+        return 301 /tools/vn-fake-data;
+    }
+
     location = /sw.js {
         expires -1;
     }
