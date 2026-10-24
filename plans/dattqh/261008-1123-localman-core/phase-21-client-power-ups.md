@@ -71,9 +71,9 @@ dependencies: [10, 13, 16]
 
 ### Checklist
 - [ ] T1 Màn vault, chaining, trang dữ liệu, docs public đã thêm vào prototype và user đã duyệt
-- [ ] T2 `vault-crypto` có test round-trip, passphrase sai, IV ngẫu nhiên
-- [ ] T3 `response-references` có TTL, gửi lại, phát hiện vòng lặp
-- [ ] T4 Module docs có ETag và trang public qua registry
+- [x] T2 `vault-crypto` có test round-trip, passphrase sai, IV ngẫu nhiên (24/10: `apps/web/src/features/secure-vault/vault-crypto.ts`, PBKDF2-SHA256 600.000 vòng, AES-GCM 256, bản mã gắn với scope và tên biến qua AAD; chưa nối vào UI, chờ T5)
+- [x] T3 `response-references` có TTL, gửi lại, phát hiện vòng lặp (24/10: `packages/shared/src/api-client/response-references.ts` thuần; workbench giữ response cuối của mỗi request trong bộ nhớ, gửi lại nguồn khi hết TTL như tab của nó, nối tối đa 5 request; chỉ dùng trong request đã lưu vào collection)
+- [x] T4 Module docs có ETag và trang public qua registry (24/10: `apps/api/src/modules/project-docs/`; operation chưa đặt được header nên trả `version` là hash nội dung thay cho ETag HTTP; docs không bao giờ có URL mock vì chứa secret, path trên `{baseUrl}` (Jev: publish bật tay 0,96; path `/p/<slug>/docs` 0,71; URL mock: placeholder, hoà 0,47 với "chủ project chọn", chọn placeholder vì ưu tiên riêng tư); cổng `PROJECT_DOCS_ENABLED`, cờ web `projectDocs`)
 - [ ] T5 Vault nối vào environment editor; server chặn PUT thiếu `lmv1:`
 - [ ] T6 `data-policy` một nguồn và trang minh bạch dữ liệu
 - [ ] T7 Trang docs public và gợi ý `{{response …}}`
