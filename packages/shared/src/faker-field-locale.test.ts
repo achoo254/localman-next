@@ -2,7 +2,13 @@ import { Faker, base, en, vi } from "@faker-js/faker";
 import { describe, expect, it } from "vitest";
 import { isVietnameseFieldName } from "./faker-field-locale.js";
 import { fakerForField, runFakerMethod } from "./faker-methods.js";
+import {
+	VN_JOB_DEPARTMENTS,
+	VN_JOB_ROLES,
+} from "./vn-fake-data/vn-job-data.js";
+import { VN_MIDDLE_NAMES } from "./vn-fake-data/vn-names-data.js";
 import { VN_MOBILE_PREFIXES } from "./vn-fake-data/vn-phone.js";
+import { VN_PROVINCES, VN_STREETS } from "./vn-fake-data/vn-places-data.js";
 
 const seeded = (seed = 1): Faker => {
 	const faker = new Faker({ locale: [en, base] });
@@ -89,5 +95,82 @@ describe("fakerForField", () => {
 			);
 		};
 		expect(run()).toEqual(run());
+	});
+});
+
+/** `count` values of `method` for the Vietnamese field `field`. */
+function valuesOf(field: string, method: string, count = 50): string[] {
+	const faker = seeded(3);
+	return Array.from({ length: count }, () =>
+		String(runFakerMethod(method, fakerForField(field, faker))),
+	);
+}
+
+/** Words of Faker's English data that must never reach a Vietnamese field. */
+const englishWords = (...lists: (readonly string[] | null | undefined)[]) =>
+	new Set(lists.flatMap((list) => list ?? []).flatMap((x) => x.split(" ")));
+
+describe("fakerForField places and jobs", () => {
+	const provinces = new Set(VN_PROVINCES.map((place) => place.name));
+
+	it("writes dia_chi as a house number and a Vietnamese street", () => {
+		const suffixes = englishWords(en.location?.street_suffix);
+		const streets = new Set(VN_STREETS);
+		for (const address of valuesOf("dia_chi", "address.streetAddress")) {
+			const match = /^(\d+(?:\/\d+)?) (.+)$/.exec(address);
+			expect(match, address).not.toBeNull();
+			expect(streets.has(match?.[2] ?? ""), address).toBe(true);
+			for (const word of address.split(" ")) {
+				expect(suffixes.has(word), address).toBe(false);
+			}
+		}
+	});
+
+	it("takes thanh_pho and tinh from the 34 provinces only", () => {
+		const cities = valuesOf("thanh_pho", "address.city");
+		const states = valuesOf("tinh", "address.state");
+		for (const place of [...cities, ...states]) {
+			expect(provinces.has(place), place).toBe(true);
+		}
+		// Old-map names and Faker's English spellings never show.
+		for (const old of ["Haiphong", "Hanoi", "Quảng Bình", "Đắk Nông"]) {
+			expect([...cities, ...states]).not.toContain(old);
+		}
+	});
+
+	it("gives a full address on the new map", () => {
+		for (const full of valuesOf("dia_chi", "address.fullAddress")) {
+			const province = full.split(", ").at(-1) ?? "";
+			expect(provinces.has(province), full).toBe(true);
+		}
+	});
+
+	it("titles chuc_vu and nghe_nghiep in Vietnamese", () => {
+		const english = englishWords(
+			en.person?.job_descriptor,
+			en.person?.job_area,
+			en.person?.job_type,
+		);
+		for (const field of ["chuc_vu", "nghe_nghiep"]) {
+			for (const title of valuesOf(field, "name.jobTitle")) {
+				const role = VN_JOB_ROLES.find((r) => title.startsWith(`${r} `));
+				expect(role, title).toBeDefined();
+				const department = title.slice((role ?? "").length + 1);
+				expect(VN_JOB_DEPARTMENTS, title).toContain(department);
+				for (const word of title.split(" ")) {
+					expect(english.has(word), title).toBe(false);
+				}
+			}
+		}
+	});
+
+	it("keeps gioi_tinh and ten_dem Vietnamese", () => {
+		for (const sex of valuesOf("gioi_tinh", "name.sex")) {
+			expect(["Nam", "Nữ"]).toContain(sex);
+		}
+		const middles = [...VN_MIDDLE_NAMES.male, ...VN_MIDDLE_NAMES.female];
+		for (const middle of valuesOf("ten_dem", "name.middleName")) {
+			expect(middles).toContain(middle);
+		}
 	});
 });

@@ -1,19 +1,12 @@
-import {
-	Faker,
-	type LocaleDefinition,
-	base,
-	faker as defaultFaker,
-	en,
-	vi,
-} from "@faker-js/faker";
+import { Faker, faker as defaultFaker } from "@faker-js/faker";
 import { isVietnameseFieldName } from "./faker-field-locale.js";
 import { FAKER_CATEGORIES } from "./faker-method-catalog.js";
 import type { FakerRun, FakerRunnerTable } from "./faker-runner-types.js";
 import { BUSINESS_RUNNERS } from "./faker-runners-business.js";
 import { GENERAL_RUNNERS } from "./faker-runners-general.js";
 import { PEOPLE_AND_PLACES_RUNNERS } from "./faker-runners-people-places.js";
+import { VI_LOCALE } from "./faker-vi-locale.js";
 import type { JsonValue } from "./json-value.js";
-import { VN_MOBILE_PREFIXES } from "./vn-fake-data/vn-phone.js";
 
 /**
  * The executable Faker whitelist. Imported through the
@@ -81,32 +74,6 @@ export function runFakerMethodText(
 	if (typeof value === "object") return JSON.stringify(value);
 	return String(value);
 }
-
-/**
- * Faker's `vi` locale in Vietnamese name order (Faker's own pattern is
- * "given family", Vietnamese is "family middle given") and with mobile
- * numbers on prefixes in use (Faker's include landlines and retired
- * prefixes). English fills what `vi` lacks (internet, lorem…).
- */
-const VI_LOCALE: LocaleDefinition[] = [
-	{
-		person: {
-			name: [{ value: "{{person.lastName}} {{person.firstName}}", weight: 1 }],
-		},
-		phone_number: {
-			format: {
-				human: VN_MOBILE_PREFIXES.map((prefix) => `${prefix}#######`),
-				national: VN_MOBILE_PREFIXES.map((prefix) => `${prefix}#######`),
-				international: VN_MOBILE_PREFIXES.map(
-					(prefix) => `+84${prefix.slice(1)}#######`,
-				),
-			},
-		},
-	},
-	vi,
-	en,
-	base,
-];
 
 /** One Vietnamese Faker per base Faker, made on first use. */
 const viFakers = new WeakMap<Faker, Faker>();
