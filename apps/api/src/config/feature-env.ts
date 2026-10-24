@@ -136,13 +136,11 @@ export const featureEnvShape = {
 	 * their operations are neither routed nor offered as MCP tools.
 	 */
 	FORKS_ENABLED: offByDefault,
-	/**
-	 * Tunnels found through the user's Tunelo account and linked machines
-	 * (`tunelo link`). Off: their operations are neither routed nor listed.
-	 */
+	/** Tunnels of the user's Tunelo account and linked machines; off: not routed. */
 	TUNELO_ACCOUNTS_ENABLED: offByDefault,
-	/** Live Mock Sync; off: its operations are not routed nor MCP tools. */
+	/** Live Mock Sync, project docs; off: not routed nor MCP tools. */
 	LIVE_MOCK_SYNC_ENABLED: offByDefault,
+	PROJECT_DOCS_ENABLED: offByDefault,
 	/**
 	 * Tunelo API for every tenant, e.g. a local Tunelo in dev or a fake in
 	 * E2E (https only in production). Unset: each tenant's own

@@ -83,6 +83,7 @@ function apiEnv(mongoUri: string, oidcSecret: string): NodeJS.ProcessEnv {
 		FORKS_ENABLED: "true",
 		TUNELO_ACCOUNTS_ENABLED: "true",
 		LIVE_MOCK_SYNC_ENABLED: "true",
+		PROJECT_DOCS_ENABLED: "true",
 		TUNELO_API_URL: TUNELO_ORIGIN, // the fake Tunelo for every tenant
 	};
 }

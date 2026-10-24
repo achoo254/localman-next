@@ -40,6 +40,7 @@ import {
 	getVapidPublicKey,
 } from "../modules/notifications/push-operations.js";
 import { sendTestNotification } from "../modules/notifications/test-notification-operations.js";
+import { projectDocsOperations } from "../modules/project-docs/docs-operations.js";
 import { projectOperations } from "../modules/projects/project-operations.js";
 import { rotateProjectSecret } from "../modules/projects/project-secret-operations.js";
 import { publicSharingOperations } from "../modules/public-sharing/public-sharing-operations.js";
@@ -122,4 +123,6 @@ export const operations: readonly AnyOperation[] = [
 	...publicSharingOperations,
 	// Served only while LIVE_MOCK_SYNC_ENABLED is on (`feature-gates.ts`).
 	...liveMockSyncOperations,
+	// Served only while PROJECT_DOCS_ENABLED is on (`feature-gates.ts`).
+	...projectDocsOperations,
 ];

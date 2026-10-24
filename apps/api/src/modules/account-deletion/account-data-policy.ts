@@ -87,6 +87,8 @@ export const ACCOUNT_DATA_POLICY: Readonly<
 	// Who linked a collection to its mock; the base holds no account.
 	LiveMockSyncLink: "anonymized",
 	LiveMockSyncBaseNode: "notPersonal",
+	// Who published a project's docs; the link goes with the project.
+	ProjectDocsLink: "anonymized",
 	PullRequest: "anonymized",
 	ElementRole: "deletedAndAnonymized",
 	AccessRequest: "deletedAndAnonymized",
