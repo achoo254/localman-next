@@ -29,6 +29,8 @@ dependencies: [10, 13, 16]
 | Phát hành | **Sau cổng** `SECRET_VAULT_ENABLED` (tắt mặc định) và cờ web `secretVault` | 1,0 |
 | Đọc bản mã khi vault đang khoá | **Không tự hỏi**: giá trị coi như chưa đặt, có nút mở khoá | 0,54 (0,08, gần hoà với "hỏi một lần mỗi phiên") |
 | Xuất bản sao lưu đã mã hoá | **Để sau**, không làm trong T5 | 0,97 (0,94) |
+| Gửi request dùng giá trị local đang khoá trong vault | **Dừng và đề nghị mở kho**, như secret bị giấu; không quay về giá trị shared (user có thể cố ý đặt giá trị riêng, ví dụ token của tài khoản khác) | 0,98 (0,96) |
+| "Cho agent dùng" áp cho giá trị nào | Chỉ **giá trị local trong vault**; giá trị shared của secret agent đã dùng được sẵn (máy chủ điền, không trả về) | theo ADR-0009 mục 3 |
 | Agent qua MCP dùng secret | **Dùng mà không đọc** (user chọn 24/10/2026, Jev 1,0): `send_request` nhận `{{biến}}` kèm environment, máy chủ thay rồi che giá trị trong response; giá trị shared dùng ngay, giá trị trong vault chỉ khi user bật "Cho agent dùng" cho từng biến. Chi tiết: ADR-0009 | user + Jev 1,0 |
 | Dẫn xuất khoá | **PBKDF2-SHA256, 600.000 vòng**, WebCrypto, không thêm dependency | 0,97 |
 | Giá trị local cũ (server mã hoá) | **Mã hoá lại khi đặt passphrase**: trình duyệt đọc một lần rồi ghi lại dạng `lmv1:` | 0,99 |
