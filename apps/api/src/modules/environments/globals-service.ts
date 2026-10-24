@@ -21,6 +21,7 @@ import {
 } from "./global-variables-model.js";
 import {
 	alignLocalSealing,
+	assertAgentKeepsSecrets,
 	assertCanSeal,
 	typeChanges,
 } from "./local-reseal.js";
@@ -112,6 +113,7 @@ export async function setGlobals(
 	const next = toStoredVariables(variables, previous, scope, keepWithheld);
 	const secrets = secretKeysOf(next);
 	const types = typeChanges(secretKeysOf(previous), secrets);
+	assertAgentKeepsSecrets(keepWithheld, types.lapsed);
 	await assertCanSeal(scope, types.newlySecret);
 	// Under the workspace lock, so a save racing its deletion cannot revive it.
 	await inWorkspaceTransaction(access.workspaceId, (session) =>

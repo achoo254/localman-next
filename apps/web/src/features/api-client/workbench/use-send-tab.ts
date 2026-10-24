@@ -67,7 +67,15 @@ export function useSendTab(
 	// Saves the scripts' scope changes; says what was dropped or failed.
 	const keepScopes = useCallback(
 		async (save: ReturnType<SaveScopes>, changes: ScriptScopeChanges) => {
-			const { saved, dropped } = await save(changes);
+			const { saved, dropped, withheld = [] } = await save(changes);
+			if (withheld.length > 0) {
+				toast.show({
+					tone: "error",
+					title: t("apiClient.send.scopesWithheld", {
+						names: withheld.join(", "),
+					}),
+				});
+			}
 			if (dropped.length > 0) {
 				const scopes = dropped
 					.map((scope) => t(`apiClient.send.scopeNames.${scope}`))

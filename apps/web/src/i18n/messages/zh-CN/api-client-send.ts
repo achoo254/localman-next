@@ -11,6 +11,8 @@ export const apiClientSend: Messages["apiClient"]["send"] = {
 	scopesDropped:
 		"脚本设置了 {scopes} 的值，但无处保存：没有已激活的 environment，或 request 不属于任何 collection。",
 	scopeNames: { environment: "environment", collectionVariables: "collection" },
+	scopesWithheld:
+		"未保存：{names} 会以明文保存你保险库中某个 secret 的值。请将其设为 secret 变量，或通过该 secret 自己的变量来使用它。",
 	scopesNotSaved:
 		"已收到 response，但脚本设置的变量未能保存。请重新发送以重试。",
 	dynamicVariablesUnavailable:

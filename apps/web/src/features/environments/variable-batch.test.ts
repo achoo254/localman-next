@@ -4,6 +4,7 @@ import {
 	batchTargets,
 	localWritesAfterSave,
 	resetPatch,
+	secretsLeaving,
 	shareActionOf,
 	sharedDrafts,
 	unsharedDrafts,
@@ -146,5 +147,27 @@ describe("batch drafts", () => {
 			{ key: "b", value: null },
 		]);
 		expect(localWritesAfterSave(renamed, values, [])).toHaveLength(2);
+	});
+});
+
+describe("sharing secrets out of the vault", () => {
+	const fromVault = (value: string) => value === "script";
+
+	it("lists the secrets and the vault values a share would take out", () => {
+		expect(keys(secretsLeaving(rows, fromVault))).toEqual(["s", "x"]);
+		expect(keys(secretsLeaving(rows, () => false))).toEqual(["s"]);
+	});
+
+	it("keeps a vault value without a definition a secret once shared", () => {
+		const loose = rows.filter((row) => row.localOnly);
+		let id = 0;
+		const next = sharedDrafts(drafts, loose, () => `n${++id}`, fromVault);
+		expect(next.at(-1)).toMatchObject({
+			key: "x",
+			sharedValue: "script",
+			type: "secret",
+		});
+		const plainShare = sharedDrafts(drafts, loose, () => "n9");
+		expect(plainShare.at(-1)?.type).toBe("default");
 	});
 });

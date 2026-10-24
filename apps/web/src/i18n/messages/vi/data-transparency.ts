@@ -61,7 +61,12 @@ export const dataTransparency: Messages["dataTransparency"] = {
 		sharedSecrets: {
 			title: "Giá trị dùng chung của biến secret",
 			detail:
-				"Mã hoá bằng khoá của máy chủ để người bạn chia sẻ dùng được. Người chỉ xem không bao giờ nhận được.",
+				"Của environment và globals: mã hoá bằng khoá của máy chủ để người bạn chia sẻ dùng được, và không bao giờ gửi cho người chỉ xem.",
+		},
+		collectionSecrets: {
+			title: "Biến secret của collection",
+			detail:
+				"Lưu nguyên dạng và gửi cho mọi người mở được collection; ứng dụng chỉ che trên màn hình và bỏ ra khỏi file export, link công khai và agent.",
 		},
 		variables: {
 			title: "Các biến khác",
@@ -79,7 +84,7 @@ export const dataTransparency: Messages["dataTransparency"] = {
 		history: {
 			title: "Lịch sử request",
 			detail:
-				"Mỗi request như đã viết, <code>{token}</code> để nguyên chưa điền và thông tin đăng nhập gõ thẳng bị để trống, kèm status, thời gian, kích thước của response và, sau redirect, nơi nó dừng (không có query); không bao giờ có header hay body của response.",
+				"Mỗi request như đã viết, <code>{token}</code> để nguyên chưa điền và thông tin đăng nhập gõ thẳng bị để trống, kèm status, thời gian, kích thước của response và, sau redirect của một URL viết không dùng biến, nơi nó dừng (không có query); không bao giờ có header hay body của response.",
 		},
 		mockLogs: {
 			title: "Log request của mock",
@@ -98,7 +103,7 @@ export const dataTransparency: Messages["dataTransparency"] = {
 		body: "Mỗi request một dòng, chỉ với các trường này. Không bao giờ có path, query, header hay body.",
 		fields: {
 			sub: "ID tài khoản của bạn",
-			host: "host đích, nhãn secret của mock API bị che",
+			host: "host đích như đã gửi, nhãn secret của mock API bị che",
 			method: "method",
 			status: "status của response",
 			error: "hoặc mã lỗi",

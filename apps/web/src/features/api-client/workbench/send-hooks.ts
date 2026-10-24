@@ -41,11 +41,13 @@ export type SaveScopes = (
 /**
  * `saved`: every change that had somewhere to go was saved. `dropped`:
  * scopes the scripts wrote with nowhere to keep it (no active environment,
- * a request outside any collection).
+ * a request outside any collection). `withheld`: names not saved because
+ * their value held a value of the vault in plain text.
  */
 export interface ScopeSaveResult {
 	saved: boolean;
 	dropped: ("environment" | "collectionVariables")[];
+	withheld?: string[];
 }
 
 /**

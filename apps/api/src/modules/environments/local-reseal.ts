@@ -1,3 +1,4 @@
+import { OperationError } from "@localman/operations";
 import type { AnyBulkWriteOperation } from "mongoose";
 import { runtimeSettings } from "../../config/runtime-settings.js";
 import {
@@ -86,4 +87,22 @@ export function typeChanges(
 	const newlySecret = [...after].filter((key) => !before.has(key));
 	const lapsed = [...before].filter((key) => !after.has(key));
 	return { changed: [...newlySecret, ...lapsed], newlySecret, lapsed };
+}
+
+/**
+ * 403 `SECRET_LAPSE_AGENT` when an agent would make secrets plain (change
+ * their type or remove them): that opens everyone's earlier local values
+ * of those names, which the agent could then read back. The user does it
+ * in the browser.
+ */
+export function assertAgentKeepsSecrets(
+	agent: boolean | undefined,
+	lapsed: readonly string[],
+): void {
+	if (!agent || lapsed.length === 0) return;
+	throw new OperationError(
+		403,
+		"SECRET_LAPSE_AGENT",
+		`An agent cannot turn secret variables into plain ones or remove them (${lapsed.join(", ")}); the user can, in the browser`,
+	);
 }

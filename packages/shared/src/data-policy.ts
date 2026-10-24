@@ -31,6 +31,7 @@ export type DataItemId =
 	| "proxySends"
 	| "agentCopies"
 	| "sharedSecrets"
+	| "collectionSecrets"
 	| "variables"
 	| "collections"
 	| "requestTabs"
@@ -72,6 +73,12 @@ export const DATA_ITEMS: readonly DataItem[] = [
 	{
 		id: "sharedSecrets",
 		place: "serverEncrypted",
+		keptDays: null,
+		maxEntries: null,
+	},
+	{
+		id: "collectionSecrets",
+		place: "server",
 		keptDays: null,
 		maxEntries: null,
 	},

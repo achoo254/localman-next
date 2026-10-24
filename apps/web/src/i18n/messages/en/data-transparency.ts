@@ -65,7 +65,12 @@ export const dataTransparency = {
 		sharedSecrets: {
 			title: "Shared values of secret variables",
 			detail:
-				"Encrypted with the server's key so the people you share them with can use them. Viewers never receive them.",
+				"Of environments and globals: encrypted with the server's key so the people you share them with can use them, and never sent to Viewers.",
+		},
+		collectionSecrets: {
+			title: "Secret variables of collections",
+			detail:
+				"Stored as they are and sent to everyone who can open the collection; the app only hides them on screen and leaves them out of exports, public links and agents.",
 		},
 		variables: {
 			title: "Other variables",
@@ -83,7 +88,7 @@ export const dataTransparency = {
 		history: {
 			title: "Request history",
 			detail:
-				"Each request as written, <code>{token}</code> left unfilled and credentials typed in as is blanked, with the status, time and size of its response and, after a redirect, where it ended without its query; never the response's headers or body.",
+				"Each request as written, <code>{token}</code> left unfilled and credentials typed in as is blanked, with the status, time and size of its response and, after a redirect of a URL written without variables, where it ended without its query; never the response's headers or body.",
 		},
 		mockLogs: {
 			title: "Mock request logs",
@@ -102,7 +107,7 @@ export const dataTransparency = {
 		body: "One line per request, with these fields only. Never the path, the query, headers or bodies.",
 		fields: {
 			sub: "your account ID",
-			host: "the destination host, a mock API's secret label masked",
+			host: "the destination host as sent, a mock API's secret label masked",
 			method: "the method",
 			status: "the response status",
 			error: "or the error code",

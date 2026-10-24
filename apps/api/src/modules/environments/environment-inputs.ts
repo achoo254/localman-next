@@ -19,7 +19,7 @@ export const VALUES_NOTE =
 	"Requests and scripts use the caller's local value of a variable when they have one, its shared value otherwise. A Viewer never receives a secret's shared value (`sharedHidden: true`), and neither does anyone while the server cannot decrypt it; a request using such a value stops with SECRET_WITHHELD until the caller sets a local value. Called with an agent token (MCP) rather than a browser session, no secret value is ever returned: shared ones read as `sharedValue: null, sharedHidden: true` and local ones as `value: null, hidden: true`; an agent may still write them.";
 /** Set operations of shared values (environments, globals). */
 export const AGENT_KEEPS_SHARED =
-	"Called with an agent token, a secret sent back as `sharedValue: null` (as an agent reads it) keeps its stored value; send a value to replace it.";
+	"Called with an agent token, a secret sent back as `sharedValue: null` (as an agent reads it) keeps its stored value; send a value to replace it. An agent cannot turn a secret into another type or remove it (403 SECRET_LAPSE_AGENT): that would open everyone's earlier local values of it.";
 /** Set operations of local values (environments, globals, collections). */
 export const AGENT_KEEPS_LOCAL =
 	"Called with an agent token, `value: null` for a secret (as an agent reads it) keeps your local value instead of resetting it. When the server runs the secret vault, local values of secret variables are encrypted in the user's browser: an agent cannot write them (403 SECRET_VAULT_AGENT_WRITE), a browser writes them as `lmv1:` ciphertext (409 SECRET_VAULT_REQUIRED otherwise), and `agentUse: true` marks one the user lets agents use through send_request `variables`.";

@@ -11,10 +11,12 @@ import {
 	DropdownMenuLabel,
 } from "../../components/ui/dropdown-menu";
 import { useT } from "../../i18n/i18n-context";
+import { isOpenVaultValue } from "../secure-vault/vault-codec";
 import type { VariableEditor } from "./use-variable-editor";
-import { batchTargets } from "./variable-batch";
+import { batchTargets, secretsLeaving } from "./variable-batch";
+import type { VariableRow } from "./variable-rows";
 
-type Confirming = "reset" | "unshare" | null;
+type Confirming = "reset" | "unshare" | "share" | "update" | null;
 
 export interface VariableBulk {
 	/** "Share all" … "Unshare all", to put in a More menu. */
@@ -45,6 +47,16 @@ export function useVariableBulk(editor: VariableEditor): VariableBulk {
 		run();
 		await editor.flush();
 	};
+	// Sharing a secret takes it out of the caller's vault: ask first.
+	const shareAll = (action: "share" | "update", rows: VariableRow[]) => {
+		if (secretsLeaving(rows, isOpenVaultValue).length > 0) {
+			setConfirming(action);
+		} else editor.shareRows(rows);
+	};
+	const leaving =
+		confirming === "share" || confirming === "update"
+			? secretsLeaving(targets[confirming], isOpenVaultValue)
+			: [];
 	const items = (
 		<>
 			<DropdownMenuItem
@@ -52,7 +64,7 @@ export function useVariableBulk(editor: VariableEditor): VariableBulk {
 				icon={<IconShare size={16} aria-hidden="true" />}
 				disabled={targets.share.length === 0}
 				title={viewerTitle}
-				onSelect={() => editor.shareRows(targets.share)}
+				onSelect={() => shareAll("share", targets.share)}
 			>
 				{t("environments.bulk.shareAll")}
 			</DropdownMenuItem>
@@ -61,7 +73,7 @@ export function useVariableBulk(editor: VariableEditor): VariableBulk {
 				icon={<IconCloudUpload size={16} aria-hidden="true" />}
 				disabled={targets.update.length === 0}
 				title={viewerTitle}
-				onSelect={() => editor.shareRows(targets.update)}
+				onSelect={() => shareAll("update", targets.update)}
 			>
 				{t("environments.bulk.updateAll")}
 			</DropdownMenuItem>
@@ -99,6 +111,34 @@ export function useVariableBulk(editor: VariableEditor): VariableBulk {
 	};
 	const dialogs = (
 		<>
+			<ConfirmModal
+				open={confirming === "share" || confirming === "update"}
+				onOpenChange={close}
+				data-id="modal-share-secrets"
+				title={t("environments.bulk.shareSecretsTitle")}
+				question={t("environments.bulk.shareSecretsQuestion", {
+					count: leaving.length,
+				})}
+				confirmLabel={t(
+					confirming === "update"
+						? "environments.bulk.updateAll"
+						: "environments.bulk.shareAll",
+				)}
+				onConfirm={() =>
+					confirm(() =>
+						editor.shareRows(
+							confirming === "update" ? targets.update : targets.share,
+						),
+					)
+				}
+			>
+				<p
+					className="m-0 font-mono text-sm"
+					data-id="modal-share-secrets-names"
+				>
+					{leaving.map((row) => row.variable.key).join(", ")}
+				</p>
+			</ConfirmModal>
 			<ConfirmModal
 				open={confirming === "reset"}
 				onOpenChange={close}

@@ -73,14 +73,31 @@ export function batchTargets(
 }
 
 /**
+ * Rows whose value leaves the caller's vault when shared: secrets, and
+ * values without a definition that come from the vault (`fromVault`).
+ */
+export function secretsLeaving(
+	rows: readonly VariableRow[],
+	fromVault: (value: string) => boolean,
+): VariableRow[] {
+	return rows.filter(
+		(row) =>
+			row.variable.type === "secret" ||
+			(row.local !== undefined && fromVault(row.local)),
+	);
+}
+
+/**
  * Drafts after sharing these rows' local values: a defined variable takes
  * its local value as shared value, a local value without a definition
- * becomes a new variable (`newRowId` names its row).
+ * becomes a new variable (`newRowId` names its row), a secret when the
+ * value comes from the vault (`fromVault`), so it stays hidden.
  */
 export function sharedDrafts(
 	drafts: readonly DraftVariable[],
 	rows: readonly VariableRow[],
 	newRowId: () => string,
+	fromVault: (value: string) => boolean = () => false,
 ): DraftVariable[] {
 	const values = new Map(
 		rows
@@ -97,6 +114,7 @@ export function sharedDrafts(
 			...blankDraft(newRowId()),
 			key: row.variable.key,
 			sharedValue: row.local ?? "",
+			...(fromVault(row.local ?? "") ? { type: "secret" as const } : {}),
 		}));
 	return [...updated, ...added];
 }

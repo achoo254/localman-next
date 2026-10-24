@@ -60,7 +60,13 @@ export const dataTransparency: Messages["dataTransparency"] = {
 		},
 		sharedSecrets: {
 			title: "Secret 变量的共享值",
-			detail: "用服务器密钥加密，以便你共享的人可以使用。只读成员永远收不到。",
+			detail:
+				"环境和全局变量中的：用服务器密钥加密，以便你共享的人可以使用，且从不发送给只读成员。",
+		},
+		collectionSecrets: {
+			title: "集合的 secret 变量",
+			detail:
+				"按原样保存，并发送给所有能打开该集合的人；应用只在界面上隐藏它们，并在导出、公开链接和 agent 中留空。",
 		},
 		variables: {
 			title: "其他变量",
@@ -78,7 +84,7 @@ export const dataTransparency: Messages["dataTransparency"] = {
 		history: {
 			title: "请求历史",
 			detail:
-				"每个请求按原写法保存，<code>{token}</code> 保持未填入，直接输入的凭据被清空，并记录响应的状态、耗时和大小，以及重定向后的最终位置（不含查询参数）；从不保存响应的请求头或正文。",
+				"每个请求按原写法保存，<code>{token}</code> 保持未填入，直接输入的凭据被清空，并记录响应的状态、耗时和大小，以及不含变量的 URL 重定向后的最终位置（不含查询参数）；从不保存响应的请求头或正文。",
 		},
 		mockLogs: {
 			title: "Mock 请求日志",
@@ -97,7 +103,7 @@ export const dataTransparency: Messages["dataTransparency"] = {
 		body: "每个请求一行，只有以下字段。从不记录路径、查询参数、请求头或正文。",
 		fields: {
 			sub: "你的账户 ID",
-			host: "目标主机，mock API 的 secret 标签被遮盖",
+			host: "按发送时的目标主机，mock API 的 secret 标签被遮盖",
 			method: "方法",
 			status: "响应状态",
 			error: "或错误代码",

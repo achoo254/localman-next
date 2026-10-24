@@ -124,6 +124,12 @@ export const environments: Messages["environments"] = {
 			other:
 				"Giá trị local của bạn ở {count} biến trở về shared value. Người khác không bị ảnh hưởng.",
 		},
+		shareSecretsTitle: "Chia sẻ secret trong kho?",
+		shareSecretsQuestion: {
+			one: "Secret này rời kho của bạn: giá trị của nó thành giá trị dùng chung, mã hoá bằng khoá của máy chủ, mọi Editor và người bạn chia sẻ đều dùng được.",
+			other:
+				"{count} secret này rời kho của bạn: giá trị của chúng thành giá trị dùng chung, mã hoá bằng khoá của máy chủ, mọi Editor và người bạn chia sẻ đều dùng được.",
+		},
 		unshareQuestion: "Ngừng chia sẻ mọi giá trị?",
 		unshareSummary: {
 			other:

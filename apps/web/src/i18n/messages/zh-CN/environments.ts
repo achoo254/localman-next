@@ -121,6 +121,12 @@ export const environments: Messages["environments"] = {
 		resetSummary: {
 			other: "你在 {count} 个变量上的本地值将恢复为共享值，不影响其他人。",
 		},
+		shareSecretsTitle: "要共享保险库中的 secret 吗？",
+		shareSecretsQuestion: {
+			one: "此 secret 将离开你的保险库：其值成为用服务器密钥加密的共享值，所有 Editor 以及你共享的人都可以使用。",
+			other:
+				"这 {count} 个 secret 将离开你的保险库：其值成为用服务器密钥加密的共享值，所有 Editor 以及你共享的人都可以使用。",
+		},
 		unshareQuestion: "取消共享所有值？",
 		unshareSummary: {
 			other:

@@ -11,15 +11,18 @@ import { invalidateHistory } from "../history/use-history";
 import type { SettledResponse } from "./workbench-types";
 
 /**
- * Where a redirect ended, as origin and path. Without a redirect the final
- * URL is the sent one, every `{{var}}` filled in, so a secret in the URL
- * would reach the server: it is left out. The query is never kept either,
- * tokens travel there.
+ * Where a redirect ended, as origin and path. Kept only when the URL sent
+ * is the URL as written: once a `{{var}}` was filled in (or a script
+ * changed it), the redirect may repeat that value in its host or path, and
+ * a secret would reach the server. Without a redirect the final URL is the
+ * sent one, so nothing is kept; the query never is, tokens travel there.
  */
 export function redirectedTo(
+	writtenUrl: string,
 	sentUrl: string,
 	finalUrl: string,
 ): string | undefined {
+	if (sentUrl !== writtenUrl.trim()) return undefined;
 	if (!URL.canParse(sentUrl) || !URL.canParse(finalUrl)) return undefined;
 	const sent = new URL(sentUrl);
 	const final = new URL(finalUrl);
@@ -44,7 +47,7 @@ export async function recordSend(
 			ms: Math.round(response.timings.total),
 			size: response.size,
 			route,
-			finalUrl: redirectedTo(request.url, response.finalUrl),
+			finalUrl: redirectedTo(draft.url, request.url, response.finalUrl),
 		});
 		await invalidateHistory(queryClient);
 		return true;

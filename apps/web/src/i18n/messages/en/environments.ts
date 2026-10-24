@@ -126,6 +126,12 @@ export const environments = {
 			other:
 				"Your local values of {count} variables go back to the shared values. Nobody else is affected.",
 		},
+		shareSecretsTitle: "Share secrets from your vault?",
+		shareSecretsQuestion: {
+			one: "This secret leaves your vault: its value becomes a shared value, encrypted with the server's key, that every Editor and the people you share with can use.",
+			other:
+				"These {count} secrets leave your vault: their values become shared values, encrypted with the server's key, that every Editor and the people you share with can use.",
+		},
 		unshareQuestion: "Unshare all values?",
 		unshareSummary: {
 			one: "{count} shared value is removed for everyone with access. Each person keeps only their own local value.",

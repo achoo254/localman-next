@@ -110,6 +110,25 @@ export function openLocalValues(
 	});
 }
 
+/** Shorter copies are not looked for: they would match by chance. */
+const COPY_MIN_LENGTH = 4;
+
+/**
+ * The plaintext of every value of the vault opened on this page, while it
+ * is unlocked: to catch a copy of one about to leave the vault.
+ */
+export function openVaultValues(): string[] {
+	if (!vaultKey()) return [];
+	return [...plain.values()].filter((value) => value.length >= COPY_MIN_LENGTH);
+}
+
+/** A value of the vault opened on this page, while it is unlocked. */
+export function isOpenVaultValue(value: string): boolean {
+	if (!vaultKey()) return false;
+	for (const opened of plain.values()) if (opened === value) return true;
+	return false;
+}
+
 /** Re-renders when decrypted values land or the vault opens or locks. */
 export function useVaultValues(): number {
 	return useSyncExternalStore(subscribeValues, getVersion, getVersion);

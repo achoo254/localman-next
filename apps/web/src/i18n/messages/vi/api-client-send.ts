@@ -11,6 +11,8 @@ export const apiClientSend: Messages["apiClient"]["send"] = {
 	scopesDropped:
 		"Script đã đặt giá trị {scopes} nhưng không có chỗ lưu: chưa có environment đang active, hoặc request không thuộc collection nào.",
 	scopeNames: { environment: "environment", collectionVariables: "collection" },
+	scopesWithheld:
+		"Không lưu: {names} sẽ chứa giá trị của một secret trong kho dưới dạng thường. Hãy đặt nó là biến secret, hoặc dùng secret qua chính biến của nó.",
 	scopesNotSaved:
 		"Đã nhận response, nhưng không lưu được các biến mà script đã đặt. Hãy gửi lại để thử lại.",
 	dynamicVariablesUnavailable:

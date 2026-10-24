@@ -10,6 +10,8 @@ export const apiClientSend = {
 	scopesDropped:
 		"Your scripts set {scopes} values, but there was nowhere to keep them: no active environment, or a request outside any collection.",
 	scopeNames: { environment: "environment", collectionVariables: "collection" },
+	scopesWithheld:
+		"Not saved: {names} would hold the value of a secret from your vault in plain text. Make it a secret variable, or use the secret through its own variable.",
 	scopesNotSaved:
 		"The response came back, but the variables your scripts set could not be saved. Send again to retry.",
 	dynamicVariablesUnavailable:

@@ -6,6 +6,7 @@
  */
 import type { LocalValue, VariableView } from "@localman/shared/api-client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { isOpenVaultValue } from "../secure-vault/vault-codec";
 import { combinedStatus } from "./combined-status";
 import { lockedKeysOf, mergedLocal } from "./local-value-map";
 import {
@@ -127,7 +128,7 @@ export function useVariableEditor(options: VariableEditorOptions) {
 			for (const key of Object.keys(resetPatch(rows))) {
 				resetsRef.current.add(key);
 			}
-			commit(sharedDrafts(draftsRef.current, rows, newRowId));
+			commit(sharedDrafts(draftsRef.current, rows, newRowId, isOpenVaultValue));
 		},
 		[commit, newRowId],
 	);

@@ -109,7 +109,7 @@ export async function saveScriptScopes(
 	changes: ScriptScopeChanges,
 ): Promise<ScopeSaveResult> {
 	const { workspaceId, environmentId, collectionId } = targets;
-	const saves: Promise<boolean>[] = [];
+	const saves: ReturnType<typeof writeScriptScope>[] = [];
 	const dropped: ScopeSaveResult["dropped"] = [];
 	if (changes.environment.length > 0 && !environmentId) {
 		dropped.push("environment");
@@ -130,9 +130,14 @@ export async function saveScriptScopes(
 	}
 	const results = await Promise.allSettled(saves);
 	const saved = results.every(
-		(result) => result.status === "fulfilled" && result.value,
+		(result) => result.status === "fulfilled" && result.value.saved,
 	);
-	return { saved, dropped };
+	const withheld = results.flatMap((result) =>
+		result.status === "fulfilled" ? result.value.withheld : [],
+	);
+	return withheld.length > 0
+		? { saved, dropped, withheld }
+		: { saved, dropped };
 }
 
 /** `undefined` while environments are off: script changes stay in the send. */

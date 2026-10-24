@@ -19,6 +19,7 @@ import {
 import { toEnvironmentDetail } from "./environment-view.js";
 import {
 	alignLocalSealing,
+	assertAgentKeepsSecrets,
 	assertCanSeal,
 	typeChanges,
 } from "./local-reseal.js";
@@ -119,6 +120,7 @@ export async function setEnvironmentVariables(
 	);
 	const secrets = secretKeysOf(next);
 	const types = typeChanges(secretKeysOf(current.variables), secrets);
+	assertAgentKeepsSecrets(options.keepWithheld, types.lapsed);
 	await assertCanSeal(scope, types.newlySecret);
 	const written = await EnvironmentModel.updateOne(
 		options.ifUpdatedAt
