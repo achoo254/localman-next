@@ -1,4 +1,9 @@
+import { tunnelDomains } from "../config/tunnel-domains.js";
 import { PRIMARY_TENANT_ID } from "../tenancy/primary-tenant.js";
+import {
+	type TenantDirectory,
+	primaryTenantDirectory,
+} from "../tenancy/tenant-directory.js";
 import type { TunnelTenant } from "../tenancy/tunnel-tenant.js";
 import { TEST_AUDIENCE, TEST_ISSUER } from "./idp-test-keys.js";
 
@@ -14,3 +19,14 @@ export const TEST_TENANT: TunnelTenant = Object.freeze({
 	audience: TEST_AUDIENCE,
 	tunnelDomain: "tunnel.hoandat.com",
 });
+
+/**
+ * TEST ONLY. The directory of the tests: `TEST_TENANT` on the
+ * `TUNNEL_DOMAINS` of vitest.config.ts and on loopback (supertest).
+ */
+export function testTenantDirectory(): TenantDirectory {
+	return primaryTenantDirectory(TEST_TENANT, {
+		tunnelDomains: tunnelDomains(),
+		loopback: true,
+	});
+}

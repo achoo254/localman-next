@@ -1,6 +1,5 @@
 import { OperationError } from "@localman/operations";
 import express, { type RequestHandler, type Router } from "express";
-import { decodeJwt } from "jose";
 import { asyncHandler } from "../../http/async-handler.js";
 import {
 	DEFAULT_SERVER_LIMIT_PER_MINUTE,
@@ -9,12 +8,6 @@ import {
 import { noStore } from "../../http/no-store.js";
 import type { Logger } from "../../logger.js";
 import { INTERNAL_PATHS } from "../../operations/protocol-routes.js";
-import {
-	type LocalmanTenant,
-	currentTenant,
-	runInTenant,
-} from "../../tenancy/tenant-context.js";
-import { tenantOfIssuer } from "../../tenancy/tenant-of-issuer.js";
 import type { OidcApi } from "../auth/oidc-api.js";
 import {
 	IdpUnavailableError,
@@ -35,7 +28,6 @@ import {
 	SET_MEDIA_TYPE,
 	verifySecurityEvent,
 } from "./security-event-token.js";
-import { acceptNotServedTenantEvent } from "./tenant-lifecycle-event.js";
 
 /** A SET is well under a kilobyte; anything bigger is not one. */
 const BODY_LIMIT = "32kb";
@@ -68,35 +60,7 @@ function requireIdpCredentials(credentials: BasicCredentials): RequestHandler {
 	};
 }
 
-/** `iss` of a SET before verification (empty when it cannot be read). */
-function unverifiedIssuer(token: string): string {
-	try {
-		const { iss } = decodeJwt(token.trim());
-		return typeof iss === "string" ? iss : "";
-	} catch {
-		return "";
-	}
-}
-
-/**
- * The tenant of a SET's issuer: one whose `https://auth.<domain>` it is,
- * else the intake's own tenant when its IdP discovered that issuer.
- */
-async function tenantOfSet(
-	issuer: string,
-	oidc: OidcApi,
-): Promise<LocalmanTenant | undefined> {
-	const named = await tenantOfIssuer(issuer);
-	if (named) return named;
-	try {
-		return issuer === (await oidc.issuer()) ? currentTenant() : undefined;
-	} catch (error) {
-		if (error instanceof IdpUnavailableError) throw authUnavailableError();
-		throw error;
-	}
-}
-
-/** The SET checked against the current tenant's IdP. */
+/** The SET checked against the IdP's issuer and keys. */
 async function verified(
 	token: string,
 	oidc: OidcApi,
@@ -131,12 +95,7 @@ function checkIdempotencyKey(header: unknown, event: AuditEvent): void {
  * signed SETs (integration guide, section 10). Authenticated by HTTP Basic
  * and the IdP's signature, so exempt from the CSRF origin check. Answers
  * 202 once stored; a redelivered `jti` is acknowledged without being
- * applied again. Every tenant's events come here (the IdP has one
- * intake); each is verified and applied in the tenant of its `iss`.
- * Lifecycle events of a tenant no longer served here (migrating,
- * self-hosted, suspended, released) cannot be verified, since the IdP
- * stops publishing that tenant's keys: they are checked without the
- * signature and only recorded (`tenant-lifecycle-event.ts`). Mounted only when AUDIT_CLIENT_ID/SECRET are configured.
+ * applied again. Mounted only when AUDIT_CLIENT_ID/SECRET are configured.
  */
 export function registerAuditEventsRoute(
 	router: Router,
@@ -161,28 +120,15 @@ export function registerAuditEventsRoute(
 			if (typeof token !== "string" || token.trim() === "") {
 				throw invalidEvent("Missing security event token");
 			}
-			// One intake for every tenant: the SET's issuer names the tenant,
-			// whose keys and data the event is then handled with.
-			const tenant = await tenantOfSet(unverifiedIssuer(token), oidc);
-			if (!tenant) {
-				// A tenant no longer served here: only its lifecycle events.
-				const status = await acceptNotServedTenantEvent(token.trim(), {
-					idempotencyKey: req.headers["idempotency-key"],
-					audience: options.audience,
-					logger,
-				});
-				res.status(202).json({ status });
+			const event = await verified(token.trim(), oidc, options, logger);
+			checkIdempotencyKey(req.headers["idempotency-key"], event);
+			if (await wasAuditEventReceived(event.jti)) {
+				res.status(202).json({ status: "duplicate" });
 				return;
 			}
-			const status = await runInTenant(tenant, async () => {
-				const event = await verified(token.trim(), oidc, options, logger);
-				checkIdempotencyKey(req.headers["idempotency-key"], event);
-				if (await wasAuditEventReceived(event.jti)) return "duplicate";
-				await applyAuditEvent(event, logger);
-				await recordAuditEvent(event);
-				return "accepted";
-			});
-			res.status(202).json({ status });
+			await applyAuditEvent(event, logger);
+			await recordAuditEvent(event);
+			res.status(202).json({ status: "accepted" });
 		}),
 	);
 }

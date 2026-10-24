@@ -1,4 +1,4 @@
-import { tuneloLoginCommand } from "../tenancy/login-command.js";
+import { TUNELO_LOGIN_COMMAND } from "../tenancy/login-command.js";
 import { type SafeHtml, html } from "./html.js";
 import type { MessageKey, Translator } from "./i18n/messages.js";
 
@@ -20,7 +20,7 @@ const STEPS: readonly Step[] = [
 		id: "login",
 		title: "steps.login.title",
 		body: "steps.login.body",
-		command: () => tuneloLoginCommand(),
+		command: () => TUNELO_LOGIN_COMMAND,
 	},
 	{
 		id: "open",

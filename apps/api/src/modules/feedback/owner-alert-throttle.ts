@@ -5,7 +5,6 @@ import {
 	RateLimitWindowModel,
 	takeRateLimitSlot,
 } from "../../lib/rate-limit-windows.js";
-import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import { getNotificationService } from "../notifications/notification-runtime.js";
 
 /** Suppressed alerts are remembered this long while waiting for a slot. */
@@ -40,15 +39,13 @@ async function takePending(kind: string): Promise<number> {
  * flood the owner's Telegram. Suppressed alerts are counted and summarized
  * ("and X more") in the next alert that goes through; the entries
  * themselves are all on the admin page. `text` writes the alert in the
- * owner's language. Another tenant's entries never alert the deployment
- * owner.
+ * owner's language.
  */
 export async function alertOwnerThrottled(
 	kind: string,
 	text: (locale: Locale) => string,
 	now: Date = new Date(),
 ): Promise<void> {
-	if (!tenantSettings().ownerAlerts) return;
 	const allowed = await takeRateLimitSlot(
 		`owner-alert:${kind}`,
 		"owner",

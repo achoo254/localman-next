@@ -86,9 +86,8 @@ export const featureEnvShape = {
 	/** Public Vietnamese fake data API (ADR-0010); off: not routed nor MCP. */
 	PUBLIC_FAKE_DATA_ENABLED: offByDefault,
 	/**
-	 * Tunelo API for every tenant, e.g. a local Tunelo in dev or a fake in
-	 * E2E (https only in production). Unset: each tenant's own
-	 * `https://tunnel.<domain>`.
+	 * Tunelo API, e.g. a local Tunelo in dev or a fake in E2E (https only
+	 * in production). Unset: `https://tunnel.hoandat.com`.
 	 */
 	TUNELO_API_URL: z
 		.url({ protocol: /^https?$/, error: "must be an http(s) URL" })

@@ -7,7 +7,7 @@ const under = (host: string, domain: string): boolean =>
 
 /**
  * A host of Localman itself: the dashboard, mock hosts and Tunelo, of this
- * tenant or any other. A secret filled for an agent never goes there: a
+ * deployment or any other. A secret filled for an agent never goes there: a
  * mock stores what it receives and Tunelo shows traffic, where an agent
  * could read the value back (ADR-0009). `*.x` patterns are checked on `x`.
  */

@@ -6,9 +6,9 @@ const HOSTNAME_REGEX =
 
 /**
  * Parses `TUNNEL_DOMAINS` ("tunnel.hoandat.com,tunnel.example.test"): the
- * primary tenant's tunnel domains. The first entry is used in every URL
- * handed out to it; the rest are also accepted on incoming requests.
- * Other tenants' domains come from the IdP (`tenancy/tenant-directory.ts`).
+ * tunnel domains served. The first entry is used in every URL handed
+ * out; the rest are also accepted on incoming requests. Any other host
+ * gets 421 (`tenancy/tenant-directory.ts`).
  */
 export function parseTunnelDomains(raw: string): string[] {
 	const domains = raw

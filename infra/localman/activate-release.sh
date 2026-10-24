@@ -5,8 +5,8 @@
 # 1. setup-server.sh (idempotent: user, dirs, Node runtime, cron, logrotate);
 # 2. runtime dependencies from the shipped lockfile (--frozen-lockfile),
 #    then the release's tenant indexes built while the current release
-#    still serves (create-tenant-indexes.mjs: tags old documents with the
-#    primary tenant, builds every index; idempotent), so the new process
+#    still serves (create-tenant-indexes.mjs: builds every index;
+#    idempotent), so the new process
 #    starts within switch-release.sh's 30 seconds;
 # 3. web assets of the previous release carried forward (hard links), so
 #    tabs opened before the deploy still load their chunks; assets older
@@ -30,8 +30,7 @@ id="${1:?usage: activate-release.sh <release-id>}"
 [[ "$id" =~ ^[A-Za-z0-9._-]+$ ]] || die "bad release id"
 new="$RELEASES/$id"
 for part in api/main.mjs api/package.json api/pnpm-lock.yaml web/index.html \
-	nginx/localman-http.conf nginx/localman.hoandat.com.conf nginx/localman-app.inc \
-	nginx/localman-tenants.conf; do
+	nginx/localman-http.conf nginx/localman.hoandat.com.conf nginx/localman-app.inc; do
 	[ -s "$new/$part" ] || die "upload incomplete: missing $new/$part"
 done
 # shellcheck disable=SC1091

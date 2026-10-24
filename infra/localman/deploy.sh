@@ -70,7 +70,7 @@ echo "== nginx config with the CSP hashes of this build"
 cp infra/localman/nginx/localman-http.conf infra/localman/nginx/localman-app.inc "$OUT/nginx/"
 HASHES="$(node infra/localman/csp-hashes.mjs apps/web/dist/*.html)"
 # Base64 hashes never contain '|' or '&'.
-for name in localman.hoandat.com.conf localman-tenants.conf; do
+for name in localman.hoandat.com.conf; do
 	sed "s|__CSP_SCRIPT_HASHES__|$HASHES|" "infra/localman/nginx/$name" >"$OUT/nginx/$name"
 	if grep -q '__CSP_SCRIPT_HASHES__' "$OUT/nginx/$name"; then
 		echo "CSP placeholder left in $name" >&2

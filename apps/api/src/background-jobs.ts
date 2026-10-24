@@ -5,11 +5,11 @@ import { LiveMockSyncJob } from "./modules/live-mock-sync/sync-job.js";
 import { TombstoneSweeper } from "./modules/projects/tombstone-sweeper.js";
 import { TrialReminderJob } from "./modules/trial/trial-reminders.js";
 import { WatchDigestJob } from "./modules/watch/watch-digest-job.js";
-import { forEachTenant } from "./tenancy/each-tenant.js";
+import { runInPrimaryTenant } from "./tenancy/primary-tenant-job.js";
 
 /**
  * The periodic jobs of the API process, started and stopped together.
- * Each run goes through every tenant in turn.
+ * Each run works in the primary tenant, the only one served.
  */
 export interface BackgroundJobs {
 	start(): void;
@@ -45,7 +45,7 @@ export function createBackgroundJobs(
 			collectionTrash.start();
 			watchDigest?.start();
 			liveMockSync.start();
-			backfill ??= forEachTenant(logger, () =>
+			backfill ??= runInPrimaryTenant(logger, () =>
 				backfillExampleSearchNames(logger),
 			);
 		},

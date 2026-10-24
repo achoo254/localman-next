@@ -8,7 +8,11 @@ import {
 	runtimeSettingsFromEnv,
 } from "./config/runtime-settings.js";
 import { createDashboardApp } from "./dashboard-server.js";
-import { connectMongo, disconnectMongo } from "./db/connect-mongo.js";
+import {
+	connectMongo,
+	disconnectMongo,
+	initModels,
+} from "./db/connect-mongo.js";
 import { closeServer } from "./http/close-server.js";
 import { runShutdownSteps, shutdownSteps } from "./lib/shutdown-sequence.js";
 import { type Logger, createLogger } from "./logger.js";
@@ -38,7 +42,6 @@ import { configureTunelo } from "./modules/tunelo/tunelo-runtime.js";
 import { servedOperations } from "./operations/feature-gates.js";
 import { operations as registeredOperations } from "./operations/registry.js";
 import { configureTenancy } from "./tenancy/configure-tenancy.js";
-import { migrateToTenants } from "./tenancy/tenant-migration.js";
 
 /** Budget of the whole shutdown (`runShutdownSteps` cuts it there). */
 const SHUTDOWN_TIMEOUT_MS = 10_000;
@@ -148,12 +151,11 @@ process.on("uncaughtException", (error) => {
 // supervisor (PM2, Compose) restarts the process once the database is back.
 try {
 	await connectMongo(env.MONGO_URI, logger);
-	// Fail fast when an index (unique invariants) cannot be built; old
-	// documents get the primary tenant first.
-	await migrateToTenants(logger, env.IDP_INTERNAL_URL !== undefined);
+	// Fail fast when an index (unique invariants) cannot be built.
+	await initModels();
 	configureRuntime(runtimeSettingsFromEnv(env));
 	configureSecretVault(env.SECRET_VAULT_ENABLED);
-	configureTenancy(env, logger);
+	configureTenancy(env);
 	notifications = createNotificationService(env, logger);
 	setNotificationService(notifications);
 	const auth = createAuthModule(authSettingsFromEnv(env), logger);

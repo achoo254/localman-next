@@ -28,22 +28,11 @@ target="$RELEASES/$id"
 source /root/.nvm/nvm.sh >/dev/null
 
 echo "== nginx config of $id"
-# conf.d loads every *.conf; the shared dashboard locations (releases since
-# tenants) are included from /etc/nginx/localman. The tenants' blocks need
-# the IdP's 00-tenants-http.conf (certificate map) and Localman serving
-# other tenants (IDP_INTERNAL_URL): otherwise they are removed.
-tenants_on=0
-if grep -Eq '^IDP_INTERNAL_URL=.+' "$APP_DIR/.env" 2>/dev/null; then tenants_on=1; fi
-if [ "$tenants_on" -eq 1 ] && [ ! -f "$target/nginx/localman-tenants.conf" ]; then
-	die "$id cannot serve other tenants; unset IDP_INTERNAL_URL first"
-fi
+# conf.d loads every *.conf; the shared dashboard locations are included
+# from /etc/nginx/localman.
 installs=("localman-http.conf:/etc/nginx/conf.d" "localman.hoandat.com.conf:/etc/nginx/conf.d")
 if [ -f "$target/nginx/localman-app.inc" ]; then
 	installs+=("localman-app.inc:/etc/nginx/localman")
-fi
-tenants_dest=/etc/nginx/conf.d/localman-tenants.conf
-if [ "$tenants_on" -eq 1 ] && [ -f /etc/nginx/conf.d/00-tenants-http.conf ]; then
-	installs+=("localman-tenants.conf:/etc/nginx/conf.d")
 fi
 # Every source first: nothing is swapped when one is missing.
 for entry in "${installs[@]}"; do
@@ -61,10 +50,6 @@ for entry in "${installs[@]}"; do
 		changed+=("$dest")
 	fi
 done
-if [[ ! " ${installs[*]} " == *"localman-tenants.conf:"* ]] && [ -f "$tenants_dest" ]; then
-	mv -f "$tenants_dest" "$tenants_dest.bak"
-	changed+=("$tenants_dest")
-fi
 if [ "${#changed[@]}" -gt 0 ] && ! nginx -t; then
 	for dest in "${changed[@]}"; do
 		if [ -f "$dest.bak" ]; then mv -f "$dest.bak" "$dest"; else rm -f "$dest"; fi

@@ -4,7 +4,6 @@ import express from "express";
 import { createApiRouter } from "./api/create-api-router.js";
 import { createLoginPageHandler } from "./api/render-login-page.js";
 import { createIdpTokenVerifier } from "./auth/idp-token-verifier.js";
-import { createTenantTokenVerifier } from "./auth/tenant-token-verifier.js";
 import { createTokenAuthenticator } from "./auth/token-authenticator.js";
 import { loadAuthConfig } from "./config/auth-config.js";
 import { primaryTunnelDomain, tunnelDomains } from "./config/tunnel-domains.js";
@@ -12,11 +11,7 @@ import { createKeyStore } from "./key-store/create-key-store.js";
 import { createLogger } from "./logger.js";
 import { createRelayHandler, extractSubdomain } from "./request-relay.js";
 import { usageTracker } from "./services/usage-tracker.js";
-import {
-	configureTenancy,
-	migrateToTenants,
-	tenantIdpSettings,
-} from "./tenancy/configure-tenancy.js";
+import { configureTenancy, initModels } from "./tenancy/configure-tenancy.js";
 import { tenantScope } from "./tenancy/tenant-scope-middleware.js";
 import { tunnelManager } from "./tunnel-manager.js";
 import { mountWebConsole } from "./web/web-console.js";
@@ -34,21 +29,14 @@ async function start(): Promise<void> {
 	// Fail fast on bad config, before taking traffic.
 	const domains = tunnelDomains();
 	const authConfig = loadAuthConfig();
-	const tenantIdp = tenantIdpSettings();
-	configureTenancy(authConfig, tenantIdp, createLogger("tunelo-tenancy"));
+	configureTenancy(authConfig);
 	const authenticator = createTokenAuthenticator({
 		config: authConfig,
 		keyStore,
-		verifier: createTenantTokenVerifier(
-			createIdpTokenVerifier({
-				issuer: authConfig.issuer,
-				audience: authConfig.audience,
-			}),
-			tenantIdp && {
-				origin: tenantIdp.internalUrl,
-				secret: tenantIdp.internalSecret,
-			},
-		),
+		verifier: createIdpTokenVerifier({
+			issuer: authConfig.issuer,
+			audience: authConfig.audience,
+		}),
 	});
 	logger.info(
 		{
@@ -61,7 +49,7 @@ async function start(): Promise<void> {
 	);
 
 	await keyStore.initialize();
-	await migrateToTenants(logger, tenantIdp !== undefined);
+	await initModels();
 	usageTracker.start();
 
 	const app = express();
@@ -69,7 +57,8 @@ async function start(): Promise<void> {
 	app.set("trust proxy", "loopback");
 	const relay = createRelayHandler();
 
-	// Everything below runs in the tenant of the Host (421 for none).
+	// Everything below runs in the primary tenant; any host it does not
+	// serve gets 421.
 	app.use(
 		tenantScope((_req, res) => {
 			res.json({ status: "ok", ...tunnelManager.getStats() });
@@ -100,15 +89,6 @@ async function start(): Promise<void> {
 		process.env,
 		{ issuer: authConfig.issuer, primaryDomain: primaryTunnelDomain() },
 		createLogger("tunelo-web"),
-		tenantIdp?.web && {
-			access: {
-				internalUrl: tenantIdp.internalUrl,
-				role: "tunelo",
-				internalSecret: tenantIdp.internalSecret,
-				loopbackUrl: tenantIdp.web.loopbackUrl,
-			},
-			clientKey: tenantIdp.web.clientKey,
-		},
 	);
 
 	// Apex fallthrough (health, unknown paths): relay handler gets raw req/res.

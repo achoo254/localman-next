@@ -1,10 +1,9 @@
 # /etc/nginx/localman/localman-app.inc (installed with each release by
 # infra/localman/switch-release.sh; not in conf.d, so never loaded alone)
-# The web app, dashboard API and /m/ fallback of a Localman dashboard host,
-# included by the server block of localman.hoandat.com and by the one of
-# every tenant's localman.<domain> (localman-tenants.conf). Each server keeps
-# its own certificate, logs, security headers (the CSP names its IdP) and
-# /internal/ rule.
+# The web app, dashboard API and /m/ fallback of the Localman dashboard host,
+# included by the server block of localman.hoandat.com, which keeps its own
+# certificate, logs, security headers (the CSP names its IdP) and /internal/
+# rule.
 
     # Through the release symlink (infra/localman/switch-release.sh).
     root /opt/localman/current/web;

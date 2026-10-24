@@ -5,8 +5,8 @@ import { type TunnelTenant, runInTenant } from "./tunnel-tenant.js";
 
 /**
  * First middleware: the rest of the request runs in the tenant of its
- * Host. A host of no tenant gets 421, except the apex `/health` probed on
- * loopback (answered by `health`); 503 when the IdP cannot be asked.
+ * Host. A host Tunelo does not serve gets 421, except `/health` probed on
+ * loopback (answered by `health`); 503 if the lookup itself fails.
  */
 export function tenantScope(health: RequestHandler): RequestHandler {
 	return async (req, res, next) => {

@@ -68,10 +68,6 @@ describe("tenant-owned models", () => {
 				// Claims jobs of every tenant, runs each in its own.
 				"modules/mock-callbacks/outbound-claims.ts",
 				"modules/mock-callbacks/retry-queue.ts",
-				// Lists the tenants that have users.
-				"tenancy/each-tenant.ts",
-				// A tenant moving to its own servers: matched and tagged by hand.
-				"tenancy/tenant-move-data.ts",
 			].sort(),
 		);
 	});

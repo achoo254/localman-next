@@ -1,13 +1,12 @@
 import { defineOperation } from "@localman/operations";
 import { z } from "zod";
-import { PRIMARY_TENANT_ID } from "../../tenancy/primary-tenant.js";
 import { currentTenant } from "../../tenancy/tenant-context.js";
 import { tenantSettings } from "../../tenancy/tenant-settings.js";
 
 /**
  * What the web shows of the domain it is served on: the account's name
- * ("hoandat account", "Acme account"), its IdP, mock and tunnel hosts.
- * The primary tenant is named by the first label of its domain.
+ * ("hoandat account"), its IdP, mock and tunnel hosts: the first label of
+ * the domain, the issuer's origin and the runtime settings.
  */
 export const getTenantInfo = defineOperation({
 	id: "public.getTenantInfo",
@@ -32,12 +31,9 @@ export const getTenantInfo = defineOperation({
 	},
 	handler: () => {
 		const tenant = currentTenant();
-		const settings = tenantSettings(tenant);
+		const settings = tenantSettings();
 		return {
-			displayName:
-				tenant.id === PRIMARY_TENANT_ID
-					? (tenant.domain.split(".")[0] ?? tenant.domain)
-					: tenant.displayName,
+			displayName: tenant.domain.split(".")[0] ?? tenant.domain,
 			idpOrigin: new URL(tenant.issuer).origin,
 			publicUrl: settings.publicUrl,
 			mockBaseDomain: settings.mockBaseDomain,

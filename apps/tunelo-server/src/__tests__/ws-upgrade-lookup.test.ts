@@ -2,12 +2,9 @@ import http from "node:http";
 import net from "node:net";
 import { afterAll, afterEach, beforeAll, describe, expect, test } from "vitest";
 import type { TokenAuthenticator } from "../auth/token-authenticator.js";
-import {
-	configureTenants,
-	singleTenantDirectory,
-} from "../tenancy/tenant-directory.js";
+import { configureTenants } from "../tenancy/tenant-directory.js";
 import type { TunnelTenant } from "../tenancy/tunnel-tenant.js";
-import { TEST_TENANT } from "../test-support/test-tenant.js";
+import { testTenantDirectory } from "../test-support/test-tenant.js";
 import { attachWsHandler } from "../ws-handler.js";
 
 const authenticator: TokenAuthenticator = {
@@ -52,7 +49,7 @@ describe("ws upgrade while the tenant lookup is pending", () => {
 		port = typeof addr === "object" && addr ? addr.port : 0;
 	});
 
-	afterEach(() => configureTenants(singleTenantDirectory(TEST_TENANT)));
+	afterEach(() => configureTenants(testTenantDirectory()));
 	afterAll(() => new Promise<void>((resolve) => server.close(() => resolve())));
 
 	function slowDirectory(): { release: () => void; asked: Promise<void> } {
@@ -96,7 +93,7 @@ describe("ws upgrade while the tenant lookup is pending", () => {
 		release();
 		await new Promise((resolve) => setTimeout(resolve, 20));
 
-		configureTenants(singleTenantDirectory(TEST_TENANT));
+		configureTenants(testTenantDirectory());
 		const raw = await send();
 		expect(raw).toContain("HTTP/1.1 421 Misdirected Request");
 	});

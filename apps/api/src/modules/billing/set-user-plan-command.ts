@@ -1,11 +1,10 @@
 import { parseArgs } from "node:util";
 import type { PlanId } from "@localman/shared";
-import { TENANT_OPTION, tenantIdArg } from "../../tenancy/tenant-arg.js";
 import { endOfSaigonDay } from "../../time/saigon-time.js";
 import { UserModel } from "../users/user-model.js";
 
 export const SET_USER_PLAN_USAGE =
-	"Usage: set-user-plan [--tenant <id>] (--sub <sub> | --username <name>) --plan free|pro [--expires YYYY-MM-DD [--force]]";
+	"Usage: set-user-plan (--sub <sub> | --username <name>) --plan free|pro [--expires YYYY-MM-DD [--force]]";
 
 export class UsageError extends Error {
 	constructor(message: string) {
@@ -15,8 +14,6 @@ export class UsageError extends Error {
 }
 
 export interface SetUserPlanArgs {
-	/** Tenant whose user it is (`--tenant`, primary by default). */
-	readonly tenantId: string;
 	readonly user: { readonly sub: string } | { readonly username: string };
 	readonly plan: PlanId;
 	/** End of the given day in Asia/Saigon; `null` for no expiry. */
@@ -48,7 +45,6 @@ export function parseSetUserPlanArgs(
 				plan: { type: "string" },
 				expires: { type: "string" },
 				force: { type: "boolean" },
-				...TENANT_OPTION,
 			},
 			strict: true,
 		}));
@@ -82,14 +78,7 @@ export function parseSetUserPlanArgs(
 			);
 		}
 	}
-	let tenantId: string;
-	try {
-		tenantId = tenantIdArg(text("tenant"));
-	} catch (error) {
-		throw new UsageError(error instanceof Error ? error.message : "bad tenant");
-	}
 	return {
-		tenantId,
 		user: sub ? { sub } : { username: username ?? "" },
 		plan,
 		expiresAt,

@@ -39,7 +39,6 @@ import {
 	registerResourceMetadataRoutes,
 	resourceMetadataUrlOf,
 } from "./mcp-resource-metadata.js";
-import { tenantMcpSettings } from "./mcp-tenant-settings.js";
 import { createOperationMcpServer } from "./operation-mcp-server.js";
 import { PrincipalEventBus } from "./principal-event-bus.js";
 import {
@@ -101,12 +100,12 @@ export function createLocalmanMcpRouter(options: LocalmanMcpOptions): Router {
 	const reachable = oauthReachableOperations(
 		options.operations ?? registeredOperations,
 	);
-	const settings = tenantMcpSettings({
+	const settings: McpResourceSettings = {
 		publicUrl: options.publicUrl,
 		issuer: options.issuer,
 		scopesSupported: baseScopesOf(reachable),
 		keys: options.keys,
-	});
+	};
 	const origins = new Set(options.allowedOrigins);
 	const selections = createMemoryToolsetSelectionStore();
 	const confirmTokens = createConfirmTokenService();

@@ -14,7 +14,7 @@ import {
 	sessionIdOf,
 } from "../../http/require-auth.js";
 import { type Logger, createLogger } from "../../logger.js";
-import { localmanDomainOf } from "../../tenancy/idp-tenant-directory.js";
+import { localmanDomainOf } from "../../tenancy/localman-domain.js";
 import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import { fillVariables } from "./agent-variable-fill.js";
 import { routeLocalTarget } from "./local-target-route.js";
@@ -56,7 +56,7 @@ function loggedHost(url: string): string {
 		tenantSettings().mockBaseDomain.split(":")[0] ?? "",
 	);
 	if (base && host.endsWith(`.${base}`)) return `[secret].${base}`;
-	// Another tenant's mock host: its secret is masked too.
+	// Another Localman's mock host: its secret is masked too.
 	const [label, ...rest] = host.split(".");
 	const other = localmanDomainOf(host) !== undefined && label !== "localman";
 	return other ? `[secret].${rest.join(".")}` : host;

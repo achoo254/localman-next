@@ -1,12 +1,12 @@
 import { createTenantContext } from "@localman/tenancy";
 
 /**
- * One tenant Localman serves: a domain claimed at the IdP. Its dashboard
- * is `localman.<domain>`, its mocks `*.localman.<domain>`, its users sign
- * in at `https://auth.<domain>`. Every document carries its `id`.
+ * The tenant Localman serves: the primary one (`primary-tenant.ts`),
+ * built from the environment. Every document carries its `id`; the scope
+ * stays so the `tenantId` filter and stamp of every model keep working.
  */
 export interface LocalmanTenant {
-	/** The IdP's tenant id (`primary` for hoandat.com, `ten_…` otherwise). */
+	/** Always `primary`, the id every stored document carries. */
 	readonly id: string;
 	readonly domain: string;
 	readonly displayName: string;
@@ -15,7 +15,7 @@ export interface LocalmanTenant {
 	readonly publicUrl: string;
 	/** Mock URLs are `{secret}.{mockBaseDomain}`. */
 	readonly mockBaseDomain: string;
-	/** IdP subjects allowed on admin operations in this tenant. */
+	/** IdP subjects allowed on admin operations. */
 	readonly ownerSubs: ReadonlySet<string>;
 }
 

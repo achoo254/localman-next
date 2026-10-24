@@ -2,66 +2,32 @@ import {
 	type TurnstileSettings,
 	runtimeSettings,
 } from "../config/runtime-settings.js";
-import { PRIMARY_TENANT_ID } from "./primary-tenant.js";
-import { type LocalmanTenant, currentTenant } from "./tenant-context.js";
 
-/** What differs per tenant (domain) among the runtime settings. */
+/** The domain settings Localman serves under, from the runtime settings. */
 export interface TenantSettings {
 	/** Origin of the dashboard (links, redirect URIs). */
 	readonly publicUrl: string;
 	/** Mock URLs are `{secret}.{mockBaseDomain}`. */
 	readonly mockBaseDomain: string;
-	/** IdP subjects with admin rights in this tenant. */
+	/** IdP subjects with admin rights. */
 	readonly ownerSubs: ReadonlySet<string>;
 	/** Anti-spam of public forms; `null` without one. */
 	readonly turnstile: TurnstileSettings | null;
-	/** Guests (not signed in) may send the public forms. */
-	readonly guestForms: boolean;
 	/** Tunnel hosts are `<label>.<one of these>`. */
 	readonly tunnelDomains: readonly string[];
-	/**
-	 * Feedback and requests alert the deployment owner's Telegram
-	 * (`OWNER_TELEGRAM_CHAT_ID`); only the primary tenant's do.
-	 */
-	readonly ownerAlerts: boolean;
-	/**
-	 * The Telegram bot (`TELEGRAM_BOT_TOKEN`, hoandat's) notifies users;
-	 * another tenant's users linked their chat to their own IdP's bot.
-	 */
-	readonly telegram: boolean;
 }
 
 /**
- * Settings of the current tenant. The primary tenant keeps the process's
- * runtime settings (its environment); another tenant's follow from its
- * domain: `localman.<d>`, `tunnel.<d>`, owners from the IdP, no
- * Turnstile yet (its public forms are for signed-in users only) and no
- * alerts to the deployment owner (its entries stay on its admin page).
+ * Settings of the primary tenant, the only one served: the process's
+ * runtime settings (its environment).
  */
-export function tenantSettings(
-	tenant: LocalmanTenant = currentTenant(),
-): TenantSettings {
+export function tenantSettings(): TenantSettings {
 	const settings = runtimeSettings();
-	if (tenant.id === PRIMARY_TENANT_ID) {
-		return {
-			publicUrl: settings.publicUrl,
-			mockBaseDomain: settings.mockBaseDomain,
-			ownerSubs: settings.ownerSubs,
-			turnstile: settings.turnstile,
-			guestForms: true,
-			tunnelDomains: settings.tunnelDomains,
-			ownerAlerts: true,
-			telegram: true,
-		};
-	}
 	return {
-		publicUrl: tenant.publicUrl,
-		mockBaseDomain: tenant.mockBaseDomain,
-		ownerSubs: tenant.ownerSubs,
-		turnstile: null,
-		guestForms: false,
-		tunnelDomains: [`tunnel.${tenant.domain}`],
-		ownerAlerts: false,
-		telegram: false,
+		publicUrl: settings.publicUrl,
+		mockBaseDomain: settings.mockBaseDomain,
+		ownerSubs: settings.ownerSubs,
+		turnstile: settings.turnstile,
+		tunnelDomains: settings.tunnelDomains,
 	};
 }

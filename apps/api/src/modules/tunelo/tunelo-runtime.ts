@@ -2,7 +2,7 @@ import { OperationError } from "@localman/operations";
 import type { Logger } from "../../logger.js";
 import type { AuthModule } from "../auth/auth-module.js";
 import type { TokenCipher } from "../auth/token-cipher.js";
-import { tunnelResource } from "../auth/token-exchange.js";
+import { TUNNEL_RESOURCE } from "../auth/token-exchange.js";
 import {
 	type FetchLike,
 	type TuneloApi,
@@ -20,7 +20,7 @@ export interface TuneloDeps {
 	/** Seals link tokens at rest (the session keyring). */
 	readonly cipher: TokenCipher;
 	readonly logger: Logger;
-	/** `TUNELO_API_URL`: one Tunelo for every tenant (dev, E2E). */
+	/** `TUNELO_API_URL`: another Tunelo than hoandat's (dev, E2E). */
 	readonly apiUrl?: string;
 	/**
 	 * A refresh younger list than this is reused (`TUNNEL_REFRESH_MIN_MS`
@@ -34,7 +34,7 @@ export interface TuneloDeps {
 export interface TuneloRuntime {
 	readonly deps: TuneloDeps;
 	readonly cache: TunnelListCache;
-	/** The Tunelo of the request's tenant (`https://tunnel.<domain>`). */
+	/** The Tunelo API (`apiUrl`, else `TUNNEL_RESOURCE`). */
 	api(): TuneloApi;
 }
 
@@ -52,7 +52,7 @@ export function setTuneloDeps(deps: TuneloDeps): void {
 	current = {
 		deps,
 		cache: new TunnelListCache(),
-		api: () => createTuneloApi(deps.apiUrl ?? tunnelResource(), fetchImpl),
+		api: () => createTuneloApi(deps.apiUrl ?? TUNNEL_RESOURCE, fetchImpl),
 	};
 }
 

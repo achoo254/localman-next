@@ -72,7 +72,6 @@ export function registerResourceMetadataRoutes(
 		});
 		router.get(path, (_req, res) => {
 			res.set(METADATA_CORS).set("Cache-Control", "public, max-age=300");
-			// Read per request: each tenant's domain has its own resource.
 			res.json(protectedResourceMetadata(settings));
 		});
 	}

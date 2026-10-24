@@ -1,6 +1,6 @@
 import { isValidHeaderName } from "@localman/shared/api-client";
 import { z } from "zod";
-import { localmanDomainOf } from "../../tenancy/idp-tenant-directory.js";
+import { localmanDomainOf } from "../../tenancy/localman-domain.js";
 import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import { normalizeHostname } from "../api-client/ssrf-guard.js";
 import type { StoredUpstream } from "../projects/project-model.js";
@@ -66,9 +66,9 @@ export function normalizeRedactHeaders(names: readonly string[]): string[] {
 /**
  * Whether `hostname` is the mock base domain or one of its project hosts,
  * compared as DNS does (case and trailing dots ignored, see
- * `normalizeHostname`): `abc.{base}.` is a mock host too. Any tenant's
- * `localman.<domain>` and `<x>.localman.<domain>` count as well, so no
- * tenant's mock forwards to another's (or to hoandat's `/m/` fallback).
+ * `normalizeHostname`): `abc.{base}.` is a mock host too. Any
+ * `localman.<domain>` and `<x>.localman.<domain>` count as well, so a mock
+ * never forwards to another Localman's mock (or its `/m/` fallback).
  */
 export function isMockHost(hostname: string): boolean {
 	const base = normalizeHostname(

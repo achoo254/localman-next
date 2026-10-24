@@ -10,19 +10,9 @@ import { tunnelDomains } from "./config/tunnel-domains.js";
 import { createLogger } from "./logger.js";
 import { usageTracker } from "./services/usage-tracker.js";
 import { createResponseSink } from "./stream/response-sink.js";
-import { PRIMARY_TENANT_ID } from "./tenancy/primary-tenant.js";
-import { currentTenant } from "./tenancy/tunnel-tenant.js";
 import { tunnelManager } from "./tunnel-manager.js";
 
 const logger = createLogger("tunelo-relay");
-
-/** Tunnel domains of the tenant in scope: the primary's `TUNNEL_DOMAINS`. */
-export function tenantTunnelDomains(): readonly string[] {
-	const tenant = currentTenant();
-	return tenant.id === PRIMARY_TENANT_ID
-		? tunnelDomains()
-		: [tenant.tunnelDomain];
-}
 
 /**
  * App subdomain of a Host header on the tenant's tunnel domains, or null
@@ -30,7 +20,7 @@ export function tenantTunnelDomains(): readonly string[] {
  */
 export function extractSubdomain(
 	host: string,
-	domains: readonly string[] = tenantTunnelDomains(),
+	domains: readonly string[] = tunnelDomains(),
 ): string | null {
 	const hostname = host.toLowerCase().replace(/:\d+$/, "");
 	// Longest first: with `x.io` and `tunnel.x.io` both configured, the apex

@@ -1,7 +1,7 @@
 /**
  * Admin CLI until billing exists: sets a user's plan and its expiry.
  *   MONGO_URI=… pnpm --filter @localman/api set-user-plan \
- *     --username dat --plan pro --expires 2026-12-31 [--tenant ten_…]
+ *     --username dat --plan pro --expires 2026-12-31
  * `--expires` is inclusive (end of that day, Asia/Saigon); a past date
  * needs `--force`. Prints the user's sub, username and plan; never the URI
  * or the email.
@@ -11,6 +11,7 @@ import {
 	parseSetUserPlanArgs,
 	setUserPlan,
 } from "../src/modules/billing/set-user-plan-command.js";
+import { PRIMARY_TENANT_ID } from "../src/tenancy/primary-tenant.js";
 import { runInTenantData } from "../src/tenancy/tenant-context.js";
 
 function fail(message: string, code: number): never {
@@ -32,7 +33,9 @@ if (!/^mongodb(\+srv)?:\/\/\S+$/.test(uri)) {
 
 try {
 	await mongoose.connect(uri, { serverSelectionTimeoutMS: 5_000 });
-	const result = await runInTenantData(args.tenantId, () => setUserPlan(args));
+	const result = await runInTenantData(PRIMARY_TENANT_ID, () =>
+		setUserPlan(args),
+	);
 	process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 	await mongoose.disconnect();
 } catch (error) {

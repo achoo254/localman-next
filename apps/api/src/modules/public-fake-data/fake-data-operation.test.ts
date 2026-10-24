@@ -1,27 +1,11 @@
 import { toMcpToolDescriptor } from "@localman/operations";
 import request from "supertest";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { createDashboardApp } from "../../dashboard-server.js";
 import { createLogger } from "../../logger.js";
-import { createIdpTenantDirectory } from "../../tenancy/idp-tenant-directory.js";
-import {
-	configureTenants,
-	singleTenantDirectory,
-} from "../../tenancy/tenant-directory.js";
 import { useDashboardTestDb } from "../../test-support/dashboard-test-app.js";
-import { TEST_TENANT } from "../../test-support/test-tenant.js";
 import { generateFakeData } from "./fake-data-operation.js";
 import { FAKE_DATA_LIMIT_PER_MINUTE } from "./fake-data-rate-limit.js";
-
-const ACME = {
-	id: "ten_AAAAAAAAAAAAAAAA",
-	domain: "acme.example",
-	displayName: "Acme Inc",
-	issuer: "https://auth.acme.example",
-	publicUrl: "https://localman.acme.example",
-	mockBaseDomain: "localman.acme.example",
-	ownerSubs: new Set<string>(),
-};
 
 const app = createDashboardApp({
 	logger: createLogger("silent"),
@@ -34,20 +18,6 @@ useDashboardTestDb(() => ({
 	publicUrl: "https://localman.test",
 	mockBaseDomain: "localman.test",
 }));
-beforeAll(() => {
-	configureTenants(
-		createIdpTenantDirectory({
-			primary: TEST_TENANT,
-			logger: createLogger("silent"),
-			client: {
-				byHost: async (host) =>
-					host === "localman.acme.example" ? ACME : undefined,
-				byId: async () => undefined,
-			},
-		}),
-	);
-});
-afterAll(() => configureTenants(singleTenantDirectory(TEST_TENANT)));
 
 /** A guest (no session cookie) calling from `ip` on `host`. */
 const fakeData = (query: string, ip: string, host = "localman.test") =>
@@ -132,16 +102,13 @@ describe("GET /public/fake-data", () => {
 		expect((await fakeData("?type=phone", "203.0.113.5")).status).toBe(200);
 	});
 
-	it("runs in the tenant of its host and refuses a host of no tenant", async () => {
-		const acme = await fakeData(
-			"?type=company",
-			"203.0.113.6",
-			"localman.acme.example",
-		);
-		expect(acme.status).toBe(200);
-		expect(acme.body.items).toHaveLength(10);
-		const nobody = await fakeData("", "203.0.113.6", "localman.nope.example");
-		expect(nobody.status).toBe(421);
+	it("answers on its own hosts and refuses any other host", async () => {
+		const own = await fakeData("?type=company", "203.0.113.6");
+		expect(own.status).toBe(200);
+		expect(own.body.items).toHaveLength(10);
+		for (const host of ["localman.acme.example", "evil.example", "1.2.3.4"]) {
+			expect((await fakeData("", "203.0.113.6", host)).status).toBe(421);
+		}
 	});
 
 	it("is an MCP tool of the public toolset", () => {

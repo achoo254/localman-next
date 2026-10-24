@@ -1,7 +1,6 @@
 import { DEFAULT_LOCALE, type Locale } from "@localman/shared";
 import type { Env } from "../../config/env.js";
 import type { Logger } from "../../logger.js";
-import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import { readOwnerLocale, readUserLocale } from "../users/user-locale.js";
 import {
 	type NotificationItem,
@@ -50,9 +49,9 @@ export class NotificationService {
 
 	constructor(private readonly options: NotificationServiceOptions) {}
 
-	/** The Telegram channel, where the request's tenant may use it. */
+	/** The Telegram channel, when configured. */
 	private get telegram(): TelegramChannel | undefined {
-		return tenantSettings().telegram ? this.options.telegram : undefined;
+		return this.options.telegram;
 	}
 
 	get availability(): ChannelAvailability {

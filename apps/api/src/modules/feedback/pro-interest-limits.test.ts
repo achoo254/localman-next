@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { clientIpBucket } from "../../lib/rate-limit-windows.js";
-import { runInTenant } from "../../tenancy/tenant-context.js";
 import { as, guest } from "../../test-support/dashboard-test-app.js";
 import { startClearOfRateWindowEdge } from "../../test-support/rate-window-edge.js";
-import { TEST_TENANT } from "../../test-support/test-tenant.js";
-import { assertHumanGuest } from "./feedback-guards.js";
 import { FeedbackModel } from "./feedback-model.js";
 import { alertOwnerThrottled } from "./owner-alert-throttle.js";
 import { TURNSTILE_TOKENS } from "./testing/fake-turnstile.js";
@@ -98,20 +95,5 @@ describe("Pro interest limits", () => {
 				"again",
 			].sort(),
 		);
-	});
-
-	it("keeps another tenant's entries from the deployment owner and its guests out", async () => {
-		const other = { ...TEST_TENANT, id: "ten_AAAAAAAAAAAAAAAA" };
-		await runInTenant(other, async () => {
-			await alertOwnerThrottled("test.kind", () => "other tenant");
-			await expect(
-				assertHumanGuest(
-					{ userSub: null, clientIp: null },
-					undefined,
-					"pro_interest",
-				),
-			).rejects.toMatchObject({ status: 401 });
-		});
-		expect(await fx.alerts()).toEqual([]);
 	});
 });

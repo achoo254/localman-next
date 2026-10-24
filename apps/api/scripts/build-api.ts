@@ -21,8 +21,7 @@ rmSync(distDir, { recursive: true, force: true });
 // One self-contained file per entry: the server (`dist/main.mjs`, run by
 // pm2) and the operator commands `dist/cleanup-abandoned-projects.mjs` and
 // `dist/create-tenant-indexes.mjs` (activate-release.sh runs it before the
-// switch), and `dist/export-tenant.mjs`/`dist/import-tenant.mjs` (a tenant
-// moving to its own servers), run on the server with the same env file.
+// switch), run on the server with the same env file.
 await build({
 	entryPoints: {
 		main: resolve(apiRoot, "src/main.ts"),
@@ -34,8 +33,6 @@ await build({
 			apiRoot,
 			"scripts/create-tenant-indexes.ts",
 		),
-		"export-tenant": resolve(apiRoot, "scripts/export-tenant.ts"),
-		"import-tenant": resolve(apiRoot, "scripts/import-tenant.ts"),
 	},
 	outdir: distDir,
 	outExtension: { ".js": ".mjs" },

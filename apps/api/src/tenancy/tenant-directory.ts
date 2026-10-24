@@ -1,12 +1,14 @@
-import { localmanDomainOf } from "./idp-tenant-directory.js";
+import { type ServedHosts, isServedHost } from "@localman/tenancy";
 import type { LocalmanTenant } from "./tenant-context.js";
 
 /**
- * Where Localman learns its tenants: the tenant of a request's Host and
+ * Where Localman learns its tenant: the tenant of a request's Host and
  * the tenant of a stored document's `tenantId` (background work).
- * `undefined`: no such tenant (or not serving).
+ * `undefined`: a host or id Localman does not serve.
  */
 export interface TenantDirectory {
+	/** The one tenant served, built from the environment. */
+	readonly primary: LocalmanTenant;
 	byHost(host: string): Promise<LocalmanTenant | undefined>;
 	byId(id: string): Promise<LocalmanTenant | undefined>;
 }
@@ -23,23 +25,33 @@ export function tenantDirectory(): TenantDirectory {
 	return directory;
 }
 
+/** What Localman answers besides the dashboard and mock hosts. */
+export interface ExtraHosts {
+	/** Tunelo domains (`TUNNEL_DOMAINS`), each with its subdomains. */
+	readonly tunnelDomains: readonly string[];
+	/** Loopback hosts (development and tests, never production). */
+	readonly loopback: boolean;
+}
+
 /**
- * A single tenant serving its hosts and any host that is not another
- * domain's `localman.` (loopback, dev ports): Localman as it ran before
- * tenants, the primary tenant built from the environment. Another
- * domain's Localman hosts get no tenant (421), so tenant server blocks
- * installed ahead of the tenant settings never show the primary's data.
+ * The primary tenant serving only its own hosts: the dashboard
+ * (`PUBLIC_URL`), the mock base domain and its project subdomains, the
+ * Tunelo domains and, outside production, loopback. Any other Host gets
+ * no tenant (421), so nothing built from the Host (MCP metadata, links)
+ * can name a host this deployment does not own.
  */
-export function singleTenantDirectory(tenant: LocalmanTenant): TenantDirectory {
+export function primaryTenantDirectory(
+	tenant: LocalmanTenant,
+	extra: ExtraHosts,
+): TenantDirectory {
+	const served: ServedHosts = {
+		exact: [new URL(tenant.publicUrl).host],
+		withSubdomains: [tenant.mockBaseDomain, ...extra.tunnelDomains],
+		loopback: extra.loopback,
+	};
 	return {
-		byHost: async (host) => {
-			const domain = localmanDomainOf(host.toLowerCase());
-			const other =
-				domain !== undefined &&
-				domain !== tenant.domain &&
-				!domain.endsWith(`.${tenant.domain}`);
-			return other ? undefined : tenant;
-		},
+		primary: tenant,
+		byHost: async (host) => (isServedHost(served, host) ? tenant : undefined),
 		byId: async (id) => (id === tenant.id ? tenant : undefined),
 	};
 }

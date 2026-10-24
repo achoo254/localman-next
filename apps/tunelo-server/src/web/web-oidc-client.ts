@@ -1,4 +1,3 @@
-import type { IdpTransport } from "@localman/tenancy";
 import * as oidc from "openid-client";
 import {
 	type IssuedTokens,
@@ -28,8 +27,6 @@ export interface WebOidcSettings {
 	readonly publicUrl: string;
 	/** Tests only: lets openid-client talk to an http:// issuer. */
 	readonly allowInsecureRequests?: boolean;
-	/** Another tenant's IdP, reached without its public DNS. */
-	readonly transport?: IdpTransport;
 }
 
 /**
@@ -58,28 +55,9 @@ export class WebOidcClient {
 	}
 
 	private async discover(): Promise<oidc.Configuration> {
-		const { transport } = this.settings;
-		const config = transport
-			? await this.fromTransport(transport)
-			: await this.discoverPublicly();
+		const config = await this.discoverPublicly();
 		// Token, refresh and revocation calls sit in a browser round trip.
 		config.timeout = REQUEST_TIMEOUT_SECONDS;
-		return config;
-	}
-
-	private async fromTransport(
-		transport: IdpTransport,
-	): Promise<oidc.Configuration> {
-		const config = new oidc.Configuration(
-			await transport.metadata(),
-			this.settings.clientId,
-			{
-				redirect_uris: [this.redirectUri],
-				id_token_signed_response_alg: "ES256",
-			},
-			oidc.ClientSecretBasic(this.settings.clientSecret),
-		);
-		config[oidc.customFetch] = transport.fetch;
 		return config;
 	}
 

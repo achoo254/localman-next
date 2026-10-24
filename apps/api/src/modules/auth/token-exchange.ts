@@ -1,10 +1,5 @@
 import { OperationError } from "@localman/operations";
 import type { Logger } from "../../logger.js";
-import { PRIMARY_TENANT_ID } from "../../tenancy/primary-tenant.js";
-import {
-	type LocalmanTenant,
-	currentTenant,
-} from "../../tenancy/tenant-context.js";
 import type { OidcApi } from "./oidc-api.js";
 import {
 	IdpUnavailableError,
@@ -16,15 +11,6 @@ import type { SessionStore } from "./session-store.js";
 
 /** Tunelo's API: the only target the IdP exchanges Localman tokens for. */
 export const TUNNEL_RESOURCE = "https://tunnel.hoandat.com";
-
-/** Tunelo of the request's tenant: hoandat's, or `https://tunnel.<domain>`. */
-export function tunnelResource(
-	tenant: LocalmanTenant = currentTenant(),
-): string {
-	return tenant.id === PRIMARY_TENANT_ID
-		? TUNNEL_RESOURCE
-		: `https://tunnel.${tenant.domain}`;
-}
 export const TUNNEL_SCOPE = "tunnels:read";
 /** Exchange again this long before the cached token expires. */
 const REUSE_MARGIN_MS = 60_000;
@@ -88,7 +74,7 @@ export class TunnelTokenExchange {
 		try {
 			issued = await oidc.exchangeToken(
 				session.tokens.accessToken,
-				tunnelResource(),
+				TUNNEL_RESOURCE,
 				TUNNEL_SCOPE,
 			);
 		} catch (error) {
