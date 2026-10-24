@@ -1,7 +1,7 @@
 # ADR-0009: Agent qua MCP dùng được secret nhưng không bao giờ đọc được giá trị
 
 - **Ngày:** 2026-10-24
-- **Trạng thái:** Đã chốt, chưa làm. User chọn ngày 24/10/2026 ("về việc kho secret, MCP cho phép sử dụng"); Jev chọn hướng "dùng mà không đọc" với xác suất 1,0 trước hai hướng "agent ghi vào kho" và "agent đọc giá trị" (0,0).
+- **Trạng thái:** Đã chốt. Phía máy chủ đã làm (24/10/2026, sau cổng `SECRET_VAULT_ENABLED`, tắt mặc định); giao diện web chờ user duyệt prototype. User chọn ngày 24/10/2026 ("về việc kho secret, MCP cho phép sử dụng"); Jev chọn hướng "dùng mà không đọc" với xác suất 1,0 trước hai hướng "agent ghi vào kho" và "agent đọc giá trị" (0,0).
 - **Người quyết định:** dattqh. Thay quyết định "agent qua MCP ghi giá trị local của biến secret: từ chối" của plan `plans/dattqh/261008-1123-localman-core/phase-21-client-power-ups.md` ở phần dùng secret; phần ghi vẫn từ chối (mục 5).
 
 ## Bối cảnh

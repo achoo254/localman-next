@@ -82,8 +82,8 @@ dependencies: [10, 13, 16]
 - [x] T2 `vault-crypto` có test round-trip, passphrase sai, IV ngẫu nhiên (24/10: `apps/web/src/features/secure-vault/vault-crypto.ts`, PBKDF2-SHA256 600.000 vòng, AES-GCM 256, bản mã gắn với scope và tên biến qua AAD; chưa nối vào UI, chờ T5)
 - [x] T3 `response-references` có TTL, gửi lại, phát hiện vòng lặp (24/10: `packages/shared/src/api-client/response-references.ts` thuần; workbench giữ response cuối của mỗi request trong bộ nhớ, gửi lại nguồn khi hết TTL như tab của nó, nối tối đa 5 request; chỉ dùng trong request đã lưu vào collection)
 - [x] T4 Module docs có ETag và trang public qua registry (24/10: `apps/api/src/modules/project-docs/`; operation chưa đặt được header nên trả `version` là hash nội dung thay cho ETag HTTP; docs không bao giờ có URL mock vì chứa secret, path trên `{baseUrl}` (Jev: publish bật tay 0,96; path `/p/<slug>/docs` 0,71; URL mock: placeholder, hoà 0,47 với "chủ project chọn", chọn placeholder vì ưu tiên riêng tư); cổng `PROJECT_DOCS_ENABLED`, cờ web `projectDocs`)
-- [ ] T5 Vault nối vào environment editor; server chặn PUT thiếu `lmv1:`
-- [ ] T5b Agent gửi request có secret qua MCP: nhận 200, không thấy giá trị trong response, lỗi hay log; biến vault chưa bật "Cho agent dùng" bị từ chối; agent không bật được công tắc
+- [ ] T5 Vault nối vào environment editor; server chặn PUT thiếu `lmv1:` (24/10: phía máy chủ xong sau cổng `SECRET_VAULT_ENABLED`: thông số kho `secret_vaults`, luật ghi `local-vault-rules.ts`, đặt lại kho; prototype phần vault đã thêm vào `prototype/api-client.html`, chờ user duyệt rồi mới làm UI web)
+- [ ] T5b (24/10: phía máy chủ xong, `agent-variable-fill.ts`, `secret-mask.ts`, test `agent-variable-send.test.ts`; còn công tắc "Cho agent dùng" ở UI) Agent gửi request có secret qua MCP: nhận 200, không thấy giá trị trong response, lỗi hay log; biến vault chưa bật "Cho agent dùng" bị từ chối; agent không bật được công tắc
 - [ ] T6 `data-policy` một nguồn và trang minh bạch dữ liệu
 - [ ] T7 Trang docs public và gợi ý `{{response …}}`
 - [ ] T8 E2E pass

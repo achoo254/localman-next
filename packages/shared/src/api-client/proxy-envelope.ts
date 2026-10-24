@@ -49,17 +49,24 @@ const DEFAULT_OPTIONS = {
 	sendClientIp: true,
 };
 
+/**
+ * Where the server finds the values of `{{variables}}` in the request
+ * (ADR-0009): the workspace's globals, then the collection's variables,
+ * then the environment, each with the caller's local values first. Used
+ * by agents, which never read secret values; the browser fills them itself.
+ */
+export const proxyVariablesSchema = z.object({
+	workspaceId: z.string().min(1).max(64),
+	collectionId: z.string().min(1).max(64).nullable().optional(),
+	environmentId: z.string().min(1).max(64).nullable().optional(),
+});
+export type ProxyVariables = z.infer<typeof proxyVariablesSchema>;
+
 export const proxyRequestSchema = z
 	.object({
 		method: z.enum(HTTP_METHODS),
-		url: z
-			.string()
-			.min(1)
-			.max(MAX_URL_LENGTH)
-			.refine(
-				(url) => parseHttpUrl(url) !== null,
-				"URL must be absolute http or https",
-			),
+		/** Absolute http(s), checked below once any `{{variables}}` are filled. */
+		url: z.string().min(1).max(MAX_URL_LENGTH),
 		headers: z.array(headerEntrySchema).max(MAX_HEADERS).default([]),
 		body: z.string().nullable().default(null),
 		bodyType: z.enum(PROXY_BODY_TYPES).default("none"),
@@ -75,8 +82,18 @@ export const proxyRequestSchema = z
 				sendClientIp: z.boolean().default(DEFAULT_OPTIONS.sendClientIp),
 			})
 			.default(DEFAULT_OPTIONS),
+		variables: proxyVariablesSchema.optional(),
 	})
 	.superRefine((envelope, ctx) => {
+		// With `variables` the URL may be a template; the server checks it
+		// again after filling it.
+		if (!envelope.variables && parseHttpUrl(envelope.url) === null) {
+			ctx.addIssue({
+				code: "custom",
+				path: ["url"],
+				message: "URL must be absolute http or https",
+			});
+		}
 		const issue = (message: string): void => {
 			ctx.addIssue({ code: "custom", path: ["body"], message });
 		};

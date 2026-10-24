@@ -16,6 +16,7 @@ import {
 import { type Logger, createLogger } from "../../logger.js";
 import { localmanDomainOf } from "../../tenancy/idp-tenant-directory.js";
 import { tenantSettings } from "../../tenancy/tenant-settings.js";
+import { fillVariables } from "./agent-variable-fill.js";
 import { routeLocalTarget } from "./local-target-route.js";
 import {
 	PROXY_CONCURRENCY,
@@ -26,6 +27,7 @@ import {
 import { forwardRequest } from "./proxy-forwarder.js";
 import { admitProxyRequest } from "./proxy-quota.js";
 import { createRuntimeSsrfGuard } from "./runtime-ssrf-guard.js";
+import { maskError, maskResponse, maskSecrets } from "./secret-mask.js";
 import { type SsrfGuard, normalizeHostname } from "./ssrf-guard.js";
 
 let proxyLogger: Logger = createLogger("silent");
@@ -65,7 +67,7 @@ function publicScheme(): string {
 	return new URL(tenantSettings().publicUrl).protocol.replace(":", "");
 }
 
-const DESCRIPTION = `Sends an HTTP request from the Localman server and returns the response, like the Send button of the API client. Give method, absolute http(s) url, headers as an ordered list of {name, value} (repeated names allowed; Cookie, User-Agent, Origin and Host may be set) and body: bodyType "text" for UTF-8 text, "base64" for bytes, "none" without body (GET and HEAD carry none). options: followRedirects (default true, at most 10), timeoutMs (1000–120000, default 30000), sendClientIp (default true: adds X-Forwarded-For, X-Real-IP and Forwarded with the caller's IP). Every request also carries X-Localman-Proxy: 1, and Host is forced to the URL's host for Localman mock URLs and Tunelo tunnel URLs. The response has status, headers in arrival order (Set-Cookie included, only shown), body as UTF-8 text or base64 (bodyEncoding), size, truncated (body cut at 10 MB), timings in ms {dns, connect, tls, ttfb, total} and finalUrl after redirects. A local target (localhost, 127.x, a LAN address) goes through the user's tunnel like the Send button: the enabled tunnel URL saved for that host and port, else for localhost the one live Tunelo tunnel of that port (from machines linked with \`tunelo link\`; with an agent's token the account's own tunnels are not read); the path and query are kept and finalUrl shows the tunnel. Only HTTP tunnels count. Several tunnels for the port answer 409 PROXY_TUNNEL_AMBIGUOUS (send to one of the listed tunnel URLs directly); a Tunelo source that did not answer, with no tunnel found, 502 PROXY_TUNNEL_UNAVAILABLE; none answers 403 PROXY_TARGET_BLOCKED with how to open one (\`tunelo http <port>\`). Other private and link-local targets (169.254.169.254, fc00::/7…) and mail ports are refused with 403 PROXY_TARGET_BLOCKED. Other failures: 502 PROXY_DNS_FAILED, PROXY_CONNECTION_FAILED (details.cause), PROXY_TOO_MANY_REDIRECTS, 504 PROXY_TIMEOUT. Every call counts toward the plan's monthly proxy requests (429 MONTHLY_QUOTA_EXCEEDED) and a per-account rate limit (429 RATE_LIMITED); at most ${PROXY_CONCURRENCY.perUser} requests of an account (${PROXY_CONCURRENCY.total} in all) run at once, more answer 429 PROXY_BUSY (details.scope user or server) without counting.`;
+const DESCRIPTION = `Sends an HTTP request from the Localman server and returns the response, like the Send button of the API client. Give method, absolute http(s) url, headers as an ordered list of {name, value} (repeated names allowed; Cookie, User-Agent, Origin and Host may be set) and body: bodyType "text" for UTF-8 text, "base64" for bytes, "none" without body (GET and HEAD carry none). options: followRedirects (default true, at most 10), timeoutMs (1000–120000, default 30000), sendClientIp (default true: adds X-Forwarded-For, X-Real-IP and Forwarded with the caller's IP). Every request also carries X-Localman-Proxy: 1, and Host is forced to the URL's host for Localman mock URLs and Tunelo tunnel URLs. The response has status, headers in arrival order (Set-Cookie included, only shown), body as UTF-8 text or base64 (bodyEncoding), size, truncated (body cut at 10 MB), timings in ms {dns, connect, tls, ttfb, total} and finalUrl after redirects. A local target (localhost, 127.x, a LAN address) goes through the user's tunnel like the Send button: the enabled tunnel URL saved for that host and port, else for localhost the one live Tunelo tunnel of that port (from machines linked with \`tunelo link\`; with an agent's token the account's own tunnels are not read); the path and query are kept and finalUrl shows the tunnel. Only HTTP tunnels count. Several tunnels for the port answer 409 PROXY_TUNNEL_AMBIGUOUS (send to one of the listed tunnel URLs directly); a Tunelo source that did not answer, with no tunnel found, 502 PROXY_TUNNEL_UNAVAILABLE; none answers 403 PROXY_TARGET_BLOCKED with how to open one (\`tunelo http <port>\`). Other private and link-local targets (169.254.169.254, fc00::/7…) and mail ports are refused with 403 PROXY_TARGET_BLOCKED. Other failures: 502 PROXY_DNS_FAILED, PROXY_CONNECTION_FAILED (details.cause), PROXY_TOO_MANY_REDIRECTS, 504 PROXY_TIMEOUT. Every call counts toward the plan's monthly proxy requests (429 MONTHLY_QUOTA_EXCEEDED) and a per-account rate limit (429 RATE_LIMITED); at most ${PROXY_CONCURRENCY.perUser} requests of an account (${PROXY_CONCURRENCY.total} in all) run at once, more answer 429 PROXY_BUSY (details.scope user or server) without counting. With \`variables\` ({workspaceId, collectionId?, environmentId?}), the server fills \`{{name}}\` in url, headers and a text body from the workspace's globals, the collection's variables and the environment, the caller's local value first, as the Send button would: secrets included, but their values never come back (echoes in the response, the final URL and errors read [secret]; copies shorter than 4 characters or transformed by the upstream are not caught). A secret the caller may not read stops the send with 409 SECRET_WITHHELD (details.keys; details.vault lists those in the user's browser vault, usable once the user turns on "Let agents use" for them); other unknown names stay as typed. 404 SECRET_VAULT_DISABLED where the server does not offer it.`;
 
 /** `client.sendRequest`; tests build it with their own guard and logger. */
 export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
@@ -89,20 +91,23 @@ export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
 		bodyLimit: MAX_PROXY_ENVELOPE_BYTES,
 		handler: async (ctx, input) => {
 			const sub = requireSubject(ctx);
+			// `{{variables}}` filled first: a send stopped there costs nothing.
+			const { request, secrets } = await fillVariables(sub, input);
 			// Before the quota: a request refused as busy costs nothing.
 			const slot = concurrency.acquire(sub);
 			if (!slot.ok) {
 				throw await proxyBusy(sub, slot.scope, concurrency.limits);
 			}
 			const started = performance.now();
-			const meta = { sub, host: loggedHost(input.url), method: input.method };
+			const host = maskSecrets(loggedHost(request.url), secrets);
+			const meta = { sub, host, method: request.method };
 			try {
 				// Counted like any refused target, then a local one goes
 				// through the user's tunnel.
 				await admitProxyRequest(sub);
-				const route = await routeLocal(sub, sessionIdOf(ctx), input.url);
+				const route = await routeLocal(sub, sessionIdOf(ctx), request.url);
 				const response = await forwardRequest(
-					{ ...input, url: route.url },
+					{ ...request, url: route.url },
 					{
 						guard: deps.guard,
 						clientIp: ctx.clientIp,
@@ -117,13 +122,13 @@ export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
 				deps
 					.logger()
 					.info({ ...meta, ...via, status: response.status, ms }, "proxy");
-				return response;
+				return maskResponse(response, secrets);
 			} catch (error) {
 				const ms = Math.round(performance.now() - started);
 				const code =
 					error instanceof OperationError ? error.code : "INTERNAL_ERROR";
 				deps.logger().info({ ...meta, error: code, ms }, "proxy");
-				throw error;
+				throw maskError(error, secrets);
 			} finally {
 				slot.release();
 			}
