@@ -8,7 +8,9 @@ import { type Dispatch, type RefObject, useCallback, useRef } from "react";
 import { useToast } from "../../../components/ui/toast";
 import { activeTranslator } from "../../../i18n/active-translator";
 import { useT } from "../../../i18n/i18n-context";
+import { keepResponse } from "./kept-responses";
 import { recordSend } from "./record-send";
+import { NO_REFERENCES, referencesOf } from "./reference-steps";
 import type { SaveScopes, SendHooks } from "./send-hooks";
 import { failed } from "./send-steps";
 import type { RequestSender, SendOptions } from "./send-types";
@@ -113,6 +115,16 @@ export function useSendTab(
 				const found = tab.source && resolve ? await resolve(tab) : null;
 				const context = found && "context" in found ? found.context : null;
 				const variables = await variablesFor(tab, context);
+				const usable =
+					variables !== UNAVAILABLE && !(found && "unavailable" in found);
+				// `{{response …}}` first: it may send other requests.
+				const refs = usable
+					? await referencesOf(tab, hooksOf.current, {
+							sender,
+							signal: controller.signal,
+							variablesFor,
+						})
+					: NO_REFERENCES;
 				settled =
 					found && "unavailable" in found
 						? failed({
@@ -124,21 +136,27 @@ export function useSendTab(
 									code: "VARIABLES_UNAVAILABLE",
 									message: t("apiClient.send.variablesUnavailable"),
 								})
-							: await sender({
-									draft,
-									files,
-									signal: controller.signal,
-									routeChosen,
-									...(options ? { options } : {}),
-									...(context ? { context } : {}),
-									...(variables ? { variables } : {}),
-									onScopeChanges: (latest) => {
-										changes = latest;
-									},
-								});
+							: !refs.ok
+								? failed({ code: refs.code, message: refs.message })
+								: await sender({
+										draft,
+										files,
+										signal: controller.signal,
+										routeChosen,
+										...(options ? { options } : {}),
+										...(context ? { context } : {}),
+										...(variables ? { variables } : {}),
+										...(refs.scope ? { extraScopes: [refs.scope] } : {}),
+										onScopeChanges: (latest) => {
+											changes = latest;
+										},
+									});
 			} catch {
 				// Senders never reject; a bug in one must not leave the tab spinning.
 				settled = senderBug();
+			}
+			if (settled.kind === "done" && tab.source) {
+				keepResponse(tab.source, settled.result.response);
 			}
 			// Done, failed or cancelled: what the scripts set is kept.
 			const keep =

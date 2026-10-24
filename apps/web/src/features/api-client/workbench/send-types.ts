@@ -4,6 +4,7 @@ import type {
 	ResolverLayer,
 	RouteMode,
 	ScriptScopeChanges,
+	VariableScope,
 } from "@localman/shared/api-client";
 import type { SendContext } from "./workbench-tab-types";
 import type { SettledResponse } from "./workbench-types";
@@ -32,6 +33,8 @@ export interface SendInput {
 	variables?: readonly ResolverLayer[];
 	/** Told what the scripts changed in the scopes so far (to save them). */
 	onScopeChanges?: (changes: ScriptScopeChanges) => void;
+	/** Values of `{{response …}}` references, filled before the send. */
+	extraScopes?: readonly VariableScope[];
 }
 
 /**

@@ -19,6 +19,7 @@ export * from "./request-model.js";
 export * from "./request-preparer.js";
 export * from "./request-schema.js";
 export * from "./response-model.js";
+export * from "./response-references.js";
 export * from "./tunnel-url.js";
 export * from "./url-params.js";
 export * from "./variable-interpolation.js";

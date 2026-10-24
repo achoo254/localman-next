@@ -120,6 +120,7 @@ export async function prepareSend(
 	const scopes: VariableScope[] = [
 		...variableScopes(layers, context),
 		scriptVariableScope(variables),
+		...(input.extraScopes ?? []),
 	];
 	const faker = await fakerForSend(toSend);
 	if (!faker.ok) {

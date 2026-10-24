@@ -3,6 +3,7 @@ import type {
 	ResolverLayer,
 	ScriptScopeChanges,
 } from "@localman/shared/api-client";
+import type { NamedRequest } from "./response-reference-step";
 import type { SendContext } from "./workbench-tab-types";
 import type { WorkbenchTab } from "./workbench-types";
 
@@ -47,9 +48,19 @@ export interface ScopeSaveResult {
 	dropped: ("environment" | "collectionVariables")[];
 }
 
+/**
+ * The request of that name in a collection, for `{{response …}}`
+ * references (`null` when there is none).
+ */
+export type RequestNamed = (
+	collectionId: string,
+	name: string,
+) => Promise<NamedRequest | null>;
+
 /** What a send may use besides the sender; all optional. */
 export interface SendHooks {
 	sendContext?: SendContextOf;
 	variablesOf?: VariablesOf;
 	saveScopes?: SaveScopes;
+	requestNamed?: RequestNamed;
 }

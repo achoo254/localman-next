@@ -1,7 +1,7 @@
 ---
 phase: 21
 title: "Client power-ups: secret local không rời trình duyệt, nối request không cần script, docs tự sinh từ mock"
-status: pending
+status: in-progress
 priority: P2
 effort: "M"
 dependencies: [10, 13, 16]
@@ -17,6 +17,15 @@ dependencies: [10, 13, 16]
 | **Giá trị local của biến secret không rời trình duyệt** (mã hoá phía client, server không đọc được). Có trang "Dữ liệu của bạn nằm ở đâu" công khai nơi lưu dữ liệu, proxy ghi log gì và telemetry | 0.62 | Riêng tư là nhu cầu số một trong nghiên cứu: người dùng lo Postman sync secret lên cloud |
 | **Nối request không cần script:** tham chiếu `{{response "Đăng nhập" "$.token"}}` tới response của request khác, có TTL; hết hạn thì tự gửi lại request nguồn | 0.53 (sát ngưỡng) | Insomnia và Yaak có; Postman phải viết script hoặc dùng Flows |
 | **Docs tự sinh từ project mock**, luôn đồng bộ với schema; trang public `https://localman.hoandat.com/docs/<slug>` | 0.54 (sát ngưỡng) | mockapi.io không có docs; docs của Postman mang brand Postman, muốn domain riêng phải trả phí |
+
+## Quyết định (Jev, 24/10/2026)
+
+| Câu hỏi | Chọn | Xác suất (độ tin) |
+|---|---|---|
+| Vault bắt buộc hay tự bật | **Bắt buộc**: server từ chối giá trị local của biến secret không phải bản mã `lmv1:` | 0,61 (0,22, thấp; áp ở T5, user có thể đổi trước khi T5 làm) |
+| Agent qua MCP ghi giá trị local của biến secret | **Từ chối**, lỗi nói rõ secret của user nằm trong vault của trình duyệt | 0,57 (0,14, thấp; áp ở T5) |
+| Dẫn xuất khoá | **PBKDF2-SHA256, 600.000 vòng**, WebCrypto, không thêm dependency | 0,97 |
+| Giá trị local cũ (server mã hoá) | **Mã hoá lại khi đặt passphrase**: trình duyệt đọc một lần rồi ghi lại dạng `lmv1:` | 0,99 |
 
 ## Thiết kế secret phía client
 - **Giá trị local** của biến `type=secret` được mã hoá AES-GCM ngay trên trình duyệt (WebCrypto). Khoá lấy từ passphrase do user đặt, qua PBKDF2 hoặc Argon2 (WASM). Server chỉ lưu bản mã. Khoá đã mở khoá nằm trong IndexedDB của thiết bị, không gửi lên server.

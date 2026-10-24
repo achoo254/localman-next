@@ -13,6 +13,26 @@ export const apiClientSend: Messages["apiClient"]["send"] = {
 		"Chưa gửi: không tải được giá trị ngẫu nhiên ($random…). Kiểm tra kết nối rồi thử lại.",
 	variablesUnavailable:
 		"Chưa gửi: không tải được biến của environment. Hãy kiểm tra kết nối rồi thử lại.",
+	sourceFailed:
+		"Chưa gửi: request mà request này cần response không nhận được response.",
+	references: {
+		REFERENCE_OUTSIDE_COLLECTION:
+			"Chưa gửi: tham chiếu response chỉ dùng được trong request đã lưu vào collection.",
+		REFERENCE_REQUEST_NOT_FOUND:
+			"Chưa gửi: collection này không có request tên “{name}” cho tham chiếu response.",
+		REFERENCE_LOOP:
+			"Chưa gửi: “{name}” cần response của chính request đang gửi, tạo thành vòng lặp.",
+		REFERENCE_TOO_DEEP:
+			"Chưa gửi: tham chiếu response nối qua quá nhiều request (tối đa 5).",
+		REFERENCE_SEND_FAILED:
+			"Chưa gửi: request {name} mà tham chiếu response cần không nhận được response.",
+		REFERENCE_NOT_JSON:
+			"Chưa gửi: response của “{name}” không phải JSON nên không đọc được {path}.",
+		REFERENCE_PATH_INVALID:
+			"Chưa gửi: {path} không phải JSONPath dạng $.token hay $.items[0].id.",
+		REFERENCE_PATH_MISSING:
+			"Chưa gửi: response của “{name}” không có gì ở {path}.",
+	},
 	fileUnreadable: "Không đọc được một file của body. Hãy chọn lại file.",
 	prepare: {
 		invalidUrl:

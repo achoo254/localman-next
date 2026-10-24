@@ -12,6 +12,25 @@ export const apiClientSend: Messages["apiClient"]["send"] = {
 	dynamicVariablesUnavailable:
 		"未发送：无法加载随机值（$random…），请检查网络后重试。",
 	variablesUnavailable: "未发送：无法加载 environment 变量，请检查网络后重试。",
+	sourceFailed: "未发送：此 request 依赖的另一个 request 没有收到 response。",
+	references: {
+		REFERENCE_OUTSIDE_COLLECTION:
+			"未发送：response 引用 只能用在已保存到 collection 的 request 中。",
+		REFERENCE_REQUEST_NOT_FOUND:
+			"未发送：此 collection 中没有名为“{name}”的 request 供 response 引用 使用。",
+		REFERENCE_LOOP:
+			"未发送：“{name}”需要正在发送的 request 的 response，形成了循环。",
+		REFERENCE_TOO_DEEP:
+			"未发送：response 引用 串联的 request 太多（最多 5 个）。",
+		REFERENCE_SEND_FAILED:
+			"未发送：response 引用 所需的 request {name} 没有收到 response。",
+		REFERENCE_NOT_JSON:
+			"未发送：“{name}”的 response 不是 JSON，无法读取 {path}。",
+		REFERENCE_PATH_INVALID:
+			"未发送：{path} 不是 $.token 或 $.items[0].id 这样的 JSONPath。",
+		REFERENCE_PATH_MISSING:
+			"未发送：“{name}”的 response 在 {path} 处没有内容。",
+	},
 	fileUnreadable: "无法读取 body 中的文件，请重新选择。",
 	prepare: {
 		invalidUrl:

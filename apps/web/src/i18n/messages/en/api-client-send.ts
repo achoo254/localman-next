@@ -12,6 +12,26 @@ export const apiClientSend = {
 		"Not sent: couldn't load the random values ($random…). Check your connection and try again.",
 	variablesUnavailable:
 		"Not sent: we couldn't load your environment variables. Check your connection and try again.",
+	sourceFailed:
+		"Not sent: a request this one needs a response from did not get one.",
+	references: {
+		REFERENCE_OUTSIDE_COLLECTION:
+			"Not sent: a response reference only works in a request saved in a collection.",
+		REFERENCE_REQUEST_NOT_FOUND:
+			"Not sent: no request named “{name}” in this collection for a response reference.",
+		REFERENCE_LOOP:
+			"Not sent: “{name}” needs a response of the request being sent, which loops.",
+		REFERENCE_TOO_DEEP:
+			"Not sent: a response reference chains through too many requests (at most 5).",
+		REFERENCE_SEND_FAILED:
+			"Not sent: the request {name} that a response reference needs did not get a response.",
+		REFERENCE_NOT_JSON:
+			"Not sent: the response of “{name}” is not JSON, so {path} can't be read.",
+		REFERENCE_PATH_INVALID:
+			"Not sent: {path} is not a JSONPath like $.token or $.items[0].id.",
+		REFERENCE_PATH_MISSING:
+			"Not sent: the response of “{name}” has nothing at {path}.",
+	},
 	fileUnreadable: "A file of the body could not be read. Choose it again.",
 	prepare: {
 		invalidUrl:

@@ -19,7 +19,12 @@ import {
 	useReducer,
 	useRef,
 } from "react";
-import type { SaveScopes, SendContextOf, VariablesOf } from "./send-hooks";
+import type {
+	RequestNamed,
+	SaveScopes,
+	SendContextOf,
+	VariablesOf,
+} from "./send-hooks";
 import type { RequestSender } from "./send-types";
 import { useDraftSync } from "./use-draft-sync";
 import { useSendTab } from "./use-send-tab";
@@ -51,6 +56,8 @@ export interface WorkbenchProviderProps {
 	variablesOf?: VariablesOf;
 	/** Saves what scripts set in the scopes as local values (flag on). */
 	saveScopes?: SaveScopes;
+	/** Finds a request of a collection by name, for `{{response …}}`. */
+	requestNamed?: RequestNamed;
 }
 
 export function WorkbenchProvider({
@@ -62,6 +69,7 @@ export function WorkbenchProvider({
 	sendContext,
 	variablesOf,
 	saveScopes,
+	requestNamed,
 }: WorkbenchProviderProps) {
 	const [state, dispatch] = useReducer(workbenchReducer, INITIAL_WORKBENCH);
 	const latest = useRef(state);
@@ -78,6 +86,7 @@ export function WorkbenchProvider({
 		sendContext,
 		variablesOf,
 		saveScopes,
+		requestNamed,
 	});
 
 	const openTab = useCallback(
