@@ -1,6 +1,7 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { as, testApp } from "../../test-support/dashboard-test-app.js";
+import { startClearOfRateWindowEdge } from "../../test-support/rate-window-edge.js";
 import {
 	BOB,
 	OWNER,
@@ -100,6 +101,7 @@ describe("DELETE /users/me", () => {
 	});
 
 	it("allows 5 attempts an hour", async () => {
+		await startClearOfRateWindowEdge(60 * 60_000);
 		// Blocked attempts count too: a loop cannot hammer the deletion.
 		const team = await createWorkspace(OWNER, "Team");
 		await addWorkspaceMember(OWNER, team, BOB, "bob");

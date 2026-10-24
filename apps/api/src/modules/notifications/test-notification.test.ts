@@ -2,6 +2,7 @@ import { SUPPORTED_LOCALES } from "@localman/shared";
 import { beforeEach, describe, expect, it } from "vitest";
 import webpush from "web-push";
 import { createLogger } from "../../logger.js";
+import { startClearOfRateWindowEdge } from "../../test-support/rate-window-edge.js";
 import { UserModel } from "../users/user-model.js";
 import { NotificationModel } from "./notification-model.js";
 import { updateEventPreferences } from "./notification-preferences-model.js";
@@ -174,6 +175,7 @@ describe("POST /notifications/test", () => {
 	});
 
 	it("returns the outcome per channel, then limits the user to one test a minute", async () => {
+		await startClearOfRateWindowEdge(60_000);
 		const sent = await as(USER).send("post", "/notifications/test");
 		expect(sent.status).toBe(200);
 		expect(sent.body).toEqual({

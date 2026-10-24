@@ -9,6 +9,7 @@ import { createDashboardApp } from "../../dashboard-server.js";
 import { RateLimitWindowModel } from "../../lib/rate-limit-windows.js";
 import { as, guest } from "../../test-support/dashboard-test-app.js";
 import { captureLogs } from "../../test-support/log-capture.js";
+import { startClearOfRateWindowEdge } from "../../test-support/rate-window-edge.js";
 import { ADA, EVE, VIC } from "../access/testing/access-fixture.js";
 import { CollectionModel } from "../collections/collection-model.js";
 import { useCollectionTestDb } from "../collections/testing/collection-fixture.js";
@@ -136,6 +137,7 @@ describe("collection access keys", () => {
 	});
 
 	it("limit guesses per address without a counter per guess, and matched keys per key", async () => {
+		await startClearOfRateWindowEdge(60_000);
 		const { id } = await sensitiveCollection();
 		const key = await createKey(EVE, id);
 		configureRuntime({

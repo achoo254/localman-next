@@ -4,6 +4,7 @@ import {
 	configureRuntime,
 } from "../../config/runtime-settings.js";
 import { useDashboardTestDb } from "../../test-support/dashboard-test-app.js";
+import { startClearOfRateWindowEdge } from "../../test-support/rate-window-edge.js";
 import {
 	UsageCounterModel,
 	readUsage,
@@ -70,6 +71,7 @@ describe("proxy quota", () => {
 	});
 
 	it("rate limits each account", async () => {
+		await startClearOfRateWindowEdge(60_000);
 		configureRuntime({
 			...DEFAULT_RUNTIME_SETTINGS,
 			proxyRateLimit: { max: 2, windowMs: 60_000 },

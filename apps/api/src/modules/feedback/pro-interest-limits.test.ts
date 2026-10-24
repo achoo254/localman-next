@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { clientIpBucket } from "../../lib/rate-limit-windows.js";
 import { runInTenant } from "../../tenancy/tenant-context.js";
 import { as, guest } from "../../test-support/dashboard-test-app.js";
+import { startClearOfRateWindowEdge } from "../../test-support/rate-window-edge.js";
 import { TEST_TENANT } from "../../test-support/test-tenant.js";
 import { assertHumanGuest } from "./feedback-guards.js";
 import { FeedbackModel } from "./feedback-model.js";
@@ -44,6 +45,7 @@ describe("clientIpBucket", () => {
 
 describe("Pro interest limits", () => {
 	it("rate-limits per IPv4 address", async () => {
+		await startClearOfRateWindowEdge(60_000);
 		for (let i = 0; i < 3; i += 1)
 			expect((await asGuest("203.0.113.7")).status).toBe(201);
 		const limited = await asGuest("203.0.113.7");
@@ -53,6 +55,7 @@ describe("Pro interest limits", () => {
 	});
 
 	it("counts a whole IPv6 /64 as one client", async () => {
+		await startClearOfRateWindowEdge(60_000);
 		for (let i = 1; i <= 3; i += 1) {
 			expect((await asGuest(`2001:db8:5:6::${i}`)).status).toBe(201);
 		}
@@ -61,6 +64,7 @@ describe("Pro interest limits", () => {
 	});
 
 	it("limits a signed-in account across networks with its stricter quota", async () => {
+		await startClearOfRateWindowEdge(60_000);
 		const submit = (ip: string) =>
 			as("acc_roaming", ip).send("post", SUBMIT, FORM);
 		expect((await submit("198.51.100.30")).status).toBe(201);

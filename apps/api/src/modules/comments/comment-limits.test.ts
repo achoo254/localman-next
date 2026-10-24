@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
+import { startClearOfRateWindowEdge } from "../../test-support/rate-window-edge.js";
 import { EVE, OLLIE, VIC } from "../access/testing/access-fixture.js";
 import {
 	createAs,
@@ -45,6 +46,7 @@ describe("comment counts, reactions and limits", () => {
 	});
 
 	it("slows down one person writing too many comments", async () => {
+		await startClearOfRateWindowEdge(60_000, 10_000);
 		const { id } = await setup();
 		for (let i = 0; i < 20; i += 1) {
 			expect((await comment(VIC, id, { body: `c${i}` })).status).toBe(201);

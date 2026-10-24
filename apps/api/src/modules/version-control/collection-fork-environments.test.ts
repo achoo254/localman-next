@@ -6,6 +6,7 @@ import {
 } from "@localman/shared/api-client";
 import { beforeEach, describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
+import { startClearOfRateWindowEdge } from "../../test-support/rate-window-edge.js";
 import { ElementRoleModel } from "../access/element-role-model.js";
 import {
 	ADA,
@@ -182,6 +183,7 @@ describe("forking a collection with environments", () => {
 	});
 
 	it("takes each environment's fork slot before creating anything", async () => {
+		await startClearOfRateWindowEdge(60_000, 10_000);
 		const { collection, env } = await setup();
 		const own = (await personalWorkspace(EVE)).toHexString();
 		// 10 forks per minute per account; the collection and its environment need two.

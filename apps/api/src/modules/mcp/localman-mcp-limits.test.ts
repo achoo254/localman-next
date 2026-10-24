@@ -9,6 +9,7 @@ import {
 } from "../../config/runtime-settings.js";
 import { USER_SCOPE } from "../../http/require-auth.js";
 import { useDashboardTestDb } from "../../test-support/dashboard-test-app.js";
+import { startClearOfRateWindowEdge } from "../../test-support/rate-window-edge.js";
 import { UserModel } from "../users/user-model.js";
 import { fixtureOperations } from "./__fixtures__/mcp-fixture-operations.js";
 import { MAX_SUBSCRIPTIONS_PER_SUBJECT } from "./localman-mcp-limits.js";
@@ -95,6 +96,7 @@ describe("Localman MCP limits", () => {
 	});
 
 	it("rate-limits requests per subject with 429 and Retry-After", async () => {
+		await startClearOfRateWindowEdge(60 * 60_000);
 		configureRuntime({
 			...runtimeSettings(),
 			localmanMcpRateLimit: { max: 2, windowMs: 60 * 60_000 },

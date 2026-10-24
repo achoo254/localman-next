@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { startClearOfRateWindowEdge } from "../../test-support/rate-window-edge.js";
 import { AccessRequestModel } from "./access-request-model.js";
 import { ElementRoleModel } from "./element-role-model.js";
 import {
@@ -105,6 +106,7 @@ describe("sharing.requestElementAccess", () => {
 		expect((await ask(VIC, elementPath(element), "editor")).status).toBe(200);
 	});
 	it("limits requests per account, whatever the element", async () => {
+		await startClearOfRateWindowEdge(60 * 60_000, 10_000);
 		for (let i = 0; i < 20; i += 1) {
 			const res = await ask(
 				OLLIE,

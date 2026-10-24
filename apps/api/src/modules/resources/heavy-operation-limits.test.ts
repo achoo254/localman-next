@@ -4,6 +4,7 @@ import {
 	type RuntimeSettings,
 } from "../../config/runtime-settings.js";
 import { as } from "../../test-support/dashboard-test-app.js";
+import { startClearOfRateWindowEdge } from "../../test-support/rate-window-edge.js";
 import {
 	BOB,
 	OWNER,
@@ -32,17 +33,8 @@ useCollaboratorTestDb(() => ({
 	heavyOperationRateLimit: limits,
 }));
 
-// Windows are fixed buckets of `windowMs` (`rate-limit-windows.ts`): a
-// burst that straddles the edge of a minute starts a new count halfway.
-// Each test sends its burst within a second or two, so it starts clear of
-// the edge.
-const EDGE_MARGIN_MS = 5_000;
-beforeEach(async () => {
-	const left = 60_000 - (Date.now() % 60_000);
-	if (left < EDGE_MARGIN_MS) {
-		await new Promise((resolve) => setTimeout(resolve, left + 50));
-	}
-});
+// Every test here counts up to a one-minute limit.
+beforeEach(() => startClearOfRateWindowEdge(60_000));
 
 async function statuses(send: () => Promise<{ status: number }>, times = 3) {
 	const seen: number[] = [];

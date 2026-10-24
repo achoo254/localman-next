@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
+import { startClearOfRateWindowEdge } from "../../test-support/rate-window-edge.js";
 import { ProjectModel } from "../projects/project-model.js";
 import { UserModel } from "../users/user-model.js";
 import { CollaboratorModel } from "./collaborator-model.js";
@@ -163,6 +164,7 @@ describe("invite links", () => {
 	});
 
 	it("requires sign-in and rate-limits token checks per account", async () => {
+		await startClearOfRateWindowEdge(10 * 60_000, 10_000);
 		const res = await as(BOB)
 			.send("post", "/invites/preview", { token: "B".repeat(43) })
 			.unset("x-test-sub");

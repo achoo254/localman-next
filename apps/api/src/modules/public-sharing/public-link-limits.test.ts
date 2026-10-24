@@ -5,6 +5,7 @@ import {
 } from "../../config/runtime-settings.js";
 import { runInTenant } from "../../tenancy/tenant-context.js";
 import { guest } from "../../test-support/dashboard-test-app.js";
+import { startClearOfRateWindowEdge } from "../../test-support/rate-window-edge.js";
 import { TEST_TENANT } from "../../test-support/test-tenant.js";
 import { EVE } from "../access/testing/access-fixture.js";
 import { useCollectionTestDb } from "../collections/testing/collection-fixture.js";
@@ -21,6 +22,7 @@ const read = (linkId: string, ip?: string) =>
 
 describe("public link lookups", () => {
 	it("limits lookups per client address before reading anything", async () => {
+		await startClearOfRateWindowEdge(60_000);
 		configureRuntime({
 			...DEFAULT_RUNTIME_SETTINGS,
 			publicSharingRateLimit: {

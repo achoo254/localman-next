@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { as, guest } from "../../test-support/dashboard-test-app.js";
+import { startClearOfRateWindowEdge } from "../../test-support/rate-window-edge.js";
 import { ContactMessageModel } from "./contact-message-model.js";
 import { FeedbackModel } from "./feedback-model.js";
 import { TURNSTILE_TOKENS } from "./testing/fake-turnstile.js";
@@ -137,6 +138,7 @@ describe("POST /feedback/contact", () => {
 	});
 
 	it("rate-limits per IP (honeypot hits count) and per account, apart from the Pro form", async () => {
+		await startClearOfRateWindowEdge(60_000);
 		const ip = "203.0.113.7";
 		expect((await asGuest({ ...MESSAGE, website: "x" }, ip)).status).toBe(201);
 		for (let i = 0; i < 2; i += 1)
@@ -158,6 +160,7 @@ describe("POST /feedback/contact", () => {
 	});
 
 	it("throttles owner alerts per kind while storing every message", async () => {
+		await startClearOfRateWindowEdge(60_000);
 		for (let i = 0; i < 3; i += 1) {
 			expect((await asGuest(MESSAGE, `198.51.100.${60 + i}`)).status).toBe(201);
 		}

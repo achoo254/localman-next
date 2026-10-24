@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
+import { startClearOfRateWindowEdge } from "../../test-support/rate-window-edge.js";
 import { useTuneloTestEnv } from "./testing/tunelo-test-setup.js";
 import { TunnelLinkModel, linkTokenSlot } from "./tunelo-link-model.js";
 
@@ -138,6 +139,7 @@ describe("linking a machine with tunelo link", () => {
 	});
 
 	it("opens at most five pairings per user in ten minutes, cancelled ones included", async () => {
+		await startClearOfRateWindowEdge(10 * 60_000);
 		for (let i = 0; i < 5; i++) {
 			const { id } = await startPairing(ALICE);
 			await as(ALICE).send("delete", `/client/tunnel-links/${id}`);

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
+import { startClearOfRateWindowEdge } from "../../test-support/rate-window-edge.js";
 import { UserModel } from "../users/user-model.js";
 import {
 	BOB,
@@ -56,6 +57,7 @@ describe("POST /projects/:projectId/collaborators/lookup", () => {
 	});
 
 	it("shares one budget with invitations per owner (429 RATE_LIMITED)", async () => {
+		await startClearOfRateWindowEdge(60 * 60_000);
 		const projectId = await createProject(OWNER);
 		const other = await createProject(OWNER, "Other");
 		expect((await lookup(OWNER, projectId, "dave")).status).toBe(200);
