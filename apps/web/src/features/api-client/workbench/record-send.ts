@@ -11,6 +11,23 @@ import { invalidateHistory } from "../history/use-history";
 import type { SettledResponse } from "./workbench-types";
 
 /**
+ * Where a redirect ended, as origin and path. Without a redirect the final
+ * URL is the sent one, every `{{var}}` filled in, so a secret in the URL
+ * would reach the server: it is left out. The query is never kept either,
+ * tokens travel there.
+ */
+export function redirectedTo(
+	sentUrl: string,
+	finalUrl: string,
+): string | undefined {
+	if (!URL.canParse(sentUrl) || !URL.canParse(finalUrl)) return undefined;
+	const sent = new URL(sentUrl);
+	const final = new URL(finalUrl);
+	const where = `${final.origin}${final.pathname}`;
+	return where === `${sent.origin}${sent.pathname}` ? undefined : where;
+}
+
+/**
  * Resolves `false` when history could not be written; the send itself
  * already succeeded, so the caller only reports it.
  */
@@ -20,14 +37,14 @@ export async function recordSend(
 	queryClient: QueryClient,
 ): Promise<boolean> {
 	if (settled.kind !== "done") return true;
-	const { response, route } = settled.result;
+	const { response, route, request } = settled.result;
 	try {
 		await recordHistoryEntry(redactDraft(draft), {
 			status: response.status,
 			ms: Math.round(response.timings.total),
 			size: response.size,
 			route,
-			finalUrl: response.finalUrl,
+			finalUrl: redirectedTo(request.url, response.finalUrl),
 		});
 		await invalidateHistory(queryClient);
 		return true;
