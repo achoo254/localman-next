@@ -105,6 +105,42 @@ describe("local values through the vault", () => {
 		expect(openLocalValues(SCOPE, moved)[0]?.locked).toBe(true);
 	});
 
+	it("seals a secret typed to look like a ciphertext", async () => {
+		server.params = null;
+		setVaultPrompt(async () => {
+			await createNewVault(PASSPHRASE);
+			return true;
+		});
+		const lookalike = `lmv1:${"A".repeat(60)}`;
+		const [sealed] = await sealLocalWrites(target, [
+			{ key: "token", value: lookalike },
+		]);
+		expect(sealed?.value).toMatch(/^lmv1:/);
+		expect(sealed?.value).not.toBe(lookalike);
+		const stored = [{ key: "token", value: sealed?.value ?? "" }];
+		expect(openLocalValues(SCOPE, stored)[0]?.value).toBe(lookalike);
+	});
+
+	it("tells a value sealed by another vault from a locked one", async () => {
+		server.params = null;
+		setVaultPrompt(async () => {
+			await createNewVault(PASSPHRASE);
+			return true;
+		});
+		const [sealed] = await sealLocalWrites(target, [
+			{ key: "token", value: "s3cret" },
+		]);
+		const stored = [{ key: "token", value: sealed?.value ?? "" }];
+		// Forgot the passphrase: a new vault cannot open the old value.
+		resetVaultSession();
+		server.params = null;
+		await createNewVault("another long passphrase");
+		await settleLocalValues(SCOPE, stored);
+		expect(openLocalValues(SCOPE, stored)).toEqual([
+			{ key: "token", value: "", locked: true, unreadable: true },
+		]);
+	});
+
 	it("refuses to save a secret when the user does not unlock", async () => {
 		server.params = null;
 		setVaultPrompt(async () => false);

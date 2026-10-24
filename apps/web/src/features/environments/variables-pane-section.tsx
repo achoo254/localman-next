@@ -6,40 +6,17 @@ import { Button } from "../../components/ui/button";
 import { IconButton } from "../../components/ui/icon-button";
 import { Skeleton } from "../../components/ui/skeleton";
 import { useT } from "../../i18n/i18n-context";
-import { useUnlockVault, useVaultUi } from "./use-vault-ui";
+import { lockedKeysOf, mergedLocal } from "./local-value-map";
+import { LockedPaneValue } from "./locked-pane-value";
+import { useVaultUi } from "./use-vault-ui";
 import {
 	type VariableRow,
 	currentValue,
 	draftsOf,
-	lockedKeysOf,
-	mergedLocal,
 	rowsOf,
 } from "./variable-rows";
 
 const MASK = "••••••••";
-
-/** A value locked in the vault: a send using it stops until unlocked. */
-function LockedValue({ name }: { name: string }) {
-	const t = useT();
-	const unlock = useUnlockVault();
-	return (
-		<span className="flex min-w-0 items-center gap-1">
-			<Badge tone="warning" data-id="vars-quick-locked">
-				{t("agentUse.vault.badge")}
-			</Badge>
-			<Button
-				size="sm"
-				variant="ghost"
-				aria-haspopup="dialog"
-				aria-label={t("agentUse.vault.cell.lockedLabel", { name })}
-				data-id="vars-quick-unlock"
-				onClick={() => unlock()}
-			>
-				{t("agentUse.vault.unlock")}
-			</Button>
-		</span>
-	);
-}
 
 /** One variable: name, the value in use (masked for a secret), its source. */
 function PaneRow({ row, vaultUi }: { row: VariableRow; vaultUi: boolean }) {
@@ -54,7 +31,12 @@ function PaneRow({ row, vaultUi }: { row: VariableRow; vaultUi: boolean }) {
 	if (!variable.enabled) {
 		shown = <i className="text-muted">{t("environments.quick.off")}</i>;
 	} else if (locked) {
-		shown = <LockedValue name={variable.key} />;
+		shown = (
+			<LockedPaneValue
+				name={variable.key}
+				unreadable={row.unreadable === true}
+			/>
+		);
 	} else if (withheld) {
 		shown = <Badge tone="neutral">{t("environments.table.hidden")}</Badge>;
 	} else if (value === null) {

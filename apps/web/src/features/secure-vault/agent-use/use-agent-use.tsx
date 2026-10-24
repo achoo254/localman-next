@@ -10,10 +10,11 @@ import { useToast } from "../../../components/ui/toast";
 import { useT } from "../../../i18n/i18n-context";
 import { useVaultUi } from "../../environments/use-vault-ui";
 import { secretNames } from "../vault-codec";
-import { writeAgentCopy } from "./agent-copy";
+import { agentCopyKeys, writeAgentCopy } from "./agent-copy";
 import {
 	type AgentSecretUse,
 	type AgentUseTarget,
+	agentUsesKey,
 	fetchAgentUses,
 	removeAgentUse,
 	saveAgentUse,
@@ -22,9 +23,6 @@ import { AgentUseDialog } from "./agent-use-dialog";
 import { AgentCopyError } from "./agent-use-errors";
 import type { AgentUseScope, AgentUseSubject } from "./agent-use-types";
 import { type OwnVariable, ownHostSources } from "./cached-host-sources";
-
-export const agentUsesKey = (target: AgentUseTarget | null) =>
-	["agent-secret-uses", target?.kind ?? "", target?.id ?? ""] as const;
 
 export interface AgentUse {
 	/** `null` while it does not apply (flag off, server without vault). */
@@ -37,8 +35,6 @@ export interface AgentUse {
 	secrets: ReadonlySet<string>;
 }
 
-const NONE: ReadonlySet<string> = new Set();
-
 /**
  * `variables` and `localValues` (opened) of the scope: its secret names,
  * and its base URLs to suggest hosts from first.
@@ -46,7 +42,7 @@ const NONE: ReadonlySet<string> = new Set();
 export function useAgentUse(
 	target: AgentUseTarget | null,
 	variables: readonly (OwnVariable & { type?: string; secret?: boolean })[],
-	localValues: readonly { key: string; value: string }[],
+	localValues: readonly { key: string; value: string; agentUse?: boolean }[],
 ): AgentUse {
 	const t = useT();
 	const toast = useToast();
@@ -130,10 +126,8 @@ export function useAgentUse(
 					turnOff: (on) => off.mutate(on),
 				}
 			: null;
-	const keys = useMemo(
-		() => (uses ? new Set(uses.map((use) => use.key)) : NONE),
-		[uses],
-	);
+	// The server's own word (`agentUse`) counts even before the list loads.
+	const keys = agentCopyKeys(localValues, uses);
 	const dialog = subject ? (
 		<AgentUseDialog
 			key={subject.key}

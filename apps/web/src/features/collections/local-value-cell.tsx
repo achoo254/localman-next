@@ -17,6 +17,8 @@ export interface LocalValueCellProps {
 	value: string | null;
 	/** The caller's value is locked in the vault. */
 	locked: boolean;
+	/** Sealed by another vault: only a new value (or none) helps. */
+	unreadable: boolean;
 	ready: boolean;
 	className: string;
 	/** `null` (an emptied box) goes back to the shared value. */
@@ -38,7 +40,8 @@ export function LocalValueCell(props: LocalValueCellProps) {
 	const [draft, setDraft] = useState<string | null>(null);
 	const box = useRef<HTMLInputElement>(null);
 	const key = entry.key.trim();
-	const vaultState = vaultCellState(useVaultUi(), {
+	const vault = useVaultUi();
+	const vaultState = vaultCellState(vault, {
 		secret: entry.secret === true && key !== "",
 		locked: props.locked,
 		hasLocal: value !== null,
@@ -49,6 +52,7 @@ export function LocalValueCell(props: LocalValueCellProps) {
 				{vaultState ? (
 					<VaultValueCell
 						state={vaultState}
+						vault={vault}
 						name={props.label}
 						onOpen={() => requestAnimationFrame(() => box.current?.focus())}
 					/>
@@ -58,7 +62,13 @@ export function LocalValueCell(props: LocalValueCellProps) {
 						type={entry.secret ? "password" : "text"}
 						autoComplete="off"
 						value={draft ?? value ?? ""}
-						placeholder={entry.secret ? undefined : entry.value}
+						placeholder={
+							props.unreadable
+								? t("agentUse.vault.unreadable")
+								: entry.secret
+									? undefined
+									: entry.value
+						}
 						disabled={!props.ready || key === ""}
 						data-id="collection-variable-local"
 						aria-label={t("environments.table.localOf", { name: props.label })}

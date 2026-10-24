@@ -39,15 +39,19 @@ export function VariableLocalCell(props: VariableLocalCellProps) {
 		: (variable.sharedValue ?? "");
 	const vaultState = vaultCellState(props.vault, {
 		secret,
-		locked: row.locked === true,
+		// Sealed by another vault: unlocking cannot help, a new value can.
+		locked: row.locked === true && !row.unreadable,
 		hasLocal: row.local !== undefined,
 	});
+	let placeholder = hidden && sharedPlaceholder ? MASK : sharedPlaceholder;
+	if (row.unreadable) placeholder = t("agentUse.vault.unreadable");
 	return (
 		<td className={props.className}>
 			<div className="flex items-center gap-1">
 				{vaultState ? (
 					<VaultValueCell
 						state={vaultState}
+						vault={props.vault}
 						name={name}
 						onOpen={() => requestAnimationFrame(() => box.current?.focus())}
 					/>
@@ -57,7 +61,7 @@ export function VariableLocalCell(props: VariableLocalCellProps) {
 						type={hidden ? "password" : "text"}
 						autoComplete="off"
 						value={row.local ?? ""}
-						placeholder={hidden && sharedPlaceholder ? MASK : sharedPlaceholder}
+						placeholder={placeholder}
 						disabled={row.localKey.trim() === ""}
 						aria-label={t("environments.table.localOf", { name })}
 						data-id="var-table-value"

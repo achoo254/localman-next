@@ -15,7 +15,6 @@ import { DeleteEnvironmentModal } from "./delete-environment-modal";
 import { EnvironmentHeader } from "./environment-header";
 import { setEnvironmentVariables } from "./environments-api";
 import { useExportEnvironment } from "./use-environment-file";
-import { useEnvironmentLocal } from "./use-environment-local";
 import { useEnvironmentMeta } from "./use-environment-meta";
 import {
 	storeEnvironment,
@@ -23,6 +22,7 @@ import {
 	useEnvironment,
 	useSetActiveEnvironment,
 } from "./use-environments";
+import { useScopeLocal } from "./use-scope-local";
 import { useVariableBulk } from "./use-variable-bulk";
 import { useVariableEditor } from "./use-variable-editor";
 import { VariableTable } from "./variable-table";
@@ -46,7 +46,12 @@ function EnvironmentEditor({
 		environment,
 		pageId,
 	);
-	const { localValues, agent, saveLocal } = useEnvironmentLocal(environment);
+	const { localValues, agent, saveLocal } = useScopeLocal({
+		kind: "environment",
+		id,
+		variables: environment.variables,
+		localValues: environment.localValues,
+	});
 	const editor = useVariableEditor({
 		variables: environment.variables,
 		localValues,

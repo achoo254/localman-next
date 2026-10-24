@@ -4,6 +4,8 @@ export const apiClientSend: Messages["apiClient"]["send"] = {
 	preScriptFailed: "Chưa gửi: script pre-request đã dừng. {reason}",
 	secretLocked:
 		"Chưa gửi: request dùng {name}, giá trị của biến này đang khoá trong kho secret của bạn. Mở kho bằng nút khoá rồi gửi lại.",
+	secretUnreadable:
+		"Chưa gửi: request dùng {name}, giá trị local của biến này được mã hoá bằng một kho secret khác nên không mở được. Hãy thay hoặc xoá giá trị đó rồi gửi lại.",
 	secretWithheld:
 		"Chưa gửi: request dùng {name}, một secret chỉ Editor xem được. Hãy đặt giá trị local của riêng bạn cho biến này trong environment rồi gửi lại.",
 	scopesDropped:

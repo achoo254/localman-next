@@ -98,6 +98,7 @@ export function VariableCard(props: VariableCardProps) {
 			<LockedVariableCard
 				name={name}
 				scope={winner.label ? `${scope} · ${winner.label}` : scope}
+				unreadable={winner.unreadable === true}
 				onDone={props.onDone}
 			/>
 		);

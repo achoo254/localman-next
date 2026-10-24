@@ -10,6 +10,7 @@ import {
 	it,
 	vi,
 } from "vitest";
+import { FeaturesContext, NO_FEATURES } from "../../config/features";
 import { createVault } from "./vault-crypto";
 import { VaultDialogHost } from "./vault-dialog-host";
 import {
@@ -145,6 +146,43 @@ describe("VaultDialogHost prompt", () => {
 		await fillCreate(NEW);
 		await expect(key).resolves.toBeInstanceOf(CryptoKey);
 		expect(vaultState().status).toBe("unlocked");
+	});
+
+	it("answers every ask waiting at once with the same dialog", async () => {
+		resetVaultServer(null);
+		renderVault(
+			<VaultDialogHost>
+				<span />
+			</VaultDialogHost>,
+		);
+		const first = requireVaultKey();
+		const second = requireVaultKey();
+		expect(
+			await screen.findByRole("dialog", { name: "Create secret vault" }),
+		).toBeVisible();
+		expect(screen.getAllByRole("dialog")).toHaveLength(1);
+		await fillCreate(NEW);
+		const [a, b] = await Promise.all([first, second]);
+		expect(a).toBeInstanceOf(CryptoKey);
+		expect(b).toBe(a);
+	});
+
+	it("asks even with the web flag off when the server runs the vault", async () => {
+		resetVaultServer(params);
+		renderVault(
+			<FeaturesContext value={NO_FEATURES}>
+				<VaultDialogHost>
+					<span />
+				</VaultDialogHost>
+			</FeaturesContext>,
+		);
+		const key = requireVaultKey();
+		key.catch(() => undefined);
+		expect(
+			await screen.findByRole("dialog", { name: "Unlock secret vault" }),
+		).toBeVisible();
+		await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+		await expect(key).rejects.toBeInstanceOf(VaultLockedError);
 	});
 
 	it("stops asking once unmounted", async () => {

@@ -15,20 +15,9 @@ import { useT } from "../../i18n/i18n-context";
 import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import type { VariablesPageTab } from "../api-client/workbench/workbench-tab-types";
 import { PageSaveState } from "../collections/page-save-state";
-import { withAgentCopies } from "../secure-vault/agent-use/agent-copy";
-import { useAgentUse } from "../secure-vault/agent-use/use-agent-use";
-import { useResealLegacy } from "../secure-vault/use-reseal-legacy";
-import {
-	globalsScope,
-	openLocalValues,
-	useVaultValues,
-} from "../secure-vault/vault-codec";
 import { setGlobals } from "./environments-api";
-import {
-	type LocalValueWrite,
-	setGlobalsLocalValues,
-} from "./local-values-api";
-import { globalsKey, storeLocalValues, useGlobals } from "./use-environments";
+import { globalsKey, useGlobals } from "./use-environments";
+import { useScopeLocal } from "./use-scope-local";
 import { useVariableBulk } from "./use-variable-bulk";
 import { useVariableEditor } from "./use-variable-editor";
 import { VariableTable } from "./variable-table";
@@ -38,26 +27,12 @@ function GlobalsEditor({ globals }: { globals: GlobalsDetail }) {
 	const client = useQueryClient();
 	const { workspaceId } = globals;
 	const canEdit = globals.role === "editor";
-	useVaultValues();
-	const localValues = openLocalValues(
-		globalsScope(workspaceId),
-		globals.localValues,
-	);
-	const agent = useAgentUse(
-		{ kind: "global", id: workspaceId },
-		globals.variables,
-		localValues,
-	);
-	const saveLocal = async (values: LocalValueWrite[]) =>
-		storeLocalValues(
-			client,
-			globalsKey(workspaceId),
-			await setGlobalsLocalValues(
-				workspaceId,
-				withAgentCopies(values, agent.keys),
-				agent.secrets,
-			),
-		);
+	const { localValues, agent, saveLocal } = useScopeLocal({
+		kind: "global",
+		id: workspaceId,
+		variables: globals.variables,
+		localValues: globals.localValues,
+	});
 	const editor = useVariableEditor({
 		variables: globals.variables,
 		localValues,
@@ -70,12 +45,6 @@ function GlobalsEditor({ globals }: { globals: GlobalsDetail }) {
 		},
 		saveLocal,
 	});
-	useResealLegacy(
-		globalsScope(workspaceId),
-		globals.localValues,
-		agent.secrets,
-		saveLocal,
-	);
 	const bulk = useVariableBulk(editor);
 	return (
 		<div

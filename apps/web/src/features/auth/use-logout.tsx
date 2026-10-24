@@ -3,6 +3,7 @@ import { logoutUrl } from "../../lib/api-url";
 import { isNativeBuild } from "../../platform/native/native-build";
 import { forgetSavedPages } from "../collections/page-storage";
 import { releasePushSubscriptionForLogout } from "../notifications/release-push-on-logout";
+import { lockVault } from "../secure-vault/vault-session";
 
 export interface Logout {
 	/** Signing out: the push cleanup runs, then the page leaves. */
@@ -14,7 +15,8 @@ export interface Logout {
 
 /**
  * Logout as the header and the invite page do it: detach this browser's
- * Web Push first (best effort) and forget the open collection pages, then
+ * Web Push first (best effort), lock the secret vault on this device (its
+ * key for this account goes) and forget the open collection pages, then
  * POST `/auth/logout`, which ends the session (and the IdP's) and
  * redirects. Repeated calls are ignored.
  */
@@ -28,6 +30,8 @@ export function useLogout(formDataId: string): Logout {
 		started.current = true;
 		setBusy(true);
 		await releasePushSubscriptionForLogout();
+		// Best effort: the page leaves next, which drops the key from memory.
+		await lockVault().catch(() => undefined);
 		forgetSavedPages();
 		if (isNativeBuild) {
 			// The shell ends its own session; the browser's IdP session stays.

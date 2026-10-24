@@ -75,8 +75,18 @@ export async function recallVaultKey(
 	return null;
 }
 
-/** Locks this device: the key is forgotten here (not on other devices). */
-export async function forgetVaultKeys(): Promise<void> {
-	memory.clear();
-	await run("readwrite", (store) => store.clear());
+/**
+ * Locks this device for one account: its keys are forgotten here (not on
+ * other devices, nor for another account signed in on this browser).
+ */
+export async function forgetVaultKeys(sub: string): Promise<void> {
+	const prefix = idOf(sub, "");
+	for (const id of [...memory.keys()]) {
+		if (id.startsWith(prefix)) memory.delete(id);
+	}
+	if (typeof IDBKeyRange === "undefined") return;
+	// Ids sort as `sub NUL salt`: this account's ids run from `sub NUL` up
+	// to (not including) `sub U+0001`.
+	const range = IDBKeyRange.bound(prefix, `${sub}\u0001`, false, true);
+	await run("readwrite", (store) => store.delete(range));
 }

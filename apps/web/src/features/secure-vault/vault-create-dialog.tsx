@@ -5,14 +5,14 @@ import { Button } from "../../components/ui/button";
 import { Modal, ModalClose } from "../../components/ui/modal";
 import { ModalFooter } from "../../components/ui/modal-footer";
 import { useT } from "../../i18n/i18n-context";
-import { errorMessage } from "../../lib/api-client";
+import { ApiError, errorMessage } from "../../lib/api-client";
 import { VaultPassphraseField } from "./vault-passphrase-field";
 import {
 	PassphraseStrengthHint,
 	isAcceptablePassphrase,
 	passphraseStrength,
 } from "./vault-passphrase-strength";
-import { createNewVault } from "./vault-session";
+import { createNewVault, reloadVault } from "./vault-session";
 
 export interface VaultCreateDialogProps {
 	open: boolean;
@@ -20,6 +20,8 @@ export interface VaultCreateDialogProps {
 	afterReset: boolean;
 	onCancel: () => void;
 	onCreated: () => void;
+	/** The account has a vault already (made elsewhere): unlock it instead. */
+	onExists: () => void;
 	onCloseAutoFocus: (event: Event) => void;
 }
 
@@ -40,6 +42,7 @@ function CreateVaultForm({
 	afterReset,
 	onCancel,
 	onCreated,
+	onExists,
 	onCloseAutoFocus,
 }: VaultCreateDialogProps) {
 	const t = useT();
@@ -65,6 +68,12 @@ function CreateVaultForm({
 			await createNewVault(passphrase);
 			onCreated();
 		} catch (error) {
+			if (error instanceof ApiError && error.code === "SECRET_VAULT_EXISTS") {
+				// Read it again so the unlock dialog has its parameters.
+				await reloadVault().catch(() => undefined);
+				onExists();
+				return;
+			}
 			setFailure(error);
 			setBusy(false);
 		}

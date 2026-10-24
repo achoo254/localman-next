@@ -13,7 +13,7 @@ import {
 	TEAM,
 	chooseWorkspace,
 } from "../workspaces/workspaces-test-helpers";
-import { ENV_FLAGS } from "./environments-test-utils";
+import { ENV_FLAGS, environment } from "./environments-test-utils";
 import { activeEnvironmentKey } from "./use-environments";
 import { useScriptScopeSaver } from "./use-script-scope-saver";
 
@@ -34,6 +34,10 @@ describe("useScriptScopeSaver", () => {
 		const { calls } = mockFetch({
 			"GET /api/v1/users/me": { body: makeUser() },
 			"GET /api/v1/workspaces": { body: { items: [PERSONAL, TEAM] } },
+			// Its variables say which values are secrets (none here).
+			"GET /api/v1/environments/env-staging": {
+				body: environment({ id: "env-staging", variables: [] }),
+			},
 			"PATCH /api/v1/environments/env-staging/local-values": {
 				body: { localValues: [{ key: "token", value: "staging-token" }] },
 			},

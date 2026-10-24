@@ -66,7 +66,8 @@ export function batchTargets(
 	return {
 		share: visible.filter((row) => shareActionOf(row, canEdit) === "share"),
 		update: visible.filter((row) => shareActionOf(row, canEdit) === "update"),
-		reset: rows.filter(canReset),
+		// "Reset all" leaves values locked in the vault alone.
+		reset: rows.filter((row) => canReset(row) && !row.locked),
 		unshare: visible.filter((row) => canUnshare(row, canEdit)),
 	};
 }
@@ -127,10 +128,13 @@ export function localWritesAfterSave(
 	drafts: readonly DraftVariable[],
 	local: ReadonlyMap<string, string>,
 	resets: readonly string[],
+	locked: ReadonlyMap<string, unknown> = new Map(),
 ): LocalValueWrite[] {
+	// `local` holds readable values only; a value locked in the vault is
+	// neither moved nor overwritten by one moving onto its name.
 	const moves = renamesOf(drafts).flatMap(({ from, to }) => {
 		const value = local.get(from);
-		return value === undefined || local.has(to)
+		return value === undefined || local.has(to) || locked.has(to)
 			? []
 			: [
 					{ key: from, value: null },

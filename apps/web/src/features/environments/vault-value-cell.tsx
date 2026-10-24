@@ -31,6 +31,8 @@ const MASK = "••••••••";
 
 export interface VaultValueCellProps {
 	state: VaultCellState;
+	/** Only a closed vault opens a dialog; open, the value is on its way. */
+	vault: VaultStatus | null;
 	/** The variable's name, for the accessible name. */
 	name: string;
 	className?: string;
@@ -41,6 +43,7 @@ export interface VaultValueCellProps {
 /** The own value of a secret that the vault keeps out of reach for now. */
 export function VaultValueCell({
 	state,
+	vault,
 	name,
 	className,
 	onOpen,
@@ -61,7 +64,9 @@ export function VaultValueCell({
 		<button
 			type="button"
 			aria-label={label}
-			aria-haspopup="dialog"
+			aria-haspopup={
+				vault === "none" || vault === "locked" ? "dialog" : undefined
+			}
 			data-id={
 				state === "none" ? "var-table-value-novault" : "var-table-value-locked"
 			}

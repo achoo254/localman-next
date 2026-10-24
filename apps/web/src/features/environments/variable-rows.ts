@@ -3,7 +3,7 @@
  * with the caller's local value, plus local values a script set without
  * a definition. Pure, so the table and its tests read the same rules.
  */
-import type { LocalValue, VariableView } from "@localman/shared/api-client";
+import type { VariableView } from "@localman/shared/api-client";
 import type { AgentUseSubject } from "../secure-vault/agent-use/agent-use-types";
 import type { VariableWrite } from "./environments-api";
 
@@ -35,6 +35,11 @@ export interface VariableRow {
 	 * then empty): it cannot be shown, copied or shared until unlocked.
 	 */
 	locked?: true;
+	/**
+	 * With `locked`: sealed by another vault, so unlocking does not help;
+	 * the value can only be replaced or removed.
+	 */
+	unreadable?: true;
 }
 
 export function draftsOf(variables: readonly VariableView[]): DraftVariable[] {
@@ -61,15 +66,28 @@ export function blankDraft(rowId: string): DraftVariable {
 	};
 }
 
-/** `locked`: names whose local value is locked in the vault. */
+/**
+ * `local`: the readable local values; `locked`: names whose value is
+ * locked in the vault (`true`: for good, sealed by another vault).
+ */
 export function rowsOf(
 	drafts: readonly DraftVariable[],
 	local: ReadonlyMap<string, string>,
-	locked: ReadonlySet<string> = new Set(),
+	locked: ReadonlyMap<string, boolean> = new Map(),
 ): VariableRow[] {
+	const lockedFlags = (key: string) => {
+		const unreadable = locked.get(key);
+		if (unreadable === undefined) return {};
+		return unreadable
+			? { locked: true as const, unreadable: true as const }
+			: { locked: true as const };
+	};
 	const defined = drafts.map((variable): VariableRow => {
 		const localKey = variable.savedKey ?? variable.key;
-		const own = localKey === "" ? undefined : local.get(localKey);
+		const own =
+			localKey === ""
+				? undefined
+				: (local.get(localKey) ?? (locked.has(localKey) ? "" : undefined));
 		const edited =
 			own !== undefined &&
 			(variable.sharedHidden || own !== (variable.sharedValue ?? ""));
@@ -79,13 +97,16 @@ export function rowsOf(
 			local: own,
 			localOnly: false,
 			sync: edited ? "edited" : "synced",
-			...(own !== undefined && locked.has(localKey) ? { locked: true } : {}),
+			...(own !== undefined ? lockedFlags(localKey) : {}),
 		};
 	});
 	const names = new Set(
 		drafts.map((variable) => variable.savedKey ?? variable.key),
 	);
-	const extra = [...local]
+	const extra = [
+		...local,
+		...[...locked.keys()].map((key) => [key, ""] as const),
+	]
 		.filter(([key]) => !names.has(key))
 		.map(([key, value]): VariableRow => {
 			const variable = {
@@ -100,37 +121,10 @@ export function rowsOf(
 				local: value,
 				localOnly: true,
 				sync: "edited",
+				...lockedFlags(key),
 			};
 		});
 	return [...defined, ...extra];
-}
-
-/**
- * Names whose local value is locked in the vault, unless an edit not
- * saved yet replaced it (`pending`).
- */
-export function lockedKeysOf(
-	saved: readonly LocalValue[],
-	pending: Readonly<Record<string, unknown>> = {},
-): Set<string> {
-	return new Set(
-		saved
-			.filter((entry) => entry.locked && !Object.hasOwn(pending, entry.key))
-			.map((entry) => entry.key),
-	);
-}
-
-/** Local values after unsaved edits (`null`: reset to shared). */
-export function mergedLocal(
-	saved: readonly LocalValue[],
-	pending: Readonly<Record<string, string | null | undefined>>,
-): Map<string, string> {
-	const map = new Map(saved.map((entry) => [entry.key, entry.value]));
-	for (const [key, value] of Object.entries(pending)) {
-		if (value === null) map.delete(key);
-		else if (value !== undefined) map.set(key, value);
-	}
-	return map;
 }
 
 /** What an Editor sends: named rows only; ids of saved variables kept. */

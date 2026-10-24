@@ -1,22 +1,18 @@
 /**
- * Editing of an environment's or the globals' variables. Editors change
- * definitions and shared values; everyone changes their own local values.
- * Both autosave in order (`usePageAutosave`): a late answer never wins.
- * Server data is merged into the drafts (`mergeDrafts`), keeping unsaved
- * rows; a rename moves the local value once the new name is saved.
+ * Editing of an environment's or the globals' variables: Editors change
+ * definitions and shared values, everyone their own local values. Both
+ * autosave in order (`usePageAutosave`). Server data is merged into the
+ * drafts (`mergeDrafts`); a rename moves the local value once saved.
  */
 import type { LocalValue, VariableView } from "@localman/shared/api-client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { usePageAutosave } from "../collections/use-page-autosave";
 import { combinedStatus } from "./combined-status";
-import type { VariableWrite } from "./environments-api";
-import type { LocalValueWrite } from "./local-values-api";
+import { lockedKeysOf, mergedLocal } from "./local-value-map";
 import {
-	localWritesAfterSave,
-	resetPatch,
-	sharedDrafts,
-	unsharedDrafts,
-} from "./variable-batch";
+	type VariableSaveOptions,
+	useVariableSaves,
+} from "./use-variable-saves";
+import { resetPatch, sharedDrafts, unsharedDrafts } from "./variable-batch";
 import { mergeDrafts } from "./variable-drafts-merge";
 import {
 	type DraftVariable,
@@ -24,60 +20,27 @@ import {
 	blankDraft,
 	draftsOf,
 	duplicateNames,
-	lockedKeysOf,
-	mergedLocal,
 	rowsOf,
-	toWrites,
 } from "./variable-rows";
 
-export interface VariableEditorOptions {
+export interface VariableEditorOptions extends VariableSaveOptions {
 	variables: readonly VariableView[];
 	localValues: readonly LocalValue[];
 	canEdit: boolean;
-	saveShared: (writes: VariableWrite[]) => Promise<void>;
-	saveLocal: (values: LocalValueWrite[]) => Promise<void>;
 }
-
-type SharedPatch = { variables: DraftVariable[] };
-type LocalPatch = Record<string, string | null>;
 
 export function useVariableEditor(options: VariableEditorOptions) {
 	const { variables, localValues, canEdit } = options;
-	const saveSharedRef = useRef(options.saveShared);
-	saveSharedRef.current = options.saveShared;
-	const saveLocalRef = useRef(options.saveLocal);
-	saveLocalRef.current = options.saveLocal;
-	const localRef = useRef(new Map<string, string>());
-
-	// Local values shared but not reset yet: they go only once the shared
-	// save succeeds, so a failed save never loses them.
+	const localRef = useRef<ReadonlyMap<string, string>>(new Map());
+	const draftsRef = useRef<DraftVariable[]>([]);
+	const lockedRef = useRef<ReadonlyMap<string, boolean>>(new Map());
 	const resetsRef = useRef(new Set<string>());
-	const flushLocalRef = useRef(async (): Promise<void> => {});
-
-	const shared = usePageAutosave<SharedPatch>(async (patch) => {
-		if (!patch.variables) return;
-		// The keys shared by the variables this save sends.
-		const sent = [...resetsRef.current];
-		await saveSharedRef.current(toWrites(patch.variables));
-		// Typed local values go first, so the resets below come last.
-		await flushLocalRef.current();
-		const resets = sent.filter((key) => resetsRef.current.has(key));
-		const writes = localWritesAfterSave(
-			patch.variables,
-			localRef.current,
-			resets,
-		);
-		if (writes.length > 0) await saveLocalRef.current(writes);
-		for (const key of resets) resetsRef.current.delete(key);
+	const { shared, local } = useVariableSaves(options, {
+		local: localRef,
+		locked: lockedRef,
+		drafts: draftsRef,
+		resets: resetsRef,
 	});
-	const local = usePageAutosave<LocalPatch>(async (patch) => {
-		const values = Object.entries(patch).map(([key, value]) => ({
-			key,
-			value: value ?? null,
-		}));
-		if (values.length > 0) await saveLocalRef.current(values);
-	});
-	flushLocalRef.current = local.flush;
 
 	const [drafts, setDrafts] = useState(() => draftsOf(variables));
 	const sharedPending = shared.pending.variables !== undefined;
@@ -86,7 +49,6 @@ export function useVariableEditor(options: VariableEditorOptions) {
 		if (!sharedPending) setDrafts((current) => mergeDrafts(current, variables));
 	}, [variables, sharedPending]);
 
-	const draftsRef = useRef(drafts);
 	draftsRef.current = drafts;
 	const nextRow = useRef(0);
 	const localMap = useMemo(
@@ -96,6 +58,7 @@ export function useVariableEditor(options: VariableEditorOptions) {
 	localRef.current = localMap;
 	// Values locked in the vault read as empty; their rows say so.
 	const locked = lockedKeysOf(localValues, local.pending);
+	lockedRef.current = locked;
 	const duplicates = useMemo(() => duplicateNames(drafts), [drafts]);
 
 	const commit = useCallback(

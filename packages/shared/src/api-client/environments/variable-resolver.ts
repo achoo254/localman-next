@@ -24,6 +24,8 @@ export interface ScopeVariable {
 	withheld: boolean;
 	/** Withheld because the caller's own value is locked in the vault. */
 	locked?: boolean;
+	/** Locked for good: sealed by another vault, unlocking does not help. */
+	unreadable?: boolean;
 }
 
 export interface ResolverLayer {
@@ -45,16 +47,17 @@ export interface VariableResolution {
 	overridden: VariableCandidate[];
 }
 
-/** A variable whose own value is locked in the vault. */
-function lockedVariable(key: string, secret: boolean): ScopeVariable {
+/** A variable whose own value (`entry`) is locked in the vault. */
+function lockedVariable(entry: LocalValue, secret: boolean): ScopeVariable {
 	return {
-		key,
+		key: entry.key,
 		value: null,
 		enabled: true,
 		secret,
 		source: "none",
 		withheld: true,
 		locked: true,
+		...(entry.unreadable ? { unreadable: true } : {}),
 	};
 }
 
@@ -68,17 +71,18 @@ export function scopeVariables(
 	localValues: readonly LocalValue[],
 ): ScopeVariable[] {
 	const local = new Map(localValues.map((entry) => [entry.key, entry.value]));
-	const locked = new Set(
-		localValues.filter((entry) => entry.locked).map((entry) => entry.key),
+	const locked = new Map(
+		localValues.filter((entry) => entry.locked).map((e) => [e.key, e]),
 	);
 	const defined = variables.map((variable): ScopeVariable => {
 		const own = local.get(variable.key);
 		const secret = variable.type === "secret";
-		if (locked.has(variable.key)) {
+		const lockedEntry = locked.get(variable.key);
+		if (lockedEntry) {
 			// The caller's own value wins but cannot be read now: nothing
 			// stands in for it, as for a withheld secret.
 			return {
-				...lockedVariable(variable.key, secret),
+				...lockedVariable(lockedEntry, secret),
 				enabled: variable.enabled,
 			};
 		}
@@ -101,7 +105,7 @@ export function scopeVariables(
 		.map(
 			(entry): ScopeVariable =>
 				entry.locked
-					? lockedVariable(entry.key, true)
+					? lockedVariable(entry, true)
 					: {
 							key: entry.key,
 							value: entry.value,

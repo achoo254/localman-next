@@ -39,16 +39,27 @@ export function VariableRow(props: VariableRowProps) {
 	const name =
 		variable.key.trim() || t("environments.table.rowN", { n: index + 1 });
 	const duplicate = editor.duplicates.has(variable.key.trim());
+	// Renaming would strand a locked value, or drop the hosts agents may
+	// use it for (the server forgets them with the old name).
+	let renameBlocked: string | null = null;
+	if (row.locked) renameBlocked = t("agentUse.vault.renameLocked");
+	else if (secret && agentUse?.hostsOf(row.localKey) !== undefined) {
+		renameBlocked = t("agentUse.control.renameBlocked");
+	}
 	return (
 		<tr data-id="var-table-row" data-key={variable.key}>
 			<td className={CELL}>
 				<input
 					type="text"
 					value={variable.key}
-					readOnly={!canEdit}
+					readOnly={!canEdit || renameBlocked !== null}
 					aria-label={t("environments.table.nameOf", { n: index + 1 })}
 					aria-invalid={duplicate || undefined}
-					title={duplicate ? t("environments.table.duplicate") : undefined}
+					title={
+						duplicate
+							? t("environments.table.duplicate")
+							: (renameBlocked ?? undefined)
+					}
 					data-id="var-table-name"
 					className={cn(FIELD, "font-mono", duplicate && "border-error")}
 					onChange={(e) =>

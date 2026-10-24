@@ -19,6 +19,11 @@ export interface AgentSecretUse {
 	hosts: string[];
 }
 
+/** Query key of a scope's uses; the prefix alone covers every scope. */
+export const AGENT_USES_KEY = ["agent-secret-uses"] as const;
+export const agentUsesKey = (target: AgentUseTarget | null) =>
+	[...AGENT_USES_KEY, target?.kind ?? "", target?.id ?? ""] as const;
+
 const pathOf = (target: AgentUseTarget, key?: string): string => {
 	const base = `/api/v1/agent-secret-uses/${target.kind}/${encodeURIComponent(target.id)}`;
 	return key === undefined ? base : `${base}/${encodeURIComponent(key)}`;

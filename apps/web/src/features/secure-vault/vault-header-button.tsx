@@ -13,8 +13,9 @@ import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
+import { useVaultState } from "./use-vault-state";
 import { useVaultDialogs } from "./vault-dialogs-context";
-import { lockVault, useVaultState } from "./vault-session";
+import { lockVault } from "./vault-session";
 
 const TRIGGER = cn(
 	buttonClassName({ variant: "ghost", size: "sm" }),

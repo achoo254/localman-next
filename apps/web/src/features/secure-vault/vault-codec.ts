@@ -19,12 +19,16 @@ import {
 	requireVaultKey,
 	subscribeVault,
 	vaultKey,
-	vaultState,
 } from "./vault-session";
 
 /** `aad \0 ciphertext` → plaintext; a ciphertext's IV makes it unique. */
 const plain = new Map<string, string>();
 const unreadable = new Set<string>();
+/**
+ * Ciphertexts the server sent or this page made. Only these pass as
+ * already sealed: a secret typed to look like `lmv1:…` is sealed anyway.
+ */
+const ciphers = new Set<string>();
 const pending = new Map<string, Promise<void>>();
 let version = 0;
 const listeners = new Set<() => void>();
@@ -43,13 +47,16 @@ function decrypt(aad: string, cipher: string): Promise<void> {
 	const running = pending.get(id);
 	if (running) return running;
 	if (!key || plain.has(id) || unreadable.has(id)) return Promise.resolve();
+	// Only while the key that did the work is still the vault's key: a
+	// lock (or a reset) meanwhile must not leave plaintext behind.
+	const current = () => vaultKey() === key;
 	const work = openValue(key, cipher, aad)
 		.then((text) => {
-			plain.set(id, text);
+			if (current()) plain.set(id, text);
 		})
 		.catch(() => {
 			// Another vault's value, or one moved onto another name.
-			unreadable.add(id);
+			if (current()) unreadable.add(id);
 		})
 		.finally(() => {
 			pending.delete(id);
@@ -67,16 +74,22 @@ export async function settleLocalValues(
 	scope: string,
 	values: readonly LocalValue[],
 ): Promise<void> {
+	const sealed = values.filter((entry) => isVaultCiphertext(entry.value));
+	if (sealed.length === 0) return;
+	// Right after a page load the key may still be on its way from storage.
+	await loadVault().catch(() => undefined);
 	await Promise.all(
-		values
-			.filter((entry) => isVaultCiphertext(entry.value))
-			.map((entry) => decrypt(valueAad(scope, entry.key), entry.value)),
+		sealed.map((entry) => {
+			ciphers.add(entry.value);
+			return decrypt(valueAad(scope, entry.key), entry.value);
+		}),
 	);
 }
 
 /**
  * The caller's local values of `scope` as they can be used now: vault
- * values decrypted when possible, else `locked` (value empty).
+ * values decrypted when possible, else `locked` (value empty), and also
+ * `unreadable` when the open vault cannot decrypt them (another vault's).
  */
 export function openLocalValues(
 	scope: string,
@@ -84,11 +97,15 @@ export function openLocalValues(
 ): LocalValue[] {
 	return values.map((entry) => {
 		if (!isVaultCiphertext(entry.value)) return entry;
+		ciphers.add(entry.value);
 		const aad = valueAad(scope, entry.key);
 		const id = cacheId(aad, entry.value);
 		const known = plain.get(id);
 		if (known !== undefined) return { ...entry, value: known };
-		if (!unreadable.has(id)) void decrypt(aad, entry.value);
+		if (unreadable.has(id)) {
+			return { ...entry, value: "", locked: true, unreadable: true };
+		}
+		void decrypt(aad, entry.value);
 		return { ...entry, value: "", locked: true };
 	});
 }
@@ -116,7 +133,10 @@ export interface LocalTarget {
 /**
  * Writes as the server takes them: a secret's plain value encrypted for
  * its name (and remembered, so it shows at once). Nothing changes while
- * the server does not run the vault.
+ * the server does not run the vault. The server is asked about the vault
+ * only when a secret's value is about to go; if that read fails, the
+ * write fails too (and can be retried) rather than send a secret plain
+ * to a server that may run the vault.
  */
 export async function sealLocalWrites(
 	target: LocalTarget,
@@ -126,7 +146,7 @@ export async function sealLocalWrites(
 		(write) =>
 			write.value !== null &&
 			target.secretKeys.has(write.key) &&
-			!isVaultCiphertext(write.value),
+			!ciphers.has(write.value),
 	);
 	if (toSeal.length === 0) return [...writes];
 	if ((await loadVault()).status === "off") return [...writes];
@@ -136,16 +156,20 @@ export async function sealLocalWrites(
 			if (!toSeal.includes(write) || write.value === null) return write;
 			const aad = valueAad(target.scope, write.key);
 			const sealed = await sealValue(key, write.value, aad);
-			plain.set(cacheId(aad, sealed), write.value);
+			ciphers.add(sealed);
+			if (vaultKey() === key) plain.set(cacheId(aad, sealed), write.value);
 			return { ...write, value: sealed };
 		}),
 	);
 }
 
-// Opening the vault decrypts again what was seen while locked; locking or
-// resetting it forgets every plaintext.
+// Opening the vault decrypts again what was seen while locked; locking,
+// resetting or another vault's key forgets every plaintext.
+let seenKey: CryptoKey | null = null;
 subscribeVault(() => {
-	if (vaultKey() === null) plain.clear();
+	const now = vaultKey();
+	if (now !== seenKey) plain.clear();
+	seenKey = now;
 	unreadable.clear();
 	changed();
 });
@@ -168,24 +192,3 @@ export const environmentScope = (id: string): string => `environment:${id}`;
 export const globalsScope = (workspaceId: string): string =>
 	`global:${workspaceId}`;
 export const collectionScope = (id: string): string => `collection:${id}`;
-
-/** `openLocalValues` of an environment, a collection or a workspace's globals. */
-export function openScopeValues(
-	kind: "environment" | "collection" | "global",
-	id: string,
-	values: readonly LocalValue[],
-): LocalValue[] {
-	const scope =
-		kind === "environment"
-			? environmentScope(id)
-			: kind === "collection"
-				? collectionScope(id)
-				: globalsScope(id);
-	return openLocalValues(scope, values);
-}
-
-/** Whether the server runs the vault (decided once it answered). */
-export const vaultRunning = (): boolean => {
-	const { status } = vaultState();
-	return status !== "off" && status !== "loading";
-};

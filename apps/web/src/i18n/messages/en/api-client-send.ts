@@ -3,6 +3,8 @@ export const apiClientSend = {
 	preScriptFailed: "Not sent: the pre-request script stopped. {reason}",
 	secretLocked:
 		"Not sent: it uses {name}, whose value is locked in your secret vault. Unlock the vault with the lock button, then send again.",
+	secretUnreadable:
+		"Not sent: it uses {name}, whose local value was sealed by another secret vault and cannot be opened. Replace or remove that value, then send again.",
 	secretWithheld:
 		"Not sent: it uses {name}, a secret only Editors can see. Set your own local value for it in the environment, then send again.",
 	scopesDropped:

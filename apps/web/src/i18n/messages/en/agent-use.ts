@@ -29,6 +29,12 @@ export const agentUse = {
 			noneAction: "Create a vault first",
 			noneLabel: "Set a local value for {name}: create a secret vault first",
 		},
+		renameLocked:
+			"Unlock the secret vault to rename it: its local value is locked.",
+		unreadable: "Sealed by another vault: type a new value, or reset it",
+		unreadableBadge: "Can't open",
+		exists:
+			"This account already has a secret vault. Unlock it with its passphrase.",
 		needUnlock: "Unlock the secret vault first",
 		needCreate: "Create a secret vault first",
 		skipped: {
@@ -43,10 +49,12 @@ export const agentUse = {
 		failed: "We couldn't open the secret vault. Try again.",
 	},
 	control: {
-		off: "Let agents use {name}",
+		off: "Let agents use {name}: off. Choose hosts",
 		offTitle: "Let agents use: off. Choose the hosts it may be sent to",
 		on: "Let agents use {name}: on for {hosts}. Edit hosts",
 		onTitle: "Agents may use {name} when sending to {hosts}",
+		renameBlocked:
+			"Stop letting agents use it before renaming: the server forgets its hosts with the old name.",
 		gatedUnlock:
 			"Unlock the secret vault to change Let agents use for your local value.",
 		gatedCreate:

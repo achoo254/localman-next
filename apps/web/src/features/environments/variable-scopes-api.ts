@@ -8,7 +8,7 @@ import type {
 } from "@localman/shared/api-client";
 import { apiRequest } from "../../lib/api-client";
 import { expectRecord } from "../../lib/json-guards";
-import { collectionScope } from "../secure-vault/vault-codec";
+import { type LocalTarget, collectionScope } from "../secure-vault/vault-codec";
 import {
 	parseActiveEnvironment,
 	parseLocalValues,
@@ -49,18 +49,20 @@ export async function fetchCollectionLocalValues(
 	return parseLocalValues(data.localValues);
 }
 
+export const collectionLocalTarget = (
+	collectionId: string,
+	secretKeys: ReadonlySet<string> = new Set(),
+): LocalTarget => ({
+	path: collectionLocalPath(collectionId),
+	scope: collectionScope(collectionId),
+	secretKeys,
+});
+
 /** `secretKeys`: the collection's variables flagged secret. */
 export function setCollectionLocalValues(
 	collectionId: string,
 	values: LocalValueWrite[],
 	secretKeys: ReadonlySet<string> = new Set(),
 ): Promise<LocalValue[]> {
-	return patchLocal(
-		{
-			path: collectionLocalPath(collectionId),
-			scope: collectionScope(collectionId),
-			secretKeys,
-		},
-		values,
-	);
+	return patchLocal(collectionLocalTarget(collectionId, secretKeys), values);
 }

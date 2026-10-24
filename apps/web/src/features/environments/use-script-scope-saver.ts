@@ -13,13 +13,19 @@ import type {
 	SaveScopes,
 	ScopeSaveResult,
 } from "../api-client/workbench/send-hooks";
+import { fetchCollection } from "../collections/collections-api";
 import { collectionKey } from "../collections/use-collections";
-import { secretNames } from "../secure-vault/vault-codec";
 import { useCurrentWorkspace } from "../workspaces/current-workspace";
+import { fetchEnvironment, fetchGlobals } from "./environments-api";
 import {
 	setEnvironmentLocalValues,
 	setGlobalsLocalValues,
 } from "./local-values-api";
+import {
+	type ScriptScope,
+	scopeFetch,
+	writeScriptScope,
+} from "./script-scope-write";
 import {
 	activeEnvironmentKey,
 	collectionLocalKey,
@@ -28,7 +34,10 @@ import {
 	storeLocalValues,
 } from "./use-environments";
 import { useEnvironmentsEnabled } from "./use-environments-enabled";
-import { setCollectionLocalValues } from "./variable-scopes-api";
+import {
+	fetchCollectionLocalValues,
+	setCollectionLocalValues,
+} from "./variable-scopes-api";
 
 export interface ScriptScopeTargets {
 	workspaceId: string;
@@ -37,19 +46,70 @@ export interface ScriptScopeTargets {
 	collectionId: string | null;
 }
 
+const globalsScope = (client: QueryClient, id: string): ScriptScope => ({
+	agentTarget: { kind: "global", id },
+	load: () =>
+		client.fetchQuery({
+			queryKey: globalsKey(id),
+			queryFn: () => fetchGlobals(id),
+			...scopeFetch,
+		}),
+	write: async (values, secrets) =>
+		storeLocalValues(
+			client,
+			globalsKey(id),
+			await setGlobalsLocalValues(id, values, secrets),
+		),
+});
+
+const environmentScope = (client: QueryClient, id: string): ScriptScope => ({
+	agentTarget: { kind: "environment", id },
+	load: () =>
+		client.fetchQuery({
+			queryKey: environmentKey(id),
+			queryFn: () => fetchEnvironment(id),
+			...scopeFetch,
+		}),
+	write: async (values, secrets) =>
+		storeLocalValues(
+			client,
+			environmentKey(id),
+			await setEnvironmentLocalValues(id, values, secrets),
+		),
+});
+
+const collectionScope = (client: QueryClient, id: string): ScriptScope => ({
+	agentTarget: { kind: "collection", id },
+	load: async () => {
+		const [detail, localValues] = await Promise.all([
+			client.fetchQuery({
+				queryKey: collectionKey(id),
+				queryFn: () => fetchCollection(id),
+				...scopeFetch,
+			}),
+			client.fetchQuery({
+				queryKey: collectionLocalKey(id),
+				queryFn: () => fetchCollectionLocalValues(id),
+				...scopeFetch,
+			}),
+		]);
+		return { variables: detail.variables, localValues };
+	},
+	write: async (values, secrets) => {
+		client.setQueryData(
+			collectionLocalKey(id),
+			await setCollectionLocalValues(id, values, secrets),
+		);
+	},
+});
+
 export async function saveScriptScopes(
 	client: QueryClient,
 	targets: ScriptScopeTargets,
 	changes: ScriptScopeChanges,
 ): Promise<ScopeSaveResult> {
 	const { workspaceId, environmentId, collectionId } = targets;
-	const saves: Promise<unknown>[] = [];
-	const secretsIn = (key: readonly unknown[]) =>
-		secretNames(
-			client.getQueryData<{
-				variables: { key: string; type?: string; secret?: boolean }[];
-			}>(key)?.variables ?? [],
-		);
+	const saves: Promise<boolean>[] = [];
 	const dropped: ScopeSaveResult["dropped"] = [];
 	if (changes.environment.length > 0 && !environmentId) {
 		dropped.push("environment");
@@ -57,41 +117,21 @@ export async function saveScriptScopes(
 	if (changes.collectionVariables.length > 0 && !collectionId) {
 		dropped.push("collectionVariables");
 	}
+	const save = (scope: ScriptScope, writes: ScriptScopeChanges["globals"]) =>
+		saves.push(writeScriptScope(client, scope, writes));
 	if (changes.globals.length > 0) {
-		saves.push(
-			setGlobalsLocalValues(
-				workspaceId,
-				changes.globals,
-				secretsIn(globalsKey(workspaceId)),
-			).then((values) =>
-				storeLocalValues(client, globalsKey(workspaceId), values),
-			),
-		);
+		save(globalsScope(client, workspaceId), changes.globals);
 	}
 	if (changes.environment.length > 0 && environmentId) {
-		saves.push(
-			setEnvironmentLocalValues(
-				environmentId,
-				changes.environment,
-				secretsIn(environmentKey(environmentId)),
-			).then((values) =>
-				storeLocalValues(client, environmentKey(environmentId), values),
-			),
-		);
+		save(environmentScope(client, environmentId), changes.environment);
 	}
 	if (changes.collectionVariables.length > 0 && collectionId) {
-		saves.push(
-			setCollectionLocalValues(
-				collectionId,
-				changes.collectionVariables,
-				secretsIn(collectionKey(collectionId)),
-			).then((values) =>
-				client.setQueryData(collectionLocalKey(collectionId), values),
-			),
-		);
+		save(collectionScope(client, collectionId), changes.collectionVariables);
 	}
 	const results = await Promise.allSettled(saves);
-	const saved = results.every((result) => result.status === "fulfilled");
+	const saved = results.every(
+		(result) => result.status === "fulfilled" && result.value,
+	);
 	return { saved, dropped };
 }
 

@@ -10,6 +10,9 @@ export const variables = {
 	tooltip: {
 		empty: "(empty)",
 		secret: "Secret value hidden",
+		unreadableValue: "Sealed by another vault",
+		unreadableNote:
+			"Your local value of this secret ({scope}) was sealed by another vault and cannot be opened. Requests using <code>{token}</code> stop until you replace or remove it.",
 		withheld: "Hidden from you: set your own local value to use it",
 		locked: "Locked",
 		lockedValue: "Locked in the vault",

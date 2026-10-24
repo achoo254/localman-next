@@ -21,18 +21,36 @@ import { setCollectionLocalValues } from "../../environments/variable-scopes-api
 import type { AgentUseTarget } from "./agent-use-api";
 
 /**
+ * Names whose new local value must carry a copy for agents: those the
+ * server says keep one (`agentUse` of the local values it answered) and
+ * those whose use is on (`uses`, when loaded), whose copy must start.
+ */
+export function agentCopyKeys(
+	localValues: readonly { key: string; agentUse?: boolean }[],
+	uses: readonly { key: string }[] | null | undefined,
+): Set<string> {
+	return new Set([
+		...localValues.filter((entry) => entry.agentUse).map((entry) => entry.key),
+		...(uses ?? []).map((use) => use.key),
+	]);
+}
+
+/**
  * Writes with the agents' copy added to each value set for a name in
- * `agentKeys` (the secrets whose use is on). Removing a value keeps the
- * use: agents then use the shared value, for the same hosts.
+ * `agentKeys` that is still a secret (`secretKeys`: a copy of anything
+ * else is refused). Removing a value keeps the use: agents then use the
+ * shared value, for the same hosts.
  */
 export function withAgentCopies(
 	writes: readonly LocalValueWrite[],
 	agentKeys: ReadonlySet<string>,
+	secretKeys: ReadonlySet<string>,
 ): LocalValueWrite[] {
 	return writes.map((write) =>
 		write.value !== null &&
 		write.agentValue === undefined &&
-		agentKeys.has(write.key)
+		agentKeys.has(write.key) &&
+		secretKeys.has(write.key)
 			? { ...write, agentValue: write.value }
 			: write,
 	);

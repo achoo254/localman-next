@@ -40,6 +40,13 @@ export function CollectionVariableRow(props: CollectionVariableRowProps) {
 	const sharedLabel = local
 		? "environments.table.sharedOf"
 		: "collections.page.variables.valueOf";
+	// Renaming would strand a locked value, or drop the hosts agents may
+	// use it for (the server forgets them with the old name).
+	let renameBlocked: string | null = null;
+	if (local?.lockedOf(key)) renameBlocked = t("agentUse.vault.renameLocked");
+	else if (v.secret && props.agentUse?.hostsOf(key) !== undefined) {
+		renameBlocked = t("agentUse.control.renameBlocked");
+	}
 	return (
 		<tr data-id="collection-variable">
 			<td className={VARIABLE_CELL}>
@@ -56,7 +63,8 @@ export function CollectionVariableRow(props: CollectionVariableRowProps) {
 				<input
 					type="text"
 					value={v.key}
-					readOnly={!canEdit}
+					readOnly={!canEdit || renameBlocked !== null}
+					title={renameBlocked ?? undefined}
 					aria-label={t("collections.page.variables.keyOf", { n: index + 1 })}
 					className={FIELD}
 					onFocus={() => {
@@ -72,6 +80,7 @@ export function CollectionVariableRow(props: CollectionVariableRowProps) {
 					label={name}
 					value={local.valueOf(key)}
 					locked={local.lockedOf(key)}
+					unreadable={local.unreadableOf(key)}
 					ready={local.ready}
 					className={VARIABLE_CELL}
 					onSave={(value) => local.save(key, value)}

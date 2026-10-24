@@ -1,6 +1,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiError } from "../../lib/api-client";
 import { VaultCreateDialog } from "./vault-create-dialog";
 import { lockVault, resetVaultSession, vaultState } from "./vault-session";
 import {
@@ -26,16 +27,18 @@ const PASSPHRASE = "correct horse battery";
 function renderCreate(afterReset = false) {
 	const onCreated = vi.fn();
 	const onCancel = vi.fn();
+	const onExists = vi.fn();
 	renderVault(
 		<VaultCreateDialog
 			open
 			afterReset={afterReset}
 			onCancel={onCancel}
 			onCreated={onCreated}
+			onExists={onExists}
 			onCloseAutoFocus={() => undefined}
 		/>,
 	);
-	return { onCreated, onCancel };
+	return { onCreated, onCancel, onExists };
 }
 
 const passphrase = () => screen.getByLabelText("Passphrase");
@@ -111,6 +114,25 @@ describe("VaultCreateDialog", () => {
 		expect(onCreated).not.toHaveBeenCalled();
 		expect(passphrase()).toHaveValue(PASSPHRASE);
 		expect(submit()).toBeEnabled();
+	});
+
+	it("turns to unlocking when the account has a vault already", async () => {
+		const existing = {
+			salt: "A".repeat(22),
+			iterations: 600_000,
+			check: `lmv1:${"B".repeat(60)}`,
+		};
+		vaultServer.saveError = new ApiError(409, "SECRET_VAULT_EXISTS", "exists");
+		const { onCreated, onExists } = renderCreate();
+		await userEvent.type(passphrase(), PASSPHRASE);
+		await userEvent.type(confirm(), PASSPHRASE);
+		await userEvent.click(ack());
+		vaultServer.params = existing;
+		await userEvent.click(submit());
+		await waitFor(() => expect(onExists).toHaveBeenCalledTimes(1));
+		expect(onCreated).not.toHaveBeenCalled();
+		// Read again: the unlock dialog has the vault to open.
+		expect(vaultState()).toEqual({ status: "locked", params: existing });
 	});
 
 	it("shows and hides the passphrase", async () => {

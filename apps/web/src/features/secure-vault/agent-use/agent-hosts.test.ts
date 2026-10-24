@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { withAgentCopies } from "./agent-copy";
+import { agentCopyKeys, withAgentCopies } from "./agent-copy";
 import {
 	agentHostsLabel,
 	hostSuggestions,
@@ -114,21 +114,36 @@ describe("suggestions from base URLs", () => {
 });
 
 describe("copies for agents", () => {
-	it("adds the copy to values set for names whose use is on", () => {
-		const keys = new Set(["token"]);
+	it("adds the copy to values set for secrets whose use is on", () => {
+		const keys = new Set(["token", "lapsed"]);
+		// "lapsed" is no longer a secret: a copy of it would be refused.
+		const secrets = new Set(["token"]);
 		expect(
 			withAgentCopies(
 				[
 					{ key: "token", value: "new" },
 					{ key: "token", value: null },
 					{ key: "other", value: "x" },
+					{ key: "lapsed", value: "y" },
 				],
 				keys,
+				secrets,
 			),
 		).toEqual([
 			{ key: "token", value: "new", agentValue: "new" },
 			{ key: "token", value: null },
 			{ key: "other", value: "x" },
+			{ key: "lapsed", value: "y" },
 		]);
+	});
+
+	it("counts the server's word on a value before the uses load", () => {
+		expect(
+			agentCopyKeys(
+				[{ key: "token", agentUse: true }, { key: "plain" }],
+				undefined,
+			),
+		).toEqual(new Set(["token"]));
+		expect(agentCopyKeys([], [{ key: "apiKey" }])).toEqual(new Set(["apiKey"]));
 	});
 });

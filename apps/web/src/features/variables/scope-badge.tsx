@@ -33,7 +33,10 @@ export function shownValue(
 	t: Translate,
 ): { text: string; muted: boolean } {
 	if (candidate.locked) {
-		return { text: t("variables.tooltip.lockedValue"), muted: true };
+		const key = candidate.unreadable
+			? "variables.tooltip.unreadableValue"
+			: "variables.tooltip.lockedValue";
+		return { text: t(key), muted: true };
 	}
 	if (candidate.withheld) {
 		return { text: t("variables.tooltip.withheld"), muted: true };

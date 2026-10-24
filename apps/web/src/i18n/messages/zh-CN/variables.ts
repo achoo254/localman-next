@@ -11,6 +11,9 @@ export const variables: Messages["variables"] = {
 	tooltip: {
 		empty: "（空）",
 		secret: "secret 值已隐藏",
+		unreadableValue: "由另一个密钥库加密",
+		unreadableNote:
+			"这个 secret 的本地值（{scope}）由另一个密钥库加密，无法打开。使用 <code>{token}</code> 的请求会停止，直到你替换或删除它。",
 		withheld: "对你隐藏：设置你自己的 local 值即可使用",
 		locked: "已锁定",
 		lockedValue: "已锁在密钥库中",

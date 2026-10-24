@@ -89,7 +89,7 @@ describe("secret collection variables and the vault", () => {
 		).toHaveTextContent("1 local value of a secret variable is hidden");
 		// The local value needs the vault: "Let agents use" says so.
 		expect(
-			screen.getByRole("button", { name: "Let agents use token" }),
+			screen.getByRole("button", { name: /^Let agents use token: off/ }),
 		).toHaveAttribute("aria-disabled", "true");
 		await user.click(cell);
 		await waitFor(() => expect(prompt).toHaveBeenCalledWith("unlock"));
@@ -99,7 +99,7 @@ describe("secret collection variables and the vault", () => {
 		const { calls } = renderShop([]);
 		const user = await openVariables();
 		await user.click(
-			await screen.findByRole("button", { name: "Let agents use token" }),
+			await screen.findByRole("button", { name: /^Let agents use token: off/ }),
 		);
 		const dialog = await screen.findByRole("dialog");
 		expect(
@@ -118,6 +118,6 @@ describe("secret collection variables and the vault", () => {
 			await screen.findByRole("button", {
 				name: "Let agents use token: on for shop.example.com. Edit hosts",
 			}),
-		).toHaveAttribute("aria-pressed", "true");
+		).toHaveTextContent("shop.example.com");
 	});
 });

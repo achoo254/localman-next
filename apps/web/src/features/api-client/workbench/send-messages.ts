@@ -3,7 +3,11 @@
  * the language on screen. Plain functions (the sender runs outside React),
  * so they read the active translator.
  */
-import type { RequestPrepareError } from "@localman/shared/api-client";
+import {
+	type RequestPrepareError,
+	type ResolverLayer,
+	resolveVariable,
+} from "@localman/shared/api-client";
 import type { ScriptError } from "@localman/shared/api-client/script-sandbox";
 import { activeTranslator } from "../../../i18n/active-translator";
 
@@ -22,6 +26,22 @@ export function prepareErrorMessage(error: RequestPrepareError): string {
 		case "BODY_TOO_LARGE":
 			return t("apiClient.send.prepare.bodyTooLarge");
 	}
+}
+
+/**
+ * Why a send stops on the secret `name` it cannot fill in: locked in the
+ * vault (unlocking helps), sealed by another vault (only replacing the
+ * value helps), or a shared secret only Editors can see.
+ */
+export function withheldMessage(
+	name: string,
+	layers: readonly ResolverLayer[] | undefined,
+): string {
+	const { t } = activeTranslator();
+	const winner = layers ? resolveVariable(name, layers).winner : null;
+	if (winner?.unreadable) return t("apiClient.send.secretUnreadable", { name });
+	if (winner?.locked) return t("apiClient.send.secretLocked", { name });
+	return t("apiClient.send.secretWithheld", { name });
 }
 
 /** What went wrong in a script, with the line when the engine gave one. */

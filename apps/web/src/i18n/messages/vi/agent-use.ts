@@ -25,6 +25,10 @@ export const agentUse: Messages["agentUse"] = {
 			noneAction: "Cần tạo kho",
 			noneLabel: "Đặt giá trị local cho {name}: cần tạo kho secret trước",
 		},
+		renameLocked: "Mở kho secret để đổi tên: giá trị local của biến đang khoá.",
+		unreadable: "Mã hoá bằng kho khác: nhập giá trị mới hoặc reset",
+		unreadableBadge: "Không mở được",
+		exists: "Tài khoản này đã có kho secret. Hãy mở bằng passphrase của kho.",
 		needUnlock: "Mở kho secret trước",
 		needCreate: "Cần tạo kho secret trước",
 		skipped: {
@@ -35,10 +39,12 @@ export const agentUse: Messages["agentUse"] = {
 		failed: "Không mở được kho secret. Hãy thử lại.",
 	},
 	control: {
-		off: "Cho agent dùng {name}",
+		off: "Cho agent dùng {name}: đang tắt. Chọn host",
 		offTitle: "Cho agent dùng: đang tắt. Bấm để chọn host được phép",
 		on: "Cho agent dùng {name}: đang bật cho {hosts}. Sửa host",
 		onTitle: "Agent được dùng {name} khi gửi tới {hosts}",
+		renameBlocked:
+			"Tắt cho agent dùng trước khi đổi tên: server bỏ danh sách host theo tên cũ.",
 		gatedUnlock: "Mở kho secret để đổi Cho agent dùng của giá trị local.",
 		gatedCreate: "Tạo kho secret để đổi Cho agent dùng của giá trị local.",
 	},

@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import {
 	type ReactNode,
 	useCallback,
@@ -8,7 +9,8 @@ import {
 } from "react";
 import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
-import { useSecretVaultEnabled } from "./use-secret-vault-enabled";
+import { ENVIRONMENTS_KEY } from "../environments/use-environments";
+import { AGENT_USES_KEY } from "./agent-use/agent-use-api";
 import { VaultCreateDialog } from "./vault-create-dialog";
 import {
 	type VaultDialog,
@@ -17,7 +19,7 @@ import {
 	VaultDialogsContext,
 } from "./vault-dialogs-context";
 import { VaultResetDialog } from "./vault-reset-dialog";
-import { setVaultPrompt } from "./vault-session";
+import { onVaultReset, setVaultPrompt } from "./vault-session";
 import { VaultUnlockDialog } from "./vault-unlock-dialog";
 
 interface Shown {
@@ -29,26 +31,24 @@ interface Shown {
 /**
  * The vault dialogs of the signed-in app, mounted once in the shell. Opens
  * them for the header button (`useVaultDialogs`) and for `requireVaultKey`
- * (the prompt it installs while mounted): that promise resolves `true` once
- * the vault is open, through unlock or forgot → reset → create, and `false`
- * when the person closes a dialog without opening it.
+ * (the prompt it installs while mounted): every ask waiting at once gets
+ * `true` once the vault is open, through unlock or forgot → reset → create,
+ * and `false` when the person closes a dialog without opening it.
+ *
+ * Mounted whatever the web flag says: the server decides whether secret
+ * values are sealed, and a save that needs the vault must be able to ask
+ * for it. Closed dialogs render nothing and ask the server nothing, so a
+ * server without the vault never sees a difference.
  */
 export function VaultDialogHost({ children }: { children: ReactNode }) {
-	return useSecretVaultEnabled() ? (
-		<VaultDialogsRoot>{children}</VaultDialogsRoot>
-	) : (
-		children
-	);
-}
-
-function VaultDialogsRoot({ children }: { children: ReactNode }) {
 	const t = useT();
 	const toast = useToast();
+	const client = useQueryClient();
 	const [shown, setShown] = useState<Shown | null>(null);
 	// Read by close handlers that run right after a hand-over (reset →
 	// create) and before the re-render: the state there would be stale.
 	const current = useRef<Shown | null>(null);
-	const pending = useRef<((open: boolean) => void) | null>(null);
+	const pending = useRef<((open: boolean) => void)[]>([]);
 	const opener = useRef<VaultDialogOpener | null>(null);
 
 	const show = useCallback((next: Shown | null) => {
@@ -57,9 +57,9 @@ function VaultDialogsRoot({ children }: { children: ReactNode }) {
 	}, []);
 
 	const settle = useCallback((open: boolean) => {
-		const resolve = pending.current;
-		pending.current = null;
-		resolve?.(open);
+		const waiting = pending.current;
+		pending.current = [];
+		for (const resolve of waiting) resolve(open);
 	}, []);
 
 	const open = useCallback<VaultDialogs["open"]>(
@@ -76,9 +76,9 @@ function VaultDialogsRoot({ children }: { children: ReactNode }) {
 		setVaultPrompt(
 			(need) =>
 				new Promise<boolean>((resolve) => {
-					settle(false); // a newer ask replaces one left unanswered
-					pending.current = resolve;
-					open(need);
+					// Asks while a dialog is up wait for that same dialog.
+					pending.current.push(resolve);
+					if (!current.current) open(need);
 				}),
 		);
 		return () => {
@@ -109,6 +109,17 @@ function VaultDialogsRoot({ children }: { children: ReactNode }) {
 		if (target?.isConnected) target.focus();
 	};
 
+	// A reset (here or in another tab) dropped the vault values: reload
+	// what showed them, and the agents' uses that went with them.
+	useEffect(
+		() =>
+			onVaultReset(() => {
+				void client.invalidateQueries({ queryKey: ENVIRONMENTS_KEY });
+				void client.invalidateQueries({ queryKey: AGENT_USES_KEY });
+			}),
+		[client],
+	);
+
 	const value = useMemo<VaultDialogs>(() => ({ open }), [open]);
 
 	return (
@@ -119,6 +130,10 @@ function VaultDialogsRoot({ children }: { children: ReactNode }) {
 				afterReset={shown?.afterReset ?? false}
 				onCancel={() => cancel("create")}
 				onCreated={() => opened(t("secretVault.create.created"))}
+				onExists={() => {
+					toast.show({ tone: "info", title: t("agentUse.vault.exists") });
+					show({ dialog: "unlock", afterReset: false });
+				}}
 				onCloseAutoFocus={returnFocus}
 			/>
 			<VaultUnlockDialog

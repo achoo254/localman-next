@@ -1,10 +1,10 @@
 import type { VariableView } from "@localman/shared/api-client";
 import { describe, expect, it } from "vitest";
+import { mergedLocal } from "./local-value-map";
 import {
 	blankDraft,
 	draftsOf,
 	duplicateNames,
-	mergedLocal,
 	rowsOf,
 	toWrites,
 } from "./variable-rows";

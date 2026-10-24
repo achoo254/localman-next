@@ -20,9 +20,10 @@ const CHIP =
 	"tint-soft inline-flex min-h-8 max-w-44 cursor-pointer items-center gap-1 rounded-sm border px-2 font-mono text-(--tone-fg) text-xs [--tone-fg:var(--c-primary)] [--tone:var(--c-primary)] pointer-coarse:min-h-10";
 
 /**
- * "Let agents use" of a secret row: a robot toggle while off, the hosts
- * ("api.example.com +2") while on; both open the dialog. A local value
- * needs the vault open: the control then only says so.
+ * "Let agents use" of a secret row: a robot button while off, the hosts
+ * ("api.example.com +2") while on. Either opens the dialog (hence a
+ * button with a popup, not a toggle); its name says whether it is on. A
+ * local value needs the vault open: the control then only says so.
  */
 export function AgentUseControl({ scope, subject }: AgentUseControlProps) {
 	const t = useT();
@@ -47,7 +48,6 @@ export function AgentUseControl({ scope, subject }: AgentUseControlProps) {
 	return (
 		<button
 			type="button"
-			aria-pressed={on}
 			aria-haspopup="dialog"
 			aria-disabled={gated || undefined}
 			aria-label={

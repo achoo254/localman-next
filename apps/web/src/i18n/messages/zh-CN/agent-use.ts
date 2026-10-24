@@ -25,6 +25,10 @@ export const agentUse: Messages["agentUse"] = {
 			noneAction: "需先创建密钥库",
 			noneLabel: "为 {name} 设置本地值：需先创建密钥库",
 		},
+		renameLocked: "解锁密钥库后才能重命名：它的本地值已锁定。",
+		unreadable: "由另一个密钥库加密：输入新值或重置",
+		unreadableBadge: "无法打开",
+		exists: "此账号已有密钥库，请用它的口令解锁。",
 		needUnlock: "请先解锁密钥库",
 		needCreate: "请先创建密钥库",
 		skipped: {
@@ -35,10 +39,12 @@ export const agentUse: Messages["agentUse"] = {
 		failed: "无法打开密钥库，请重试。",
 	},
 	control: {
-		off: "允许 agent 使用 {name}",
+		off: "允许 agent 使用 {name}：已关闭。选择主机",
 		offTitle: "允许 agent 使用：已关闭。点击选择允许的主机",
 		on: "允许 agent 使用 {name}：已对 {hosts} 开启。编辑主机",
 		onTitle: "agent 向 {hosts} 发送请求时可以使用 {name}",
+		renameBlocked:
+			"重命名前请先停止允许 agent 使用：服务器会随旧名称删除主机列表。",
 		gatedUnlock: "解锁密钥库后才能更改本地值的“允许 agent 使用”。",
 		gatedCreate: "创建密钥库后才能更改本地值的“允许 agent 使用”。",
 	},

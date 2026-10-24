@@ -55,10 +55,13 @@ export function parseLocalValues(value: unknown): LocalValue[] {
 	if (!Array.isArray(value)) throw new InvalidResponseError("local values");
 	return value.map((item) => {
 		const data = expectRecord(item, "local value");
-		return {
+		const entry = {
 			key: expectString(data, "key"),
 			value: expectString(data, "value"),
 		};
+		// The server keeps a copy for agents (ADR-0009): a new value of it
+		// must carry the copy again, or the server drops it.
+		return data.agentUse === true ? { ...entry, agentUse: true } : entry;
 	});
 }
 

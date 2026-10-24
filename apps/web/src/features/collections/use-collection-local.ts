@@ -3,6 +3,7 @@
  * on): never synced, used instead of the shared value when they send.
  * Any role may set them, Viewers included.
  */
+import type { LocalValue } from "@localman/shared/api-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
@@ -11,8 +12,14 @@ import {
 	collectionLocalKey,
 	useCollectionLocalValues,
 } from "../environments/use-environments";
-import { setCollectionLocalValues } from "../environments/variable-scopes-api";
-import { withAgentCopies } from "../secure-vault/agent-use/agent-copy";
+import {
+	collectionLocalTarget,
+	setCollectionLocalValues,
+} from "../environments/variable-scopes-api";
+import {
+	agentCopyKeys,
+	withAgentCopies,
+} from "../secure-vault/agent-use/agent-copy";
 import { useResealLegacy } from "../secure-vault/use-reseal-legacy";
 import {
 	collectionScope,
@@ -29,6 +36,8 @@ export interface CollectionLocal {
 	valueOf: (key: string) => string | null;
 	/** The caller's value of `key` is locked in the vault (unreadable now). */
 	lockedOf: (key: string) => boolean;
+	/** Locked for good: sealed by another vault (replace or remove it). */
+	unreadableOf: (key: string) => boolean;
 	/** `null` goes back to the shared value. */
 	save: (key: string, value: string | null) => void;
 	/** A renamed variable: its own value follows (unless the name has one). */
@@ -55,7 +64,12 @@ export function useCollectionLocal(
 		mutationFn: (writes: LocalValueWrite[]) =>
 			setCollectionLocalValues(
 				collectionId ?? "",
-				withAgentCopies(writes, agentKeys),
+				withAgentCopies(
+					writes,
+					// The server's word on each value counts before the uses load.
+					new Set([...agentKeys, ...agentCopyKeys(query.data ?? [], null)]),
+					secretKeys,
+				),
 				secretKeys,
 			),
 		onSuccess: (values) =>
@@ -67,11 +81,12 @@ export function useCollectionLocal(
 					: { tone: "error", title: collectionErrorMessage(error, t) },
 			),
 	});
+	const localKey = collectionLocalKey(collectionId ?? "");
 	useResealLegacy(
-		collectionId ? collectionScope(collectionId) : null,
+		collectionId ? collectionLocalTarget(collectionId, secretKeys) : null,
 		query.data ?? [],
-		secretKeys,
-		(writes) => mutation.mutateAsync(writes),
+		() => client.getQueryData<LocalValue[]>(localKey),
+		(values) => client.setQueryData(localKey, values),
 	);
 	useVaultValues();
 	const opened = collectionId
@@ -84,12 +99,16 @@ export function useCollectionLocal(
 	return {
 		ready: query.isSuccess,
 		valueOf: (key) => values.get(key) ?? null,
-		lockedOf: (key) => opened.some((v) => v.key === key && v.locked === true),
+		lockedOf: (key) =>
+			opened.some((v) => v.key === key && v.locked && !v.unreadable),
+		unreadableOf: (key) =>
+			opened.some((v) => v.key === key && v.unreadable === true),
 		save: (key, value) => mutation.mutate([{ key, value }]),
 		move: (from, to) => {
 			const value = values.get(from);
 			if (!from || !to || from === to || value === undefined) return;
-			if (values.has(to)) return;
+			// Never onto a name that has a value, readable or locked.
+			if (values.has(to) || opened.some((v) => v.key === to)) return;
 			mutation.mutate([
 				{ key: to, value },
 				{ key: from, value: null },

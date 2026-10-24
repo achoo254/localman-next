@@ -11,6 +11,9 @@ export const variables: Messages["variables"] = {
 	tooltip: {
 		empty: "(rỗng)",
 		secret: "Giá trị secret đã được che",
+		unreadableValue: "Mã hoá bằng kho khác",
+		unreadableNote:
+			"Giá trị local của biến secret này ({scope}) được mã hoá bằng một kho khác nên không mở được. Request dùng <code>{token}</code> sẽ dừng cho tới khi bạn thay hoặc xoá giá trị đó.",
 		withheld: "Bị ẩn với bạn: đặt giá trị local của riêng bạn để dùng biến này",
 		locked: "Đã khoá",
 		lockedValue: "Đang khoá trong kho",

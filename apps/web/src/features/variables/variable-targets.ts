@@ -16,7 +16,7 @@ import {
 	type TemporaryVariable,
 	temporaryLayer,
 } from "../api-client/workbench/temporary-variables";
-import { openScopeValues } from "../secure-vault/vault-codec";
+import { openScopeValues } from "../secure-vault/open-scope-values";
 
 export const TARGET_SCOPES = [
 	"environment",

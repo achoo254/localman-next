@@ -11,7 +11,6 @@ import {
 	type ScriptScopeValues,
 	type VariableScope,
 	prepareRequest,
-	resolveVariable,
 	withScriptScopes,
 } from "@localman/shared/api-client";
 import type { ScriptRunner } from "@localman/shared/api-client/script-sandbox";
@@ -22,7 +21,11 @@ import { fakerForSend } from "./faker-loader";
 import { nonBlankScripts, runPostScripts, runPreScripts } from "./script-chain";
 import { givenScopesOf, reportScopes } from "./script-scopes";
 import { scriptVariableScope } from "./script-steps";
-import { prepareErrorMessage, scriptErrorMessage } from "./send-messages";
+import {
+	prepareErrorMessage,
+	scriptErrorMessage,
+	withheldMessage,
+} from "./send-messages";
 import type { SendInput } from "./send-types";
 import { variableScopes, withheldUsed } from "./send-variables";
 import { newId } from "./workbench-ids";
@@ -70,10 +73,9 @@ export type PrepareOutcome =
 /**
  * Runs the pre-request scripts, then fills `{{var}}`, auth and the body.
  * A tab bound to a collection request (`context`) runs the collection's
- * and folders' scripts around its own, takes the inherited auth for
- * `inherit`, and resolves `{{var}}` from, lowest to highest: globals,
- * collection and environment variables (each with the caller's local
- * values), then `lm.variables` set by the scripts.
+ * and folders' scripts around its own, takes the inherited auth, and
+ * resolves `{{var}}` from globals, collection and environment variables
+ * (with the caller's local values), then `lm.variables` of the scripts.
  */
 export async function prepareSend(
 	input: SendInput,
@@ -112,17 +114,9 @@ export async function prepareSend(
 		: undefined;
 	const withheld = withheldUsed(layers, toSend, variables);
 	if (withheld) {
-		// Locked in the vault: unlocking it (lock button) lets it go.
-		const locked =
-			layers && resolveVariable(withheld, layers).winner?.locked === true;
-		const message = t(
-			locked ? "apiClient.send.secretLocked" : "apiClient.send.secretWithheld",
-			{ name: withheld },
-		);
-		return {
-			ok: false,
-			settled: failed({ code: "SECRET_WITHHELD", message, preScript }),
-		};
+		const message = withheldMessage(withheld, layers);
+		const code = "SECRET_WITHHELD";
+		return { ok: false, settled: failed({ code, message, preScript }) };
 	}
 	const scopes: VariableScope[] = [
 		...variableScopes(layers, context),

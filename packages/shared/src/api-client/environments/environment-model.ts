@@ -80,6 +80,12 @@ export interface LocalValue {
 	 * vault is locked). It counts as withheld, so a send using it stops.
 	 */
 	locked?: boolean;
+	/**
+	 * Set by the web with `locked`: the vault is open but this value was
+	 * sealed by another vault (or for another name), so unlocking does not
+	 * help; it can only be replaced or removed.
+	 */
+	unreadable?: boolean;
 }
 
 export interface EnvironmentSummary {

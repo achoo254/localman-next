@@ -9,6 +9,8 @@ export interface LockedVariableCardProps {
 	name: string;
 	/** Where the locked value comes from ("Environment · Staging"). */
 	scope: string;
+	/** Sealed by another vault: unlocking cannot help, no button. */
+	unreadable: boolean;
 	onDone: () => void;
 }
 
@@ -19,6 +21,7 @@ export interface LockedVariableCardProps {
 export function LockedVariableCard({
 	name,
 	scope,
+	unreadable,
 	onDone,
 }: LockedVariableCardProps) {
 	const t = useT();
@@ -31,29 +34,40 @@ export function LockedVariableCard({
 				</span>
 				<Badge tone="warning" className="ml-auto">
 					<IconLock size={12} aria-hidden="true" />
-					{t("variables.tooltip.locked")}
+					{t(
+						unreadable
+							? "variables.tooltip.unreadableValue"
+							: "variables.tooltip.locked",
+					)}
 				</Badge>
 			</div>
 			<p data-id="var-tooltip-locked" className="m-0 text-muted text-xs">
 				{renderRich(
-					t("variables.tooltip.lockedNote", { scope, token: `{{${name}}}` }),
+					t(
+						unreadable
+							? "variables.tooltip.unreadableNote"
+							: "variables.tooltip.lockedNote",
+						{ scope, token: `{{${name}}}` },
+					),
 				)}
 			</p>
-			<div>
-				<Button
-					size="sm"
-					variant="secondary"
-					aria-haspopup="dialog"
-					data-id="var-tooltip-unlock"
-					onClick={() => {
-						onDone();
-						unlock();
-					}}
-				>
-					<IconLockOpen size={14} aria-hidden="true" />
-					{t("variables.tooltip.unlock")}
-				</Button>
-			</div>
+			{unreadable ? null : (
+				<div>
+					<Button
+						size="sm"
+						variant="secondary"
+						aria-haspopup="dialog"
+						data-id="var-tooltip-unlock"
+						onClick={() => {
+							onDone();
+							unlock();
+						}}
+					>
+						<IconLockOpen size={14} aria-hidden="true" />
+						{t("variables.tooltip.unlock")}
+					</Button>
+				</div>
+			)}
 		</div>
 	);
 }
