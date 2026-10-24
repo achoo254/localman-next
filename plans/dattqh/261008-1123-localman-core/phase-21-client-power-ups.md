@@ -24,6 +24,7 @@ dependencies: [10, 13, 16]
 |---|---|---|
 | Vault bắt buộc hay tự bật | **Bắt buộc**: server từ chối giá trị local của biến secret không phải bản mã `lmv1:` | 0,61 (0,22, thấp; áp ở T5, user có thể đổi trước khi T5 làm) |
 | Agent qua MCP ghi giá trị local của biến secret | **Từ chối**, lỗi nói rõ secret của user nằm trong vault của trình duyệt | 0,57 (0,14, thấp; áp ở T5) |
+| Agent qua MCP dùng secret | **Dùng mà không đọc** (user chọn 24/10/2026, Jev 1,0): `send_request` nhận `{{biến}}` kèm environment, máy chủ thay rồi che giá trị trong response; giá trị shared dùng ngay, giá trị trong vault chỉ khi user bật "Cho agent dùng" cho từng biến. Chi tiết: ADR-0009 | user + Jev 1,0 |
 | Dẫn xuất khoá | **PBKDF2-SHA256, 600.000 vòng**, WebCrypto, không thêm dependency | 0,97 |
 | Giá trị local cũ (server mã hoá) | **Mã hoá lại khi đặt passphrase**: trình duyệt đọc một lần rồi ghi lại dạng `lmv1:` | 0,99 |
 
@@ -32,6 +33,7 @@ dependencies: [10, 13, 16]
 - **Lúc gửi request**, trình duyệt giải mã. Gửi thẳng thì giá trị **không bao giờ tới server Localman**. Nếu phải chuyển sang proxy thì hỏi user trước (phase 10, bước 3); proxy chỉ thấy giá trị lúc đang chuyển đi, không lưu và không log.
 - **Giá trị shared** của biến secret giữ nguyên thiết kế của phase 13 (mã hoá phía server để chia sẻ được cho team).
 - **Quên passphrase** thì mất giá trị local của biến secret. UI cảnh báo trước và có "Xuất bản sao lưu đã mã hoá".
+- **Agent dùng secret** (`docs/decisions/0009-agents-use-secrets-without-reading-them.md`): công tắc "Cho agent dùng" trên từng biến secret, chỉ phiên trình duyệt bật được; bật thì trình duyệt gửi thêm bản mã hoá phía máy chủ của giá trị đó. Biến đã bật nằm ngoài lời hứa "Secret không rời trình duyệt", UI và trang minh bạch dữ liệu ghi rõ.
 
 ## Files to Create / Modify
 - Create `apps/web/src/features/secure-vault/` (`vault-crypto.ts`, `unlock-dialog.tsx`, `backup-export.tsx`). Modify `apps/web/src/features/environments/environment-editor.tsx`, cùng chỗ lưu giá trị local của phase 13: bản mã có tiền tố `lmv1:`.
@@ -63,6 +65,7 @@ dependencies: [10, 13, 16]
 | T3 | Viết `response-references`: parse và resolve `{{response "<tên request>" "<JSONPath>"}}`, TTL, tự gửi lại request nguồn khi hết hạn, phát hiện vòng lặp; nối vào `variable-resolver` và request preparer của phase 10; test nối 3 request | fullstack-developer | với T1, T2, T4 | `packages/shared/src/response-references.ts`, `packages/shared/src/variable-resolver.ts` |
 | T4 | Làm module docs: render từ cây resource, schema và ví dụ, có ETag cache; operation qua registry cho trang public `/docs/<slug>` | fullstack-developer | với T1, T2, T3 | `apps/api/src/modules/docs/` |
 | T5 | Nối vault vào UI: `unlock-dialog`, `backup-export`, `environment-editor` lưu bản mã `lmv1:`; phía server chặn mọi PUT giá trị local của biến secret không bắt đầu bằng `lmv1:`; xác nhận đường proxy (hỏi trước) không lưu và không log giá trị | fullstack-developer | với T6 | `apps/web/src/features/secure-vault/`, `apps/web/src/features/environments/environment-editor.tsx`, `apps/api/src/modules/environments/` |
+| T5b | Agent dùng secret qua MCP theo ADR-0009: `send_request` nhận environment (và collection) rồi thay `{{biến}}` phía máy chủ; che mọi chỗ chứa giá trị đã thay trong response, lỗi và log; công tắc "Cho agent dùng" (chỉ phiên trình duyệt, agent gọi bị từ chối) lưu bản mã hoá phía máy chủ của giá trị trong vault; biến chưa bật thì báo lỗi nêu tên biến; thêm công tắc vào prototype của T1 | fullstack-developer | sau T5 | `apps/api/src/modules/api-client/proxy-operations.ts`, `apps/api/src/modules/environments/`, `apps/web/src/features/environments/environment-editor.tsx` |
 | T6 | Làm `data-policy` là nguồn duy nhất về nơi lưu dữ liệu, proxy log gì và telemetry; trang `data-transparency-page` render từ đó; câu chữ keyword "Secret không rời trình duyệt" đúng như mục Liên quan | fullstack-developer | với T5 | `apps/api/src/config/data-policy.ts`, `apps/web/src/pages/data-transparency-page.tsx` |
 | T7 | Làm trang docs public và gợi ý `{{response …}}` trong editor (mở rộng highlighter của phase 13) | fullstack-developer | — | `apps/web/src/pages/public-docs/`, `apps/web/src/features/variables/variable-highlighter.ts` |
 | T8 | Viết E2E: đặt secret local rồi đăng nhập thiết bị khác không thấy plaintext; gửi request có secret nhận 200 và log proxy không chứa giá trị; đổi schema thì docs đổi theo; nối 3 request, TTL hết hạn thì gửi lại, vòng lặp báo lỗi | tester | — | `e2e/specs/client-power-ups.spec.ts` |
@@ -75,6 +78,7 @@ dependencies: [10, 13, 16]
 - [x] T3 `response-references` có TTL, gửi lại, phát hiện vòng lặp (24/10: `packages/shared/src/api-client/response-references.ts` thuần; workbench giữ response cuối của mỗi request trong bộ nhớ, gửi lại nguồn khi hết TTL như tab của nó, nối tối đa 5 request; chỉ dùng trong request đã lưu vào collection)
 - [x] T4 Module docs có ETag và trang public qua registry (24/10: `apps/api/src/modules/project-docs/`; operation chưa đặt được header nên trả `version` là hash nội dung thay cho ETag HTTP; docs không bao giờ có URL mock vì chứa secret, path trên `{baseUrl}` (Jev: publish bật tay 0,96; path `/p/<slug>/docs` 0,71; URL mock: placeholder, hoà 0,47 với "chủ project chọn", chọn placeholder vì ưu tiên riêng tư); cổng `PROJECT_DOCS_ENABLED`, cờ web `projectDocs`)
 - [ ] T5 Vault nối vào environment editor; server chặn PUT thiếu `lmv1:`
+- [ ] T5b Agent gửi request có secret qua MCP: nhận 200, không thấy giá trị trong response, lỗi hay log; biến vault chưa bật "Cho agent dùng" bị từ chối; agent không bật được công tắc
 - [ ] T6 `data-policy` một nguồn và trang minh bạch dữ liệu
 - [ ] T7 Trang docs public và gợi ý `{{response …}}`
 - [ ] T8 E2E pass
