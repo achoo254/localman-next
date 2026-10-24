@@ -108,7 +108,7 @@ export async function fillVariables(
 		sub,
 		templates,
 		built,
-		checked.data.url,
+		checked.data,
 		secrets,
 	);
 	return redirectAllowed

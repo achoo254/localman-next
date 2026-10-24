@@ -8,6 +8,7 @@ import {
 import type { ClientSession, Types } from "mongoose";
 import { elementNotFound } from "../access/access-policy.js";
 import { requireWorkspace } from "../workspaces/workspace-roles.js";
+import { dropAgentSecretUses } from "./agent-secret-lapse.js";
 import { requireEnvironment } from "./environment-access.js";
 import { insertEnvironment } from "./environment-insert.js";
 import {
@@ -133,6 +134,7 @@ export async function setEnvironmentVariables(
 		);
 	}
 	await alignLocalSealing(scope, types.changed, secrets);
+	await dropAgentSecretUses(scope, types.lapsed);
 	return toEnvironmentDetail(
 		sub,
 		await loadEnvironment(environmentId),

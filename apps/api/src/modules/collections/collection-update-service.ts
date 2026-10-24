@@ -4,6 +4,7 @@ import type {
 } from "@localman/shared/api-client";
 import type { z } from "zod";
 import { elementNotFound } from "../access/access-policy.js";
+import { dropLapsedCollectionSecrets } from "../environments/agent-secret-lapse.js";
 import { inWorkspaceTransaction } from "../workspaces/workspace-lock.js";
 import { requireCollection } from "./collection-access.js";
 import { rootBytes } from "./collection-bytes.js";
@@ -101,6 +102,12 @@ export async function updateCollection(
 			set,
 			revisions: [revision],
 		});
+		await dropLapsedCollectionSecrets(
+			collectionId,
+			before.variables,
+			after.variables,
+			session,
+		);
 	});
 	return loadCollectionDetail(collectionId, role, sub);
 }

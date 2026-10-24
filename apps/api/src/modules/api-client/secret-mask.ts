@@ -55,24 +55,46 @@ export function maskSecrets(text: string, secrets: readonly string[]): string {
 	return out;
 }
 
+/** A copy with ASCII `A`–`Z` lowered; other bytes (UTF-8 included) kept. */
+function asciiLower(bytes: Buffer): Buffer {
+	const out = Buffer.from(bytes);
+	for (let i = 0; i < out.length; i++) {
+		const byte = out[i] ?? 0;
+		if (byte >= 0x41 && byte <= 0x5a) out[i] = byte + 0x20;
+	}
+	return out;
+}
+
+/**
+ * Masks the forms in bytes, ASCII letters in any case like `maskSecrets`
+ * (a non-ASCII letter must match its case: bytes have no text case). The
+ * search runs on a lowered copy kept in step with the bytes, so the
+ * bytes around a match stay exactly as they came.
+ */
 function maskBytes(body: string, secrets: readonly string[]): string {
 	let bytes = Buffer.from(body, "base64");
+	let lowered = asciiLower(bytes);
 	const mask = Buffer.from(SECRET_MASK);
+	const loweredMask = asciiLower(mask);
 	for (const form of maskable(secrets)) {
-		const needle = Buffer.from(form);
+		const needle = asciiLower(Buffer.from(form));
 		const parts: Buffer[] = [];
+		const loweredParts: Buffer[] = [];
 		let from = 0;
 		for (
-			let at = bytes.indexOf(needle);
+			let at = lowered.indexOf(needle);
 			at !== -1;
-			at = bytes.indexOf(needle, from)
+			at = lowered.indexOf(needle, from)
 		) {
 			parts.push(bytes.subarray(from, at), mask);
+			loweredParts.push(lowered.subarray(from, at), loweredMask);
 			from = at + needle.length;
 		}
 		if (parts.length === 0) continue;
 		parts.push(bytes.subarray(from));
+		loweredParts.push(lowered.subarray(from));
 		bytes = Buffer.concat(parts);
+		lowered = Buffer.concat(loweredParts);
 	}
 	return bytes.toString("base64");
 }

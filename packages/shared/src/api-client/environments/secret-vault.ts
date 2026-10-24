@@ -59,7 +59,69 @@ const AGENT_HOST = new RegExp(
 	`^(?:\\*\\.)?(?:${HOST_LABEL}\\.)*${HOST_LABEL}$`,
 );
 
-/** A host (`api.example.com`) or every subdomain of one (`*.example.com`). */
+/**
+ * Shared hosting and tunnel suffixes: every subdomain of one is another
+ * customer's app, so `*.herokuapp.com` would let a secret reach anyone's
+ * app. An exact host under them (`my-app.herokuapp.com`) stays allowed.
+ * Kept by hand on purpose, without a Public Suffix List dependency: these
+ * plus the label rules of `openWildcard` cover the usual cases.
+ */
+export const SHARED_HOSTING_SUFFIXES: ReadonlySet<string> = new Set([
+	"herokuapp.com",
+	"vercel.app",
+	"netlify.app",
+	"github.io",
+	"pages.dev",
+	"workers.dev",
+	"ngrok-free.app",
+	"ngrok.io",
+	"ngrok.app",
+	"onrender.com",
+	"fly.dev",
+	"azurewebsites.net",
+	"cloudfront.net",
+	"appspot.com",
+	"firebaseapp.com",
+	"web.app",
+	"glitch.me",
+	"repl.co",
+	"replit.app",
+	"trycloudflare.com",
+	"loca.lt",
+]);
+
+/** First labels of a country's second level (`co.uk`, `com.vn`, `org.au`). */
+const SECOND_LEVEL_LABELS = new Set([
+	"co",
+	"com",
+	"net",
+	"org",
+	"gov",
+	"edu",
+	"ac",
+]);
+
+/**
+ * Whether `pattern` is a wildcard over a public suffix rather than one
+ * owner's domain: `*.com` (a single label), `*.co.uk` / `*.com.vn` (a
+ * country's second level) or a shared host (`SHARED_HOSTING_SUFFIXES`).
+ * An exact host is never open.
+ */
+export function openWildcard(pattern: string): boolean {
+	if (!pattern.startsWith("*.")) return false;
+	const base = pattern.slice(2);
+	const labels = base.split(".");
+	if (labels.length < 2) return true;
+	if (labels.length === 2 && SECOND_LEVEL_LABELS.has(labels[0] ?? "")) {
+		return true;
+	}
+	return SHARED_HOSTING_SUFFIXES.has(base);
+}
+
+/**
+ * A host (`api.example.com`) or every subdomain of one (`*.example.com`),
+ * never every subdomain of a public suffix (`openWildcard`).
+ */
 export const agentHostSchema = z
 	.string()
 	.trim()
@@ -68,6 +130,10 @@ export const agentHostSchema = z
 	.regex(
 		AGENT_HOST,
 		"must be a host name such as api.example.com or *.example.com",
+	)
+	.refine(
+		(host) => !openWildcard(host),
+		"a wildcard must cover one owner's domain, not *.com, *.co.uk or a shared host such as *.herokuapp.com",
 	);
 
 export const agentHostsSchema = z
@@ -75,15 +141,19 @@ export const agentHostsSchema = z
 	.min(1)
 	.max(AGENT_HOSTS_MAX);
 
-/** Whether `host` (any case, no port) is one of `patterns`. */
+/**
+ * Whether `host` (any case, no port) is one of `patterns`. A wildcard over
+ * a public suffix (`openWildcard`), saved before the schema refused it,
+ * matches nothing.
+ */
 export function agentHostAllowed(
 	host: string,
 	patterns: readonly string[],
 ): boolean {
 	const name = host.toLowerCase().replace(/\.$/, "");
-	return patterns.some((pattern) =>
-		pattern.startsWith("*.")
-			? name.endsWith(pattern.slice(1)) && name.length > pattern.length - 1
-			: name === pattern,
-	);
+	return patterns.some((pattern) => {
+		if (!pattern.startsWith("*.")) return name === pattern;
+		if (openWildcard(pattern)) return false;
+		return name.endsWith(pattern.slice(1)) && name.length > pattern.length - 1;
+	});
 }

@@ -1,5 +1,6 @@
 import { OperationError } from "@localman/operations";
 import {
+	type HeaderEntry,
 	type ResolverLayer,
 	VARIABLE_PATTERN,
 	agentHostAllowed,
@@ -45,17 +46,45 @@ function guardedNames(
 }
 
 /**
+ * The host name a `Host` header names, or `null` when it is not a bare
+ * `host[:port]` (a path, user info or list could route somewhere else).
+ */
+function hostHeaderName(value: string): string | null {
+	try {
+		const parsed = new URL(`http://${value.trim()}`);
+		const bare =
+			parsed.pathname === "/" &&
+			!parsed.search &&
+			!parsed.hash &&
+			!parsed.username &&
+			!parsed.password;
+		return bare && !value.includes("/") ? parsed.hostname : null;
+	} catch {
+		return null;
+	}
+}
+
+/** Where a request goes: its URL and the `Host` headers it carries. */
+export interface Destination {
+	readonly url: string;
+	readonly headers: readonly HeaderEntry[];
+}
+
+/**
  * A secret filled for an agent goes only where the user allowed it
  * (ADR-0009): its use must be turned on (409 `AGENT_USE_REQUIRED`) and the
  * request's host must be one of its hosts and not Localman's own (409
- * `AGENT_HOST_NOT_ALLOWED`). Returns the test for redirects (the same
- * rule on every hop), or `undefined` when no secret was filled.
+ * `AGENT_HOST_NOT_ALLOWED`). A `Host` header the request carries must
+ * pass the same test, since a PaaS or CDN routes by it rather than by the
+ * address. Returns the test for redirects (the same rule on every hop; a
+ * `Host` override never crosses origins, see `headersForRedirect`), or
+ * `undefined` when no secret was filled.
  */
 export async function assertSecretDestination(
 	sub: string,
 	templates: readonly string[],
 	layers: Layers,
-	url: string,
+	destination: Destination,
 	secrets: readonly string[],
 ): Promise<((to: URL) => boolean) | undefined> {
 	const guarded = guardedNames(templates, layers);
@@ -78,17 +107,29 @@ export async function assertSecretDestination(
 	const reaches = (host: string): boolean =>
 		!isLocalmanHost(host) &&
 		guarded.every((entry) => agentHostAllowed(host, hostsOf(entry) ?? []));
-	const host = new URL(url).hostname;
+	const keys = guarded.map((entry) => entry.name).join(", ");
+	const host = new URL(destination.url).hostname;
 	if (!reaches(host)) {
 		throw new OperationError(
 			409,
 			"AGENT_HOST_NOT_ALLOWED",
 			"These secrets may not be sent to this host",
-			{
-				keys: guarded.map((entry) => entry.name).join(", "),
-				host: maskSecrets(host, secrets),
-			},
+			{ keys, host: maskSecrets(host, secrets) },
 		);
+	}
+	const hostHeaders = destination.headers.filter(
+		(header) => header.name.trim().toLowerCase() === "host",
+	);
+	for (const header of hostHeaders) {
+		const named = hostHeaderName(header.value);
+		if (named === null || !reaches(named)) {
+			throw new OperationError(
+				409,
+				"AGENT_HOST_NOT_ALLOWED",
+				"These secrets may not be sent with this Host header",
+				{ keys, host: maskSecrets(header.value, secrets) },
+			);
+		}
 	}
 	return (to) => reaches(to.hostname);
 }

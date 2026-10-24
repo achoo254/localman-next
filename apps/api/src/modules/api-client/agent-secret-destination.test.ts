@@ -43,12 +43,17 @@ const allow = (env: string, hosts: string[]) =>
 		hosts,
 	});
 
-function send(ws: string, env: string, path = "/echo") {
+function send(
+	ws: string,
+	env: string,
+	path = "/echo",
+	extra: { name: string; value: string }[] = [],
+) {
 	if (!sendRequest) throw new Error("no send operation");
 	return callAsAgent(sendRequest, EVE, {
 		method: "GET",
 		url: `{{base}}${path}`,
-		headers: [{ name: "X-Api-Key", value: "{{token}}" }],
+		headers: [{ name: "X-Api-Key", value: "{{token}}" }, ...extra],
 		variables: { workspaceId: ws, environmentId: env },
 	}) as Promise<{ status: number; body: string }>;
 }
@@ -84,6 +89,32 @@ describe("where a secret filled for an agent may go", () => {
 		});
 		const res = await send(ws, env, "/away");
 		expect(res.status).toBe(307);
+	});
+
+	it("refuses a Host header naming a host the secret may not reach", async () => {
+		const { ws, env } = await environment();
+		await allow(env, ["127.0.0.1"]);
+		for (const value of [
+			"evil-app.platform.example",
+			"127.0.0.1/../evil.example",
+			"abc123.localman.hoandat.com",
+			"{{token}}.example",
+		]) {
+			await expect(
+				send(ws, env, "/echo", [{ name: "host", value }]),
+				value,
+			).rejects.toMatchObject({
+				status: 409,
+				code: "AGENT_HOST_NOT_ALLOWED",
+			});
+		}
+		await expect(
+			send(ws, env, "/echo", [{ name: "Host", value: "{{token}}.example" }]),
+		).rejects.toMatchObject({ details: { host: "[secret].example" } });
+		const same = await send(ws, env, "/echo", [
+			{ name: "Host", value: `127.0.0.1:${server.port}` },
+		]);
+		expect(same.status).toBe(200);
 	});
 
 	it("never lets a Localman host be allowed", async () => {

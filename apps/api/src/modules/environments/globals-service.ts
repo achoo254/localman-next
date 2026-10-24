@@ -13,6 +13,7 @@ import type { Types } from "mongoose";
 import { inWorkspaceTransaction } from "../workspaces/workspace-lock.js";
 import { WorkspaceModel } from "../workspaces/workspace-model.js";
 import { requireWorkspace } from "../workspaces/workspace-roles.js";
+import { dropAgentSecretUses } from "./agent-secret-lapse.js";
 import {
 	GlobalVariablesModel,
 	type StoredGlobals,
@@ -121,6 +122,7 @@ export async function setGlobals(
 		),
 	);
 	await alignLocalSealing(scope, types.changed, secrets);
+	await dropAgentSecretUses(scope, types.lapsed);
 	return toGlobalsDetail(sub, access);
 }
 

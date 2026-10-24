@@ -37,6 +37,24 @@ describe("secret masking", () => {
 		);
 	});
 
+	it("masks a binary body in any ASCII case, keeping the bytes around", () => {
+		const raw = Buffer.concat([
+			Buffer.from([0xff, 0x41]),
+			Buffer.from("TOK-ABCdef|tok-abcDEF|Tok-AbcDef"),
+			Buffer.from([0x5a, 0x00]),
+		]);
+		const masked = maskResponse(response(raw.toString("base64"), "base64"), [
+			"tok-abcdef",
+		]);
+		expect(Buffer.from(masked.body, "base64")).toEqual(
+			Buffer.concat([
+				Buffer.from([0xff, 0x41]),
+				Buffer.from("[secret]|[secret]|[secret]"),
+				Buffer.from([0x5a, 0x00]),
+			]),
+		);
+	});
+
 	it("masks an error's message and text details", () => {
 		const error = maskError(
 			new OperationError(502, "PROXY_DNS_FAILED", "no tok-123456.test", {

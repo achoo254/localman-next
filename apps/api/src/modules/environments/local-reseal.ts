@@ -75,15 +75,15 @@ export async function alignLocalSealing(
 	if (writes.length > 0) await LocalVariableValueModel.bulkWrite(writes);
 }
 
-/** Names whose type changed between two sets of secret names. */
+/**
+ * Names whose type changed between two sets of secret names: `lapsed`
+ * ones are no longer secrets (type changed back or variable removed).
+ */
 export function typeChanges(
 	before: ReadonlySet<string>,
 	after: ReadonlySet<string>,
-): { changed: string[]; newlySecret: string[] } {
+): { changed: string[]; newlySecret: string[]; lapsed: string[] } {
 	const newlySecret = [...after].filter((key) => !before.has(key));
-	const changed = [
-		...newlySecret,
-		...[...before].filter((key) => !after.has(key)),
-	];
-	return { changed, newlySecret };
+	const lapsed = [...before].filter((key) => !after.has(key));
+	return { changed: [...newlySecret, ...lapsed], newlySecret, lapsed };
 }

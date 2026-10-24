@@ -1,5 +1,6 @@
 import { COLLECTION_NODES_MAX } from "@localman/shared/api-client";
 import { type ClientSession, Types } from "mongoose";
+import { dropLapsedCollectionSecrets } from "../environments/agent-secret-lapse.js";
 import {
 	COLLECTION_BYTES_MAX,
 	collectionTooLarge,
@@ -72,6 +73,12 @@ export async function writeCollectionState(
 		set: { ...target.root, searchName: foldSearchText(target.root.name) },
 		revisions: [revision],
 	});
+	await dropLapsedCollectionSecrets(
+		collectionId,
+		current.root.variables,
+		target.root.variables,
+		session,
+	);
 	const same = (id: string) =>
 		JSON.stringify(current.nodes[id]) === JSON.stringify(target.nodes[id]);
 	const staleIds = Object.keys(current.nodes)
