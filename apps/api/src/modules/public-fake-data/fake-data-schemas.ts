@@ -10,6 +10,9 @@ import { z } from "zod";
 export const FAKE_DATA_NOTICE =
 	"Fake data for testing only. Every value is invented at random: no real person, address, phone subscriber, ID card or company is meant.";
 
+/** Largest `seed`: the generators take seeds modulo 2^32. */
+export const FAKE_DATA_MAX_SEED = 2 ** 32 - 1;
+
 export const fakeDataInput = z.object({
 	type: z.enum(VN_FAKE_DATA_TYPES).default("person"),
 	count: z
@@ -19,6 +22,8 @@ export const fakeDataInput = z.object({
 		.max(VN_FAKE_DATA_MAX_COUNT)
 		.default(10),
 	locale: z.enum(VN_FAKE_DATA_LOCALES).default("vi"),
+	/** Same seed, same records (birth dates count back from today). */
+	seed: z.number().int().min(0).max(FAKE_DATA_MAX_SEED).optional(),
 });
 
 const gender = z.enum(["male", "female"]);

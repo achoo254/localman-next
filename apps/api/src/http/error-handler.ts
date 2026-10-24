@@ -68,6 +68,21 @@ function toKnownError(err: unknown): OperationError | null {
 	return null;
 }
 
+/**
+ * Seconds a 429 asks the client to wait (`details.retryAfterSeconds`, the
+ * stand-in MCP results carry), sent over HTTP as `Retry-After` too.
+ */
+function retryAfterOf(error: OperationError): number | null {
+	const { details } = error;
+	if (error.status !== 429 || !details || !("retryAfterSeconds" in details)) {
+		return null;
+	}
+	const seconds = details.retryAfterSeconds;
+	return typeof seconds === "number" && Number.isInteger(seconds) && seconds > 0
+		? seconds
+		: null;
+}
+
 export const notFoundHandler: RequestHandler = (_req, res) => {
 	res
 		.status(404)
@@ -83,6 +98,8 @@ export function createErrorHandler(logger: Logger): ErrorRequestHandler {
 		}
 		const known = toKnownError(err);
 		if (known) {
+			const retryAfter = retryAfterOf(known);
+			if (retryAfter !== null) res.set("Retry-After", String(retryAfter));
 			res.status(known.status).json(known.toBody());
 			return;
 		}

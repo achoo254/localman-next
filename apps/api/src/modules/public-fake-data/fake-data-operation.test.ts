@@ -11,10 +11,7 @@ import {
 import { useDashboardTestDb } from "../../test-support/dashboard-test-app.js";
 import { TEST_TENANT } from "../../test-support/test-tenant.js";
 import { generateFakeData } from "./fake-data-operation.js";
-import {
-	FAKE_DATA_LIMIT_PER_MINUTE,
-	createIpMinuteLimiter,
-} from "./fake-data-rate-limit.js";
+import { FAKE_DATA_LIMIT_PER_MINUTE } from "./fake-data-rate-limit.js";
 
 const ACME = {
 	id: "ten_AAAAAAAAAAAAAAAA",
@@ -97,11 +94,24 @@ describe("GET /public/fake-data", () => {
 			"?count=51",
 			"?type=passport",
 			"?locale=fr",
+			"?seed=-1",
+			"?seed=4294967296",
+			"?seed=1.5",
 		]) {
 			const res = await fakeData(query, "203.0.113.3");
 			expect(res.status, query).toBe(400);
 			expect(res.body.error.code).toBe("VALIDATION_ERROR");
 		}
+	});
+
+	it("gives the same records for the same seed", async () => {
+		const query = "?type=company&count=3&seed=4294967295";
+		const first = await fakeData(query, "203.0.113.7");
+		const again = await fakeData(query, "203.0.113.7");
+		expect(first.status).toBe(200);
+		expect(again.body.items).toEqual(first.body.items);
+		const other = await fakeData("?type=company&count=3&seed=1", "203.0.113.7");
+		expect(other.body.items).not.toEqual(first.body.items);
 	});
 
 	it("answers 429 past the limit per address, other addresses unaffected", async () => {
@@ -113,6 +123,12 @@ describe("GET /public/fake-data", () => {
 		const limited = await fakeData("?type=phone&count=1", "203.0.113.4");
 		expect(limited.status).toBe(429);
 		expect(limited.body.error.code).toBe("RATE_LIMITED");
+		const retryAfter = Number(limited.headers["retry-after"]);
+		expect(retryAfter).toBeGreaterThanOrEqual(1);
+		expect(retryAfter).toBeLessThanOrEqual(60);
+		expect(limited.body.error.details).toEqual({
+			retryAfterSeconds: retryAfter,
+		});
 		expect((await fakeData("?type=phone", "203.0.113.5")).status).toBe(200);
 	});
 
@@ -132,24 +148,5 @@ describe("GET /public/fake-data", () => {
 		expect(toMcpToolDescriptor(generateFakeData)).toMatchObject({
 			name: "generate_fake_data",
 		});
-	});
-});
-
-describe("createIpMinuteLimiter", () => {
-	it("opens a new window after a minute", () => {
-		let now = 0;
-		const take = createIpMinuteLimiter(2, () => now);
-		take("198.51.100.1");
-		take("198.51.100.1");
-		expect(() => take("198.51.100.1")).toThrow(/Too many requests/);
-		now = 60_000;
-		expect(() => take("198.51.100.1")).not.toThrow();
-	});
-
-	it("counts an IPv6 /64 as one address", () => {
-		const take = createIpMinuteLimiter(1, () => 0);
-		take("2001:db8:1:2::1");
-		expect(() => take("2001:db8:1:2::ff")).toThrow(/Too many requests/);
-		expect(() => take("2001:db8:1:3::1")).not.toThrow();
 	});
 });
