@@ -9,6 +9,7 @@ import {
 import { createDashboardApp } from "../dashboard-server.js";
 import { createLogger } from "../logger.js";
 import { clearKnownSubjects } from "../modules/mcp/localman-mcp-limits.js";
+import { drainNotificationService } from "../modules/notifications/notification-runtime.js";
 import { clearCollections, connectTestMongo } from "./test-mongo.js";
 
 const ORIGIN = "https://localman.test";
@@ -76,6 +77,9 @@ export function useDashboardTestDb(
 		await teardown?.();
 	});
 	beforeEach(async () => {
+		// The last test's background notifications first, or one landing
+		// late outlives the clear and shows up in this test.
+		await drainNotificationService();
 		await clearCollections();
 		// The users collection was emptied: forget the users known to exist.
 		clearKnownSubjects();

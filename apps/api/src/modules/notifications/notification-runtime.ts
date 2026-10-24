@@ -15,3 +15,11 @@ export function getNotificationService(): NotificationService {
 	if (!current) throw new Error("Notification service is not configured");
 	return current;
 }
+
+/**
+ * TEST ONLY. Waits for the installed service's background deliveries, so a
+ * test's late write cannot land in the next test's emptied database.
+ */
+export async function drainNotificationService(): Promise<void> {
+	await current?.drain();
+}
