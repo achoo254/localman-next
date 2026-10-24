@@ -12,7 +12,7 @@ Monorepo của bộ công cụ API Localman và Tunelo.
 - **API client trên web:** collections, environments, workspace và chia sẻ; request đi thẳng từ trình duyệt, qua proxy hoặc qua Tunelo.
 - **Localman MCP** tại `/mcp`: mỗi operation của registry là một MCP tool.
 - **Cộng tác:** mời thành viên vào project và magic link.
-- **Landing, trang tài khoản và docs người dùng** (`/docs`). Đăng nhập qua `auth.hoandat.com`; mỗi domain đã nhận ở IdP là một tenant ([ADR-0003](docs/decisions/0003-tenant-scoped-data.md)).
+- **Landing, trang tài khoản và docs người dùng** (`/docs`). Đăng nhập qua `auth.hoandat.com`.
 
 **Tunelo:** tunnel `*.tunnel.hoandat.com` tới localhost, gộp vào repo này (xem [`packages/tunelo-cli/README.md`](packages/tunelo-cli/README.md)).
 
@@ -64,4 +64,4 @@ Các bước CI chạy: [`.github/workflows/ci.yml`](.github/workflows/ci.yml). 
 - [Đa ngôn ngữ (i18n)](docs/i18n.md)
 - Quyết định kiến trúc: [`docs/decisions/`](docs/decisions/)
 - Tunelo: [`docs/tunelo/`](docs/tunelo/), ADR ở [`docs/decisions/tunelo/`](docs/decisions/tunelo/)
-- Domain riêng (tenant): Localman và Tunelo phục vụ `localman.<domain>` và `tunnel.<domain>` của mọi domain đã nhận ở IdP, dữ liệu theo `tenantId` (ADR [`0003-tenant-scoped-data`](docs/decisions/0003-tenant-scoped-data.md), mục "Tenants" của [`docs/tunelo/deployment-guide.md`](docs/tunelo/deployment-guide.md)); hướng dẫn cho chủ domain nằm ở repo `auth-next` (`docs/tenant-owner-guide.md`)
+- Đơn tenant: Localman và Tunelo chỉ phục vụ host của `hoandat.com` cấu hình trong env, host khác nhận 421; dữ liệu vẫn mang `tenantId: "primary"` (ADR [`0003-tenant-scoped-data`](docs/decisions/0003-tenant-scoped-data.md), đã superseded)

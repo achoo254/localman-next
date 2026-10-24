@@ -1,8 +1,24 @@
 # ADR-0003: Dữ liệu Localman theo tenant (domain)
 
 - **Ngày:** 2026-10-13
-- **Trạng thái:** Đã chốt và chạy production từ 13/10/2026 (dữ liệu, chọn tenant theo Host, đăng nhập, thông báo, web, nginx `localman-tenants.conf`); còn e2e hai tenant, Turnstile và Telegram cho tenant khác
+- **Trạng thái:** Superseded 24/10/2026 bởi [ADR-0013 của `auth-next`: đơn tenant](https://github.com/achoo254/auth-next/blob/main/docs/decisions/0013-single-tenant.md). Từ 13/10 tới 24/10/2026 đã chạy production như mô tả dưới đây. Phần còn giữ và phần đã gỡ ở mục "Sau khi bỏ đa tenant"
 - **Người quyết định:** dattqh (Localman phục vụ mọi domain đã nhận ở IdP `auth-next`, hoandat.com là tenant số 1 không đổi hành vi; Pro/trial ở tenant mới như hoandat, owner của tenant là admin của tenant). Thiết kế theo `docs/decisions/0006-tenants-by-domain.md` của repo `auth-next`.
+
+## Sau khi bỏ đa tenant (24/10/2026)
+
+Hệ sinh thái chỉ phục vụ `hoandat.com`. Localman và Tunelo giữ:
+- `tenantScopePlugin` trên mọi model, trường `tenantId` và index `tenant_*` (mục 2, 3, 4, 9): dữ liệu và index không đổi, không migrate;
+- ngữ cảnh `AsyncLocalStorage`, nhưng mọi request và job chỉ chạy trong tenant `primary` dựng từ env (`primaryTenantFromEnv`); job định kỳ chạy một lần qua `runInPrimaryTenant`;
+- `GET /api/v1/tenant` (mục 11), web vẫn đọc nó.
+
+Đã gỡ:
+- mục 7, 10, 13: API nội bộ của IdP, cache tenant, client OIDC và web console Tunelo theo tenant, intake sự kiện vòng đời; env `IDP_INTERNAL_URL`, `IDP_INTERNAL_SECRET`, `IDP_LOOPBACK_URL`, `LOCALMAN_CLIENT_KEY`, `TUNELO_CLIENT_KEY`;
+- mục 6: `migrateToTenants`, `tagUntaggedDocuments`, `dropReplacedIndexes` (production đếm 0 document `tenantId: null`); `create-tenant-indexes.mjs` chỉ còn dựng index;
+- mục 8: nhánh cấu hình của tenant khác (`guestForms`, `ownerAlerts`, `telegram` theo tenant);
+- mục 12: tham số `--tenant`; `export-tenant`, `import-tenant`, chuyển tenant;
+- nginx `localman-tenants.conf`, `tunelo-tenants.conf`.
+
+Mục 1 và 7 đổi thành **allowlist Host**: Localman chỉ nhận host của `PUBLIC_URL`, `MOCK_BASE_DOMAIN` cùng subdomain, `TUNNEL_DOMAINS` cùng subdomain; Tunelo chỉ nhận `TUNNEL_DOMAINS` cùng subdomain. Ngoài production nhận thêm loopback. Mọi host khác (`evil.example`, IP trần) nhận 421, trừ `/healthz` và `/health` trên loopback. Lý do: metadata MCP và link dựng từ Host của request, nên không được trả lời Host mà triển khai không sở hữu (`packages/tenancy/src/served-hosts.ts`).
 
 ## Bối cảnh
 

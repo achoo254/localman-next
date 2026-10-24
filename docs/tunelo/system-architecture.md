@@ -2,7 +2,7 @@
 
 ## Overview
 
-Tunelo is a multi-tenant tunnel proxy with user management, TOTP 2FA, and persistent storage.
+Tunelo is a tunnel proxy for one domain (`TUNNEL_DOMAINS`, production `tunnel.hoandat.com`) with accounts at the shared IdP and persistent storage. Any other Host gets 421; data keeps `tenantId: "primary"` ([ADR-0003](../decisions/0003-tenant-scoped-data.md), superseded).
 
 ```
                     INTERNET
@@ -46,7 +46,7 @@ Tunelo is a multi-tenant tunnel proxy with user management, TOTP 2FA, and persis
 
 ## Accounts via the shared IdP
 
-Tunelo has no accounts of its own. Users sign in at the shared IdP (`auth.hoandat.com`, or `auth.<domain>` for another tenant); the server only verifies the IdP's access tokens. Rationale and trade-offs: [ADR-0004](../decisions/tunelo/0004-accounts-via-central-idp.md).
+Tunelo has no accounts of its own. Users sign in at the shared IdP (`auth.hoandat.com`); the server only verifies the IdP's access tokens. Rationale and trade-offs: [ADR-0004](../decisions/tunelo/0004-accounts-via-central-idp.md).
 
 **CLI sign-in (`tunelo login`)** — OAuth Device Authorization Grant (RFC 8628):
 

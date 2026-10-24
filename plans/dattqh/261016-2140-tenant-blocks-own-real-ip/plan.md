@@ -1,11 +1,14 @@
 ---
-status: completed
+status: superseded
+superseded: 2026-10-24
 tier: S
 created: 2026-10-16
 from: hoandat-auth (bàn giao)
 ---
 
 # Block tenant của Localman và Tunelo tự khai real-IP
+
+> **Superseded 24/10/2026:** hệ sinh thái về đơn tenant ([ADR-0013 của `auth-next`](https://github.com/achoo254/auth-next/blob/main/docs/decisions/0013-single-tenant.md)). `localman-tenants.conf` và `nginx-tenants.conf` đã xoá khỏi repo, cùng test `scripts/nginx-real-ip`; plan này chỉ còn là lịch sử.
 
 ## Bối cảnh
 

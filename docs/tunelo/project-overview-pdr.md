@@ -2,7 +2,7 @@
 
 ## What
 
-Tunelo is a self-hosted ngrok alternative — a multi-tenant tunnel proxy with user management, TOTP 2FA, and persistent storage via MongoDB.
+Tunelo is a self-hosted ngrok alternative — a tunnel proxy for one domain, with accounts at the shared IdP and persistent storage via MongoDB.
 
 ## Why
 

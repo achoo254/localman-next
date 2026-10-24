@@ -147,31 +147,32 @@ and `mail.tunnel` deleted in Cloudflare zone `inetdev.io.vn`; both certificates 
 (archived in `/root/letsencrypt-inetdev-tunnel-261013.tgz`). CLI 1.6.x still defaults to
 the old apex: those machines need `--server https://tunnel.hoandat.com` or a newer CLI.
 
-Since the evening of 2026-10-13 `inetdev.io.vn` is a tenant of the IdP (the owner's
-acceptance domain): `tunnel.inetdev.io.vn` and `*.tunnel.inetdev.io.vn` answer again,
-for that tenant only. A machine still configured with the old domain and a hoandat
-sign-in reaches the tenant and is refused (its tunnel names answer 502); the CLI moves
-such a saved server to `tunnel.hoandat.com`, but keeps it when the saved sign-in is
-the tenant's own (`tunelo login --server https://tunnel.inetdev.io.vn`).
+From 2026-10-13 to 2026-10-24 `inetdev.io.vn` was a tenant of the IdP (the owner's
+acceptance domain) and `tunnel.inetdev.io.vn` answered again for that tenant. The tenant
+and its DNS records were removed on 2026-10-24: `TUNNEL_DOMAINS` is only
+`tunnel.hoandat.com` now.
 
-## Tenants (domains claimed at the IdP)
+## One domain (no tenants)
 
-Tunelo serves `tunnel.<domain>` and `*.tunnel.<domain>` of every domain claimed at the
-IdP (`auth-next`, ADR 0006) from the same process. The primary tenant (hoandat.com)
-comes from `TUNNEL_DOMAINS`, `AUTH_ISSUER`, `AUTH_AUDIENCE` and never needs the IdP's
-internal API; another tenant is looked up there by Host (cached, last answer kept while
-the IdP is down). Tunnels, cache, TCP ports in tunnel lists, keys, links, usage and
-console sessions are per tenant: the same subdomain on two domains is two tunnels. TCP
-ports are one range for all tenants (the port, not the host, picks the tunnel); their
-URLs use the tenant's domain. A tenant's tokens are verified against `https://auth.<domain>`
-with audience `https://tunnel.<domain>` and keys from the internal API.
+Since 2026-10-24 Tunelo serves only `TUNNEL_DOMAINS` (`tunnel.hoandat.com` and
+`*.tunnel.hoandat.com`) as the primary tenant, built from `TUNNEL_DOMAINS`,
+`AUTH_ISSUER` and `AUTH_AUDIENCE`. Every other Host gets 421 (HTTP) or a refused
+WebSocket upgrade, `127.0.0.1` included in production; `/health` still answers on
+loopback. Documents keep `tenantId: "primary"` and the tenant-prefixed indexes; nothing
+is migrated at startup any more (startup only builds the indexes). The server no longer
+reads `IDP_INTERNAL_URL`, `IDP_INTERNAL_SECRET`, `IDP_LOOPBACK_URL`, `TUNELO_CLIENT_KEY`
+(unused variables are ignored, so deploy first, then delete them), and the
+`tunelo-tenants.conf` nginx file is gone from the repo: remove
+`/etc/nginx/conf.d/tunelo-tenants.conf` by hand after the deploy, then `nginx -t`.
+Check after a deploy:
 
-Turning it on (prod action, with the deploy): set `IDP_INTERNAL_URL`, `IDP_INTERNAL_SECRET`
-(and, for tenants' web console, `IDP_LOOPBACK_URL`, `TUNELO_CLIENT_KEY`) in
-`/var/www/tunelo/.env` (see `apps/tunelo-server/.env.example`), install
-`infra/tunelo/nginx-tenants.conf` as `/etc/nginx/conf.d/tunelo-tenants.conf`, `nginx -t`,
-reload nginx, `pm2 reload tunelo`. Startup tags documents stored before tenants with the
-primary tenant and, with the IdP settings on, drops the indexes the tenant ones replace.
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' -H 'Host: evil.example' http://127.0.0.1:3001/   # 421
+curl -s http://127.0.0.1:3001/health                                                       # 200
+```
+
+The old `users` collection (one document, no `tenantId`) is a leftover of the account
+system removed in July 2026 (no model reads it); it is neither read nor migrated.
 
 The HTTP/WebSocket port listens on `TUNNEL_HOST` (`127.0.0.1` from `infra/tunelo/ecosystem.config.cjs`):
 only nginx reaches it, so its Host-equals-SNI check cannot be skipped by calling `:3001` directly.
@@ -180,6 +181,7 @@ TCP tunnel ports are not affected.
 The CLI signs in per server: `tunelo login --server https://tunnel.<domain>` signs in at
 `https://auth.<domain>` (derived from the host, never from the server's answers) and makes
 that server the default; the account token is only sent to the Tunelo of its own domain.
+The production server is only `tunnel.hoandat.com`, the CLI's default.
 
 ## MongoDB Setup (v0.3+)
 

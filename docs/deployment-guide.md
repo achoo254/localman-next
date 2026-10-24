@@ -11,7 +11,7 @@ Mọi script nằm ở [`infra/localman/`](../infra/localman/); tài liệu này
 | DNS (Cloudflare, zone `hoandat.com`) | `localman` → `103.72.98.65` proxied; `*.localman` → `103.72.98.65` DNS only (Universal SSL miễn phí không phủ wildcard hai cấp) |
 | TLS | Let's Encrypt `localman.hoandat.com` + `*.localman.hoandat.com`, gia hạn bằng DNS-01 Cloudflare (`authenticator = dns-cloudflare`, `renew_hook = systemctl reload nginx`) qua [`issue-wildcard-cert.sh`](../infra/localman/issue-wildcard-cert.sh); dùng cho cả host proxied (SSL "full") lẫn wildcard |
 | Release | `/opt/localman/releases/<id>/{api,web,nginx}` (id = giờ UTC + commit, thêm `-dirty` nếu cây làm việc có sửa đổi), symlink `/opt/localman/current` trỏ release đang chạy; giữ 5 release gần nhất. Lên release mới: [`activate-release.sh`](../infra/localman/activate-release.sh); đổi qua lại giữa các release: [`switch-release.sh`](../infra/localman/switch-release.sh) |
-| nginx | `/etc/nginx/conf.d/localman-http.conf` (zone `limit_req`/`limit_conn`, log che secret), `/etc/nginx/conf.d/localman.hoandat.com.conf` (CSP mang hash của đúng bản build), `/etc/nginx/localman/localman-app.inc` (location của dashboard, dùng chung cho hoandat và tenant) và `/etc/nginx/conf.d/localman-tenants.conf` (`localman.<domain>`, `*.localman.<domain>` của tenant; chỉ cài khi đã có `00-tenants-http.conf` của IdP, vì chứng chỉ chọn theo SNI qua map ở đó). Mỗi release có bản conf riêng trong `releases/<id>/nginx/`, `switch-release.sh` cài bản đó cùng lúc với đổi symlink; bản gốc ở [`infra/localman/nginx/`](../infra/localman/nginx/), không chép tay |
+| nginx | `/etc/nginx/conf.d/localman-http.conf` (zone `limit_req`/`limit_conn`, log che secret), `/etc/nginx/conf.d/localman.hoandat.com.conf` (CSP mang hash của đúng bản build), `/etc/nginx/localman/localman-app.inc` (location của dashboard). Mỗi release có bản conf riêng trong `releases/<id>/nginx/`, `switch-release.sh` cài bản đó cùng lúc với đổi symlink; bản gốc ở [`infra/localman/nginx/`](../infra/localman/nginx/), không chép tay |
 | IP client thật | Host proxied dựa vào `set_real_ip_from` (dải Cloudflare) + `real_ip_header CF-Connecting-IP` đã có ở cấp `http` trên server, Localman không lặp lại (`activate-release.sh` cảnh báo nếu thiếu). Host DNS-only `*.localman` không tin header nào (`set_real_ip_from unix:;` trong server block), `$remote_addr` là IP kết nối thật. Site chỉ chuyển `X-Forwarded-For $remote_addr` và `X-Forwarded-Host $host`, API tin proxy `127.0.0.1` (`TRUST_PROXY=127.0.0.1`) |
 | `/internal/` | Chỉ cho `103.72.98.65` (IdP trên chính server này, đi qua Cloudflare nên sau real-IP là IPv4 công khai của server), `127.0.0.1`, `::1`; nơi khác nhận 403 |
 | `/mcp` | Localman MCP (Streamable HTTP, Bearer token của IdP): `proxy_buffering off` cho SSE, body tối đa 4 MB, `proxy_read_timeout 300s` (Cloudflare vẫn cắt kết nối im lặng sau 100 giây, client MCP tự nối lại). `/.well-known/oauth-protected-resource` (metadata RFC 9728) cũng tới API |
@@ -122,19 +122,21 @@ seq 1 100 | xargs -P 20 -I % curl -s -o /dev/null -w '%{http_code}\n' "$MOCK_URL
 - Server: `pm2 status localman-api`, `pm2 logs localman-api --lines 50 --nostream`, `tail /var/log/nginx/localman-mock.access.log` (đường dẫn `/m/` hiện `[secret]`).
 - 429 `RATE_LIMITED` của form công khai sau khi mở form: theo dõi để chỉnh `feedbackRateLimit.perIp` nếu người dùng sau CGNAT bị chặn nhầm.
 
-## Tenant khác (domain đã nhận ở IdP)
+## Chỉ một domain (đơn tenant)
 
-Bật theo thứ tự, mỗi bước là thao tác trên prod chỉ làm khi được yêu cầu:
+Từ 24/10/2026 Localman chỉ phục vụ `hoandat.com` (ADR-0003 đã superseded). Process chỉ trả lời Host thuộc `PUBLIC_URL`, `MOCK_BASE_DOMAIN` cùng subdomain và `TUNNEL_DOMAINS` cùng subdomain. Host khác nhận 421, kể cả `127.0.0.1` trên production; riêng `/healthz` vẫn trả lời trên loopback. Kiểm sau deploy:
 
-1. IdP đã cài `00-tenants-http.conf`, `tenants-acme.conf` và provisioner (repo `auth-next`, `docs/deployment-guide.md`).
-2. Lấy khoá `localman-web` từ IdP (`node --env-file=.env dist/app-client-key.mjs localman-web <file>`) và secret `localman:` của `INTERNAL_API_CREDENTIALS`; điền `IDP_INTERNAL_URL`, `IDP_INTERNAL_SECRET`, `IDP_LOOPBACK_URL`, `LOCALMAN_CLIENT_KEY` vào `/opt/localman/.env` (mẫu ở `infra/localman/.env.production.example`), rồi chạy lại `bash /opt/localman/infra/switch-release.sh "$(basename "$(readlink /opt/localman/current)")"`: nó cài `localman-tenants.conf` (chỉ khi có cả map của IdP lẫn `IDP_INTERNAL_URL`), chạy `nginx -t`, reload nginx và API. Lần khởi động này gỡ index cũ không có `tenantId`. Từ đó `switch-release.sh` từ chối quay về release chưa có tenant cho tới khi bỏ `IDP_INTERNAL_URL`.
-3. Kiểm: `curl -s --resolve localman.<domain>:443:127.0.0.1 https://localman.<domain>/api/v1/tenant` trả tên và domain của tenant; host không phải tenant nhận 421.
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' -H 'Host: evil.example' http://127.0.0.1:4000/api/v1/tenant   # 421
+curl -s -o /dev/null -w '%{http_code}\n' -H 'Host: evil.example' http://127.0.0.1:4100/                # 421
+curl -s http://127.0.0.1:4000/healthz                                                                    # 200
+```
 
-Đã bật trên production 13/10/2026: release `20261013-072237-ef69d8bd630f` (gắn 1432 document cũ, backup trước đó `localman-20261013-141933`), bốn biến trên đã điền (bản `.env` trước đó: `.env.bak-<giờ>` cạnh nó), `localman-tenants.conf` đã cài và index cũ đã gỡ. Chưa có tenant nào ngoài hoandat.com (IdP chưa mở `/claim`).
+`/opt/localman/.env` không còn đọc `IDP_INTERNAL_URL`, `IDP_INTERNAL_SECRET`, `IDP_LOOPBACK_URL`, `LOCALMAN_CLIENT_KEY`; biến thừa bị bỏ qua, nên deploy code trước rồi mới xoá biến. `/etc/nginx/conf.d/localman-tenants.conf` không còn được `switch-release.sh` cài hay gỡ: xoá tay sau khi code mới chạy.
 
 ## Index theo tenant
 
-Bundle có `api/create-tenant-indexes.mjs`; `activate-release.sh` chạy nó (user `localman`, env `/opt/localman/.env`) trước khi switch, lúc release cũ còn phục vụ: gắn `tenantId: "primary"` cho document chưa có và dựng mọi index có `tenantId` đứng đầu. Chạy lại được. Lỗi thì release mới không được kích hoạt. Index cũ (không có `tenantId`) ở lại tới khi bật tenant khác (đặt `IDP_INTERNAL_URL` và `IDP_INTERNAL_SECRET` rồi reload): lúc đó API gỡ chúng khi khởi động. Trước đó quay về release cũ không cần dựng lại index; sau đó thì cần. Xem `docs/decisions/0003-tenant-scoped-data.md`.
+Bundle có `api/create-tenant-indexes.mjs`; `activate-release.sh` chạy nó (user `localman`, env `/opt/localman/.env`) trước khi switch, lúc release cũ còn phục vụ: dựng mọi index của model (index có `tenantId` đứng đầu). Chạy lại được. Lỗi thì release mới không được kích hoạt. Mọi document đều đã mang `tenantId: "primary"`; code không còn gắn tenant cho document cũ, cũng không gỡ index nào. Xem `docs/decisions/0003-tenant-scoped-data.md`.
 
 ## Dọn project bỏ hoang
 
@@ -146,7 +148,7 @@ runuser -u localman -- /opt/localman/runtime/node --env-file=/opt/localman/.env 
 runuser -u localman -- /opt/localman/runtime/node --env-file=/opt/localman/.env cleanup-abandoned-projects.mjs --days 90 --apply  # xoá
 ```
 
-Thêm `--tenant <id>` để chạy cho một tenant khác (mặc định `primary`, hoandat.com). Mã thoát: 0 xong, 1 có project xoá lỗi hoặc lỗi chạy, 2 sai tham số hoặc env. Nên chạy backup ngay trước `--apply`.
+Lệnh chạy trên dữ liệu của tenant `primary`. Mã thoát: 0 xong, 1 có project xoá lỗi hoặc lỗi chạy, 2 sai tham số hoặc env. Nên chạy backup ngay trước `--apply`.
 
 ## Xoay token Cloudflare
 
@@ -181,7 +183,7 @@ Fork, pull changes, merge của collection và environment, cùng pull request c
 
 ## Tunnel theo tài khoản Tunelo (`TUNELO_ACCOUNTS_ENABLED`)
 
-API client tự tìm tunnel Tunelo của user (cùng tài khoản, hoặc máy ẩn danh liên kết bằng `tunelo link <mã>`) khi **cả hai** cùng bật: cờ web `tuneloAccounts` trong [`released-features`](../infra/localman/released-features) và cổng server `TUNELO_ACCOUNTS_ENABLED=true`. Server gọi Tunelo của từng tenant (`https://tunnel.<domain>`, tenant chính `https://tunnel.hoandat.com`), nên Tunelo đó phải có `GET /api/tunnels` và `/api/links/*`; `TUNELO_API_URL` chỉ dùng cho dev/E2E. Link token niêm phong bằng `SESSION_ENCRYPTION_KEY`.
+API client tự tìm tunnel Tunelo của user (cùng tài khoản, hoặc máy ẩn danh liên kết bằng `tunelo link <mã>`) khi **cả hai** cùng bật: cờ web `tuneloAccounts` trong [`released-features`](../infra/localman/released-features) và cổng server `TUNELO_ACCOUNTS_ENABLED=true`. Server gọi `https://tunnel.hoandat.com`, nên Tunelo đó phải có `GET /api/tunnels` và `/api/links/*`; `TUNELO_API_URL` chỉ dùng cho dev/E2E. Link token niêm phong bằng `SESSION_ENCRYPTION_KEY`.
 
 - **Bật:** thêm `tuneloAccounts` vào `released-features` và deploy; trên server đặt `TUNELO_ACCOUNTS_ENABLED=true` rồi `pm2 reload localman-api`.
 - **Kiểm sau khi bật:** `GET /api/v1/client/local-tunnels` trả 401 khi chưa đăng nhập (không phải 404); đăng nhập, chạy `tunelo http <port>` cùng tài khoản rồi gửi tới `http://localhost:<port>` thì badge "Qua Tunelo · <máy>".

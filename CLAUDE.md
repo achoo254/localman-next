@@ -27,7 +27,7 @@ Quy tắc:
 - Lỗi API theo dạng `{ error: { code, message } }`; không lộ stack ra client, không log secret.
 - Internal package `@localman/*` là source-only TS (`exports` trỏ vào `src/index.ts`); import tương đối dùng đuôi `.js` (NodeNext), trừ `apps/web` (Bundler).
 - TypeScript strict, không `any` (dùng `unknown` + type guard), không non-null assertion `!`, named exports, file kebab-case, ≤ 200 dòng.
-- **Dữ liệu theo tenant** (`docs/decisions/0003-tenant-scoped-data.md`): model mới gắn `schema.plugin(tenantScopePlugin)` sau mọi `schema.index` và trước `mongoose.model`. Không ghi thô qua `Model.collection` hay dùng `acrossTenants` ngoài danh sách của `tenant-models.test.ts`. Việc chạy ngoài request (timer, job) phải giữ tenant của mục và ghi trong `runInTenant`; job định kỳ đi qua `forEachTenant`. Lệnh vận hành mới nhận `--tenant`.
+- **Dữ liệu theo tenant** (`docs/decisions/0003-tenant-scoped-data.md`): model mới gắn `schema.plugin(tenantScopePlugin)` sau mọi `schema.index` và trước `mongoose.model`. Không ghi thô qua `Model.collection` hay dùng `acrossTenants` ngoài danh sách của `tenant-models.test.ts`. Việc chạy ngoài request (timer, job) phải giữ tenant của mục và ghi trong `runInTenant`; job định kỳ đi qua `runInPrimaryTenant`. Chỉ có tenant `primary` (đơn tenant từ 24/10/2026, ADR-0003 đã superseded): Host ngoài allowlist (`PUBLIC_URL`, `MOCK_BASE_DOMAIN`, `TUNNEL_DOMAINS` cùng subdomain; loopback ngoài production) nhận 421.
 - Kiến trúc tổng thể: `docs/system-architecture.md`.
 
 ## Tunelo
@@ -58,7 +58,7 @@ VPS_HOST=<ssh alias> bash infra/tunelo/deploy.sh   # Deploy server (PM2)
 
 Release CLI: tag `tunelo-vX.Y.Z` triggers `.github/workflows/tunelo-publish-cli.yml`.
 
-- **Tunelo theo tenant** (mục "Tenants" của `docs/tunelo/deployment-guide.md`): tenant chọn theo Host ở middleware đầu tiên (`apps/tunelo-server/src/tenancy/`); model mới gắn `tenantScopePlugin`; trạng thái trong bộ nhớ (tunnel, cache, stream) khoá theo `tenantKey(subdomain)`; frame từ client chỉ nhận từ đúng connection đã gửi request. Tenant chính (`primary`) dựng từ env, không bao giờ cần API nội bộ của IdP. Phần dùng chung với Localman nằm ở `packages/tenancy` (`@localman/tenancy`). CLI chỉ gửi token tới Tunelo cùng domain với issuer của phiên (`acceptsAccountToken`).
+- **Dữ liệu Tunelo** (mục "One domain" của `docs/tunelo/deployment-guide.md`): model mới gắn `tenantScopePlugin`; request chạy trong tenant `primary` dựng từ env khi Host thuộc `TUNNEL_DOMAINS` (hoặc loopback ngoài production), host khác nhận 421 (`apps/tunelo-server/src/tenancy/`); trạng thái trong bộ nhớ (tunnel, cache, stream) khoá theo `tenantKey(subdomain)`; frame từ client chỉ nhận từ đúng connection đã gửi request. Phần dùng chung với Localman nằm ở `packages/tenancy` (`@localman/tenancy`). CLI chỉ gửi token tới Tunelo cùng domain với issuer của phiên (`acceptsAccountToken`).
 
 ### Coding Rules
 
