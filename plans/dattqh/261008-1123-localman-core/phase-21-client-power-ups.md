@@ -89,11 +89,11 @@ dependencies: [10, 13, 16]
 - [ ] T5b (24/10: phía máy chủ xong, `agent-variable-fill.ts`, `agent-secret-destination.ts`, `secret-mask.ts`, `agent_secret_uses` + operation bật/tắt kèm host; sau review lần hai: header `Host` phải qua phép thử host, từ chối wildcard trên hậu tố công cộng, biến thôi là secret thì xoá quyền và bản cho agent (`agent-secret-lapse.ts`), che body nhị phân không phân biệt hoa thường; test `agent-variable-send.test.ts`, `agent-secret-destination.test.ts`, `agent-secret-lapse.test.ts`, `secret-mask.test.ts`, `packages/shared/.../secret-vault.test.ts`; công tắc "Cho agent dùng" kèm danh sách host đã có ở UI web, sau cờ `secretVault`) Agent gửi request có secret qua MCP: nhận 200, không thấy giá trị trong response, lỗi hay log; biến vault chưa bật "Cho agent dùng" bị từ chối; agent không bật được công tắc
 - [ ] T6 `data-policy` một nguồn và trang minh bạch dữ liệu
 - [ ] T7 Trang docs public và gợi ý `{{response …}}`
-- [ ] T8 E2E pass
+- [x] T8 E2E pass (24/10: `e2e/specs/secret-vault.spec.ts` (mọi trao đổi với Localman không chứa giá trị secret, thiết bị khác thấy khoá tới khi nhập passphrase; bắt được lỗi `finalUrl` của lịch sử gửi URL đã thay biến lên server, đã sửa), `secret-vault-agent.spec.ts` (agent chỉ dùng sau khi bật, đúng host, không ghi được, không đọc được; gửi thành công tới upstream để unit test vì proxy từ chối loopback của stack E2E), `project-docs.spec.ts`, `response-references.spec.ts`; 15/15 pass cùng spec biến và workbench, chạy trên Mac vì stack E2E không chạy trên Windows)
 - [ ] T9 Staging deploy và khối landing bật sau khi user xác nhận
 - [ ] T10 Review không còn finding mức high
 - [ ] Verification: unit `vault-crypto` (round-trip, passphrase sai, bản mã khác nhau) và test chặn PUT secret thiếu `lmv1:` pass
 - [ ] Verification: `response-references` nối 3 request, hết TTL gửi lại, vòng lặp báo lỗi
-- [ ] Verification: E2E thiết bị khác không thấy plaintext; log proxy không có giá trị secret; docs đổi theo schema
+- [x] Verification: E2E thiết bị khác không thấy plaintext; log proxy không có giá trị secret; docs đổi theo schema
 - [ ] `pnpm lint && pnpm typecheck && pnpm test` sạch
 - [ ] `pnpm check:mcp-coverage` pass
