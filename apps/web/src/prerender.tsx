@@ -5,7 +5,15 @@ import {
 	createStaticRouter,
 } from "react-router";
 import { AppProviders } from "./app-providers";
+import {
+	type FeatureFlags,
+	FeaturesContext,
+	features,
+} from "./config/features";
+import { en } from "./i18n/messages/en/dictionary";
+import { createTranslator } from "./i18n/translate";
 import { createQueryClient } from "./lib/query-client";
+import { appTitle } from "./lib/use-document-title";
 import { routes } from "./routes";
 
 /** English head of a prerendered page, for crawlers and link previews. */
@@ -22,16 +30,42 @@ export interface PrerenderedPage {
 	head: PageHead | null;
 }
 
-/** Public pages written as HTML at build time, so crawlers read them without JS. */
-export function prerenderedPages(): PrerenderedPage[] {
-	return [{ path: "/", file: "index.html", head: null }];
+/**
+ * Public pages written as HTML at build time, so crawlers read them
+ * without JS. A flagged page is written only by builds with its flag on
+ * (it would redirect home otherwise); nginx serves `file` for `path` and
+ * falls back to `index.html` when the build has no such file.
+ */
+export function prerenderedPages(
+	flags: FeatureFlags = features,
+): PrerenderedPage[] {
+	const { t } = createTranslator("en", en);
+	return [
+		{ path: "/", file: "index.html", head: null },
+		...(flags.vnFakeData
+			? [
+					{
+						path: "/tools/vn-fake-data",
+						file: "tools-vn-fake-data.html",
+						head: {
+							title: appTitle(t("vnFakeData.meta.title")),
+							description: t("vnFakeData.meta.description"),
+						},
+					},
+				]
+			: []),
+	];
 }
 
 /**
  * Markup of `path` for an anonymous visitor with this build's feature
- * flags. The browser hydrates it with the same providers and routes.
+ * flags (`flags` lets tests try others). The browser hydrates it with
+ * the same providers and routes.
  */
-export async function renderPageHtml(path: string): Promise<string> {
+export async function renderPageHtml(
+	path: string,
+	flags: FeatureFlags = features,
+): Promise<string> {
 	const handler = createStaticHandler(routes);
 	const context = await handler.query(new Request(`http://localhost${path}`));
 	if (context instanceof Response) {
@@ -40,7 +74,13 @@ export async function renderPageHtml(path: string): Promise<string> {
 	const router = createStaticRouter(handler.dataRoutes, context);
 	const { prelude } = await prerender(
 		<AppProviders queryClient={createQueryClient()}>
-			<StaticRouterProvider router={router} context={context} hydrate={false} />
+			<FeaturesContext value={flags}>
+				<StaticRouterProvider
+					router={router}
+					context={context}
+					hydrate={false}
+				/>
+			</FeaturesContext>
 		</AppProviders>,
 	);
 	return new Response(prelude).text();
@@ -85,13 +125,14 @@ const APP_MOUNT = '<div id="app"></div>';
  */
 export async function renderPrerenderedFiles(
 	template: string,
+	flags: FeatureFlags = features,
 ): Promise<Array<{ file: string; html: string }>> {
 	if (!template.includes(APP_MOUNT)) {
 		throw new Error(`index.html has no ${APP_MOUNT}`);
 	}
 	const files: Array<{ file: string; html: string }> = [];
-	for (const page of prerenderedPages()) {
-		const markup = await renderPageHtml(page.path);
+	for (const page of prerenderedPages(flags)) {
+		const markup = await renderPageHtml(page.path, flags);
 		if (markup === "") throw new Error(`Prerender of ${page.path} is empty`);
 		const mounted = template.replace(
 			APP_MOUNT,

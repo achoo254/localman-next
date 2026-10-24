@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { createDashboardApp } from "../dashboard-server.js";
 import { createLogger } from "../logger.js";
 import { commentOperations } from "../modules/comments/comment-operations.js";
+import { publicFakeDataOperations } from "../modules/public-fake-data/fake-data-operation.js";
 import { publicSharingOperations } from "../modules/public-sharing/public-sharing-operations.js";
 import { tuneloOperations } from "../modules/tunelo/tunelo-operations.js";
 import { watchOperations } from "../modules/watch/watch-operations.js";
@@ -17,6 +18,7 @@ const ALL_ON = {
 	liveMockSync: true,
 	projectDocs: true,
 	secretVault: true,
+	publicFakeData: true,
 };
 const SHARING_OFF = { ...ALL_ON, publicSharing: false };
 
@@ -90,6 +92,29 @@ describe("TUNELO_ACCOUNTS_ENABLED", () => {
 			operations: off,
 		});
 		const res = await request(app).get("/api/v1/client/local-tunnels");
+		expect(res.status).toBe(404);
+	});
+});
+
+describe("PUBLIC_FAKE_DATA_ENABLED", () => {
+	it("leaves the fake data API and its MCP tool out while off", async () => {
+		const off = servedOperations(operations, {
+			...ALL_ON,
+			publicFakeData: false,
+		});
+		for (const operation of publicFakeDataOperations) {
+			expect(operations).toContain(operation);
+			expect(off).not.toContain(operation);
+		}
+		expect(off).toHaveLength(
+			operations.length - publicFakeDataOperations.length,
+		);
+		const app = createDashboardApp({
+			logger: createLogger("silent"),
+			allowedOrigins: ["https://localman.test"],
+			operations: off,
+		});
+		const res = await request(app).get("/api/v1/public/fake-data");
 		expect(res.status).toBe(404);
 	});
 });

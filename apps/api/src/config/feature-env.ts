@@ -143,6 +143,8 @@ export const featureEnvShape = {
 	PROJECT_DOCS_ENABLED: offByDefault,
 	/** Browser secret vault and agents using secrets (ADR-0009); off: not routed. */
 	SECRET_VAULT_ENABLED: offByDefault,
+	/** Public Vietnamese fake data API (ADR-0010); off: not routed nor MCP. */
+	PUBLIC_FAKE_DATA_ENABLED: offByDefault,
 	/**
 	 * Tunelo API for every tenant, e.g. a local Tunelo in dev or a fake in
 	 * E2E (https only in production). Unset: each tenant's own

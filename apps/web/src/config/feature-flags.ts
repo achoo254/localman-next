@@ -17,7 +17,9 @@
  * projects at `/p/<slug>/docs`; the API serves them only with
  * `PROJECT_DOCS_ENABLED`) and `secretVault` (the browser vault of local
  * secret values and letting agents use secrets; needs `environments`, the
- * API serves it only with `SECRET_VAULT_ENABLED`).
+ * API serves it only with `SECRET_VAULT_ENABLED`) and `vnFakeData` (the public
+ * Vietnamese fake data tool at `/tools/vn-fake-data` and its link on the
+ * landing; the page generates in the browser and needs no API gate).
  *
  * Set at build time in `VITE_FEATURES`, a comma-separated list such as
  * `apiClient,mockMcp`. Everything is off by default. No React here:
@@ -38,6 +40,7 @@ export interface FeatureFlags {
 	readonly tuneloAccounts: boolean;
 	readonly projectDocs: boolean;
 	readonly secretVault: boolean;
+	readonly vnFakeData: boolean;
 }
 
 export type FeatureName = keyof FeatureFlags;
@@ -57,6 +60,7 @@ export const NO_FEATURES: FeatureFlags = Object.freeze({
 	tuneloAccounts: false,
 	projectDocs: false,
 	secretVault: false,
+	vnFakeData: false,
 });
 
 function isFeatureName(value: string): value is FeatureName {

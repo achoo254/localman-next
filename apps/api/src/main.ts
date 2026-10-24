@@ -171,6 +171,7 @@ try {
 		liveMockSync: env.LIVE_MOCK_SYNC_ENABLED,
 		projectDocs: env.PROJECT_DOCS_ENABLED,
 		secretVault: env.SECRET_VAULT_ENABLED,
+		publicFakeData: env.PUBLIC_FAKE_DATA_ENABLED,
 	});
 	const dashboard = createDashboardApp({
 		logger,

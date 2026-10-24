@@ -45,6 +45,7 @@ import { ui } from "./ui";
 import { upstream } from "./upstream";
 import { variables } from "./variables";
 import { versionControl } from "./version-control";
+import { vnFakeData } from "./vn-fake-data";
 import { webhookInbox } from "./webhook-inbox";
 import { workspaces } from "./workspaces";
 
@@ -95,6 +96,7 @@ export const vi: Messages = {
 	projectDocs,
 	secretVault,
 	agentUse,
+	vnFakeData,
 	legal,
 	legalPrivacy,
 	legalTerms,

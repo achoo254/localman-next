@@ -43,6 +43,7 @@ import { sendTestNotification } from "../modules/notifications/test-notification
 import { projectDocsOperations } from "../modules/project-docs/docs-operations.js";
 import { projectOperations } from "../modules/projects/project-operations.js";
 import { rotateProjectSecret } from "../modules/projects/project-secret-operations.js";
+import { publicFakeDataOperations } from "../modules/public-fake-data/fake-data-operation.js";
 import { publicSharingOperations } from "../modules/public-sharing/public-sharing-operations.js";
 import { mockAdvancedOperations } from "../modules/resources/mock-advanced-operations.js";
 import { getMockUrls } from "../modules/resources/mock-url-operations.js";
@@ -128,4 +129,6 @@ export const operations: readonly AnyOperation[] = [
 	...projectDocsOperations,
 	// Served only while SECRET_VAULT_ENABLED is on (`feature-gates.ts`).
 	...secretVaultOperations,
+	// Served only while PUBLIC_FAKE_DATA_ENABLED is on (`feature-gates.ts`).
+	...publicFakeDataOperations,
 ];

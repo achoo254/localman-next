@@ -12,7 +12,8 @@
 		"./constants": "./src/constants.ts",
 		"./endpoint-behavior": "./src/endpoint-behavior.ts",
 		"./faker-catalog": "./src/faker-method-catalog.ts",
-		"./faker-methods": "./src/faker-methods.ts"
+		"./faker-methods": "./src/faker-methods.ts",
+		"./vn-fake-data": "./src/vn-fake-data/vn-fake-data.ts"
 	},
 	"scripts": {
 		"test": "vitest run",

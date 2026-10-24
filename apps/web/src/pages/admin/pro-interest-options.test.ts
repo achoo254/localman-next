@@ -39,6 +39,7 @@ describe("Pro interest needs by released features", () => {
 			tuneloAccounts: true,
 			projectDocs: true,
 			secretVault: true,
+			vnFakeData: true,
 		};
 		expect(ids(all)).not.toContain("devops_ci");
 		expect(sourceNeedFor("devops", all)).toBeUndefined();

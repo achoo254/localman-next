@@ -1,7 +1,8 @@
 /**
  * Server gates of unreleased features (`PUBLIC_SHARING_ENABLED`,
  * `COMMENTS_ENABLED`, `FORKS_ENABLED`, `TUNELO_ACCOUNTS_ENABLED`,
- * `LIVE_MOCK_SYNC_ENABLED`, `PROJECT_DOCS_ENABLED`, `SECRET_VAULT_ENABLED`). The working tree is deployed by whichever session
+ * `LIVE_MOCK_SYNC_ENABLED`, `PROJECT_DOCS_ENABLED`, `SECRET_VAULT_ENABLED`,
+ * `PUBLIC_FAKE_DATA_ENABLED`). The working tree is deployed by whichever session
  * ships next, so a web flag alone would not keep unreleased endpoints and
  * MCP tools off production: while a gate is off, the operations of its
  * feature are neither routed nor offered over MCP, and their paths answer
@@ -12,6 +13,7 @@ import type { AnyOperation } from "@localman/operations";
 import { commentOperations } from "../modules/comments/comment-operations.js";
 import { liveMockSyncOperations } from "../modules/live-mock-sync/sync-operations.js";
 import { projectDocsOperations } from "../modules/project-docs/docs-operations.js";
+import { publicFakeDataOperations } from "../modules/public-fake-data/fake-data-operation.js";
 import { publicSharingOperations } from "../modules/public-sharing/public-sharing-operations.js";
 import { secretVaultOperations } from "../modules/secret-vault/secret-vault-operations.js";
 import { tuneloOperations } from "../modules/tunelo/tunelo-operations.js";
@@ -30,6 +32,8 @@ export interface FeatureGates {
 	readonly projectDocs: boolean;
 	/** The browser vault of local secret values. */
 	readonly secretVault: boolean;
+	/** The public Vietnamese fake data API (stateless, no sign-in). */
+	readonly publicFakeData: boolean;
 }
 
 const COMMENT_OPERATIONS = [...commentOperations, ...watchOperations];
@@ -47,6 +51,7 @@ export function servedOperations(
 		...(gates.liveMockSync ? [] : liveMockSyncOperations),
 		...(gates.projectDocs ? [] : projectDocsOperations),
 		...(gates.secretVault ? [] : secretVaultOperations),
+		...(gates.publicFakeData ? [] : publicFakeDataOperations),
 	]);
 	return off.size === 0
 		? operations

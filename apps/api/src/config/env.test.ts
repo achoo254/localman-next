@@ -55,6 +55,7 @@ describe("parseEnv", () => {
 			LIVE_MOCK_SYNC_ENABLED: false,
 			PROJECT_DOCS_ENABLED: false,
 			SECRET_VAULT_ENABLED: false,
+			PUBLIC_FAKE_DATA_ENABLED: false,
 			TURNSTILE_VERIFY_URL:
 				"https://challenges.cloudflare.com/turnstile/v0/siteverify",
 			MOBILE_ANDROID_CERT_SHA256: [],

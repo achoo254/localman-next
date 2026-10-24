@@ -181,6 +181,13 @@
         return 302 /;
     }
 
+    # Prerendered public tool page; builds without the `vnFakeData` flag have
+    # no such file, and the SPA's index.html sends the visitor home.
+    location = /tools/vn-fake-data {
+        expires -1;
+        try_files /tools-vn-fake-data.html /index.html;
+    }
+
     location = /sw.js {
         expires -1;
     }

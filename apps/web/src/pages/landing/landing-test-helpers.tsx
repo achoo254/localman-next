@@ -21,6 +21,7 @@ export const ALL_FEATURES: FeatureFlags = Object.freeze({
 	tuneloAccounts: true,
 	projectDocs: true,
 	secretVault: true,
+	vnFakeData: true,
 });
 
 /** Renders `element` at `/` under the app providers and the given flags. */

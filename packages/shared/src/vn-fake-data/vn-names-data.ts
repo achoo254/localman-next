@@ -1,0 +1,126 @@
+/**
+ * Name parts of Vietnamese fake people. Family names carry a rough share
+ * of the population, so "Nguyễn" comes up most as in real lists; middle
+ * and given names depend on the gender ("Văn"/"Thị").
+ */
+import type { VnGender } from "./vn-fake-data-types.js";
+
+export interface WeightedName {
+	readonly name: string;
+	readonly weight: number;
+}
+
+export const VN_FAMILY_NAMES: readonly WeightedName[] = [
+	{ name: "Nguyễn", weight: 38 },
+	{ name: "Trần", weight: 11 },
+	{ name: "Lê", weight: 9.5 },
+	{ name: "Phạm", weight: 7 },
+	{ name: "Hoàng", weight: 5.1 },
+	{ name: "Huỳnh", weight: 5 },
+	{ name: "Phan", weight: 4.5 },
+	{ name: "Vũ", weight: 3.9 },
+	{ name: "Võ", weight: 3.9 },
+	{ name: "Đặng", weight: 2.1 },
+	{ name: "Bùi", weight: 2 },
+	{ name: "Đỗ", weight: 1.4 },
+	{ name: "Hồ", weight: 1.3 },
+	{ name: "Ngô", weight: 1.3 },
+	{ name: "Dương", weight: 1 },
+	{ name: "Lý", weight: 0.5 },
+	{ name: "Đinh", weight: 0.5 },
+	{ name: "Trương", weight: 0.5 },
+];
+
+export const VN_MIDDLE_NAMES: Readonly<Record<VnGender, readonly string[]>> = {
+	male: [
+		"Văn",
+		"Đức",
+		"Minh",
+		"Quốc",
+		"Hữu",
+		"Thành",
+		"Công",
+		"Gia",
+		"Hoàng",
+		"Anh",
+	],
+	female: [
+		"Thị",
+		"Ngọc",
+		"Thu",
+		"Thanh",
+		"Thùy",
+		"Phương",
+		"Mai",
+		"Bảo",
+		"Khánh",
+		"Minh",
+	],
+};
+
+export const VN_GIVEN_NAMES: Readonly<Record<VnGender, readonly string[]>> = {
+	male: [
+		"An",
+		"Bình",
+		"Cường",
+		"Dũng",
+		"Duy",
+		"Đạt",
+		"Hải",
+		"Hiếu",
+		"Hoàng",
+		"Hùng",
+		"Huy",
+		"Khang",
+		"Khoa",
+		"Long",
+		"Minh",
+		"Nam",
+		"Phong",
+		"Phúc",
+		"Quân",
+		"Quang",
+		"Sơn",
+		"Tâm",
+		"Thắng",
+		"Thành",
+		"Trung",
+		"Tuấn",
+		"Tùng",
+		"Việt",
+		"Vinh",
+		"Vũ",
+	],
+	female: [
+		"Anh",
+		"Châu",
+		"Chi",
+		"Diệp",
+		"Dung",
+		"Giang",
+		"Hà",
+		"Hân",
+		"Hằng",
+		"Hoa",
+		"Hương",
+		"Lan",
+		"Linh",
+		"Ly",
+		"Mai",
+		"My",
+		"Ngân",
+		"Ngọc",
+		"Nhi",
+		"Nhung",
+		"Oanh",
+		"Phương",
+		"Quyên",
+		"Tâm",
+		"Thảo",
+		"Trang",
+		"Trinh",
+		"Uyên",
+		"Vân",
+		"Yến",
+	],
+};

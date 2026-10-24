@@ -9,6 +9,7 @@ import { HeroSection } from "./hero-section";
 import { MoreFeaturesSection } from "./more-features-section";
 import { RelationsDemo } from "./relations-demo";
 import { StartCta } from "./start-cta";
+import { VnFakeDataTeaser } from "./vn-fake-data-teaser";
 
 // Flagged blocks load on demand, so an unreleased feature adds nothing to
 // the landing bundle until its flag is on.
@@ -21,7 +22,8 @@ const MockMcpSection = lazy(async () => ({
 
 /**
  * Public landing: hero, flagged feature blocks, schema,
- * relations, "And more" and the closing call to action. The footer comes
+ * relations, "And more", the fake data tool link (flagged) and the
+ * closing call to action. The footer comes
  * from `AppLayout`. The tab title follows the hero message; `index.html`
  * carries the English one statically for crawlers (checked by a test).
  */
@@ -53,6 +55,7 @@ export function LandingPage() {
 			<DataModelingDemo />
 			<RelationsDemo />
 			<MoreFeaturesSection />
+			{flags.vnFakeData ? <VnFakeDataTeaser /> : null}
 			<CtaBand />
 		</>
 	);

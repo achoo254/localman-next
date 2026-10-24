@@ -53,6 +53,15 @@ export const publicRoutes: RouteObject[] = [
 			"RunButtonPage",
 		),
 	},
+	// Vietnamese fake data generated in the browser; public and prerendered
+	// for search engines (`vnFakeData` flag, home otherwise).
+	{
+		path: "tools/vn-fake-data",
+		element: lazyPage(
+			() => import("../pages/tools/vn-fake-data-page"),
+			"VnFakeDataPage",
+		),
+	},
 	// Legal pages: public, at stable paths the app stores link to.
 	{
 		path: "privacy",
