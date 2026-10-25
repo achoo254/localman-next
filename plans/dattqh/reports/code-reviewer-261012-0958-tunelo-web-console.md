@@ -223,6 +223,6 @@ None.
   the real IdP, and a check that `GET /` on `tunnel.inetdev.io.vn` still answers 400.
 
 ## Unresolved questions
-1. Which Node version runs on 103.72.98.65 (pm2 `tunelo`)? It decides whether H1 is live.
+1. Which Node version runs on <SERVER_65_IP> (pm2 `tunelo`)? It decides whether H1 is live.
 2. M2: should IdP sign-out end console sessions within 15 minutes (session-bound refresh, sessions capped at the 30-day
    IdP session), or is best-effort back-channel logout with 90-day offline sessions acceptable?

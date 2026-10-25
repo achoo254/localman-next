@@ -87,10 +87,10 @@ describe("product settings in the environment", () => {
 	it("reads the proxy block list as IPs and CIDRs", () => {
 		const env = parseEnv({
 			...REQUIRED,
-			PROXY_BLOCKED_CIDRS: " 103.72.98.65, ,2001:db8::/32,198.51.100.0/24 ",
+			PROXY_BLOCKED_CIDRS: " 203.0.113.65, ,2001:db8::/32,198.51.100.0/24 ",
 		});
 		expect(env.PROXY_BLOCKED_CIDRS).toEqual([
-			"103.72.98.65",
+			"203.0.113.65",
 			"2001:db8::/32",
 			"198.51.100.0/24",
 		]);

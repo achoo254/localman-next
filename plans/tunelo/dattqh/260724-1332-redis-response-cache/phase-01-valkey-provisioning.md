@@ -44,7 +44,7 @@ requirepass CHANGE_ME_AT_DEPLOY   # đặt password thật lúc deploy, KHÔNG c
 - `systemctl is-active valkey` = `active`; `ss -ltnp | grep 6379` chỉ bind `127.0.0.1`/`::1` (không `0.0.0.0`).
 - `valkey-cli -a '<pass>' config get maxmemory maxmemory-policy save appendonly` khớp config.
 - `valkey-cli -a '<pass>' info memory | grep used_memory_human` ~5–10M lúc idle.
-- Từ ngoài: `redis-cli -h 103.72.98.65 -p 6379 ping` **phải fail/timeout** (không expose).
+- Từ ngoài: `redis-cli -h <SERVER_65_IP> -p 6379 ping` **phải fail/timeout** (không expose).
 
 ## Rollback
 

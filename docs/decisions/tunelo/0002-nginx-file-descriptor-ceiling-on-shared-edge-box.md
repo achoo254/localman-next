@@ -6,7 +6,7 @@
 
 ## Bối cảnh
 
-Tunelo chạy production trên `103.72.98.65` — **không phải box riêng**. nginx ở đó phục vụ 14 server block cho nhiều hệ thống khác (cloudpanel-dev, sa-dashboard, onescribe, onedash-s3, vaultic, hoc-cloud, meilisearch, office-tunnel…). Máy: CentOS Stream 9, nginx 1.20.1 (RPM AppStream), 4 vCPU, 7,6 GB RAM.
+Tunelo chạy production trên `<SERVER_65_IP>` — **không phải box riêng**. nginx ở đó phục vụ 14 server block cho nhiều hệ thống khác (cloudpanel-dev, sa-dashboard, onescribe, onedash-s3, vaultic, hoc-cloud, meilisearch, office-tunnel…). Máy: CentOS Stream 9, nginx 1.20.1 (RPM AppStream), 4 vCPU, 7,6 GB RAM.
 
 Cấu hình `/etc/nginx/nginx.conf` khi kiểm tra:
 

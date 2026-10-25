@@ -1,6 +1,8 @@
 # Deploy Localman (localman.hoandat.com)
 
-Localman chạy trên server dùng chung `103.72.98.65` theo quy ước của server đó, giống IdP `auth.hoandat.com`: một process pm2, nginx giữ TLS, không Docker Compose. MongoDB của Localman là một mongod **riêng** (single-node replica set để chạy transaction) ở `127.0.0.1:27018`; mongod chung cổng 27017 của các app khác không bị đụng tới. Quyết định này ghi ở Validation Log "Vòng 24" của `plans/dattqh/261008-1123-localman-core/plan.md`.
+> `<SERVER_65_IP>` là IPv4 công khai của server .65. Repo công khai nên không ghi IP thật; lấy từ tệp credential lab (`ALL_IN_ONE_STAGING_DEV`, entry `SSH_SERVER_STAGING`).
+
+Localman chạy trên server dùng chung `<SERVER_65_IP>` theo quy ước của server đó, giống IdP `auth.hoandat.com`: một process pm2, nginx giữ TLS, không Docker Compose. MongoDB của Localman là một mongod **riêng** (single-node replica set để chạy transaction) ở `127.0.0.1:27018`; mongod chung cổng 27017 của các app khác không bị đụng tới. Quyết định này ghi ở Validation Log "Vòng 24" của `plans/dattqh/261008-1123-localman-core/plan.md`.
 
 Mọi script nằm ở [`infra/localman/`](../infra/localman/); tài liệu này chỉ nêu thứ tự và cách kiểm tra, chi tiết nằm trong comment đầu mỗi script.
 
@@ -8,12 +10,12 @@ Mọi script nằm ở [`infra/localman/`](../infra/localman/); tài liệu này
 
 | Thành phần | Vị trí |
 |---|---|
-| DNS (Cloudflare, zone `hoandat.com`) | `localman` → `103.72.98.65` proxied; `*.localman` → `103.72.98.65` DNS only (Universal SSL miễn phí không phủ wildcard hai cấp) |
+| DNS (Cloudflare, zone `hoandat.com`) | `localman` → `<SERVER_65_IP>` proxied; `*.localman` → `<SERVER_65_IP>` DNS only (Universal SSL miễn phí không phủ wildcard hai cấp) |
 | TLS | Let's Encrypt `localman.hoandat.com` + `*.localman.hoandat.com`, gia hạn bằng DNS-01 Cloudflare (`authenticator = dns-cloudflare`, `renew_hook = systemctl reload nginx`) qua [`issue-wildcard-cert.sh`](../infra/localman/issue-wildcard-cert.sh); dùng cho cả host proxied (SSL "full") lẫn wildcard |
 | Release | `/opt/localman/releases/<id>/{api,web,nginx}` (id = giờ UTC + commit, thêm `-dirty` nếu cây làm việc có sửa đổi), symlink `/opt/localman/current` trỏ release đang chạy; giữ 5 release gần nhất. Lên release mới: [`activate-release.sh`](../infra/localman/activate-release.sh); đổi qua lại giữa các release: [`switch-release.sh`](../infra/localman/switch-release.sh) |
 | nginx | `/etc/nginx/conf.d/localman-http.conf` (zone `limit_req`/`limit_conn`, log che secret), `/etc/nginx/conf.d/localman.hoandat.com.conf` (CSP mang hash của đúng bản build), `/etc/nginx/localman/localman-app.inc` (location của dashboard). Mỗi release có bản conf riêng trong `releases/<id>/nginx/`, `switch-release.sh` cài bản đó cùng lúc với đổi symlink; bản gốc ở [`infra/localman/nginx/`](../infra/localman/nginx/), không chép tay |
 | IP client thật | Host proxied dựa vào `set_real_ip_from` (dải Cloudflare) + `real_ip_header CF-Connecting-IP` đã có ở cấp `http` trên server, Localman không lặp lại (`activate-release.sh` cảnh báo nếu thiếu). Host DNS-only `*.localman` không tin header nào (`set_real_ip_from unix:;` trong server block), `$remote_addr` là IP kết nối thật. Site chỉ chuyển `X-Forwarded-For $remote_addr` và `X-Forwarded-Host $host`, API tin proxy `127.0.0.1` (`TRUST_PROXY=127.0.0.1`) |
-| `/internal/` | Chỉ cho `103.72.98.65` (IdP trên chính server này, đi qua Cloudflare nên sau real-IP là IPv4 công khai của server), `127.0.0.1`, `::1`; nơi khác nhận 403 |
+| `/internal/` | Chỉ cho `<SERVER_65_IP>` (IdP trên chính server này, đi qua Cloudflare nên sau real-IP là IPv4 công khai của server), `127.0.0.1`, `::1`; nơi khác nhận 403 |
 | `/mcp` | Localman MCP (Streamable HTTP, Bearer token của IdP): `proxy_buffering off` cho SSE, body tối đa 4 MB, `proxy_read_timeout 300s` (Cloudflare vẫn cắt kết nối im lặng sau 100 giây, client MCP tự nối lại). `/.well-known/oauth-protected-resource` (metadata RFC 9728) cũng tới API |
 | Cổng nội bộ | API nghe `127.0.0.1` (`HOST=127.0.0.1`) ở 4000 và 4100, mongod-localman `127.0.0.1:27018`; tường lửa chung không mở ba cổng này. `setup-server.sh` chỉ **báo** nếu có cổng nghe ngoài loopback hay firewalld mở chúng, không tự đổi tường lửa |
 | Log nginx | Access log format `localman`: che secret trong `/m/{secret}`, token trong `/invite/{token}`, bỏ mọi query string (`code`/`state` của `/auth/callback`, `returnTo` chứa link mời, `?token=`), không ghi host (secret mock) và Referer. Error log của host wildcard, cổng 80 và `location /m/` chỉ ghi mức `crit` vì mỗi dòng lỗi đều nêu host hoặc request; từ chối do `limit_req`/`limit_conn` ghi mức `warn` (không vào error log mức `error`), đếm 429 ở access log |
@@ -27,7 +29,7 @@ Mọi script nằm ở [`infra/localman/`](../infra/localman/); tài liệu này
 
 ## Trạng thái hiện tại
 
-- Chứng chỉ: đã chuyển sang `dns-cloudflare` bằng `certbot reconfigure` ngày 2026-10-09, hết hạn 2027-01-07 (certbot timer gia hạn trước 30 ngày). Token Cloudflare chỉ có quyền DNS Edit trên `hoandat.com`, giới hạn IP `103.72.98.65`, nằm ở `/etc/letsencrypt/cloudflare-localman.ini` (600).
+- Chứng chỉ: đã chuyển sang `dns-cloudflare` bằng `certbot reconfigure` ngày 2026-10-09, hết hạn 2027-01-07 (certbot timer gia hạn trước 30 ngày). Token Cloudflare chỉ có quyền DNS Edit trên `hoandat.com`, giới hạn IP `<SERVER_65_IP>`, nằm ở `/etc/letsencrypt/cloudflare-localman.ini` (600).
 - Kho secret (ADR-0009) bật từ 24/10/2026: `SECRET_VAULT_ENABLED=true` trong `/opt/localman/.env` (bản trước đó `.env.bak-20261024-131033`) và cờ web `secretVault` trong `released-features`, release `20261024-061038-ef90efbce6b0`, backup DB ngay trước `localman-20261024-131033`. Không tắt lại khi người dùng đã có giá trị `lmv1:`: thiếu kho, web hiện và gửi nguyên bản mã. Trang `/your-data` (dữ liệu nằm ở đâu, theo cờ `secretVault`) lên cùng release `20261024-074506-956db9dabb1b`. Bản sửa sau review cuối phase (lịch sử, script, Share all, agent hạ kiểu secret) và gợi ý `{{response …}}` lên release `20261024-084539-5db554794412`, backup DB trước đó `localman-20261024-154529`. Ba bản sửa mức Low (che secret trong host ở log proxy, hỏi trước khi qua proxy khi request chứa bản sao giá trị kho, đặt lại kho xoá bản mã không có cờ) lên release `20261024-100053-f607efdac146`, backup DB trước đó `localman-20261024-170047`.
 - **Việc còn mở:** backup chỉ nằm trên chính server `.65`. Chưa có đích lưu ngoài server (mất ổ hay mất server là mất cả dữ liệu lẫn backup); cần chọn đích (ví dụ object storage) rồi thêm bước đẩy bản dump.
 
@@ -48,7 +50,7 @@ Trên máy deploy: pnpm 11.9, Node ≥ 22.12, ssh tới server qua alias (`SSH_T
 
 ## Lần đầu
 
-1. **DNS.** Cloudflare: `localman` (proxied) và `*.localman` (DNS only) trỏ `103.72.98.65`, zone SSL mode "full" (đã có cho IdP). Widget Turnstile cho `localman.hoandat.com`.
+1. **DNS.** Cloudflare: `localman` (proxied) và `*.localman` (DNS only) trỏ `<SERVER_65_IP>`, zone SSL mode "full" (đã có cho IdP). Widget Turnstile cho `localman.hoandat.com`.
 2. **Đồng bộ script lên server.** Từ repo: `SSH_TARGET=<alias> bash infra/localman/deploy.sh --infra-only` (chỉ chép `infra/localman/` vào `/opt/localman/infra`).
 3. **mongod-localman.** Trên server, với root (mật khẩu đi qua biến môi trường hoặc stdin, không qua argv):
    ```bash
@@ -62,7 +64,7 @@ Trên máy deploy: pnpm 11.9, Node ≥ 22.12, ssh tới server qua alias (`SSH_T
    - `nginx -T 2>/dev/null | grep -E 'set_real_ip_from|real_ip_header'` có dải IP Cloudflare và `real_ip_header CF-Connecting-IP` ở cấp `http` (nếu không, mọi người dùng chung rate limit của một IP edge Cloudflare, và `/internal/` từ chối IdP). Nếu thiếu, thêm một lần ở cấp `http` cho cả server (dải IP lấy từ `https://www.cloudflare.com/ips-v4` và `ips-v6`); đây là cấu hình chung với IdP nên báo user trước.
    - SELinux enforcing: `getsebool httpd_can_network_connect` phải `on` (setup-server cảnh báo nếu tắt); `web/` của mọi release mang nhãn `httpd_sys_content_t` (setup-server khai, activate-release `restorecon`).
 7. **Env.** `HOST=127.0.0.1` có sẵn trong mẫu (file cũ thiếu thì `setup-server.sh` thêm vào). Điền `/opt/localman/.env` theo mẫu: `MONGO_URI` (mật khẩu app ở bước 3), `OIDC_CLIENT_SECRET`, `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `TELEGRAM_BOT_TOKEN`, `OWNER_TELEGRAM_CHAT_ID`, `OWNER_SUBS`, bộ VAPID, `AUDIT_CLIENT_ID`/`AUDIT_CLIENT_SECRET`. Biến thiếu hoặc sai thì API dừng ngay khi khởi động và log tên biến (không in giá trị).
-8. **Deploy.** `SSH_TARGET=<alias> bash infra/localman/deploy.sh` (xem mục dưới).
+8. **Deploy.** `SSH_TARGET=<alias> SERVER_PUBLIC_IP=<SERVER_65_IP> bash infra/localman/deploy.sh` (xem mục dưới).
 9. **Telegram.** Bot của Localman chỉ **gửi** tin (API không có route webhook, nên không có `setWebhook` hay `TELEGRAM_WEBHOOK_SECRET`). Owner mở `@localman_hoandat_bot` và bấm Start để bot được phép nhắn; user nhận thông báo cũng phải Start bot (chat id lấy từ IdP). Kiểm token mà không để lộ qua argv:
    ```bash
    read -rs TOKEN && printf 'url = "https://api.telegram.org/bot%s/getMe"\n' "$TOKEN" | curl -s --config -; unset TOKEN
@@ -75,7 +77,7 @@ Trên máy deploy: pnpm 11.9, Node ≥ 22.12, ssh tới server qua alias (`SSH_T
 ## Các lần sau
 
 ```bash
-SSH_TARGET=<alias> [SSH_OPTS="-F ssh_config"] [VITE_FEATURES=...] bash infra/localman/deploy.sh
+SSH_TARGET=<alias> SERVER_PUBLIC_IP=<SERVER_65_IP> [SSH_OPTS="-F ssh_config"] [VITE_FEATURES=...] bash infra/localman/deploy.sh
 ```
 
 [`deploy.sh`](../infra/localman/deploy.sh) chạy ở máy:
@@ -111,7 +113,7 @@ seq 1 100 | xargs -P 20 -I % curl -s -o /dev/null -w '%{http_code}\n' "$MOCK_URL
 ```
 
 - Release: `readlink /opt/localman/current`, `ls /opt/localman/releases`.
-- Cổng nội bộ đóng từ ngoài (chạy ở máy khác, phải báo lỗi hoặc timeout): `for p in 4000 4100 27018; do nc -vz -w 3 103.72.98.65 $p; done`. Trên server: `ss -ltnp | grep -E ':(4000|4100|27018) '` chỉ thấy `127.0.0.1`.
+- Cổng nội bộ đóng từ ngoài (chạy ở máy khác, phải báo lỗi hoặc timeout): `for p in 4000 4100 27018; do nc -vz -w 3 <SERVER_65_IP> $p; done`. Trên server: `ss -ltnp | grep -E ':(4000|4100|27018) '` chỉ thấy `127.0.0.1`.
 - Log không lộ token hay secret (cả access và error log; secret mock nằm trong host nên cũng tìm theo tên miền):
   ```bash
   grep -E '/invite/[^\[]|\?[^\[]' /var/log/nginx/localman*.access.log          # không ra dòng nào
@@ -152,7 +154,7 @@ Lệnh chạy trên dữ liệu của tenant `primary`. Mã thoát: 0 xong, 1 c�
 
 ## Xoay token Cloudflare
 
-1. Tạo token mới trên Cloudflare: quyền Zone:DNS:Edit, chỉ zone `hoandat.com`, giới hạn IP `103.72.98.65`.
+1. Tạo token mới trên Cloudflare: quyền Zone:DNS:Edit, chỉ zone `hoandat.com`, giới hạn IP `<SERVER_65_IP>`.
 2. Trên server: `bash /opt/localman/infra/issue-wildcard-cert.sh --replace-token < /root/cloudflare-token`, rồi `shred -u /root/cloudflare-token`.
 3. `certbot renew --dry-run --cert-name localman.hoandat.com` phải thành công với token mới.
 4. Xoá token cũ trên Cloudflare, cập nhật bản sao trong iCloud.

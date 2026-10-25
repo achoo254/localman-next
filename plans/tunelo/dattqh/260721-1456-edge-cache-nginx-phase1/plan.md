@@ -189,7 +189,7 @@ Code-review (`code-reviewer`) phát hiện **1 lỗ hổng Critical** đã vá:
 - Nit không chặn (chưa làm, chấp nhận): `location /api|/login|/health` prefix rộng hơn segment của Express (path `/apidocs` mất cache, không sai); chưa có test riêng cho wiring `X-Accel-Buffering` trong `onStart` (helper đã test kỹ, wiring one-liner); `X-Cache-Status` lộ nhẹ info hạ tầng (cần cho verify phase-1, có thể gate sau).
 
 ### Deploy lên staging .65 (Session 3) — ĐÃ TRIỂN KHAI
-Server `103.72.98.65` (nhãn "SERVER STAGING .65"), shared host nhiều service, config tunelo ở `/etc/nginx/conf.d/tunelo.conf` (include http-context → `proxy_cache_path` đặt trong file này OK). nginx 1.20.1, user `nginx`, Node v22, pm2.
+Server `<SERVER_65_IP>` (nhãn "SERVER STAGING .65"), shared host nhiều service, config tunelo ở `/etc/nginx/conf.d/tunelo.conf` (include http-context → `proxy_cache_path` đặt trong file này OK). nginx 1.20.1, user `nginx`, Node v22, pm2.
 
 Đã làm:
 - Server: `pnpm build:server` → rsync `server.mjs`(+map) vào `/var/www/tunelo` → `pm2 restart tunelo`. Health `{"status":"ok"}`. Backup: `server.mjs.bak-<ts>`.

@@ -53,9 +53,9 @@ describe("blocked address ranges", () => {
 	});
 
 	it("adds the operator's CIDRs", () => {
-		const extra = blockListOf(["103.72.98.65", "2606:4700::/32"]);
-		expect(isBlockedAddress(extra, "103.72.98.65")).toBe(true);
-		expect(isBlockedAddress(extra, "103.72.98.66")).toBe(false);
+		const extra = blockListOf(["203.0.113.65", "2606:4700::/32"]);
+		expect(isBlockedAddress(extra, "203.0.113.65")).toBe(true);
+		expect(isBlockedAddress(extra, "203.0.113.66")).toBe(false);
 		expect(isBlockedAddress(extra, "2606:4700:4700::1111")).toBe(true);
 	});
 

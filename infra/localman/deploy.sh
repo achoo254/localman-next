@@ -3,7 +3,7 @@
 # atomic release: /opt/localman/releases/<id>/{api,web,nginx} behind the
 # symlink /opt/localman/current. The server side (install, nginx -t, switch,
 # health check, automatic rollback) is infra/localman/activate-release.sh.
-#   SSH_TARGET=<ssh alias or user@host> [SSH_OPTS="-F ssh_config"] bash infra/localman/deploy.sh
+#   SSH_TARGET=<ssh alias or user@host> SERVER_PUBLIC_IP=<server IPv4> [SSH_OPTS="-F ssh_config"] bash infra/localman/deploy.sh
 #   ... bash infra/localman/deploy.sh --infra-only   # sync infra/localman only (first-time setup)
 # Build-time web settings (VITE_*) are pinned here so a developer's
 # apps/web/.env.local never leaks into production; override with
@@ -34,6 +34,10 @@ if [ "${1:-}" = "--infra-only" ]; then
 	exit 0
 fi
 [ $# -eq 0 ] || { echo "usage: deploy.sh [--infra-only]" >&2; exit 2; }
+# The server's public IPv4 is kept out of the public repository; nginx needs it
+# to let the IdP on the same server reach /internal/.
+SERVER_PUBLIC_IP="${SERVER_PUBLIC_IP:?set SERVER_PUBLIC_IP to the server public IPv4}"
+[[ "$SERVER_PUBLIC_IP" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]] || { echo "SERVER_PUBLIC_IP is not an IPv4 address" >&2; exit 2; }
 
 # Sortable and traceable: UTC time, commit, and whether the tree was dirty.
 RELEASE="$(date -u +%Y%m%d-%H%M%S)-$(git rev-parse --short=12 HEAD)"
@@ -66,14 +70,15 @@ fi
 cp -R apps/api/dist/. "$OUT/api/"
 cp -R apps/web/dist "$OUT/web"
 
-echo "== nginx config with the CSP hashes of this build"
+echo "== nginx config with the CSP hashes of this build and the server IP"
 cp infra/localman/nginx/localman-http.conf infra/localman/nginx/localman-app.inc "$OUT/nginx/"
 HASHES="$(node infra/localman/csp-hashes.mjs apps/web/dist/*.html)"
 # Base64 hashes never contain '|' or '&'.
 for name in localman.hoandat.com.conf; do
-	sed "s|__CSP_SCRIPT_HASHES__|$HASHES|" "infra/localman/nginx/$name" >"$OUT/nginx/$name"
-	if grep -q '__CSP_SCRIPT_HASHES__' "$OUT/nginx/$name"; then
-		echo "CSP placeholder left in $name" >&2
+	sed -e "s|__CSP_SCRIPT_HASHES__|$HASHES|" -e "s|__SERVER_PUBLIC_IP__|$SERVER_PUBLIC_IP|" \
+		"infra/localman/nginx/$name" >"$OUT/nginx/$name"
+	if grep -Eq '__CSP_SCRIPT_HASHES__|__SERVER_PUBLIC_IP__' "$OUT/nginx/$name"; then
+		echo "placeholder left in $name" >&2
 		exit 1
 	fi
 done

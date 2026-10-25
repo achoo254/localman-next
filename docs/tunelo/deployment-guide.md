@@ -78,15 +78,15 @@ Cloudflare zone `hoandat.com`, both records **DNS only** (grey cloud): the
 Universal SSL cert does not cover `*.tunnel.hoandat.com`, and tunnels need long
 WebSockets and their own TCP ports.
 ```
-tunnel.hoandat.com      A  103.72.98.65   (DNS only)
-*.tunnel.hoandat.com    A  103.72.98.65   (DNS only)
+tunnel.hoandat.com      A  <SERVER_65_IP>   (DNS only)
+*.tunnel.hoandat.com    A  <SERVER_65_IP>   (DNS only)
 ```
 
 ## SSL Certificate (Let's Encrypt)
 
 Wildcard cert by DNS-01 through the Cloudflare plugin, reusing the token that
 already renews `localman.hoandat.com` (`Zone:DNS:Edit` on `hoandat.com`, only
-usable from 103.72.98.65): `bash infra/tunelo/certbot-setup.sh` on the server.
+usable from <SERVER_65_IP>): `bash infra/tunelo/certbot-setup.sh` on the server.
 Cert: `/etc/letsencrypt/live/tunnel.hoandat.com/`; `certbot-renew.timer` renews
 it and reloads nginx.
 

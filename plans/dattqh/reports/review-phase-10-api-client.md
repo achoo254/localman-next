@@ -197,7 +197,7 @@ Biome báo sai thứ tự import: `snippets/code-snippet-modal` phải đứng s
 
 ## Câu hỏi còn mở
 
-- Server Localman (origin sau Cloudflare) có chung VPS hoặc IP với `tunnel.hoandat.com` không? Nếu có, guard "địa chỉ của chính server" sẽ chặn mọi URL tunnel, và đường Tunelo luôn trả `PROXY_TARGET_BLOCKED` trong production. Hiện mới biết `tunnel.inetdev.io.vn` trỏ `103.72.98.65` và `localman.hoandat.com` nằm sau Cloudflare.
+- Server Localman (origin sau Cloudflare) có chung VPS hoặc IP với `tunnel.hoandat.com` không? Nếu có, guard "địa chỉ của chính server" sẽ chặn mọi URL tunnel, và đường Tunelo luôn trả `PROXY_TARGET_BLOCKED` trong production. Hiện mới biết `tunnel.inetdev.io.vn` trỏ `<SERVER_65_IP>` và `localman.hoandat.com` nằm sau Cloudflare.
 - Có giữ `mcp: true` cho `setTunnelMapping` và `updateClientSettings` không, khi hai thao tác này nới lỏng việc hỏi đồng ý ở trình duyệt? (H2)
 - Có che credential trong history (M2) không, hay chấp nhận rủi ro tới phase 13 (environment)?
 
