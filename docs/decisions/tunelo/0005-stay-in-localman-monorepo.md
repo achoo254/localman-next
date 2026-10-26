@@ -49,8 +49,15 @@ Giữ Tunelo trong `localman-next`. Dùng ngoài Localman đi qua gói npm `tune
   Localman tồn tại.
 - Mất: ai muốn **tự host server** Tunelo phải clone cả monorepo, và server vẫn cần IdP kiểu
   `auth.<domain>` cùng gói tenancy.
-- Check ranh giới chỉ nhìn import; phụ thuộc ngầm qua chuỗi lỗi hay API HTTP vẫn phải ghi trong
-  tài liệu (`docs/tunelo/system-architecture.md`, mục "Boundary with Localman").
+- Check ranh giới chỉ nhìn import. Các hợp đồng chéo không đi qua import, phải đổi ở cả hai bên trong
+  cùng một commit:
+  - chuỗi lỗi relay (`Tunnel not found: <label>`, `Bad Gateway`, `Gateway Timeout`,
+    `Local service unavailable`, …) mà Localman nhận dạng trong
+    `apps/api/src/modules/mock-runtime/upstream-tunelo.ts`;
+  - `GET /api/tunnels` cùng scope `tunnels:read` (`apps/tunelo-server/src/api/tunnel-list-routes.ts`,
+    [ADR-0004](0004-accounts-via-central-idp.md)), Localman đọc bằng token đổi ở IdP;
+  - luồng `tunelo link <code>` (`apps/tunelo-server/src/api/link-routes.ts`) mà Localman hiện cho máy
+    chưa có tài khoản.
 
 ## Khi nào xem lại
 

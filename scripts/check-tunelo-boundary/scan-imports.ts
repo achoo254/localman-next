@@ -11,7 +11,7 @@ export interface TuneloPackage {
  * Tunelo ships on its own (the `tunelo` CLI on npm, the server on the edge
  * box), so it must not grow into Localman. The server shares only the
  * tenancy guard (`@localman/tenancy`); the CLI and the protocol package share
- * nothing. See `docs/tunelo/system-architecture.md`, "Boundary with Localman".
+ * nothing. See `docs/decisions/tunelo/0005-stay-in-localman-monorepo.md`.
  */
 export const TUNELO_PACKAGES: readonly TuneloPackage[] = [
 	{ root: "apps/tunelo-server", allowedLocalman: ["@localman/tenancy"] },

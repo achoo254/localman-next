@@ -109,7 +109,8 @@ The browser opens `auth.hoandat.com`: sign in with Google or GitHub (skipped if 
 
 - Already signed in: `tunelo login` says so and stops; `--force` signs in again.
 - Another Tunelo server: `tunelo login --server https://tunnel.<domain>`. The CLI signs in at `https://auth.<domain>` (derived from the server name) and makes that server the default. Account tokens are only sent to the Tunelo of the account's own domain.
-- No browser (CI): `tunelo login --legacy-key <token>`, or `--legacy-key` with the token in `TUNELO_KEY` (anonymous token).
+- Machine reached over SSH (lab box running a long-lived tunnel): run `tunelo login` on that machine, open the printed URL and approve the code from a browser anywhere else; the session is stored in that user's `~/.tunelo/config.json`, so run the tunnel process as the same user.
+- Nobody to approve (CI): `tunelo login --legacy-key <token>`, or `--legacy-key` with the token in `TUNELO_KEY` (anonymous token).
 
 ### Step 2 — open a tunnel
 
@@ -177,12 +178,7 @@ pnpm lint                # Lint (biome)
 
 ## Deploy to VPS
 
-See `docs/tunelo/deployment-guide.md` in the monorepo for full instructions. Quick summary:
-
-1. Setup DNS: `A tunnel.hoandat.com` and `A *.tunnel.hoandat.com → VPS_IP` (DNS only)
-2. Get wildcard SSL: `bash infra/certbot-setup.sh`
-3. Configure nginx: `cp infra/nginx.conf /etc/nginx/sites-available/tunelo`
-4. Deploy: `bash infra/deploy.sh`
+See `docs/tunelo/deployment-guide.md` in the monorepo (DNS, wildcard certificate, nginx and deploy scripts in `infra/tunelo/`).
 
 ## Security
 

@@ -39,7 +39,7 @@ apps/tunelo-server/      # Tunnel server (deployed to VPS, PM2)
 packages/tunelo-cli/     # CLI tool (npm package: tunelo)
 packages/tunelo-shared/  # Shared types & WS protocol (@tunelo/shared)
 infra/tunelo/            # nginx, certbot, PM2 configs, deploy.sh
-docs/tunelo/             # Tunelo documentation
+docs/tunelo/             # Deployment guide (ADR: docs/decisions/tunelo/)
 tests/tunelo/            # E2E tests
 ```
 
@@ -62,8 +62,6 @@ Release CLI: tag `tunelo-vX.Y.Z` triggers `.github/workflows/tunelo-publish-cli.
 
 ### Coding Rules
 
-Read `docs/tunelo/code-standards.md` for full details. Quick reference:
-
 - **TypeScript strict** — `strict: true`, no `any` (use `unknown` + type guards)
 - **ESM only** — `"type": "module"` in all package.json
 - **Named exports only** — no `export default`
@@ -80,8 +78,8 @@ This is a **tunnel proxy** — it relays untrusted HTTP traffic. Critical rules:
 
 1. **Validate all WS messages** — JSON.parse in try-catch, validate schema with type guards
 2. **Sanitize headers** — strip hop-by-hop headers (`Connection`, `Transfer-Encoding`, `Upgrade`, etc.)
-3. **Max body size** — reject payloads >10MB
-4. **Rate limit WS** — drop connections exceeding 100 msg/s
+3. **Max body size** — reject payloads above `MAX_BODY_SIZE` (`packages/tunelo-shared/src/constants.ts`)
+4. **Rate limit WS** — drop connections exceeding `WS_RATE_LIMIT` (same file)
 5. **Subdomain validation** — regex `^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`
 6. **Timeout everything** — HTTP relay 30s, WS ping/pong 30s
 7. **API keys** — store hashed (SHA-256), never log plaintext
@@ -121,7 +119,7 @@ This is a **tunnel proxy** — it relays untrusted HTTP traffic. Critical rules:
 
 ### Architecture Reference
 
-See `docs/tunelo/system-architecture.md` for full details.
+Decisions and boundaries: accounts via the shared IdP in `docs/decisions/tunelo/0004-accounts-via-central-idp.md`; boundary with Localman (import check, cross contracts) in `docs/decisions/tunelo/0005-stay-in-localman-monorepo.md`. Operations: `docs/tunelo/deployment-guide.md`. Current API: `apps/tunelo-server/src/api/create-api-router.ts`.
 
 ```
 Browser → nginx (443, TLS, wildcard cert)

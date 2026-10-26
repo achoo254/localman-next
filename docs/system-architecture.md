@@ -11,7 +11,7 @@ Monorepo `localman-next` là pnpm workspace gồm `apps/*` và `packages/*`, ch�
 | `packages/operations` | `@localman/operations` | Operation registry: một khai báo sinh route REST, MCP tool descriptor và OpenAPI 3.1. Xem [operation-registry.md](operation-registry.md) |
 | `packages/shared` | `@localman/shared` | Code dùng chung cho web và api. `plan-limits.ts` là nguồn duy nhất của mọi hạn mức gói. Ngoài entry gốc có subpath nhẹ: `@localman/shared/constants` (hạn mức, giới hạn resource, `FIELD_TYPES`, `ENDPOINT_*`, `parentKeyOf`; không zod, không catalog Faker), `@localman/shared/faker-catalog` (danh sách id Faker, không Faker) và `@localman/shared/faker-methods` (hàm chạy Faker, chỉ api) và `@localman/shared/vn-fake-data` (bộ sinh dữ liệu giả kiểu Việt Nam, không Faker) |
 | `packages/design-tokens` | `@localman/design-tokens` | `tokens.css`, nơi duy nhất được chứa literal màu. Xem [design-system.md](design-system.md) |
-| `apps/tunelo-server`, `packages/tunelo-cli`, `packages/tunelo-shared` | `@tunelo/server`, `tunelo`, `@tunelo/shared` | Tunelo, gộp từ repo cũ và giữ nguyên lịch sử. Xem `docs/tunelo/` |
+| `apps/tunelo-server`, `packages/tunelo-cli`, `packages/tunelo-shared` | `@tunelo/server`, `tunelo`, `@tunelo/shared` | Tunelo, gộp từ repo cũ và giữ nguyên lịch sử. Vận hành: `docs/tunelo/deployment-guide.md`; quyết định và ranh giới với Localman: `docs/decisions/tunelo/` |
 | `scripts/` | — | Script kiểm tra cho CI (`check-mcp-coverage.ts`, `check-tokens.ts`) và script build của Tunelo (`scripts/tunelo/`) |
 | `infra/tunelo/` | — | nginx, certbot, PM2 và `deploy.sh` của Tunelo |
 

@@ -94,52 +94,6 @@ IdP session, so signing out at `auth.hoandat.com` ends console sessions.
 Rollback: remove the two variables and restart `tunelo`, or restore
 `server.mjs.bak-pre-web-console` and `package.json.bak-pre-web-console`.
 
-## Domain move from `tunnel.inetdev.io.vn`
-
-Retired on 2026-10-13: the server answers `tunnel.hoandat.com` only. From 2026-10-12
-to then it answered both domains (`TUNNEL_DOMAINS=tunnel.hoandat.com,tunnel.inetdev.io.vn`).
-
-Moved on 2026-10-12: the three lab tunnel clients (`onedash-s3` on lab .171 via
-`/root/.tunelo/config.json`; `onedash-staging` on .174, same file; `miu-staging` on
-.176 via `TUNELO_SERVER` in `miu-tunnel.service`), the `Host` header of the
-`onedash-s3.conf` and `miu-staging.conf` proxies, and OneDash staging log shipping
-(`VL_INGEST_ENDPOINT`). The `ods3lab` tunnel and the `office.tunnel.inetdev.io.vn`
-vhost were retired the same day (configs kept in `/root/nginx-bak/`).
-Miu staging (`miu-staging` tunnel on .176, `miu-staging.conf` on .65, DNS
-`miu-staging.hoandat.com`) was removed later that day; only Miu production remains.
-
-Also moved on 2026-10-12: every lab machine runs `tunelo@1.7.0` from npmjs (the
-old `@dattqh/tunelo` package removed), and `server-tools.conf` (`cloudpanel-dev.inet.vn`)
-sends `Host onedash-staging.tunnel.hoandat.com` after OneDash learned that alias
-(commit `50f03783c`: MCP public base, backend OAuth issuer, client host lists).
-
-Checked on 2026-10-13 (read-only): `cloudpanel-dev.inet.vn` no longer depends on the
-old domain (its proxy sends `Host onedash-staging.tunnel.hoandat.com`, the staging
-client on the staging lab machine connects to `tunnel.hoandat.com` since 2026-10-12, no staging
-request on the old domain since 2026-10-12 08:54). The old domain is therefore
-retired; what remained on it:
-
-- The OneDash dev setup, `onedash-dev.tunnel.inetdev.io.vn` (`.env.dattqh_lab` and
-  the dev entries of the OneDash host lists) and the agents and OTLP exporters that
-  call it: move them to `onedash-dev.tunnel.hoandat.com`.
-
-`mail.tunnel.inetdev.io.vn` (OneMail dev, Collabora WOPI) goes too, by the owner's
-decision of 2026-10-13: OneMail dev uses `mail.tunnel.hoandat.com` and Collabora
-is tested another way.
-
-Done on the server on 2026-10-13: `TUNNEL_DOMAINS=tunnel.hoandat.com` in
-`/var/www/tunelo/.env`; the old domain's 443 block, its `tunnel_old_domain` log, its
-port 80 names and both `mail.tunnel.inetdev.io.vn` blocks dropped from `tunelo.conf`
-(previous file `/root/tunelo.conf.bak-261013-142454`); DNS records `tunnel`, `*.tunnel`
-and `mail.tunnel` deleted in Cloudflare zone `inetdev.io.vn`; both certificates deleted
-(archived in `/root/letsencrypt-inetdev-tunnel-261013.tgz`). CLI 1.6.x still defaults to
-the old apex: those machines need `--server https://tunnel.hoandat.com` or a newer CLI.
-
-From 2026-10-13 to 2026-10-24 `inetdev.io.vn` was a tenant of the IdP (the owner's
-acceptance domain) and `tunnel.inetdev.io.vn` answered again for that tenant. The tenant
-and its DNS records were removed on 2026-10-24: `TUNNEL_DOMAINS` is only
-`tunnel.hoandat.com` now.
-
 ## One domain (no tenants)
 
 Since 2026-10-24 Tunelo serves only `TUNNEL_DOMAINS` (`tunnel.hoandat.com` and

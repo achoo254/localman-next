@@ -1,6 +1,6 @@
 /**
  * `pnpm check:tunelo-boundary` — keeps Tunelo shippable on its own
- * (docs/tunelo/system-architecture.md, "Boundary with Localman").
+ * (docs/decisions/tunelo/0005-stay-in-localman-monorepo.md).
  *
  * Scans the sources of `apps/tunelo-server`, `packages/tunelo-cli` and
  * `packages/tunelo-shared` for imports of Localman packages outside each
@@ -50,7 +50,7 @@ async function main(): Promise<number> {
 	}
 	if (violations.length > 0) {
 		console.error(
-			`✗ ${violations.length} import(s) cross the Tunelo boundary (docs/tunelo/system-architecture.md):`,
+			`✗ ${violations.length} import(s) cross the Tunelo boundary (docs/decisions/tunelo/0005-stay-in-localman-monorepo.md):`,
 		);
 		for (const v of violations) {
 			console.error(`  ${v.file}:${v.line}  ${v.specifier}  — ${v.reason}`);
