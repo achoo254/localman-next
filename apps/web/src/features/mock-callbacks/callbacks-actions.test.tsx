@@ -85,6 +85,34 @@ describe("callbacks editor: test, read only and limit", () => {
 		).toBeInTheDocument();
 	});
 
+	it("puts a refused test on the target field, with nothing sent", async () => {
+		renderCallbacks(callbacksJson([callbackJson("cb1")]), {
+			[`POST ${BASE}/test`]: {
+				status: 400,
+				body: {
+					error: {
+						code: "CALLBACK_URL_BLOCKED",
+						message: "Blocked",
+						details: [
+							{ path: "callback.target.url", message: "This host is private." },
+						],
+					},
+				},
+			},
+		});
+		const first = await waitFor(() => block(1));
+		await userEvent
+			.setup()
+			.click(within(first).getByRole("button", { name: "Send test" }));
+		const target = within(first).getByLabelText("Target");
+		await waitFor(() => expect(target).toHaveAttribute("aria-invalid", "true"));
+		expect(within(first).getByText("This host is private.")).toBeVisible();
+		expect(
+			first.querySelector('[data-id="resource-form-callback-test-result"]'),
+		).toBeNull();
+		expect(within(first).getByText("Not sent yet.")).toBeInTheDocument();
+	});
+
 	it("is read only for a collaborator", async () => {
 		const { container } = renderCallbacks(
 			callbacksJson([callbackJson("cb1")], { canManage: false }),

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { createProject } from "../support/projects-ui.js";
 import { signIn, uniqueUsername } from "../support/session.js";
 
-test("a user deletes their account from Account and stays signed out", async ({
+test("a user deletes their account from Account and stays signed out @smoke", async ({
 	page,
 }) => {
 	const username = uniqueUsername("delete");
@@ -41,7 +41,7 @@ test("a user deletes their account from Account and stays signed out", async ({
 	await expect(page.getByTestId("projects-add")).toBeVisible();
 });
 
-test("the legal pages and the deletion page open without signing in", async ({
+test("the legal pages and the deletion page open without signing in @smoke", async ({
 	page,
 }) => {
 	for (const [path, heading] of [

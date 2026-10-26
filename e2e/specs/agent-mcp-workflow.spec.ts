@@ -9,7 +9,7 @@ import { signIn, uniqueSuffix, uniqueUsername } from "../support/session.js";
  * Mock Sync; sending to the mock is covered by the MCP tests, since the
  * E2E mock lives on a loopback port the proxy refuses.)
  */
-test("an agent drives mock, Live Mock Sync, sharing, fork, pull request and merge with tools only", async ({
+test("an agent drives mock, Live Mock Sync, sharing, fork, pull request and merge with tools only @smoke", async ({
 	page,
 }) => {
 	const suffix = uniqueSuffix();

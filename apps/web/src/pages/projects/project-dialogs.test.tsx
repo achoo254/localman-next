@@ -81,6 +81,27 @@ describe("project dialogs", () => {
 		expect(notice).not.toHaveTextContent(/plan|Pro/);
 	});
 
+	it("closes the form with the limit notice when the server is already full", async () => {
+		// The list is stale: another tab created the last project meanwhile.
+		const { calls } = renderPage({
+			"GET /api/v1/projects": { body: { items: [makeProject("p1")] } },
+			"POST /api/v1/projects": PLAN_LIMIT,
+		});
+		await userEvent.click(
+			await screen.findByRole("button", { name: "Create a new project" }),
+		);
+		await userEvent.type(screen.getByLabelText(/Project name/), "One more");
+		await userEvent.click(
+			screen.getByRole("button", { name: "Create project" }),
+		);
+		expect(await findToast("You've reached the limit of")).toBeInTheDocument();
+		await waitFor(() =>
+			expect(screen.queryByRole("dialog", { name: "New project" })).toBeNull(),
+		);
+		expect(screen.queryByText("One more")).toBeNull();
+		expect(calls.filter((c) => c.method === "POST")).toHaveLength(1);
+	});
+
 	it("skips the form when the plan is already full", async () => {
 		const full = Array.from({ length: limitsFor("free").projects }, (_, i) =>
 			makeProject(`p${i}`),

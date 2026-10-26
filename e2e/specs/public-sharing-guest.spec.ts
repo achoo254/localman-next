@@ -18,7 +18,7 @@ interface Notification {
  * and nothing more, ask for edit access, the owner approves, and only then
  * do they open the collection in its workspace.
  */
-test("a guest reads the redacted collection, asks to edit and gets in once approved", async ({
+test("a guest reads the redacted collection, asks to edit and gets in once approved @smoke", async ({
 	page,
 	browser,
 }) => {

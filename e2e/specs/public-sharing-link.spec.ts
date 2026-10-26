@@ -18,7 +18,7 @@ import { signIn, uniqueSuffix, uniqueUsername } from "../support/session.js";
  * without a session reads requests and examples with every secret hidden;
  * the workspace Admin turns public links off and the page is gone.
  */
-test("publish a collection with a public link and read it signed out", async ({
+test("publish a collection with a public link and read it signed out @smoke", async ({
 	page,
 	browser,
 }) => {

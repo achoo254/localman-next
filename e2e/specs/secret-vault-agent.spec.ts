@@ -34,7 +34,7 @@ function namedItems(value: unknown): Named[] {
  * (A send that reaches an upstream and masks its echo is covered by the
  * API tests: the proxy refuses the E2E stack's loopback servers.)
  */
-test("an agent uses a vault secret only once the user lets it, only on the allowed hosts, never reading it", async ({
+test("an agent uses a vault secret only once the user lets it, only on the allowed hosts, never reading it @smoke", async ({
 	page,
 }) => {
 	const suffix = uniqueSuffix();

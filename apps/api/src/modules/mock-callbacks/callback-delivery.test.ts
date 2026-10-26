@@ -101,6 +101,30 @@ describe("callback delivery", () => {
 		expect(res.body.response).toBeNull();
 	});
 
+	it("refuses a test to a private address on its target, sending nothing", async () => {
+		const { path } = await usersProject();
+		const res = await request(callbackApp)
+			.post(`${path}/test`)
+			.set("origin", ORIGIN)
+			.set("x-test-sub", OWNER)
+			.send({
+				callback: {
+					on: "create",
+					target: { kind: "url", url: "https://169.254.169.254/" },
+				},
+			});
+		expect(res.status).toBe(400);
+		expect(res.body.error).toMatchObject({
+			code: "CALLBACK_URL_BLOCKED",
+			details: [{ path: "callback.target.url" }],
+		});
+		expect(outbound.received).toHaveLength(0);
+		await requestLog.flush();
+		expect(await RequestLogModel.countDocuments({ source: "callback" })).toBe(
+			0,
+		);
+	});
+
 	it("puts a delivery in flight back on shutdown", async () => {
 		outbound.server.routes.set("/hooks/slow", (_req, res) => {
 			hanging.push(res);

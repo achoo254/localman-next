@@ -74,7 +74,7 @@ function outline(items: readonly V21Item[]): unknown[] {
 	);
 }
 
-test("import a nested Postman collection, send a request with inherited auth, export it", async ({
+test("import a nested Postman collection, send a request with inherited auth, export it @smoke", async ({
 	page,
 }) => {
 	await signIn(page, uniqueUsername("collections"));

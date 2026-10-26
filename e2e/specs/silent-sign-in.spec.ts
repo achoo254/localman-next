@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { IDP_ORIGIN } from "../support/ports.js";
 import { signIn, uniqueUsername } from "../support/session.js";
 
-test("a browser still signed in at the IdP comes back signed in without a click", async ({
+test("a browser still signed in at the IdP comes back signed in without a click @smoke", async ({
 	page,
 }) => {
 	await signIn(page, uniqueUsername("silent"));
@@ -16,7 +16,7 @@ test("a browser still signed in at the IdP comes back signed in without a click"
 	expect(new URL(page.url()).pathname).toBe("/docs/quick-start");
 });
 
-test("a first-time visitor stays a guest without a trip to the IdP", async ({
+test("a first-time visitor stays a guest without a trip to the IdP @smoke", async ({
 	page,
 }) => {
 	const idpRequests: string[] = [];

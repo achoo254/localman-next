@@ -21,7 +21,7 @@ import { signIn, uniqueSuffix, uniqueUsername } from "../support/session.js";
  * history never hand it to Localman; another device of the same account
  * gets only the ciphertext until the passphrase opens it there.
  */
-test("a secret's own value stays in the browser and opens on another device only with the passphrase", async ({
+test("a secret's own value stays in the browser and opens on another device only with the passphrase @smoke", async ({
 	page,
 	browser,
 }) => {

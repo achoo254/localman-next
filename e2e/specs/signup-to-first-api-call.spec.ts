@@ -13,7 +13,7 @@ import {
 } from "../support/resources-ui.js";
 import { signIn, uniqueSuffix, uniqueUsername } from "../support/session.js";
 
-test("a new user signs up, builds users and posts, and calls the mock API", async ({
+test("a new user signs up, builds users and posts, and calls the mock API @smoke", async ({
 	page,
 }) => {
 	const suffix = uniqueSuffix();

@@ -29,7 +29,7 @@ function postForm(url: string, form: Record<string, string>) {
 	return fetch(url, { method: "POST", body: new URLSearchParams(form) });
 }
 
-test("an agent authorizes Localman MCP at the IdP, creates a project the user then sees", async ({
+test("an agent authorizes Localman MCP at the IdP, creates a project the user then sees @smoke", async ({
 	page,
 	request,
 }) => {
