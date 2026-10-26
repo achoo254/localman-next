@@ -14,6 +14,7 @@
 		"lint:fix": "biome check --fix .",
 		"typecheck": "pnpm -r --workspace-concurrency=1 typecheck && tsc -p scripts/tsconfig.json && tsc -p e2e/tsconfig.json",
 		"e2e": "playwright test --config e2e/playwright.config.ts",
+		"e2e:smoke": "playwright test --config e2e/playwright.config.ts --grep @smoke",
 		"store:screenshots": "playwright test --config e2e/store/playwright.config.ts",
 		"test": "vitest run",
 		"test:watch": "vitest",

@@ -1,6 +1,9 @@
 # Quality gates for every push to main and every pull request: the same
-# commands each phase must pass locally (CLAUDE.md), then the Playwright
-# E2E suite against a local stack (in-memory Mongo replica set, fake IdP).
+# commands each phase must pass (CLAUDE.md), split into parallel jobs so
+# the slowest one sets the time. The unit and API integration suite is
+# sharded; Playwright runs only the `@smoke` journeys against a local stack
+# (in-memory Mongo replica set, fake IdP). The whole E2E suite runs nightly
+# in e2e-nightly.yml.
 name: ci
 
 on:
@@ -16,9 +19,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  checks:
+  static:
+    name: lint, typecheck, MCP coverage, build
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
@@ -33,17 +37,54 @@ jobs:
 
       - run: pnpm lint
       - run: pnpm typecheck
-      - run: pnpm test --maxWorkers=2
       - run: pnpm check:mcp-coverage
       - run: pnpm build
 
+  unit:
+    name: unit and API tests (${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm test --maxWorkers=2 --shard=${{ matrix.shard }}/4
+
+  e2e-smoke:
+    name: E2E smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
       - run: pnpm exec playwright install --with-deps chromium
 
-      - run: pnpm e2e --workers=2
+      - run: pnpm e2e:smoke --workers=2
 
       - if: failure()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
-          name: e2e-results
+          name: e2e-smoke-results
           path: e2e/test-results/
           retention-days: 7
