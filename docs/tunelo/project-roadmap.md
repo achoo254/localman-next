@@ -1,5 +1,7 @@
 # Project Roadmap
 
+> **Historical v0.3 snapshot.** This file predates the move into `localman-next` and the switch to accounts at the shared IdP ([ADR-0004](../decisions/tunelo/0004-accounts-via-central-idp.md)); its paths, user/password/TOTP model and status lines do not describe the current code. Current layout: `apps/tunelo-server`, `packages/tunelo-cli`, `packages/tunelo-shared` ([CLAUDE.md](../../CLAUDE.md), section Tunelo); current API: `apps/tunelo-server/src/api/create-api-router.ts`.
+
 ## v0.1 — MVP (Complete — 2026-03-28)
 
 **Goal:** Working tunnel proxy with HTTPS + wildcard subdomains

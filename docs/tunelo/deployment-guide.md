@@ -50,27 +50,15 @@ secret tương ứng: `SSH_PRIVATE_KEY`, `STAGING_HOST`, `STAGING_PORT`,
 `STAGING_USER`, `DEPLOY_PATH`.
 
 Deploy **không** đồng bộ `.env` — file secret nằm sẵn trên server tại
-`/var/www/tunelo/.env` và được `ecosystem.config.cjs` nạp qua `--env-file`.
-Bản server hiện tại (MongoDB key-store) **bắt buộc** `MONGO_URI` và `JWT_SECRET`
-trong file này, nếu thiếu process crash-loop lúc khởi động. Set tối thiểu:
-
-```bash
-TUNNEL_PORT=3001
-TUNNEL_DOMAINS=tunnel.hoandat.com   # primary first; any others also accepted
-MONGO_URI=mongodb://<user>:<pass>@localhost:27017/<db>   # required
-JWT_SECRET=<openssl rand -base64 48>                     # required
-ADMIN_EMAILS=you@example.com                             # optional
-NODE_ENV=production
-```
+`/var/www/tunelo/.env` và được `infra/tunelo/ecosystem.config.cjs` nạp qua `--env-file`.
+Server **bắt buộc** `MONGO_URI` (thiếu thì process dừng lúc khởi động,
+`apps/tunelo-server/src/key-store/create-key-store.ts`). Danh sách biến và giải thích:
+`apps/tunelo-server/.env.example`; bản sao production ở iCloud `ENV production/tunelo/.env`.
 
 ## Prerequisites
 
-- VPS: Ubuntu 22.04+, 2-4 vCPU, 4-8GB RAM
 - Domain: `tunnel.hoandat.com` + `*.tunnel.hoandat.com` (Cloudflare zone `hoandat.com`)
-- Node.js 20+ installed on VPS
-- pnpm installed on VPS
-- MongoDB 5.0+ (v0.3: can run on same VPS or remote host)
-- Email service (for future notifications, optional)
+- Node.js (theo `engines` trong `package.json` gốc) và pm2 trên server; MongoDB cho `MONGO_URI`
 
 ## DNS Setup
 
@@ -127,7 +115,7 @@ sends `Host onedash-staging.tunnel.hoandat.com` after OneDash learned that alias
 
 Checked on 2026-10-13 (read-only): `cloudpanel-dev.inet.vn` no longer depends on the
 old domain (its proxy sends `Host onedash-staging.tunnel.hoandat.com`, the staging
-client on 202.92.7.26 connects to `tunnel.hoandat.com` since 2026-10-12, no staging
+client on the staging lab machine connects to `tunnel.hoandat.com` since 2026-10-12, no staging
 request on the old domain since 2026-10-12 08:54). The old domain is therefore
 retired; what remained on it:
 
@@ -183,52 +171,9 @@ The CLI signs in per server: `tunelo login --server https://tunnel.<domain>` sig
 that server the default; the account token is only sent to the Tunelo of its own domain.
 The production server is only `tunnel.hoandat.com`, the CLI's default.
 
-## MongoDB Setup (v0.3+)
+## Database
 
-### Option A: Local MongoDB (Same VPS)
-
-```bash
-# Install MongoDB Community Edition
-curl -fsSL https://www.mongodb.org/static/pgp/server-5.0.asc | sudo apt-key add -
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-5.0.list
-sudo apt update && sudo apt install -y mongodb-org
-
-# Start and enable
-sudo systemctl start mongod
-sudo systemctl enable mongod
-
-# Verify
-mongo --eval "db.version()"
-
-# Create tunelo database + indexes
-mongo << 'EOF'
-use tunelo
-db.users.createIndex({ "email": 1 }, { unique: true })
-db.apikeys.createIndex({ "userId": 1 })
-db.apikeys.createIndex({ "keyHash": 1 }, { unique: true })
-db.usagelogs.createIndex({ "keyId": 1 })
-db.usagelogs.createIndex({ "date": 1 })
-EOF
-
-# Set connection string in .env
-echo "MONGO_URI=mongodb://localhost/tunelo" >> /opt/tunelo/.env
-```
-
-### Option B: Remote MongoDB (e.g., Atlas)
-
-1. Create cluster at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-2. Create database user (username + password)
-3. Whitelist VPS IP in Network Access
-4. Copy connection string
-
-```bash
-# .env example
-MONGO_URI=mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/tunelo?retryWrites=true&w=majority
-```
-
-### Database Initialization
-
-Server will auto-create collections and indexes on startup via Mongoose schemas.
+Server tự tạo collection và index lúc khởi động qua schema Mongoose (`apps/tunelo-server/src/db/models/`).
 
 ## nginx Configuration
 
@@ -236,182 +181,20 @@ The deployed file is `infra/tunelo/nginx.conf`, installed as
 `/etc/nginx/conf.d/tunelo.conf`. Back the old one up, copy, `nginx -t`, then
 `systemctl reload nginx` (the server is shared: never reload on a failed test).
 
-## PM2 Setup
+## PM2
 
-```bash
-# Install PM2 globally
-sudo npm install -g pm2
+pm2 app `tunelo` chạy `/var/www/tunelo/server.mjs` theo `infra/tunelo/ecosystem.config.cjs`;
+`infra/tunelo/deploy.sh` chép file đó lên và restart. Kiểm sau deploy: `pm2 status tunelo`,
+`curl http://127.0.0.1:3001/health` trên server.
 
-# Build and deploy
-cd /opt/tunelo
-pnpm install --frozen-lockfile
-pnpm build
-
-# Start using config file
-pm2 start infra/tunelo/pm2.config.cjs
-
-# Save for auto-start on reboot
-pm2 save
-pm2 startup
-```
-
-PM2 config (`infra/tunelo/pm2.config.cjs`):
-```javascript
-module.exports = {
-  apps: [{
-    name: 'tunelo-server',
-    script: 'apps/tunelo-server/dist/server.js',
-    instances: 1,
-    exec_mode: 'fork',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3001,
-
-      // Database (v0.3+)
-      MONGO_URI: 'mongodb://localhost/tunelo',
-
-      // JWT tokens
-      JWT_SECRET: 'your-secret-key-min-32-chars',
-      JWT_REFRESH_SECRET: 'your-refresh-key-min-32-chars',
-
-      // Admin email whitelist (comma-separated)
-      ADMIN_EMAILS: 'admin@example.com,dev@example.com',
-
-      // Tunnel config
-      TUNNEL_DOMAINS: 'tunnel.hoandat.com'
-    }
-  }]
-};
-```
-
-**Important Environment Variables:**
-
-| Var | Type | Example | Notes |
-|-----|------|---------|-------|
-| `MONGO_URI` | String | `mongodb://localhost/tunelo` | v0.3: Required for user/key storage |
-| `JWT_SECRET` | String | 32+ random chars | Used to sign access tokens (24h) |
-| `JWT_REFRESH_SECRET` | String | 32+ random chars | Used to sign refresh tokens (7d) |
-| `ADMIN_EMAILS` | String | `admin@ex.com,dev@ex.com` | Comma-separated emails with admin access |
-| `TUNNEL_DOMAINS` | String | `tunnel.hoandat.com` | Primary first (used in every URL handed out); others still accepted. `TUNNEL_DOMAIN` is read only when this is unset |
-| `NODE_ENV` | String | `production` | Controls logging, error details |
-
-**Generate secure secrets:**
-```bash
-# Generate random 32-char string
-openssl rand -base64 24
-```
-
-## Deploy Steps (v0.3)
-
-```bash
-# On VPS as deploy user
-git clone <repo> /opt/tunelo
-cd /opt/tunelo
-
-# Install dependencies (pnpm workspace)
-pnpm install --frozen-lockfile
-
-# Build all packages (TypeScript + Vite)
-pnpm build
-
-# (v0.3) Generate secrets
-JWT_SECRET=$(openssl rand -base64 24)
-JWT_REFRESH_SECRET=$(openssl rand -base64 24)
-echo "JWT_SECRET: $JWT_SECRET"
-echo "JWT_REFRESH_SECRET: $JWT_REFRESH_SECRET"
-
-# (v0.3) Set up MongoDB
-# ... (see MongoDB Setup section above)
-
-# Edit PM2 config with secrets + MongoDB URI
-vim infra/tunelo/pm2.config.cjs
-# Set: MONGO_URI, JWT_SECRET, JWT_REFRESH_SECRET, ADMIN_EMAILS
-
-# Start tunnel server
-pm2 start infra/tunelo/pm2.config.cjs
-
-# Verify it's running
-pm2 status
-curl http://localhost:3001/health  # Should return 200 OK
-curl http://localhost:3001/api/admin/users \
-  -H "Authorization: Bearer {admin_token}"  # Protected endpoint
-```
-
-**Verify Deployment:**
-```bash
-# Check server logs
-pm2 logs tunelo-server
-
-# Test tunnel endpoint from local machine
-curl -i -N \
-  -H "Connection: Upgrade" \
-  -H "Upgrade: websocket" \
-  -H "Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==" \
-  https://tunnel.hoandat.com/tunnel
-
-# Should upgrade connection successfully
-```
-
-## Environment Variables Summary
-
-### Core (v0.1+)
-
-| Variable | Required | Type | Default | Notes |
-|----------|----------|------|---------|-------|
-| `PORT` | No | Number | 3001 | Server listening port |
-| `NODE_ENV` | No | String | development | production / development |
-
-### Database & Auth (v0.3+)
-
-| Variable | Required | Type | Example | Notes |
-|----------|----------|------|---------|-------|
-| `MONGO_URI` | Yes | String | `mongodb://localhost/tunelo` | Connection string (local or Atlas) |
-| `JWT_SECRET` | Yes | String | (32+ random chars) | Sign access tokens (24h expiry) |
-| `JWT_REFRESH_SECRET` | Yes | String | (32+ random chars) | Sign refresh tokens (7d expiry) |
-| `ADMIN_EMAILS` | No | String | `admin@ex.com,dev@ex.com` | Comma-separated admin emails |
-| `TUNNEL_DOMAINS` | Yes | String | `tunnel.hoandat.com` | Tunnel domains, primary first |
-
-### Response Cache (Valkey — optional, dev-first)
+## Response Cache (Valkey — optional, dev-first)
 
 Tunnel server caches static FE responses in Valkey to skip the WS round-trip on
 repeated loads. Respect-origin only (dev servers sending `no-cache` are never
 cached); API/JSON/SSE/authed requests always bypass. Disabled entirely if
 `REDIS_URL` is unset. See
-`plans/dattqh/260724-1332-redis-response-cache/` and ADR-0001.
-
-| Variable | Required | Default | Notes |
-|----------|----------|---------|-------|
-| `REDIS_URL` | No | (unset → cache off) | e.g. `redis://:<pass>@127.0.0.1:6379/0` |
-| `CACHE_ENABLED` | No | `true` if `REDIS_URL` set | Kill-switch (`false` disables) |
-| `CACHE_MAX_OBJECT_BYTES` | No | `5242880` (5MB) | Max cached response size |
-| `CACHE_MAX_TTL_SECONDS` | No | `86400` | Cap on TTL (effective TTL = origin max-age) |
+[ADR-0001](../decisions/tunelo/0001-redis-response-cache-in-node-relay.md); variables in
+`apps/tunelo-server/src/cache/cache-config.ts`.
 
 Install (CentOS Stream 9): `dnf install -y valkey`, deploy `infra/tunelo/valkey.conf`
 to `/etc/valkey/valkey.conf` (set `requirepass`), `systemctl enable --now valkey`.
-
-### Optional (Future)
-
-| Variable | Purpose |
-|----------|---------|
-| `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS` | Email service (future notifications) |
-
-### .env.example Template
-
-```bash
-# Server
-PORT=3001
-NODE_ENV=production
-
-# Database
-MONGO_URI=mongodb://localhost/tunelo
-
-# JWT
-JWT_SECRET=your-32-char-secret-here-generate-new
-JWT_REFRESH_SECRET=your-32-char-secret-here-generate-new
-
-# Admin whitelist
-ADMIN_EMAILS=admin@example.com
-
-# Tunnel config
-TUNNEL_DOMAINS=tunnel.hoandat.com
-```

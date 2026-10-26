@@ -40,7 +40,7 @@ Tên Localman, màu chủ đạo, bundle id `com.hoandat.localman` (app mobile C
 
 - Chữ i18n và mô tả operation/MCP vẫn chứa "Localman"; đổi tên sản phẩm phải sửa chúng bằng tay (tìm theo chuỗi).
 - Nhãn host `localman` trong tenancy (`localmanDomainOf`, `appDomainOf(host, "localman")`), header `X-Localman-*`, khoá localStorage `localman-theme` là tên runtime, giữ nguyên cho tới khi có kế hoạch đổi riêng.
-- Logotype `Wordmark` (`Local` + `man`) là thiết kế chữ, không lấy từ brand.
+- Logotype `Wordmark` (`Local` + `man`) là thiết kế chữ, không lấy từ brand; dấu app đặt cạnh nó là bản WebP của icon AI, phục vụ tĩnh ở `apps/web/public/brand/` (đổi icon thì thay cả file này).
 
 ## Cách thay đổi
 

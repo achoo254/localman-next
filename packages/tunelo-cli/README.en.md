@@ -108,7 +108,7 @@ tunelo login
 The browser opens `auth.hoandat.com`: sign in with Google or GitHub (skipped if you already have a session), check that the code matches the terminal, then allow this machine. The CLI stores a refresh token in `~/.tunelo/config.json` (mode 600) and refreshes the access token whenever it opens a tunnel. Each machine is its own device; review or sign out machines at [auth.hoandat.com/account](https://auth.hoandat.com/account).
 
 - Already signed in: `tunelo login` says so and stops; `--force` signs in again.
-- Tunelo on another domain (claimed at `auth.hoandat.com/claim`): `tunelo login --server https://tunnel.<domain>`. The CLI signs in at `https://auth.<domain>` (derived from the server name) and makes that server the default. Account tokens are only sent to the Tunelo of the account's own domain.
+- Another Tunelo server: `tunelo login --server https://tunnel.<domain>`. The CLI signs in at `https://auth.<domain>` (derived from the server name) and makes that server the default. Account tokens are only sent to the Tunelo of the account's own domain.
 - No browser (CI): `tunelo login --legacy-key <token>`, or `--legacy-key` with the token in `TUNELO_KEY` (anonymous token).
 
 ### Step 2 — open a tunnel

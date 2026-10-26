@@ -1,5 +1,7 @@
 # Tunelo Codebase Summary
 
+> **Historical v0.3 snapshot.** This file predates the move into `localman-next` and the switch to accounts at the shared IdP ([ADR-0004](../decisions/tunelo/0004-accounts-via-central-idp.md)); its paths, user/password/TOTP model and status lines do not describe the current code. Current layout: `apps/tunelo-server`, `packages/tunelo-cli`, `packages/tunelo-shared` ([CLAUDE.md](../../CLAUDE.md), section Tunelo); current API: `apps/tunelo-server/src/api/create-api-router.ts`.
+
 **Status:** v0.3.1 (2026-03-29) | Device Code Auth Flow | MongoDB User & Key Management | Tests: 19/19 passing
 
 ## Project Structure

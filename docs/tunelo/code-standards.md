@@ -4,7 +4,7 @@
 
 - **Target:** ES2022
 - **Module:** NodeNext (ESM)
-- **Strict mode:** enabled (`strict: true`, `noUncheckedIndexedAccess: true`)
+- **Strict mode:** enabled (`strict: true`; compiler options in `tsconfig.base.json`)
 - **No `any`** — use `unknown` + type guards for dynamic data
 - **Explicit return types** on all exported functions
 - **Named exports only** — no `export default`
@@ -35,10 +35,10 @@ packages/{name}/
 
 ### TuneloError Class
 
-All errors must use the structured `TuneloError` class from `@tunelo/shared`:
+All server errors must use the structured `TuneloError` class (`apps/tunelo-server/src/api/middleware/error-handler.ts`):
 
 ```typescript
-import { TuneloError } from '@tunelo/shared';
+import { TuneloError } from './api/middleware/error-handler.js';
 
 // Throw with code + message + HTTP status
 throw new TuneloError('TUNELO_AUTH_001', 'Invalid API key', 401);
@@ -158,7 +158,7 @@ const user = await User.findById(userId);
 ### Middleware-Based Access Control
 
 ```typescript
-import { TuneloError } from '@tunelo/shared';
+import { TuneloError } from './api/middleware/error-handler.js';
 
 // Role-based middleware
 export function requireRole(allowedRoles: string[]) {

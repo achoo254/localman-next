@@ -1,6 +1,6 @@
 # Tunelo CLI
 
-Expose dịch vụ local ra internet qua HTTPS wildcard subdomain — `https://<tên>.tunnel.hoandat.com` chuyển tiếp về `localhost` của bạn. Đăng nhập bằng tài khoản hoandat (Google hoặc GitHub qua `auth.hoandat.com`); xem tunnel của tài khoản tại [tunnel.hoandat.com](https://tunnel.hoandat.com).
+Expose dịch vụ local ra internet qua HTTPS wildcard subdomain — `https://<tên>.tunnel.hoandat.com` chuyển tiếp về `localhost` của bạn. Đăng nhập bằng tài khoản hoandat.com (Google hoặc GitHub qua `auth.hoandat.com`); xem tunnel của tài khoản tại [tunnel.hoandat.com](https://tunnel.hoandat.com).
 
 ## Cài đặt
 
@@ -61,7 +61,7 @@ tunelo login
 
 Trình duyệt mở trang của `auth.hoandat.com`: đăng nhập bằng Google hoặc GitHub (đã có phiên thì bỏ qua), kiểm mã trùng với mã trên terminal, rồi bấm cho phép máy này. CLI lưu refresh token vào `~/.tunelo/config.json` (quyền 600) và tự làm mới token khi mở tunnel. Mỗi máy là một thiết bị riêng, xem và đăng xuất từng máy ở [auth.hoandat.com/account](https://auth.hoandat.com/account).
 
-Đã đăng nhập rồi thì `tunelo login` báo và dừng (`--force` để làm lại). Dùng Tunelo của domain khác (domain đã nhận ở `auth.hoandat.com/claim`): `tunelo login --server https://tunnel.<domain>`; CLI đăng nhập ở `https://auth.<domain>` (suy từ tên server, không hỏi server) và đặt server đó làm mặc định. Token tài khoản chỉ được gửi tới Tunelo cùng domain với tài khoản. Máy không có trình duyệt (CI): `tunelo login --legacy-key <token>` hoặc biến `TUNELO_KEY` (token ẩn danh).
+Đã đăng nhập rồi thì `tunelo login` báo và dừng (`--force` để làm lại). Dùng một server Tunelo khác: `tunelo login --server https://tunnel.<domain>`; CLI đăng nhập ở `https://auth.<domain>` (suy từ tên server, không hỏi server) và đặt server đó làm mặc định. Token tài khoản chỉ được gửi tới Tunelo cùng domain với tài khoản. Máy không có trình duyệt (CI): `tunelo login --legacy-key <token>` hoặc biến `TUNELO_KEY` (token ẩn danh).
 
 ### Bước 2 — mở tunnel
 
