@@ -28,7 +28,7 @@ pnpm dev
 
 Biến môi trường và giải thích nằm trong [`.env.example`](.env.example); cổng mặc định của api ở `apps/api/src/config/env.ts`.
 
-Lệnh của repo: `scripts` trong [`package.json`](package.json); quy ước chạy test (máy dev chỉ chạy test liên quan, bộ đầy đủ chạy trên CI) và lệnh riêng của Tunelo ở [`CLAUDE.md`](CLAUDE.md). Các bước CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+Lệnh của repo: `scripts` trong [`package.json`](package.json); quy ước chạy test (máy dev chỉ chạy test liên quan, bộ đầy đủ chạy trên CI) và lệnh riêng của Tunelo ở [`CLAUDE.md`](CLAUDE.md). Các bước CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (mỗi push: lint, typecheck, unit/API test, build, E2E smoke); E2E đầy đủ chạy hằng đêm ở [`.github/workflows/e2e-nightly.yml`](.github/workflows/e2e-nightly.yml).
 
 ## Tài liệu
 
