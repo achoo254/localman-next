@@ -1,14 +1,12 @@
 import { Suspense, lazy } from "react";
-import { cardClassName } from "../../components/ui/card";
 import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
-import { cn } from "../../lib/cn";
 import { useDocumentTitle } from "../../lib/use-document-title";
+import { CtaBand, MidCta } from "./cta-band";
 import { DataModelingDemo } from "./data-modeling-demo";
 import { HeroSection } from "./hero-section";
 import { MoreFeaturesSection } from "./more-features-section";
 import { RelationsDemo } from "./relations-demo";
-import { StartCta } from "./start-cta";
 
 // Flagged blocks load on demand, so an unreleased feature adds nothing to
 // the landing bundle until its flag is on.
@@ -28,7 +26,7 @@ const VnFakeDataTeaser = lazy(async () => ({
 /**
  * Public landing: hero, flagged feature blocks (Live Mock Sync, Mock MCP,
  * secrets staying in the browser), schema,
- * relations, "And more", the fake data tool link (flagged) and the
+ * relations, a call to action right after the demos, "And more", the fake data tool link (flagged) and the
  * closing call to action. The footer comes
  * from `AppLayout`. The tab title follows the hero message; `index.html`
  * carries the English one statically for crawlers (checked by a test).
@@ -65,6 +63,7 @@ export function LandingPage() {
 			) : null}
 			<DataModelingDemo />
 			<RelationsDemo />
+			<MidCta />
 			<MoreFeaturesSection />
 			{flags.vnFakeData ? (
 				<Suspense fallback={null}>
@@ -73,30 +72,5 @@ export function LandingPage() {
 			) : null}
 			<CtaBand />
 		</>
-	);
-}
-
-function CtaBand() {
-	const t = useT();
-	return (
-		<section
-			data-id="landing-cta"
-			aria-labelledby="landing-cta-title"
-			className={cn(
-				cardClassName,
-				"my-16 flex flex-wrap items-center justify-between gap-6 p-8",
-			)}
-		>
-			<div className="grid gap-2">
-				<h2
-					id="landing-cta-title"
-					className="m-0 font-bold text-[clamp(1.375rem,3vw,1.75rem)] tracking-[-0.02em]"
-				>
-					{t("landing.cta.title")}
-				</h2>
-				<p className="m-0 text-muted">{t("landing.cta.text")}</p>
-			</div>
-			<StartCta data-id="landing-cta-button" />
-		</section>
 	);
 }

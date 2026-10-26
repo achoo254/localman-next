@@ -58,12 +58,18 @@ describe("landing at / by session", () => {
 			bar.getByRole("button", { name: "Minh Anh · Account" }),
 		).toBeVisible();
 		expect(bar.queryByRole("link", { name: "Sign in" })).toBeNull();
-		for (const id of ["landing-hero-cta", "landing-cta-button"]) {
+		for (const id of [
+			"landing-hero-cta",
+			"landing-mid-cta-button",
+			"landing-cta-button",
+		]) {
 			expect(byDataId(id)).toHaveAttribute("href", "/projects");
 			expect(byDataId(id)).toHaveAccessibleName("Open app");
 		}
 		// No call to action invites an existing account to sign up again.
-		expect(screen.queryByRole("link", { name: /Get started/ })).toBeNull();
+		expect(
+			screen.queryByRole("link", { name: /Get started|Try it free/ }),
+		).toBeNull();
 		expect(router.state.location.pathname).toBe("/");
 	});
 
@@ -73,9 +79,13 @@ describe("landing at / by session", () => {
 		const bar = within(topbar());
 		expect(await bar.findByRole("link", { name: "Sign in" })).toBeVisible();
 		expect(bar.queryByRole("link", { name: "Open app" })).toBeNull();
-		for (const id of ["landing-hero-cta", "landing-cta-button"]) {
+		for (const id of [
+			"landing-hero-cta",
+			"landing-mid-cta-button",
+			"landing-cta-button",
+		]) {
 			expect(byDataId(id)).toHaveAttribute("href", SIGN_UP_HREF);
-			expect(byDataId(id)).toHaveAccessibleName("Get started now");
+			expect(byDataId(id)).toHaveAccessibleName("Try it free");
 		}
 	});
 
@@ -90,9 +100,7 @@ describe("landing at / by session", () => {
 		expect(
 			within(topbar()).getByRole("link", { name: "Sign in" }),
 		).toBeVisible();
-		expect(byDataId("landing-hero-cta")).toHaveAccessibleName(
-			"Get started now",
-		);
+		expect(byDataId("landing-hero-cta")).toHaveAccessibleName("Try it free");
 	});
 
 	it("has no serious axe violations once signed in", async () => {

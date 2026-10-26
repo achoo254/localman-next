@@ -8,6 +8,7 @@ import { renderRich } from "../../i18n/rich-text";
 import { cn } from "../../lib/cn";
 import { LEGAL_PATHS } from "../../lib/legal";
 import { AuthErrorAlert } from "./auth-error-alert";
+import { CtaPerks } from "./cta-perks";
 import { HeroPreview } from "./hero-preview";
 import { StartCta } from "./start-cta";
 
@@ -74,6 +75,7 @@ export function HeroSection({ howItWorksHref }: { howItWorksHref: string }) {
 						{t("landing.hero.howItWorks")}
 					</a>
 				</div>
+				<CtaPerks data-id="landing-hero-perks" />
 				<p className="m-0 text-[0.8125rem] text-muted">
 					{apiClient && proxy !== null
 						? t("landing.hero.noteLocalhost", { ...limits, proxy })

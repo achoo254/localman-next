@@ -93,6 +93,7 @@ describe("landing prerender", () => {
 		const html = await renderPageHtml("/");
 		expect(html).toContain("REST APIs with relations and Faker");
 		expect(html).toContain("Get started now");
+		expect(html).toContain("Try it free");
 		expect(html).not.toMatch(/Bắt đầu ngay|立即开始/);
 	});
 
@@ -131,6 +132,7 @@ describe("landing prerender", () => {
 		expect(openApp.map((link) => link.getAttribute("data-id"))).toEqual([
 			"topbar-projects",
 			"landing-hero-cta",
+			"landing-mid-cta-button",
 			"landing-cta-button",
 		]);
 		expect(router.state.location.pathname).toBe("/");

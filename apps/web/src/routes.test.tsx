@@ -52,12 +52,15 @@ describe("route guards", () => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		renderRoutes(routes, "/");
 		const login = await screen.findByRole("link", { name: "Sign in" });
-		const signUps = screen.getAllByRole("link", { name: "Get started now" });
-		// Top bar, hero and closing band all sign up the same way.
+		const signUps = screen.getAllByRole("link", {
+			name: /^(Get started now|Try it free)$/,
+		});
+		// Top bar, hero, the block after the demos and closing band all sign up the same way.
 		expect(login).toHaveAttribute("data-id", "topbar-login");
 		expect(signUps.map((link) => link.getAttribute("data-id"))).toEqual([
 			"topbar-signup",
 			"landing-hero-cta",
+			"landing-mid-cta-button",
 			"landing-cta-button",
 		]);
 		for (const link of signUps) {

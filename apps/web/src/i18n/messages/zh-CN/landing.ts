@@ -113,6 +113,15 @@ export const landing: Messages["landing"] = {
 	},
 	cta: {
 		title: "几分钟内搭建你的第一个 mock API",
-		text: "创建账号，添加 resource，点击数据生成条，即可得到一个可用的 endpoint。",
+		text: "免费创建账号，添加 resource，点击数据生成条，即可得到一个可用的 endpoint。",
+		tryFree: "免费试用",
+	},
+	midCta: {
+		title: "看够了？在你自己的 API 上试试",
+	},
+	perks: {
+		free: "免费套餐",
+		noCard: "无需绑卡",
+		inBrowser: "浏览器即开即用",
 	},
 };
