@@ -1,67 +1,42 @@
 # Localman (next)
 
-Monorepo của bộ công cụ API Localman và Tunelo.
+Monorepo của bộ công cụ API Localman và Tunelo, chạy tại <https://localman.hoandat.com>. Một app trong hệ sinh thái hoandat, đăng nhập qua IdP `auth-next` (`auth.hoandat.com`).
 
-## Trạng thái
+- **Localman:** mock API có trạng thái (cùng loại với mockapi.io), API client trên web, MCP cho cả Localman lẫn từng mock project, công cụ dữ liệu giả kiểu Việt Nam. Hợp đồng mock runtime: [docs/api-contract.md](docs/api-contract.md).
+- **Tunelo:** tunnel tự host đưa dịch vụ localhost ra HTTPS qua subdomain wildcard, gộp vào repo này. CLI: [packages/tunelo-cli/README.md](packages/tunelo-cli/README.md); tài liệu riêng: [docs/tunelo/](docs/tunelo/).
+- **App iPhone và Android:** vỏ Capacitor (`apps/mobile`) bọc toàn bộ web app — [docs/mobile-app.md](docs/mobile-app.md).
 
-Đang chạy production tại <https://localman.hoandat.com>:
+## Quyết định và ràng buộc
 
-- **Mock API có trạng thái**, tương đương mockapi.io: project, resource lồng nhau, dữ liệu Faker, custom response. Mock runtime công khai ở `https://{secret}.localman.hoandat.com{prefix}`.
-- **Mock power-ups:** tạo resource từ JSON/OpenAPI/CSV, xuất type, rules và chaos theo endpoint, gợi ý Faker.
-- **Mock MCP** cho mỗi project, **mock lai localhost** (upstream, log request có replay, webhook inbox, mock callback).
-- **API client trên web:** collections, environments, workspace và chia sẻ; request đi thẳng từ trình duyệt, qua proxy hoặc qua Tunelo.
-- **Localman MCP** tại `/mcp`: mỗi operation của registry là một MCP tool.
-- **Cộng tác:** mời thành viên vào project và magic link.
-- **Landing, trang tài khoản và docs người dùng** (`/docs`). Đăng nhập qua `auth.hoandat.com`.
-
-**Tunelo:** tunnel `*.tunnel.hoandat.com` tới localhost, gộp vào repo này (xem [`packages/tunelo-cli/README.md`](packages/tunelo-cli/README.md)).
-
-**Sắp có.** Web ẩn nội dung của tính năng chưa phát hành bằng cờ build `VITE_FEATURES` ([`apps/web/src/config/feature-flags.ts`](apps/web/src/config/feature-flags.ts)); [`infra/localman/deploy.sh`](infra/localman/deploy.sh) build với các cờ trong [`infra/localman/released-features`](infra/localman/released-features).
-
-- Live Mock Sync (`liveMockSync`): mock luôn đồng bộ với collection và environment.
-- Chia sẻ công khai (guest, nút Run, access key), fork, merge và comment.
-- DevOps toolkit: Collection Runner và CLI `localman` để test API trong CI bằng một lệnh, mock tạm, tunnel có SSO, giám sát.
-
-Thứ tự triển khai và trạng thái từng phase: [`plans/dattqh/EXECUTION.md`](plans/dattqh/EXECUTION.md).
+- **Đơn tenant.** Localman và Tunelo chỉ phục vụ host của `hoandat.com` cấu hình trong env, host khác nhận 421. Dữ liệu vẫn mang `tenantId: "primary"`, không migrate ([ADR-0003](docs/decisions/0003-tenant-scoped-data.md), superseded, mục "Sau khi bỏ đa tenant").
+- **Chưa thương mại.** Web không hiện giá hay gói; mọi tài khoản tự nhận Pro 30 ngày, backend hạn mức vẫn giữ để bật lại được ([ADR-0002](docs/decisions/0002-no-commercial-ui-automatic-pro-period.md)).
+- **Tính năng chỉ hiện khi đã phát hành.** Web bật tính năng bằng cờ build `VITE_FEATURES` ([`apps/web/src/config/feature-flags.ts`](apps/web/src/config/feature-flags.ts)); danh sách cờ đang chạy production là [`infra/localman/released-features`](infra/localman/released-features), file mà [`infra/localman/deploy.sh`](infra/localman/deploy.sh) đọc khi build.
+- **Một khai báo cho REST, MCP và OpenAPI.** API nghiệp vụ khai qua operation registry, mỗi operation là một MCP tool hoặc có lý do miễn trừ ([docs/operation-registry.md](docs/operation-registry.md)).
+- **Tên sản phẩm ở một file.** Tên, bundle id và mẫu host chỉ khai trong [`brand.config.json`](brand.config.json), mã thương hiệu nằm ở gói dùng chung `@shared-next/brand` ([ADR-0006](docs/decisions/0006-brand-config-and-product-name.md)).
+- **MongoDB chạy replica set** vì sinh dữ liệu resource cần transaction nhiều document ([ADR-0001](docs/decisions/0001-resource-data-in-project-transactions.md)); bản dev là service `mongo` trong [`docker-compose.yml`](docker-compose.yml).
 
 ## Bắt đầu
 
-Yêu cầu: Node ≥ 22.12, pnpm 11, Docker (để chạy MongoDB).
+Yêu cầu: Node và pnpm theo `engines`/`packageManager` trong [`package.json`](package.json), Docker để chạy MongoDB.
 
 ```bash
 pnpm install
 cp .env.example .env
-docker compose up -d mongo     # MongoDB 7, single-node replica set rs0
-pnpm dev                       # web :5173, dashboard API :4000, mock runtime :4100
+docker compose up -d mongo
+pnpm dev
 ```
 
-Kiểm tra nhanh: `curl localhost:4000/healthz` và `curl localhost:4100/healthz`.
+Biến môi trường và giải thích nằm trong [`.env.example`](.env.example); cổng mặc định của api ở `apps/api/src/config/env.ts`.
 
-## Lệnh
-
-| Lệnh | Việc |
-|---|---|
-| `pnpm dev` | Chạy web và api ở chế độ watch |
-| `pnpm build` | Build mọi package |
-| `pnpm lint` / `pnpm lint:fix` | Biome lint và format cho toàn repo |
-| `pnpm typecheck` | `tsc --noEmit` cho từng package, `scripts/` và `e2e/` |
-| `pnpm test` | Vitest cho mọi package (mỗi package là một project) |
-| `pnpm e2e` | Playwright trên cả stack (MongoDB trong bộ nhớ, IdP giả); lần đầu cần `pnpm exec playwright install chromium` |
-| `pnpm check:mcp-coverage` | Fail khi có operation thiếu MCP tool mà không ghi lý do miễn trừ |
-| `pnpm check:tokens` | Fail khi có màu hoặc khoảng cách hardcode ngoài `tokens.css`, hoặc tương phản không đạt |
-| `pnpm check:i18n` | Fail khi có chữ tiếng Việt ngoài dictionary `vi` (trừ danh sách file chưa chuyển) hoặc tên đối thủ trong web app; chạy kèm `pnpm lint` |
-
-Các bước CI chạy: [`.github/workflows/ci.yml`](.github/workflows/ci.yml). Lệnh riêng của Tunelo nằm trong [`CLAUDE.md`](CLAUDE.md#tunelo).
+Lệnh của repo: `scripts` trong [`package.json`](package.json); quy ước chạy test (máy dev chỉ chạy test liên quan, bộ đầy đủ chạy trên CI) và lệnh riêng của Tunelo ở [`CLAUDE.md`](CLAUDE.md). Các bước CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 ## Tài liệu
 
 - [Kiến trúc hệ thống](docs/system-architecture.md)
 - [Hợp đồng mock runtime](docs/api-contract.md)
-- [Operation registry: REST, MCP và OpenAPI từ một khai báo](docs/operation-registry.md)
+- [Operation registry](docs/operation-registry.md)
 - [Deploy production](docs/deployment-guide.md)
-- [Design system](docs/design-system.md)
-- [UX writing](docs/ux-writing.md)
-- [Đa ngôn ngữ (i18n)](docs/i18n.md)
-- Quyết định kiến trúc: [`docs/decisions/`](docs/decisions/)
-- Tunelo: [`docs/tunelo/`](docs/tunelo/), ADR ở [`docs/decisions/tunelo/`](docs/decisions/tunelo/)
-- Đơn tenant: Localman và Tunelo chỉ phục vụ host của `hoandat.com` cấu hình trong env, host khác nhận 421; dữ liệu vẫn mang `tenantId: "primary"` (ADR [`0003-tenant-scoped-data`](docs/decisions/0003-tenant-scoped-data.md), đã superseded)
+- [App iOS và Android](docs/mobile-app.md)
+- [Design system](docs/design-system.md), [UX writing](docs/ux-writing.md), [Đa ngôn ngữ (i18n)](docs/i18n.md)
+- Quyết định kiến trúc: [docs/decisions/](docs/decisions/); Tunelo: [docs/decisions/tunelo/](docs/decisions/tunelo/)
+- Thứ tự triển khai các phase (bản ghi kế hoạch): [plans/dattqh/EXECUTION.md](plans/dattqh/EXECUTION.md)
