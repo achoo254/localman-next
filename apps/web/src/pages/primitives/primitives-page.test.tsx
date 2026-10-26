@@ -30,7 +30,7 @@ describe("PrimitivesPage", () => {
 		for (const id of [
 			"topbar",
 			"topbar-home",
-			"topbar-theme",
+			"app-footer-theme",
 			"primitives",
 			"primitives-buttons",
 			"primitives-forms",
@@ -47,9 +47,10 @@ describe("PrimitivesPage", () => {
 
 	it("switches the theme attribute on <html>", async () => {
 		const { container } = renderPage();
-		// The footer repeats the switch for narrow screens; use the top bar's.
-		const toggle = container.querySelector('[data-id="topbar-theme"]');
-		if (!(toggle instanceof HTMLElement)) throw new Error("no topbar-theme");
+		// The theme switch is in the footer, as on the account app.
+		const toggle = container.querySelector('[data-id="app-footer-theme"]');
+		if (!(toggle instanceof HTMLElement))
+			throw new Error("no app-footer-theme");
 		await userEvent.click(
 			within(toggle).getByRole("button", { name: "Dark theme" }),
 		);

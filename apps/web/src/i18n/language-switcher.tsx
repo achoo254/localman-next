@@ -1,4 +1,3 @@
-import { isLocale } from "@localman/shared/constants";
 import { IconChevronDown, IconLanguage } from "@tabler/icons-react";
 import { buttonClassName } from "../components/ui/button";
 import {
@@ -8,14 +7,10 @@ import {
 	DropdownMenuRadioItem,
 	DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
-import { useToast } from "../components/ui/toast";
-import { peekCurrentUser } from "../features/auth/use-current-user";
 import { cn } from "../lib/cn";
 import { useI18n } from "./i18n-context";
-import { loadMessages } from "./load-messages";
 import { LOCALE_NAMES } from "./locale-names";
-import { saveUserLocale } from "./save-user-locale";
-import { createTranslator } from "./translate";
+import { useChooseLocale } from "./use-choose-locale";
 
 export interface LanguageSwitcherProps {
 	"data-id": string;
@@ -31,30 +26,9 @@ export function LanguageSwitcher({
 	"data-id": dataId,
 	compact = false,
 }: LanguageSwitcherProps) {
-	const { locale, setLocale, t } = useI18n();
-	const toast = useToast();
+	const { locale, t } = useI18n();
+	const choose = useChooseLocale();
 	const current = LOCALE_NAMES[locale];
-
-	async function choose(value: string) {
-		if (!isLocale(value) || value === locale) return;
-		try {
-			await setLocale(value);
-		} catch {
-			toast.show({ tone: "error", title: t("common.language.loadFailed") });
-			return;
-		}
-		if (peekCurrentUser().status !== "authenticated") return;
-		try {
-			await saveUserLocale(value);
-		} catch {
-			// Said in the language just chosen (already loaded, so no fetch).
-			const say = await loadMessages(value).then(
-				(messages) => createTranslator(value, messages).t,
-				() => t,
-			);
-			toast.show({ tone: "error", title: say("common.language.saveFailed") });
-		}
-	}
 
 	return (
 		<DropdownMenu>

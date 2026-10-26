@@ -29,10 +29,10 @@ describe("createTranslator", () => {
 		);
 	});
 
-	it("keeps strings as given, so a year is not grouped", () => {
-		expect(english.t("layout.footer.copyright", { year: "2026" })).toBe(
-			"© 2026 Localman",
-		);
+	it("keeps strings as given", () => {
+		expect(
+			english.t("layout.footer.ecosystem", { domain: "hoandat.com" }),
+		).toBe("An app from hoandat.com");
 	});
 
 	it("picks the plural form with Intl.PluralRules", () => {

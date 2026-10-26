@@ -33,7 +33,7 @@ export const layout: Messages["layout"] = {
 		opensIdp: ", mở trang tài khoản {idpName} ở tab mới",
 	},
 	footer: {
-		copyright: "© {year} Localman",
+		ecosystem: "Một app của {domain}",
 		feedback: "Góp ý / Liên hệ",
 	},
 	theme: {

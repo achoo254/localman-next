@@ -127,14 +127,14 @@ describe("links back to the landing, never to pricing", () => {
 		["/", { "GET /api/v1/users/me": UNAUTHENTICATED }],
 		["/projects", SIGNED_IN],
 	])(
-		"puts Localman home, and no pricing, in the footer on %s",
+		"puts the brand's home, and no pricing, in the footer on %s",
 		async (path, api) => {
 			mockFetch(api);
 			renderRoutes(routes, path);
 			const footer = within(await screen.findByRole("contentinfo"));
 			expect(
-				await footer.findByRole("link", { name: "Localman home" }),
-			).toHaveAttribute("href", "/");
+				await footer.findByRole("link", { name: "An app from hoandat.com" }),
+			).toHaveAttribute("href", "https://hoandat.com");
 			expect(footer.queryByRole("link", { name: "Pricing" })).toBeNull();
 		},
 	);

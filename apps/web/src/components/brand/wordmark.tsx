@@ -8,13 +8,15 @@ export type WordmarkProps = Omit<ComponentProps<"span">, "children">;
 
 /**
  * The Localman logotype: the AI-drawn app mark (the same art as the app icon)
- * beside the name in bold JetBrains Mono, "Local" in violet step 11.
+ * beside the name in the bold sans font, "Local" in violet step 11. At the
+ * default 16px it matches the account app's top bar: a 24px mark and the
+ * name beside it.
  */
 export function Wordmark({ className, ...rest }: WordmarkProps) {
 	return (
 		<span
 			className={cn(
-				"inline-flex items-center gap-2 font-bold font-mono text-fg text-xl tracking-[-0.02em]",
+				"inline-flex items-center gap-2 font-bold font-sans text-base text-fg",
 				className,
 			)}
 			{...rest}
@@ -25,7 +27,7 @@ export function Wordmark({ className, ...rest }: WordmarkProps) {
 				aria-hidden="true"
 				width={128}
 				height={128}
-				className="size-[1.2em] shrink-0"
+				className="size-[1.5em] shrink-0"
 				data-id="brand-mark"
 			/>
 			<span>

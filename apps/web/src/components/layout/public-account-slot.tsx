@@ -9,14 +9,20 @@ import { buttonClassName } from "../ui/button";
 import { AccountControls } from "./account-controls";
 import { AccountTriggerSpacer } from "./account-menu";
 
-export const GHOST_SM = cn(
+/** 44px targets on touch screens and phones, as on the account app (pointer coarse or ≤ 479px). */
+export const TAP_TARGET =
+	"pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center max-[479px]:inline-flex max-[479px]:min-h-11 max-[479px]:items-center";
+
+const GHOST_SM = cn(
 	buttonClassName({ variant: "ghost", size: "sm" }),
 	"no-underline",
+	TAP_TARGET,
 );
 
 const PRIMARY_SM = cn(
 	buttonClassName({ variant: "primary", size: "sm" }),
 	"no-underline",
+	TAP_TARGET,
 );
 
 /**

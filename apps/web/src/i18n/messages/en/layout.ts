@@ -32,7 +32,7 @@ export const layout = {
 		opensIdp: ", opens your {idpName} account in a new tab",
 	},
 	footer: {
-		copyright: "© {year} Localman",
+		ecosystem: "An app from {domain}",
 		feedback: "Feedback / Contact",
 	},
 	theme: {

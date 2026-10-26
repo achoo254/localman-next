@@ -33,7 +33,7 @@ export const layout: Messages["layout"] = {
 		opensIdp: "，在新标签页中打开 {idpName} 账号",
 	},
 	footer: {
-		copyright: "© {year} Localman",
+		ecosystem: "{domain} 旗下应用",
 		feedback: "反馈 / 联系",
 	},
 	theme: {

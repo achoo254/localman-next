@@ -10,7 +10,7 @@ import {
 	docsPath,
 } from "./docs-pages";
 
-/** Table of contents; the current page gets `aria-current="page"`. */
+/** Table of contents; the current page gets `aria-current="page"`. Links are 44px targets on phones and touch screens. */
 function DocsToc({ pages }: { pages: readonly DocsPage[] }) {
 	const t = useT();
 	return (
@@ -26,7 +26,7 @@ function DocsToc({ pages }: { pages: readonly DocsPage[] }) {
 							data-id={`docs-toc-${page.slug}`}
 							className={({ isActive }) =>
 								cn(
-									"grid rounded-md border px-3 py-2 no-underline transition-colors",
+									"grid content-center rounded-md border px-3 py-2 no-underline transition-colors max-md:min-h-11 pointer-coarse:min-h-11",
 									isActive
 										? "border-primary bg-surface text-primary"
 										: "border-transparent text-fg hover:bg-surface-subtle",

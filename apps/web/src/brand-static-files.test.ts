@@ -26,4 +26,18 @@ describe("static files follow the brand", () => {
 		);
 		expect(html).toContain(`<title>${brand.appName} · `);
 	});
+
+	it("points link previews at the share image on the web host", () => {
+		const host = brand.hostTemplates.web.replace(
+			"{domain}",
+			brand.primaryTenant.domain,
+		);
+		const image = `https://${host}/og-image.jpg`;
+		const html = read("index.html").replace(/\s+/g, " ");
+		expect(html).toContain(`<meta property="og:image" content="${image}" />`);
+		expect(html).toContain(`<meta name="twitter:image" content="${image}" />`);
+		expect(
+			readFileSync(resolve(webRoot, "public/og-image.jpg")).length,
+		).toBeGreaterThan(0);
+	});
 });

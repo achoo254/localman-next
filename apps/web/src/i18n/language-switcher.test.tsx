@@ -64,10 +64,20 @@ describe("interface language", () => {
 		renderApp("/", { "GET /api/v1/users/me": UNAUTHENTICATED });
 		expect(await heroHeading()).toHaveTextContent(/^Stateful mock REST APIs/);
 		expect(document.documentElement.lang).toBe("en");
-		// Top bar and footer.
+		// The footer pill, as on the account app: each language in itself.
+		const pill = screen.getByRole("group", { name: "Language" });
 		expect(
-			screen.getAllByRole("button", { name: "Language: English" }),
-		).toHaveLength(2);
+			within(pill)
+				.getAllByRole("button")
+				.map((button) => [button.textContent, button.lang]),
+		).toEqual([
+			["English", "en"],
+			["中文", "zh-CN"],
+			["Tiếng Việt", "vi"],
+		]);
+		expect(
+			within(pill).getByRole("button", { name: "English" }),
+		).toHaveAttribute("aria-pressed", "true");
 	});
 
 	it("restores the saved language", async () => {
@@ -84,22 +94,15 @@ describe("interface language", () => {
 		expect(window.localStorage.getItem(LOCALE_STORAGE_KEY)).toBe("zh-CN");
 	});
 
-	it("switches from the top bar menu, without calling the API anonymously", async () => {
+	it("switches from the footer pill, without calling the API anonymously", async () => {
 		const { calls } = renderApp("/", {
 			"GET /api/v1/users/me": UNAUTHENTICATED,
 		});
 		await heroHeading();
-		const menu = await openSwitcher("topbar-language");
-		const items = within(menu).getAllByRole("menuitemradio");
-		expect(items.map((item) => [item.textContent, item.lang])).toEqual([
-			["English", "en"],
-			["中文", "zh-CN"],
-			["Tiếng Việt", "vi"],
-		]);
-		expect(items[0]).toHaveAttribute("aria-checked", "true");
+		const pill = screen.getByRole("group", { name: "Language" });
 		expect(await seriousViolations(document.body)).toEqual([]);
 		await userEvent.click(
-			within(menu).getByRole("menuitemradio", { name: "Tiếng Việt" }),
+			within(pill).getByRole("button", { name: "Tiếng Việt" }),
 		);
 		await waitFor(() => expect(document.documentElement.lang).toBe("vi"));
 		expect(await heroHeading()).toHaveTextContent(/có trạng thái/);

@@ -50,7 +50,7 @@ export function ThemeToggle({ "data-id": dataId }: { "data-id"?: string }) {
 						title={label}
 						onClick={() => applyThemePreference(value)}
 						className={cn(
-							"inline-flex size-8 cursor-pointer items-center justify-center rounded-sm transition-colors",
+							"inline-flex size-8 cursor-pointer items-center justify-center rounded-sm transition-colors pointer-coarse:size-11 max-[479px]:size-11",
 							preference === value
 								? "bg-primary-solid text-on-primary"
 								: "text-muted hover:bg-fg/6 hover:text-fg",

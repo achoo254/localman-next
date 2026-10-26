@@ -43,7 +43,7 @@ for (const locale of ["en", "vi"] as const) {
 		await page.goto("/");
 
 		const bar = page.getByTestId("topbar");
-		const language = bar.getByTestId("topbar-language");
+		const features = bar.getByTestId("topbar-features");
 		const docs = bar.getByTestId("topbar-docs");
 		// Session still loading: the page shows its sign-in pair, in `locale`.
 		await expect(
@@ -51,7 +51,7 @@ for (const locale of ["en", "vi"] as const) {
 		).toBeVisible();
 		await page.evaluate(() => document.fonts.ready);
 		const before = {
-			language: await leftEdge(language),
+			features: await leftEdge(features),
 			docs: await leftEdge(docs),
 		};
 
@@ -59,12 +59,12 @@ for (const locale of ["en", "vi"] as const) {
 		await expect(bar.getByTestId("topbar-projects")).toBeVisible();
 		await expect(bar.getByTestId("topbar-account")).toBeVisible();
 		const after = {
-			language: await leftEdge(language),
+			features: await leftEdge(features),
 			docs: await leftEdge(docs),
 		};
 
 		console.log(
-			`[${locale}] language switch x: ${before.language} -> ${after.language}; docs link x: ${before.docs} -> ${after.docs}`,
+			`[${locale}] features link x: ${before.features} -> ${after.features}; docs link x: ${before.docs} -> ${after.docs}`,
 		);
 		expect(after).toEqual(before);
 	});

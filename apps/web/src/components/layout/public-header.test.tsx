@@ -35,14 +35,15 @@ describe("public top bar and skip link", () => {
 			within(nav)
 				.getAllByRole("link")
 				.map((link) => [link.textContent, link.getAttribute("href")]),
-		).toEqual([["Features", "#features"]]);
+		).toEqual([
+			["Features", "#features"],
+			["Docs", "/docs"],
+		]);
 		expect(screen.queryByRole("link", { name: "Pricing" })).toBeNull();
 		expect(document.getElementById("features")).not.toBeNull();
 		const bar = within(topbar());
-		expect(bar.getByRole("link", { name: "Docs" })).toHaveAttribute(
-			"href",
-			"/docs",
-		);
+		// The language and theme switches are in the footer, as on the account app.
+		expect(bar.queryByRole("button", { name: /^Language/ })).toBeNull();
 		expect(bar.getByRole("link", { name: "Sign in" })).toHaveAttribute(
 			"href",
 			"/auth/login?returnTo=%2Fprojects",
@@ -53,13 +54,18 @@ describe("public top bar and skip link", () => {
 		);
 	});
 
-	it("drops the landing anchors elsewhere and signs in back to the page", async () => {
+	it("drops the landing anchors elsewhere, marks Docs current and signs in back to the page", async () => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		renderRoutes(routes, "/docs/quick-start");
 		await screen.findByRole("heading", { level: 1 });
-		expect(
-			within(topbar()).queryByRole("navigation", { name: "Main navigation" }),
-		).toBeNull();
+		const nav = within(topbar()).getByRole("navigation", {
+			name: "Main navigation",
+		});
+		expect(within(nav).queryByRole("link", { name: "Features" })).toBeNull();
+		expect(within(nav).getByRole("link", { name: "Docs" })).toHaveAttribute(
+			"aria-current",
+			"page",
+		);
 		expect(
 			within(topbar()).getByRole("link", { name: "Sign in" }),
 		).toHaveAttribute("href", "/auth/login?returnTo=%2Fdocs%2Fquick-start");
