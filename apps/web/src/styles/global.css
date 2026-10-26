@@ -284,7 +284,7 @@
 	}
 }
 
-/* App switcher of the *-next apps (@shared-next/app-switcher, top bar):
+/* App switcher of the *-next apps (@achoo254/app-switcher, top bar):
    its variables mapped to Localman tokens, sized like the ghost icon
    buttons next to it (size-9, size-11 on a touch screen like the bell). */
 .sn-app-switcher {
@@ -301,8 +301,6 @@
 	--app-switcher-radius: var(--radius-md);
 	--app-switcher-item-radius: var(--radius-sm);
 	--app-switcher-font: var(--font-sans);
-	--app-switcher-icon: var(--c-primary);
-	--app-switcher-icon-stroke: var(--icon-stroke);
 }
 
 @media (pointer: coarse) {

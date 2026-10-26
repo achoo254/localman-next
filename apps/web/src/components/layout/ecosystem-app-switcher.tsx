@@ -1,6 +1,5 @@
-import "@shared-next/app-switcher/app-switcher.css";
-import { brand } from "@localman/shared/brand";
-import { AppSwitcher } from "@shared-next/app-switcher";
+import "@achoo254/app-switcher/app-switcher.css";
+import { AppSwitcher } from "@achoo254/app-switcher";
 import { DOMAIN_PATTERN } from "@shared-next/brand/hosts";
 import { useI18n } from "../../i18n/i18n-context";
 import { useLoadedTenantInfo } from "../../lib/tenant-info";
@@ -38,7 +37,7 @@ function openInSystemBrowser(url: string): void {
 
 /**
  * The 9-dot button listing the other apps the same account signs in to
- * (`@shared-next/app-switcher`). Signed-in top bar only. It waits for the
+ * (`@achoo254/app-switcher`). Signed-in top bar only. It waits for the
  * domain the page is on (`/api/v1/tenant`): the primary domain's defaults
  * would link another tenant's people to hoandat.com. Until then an empty
  * box of the button's size keeps the top bar from shifting.
@@ -60,10 +59,7 @@ export function EcosystemAppSwitcher() {
 	return (
 		<AppSwitcher
 			current="localman"
-			tenantDomain={tenantDomain}
-			// Scribe runs on the primary tenant (hoandat.com) only: a self-hosted
-			// install on another domain lists the other apps without it.
-			isPrimaryTenant={tenantDomain === brand.primaryTenant.domain}
+			domain={tenantDomain}
 			locale={locale}
 			// The shell's WebView must not load another app: system browser.
 			onOpen={isNativeBuild ? openInSystemBrowser : undefined}

@@ -98,7 +98,7 @@ describe("EcosystemAppSwitcher", () => {
 		]);
 	});
 
-	it("leaves Scribe out on another tenant's domain", async () => {
+	it("links every app under the domain of the IdP", async () => {
 		state.idpOrigin = "https://auth.acme.example";
 		renderSwitcher();
 		const panel = await openPanel();
@@ -108,6 +108,7 @@ describe("EcosystemAppSwitcher", () => {
 				.map((link) => new URL(link.getAttribute("href") ?? "").host),
 		).toEqual([
 			"chat.acme.example",
+			"scribe.acme.example",
 			"tunnel.acme.example",
 			"auth.acme.example",
 		]);
