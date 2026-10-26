@@ -8,7 +8,7 @@ import { renderRoutes } from "../../test/render-app";
 import { AppHeader } from "./app-header";
 
 const TENANT = {
-	displayName: "hoandat",
+	displayName: "hoandat.com",
 	idpOrigin: "https://auth.hoandat.com",
 	publicUrl: "https://localman.hoandat.com",
 	mockBaseDomain: "localman.hoandat.com",
@@ -85,7 +85,7 @@ describe("AppHeader", () => {
 			await screen.findByRole("menuitem", {
 				// jsdom puts a space before the sr-only suffix; browsers do not.
 				name: new RegExp(
-					`^${label} ?, opens your hoandat account in a new tab$`,
+					`^${label} ?, opens your hoandat.com account in a new tab$`,
 				),
 			}),
 		);

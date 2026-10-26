@@ -5,7 +5,7 @@ Checklist cho mọi chữ người dùng thấy: landing, nút, lỗi, toast, mo
 ## 1. Rõ và ngắn
 
 - [ ] Viết câu hoàn chỉnh, mỗi câu một ý. Ví dụ: "Khai báo resource, sinh dữ liệu giả bằng một click và có ngay endpoint CRUD đầy đủ."
-- [ ] Gọi người dùng là "bạn", gọi đội làm sản phẩm là "chúng tôi", gọi sản phẩm là "Localman". Tài khoản IdP gọi là "tài khoản hoandat".
+- [ ] Gọi người dùng là "bạn", gọi đội làm sản phẩm là "chúng tôi", gọi sản phẩm là "Localman". Tài khoản IdP gọi là "tài khoản hoandat.com" ("hoandat.com account").
 - [ ] Không dùng dấu gạch dài (—) để nối ý trong câu; dùng dấu phẩy, hoặc tách thành câu mới. Dấu "·" chỉ dùng để ngăn metadata ("3 resource · sửa 2 phút trước").
 - [ ] Tiêu đề, nút và mục menu viết sentence case: "Bắt đầu ngay", "Kênh thông báo". Badge và eyebrow viết thường trong source, CSS tự in hoa.
 - [ ] Bỏ trạng từ rỗng ("rất", "cực kỳ", "dễ dàng") và từ so sánh tuyệt đối ("nhất", "duy nhất") khi không chứng minh được.

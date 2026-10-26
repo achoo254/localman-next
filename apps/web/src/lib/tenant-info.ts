@@ -5,7 +5,7 @@ import { expectRecord, expectString, optionalString } from "./json-guards";
 
 /** The domain this Localman is served on (`GET /api/v1/tenant`). */
 export interface TenantInfo {
-	/** Name of the account people sign in with ("hoandat", "Acme"). */
+	/** Name of the account people sign in with ("hoandat.com", "Acme"). */
 	readonly displayName: string;
 	readonly idpOrigin: string;
 	/** Dashboard origin, e.g. `https://localman.hoandat.com`. */
@@ -20,7 +20,7 @@ export interface TenantInfo {
  * answers: the primary domain (the build's IdP).
  */
 export const DEFAULT_TENANT_INFO: TenantInfo = {
-	displayName: "hoandat",
+	displayName: "hoandat.com",
 	idpOrigin: appConfig.idpOrigin,
 	publicUrl: "https://localman.hoandat.com",
 	mockBaseDomain: "localman.hoandat.com",

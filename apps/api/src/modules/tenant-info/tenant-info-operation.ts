@@ -5,8 +5,8 @@ import { tenantSettings } from "../../tenancy/tenant-settings.js";
 
 /**
  * What the web shows of the domain it is served on: the account's name
- * ("hoandat account"), its IdP, mock and tunnel hosts: the first label of
- * the domain, the issuer's origin and the runtime settings.
+ * ("hoandat.com account"), its IdP, mock and tunnel hosts: the whole
+ * domain, the issuer's origin and the runtime settings.
  */
 export const getTenantInfo = defineOperation({
 	id: "public.getTenantInfo",
@@ -33,7 +33,7 @@ export const getTenantInfo = defineOperation({
 		const tenant = currentTenant();
 		const settings = tenantSettings();
 		return {
-			displayName: tenant.domain.split(".")[0] ?? tenant.domain,
+			displayName: tenant.domain,
 			idpOrigin: new URL(tenant.issuer).origin,
 			publicUrl: settings.publicUrl,
 			mockBaseDomain: settings.mockBaseDomain,

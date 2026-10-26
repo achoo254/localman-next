@@ -68,7 +68,7 @@ LÀM VIỆC CÙNG NHAU VÀ AI AGENT
 
 RIÊNG TƯ
 • Không quảng cáo, không công cụ phân tích hay theo dõi.
-• Đăng nhập bằng tài khoản hoandat qua trình duyệt của hệ thống; app không giữ mật khẩu của bạn.
+• Đăng nhập bằng tài khoản hoandat.com qua trình duyệt của hệ thống; app không giữ mật khẩu của bạn.
 • Xoá tài khoản và dữ liệu ngay trong app, ở Tài khoản và hạn mức.
 ```
 
@@ -100,7 +100,7 @@ TEAMS AND AI AGENTS
 
 PRIVACY
 • No ads, no analytics or tracking tools.
-• Sign in with your hoandat account in the system browser; the app never holds your password.
+• Sign in with your hoandat.com account in the system browser; the app never holds your password.
 • Delete your account and its data in the app, under Account and limits.
 ```
 
@@ -147,7 +147,7 @@ phân tích hay cá nhân hoá.
 
 | Loại của Apple | Thu thập | Gồm (theo /privacy) |
 |---|---|---|
-| Contact Info › Name | Có | Tên hiển thị từ tài khoản hoandat; tên tuỳ chọn trong form góp ý |
+| Contact Info › Name | Có | Tên hiển thị từ tài khoản hoandat.com; tên tuỳ chọn trong form góp ý |
 | Contact Info › Email Address | Có | Email của tài khoản (và đã xác minh hay chưa); email trả lời tuỳ chọn trong form góp ý |
 | Contact Info › Other User Contact Info | Có | Chat Telegram đã liên kết (nếu có); username Telegram tuỳ chọn trong form góp ý |
 | Identifiers › User ID | Có | Account ID, username |

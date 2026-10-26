@@ -12,7 +12,7 @@ import { renderRoutes } from "../../test/render-app";
 import { AccountMenu } from "./account-menu";
 
 const APPS_NAME =
-	/^Authorized apps ?, opens your hoandat account in a new tab$/;
+	/^Authorized apps ?, opens your hoandat.com account in a new tab$/;
 
 async function openMenu(flags: FeatureFlags) {
 	renderRoutes(

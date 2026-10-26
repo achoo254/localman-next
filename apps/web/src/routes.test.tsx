@@ -104,7 +104,7 @@ describe("route guards", () => {
 		["access_denied", "You cancelled sign-in"],
 		["login_expired", "Your sign-in expired"],
 		["login_failed", "Sign-in failed"],
-		["idp_unavailable", "Can't reach your hoandat account"],
+		["idp_unavailable", "Can't reach your hoandat.com account"],
 		[
 			"rate_limited",
 			"You tried to sign in too many times. Please wait a minute and try again.",

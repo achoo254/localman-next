@@ -71,7 +71,7 @@ describe("public legal pages", () => {
 			"/account",
 		);
 		expect(
-			screen.getByRole("link", { name: "your hoandat account page" }),
+			screen.getByRole("link", { name: "your hoandat.com account page" }),
 		).toHaveAttribute("href", expect.stringMatching(/\/account\/delete$/));
 		expect(
 			document.querySelector('[data-id="legal-account-deleted"]'),

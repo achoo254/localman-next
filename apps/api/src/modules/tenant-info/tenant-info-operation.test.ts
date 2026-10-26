@@ -15,11 +15,11 @@ const info = (host: string) =>
 	request(testApp).get("/api/v1/tenant").set("host", host);
 
 describe("GET /tenant", () => {
-	it("names the primary tenant by its domain's first label, from its settings", async () => {
+	it("names the primary tenant by its whole domain, from its settings", async () => {
 		const res = await info("localman.test");
 		expect(res.status).toBe(200);
 		expect(res.body).toEqual({
-			displayName: "localman",
+			displayName: "localman.test",
 			idpOrigin: "https://auth.localman.test",
 			publicUrl: "https://localman.test",
 			mockBaseDomain: "localman.test",
