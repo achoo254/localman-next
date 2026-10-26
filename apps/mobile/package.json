@@ -8,6 +8,7 @@
 		"build:web": "bash scripts/build-native-web.sh",
 		"sync": "pnpm build:web && cap sync",
 		"open:ios": "cap open ios",
+		"ios:release": "bash scripts/ios-release.sh",
 		"open:android": "cap open android"
 	},
 	"dependencies": {

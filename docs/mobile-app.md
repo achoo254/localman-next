@@ -34,6 +34,37 @@ lần đổi web/mobile. Máy dev không cần Android SDK.
 Server tắt đăng nhập mobile cho tới khi có `MOBILE_IOS_TEAM_ID` (iOS) và/hoặc `MOBILE_ANDROID_CERT_SHA256` (vân tay
 chứng chỉ ký APK/AAB) trong `/opt/localman/.env` (`docs/deployment-guide.md`). Team iOS: `AM5C55N339`.
 
+iOS đã bật từ 24/10/2026: `MOBILE_IOS_TEAM_ID=AM5C55N339` có trong `/opt/localman/.env` và bản sao iCloud
+`ENV production/localman/server/localman.env`. Kiểm (26/10/2026):
+`curl -s https://localman.hoandat.com/.well-known/apple-app-site-association` trả JSON có appID
+`AM5C55N339.com.hoandat.localman` cho `applinks` (`/m/auth/callback`) và `webcredentials`; bản Apple cache tại
+`https://app-site-association.cdn-apple.com/a/v1/localman.hoandat.com` giống vậy. Android còn tắt (chưa có chứng chỉ ký).
+
+## Phát hành TestFlight
+
+`pnpm --filter @localman/mobile ios:release` ([`apps/mobile/scripts/ios-release.sh`](../apps/mobile/scripts/ios-release.sh),
+cùng cách với Scribe) chạy tay trên Mac build, không chạy trên CI: build web native (luôn host API prod và
+`released-features`, bỏ qua `LOCALMAN_API_BASE_URL`/`VITE_FEATURES`, kiểm bundle có `https://localman.hoandat.com`) →
+`cap sync ios` → `xcodebuild archive` (Release, ký tự động bằng key API, `-allowProvisioningUpdates`) →
+`xcodebuild -exportArchive` với `method: app-store-connect`, `destination: upload` (ký phân phối và tải thẳng lên App
+Store Connect).
+
+```bash
+ASC_KEY_ID=<Key ID> ASC_ISSUER_ID=<Issuer ID> \
+ASC_KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_<KEY_ID>.p8 pnpm --filter @localman/mobile ios:release
+```
+
+- Key API (vai trò Admin, cần cho ký phân phối bằng key): tệp `.p8` ngoài repo, quyền 600; Key ID và Issuer ID nằm
+  trong tệp access-tokens trên iCloud, service `appstoreconnect.apple.com`.
+- Phiên bản: `MARKETING_VERSION` (`1.0`) trong `project.pbxproj`; số build do script đặt = giờ UTC `YYYYMMDD.HHMM`
+  (luôn tăng), hoặc `IOS_BUILD_NUMBER`. `IOS_RELEASE_DIR` giữ lại archive.
+- `Info.plist` khai `ITSAppUsesNonExemptEncryption = false` (chỉ HTTPS chuẩn) nên TestFlight không hỏi về mã hoá;
+  `UIRequiredDeviceCapabilities` = `arm64`.
+- App record "Localman" (`com.hoandat.localman`) có nhóm TestFlight nội bộ "Nội bộ" nhận mọi build
+  (`hasAccessToAllBuilds`); build hiện ở đó sau khi Apple xử lý xong (trạng thái `VALID`).
+- App khai cả iPhone và iPad (`TARGETED_DEVICE_FAMILY = 1,2`): nộp App Store sẽ cần thêm ảnh iPad, hoặc chuyển về chỉ
+  iPhone trước khi nộp.
+
 ## Icon và màn chờ
 
 `pnpm brand:gen` vẽ từ `packages/design-tokens/app-icon.svg`, `app-icon-maskable.svg` và `colors` của
@@ -70,7 +101,6 @@ Bố cục điện thoại cần sửa (ghi lại khi chụp 23/10/2026, chưa s
 
 ## Chưa làm
 
-- Push (APNs/FCM), ký bản phát hành Android và tải lên TestFlight (cần app record trên App Store Connect do chủ tài
-  khoản tạo).
+- Push (APNs/FCM), ký bản phát hành Android, Play Console; nộp duyệt App Store (mới có TestFlight nội bộ).
 - Chưa kiểm trên máy thật; APK debug của CI ký bằng khoá debug ngẫu nhiên nên App Link chưa xác minh được với
   `assetlinks.json` của prod.
