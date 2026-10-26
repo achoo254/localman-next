@@ -2,10 +2,10 @@ import { IconCheck } from "@tabler/icons-react";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 
-const PERKS = ["free", "noCard", "inBrowser"] as const;
+const PERKS = ["free", "ready", "inBrowser"] as const;
 
 /**
- * "Free · No card · Runs in your browser" next to a sign-up button, so the
+ * "Free · Ready in a minute · Runs in your browser" next to a sign-up button, so the
  * cost of trying sits where the visitor decides. `inverse` is for the
  * solid primary band (text in `--c-on-primary`).
  */

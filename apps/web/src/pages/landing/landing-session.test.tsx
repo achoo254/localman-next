@@ -68,7 +68,7 @@ describe("landing at / by session", () => {
 		}
 		// No call to action invites an existing account to sign up again.
 		expect(
-			screen.queryByRole("link", { name: /Get started|Try it free/ }),
+			screen.queryByRole("link", { name: /Get started|Start free/ }),
 		).toBeNull();
 		expect(router.state.location.pathname).toBe("/");
 	});
@@ -85,7 +85,7 @@ describe("landing at / by session", () => {
 			"landing-cta-button",
 		]) {
 			expect(byDataId(id)).toHaveAttribute("href", SIGN_UP_HREF);
-			expect(byDataId(id)).toHaveAccessibleName("Try it free");
+			expect(byDataId(id)).toHaveAccessibleName("Start free");
 		}
 	});
 
@@ -100,7 +100,7 @@ describe("landing at / by session", () => {
 		expect(
 			within(topbar()).getByRole("link", { name: "Sign in" }),
 		).toBeVisible();
-		expect(byDataId("landing-hero-cta")).toHaveAccessibleName("Try it free");
+		expect(byDataId("landing-hero-cta")).toHaveAccessibleName("Start free");
 	});
 
 	it("has no serious axe violations once signed in", async () => {

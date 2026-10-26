@@ -125,14 +125,14 @@ export const landing = {
 	cta: {
 		title: "Build your first mock API in minutes",
 		text: "Create a free account, add a resource, click the generator bar and you have a working endpoint.",
-		tryFree: "Try it free",
+		startFree: "Start free",
 	},
 	midCta: {
 		title: "Seen enough? Try it on your own API",
 	},
 	perks: {
-		free: "Free plan",
-		noCard: "No card needed",
+		free: "Free",
+		ready: "Ready in a minute",
 		inBrowser: "Runs in your browser",
 	},
 } as const;

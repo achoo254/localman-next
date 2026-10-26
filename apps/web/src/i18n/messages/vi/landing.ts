@@ -115,14 +115,14 @@ export const landing: Messages["landing"] = {
 	cta: {
 		title: "Dựng mock API đầu tiên trong vài phút",
 		text: "Tạo tài khoản miễn phí, thêm resource, bấm thanh sinh dữ liệu là có endpoint chạy được.",
-		tryFree: "Dùng thử miễn phí",
+		startFree: "Bắt đầu miễn phí",
 	},
 	midCta: {
 		title: "Thấy hợp rồi? Thử ngay với API của bạn",
 	},
 	perks: {
-		free: "Gói miễn phí",
-		noCard: "Không cần thẻ",
+		free: "Miễn phí",
+		ready: "Dùng được sau một phút",
 		inBrowser: "Chạy ngay trên trình duyệt",
 	},
 };

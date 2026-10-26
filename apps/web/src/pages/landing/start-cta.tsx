@@ -19,7 +19,7 @@ const LABEL_CELL = "col-start-1 row-start-1";
 
 /**
  * Main call to action of the landing (hero, after the demos, closing band):
- * "Try it free" signs a visitor up, "Open app" takes a signed-in user to the
+ * "Start free" signs a visitor up, "Open app" takes a signed-in user to the
  * projects. The prerendered page does not know the session, so both labels
  * sit in one grid cell, the unused one invisible and hidden from assistive
  * tech: the button keeps the width of the longer label when the session
@@ -42,7 +42,7 @@ export function StartCta({
 					className={cn(LABEL_CELL, signedIn && "invisible")}
 					aria-hidden={signedIn ? true : undefined}
 				>
-					{t("landing.cta.tryFree")}
+					{t("landing.cta.startFree")}
 				</span>
 				<span
 					className={cn(LABEL_CELL, !signedIn && "invisible")}

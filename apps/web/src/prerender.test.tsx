@@ -93,7 +93,7 @@ describe("landing prerender", () => {
 		const html = await renderPageHtml("/");
 		expect(html).toContain("REST APIs with relations and Faker");
 		expect(html).toContain("Get started now");
-		expect(html).toContain("Try it free");
+		expect(html).toContain("Start free");
 		expect(html).not.toMatch(/Bắt đầu ngay|立即开始/);
 	});
 

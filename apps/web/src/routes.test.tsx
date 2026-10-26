@@ -53,7 +53,7 @@ describe("route guards", () => {
 		renderRoutes(routes, "/");
 		const login = await screen.findByRole("link", { name: "Sign in" });
 		const signUps = screen.getAllByRole("link", {
-			name: /^(Get started now|Try it free)$/,
+			name: /^(Get started now|Start free)$/,
 		});
 		// Top bar, hero, the block after the demos and closing band all sign up the same way.
 		expect(login).toHaveAttribute("data-id", "topbar-login");
