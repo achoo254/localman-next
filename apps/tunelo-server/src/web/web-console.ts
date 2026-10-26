@@ -17,8 +17,14 @@ import {
 } from "./web-config.js";
 import { type WebContextOptions, createWebContext } from "./web-context.js";
 
+/**
+ * The console runs no script of its own. The one script allowed is the
+ * Cloudflare Web Analytics beacon that Cloudflare injects (cookie-less page
+ * views, as on every hoandat app; Localman's privacy page says so), with its
+ * report endpoint.
+ */
 export const CONTENT_SECURITY_POLICY =
-	"default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self' data:; frame-ancestors 'none'";
+	"default-src 'self'; script-src https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; style-src 'self'; img-src 'self' data:; frame-ancestors 'none'";
 
 /** `/`, `/lang`, `/auth/*`, `/assets/*`; case-insensitive like Express routes. */
 const CONSOLE_PATH = /^\/(?:lang\/?|auth\/.*|assets\/.*)?$/i;
