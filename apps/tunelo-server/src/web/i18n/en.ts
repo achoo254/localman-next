@@ -54,5 +54,10 @@ export const en = {
 	"error.idp_unavailable":
 		"The sign-in service is not reachable right now. Please try again shortly.",
 	"error.csrf": "That request expired. Reload the page and try again.",
-	"footer.note": "Accounts by {idpHost}",
+	"nav.accountNav": "Account",
+	"meta.description":
+		"Tunelo gives the app running on your machine a public HTTPS address, or a TCP port, with one command.",
+	"footer.ecosystem": "An app from {domain}",
+	"footer.privacy": "Privacy policy",
+	"footer.terms": "Terms of use",
 } as const;

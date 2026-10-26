@@ -51,5 +51,10 @@ export const vi: Messages = {
 	"error.idp_unavailable":
 		"Dịch vụ đăng nhập tạm thời không truy cập được. Vui lòng thử lại sau ít phút.",
 	"error.csrf": "Yêu cầu đã hết hạn. Tải lại trang rồi thử lại.",
-	"footer.note": "Tài khoản do {idpHost} quản lý",
+	"nav.accountNav": "Tài khoản",
+	"meta.description":
+		"Tunelo cấp cho ứng dụng đang chạy trên máy bạn một địa chỉ HTTPS công khai, hoặc một cổng TCP, chỉ bằng một lệnh.",
+	"footer.ecosystem": "Một app của {domain}",
+	"footer.privacy": "Chính sách quyền riêng tư",
+	"footer.terms": "Điều khoản sử dụng",
 };

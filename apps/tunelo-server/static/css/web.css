@@ -73,9 +73,14 @@ pre {
 	white-space: nowrap;
 }
 
-/* Top bar */
+/* Top bar, as on the account app (auth-next static/css/app.css): the mark
+   (24px) and the bold name, small mono links with the sign-in as a tinted pill */
 .topbar {
-	background: var(--c-surface);
+	position: sticky;
+	top: 0;
+	z-index: 30;
+	background: color-mix(in srgb, var(--c-bg) 82%, transparent);
+	backdrop-filter: blur(10px);
 	border-bottom: 1px solid var(--c-border-subtle);
 }
 
@@ -91,22 +96,57 @@ pre {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-2);
+	min-height: 44px;
 	color: var(--c-text);
-	font-weight: 700;
-	font-size: 1.125rem;
+	font-family: var(--font-sans);
+	font-size: 1rem;
 	text-decoration: none;
+}
+
+.brand b {
+	color: var(--c-primary);
 }
 
 .brand-mark {
 	display: block;
 	flex: none;
+	width: 24px;
+	height: 24px;
 }
 
 .topbar-actions {
 	display: flex;
 	align-items: center;
-	gap: var(--space-3);
+	gap: var(--space-1);
 	min-width: 0;
+}
+
+.topbar-link {
+	font-family: var(--font-mono);
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--c-text-muted);
+	text-decoration: none;
+	white-space: nowrap;
+	padding: var(--space-2) var(--space-3);
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	cursor: pointer;
+	transition:
+		background-color var(--dur-fast) var(--ease-standard),
+		color var(--dur-fast) var(--ease-standard);
+}
+
+.topbar-link:hover {
+	color: var(--c-text);
+	background: color-mix(in srgb, var(--c-text) 6%, transparent);
+}
+
+.topbar-cta,
+.topbar-cta:hover {
+	color: var(--c-primary);
+	background: color-mix(in srgb, var(--c-primary) 10%, transparent);
 }
 
 .topbar-user {
@@ -116,6 +156,24 @@ pre {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	max-width: 280px;
+	padding-inline: var(--space-2);
+}
+
+/* touch screens and phones: every header and footer link is a 44px target */
+@media (pointer: coarse), (max-width: 479px) {
+	.topbar-link,
+	.foot-link,
+	.lang-option {
+		display: inline-flex;
+		align-items: center;
+		min-height: 44px;
+	}
+}
+
+@media (max-width: 479px) {
+	.topbar-link {
+		padding-inline: var(--space-2);
+	}
 }
 
 .inline-form {
@@ -130,10 +188,11 @@ pre {
 	min-height: 40px;
 	padding: var(--space-2) var(--space-4);
 	border: 1px solid transparent;
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-md);
 	font: inherit;
+	font-family: var(--font-mono);
 	font-weight: 600;
-	font-size: 0.9375rem;
+	font-size: 0.875rem;
 	line-height: 1.2;
 	text-decoration: none;
 	cursor: pointer;
@@ -156,15 +215,8 @@ pre {
 	border-color: var(--c-border);
 }
 
-.btn-secondary:hover,
-.btn-ghost:hover {
+.btn-secondary:hover {
 	background: var(--c-bar-track);
-}
-
-.btn-ghost {
-	background: transparent;
-	color: var(--c-text);
-	border-color: var(--c-border-subtle);
 }
 
 .btn-lg {
@@ -193,8 +245,8 @@ pre {
 
 .card {
 	background: var(--c-surface);
-	border: 1px solid var(--c-border-subtle);
-	border-radius: var(--radius-lg);
+	border: 1px solid var(--c-border);
+	border-radius: var(--radius-xl);
 	box-shadow: var(--shadow-sm);
 	padding: var(--space-5);
 }
@@ -214,16 +266,24 @@ pre {
 }
 
 .eyebrow {
+	align-self: flex-start;
+	padding: var(--space-1) var(--space-3);
 	color: var(--c-primary);
+	font-family: var(--font-mono);
 	font-weight: 600;
-	font-size: 0.875rem;
-	letter-spacing: 0.04em;
+	font-size: 12px;
+	letter-spacing: 0.08em;
 	text-transform: uppercase;
+	border: 1px solid color-mix(in srgb, var(--c-primary) 30%, var(--c-surface));
+	border-radius: var(--radius-full);
+	background: color-mix(in srgb, var(--c-primary) 8%, var(--c-surface));
 }
 
 .hero-title {
-	font-size: clamp(1.75rem, 5vw, 2.75rem);
-	line-height: 1.15;
+	font-family: var(--font-mono);
+	font-size: clamp(1.75rem, 1.2rem + 2.4vw, 3rem);
+	font-weight: 700;
+	line-height: 1.12;
 	letter-spacing: -0.02em;
 }
 
@@ -401,33 +461,64 @@ pre {
 	font-weight: 600;
 }
 
-/* Footer */
+/* Footer, as on the account app: the language pill, then one quiet row */
 .page-foot {
 	display: flex;
-	flex-wrap: wrap;
+	flex-direction: column;
 	align-items: center;
-	justify-content: space-between;
 	gap: var(--space-3);
-	padding-top: var(--space-4);
-	padding-bottom: var(--space-5);
-	border-top: 1px solid var(--c-border-subtle);
+	padding-bottom: var(--space-7);
 }
 
 .lang-switch {
-	display: flex;
+	display: inline-flex;
 	flex-wrap: wrap;
-	gap: var(--space-3);
-	font-size: 0.875rem;
+	justify-content: center;
+	gap: 2px;
+	padding: 2px;
+	border: 1px solid var(--c-border);
+	border-radius: var(--radius-full);
+	background: var(--c-surface);
 }
 
 .lang-option {
+	font-family: var(--font-mono);
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--c-text-muted);
+	text-decoration: none;
+	padding: var(--space-1) var(--space-3);
+	border: 1px solid transparent;
+	border-radius: var(--radius-full);
+}
+
+.lang-option:hover {
+	color: var(--c-text);
+}
+
+.lang-option[aria-current="true"] {
+	color: var(--c-primary);
+	background: color-mix(in srgb, var(--c-primary) 8%, var(--c-surface));
+	border-color: color-mix(in srgb, var(--c-primary) 30%, var(--c-surface));
+}
+
+.foot-links {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	column-gap: var(--space-4);
+}
+
+.foot-link {
+	font-size: 13px;
 	color: var(--c-text-muted);
 	text-decoration: none;
 }
 
-.lang-option[aria-current="true"] {
+.foot-link:hover {
 	color: var(--c-text);
-	font-weight: 600;
+	text-decoration: underline;
+	text-underline-offset: 2px;
 }
 
 @media (max-width: 479px) {

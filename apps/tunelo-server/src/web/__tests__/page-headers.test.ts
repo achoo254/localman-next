@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { useTestDatabase } from "../../test-support/test-mongo.js";
-import { BRAND_MARK_PATH } from "../layout.js";
+import { BRAND_MARK_PATH, OG_IMAGE_PATH } from "../layout.js";
 import { CONTENT_SECURITY_POLICY } from "../web-console.js";
 import { WebSessionModel } from "../web-session-model.js";
 import {
@@ -58,6 +58,43 @@ describe("headers and assets", () => {
 		const res = await harness.request(BRAND_MARK_PATH);
 		expect(res.status).toBe(200);
 		expect(res.headers["content-type"]).toBe("image/webp");
+	});
+
+	test("link previews show the share image, served from static/img", async () => {
+		const body = (await page()).body;
+		expect(body).toContain(
+			`<meta property="og:image" content="https://tunnel.hoandat.com${OG_IMAGE_PATH}">`,
+		);
+		expect(body).toContain(
+			'<meta name="twitter:card" content="summary_large_image">',
+		);
+		const res = await harness.request(OG_IMAGE_PATH);
+		expect(res.status).toBe(200);
+		expect(res.headers["content-type"]).toBe("image/jpeg");
+	});
+
+	test("the footer links the brand's home and Localman's privacy policy and terms", async () => {
+		const body = (await page()).body;
+		expect(body).toContain(
+			'href="https://hoandat.com" data-id="foot-home">An app from hoandat.com</a>',
+		);
+		expect(body).toContain(
+			'href="https://localman.hoandat.com/privacy" data-id="foot-privacy"',
+		);
+		expect(body).toContain(
+			'href="https://localman.hoandat.com/terms" data-id="foot-terms"',
+		);
+	});
+
+	test("serves the account app's fonts (Inter, JetBrains Mono) from static/fonts", async () => {
+		expect((await page()).body).toContain(
+			'<link rel="stylesheet" href="/assets/css/fonts.css">',
+		);
+		const css = await harness.request("/assets/css/fonts.css");
+		expect(css.status).toBe(200);
+		for (const [, url] of css.body.matchAll(/url\("([^"]+)"\)/g)) {
+			expect((await harness.request(url ?? "")).status).toBe(200);
+		}
 	});
 
 	test("every page links the Tunelo favicon set", async () => {

@@ -11,3 +11,12 @@ export function brandValues(): { brand: string; idpHost: string } {
 		idpHost: new URL(tenant.issuer).host,
 	};
 }
+
+/**
+ * Footer links of the tenant: its home (`<domain>`) and Localman's web app,
+ * whose privacy policy and terms cover the suite Tunelo belongs to.
+ */
+export function footLinks(): { domain: string; localmanUrl: string } {
+	const { domain } = currentTenant();
+	return { domain, localmanUrl: `https://localman.${domain}` };
+}

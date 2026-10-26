@@ -1,5 +1,6 @@
+import { currentTenant } from "../tenancy/tunnel-tenant.js";
 import { BRAND_ICON_LINKS } from "./brand-icons.js";
-import { brandValues } from "./brand.js";
+import { footLinks } from "./brand.js";
 import { type HtmlValue, type SafeHtml, html } from "./html.js";
 import { LOCALES, LOCALE_NAMES } from "./i18n/locale.js";
 import type { Translator } from "./i18n/messages.js";
@@ -26,14 +27,17 @@ export interface LayoutOptions {
 
 /** The Tunelo mark, AI-drawn (static/img); decorative, the name follows it. */
 export const BRAND_MARK_PATH = "/assets/img/tunelo-mark-128.webp";
-const BRAND_MARK = html`<img class="brand-mark" src="${BRAND_MARK_PATH}" width="28" height="28" alt="">`;
+const BRAND_MARK = html`<img class="brand-mark" src="${BRAND_MARK_PATH}" width="24" height="24" alt="">`;
+
+/** Link preview picture (static/img), AI-drawn, 1200 × 630. */
+export const OG_IMAGE_PATH = "/assets/img/og-image.jpg";
 
 function accountActions(
 	i18n: Translator,
 	account: SignedInChrome | null,
 ): SafeHtml {
 	if (!account) {
-		return html`<a class="btn btn-primary" href="${LOGIN_PATH}" data-id="topbar-sign-in">${i18n.t("nav.signIn")}</a>`;
+		return html`<a class="topbar-link topbar-cta" href="${LOGIN_PATH}" data-id="topbar-sign-in">${i18n.t("nav.signIn")}</a>`;
 	}
 	return html`${
 		account.label
@@ -41,7 +45,7 @@ function accountActions(
 			: ""
 	}<form class="inline-form" method="post" action="${LOGOUT_PATH}" data-id="topbar-sign-out-form">
 <input type="hidden" name="csrf" value="${account.csrfToken}">
-<button class="btn btn-ghost" type="submit" data-id="topbar-sign-out">${i18n.t("nav.signOut")}</button>
+<button class="topbar-link" type="submit" data-id="topbar-sign-out">${i18n.t("nav.signOut")}</button>
 </form>`;
 }
 
@@ -53,6 +57,32 @@ function languageSwitcher(i18n: Translator): SafeHtml {
 				locale === i18n.locale ? html` aria-current="true"` : ""
 			} data-id="lang-${locale}">${LOCALE_NAMES[locale]}</a>`,
 	)}</nav>`;
+}
+
+/**
+ * Under every page, as on the account app (auth-next layout.ts): the
+ * language pill, then "An app from <domain>", and the privacy policy and
+ * terms. Tunelo has none of its own: it is part of the Localman suite, so
+ * they are Localman's.
+ */
+function pageFoot(i18n: Translator): SafeHtml {
+	const { domain, localmanUrl } = footLinks();
+	return html`<footer class="page-foot container">${languageSwitcher(i18n)}<p class="foot-links"><a class="foot-link" href="https://${domain}" data-id="foot-home">${i18n.t("footer.ecosystem", { domain })}</a><a class="foot-link" href="${localmanUrl}/privacy" data-id="foot-privacy">${i18n.t("footer.privacy")}</a><a class="foot-link" href="${localmanUrl}/terms" data-id="foot-terms">${i18n.t("footer.terms")}</a></p></footer>`;
+}
+
+/** Link previews: title, description and the share image by absolute URL. */
+function shareTags(i18n: Translator, title: string): SafeHtml {
+	const image = `https://${currentTenant().tunnelDomain}${OG_IMAGE_PATH}`;
+	return html`<meta name="description" content="${i18n.t("meta.description")}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Tunelo">
+<meta property="og:title" content="${title}">
+<meta property="og:description" content="${i18n.t("meta.description")}">
+<meta property="og:image" content="${image}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${image}">`;
 }
 
 /**
@@ -69,20 +99,22 @@ export function renderLayout(options: LayoutOptions): string {
 <meta name="referrer" content="no-referrer">
 <meta name="color-scheme" content="light dark">
 <title>${options.title}</title>
+${shareTags(i18n, options.title)}
 ${BRAND_ICON_LINKS}
+<link rel="stylesheet" href="/assets/css/fonts.css">
 <link rel="stylesheet" href="/assets/css/tokens.css">
 <link rel="stylesheet" href="/assets/css/web.css">
 </head>
 <body>
 <header class="topbar"><div class="topbar-inner container">
-<a class="brand" href="/" aria-label="${i18n.t("nav.home")}" data-id="topbar-brand">${BRAND_MARK}<span>Tunelo</span></a>
-<div class="topbar-actions">${accountActions(i18n, options.account)}</div>
+<a class="brand" href="/" aria-label="${i18n.t("nav.home")}" data-id="topbar-brand">${BRAND_MARK}<b>Tunelo</b></a>
+<nav class="topbar-actions" aria-label="${i18n.t("nav.accountNav")}">${accountActions(i18n, options.account)}</nav>
 </div></header>
 <main class="page container">
 ${options.notice ? html`<p class="notice" role="alert" data-id="page-notice">${options.notice}</p>` : ""}
 ${options.body}
 </main>
-<footer class="page-foot container">${languageSwitcher(i18n)}<p class="muted">${i18n.t("footer.note", brandValues())}</p></footer>
+${pageFoot(i18n)}
 </body>
 </html>`;
 	return page.value;
