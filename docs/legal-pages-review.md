@@ -22,7 +22,7 @@ Tên miền, tên tài khoản IdP và host Tunelo trong chữ là tham số the
 | P10 | Máy Tunelo đã liên kết: link token mã hoá, tên máy | `system-architecture.md` "`tunelo_links`"; `tunelo/tunelo-link-model.ts` |
 | P11 | Log kỹ thuật: request id, method, route, status, ms; không header, cookie, body, query; proxy ghi thêm `sub` và host đích | `system-architecture.md` "Luồng request của api" (Log request) và "Proxy của API client" (Log) |
 | P12 | Rate limit: bộ đếm theo hash IP/tài khoản, hết hạn theo cửa sổ | `apps/api/src/lib/rate-limit-windows.ts` |
-| P13 | Không quảng cáo, không công cụ phân tích/theo dõi | grep `apps/web/src`, `apps/web/index.html`: không có gtag/analytics/posthog/sentry/… (kiểm 2026-10-20) |
+| P13 | Không quảng cáo, không công cụ phân tích/theo dõi trong app; trang web đếm lượt xem bằng Cloudflare Web Analytics, không cookie | grep `apps/web/src`, `apps/web/index.html`: không có gtag/analytics/posthog/sentry/… (kiểm 2026-10-20). Beacon Web Analytics do Cloudflare tự chèn ở edge, không nằm trong mã; CSP của `infra/localman/nginx/localman.hoandat.com.conf` cho `https://static.cloudflareinsights.com` (quyết định đồng bộ UX hệ sinh thái 26/10/2026; `LEGAL_EFFECTIVE_DATE` thành 2026-10-26) |
 | P14 | Local storage: ngôn ngữ, theme, trang đang mở, thứ tự sắp xếp, lựa chọn tunnel | `i18n/locale-preference.ts`, `lib/theme.ts`, `features/collections/page-storage.ts`, `use-collection-sort.ts`, `features/api-client/tunelo/auto-tunnel.ts` |
 | P15 | Mục đích: chạy tính năng, hạn mức/rate limit/chống lạm dụng, bảo mật và sửa lỗi | suy từ P1–P12 |
 | P16 | IdP `auth.hoandat.com` đăng nhập và gửi thông tin tài khoản; là dịch vụ riêng có trang tài khoản riêng | `system-architecture.md` "Đăng nhập và phiên"; repo `auth-next` |
