@@ -16,7 +16,7 @@ hạn bảng trạng thái và bắt đầu nuốt gói của luồng đó. Khô
 client vẫn `ESTABLISHED` trong bảng kernel. Không có `close`, nên không có kết nối lại. Vĩnh viễn.
 
 Sự cố thật ngày 19/08/2026 trên lab: một trục trặc mạng lúc ~08:35 đụng cả ba tunnel của box CEPH
-`192.168.122.171` (box này nằm sau NAT). Log tunnel server:
+(box này nằm sau NAT). Log tunnel server:
 
 ```
 08:35:48  onedash-s3  Tunnel unregistered      ← và không có "registered" nào sau đó
