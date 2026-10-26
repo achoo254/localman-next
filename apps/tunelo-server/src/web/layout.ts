@@ -1,3 +1,4 @@
+import { BRAND_ICON_LINKS } from "./brand-icons.js";
 import { brandValues } from "./brand.js";
 import { type HtmlValue, type SafeHtml, html } from "./html.js";
 import { LOCALES, LOCALE_NAMES } from "./i18n/locale.js";
@@ -23,8 +24,9 @@ export interface LayoutOptions {
 	readonly notice: string | null;
 }
 
-/** The Tunelo mark: a tunnel arch; colour comes from the text colour. */
-const BRAND_MARK = html`<svg class="brand-mark" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M3 21V11a9 9 0 0 1 18 0v10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 21v-8a4 4 0 0 1 8 0v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+/** The Tunelo mark, AI-drawn (static/img); decorative, the name follows it. */
+export const BRAND_MARK_PATH = "/assets/img/tunelo-mark-128.webp";
+const BRAND_MARK = html`<img class="brand-mark" src="${BRAND_MARK_PATH}" width="28" height="28" alt="">`;
 
 function accountActions(
 	i18n: Translator,
@@ -67,6 +69,7 @@ export function renderLayout(options: LayoutOptions): string {
 <meta name="referrer" content="no-referrer">
 <meta name="color-scheme" content="light dark">
 <title>${options.title}</title>
+${BRAND_ICON_LINKS}
 <link rel="stylesheet" href="/assets/css/tokens.css">
 <link rel="stylesheet" href="/assets/css/web.css">
 </head>

@@ -14,6 +14,8 @@ import { usageTracker } from "./services/usage-tracker.js";
 import { configureTenancy, initModels } from "./tenancy/configure-tenancy.js";
 import { tenantScope } from "./tenancy/tenant-scope-middleware.js";
 import { tunnelManager } from "./tunnel-manager.js";
+import { createBrandIconRouter } from "./web/brand-icons.js";
+import { findStaticDir } from "./web/static-dir.js";
 import { mountWebConsole } from "./web/web-console.js";
 import { attachWsHandler } from "./ws-handler.js";
 
@@ -74,6 +76,10 @@ async function start(): Promise<void> {
 			return relay(req, res);
 		next();
 	});
+
+	// Favicon set (`/favicon.ico`, `/icon.svg`, `/apple-touch-icon.png`) for
+	// the console and the device login page — apex only.
+	app.use(createBrandIconRouter(findStaticDir()));
 
 	// Mount API router — apex only.
 	app.use("/api", createApiRouter(authenticator));

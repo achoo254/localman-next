@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import type { AuthConfig } from "../config/auth-config.js";
 import { currentTenant } from "../tenancy/tunnel-tenant.js";
+import { BRAND_ICON_LINKS } from "../web/brand-icons.js";
 
 /**
  * GET /login?req=<id>, opened by tunelo CLI 1.6.x. In `hybrid` mode nobody
@@ -29,6 +30,7 @@ export function renderLoginPage(requestId: string): string {
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Tunelo — Authorize device</title>
+${BRAND_ICON_LINKS.value}
 <style>
   :root { color-scheme: light dark; }
   body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;

@@ -98,7 +98,7 @@ pre {
 }
 
 .brand-mark {
-	color: var(--c-primary);
+	display: block;
 	flex: none;
 }
 

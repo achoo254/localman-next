@@ -32,14 +32,22 @@ const STYLE = [
 ].join("");
 
 /**
+ * The web app's favicon on this same host (`webInstall` in brand.config.json
+ * serves both at the root); CSP `img-src 'self'` lets the browser load them.
+ */
+const FAVICON_LINKS =
+	'<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48"><link rel="icon" href="/icon.svg" type="image/svg+xml">';
+
+/**
  * Sends a page of the mobile sign-in. Its own CSP: no script at all, the
- * one inline style by nonce, forms only to this origin, never framed; no
- * referrer, so the callback URL (with its code) never leaks onwards.
+ * one inline style by nonce, images (the favicon) and forms only from this
+ * origin, never framed; no referrer, so the callback URL (with its code)
+ * never leaks onwards.
  */
 function sendPage(res: Response, locale: Locale, title: string, body: string) {
 	const nonce = randomBytes(16).toString("base64");
 	res.set({
-		"Content-Security-Policy": `default-src 'none'; style-src 'nonce-${nonce}'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'`,
+		"Content-Security-Policy": `default-src 'none'; style-src 'nonce-${nonce}'; img-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'`,
 		"X-Frame-Options": "DENY",
 		"Referrer-Policy": "no-referrer",
 		"Cache-Control": "no-store",
@@ -47,7 +55,7 @@ function sendPage(res: Response, locale: Locale, title: string, body: string) {
 	res
 		.type("html")
 		.send(
-			`<!doctype html><html lang="${escapeHtml(locale)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${escapeHtml(title)}</title><style nonce="${nonce}">${STYLE}</style></head><body><main>${body}</main></body></html>`,
+			`<!doctype html><html lang="${escapeHtml(locale)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${escapeHtml(title)}</title>${FAVICON_LINKS}<style nonce="${nonce}">${STYLE}</style></head><body><main>${body}</main></body></html>`,
 		);
 }
 

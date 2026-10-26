@@ -8,6 +8,8 @@
  * everything after it is the artwork (the foreground layer). `<defs>` stay
  * with both layers, so gradients keep working. A redrawn icon that breaks
  * the convention fails here instead of producing a wrong launcher icon.
+ * A picture icon (artwork embedded as an `<image>`, such as a drawn or
+ * AI-made logo) has no layers to split: see isPictureSvg.
  */
 
 /** A brand SVG cut into what the native files need. */
@@ -36,6 +38,11 @@ export function parseSquareSvg(svg: string, label: string): ParsedSvg {
 	const defs = (inner.match(/<defs\b[\s\S]*?<\/defs>/g) ?? []).join("");
 	const body = inner.replace(/<defs\b[\s\S]*?<\/defs>/g, "").trim();
 	return { size: Number(viewBox[1]), defs, body };
+}
+
+/** Whether the SVG draws a picture (`<image>`) rather than shapes that split into adaptive layers. */
+export function isPictureSvg(svg: string): boolean {
+	return /<image\b/.test(svg.replace(/<!--[\s\S]*?-->/g, ""));
 }
 
 /** The maskable icon's two adaptive layers (see the convention above). */

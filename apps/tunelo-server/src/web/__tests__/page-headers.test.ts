@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { useTestDatabase } from "../../test-support/test-mongo.js";
+import { BRAND_MARK_PATH } from "../layout.js";
 import { CONTENT_SECURITY_POLICY } from "../web-console.js";
 import { WebSessionModel } from "../web-session-model.js";
 import {
@@ -50,6 +51,24 @@ describe("headers and assets", () => {
 		);
 		expect(res.body).toBe(readFileSync(source, "utf8"));
 		expect((await harness.request("/assets/css/missing.css")).status).toBe(404);
+	});
+
+	test("serves the brand mark the layout shows", async () => {
+		expect((await page()).body).toContain(`src="${BRAND_MARK_PATH}"`);
+		const res = await harness.request(BRAND_MARK_PATH);
+		expect(res.status).toBe(200);
+		expect(res.headers["content-type"]).toBe("image/webp");
+	});
+
+	test("every page links the Tunelo favicon set", async () => {
+		const body = (await page()).body;
+		expect(body).toContain('<link rel="icon" href="/favicon.ico"');
+		expect(body).toContain(
+			'<link rel="icon" href="/icon.svg" type="image/svg+xml">',
+		);
+		expect(body).toContain(
+			'<link rel="apple-touch-icon" href="/apple-touch-icon.png">',
+		);
 	});
 
 	test("web.css uses colours from tokens only", () => {

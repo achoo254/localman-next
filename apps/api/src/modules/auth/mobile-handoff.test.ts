@@ -58,7 +58,12 @@ describe("mobile sign-in through the IdP", () => {
 		expect(callback.headers["content-security-policy"]).toMatch(
 			/frame-ancestors 'none'/,
 		);
+		expect(callback.headers["content-security-policy"]).toMatch(
+			/img-src 'self'/,
+		);
 		expect(callback.headers["cache-control"]).toBe("no-store");
+		expect(callback.text).toContain('<link rel="icon" href="/favicon.ico"');
+		expect(callback.text).toContain('<link rel="icon" href="/icon.svg"');
 		expect(callback.text).toContain(harness.account.email);
 		expect(callback.text).toContain("Tiếp tục");
 		// No session (and no cookie) before the app redeems the code.

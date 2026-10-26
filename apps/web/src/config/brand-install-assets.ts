@@ -13,8 +13,8 @@
  *   brand:gen writes there; scripts/brand/localman-brand.test.ts keeps it
  *   equal to the brand).
  *
- * With "webInstall": false (the default while the icon is a placeholder) the
- * plugin has no hooks, so the build output is the same as without it.
+ * With "webInstall": false the plugin has no hooks, so the build output is
+ * the same as without it. It is on since 26/10/2026 (designed icon).
  * docs/decisions/0006-brand-config-and-product-name.md says how to turn it on.
  */
 import { readFileSync } from "node:fs";

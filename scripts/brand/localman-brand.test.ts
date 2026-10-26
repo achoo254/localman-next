@@ -8,6 +8,7 @@ import {
 	webIconFiles,
 } from "@shared-next/brand/build";
 import { describe, expect, it } from "vitest";
+import { isPictureSvg } from "./icon-svg.js";
 import {
 	BRAND_INDENT,
 	BRAND_MANIFESTS,
@@ -74,7 +75,7 @@ describe("brand.config.json", () => {
 		});
 	});
 
-	it("draws the icons in the primary button colours only", () => {
+	it("draws shape icons in the primary button colours only (a picture icon has no colour literals)", () => {
 		const allowed = new Set([
 			token(tokensCss, "--c-primary-solid"),
 			token(tokensCss, "--c-on-primary"),
@@ -84,7 +85,7 @@ describe("brand.config.json", () => {
 			const fills = [...svg.matchAll(/fill="(#[0-9a-f]{6})"/g)].map(
 				(match) => match[1],
 			);
-			expect(fills.length, path).toBeGreaterThan(0);
+			if (!isPictureSvg(svg)) expect(fills.length, path).toBeGreaterThan(0);
 			for (const fill of fills)
 				expect(allowed.has(fill ?? ""), path).toBe(true);
 		}

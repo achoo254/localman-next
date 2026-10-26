@@ -76,8 +76,12 @@ ASC_KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_<KEY_ID>.p8 pnpm --filter @
 | Android | `mipmap-*/ic_launcher_{background,foreground,monochrome}.png` cho adaptive icon (`mipmap-anydpi-v26`, monochrome cho icon theo theme Android 13+), `ic_launcher.png`/`ic_launcher_round.png` cho Android 7.x; `drawable[-port\|-land][-night]-*/splash.png`; `values[-night]/brand_colors.xml` cho màn chờ Android 12+ (`styles.xml`, `AppTheme.NoActionBarLaunch`) |
 | Play | `docs/store/play/icon-512.png`, `feature-graphic.png` (1024 × 500) |
 
-Icon hiện là **dấu tạm** (chữ L trắng trên nền violet), vẫn dùng cho bản lên cửa hàng. Có icon thiết kế: thay hai SVG
-(maskable giữ quy ước `<rect>` nền phủ canvas là phần tử đầu, hình nằm trong vòng tròn 80% ở giữa), `pnpm brand:gen`,
+Icon hiện là ảnh vẽ bằng AI (dấu `{•}` trên nền violet, 26/10/2026) nhúng WebP trong hai SVG. Icon dạng hình
+(maskable giữ quy ước `<rect>` nền phủ canvas là phần tử đầu, hình nằm trong vòng tròn 80% ở giữa) được tách lớp nền,
+hình và monochrome; icon là ảnh (`<image>`) thì không tách được: lớp hình là cả ảnh maskable trên nền `colors.primary`,
+lớp monochrome lấy từ `packages/design-tokens/app-icon-monochrome.svg` (bóng trắng của dấu trên nền trong suốt, cùng
+khung với ảnh maskable, tách một lần từ ảnh gốc AI; thiếu file này thì không có lớp monochrome và Android 13+ hiện icon
+màu gốc khi bật icon theo theme). Đổi icon: thay hai SVG (và SVG monochrome), `pnpm brand:gen`,
 commit, build và nộp bản mới; tải lại hai ảnh Play bằng tay. `scripts/brand/native-assets.test.ts` báo khi file sinh
 ra cũ hơn brand. `cap sync` chỉ chép bản build web và plugin, không đụng các file này.
 

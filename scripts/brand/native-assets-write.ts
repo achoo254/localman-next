@@ -6,16 +6,32 @@
  * fails CI until the generator has run again.
  */
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+	existsSync,
+	mkdirSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import type { BrandConfig } from "@shared-next/brand/build";
 import { rasterize, svgPage } from "./chromium-raster.js";
-import { type NativeBrand, nativePictures } from "./native-assets.js";
+import {
+	type NativeBrand,
+	nativePictures,
+	staleNativeFiles,
+} from "./native-assets.js";
 import { nativeTextFiles } from "./native-resource-files.js";
 import { toRgbPng } from "./png-rgb.js";
 
 export const NATIVE_SOURCE_RECORD = "apps/mobile/brand-assets-source.json";
+
+/**
+ * The themed-icon silhouette next to the brand icons (not a brand.config.json
+ * field: the shared schema has none). Derived once from the AI master.
+ */
+export const MONOCHROME_ICON = "packages/design-tokens/app-icon-monochrome.svg";
 
 type BrandColours = BrandConfig["colors"] & {
 	readonly primary: string;
@@ -31,6 +47,9 @@ export function nativeBrandOf(
 		appName: brand.appName,
 		iconSvg: readFileSync(new URL(brand.icon, root), "utf8"),
 		maskableSvg: readFileSync(new URL(brand.iconMaskable, root), "utf8"),
+		monochromeSvg: existsSync(new URL(MONOCHROME_ICON, root))
+			? readFileSync(new URL(MONOCHROME_ICON, root), "utf8")
+			: null,
 		colors: {
 			primary: brand.colors.primary,
 			background: brand.colors.background,
@@ -50,6 +69,9 @@ export function nativeSourceRecord(
 		appName: native.appName,
 		icon: sha256(native.iconSvg),
 		iconMaskable: sha256(native.maskableSvg),
+		...(native.monochromeSvg === null
+			? {}
+			: { iconMonochrome: sha256(native.monochromeSvg) }),
 		colors: native.colors,
 	};
 }
@@ -94,6 +116,9 @@ export async function writeNativeAssets(
 	for (const { path, text } of nativeTextFiles(native)) {
 		write(root, path, text);
 		written.push(path);
+	}
+	for (const path of staleNativeFiles(native)) {
+		rmSync(new URL(path, root), { force: true });
 	}
 	write(
 		root,

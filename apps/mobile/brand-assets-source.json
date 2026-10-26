@@ -1,7 +1,8 @@
 {
 	"appName": "Localman",
-	"icon": "42994e6c8daf01fcb3aa522239be52836a676cea8e1ba23f05c5f726eb3b31e4",
-	"iconMaskable": "ffe9b4b47497d298f915a353b66a7772d7f74af3ba71537bf6bb2ea6d91882c6",
+	"icon": "4cdc0cfedd3cd566128dfa32900fad3f8d3f559d74b27c33510f60183d61ea14",
+	"iconMaskable": "92475427927d3af2f3f34bee3e4c7b212b6d40ead54d73573137ae416e123551",
+	"iconMonochrome": "3a3be52da695a1cf0ebbe5ad2f1dc73c4f85ff52ca0967f7d7092f1124e48a3c",
 	"colors": {
 		"primary": "#6e56cf",
 		"background": "#f9f9fb",

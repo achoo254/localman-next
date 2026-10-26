@@ -1,6 +1,3 @@
-import { existsSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import express, {
 	type Express,
 	type NextFunction,
@@ -12,6 +9,7 @@ import type pino from "pino";
 import { createAuthRouter } from "./auth-routes.js";
 import { describeError } from "./oidc-errors.js";
 import { createPageRouter } from "./page-routes.js";
+import { findStaticDir } from "./static-dir.js";
 import {
 	type WebConfig,
 	type WebConfigDefaults,
@@ -21,16 +19,6 @@ import { type WebContextOptions, createWebContext } from "./web-context.js";
 
 export const CONTENT_SECURITY_POLICY =
 	"default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self' data:; frame-ancestors 'none'";
-
-/**
- * `static/` next to the bundle (`dist/tunelo-server/server.mjs`) in
- * production, or at the package root when running from `src/`.
- */
-function findStaticDir(): string | null {
-	const here = dirname(fileURLToPath(import.meta.url));
-	const candidates = [join(here, "static"), join(here, "..", "..", "static")];
-	return candidates.find((dir) => existsSync(join(dir, "css"))) ?? null;
-}
 
 /** `/`, `/lang`, `/auth/*`, `/assets/*`; case-insensitive like Express routes. */
 const CONSOLE_PATH = /^\/(?:lang\/?|auth\/.*|assets\/.*)?$/i;

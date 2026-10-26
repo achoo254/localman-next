@@ -197,6 +197,17 @@
         expires -1;
     }
 
+    # Web app manifest (brand.config.json "webInstall"). nginx 1.20's
+    # mime.types has no webmanifest; browsers want application/manifest+json.
+    # No add_header here, so the server block's security headers (CSP
+    # manifest-src 'self') still apply.
+    location = /manifest.webmanifest {
+        types { }
+        default_type application/manifest+json;
+        expires 1h;
+        try_files $uri =404;
+    }
+
     location = /robots.txt {
         expires 1d;
     }

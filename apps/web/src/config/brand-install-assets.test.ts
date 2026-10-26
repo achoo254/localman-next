@@ -73,8 +73,8 @@ const text = (value: string | Uint8Array | undefined): string =>
 	typeof value === "string" ? value : new TextDecoder().decode(value);
 
 describe("brandInstallAssets", () => {
-	it("is off in brand.config.json until the icon is designed", () => {
-		expect(brand.webInstall).toBe(false);
+	it("is on in brand.config.json now that the icon is designed", () => {
+		expect(brand.webInstall).toBe(true);
 	});
 
 	it("off: has no hooks; the build emits index.html only, unchanged", async () => {

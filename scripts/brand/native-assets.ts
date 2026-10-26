@@ -6,7 +6,9 @@
  * `cap sync` copies only the web build and plugins, never these resources.
  */
 import {
+	canvasSvg,
 	centred,
+	isPictureSvg,
 	monochrome,
 	roundClipped,
 	splitMaskable,
@@ -46,6 +48,12 @@ export interface NativeBrand {
 	readonly iconSvg: string;
 	/** Content of the `iconMaskable` SVG (full bleed). */
 	readonly maskableSvg: string;
+	/**
+	 * White silhouette of the icon's symbol on transparent, framed like the
+	 * maskable SVG: the Android 13+ themed (monochrome) layer of a picture
+	 * icon, which cannot be derived by splitting. `null` when there is none.
+	 */
+	readonly monochromeSvg: string | null;
 	readonly colors: {
 		readonly primary: string;
 		readonly background: string;
@@ -122,9 +130,78 @@ function splashes(brand: NativeBrand): PictureAsset[] {
 	return out;
 }
 
-/** Launcher icons: legacy squares and circles, and the three adaptive layers. */
-function launcherIcons(brand: NativeBrand): PictureAsset[] {
+/**
+ * The adaptive layers of one density. A picture icon cannot be split: its
+ * whole maskable picture is the foreground over the primary colour, and its
+ * monochrome layer is the separate silhouette SVG, placed like the
+ * foreground (without one, Android 13+ themed icons show it in colour).
+ */
+function adaptiveLayers(
+	brand: NativeBrand,
+	dir: string,
+	layer: number,
+): PictureAsset[] {
+	const square = (file: string, svg: string) => ({
+		path: dir + file,
+		width: layer,
+		height: layer,
+		svg,
+		opaque: false,
+	});
+	if (isPictureSvg(brand.maskableSvg)) {
+		return [
+			square(
+				"ic_launcher_background.png",
+				canvasSvg(layer, layer, "", brand.colors.primary),
+			),
+			square(
+				"ic_launcher_foreground.png",
+				centred(brand.maskableSvg, layer, layer, VISIBLE_SHARE),
+			),
+			...(brand.monochromeSvg === null
+				? []
+				: [
+						square(
+							"ic_launcher_monochrome.png",
+							centred(brand.monochromeSvg, layer, layer, VISIBLE_SHARE),
+						),
+					]),
+		];
+	}
 	const layers = splitMaskable(brand.maskableSvg, "iconMaskable");
+	return [
+		square("ic_launcher_background.png", layers.background),
+		square(
+			"ic_launcher_foreground.png",
+			centred(layers.foreground, layer, layer, VISIBLE_SHARE),
+		),
+		square(
+			"ic_launcher_monochrome.png",
+			centred(
+				monochrome(layers.foreground, layer),
+				layer,
+				layer,
+				VISIBLE_SHARE,
+			),
+		),
+	];
+}
+
+/** Whether the adaptive icon has a monochrome (themed) layer. */
+export function hasMonochromeLayer(brand: NativeBrand): boolean {
+	return !isPictureSvg(brand.maskableSvg) || brand.monochromeSvg !== null;
+}
+
+/** Monochrome layers left over once the icon has none: removed by the generator. */
+export function staleNativeFiles(brand: NativeBrand): string[] {
+	if (hasMonochromeLayer(brand)) return [];
+	return DENSITIES.map(
+		({ name }) => `${ANDROID_RES}mipmap-${name}/ic_launcher_monochrome.png`,
+	);
+}
+
+/** Launcher icons: legacy squares and circles, and the adaptive layers. */
+function launcherIcons(brand: NativeBrand): PictureAsset[] {
 	const out: PictureAsset[] = [];
 	for (const { name, scale } of DENSITIES) {
 		const dir = `${ANDROID_RES}mipmap-${name}/`;
@@ -144,22 +221,7 @@ function launcherIcons(brand: NativeBrand): PictureAsset[] {
 				legacy,
 				roundClipped(brand.maskableSvg, legacy),
 			),
-			square("ic_launcher_background.png", layer, layers.background),
-			square(
-				"ic_launcher_foreground.png",
-				layer,
-				centred(layers.foreground, layer, layer, VISIBLE_SHARE),
-			),
-			square(
-				"ic_launcher_monochrome.png",
-				layer,
-				centred(
-					monochrome(layers.foreground, layer),
-					layer,
-					layer,
-					VISIBLE_SHARE,
-				),
-			),
+			...adaptiveLayers(brand, dir, layer),
 		);
 	}
 	return out;
