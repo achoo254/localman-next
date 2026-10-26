@@ -63,6 +63,31 @@ Tunelo has no accounts of its own. Users sign in at the shared IdP (`auth.hoanda
 - Link token: the tunnels of the one anonymous machine that approved it via `tunelo link <code>` (`/api/links/*`, `apps/tunelo-server/src/api/link-routes.ts`).
 - Response rows come from the in-memory registries (`tunnel-directory.ts`) and never carry keys or hashes. With more than one server instance each would see only its own tunnels — see ADR-0004.
 
+## Boundary with Localman
+
+Tunelo lives in the `localman-next` monorepo but is used on its own: any project installs the CLI from npm (`npm install -g tunelo`, see `packages/tunelo-cli/README.md`) and tunnels through `tunnel.hoandat.com` without touching Localman. Why it is not a separate repo, and when that changes: [ADR-0005](../decisions/tunelo/0005-stay-in-localman-monorepo.md).
+
+**Import rules** — enforced by `pnpm check:tunelo-boundary` (part of `pnpm lint`, `scripts/check-tunelo-boundary/scan-imports.ts`):
+
+| Package | May import from Localman | Relative imports |
+|---|---|---|
+| `packages/tunelo-cli` (npm `tunelo`) | nothing | inside the package only |
+| `packages/tunelo-shared` | nothing | inside the package only |
+| `apps/tunelo-server` | `@localman/tenancy` (host allowlist, tenant scope, usage) | inside the package only |
+
+**Contracts that cross the boundary without an import** — change them together, in one commit:
+
+- Relay error bodies (`Tunnel not found: <label>`, `Bad Gateway`, `Gateway Timeout`, `Local service unavailable`, …): Localman's mock runtime recognises them in `apps/api/src/modules/mock-runtime/upstream-tunelo.ts`.
+- `GET /api/tunnels` and the `tunnels:read` scope: Localman lists a user's tunnels with a token exchanged at the IdP (see [Accounts via the shared IdP](#accounts-via-the-shared-idp)).
+- `tunelo link <code>`: the link flow Localman shows to machines without an account.
+
+**Using Tunelo outside Localman:**
+
+- Developer machine: `tunelo login`, then `tunelo http <port> [-s <name>]`.
+- Long-running tunnel on a machine without a browser (lab box over SSH): run `tunelo login` there and approve the code from a browser on any other machine (device flow); the session lands in that user's `~/.tunelo/config.json`, so run the tunnel process as the same user. Anonymous tokens (`TUNELO_KEY`, `--legacy-key`) still work for CI but stop at `LEGACY_TOKEN_CUTOFF` (`TUNELO_AUTH_004`).
+- AI agents: `tunelo mcp` exposes tunnel tools over stdio.
+- Self-hosting the server elsewhere is not supported yet: it needs `@localman/tenancy` and an IdP at `auth.<domain>` (ADR-0005, "Khi nào xem lại").
+
 ## Components
 
 ### 1. nginx (Reverse Proxy)
