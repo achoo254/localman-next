@@ -1,6 +1,8 @@
 import type { ComponentProps } from "react";
 import { cn } from "../../lib/cn";
-import markUrl from "./localman-mark-128.webp";
+
+/** Served from public/: a fixed URL, so the prerendered landing page and the client agree. */
+const MARK_URL = "/brand/localman-mark-128.webp";
 
 export type WordmarkProps = Omit<ComponentProps<"span">, "children">;
 
@@ -18,7 +20,7 @@ export function Wordmark({ className, ...rest }: WordmarkProps) {
 			{...rest}
 		>
 			<img
-				src={markUrl}
+				src={MARK_URL}
 				alt=""
 				aria-hidden="true"
 				width={128}
