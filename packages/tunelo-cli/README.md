@@ -33,7 +33,7 @@ Tunnel đang chạy vẫn giữ code cũ trong bộ nhớ — khởi động l�
 
 ### Chuyển từ bản cài qua npm (1.9.1 trở xuống)
 
-Gói `tunelo` trên npm dừng ở 1.9.1 (hoặc 1.10.0, bản cuối trỏ sang chỗ mới); `tunelo update` của bản 1.9.1 chỉ hỏi npm nên không thấy bản mới. Cài đè một lần bằng lệnh ở trên; từ 1.10.0 trở đi `tunelo update` lấy bản từ GitHub. Thông tin đăng nhập trong `~/.tunelo/config.json` được giữ nguyên.
+Gói `tunelo` trên npm dừng ở 1.9.1; `tunelo update` của bản 1.9.1 chỉ hỏi npm nên không thấy bản mới. Cài đè một lần bằng lệnh ở trên; từ 1.10.0 trở đi `tunelo update` lấy bản từ GitHub. Thông tin đăng nhập trong `~/.tunelo/config.json` được giữ nguyên.
 
 ### Từ 1.6.x lên 1.7.0
 

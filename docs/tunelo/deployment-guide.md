@@ -28,7 +28,7 @@ git commit -am "chore(tunelo): release X.Y.Z" && git tag tunelo-vX.Y.Z && git pu
 - Người dùng cài bằng `npm install -g https://github.com/achoo254/localman-next/releases/latest/download/tunelo.tgz`, cập nhật bằng `tunelo update` (đọc release mới nhất
   qua GitHub API rồi cài `tunelo.tgz` của đúng tag đó). Địa chỉ cài nằm ở `packages/tunelo-shared/src/release.ts`.
 - `releases/latest` phải luôn là bản Tunelo: release khác trong repo này phải tạo với `--latest=false`.
-- Gói `tunelo` trên npm dừng ở bản cuối (xem `packages/tunelo-cli/CHANGELOG.md`); recovery code 2FA
+- Gói `tunelo` trên npm dừng ở 1.9.1 (bản 1.10.0 publish thử ngày 27/10 bị npm chặn vì tài khoản đang bị khoá); recovery code 2FA
   của npm nằm ở iCloud `ENV production/npmjs/`.
 
 ### Server — deploy thủ công lên staging
