@@ -10,7 +10,7 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        // Required by @shared-next/capacitor-system-auth; Localman signs in with an
+        // Required by @achoo254/capacitor-system-auth; Localman signs in with an
         // https App Link (docs/decisions/0005-mobile-session-handoff.md), so this is
         // only the Custom Tabs fallback receiver's scheme.
         manifestPlaceholders += [systemAuthRedirectScheme: "com.hoandat.localman"]

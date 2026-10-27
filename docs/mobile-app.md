@@ -19,7 +19,7 @@ lần đổi web/mobile. Máy dev không cần Android SDK.
 
 - `VITE_NATIVE=true` là hằng lúc build: bản web bỏ hẳn nhánh native và không tải Capacitor
   (`apps/web/src/platform/native/`).
-- Đăng nhập mở `/auth/login?client=mobile` trong trình duyệt hệ thống bằng `@shared-next/capacitor-system-auth`, nhận
+- Đăng nhập mở `/auth/login?client=mobile` trong trình duyệt hệ thống bằng `@achoo254/capacitor-system-auth`, nhận
   lại link https `/m/auth/callback` đã xác minh, đổi mã kèm PKCE lấy token phiên. Token nằm trong Keychain/Keystore
   (`@aparajita/capacitor-secure-storage`) và đi kèm mọi request dạng `Authorization: Bearer`; không dùng cookie.
 - Live log đọc SSE bằng `fetch` (EventSource không gửi được header).

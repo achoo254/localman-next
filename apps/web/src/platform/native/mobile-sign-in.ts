@@ -98,7 +98,7 @@ async function authenticate(
 	url: string,
 	host: string,
 ): Promise<string | "cancelled"> {
-	const { SystemAuth } = await import("@shared-next/capacitor-system-auth");
+	const { SystemAuth } = await import("@achoo254/capacitor-system-auth");
 	try {
 		const result = await SystemAuth.authenticate({
 			url,

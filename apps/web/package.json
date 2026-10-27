@@ -13,6 +13,7 @@
 	"dependencies": {
 		"@achoo254/app-switcher": "github:achoo254/shared-next#v0.5.1&path:/packages/app-switcher",
 		"@achoo254/brand": "github:achoo254/shared-next#v0.5.1&path:/packages/brand",
+		"@achoo254/capacitor-system-auth": "github:achoo254/shared-next#v0.5.1&path:/packages/capacitor-system-auth",
 		"@aparajita/capacitor-secure-storage": "8.0.1",
 		"@capacitor/core": "8.5.3",
 		"@codemirror/commands": "^6.11.1",
@@ -39,7 +40,6 @@
 		"@radix-ui/react-tabs": "1.1.22",
 		"@radix-ui/react-toast": "^1.2.14",
 		"@radix-ui/react-tooltip": "^1.2.7",
-		"@shared-next/capacitor-system-auth": "github:achoo254/shared-next#v0.3.0&path:/packages/capacitor-system-auth",
 		"@tabler/icons-react": "^3.34.0",
 		"@tanstack/react-query": "^5.104.1",
 		"react": "^19.1.0",
@@ -47,7 +47,6 @@
 		"react-router": "^7.6.0"
 	},
 	"devDependencies": {
-		"@shared-next/brand": "github:achoo254/shared-next#v0.2.0&path:/packages/brand",
 		"@tailwindcss/vite": "^4.1.0",
 		"@testing-library/jest-dom": "^6.6.0",
 		"@testing-library/react": "^16.3.0",

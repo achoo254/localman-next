@@ -1,4 +1,4 @@
-import type { BrandConfigWith } from "@shared-next/brand";
+import type { BrandConfigWith } from "@achoo254/brand";
 import config from "../../../brand.config.json" with { type: "json" };
 
 /**

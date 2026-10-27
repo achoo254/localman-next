@@ -122,7 +122,7 @@ Kết quả mong đợi: **4+** (Apple tự tính). Trả lời bảng câu hỏ
 
 ## App Privacy ("nhãn dinh dưỡng")
 
-Rút từ [/privacy](https://localman.hoandat.com/privacy) (chữ ở `apps/web/src/i18n/messages/en/legal-privacy.ts`). **Theo dõi (tracking): No** cho mọi loại; app không có SDK quảng cáo hay phân tích (plugin native chỉ có `@capacitor/app`, `@aparajita/capacitor-secure-storage`, `@shared-next/capacitor-system-auth`). Mọi loại dưới đây: thu thập = Yes, liên kết với danh tính = **Yes**, mục đích = **App Functionality** (gồm bảo mật và chống lạm dụng).
+Rút từ [/privacy](https://localman.hoandat.com/privacy) (chữ ở `apps/web/src/i18n/messages/en/legal-privacy.ts`). **Theo dõi (tracking): No** cho mọi loại; app không có SDK quảng cáo hay phân tích (plugin native chỉ có `@capacitor/app`, `@aparajita/capacitor-secure-storage`, `@achoo254/capacitor-system-auth`). Mọi loại dưới đây: thu thập = Yes, liên kết với danh tính = **Yes**, mục đích = **App Functionality** (gồm bảo mật và chống lạm dụng).
 
 | Nhóm App Store Connect | Loại | Ghi chú |
 |---|---|---|

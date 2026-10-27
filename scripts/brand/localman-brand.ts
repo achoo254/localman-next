@@ -1,5 +1,5 @@
 /**
- * How Localman calls @shared-next/brand at build time: the fields it cannot
+ * How Localman calls @achoo254/brand at build time: the fields it cannot
  * work without, the manifests it generates and where they go. Shared by
  * `pnpm brand:gen` (scripts/brand-gen.ts) and the tests that keep the
  * committed files equal to what it would write.
@@ -11,7 +11,7 @@ import {
 	type RequirableField,
 	loadBrandConfig,
 	svgManifestIcons,
-} from "@shared-next/brand/build";
+} from "@achoo254/brand/build";
 
 /** Repository root: the directory of brand.config.json and its icon paths. */
 export const BRAND_ROOT = new URL("../../", import.meta.url);

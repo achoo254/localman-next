@@ -12,7 +12,7 @@ Monorepo của bộ công cụ API Localman và Tunelo, chạy tại <https://lo
 - **Chưa thương mại.** Web không hiện giá hay gói; mọi tài khoản tự nhận Pro 30 ngày, backend hạn mức vẫn giữ để bật lại được ([ADR-0002](docs/decisions/0002-no-commercial-ui-automatic-pro-period.md)).
 - **Tính năng chỉ hiện khi đã phát hành.** Web bật tính năng bằng cờ build `VITE_FEATURES` ([`apps/web/src/config/feature-flags.ts`](apps/web/src/config/feature-flags.ts)); danh sách cờ đang chạy production là [`infra/localman/released-features`](infra/localman/released-features), file mà [`infra/localman/deploy.sh`](infra/localman/deploy.sh) đọc khi build.
 - **Một khai báo cho REST, MCP và OpenAPI.** API nghiệp vụ khai qua operation registry, mỗi operation là một MCP tool hoặc có lý do miễn trừ ([docs/operation-registry.md](docs/operation-registry.md)).
-- **Tên sản phẩm ở một file.** Tên, bundle id và mẫu host chỉ khai trong [`brand.config.json`](brand.config.json), mã thương hiệu nằm ở gói dùng chung `@shared-next/brand` ([ADR-0006](docs/decisions/0006-brand-config-and-product-name.md)).
+- **Tên sản phẩm ở một file.** Tên, bundle id và mẫu host chỉ khai trong [`brand.config.json`](brand.config.json), mã thương hiệu nằm ở gói dùng chung `@achoo254/brand` ([ADR-0006](docs/decisions/0006-brand-config-and-product-name.md)).
 - **MongoDB chạy replica set** vì sinh dữ liệu resource cần transaction nhiều document ([ADR-0001](docs/decisions/0001-resource-data-in-project-transactions.md)); bản dev là service `mongo` trong [`docker-compose.yml`](docker-compose.yml).
 
 ## Bắt đầu

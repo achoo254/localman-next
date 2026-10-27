@@ -1,6 +1,6 @@
 import "@achoo254/app-switcher/app-switcher.css";
 import { AppSwitcher } from "@achoo254/app-switcher";
-import { DOMAIN_PATTERN } from "@shared-next/brand/hosts";
+import { DOMAIN_PATTERN } from "@achoo254/brand/hosts";
 import { useI18n } from "../../i18n/i18n-context";
 import { useLoadedTenantInfo } from "../../lib/tenant-info";
 import { isNativeBuild } from "../../platform/native/native-build";

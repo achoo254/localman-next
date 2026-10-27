@@ -15,7 +15,7 @@ import {
 } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
-import type { BrandConfig } from "@shared-next/brand/build";
+import type { BrandConfig } from "@achoo254/brand/build";
 import { rasterize, svgPage } from "./chromium-raster.js";
 import {
 	type NativeBrand,

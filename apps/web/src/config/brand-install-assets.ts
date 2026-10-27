@@ -25,7 +25,7 @@ import {
 	RASTER_ICONS,
 	loadBrandConfig,
 	webIconFiles,
-} from "@shared-next/brand/build";
+} from "@achoo254/brand/build";
 import type { Plugin } from "vite";
 
 /** The brand fields the plugin reads beyond the schema's required ones. */

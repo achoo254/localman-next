@@ -6,7 +6,7 @@ import {
 	iconSourceHashes,
 	parseBrandConfig,
 	webIconFiles,
-} from "@shared-next/brand/build";
+} from "@achoo254/brand/build";
 import { describe, expect, it } from "vitest";
 import { isPictureSvg } from "./icon-svg.js";
 import {

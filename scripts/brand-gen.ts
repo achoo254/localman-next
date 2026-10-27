@@ -7,7 +7,7 @@
  * commit the generated files. scripts/brand/localman-brand.test.ts and
  * native-assets.test.ts fail while they are stale.
  */
-import { chromiumRenderer, writeBrandFiles } from "@shared-next/brand/build";
+import { chromiumRenderer, writeBrandFiles } from "@achoo254/brand/build";
 import { chromium } from "playwright";
 import {
 	BRAND_INDENT,
