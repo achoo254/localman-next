@@ -94,7 +94,7 @@ describe("EcosystemAppSwitcher", () => {
 			`https://chat.hoandat.com/?${UTM}`,
 			`https://scribe.hoandat.com/?${UTM}`,
 			`https://tunnel.hoandat.com/?${UTM}`,
-			`https://auth.hoandat.com/account?${UTM}`,
+			`https://tieude.hoandat.com/?${UTM}`,			`https://auth.hoandat.com/account?${UTM}`,
 		]);
 	});
 
@@ -110,7 +110,7 @@ describe("EcosystemAppSwitcher", () => {
 			"chat.acme.example",
 			"scribe.acme.example",
 			"tunnel.acme.example",
-			"auth.acme.example",
+			"tieude.acme.example",			"auth.acme.example",
 		]);
 	});
 

@@ -22,7 +22,7 @@
 	},
 	"dependencies": {
 		"@faker-js/faker": "^10.6.0",
-		"@achoo254/brand": "github:achoo254/shared-next#v0.5.1&path:/packages/brand",
+		"@achoo254/brand": "github:achoo254/shared-next#v0.6.0&path:/packages/brand",
 		"fractional-indexing": "^4.0.0",
 		"quickjs-emscripten-core": "0.32.0",
 		"zod": "^4.6.5"
