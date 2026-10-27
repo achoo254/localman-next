@@ -6,8 +6,9 @@ import {
 	buildInstallArgs,
 	compareVersions,
 	detectPackageManager,
+	fetchLatestVersion,
 } from "./cli-update-command.js";
-import { PACKAGE_NAME, VERSION } from "./version.js";
+import { VERSION } from "./version.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -17,7 +18,6 @@ describe("VERSION", () => {
 			readFileSync(path.resolve(here, "..", "package.json"), "utf-8"),
 		);
 		expect(VERSION).toBe(pkg.version);
-		expect(PACKAGE_NAME).toBe(pkg.name);
 	});
 });
 
@@ -65,15 +65,35 @@ describe("detectPackageManager", () => {
 
 describe("buildInstallArgs", () => {
 	it("uses the global install verb of each manager", () => {
-		expect(buildInstallArgs("npm", "tunelo@latest")).toEqual([
+		expect(buildInstallArgs("npm", "https://example.test/tunelo.tgz")).toEqual([
 			"install",
 			"-g",
-			"tunelo@latest",
+			"https://example.test/tunelo.tgz",
 		]);
-		expect(buildInstallArgs("pnpm", "tunelo@latest")).toEqual([
-			"add",
-			"-g",
-			"tunelo@latest",
-		]);
+		expect(buildInstallArgs("pnpm", "https://example.test/tunelo.tgz")).toEqual(
+			["add", "-g", "https://example.test/tunelo.tgz"],
+		);
+	});
+});
+
+describe("fetchLatestVersion", () => {
+	const answer = (status: number, body: unknown): typeof fetch =>
+		(async () =>
+			new Response(JSON.stringify(body), { status })) as typeof fetch;
+
+	it("reads the version from the tag of the latest release", async () => {
+		await expect(
+			fetchLatestVersion(answer(200, { tag_name: "tunelo-v1.10.0" })),
+		).resolves.toBe("1.10.0");
+	});
+
+	it("rejects a latest release that is not a Tunelo release", async () => {
+		await expect(
+			fetchLatestVersion(answer(200, { tag_name: "v2.0.0" })),
+		).rejects.toThrow("not a Tunelo release");
+	});
+
+	it("rejects an error answer from GitHub", async () => {
+		await expect(fetchLatestVersion(answer(403, {}))).rejects.toThrow("403");
 	});
 });

@@ -1,6 +1,6 @@
 /**
  * Tunelo commands and tunnel URLs as the CLI prints them
- * (`packages/tunelo-cli/README.md`): `npm install -g tunelo`,
+ * (`packages/tunelo-cli/README.md`): the install command below,
  * `tunelo login`, `tunelo http <port>` giving `https://<name>.<domain>`.
  * The domains come from the server (`tunnelDomains` of the client
  * settings), the same list it checks a saved mapping against.
@@ -11,7 +11,9 @@ import {
 	parseHttpUrl,
 } from "@localman/shared/api-client";
 
-export const TUNELO_INSTALL = "npm install -g tunelo";
+/** Same command as `TUNELO_INSTALL_COMMAND` of `@tunelo/shared` (web stays outside the Tunelo boundary). */
+export const TUNELO_INSTALL =
+	"npm install -g https://github.com/achoo254/localman-next/releases/latest/download/tunelo.tgz";
 
 /**
  * Sign-in for the Tunelo of `tunnelDomain`. The CLI's default server is

@@ -1,6 +1,16 @@
 # Changelog
 
-Changes to the `tunelo` CLI on npm. Each version is released from the tag `tunelo-vX.Y.Z`.
+Changes to the `tunelo` CLI. Each version is released from the tag `tunelo-vX.Y.Z`: a GitHub release of
+`achoo254/localman-next` with the package as `tunelo.tgz` (npm up to 1.9.1).
+
+## 1.10.0 — 2026-10-27
+
+### Changed
+
+- **Tunelo is no longer released on npm.** Install and update from GitHub Releases:
+  `npm install -g https://github.com/achoo254/localman-next/releases/latest/download/tunelo.tgz`.
+  `tunelo update` now reads the latest GitHub release and installs its `tunelo.tgz`.
+- The getting-started page and the closed anonymous sign-in message show the new install command.
 
 ## 1.9.1 — 2026-10-19
 

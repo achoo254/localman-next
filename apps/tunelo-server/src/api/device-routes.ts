@@ -1,3 +1,4 @@
+import { TUNELO_INSTALL_COMMAND } from "@tunelo/shared";
 import { Router, json } from "express";
 import type { AuthConfig } from "../config/auth-config.js";
 import * as deviceLogin from "../services/device-login-service.js";
@@ -18,8 +19,7 @@ export function createDeviceRouter(config: AuthConfig): Router {
 			res.status(403).json({
 				error: {
 					code: "TUNELO_DEVICE_004",
-					message:
-						"Anonymous sign-in is closed. Update tunelo (npm i -g tunelo@latest) and run `tunelo login`.",
+					message: `Anonymous sign-in is closed. Update tunelo (${TUNELO_INSTALL_COMMAND}) and run \`tunelo login\`.`,
 				},
 			});
 		});

@@ -62,7 +62,7 @@ pnpm test:tunelo-e2e
 VPS_HOST=<ssh alias> bash infra/tunelo/deploy.sh   # Deploy server (PM2)
 ```
 
-Release CLI: tag `tunelo-vX.Y.Z` triggers `.github/workflows/tunelo-publish-cli.yml`.
+Release CLI: tag `tunelo-vX.Y.Z` triggers `.github/workflows/tunelo-release.yml` (GitHub release with `tunelo.tgz`; the CLI is not on npm).
 
 - **Dữ liệu Tunelo** (mục "One domain" của `docs/tunelo/deployment-guide.md`): model mới gắn `tenantScopePlugin`; request chạy trong tenant `primary` dựng từ env khi Host thuộc `TUNNEL_DOMAINS` (hoặc loopback ngoài production), host khác nhận 421 (`apps/tunelo-server/src/tenancy/`); trạng thái trong bộ nhớ (tunnel, cache, stream) khoá theo `tenantKey(subdomain)`; frame từ client chỉ nhận từ đúng connection đã gửi request. Phần dùng chung với Localman nằm ở `packages/tenancy` (`@localman/tenancy`). CLI chỉ gửi token tới Tunelo cùng domain với issuer của phiên (`acceptsAccountToken`).
 

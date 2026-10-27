@@ -1,3 +1,4 @@
+import { TUNELO_INSTALL_COMMAND } from "@tunelo/shared";
 import { TUNELO_LOGIN_COMMAND } from "../tenancy/login-command.js";
 import { type SafeHtml, html } from "./html.js";
 import type { MessageKey, Translator } from "./i18n/messages.js";
@@ -14,7 +15,7 @@ const STEPS: readonly Step[] = [
 		id: "install",
 		title: "steps.install.title",
 		body: "steps.install.body",
-		command: () => "npm i -g tunelo",
+		command: () => TUNELO_INSTALL_COMMAND,
 	},
 	{
 		id: "login",

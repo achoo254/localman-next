@@ -54,7 +54,11 @@ describe("TuneloPanel", () => {
 		expect(
 			screen.getByText("Tried to send directly to localhost:3000"),
 		).toBeVisible();
-		expect(screen.getByText("npm install -g tunelo")).toBeVisible();
+		expect(
+			screen.getByText(
+				"npm install -g https://github.com/achoo254/localman-next/releases/latest/download/tunelo.tgz",
+			),
+		).toBeVisible();
 		expect(screen.getByText("tunelo login")).toBeVisible();
 		expect(screen.getByText("tunelo http 3000")).toBeVisible();
 		if (!panel) throw new Error("no panel");

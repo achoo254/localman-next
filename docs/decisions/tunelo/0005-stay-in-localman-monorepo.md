@@ -15,7 +15,8 @@ Hiện trạng khi quyết định:
 - Tunelo **từng là repo riêng** (`achoo254/tunelo`), được gộp vào monorepo ngày 2026-10-08 (giữ lịch
   sử, tag cũ đổi thành `tunelo-v*`); repo cũ đã xoá khỏi GitHub ngày 2026-10-17.
 - CLI phát hành công khai trên npmjs với tên `tunelo` (1.9.1 ngày 2026-10-19). Người dùng cài
-  `npm install -g tunelo`, không cần clone repo nào.
+  `npm install -g tunelo`, không cần clone repo nào. (Cập nhật 27/10/2026: từ 1.10.0 CLI phát hành ở
+  GitHub Releases của repo này, không còn trên npm; xem `docs/tunelo/deployment-guide.md`.)
 - Trong monorepo Tunelo đã có thư mục, lệnh build/test/deploy, workflow release (`tunelo-v*`), tài liệu
   và ADR riêng.
 - Hai sản phẩm gắn nhau ở ba chỗ:

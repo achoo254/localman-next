@@ -145,7 +145,7 @@ describe("signed-out home", () => {
 		expect(res.headers["content-type"]).toMatch(/text\/html/);
 		expect(res.body).toContain('href="/auth/login"');
 		for (const command of [
-			"npm i -g tunelo",
+			"npm install -g https://github.com/achoo254/localman-next/releases/latest/download/tunelo.tgz",
 			"tunelo login",
 			"tunelo http 3000",
 		]) {

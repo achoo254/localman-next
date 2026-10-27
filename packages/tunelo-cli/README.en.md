@@ -5,7 +5,7 @@
 Self-hosted tunnel proxy that exposes local services via public HTTPS wildcard subdomains. Your infrastructure, your rules — no cloud dependency, no artificial limits.
 
 ```
-npx tunelo http 3000
+tunelo http 3000
 # => https://myapp.tunnel.hoandat.com
 ```
 
@@ -70,21 +70,21 @@ At 5K concurrent tunnels, Tunelo uses ~15-20 MB server memory vs ~150-200 MB wit
 
 ### Install the CLI
 
-The CLI is published on [npm](https://www.npmjs.com/package/tunelo) as `tunelo` — no repo clone, registry setup or token needed. Requires Node.js 20+.
+The CLI is released on the [GitHub Releases](https://github.com/achoo254/localman-next/releases) of `localman-next` (tag `tunelo-v<version>`, asset `tunelo.tgz`), **no longer on npm**. npm or pnpm install it straight from the URL: no repo clone, registry setup or token needed. Requires Node.js 20+.
 
 ```bash
 # npm
-npm install -g tunelo
+npm install -g https://github.com/achoo254/localman-next/releases/latest/download/tunelo.tgz
 
 # or pnpm (run `pnpm setup` once so the global bin is on PATH)
-pnpm setup && pnpm add -g tunelo
+pnpm setup && pnpm add -g https://github.com/achoo254/localman-next/releases/latest/download/tunelo.tgz
 
 tunelo --version
 tunelo update           # upgrade to the latest version
 tunelo update --check   # only check, do not install
 ```
 
-Upgrading from the old `@dattqh/tunelo` (installed from a GitLab registry)? See [README.md](./README.md#chuyển-từ-bản-cũ-dattqhtunelo-cài-từ-gitlab-registry) for the one-time migration.
+Installed from npm (1.9.1 or older)? Its `tunelo update` only asks npm, so it never sees a newer release: run the install command above once. From 1.10.0 on, `tunelo update` reads GitHub Releases.
 
 ### Upgrading from 1.6.x to 1.7.0
 
@@ -92,7 +92,7 @@ Upgrading from the old `@dattqh/tunelo` (installed from a GitLab registry)? See 
 - Sign in with your account instead of the old Approve page. Old anonymous tokens still work, but `tunelo whoami` reminds you to sign in; run `tunelo login` once so this machine's tunnels belong to your account:
 
 ```bash
-npm i -g tunelo@latest && tunelo login
+npm install -g https://github.com/achoo254/localman-next/releases/latest/download/tunelo.tgz && tunelo login
 ```
 
 ### Step 1 — sign in
@@ -155,7 +155,7 @@ Tunelo lives in the [localman-next](https://github.com/achoo254/localman-next) m
 ```
 localman-next/
 ├── apps/tunelo-server/      # Tunnel server (HTTP + WebSocket relay)
-├── packages/tunelo-cli/     # CLI tool (npm: tunelo)
+├── packages/tunelo-cli/     # CLI tool (GitHub Releases: tunelo.tgz)
 ├── packages/tunelo-shared/  # WS protocol types, constants, error codes
 ├── infra/tunelo/            # nginx, certbot, PM2, deploy script
 ├── tests/tunelo/            # E2E test suite

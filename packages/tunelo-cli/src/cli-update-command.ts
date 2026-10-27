@@ -1,11 +1,16 @@
-/** CLI handler for `tunelo update` — self-update from the configured registry */
+/** CLI handler for `tunelo update`: self-update from the latest GitHub release */
 
 import { type SpawnOptions, spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+	TUNELO_LATEST_RELEASE_API,
+	tuneloTarballUrl,
+	versionFromReleaseTag,
+} from "@tunelo/shared";
 import chalk from "chalk";
 import type { Command } from "commander";
-import { PACKAGE_NAME, VERSION } from "./version.js";
+import { VERSION } from "./version.js";
 
 /** Windows ships npm/pnpm as .cmd shims, which Node refuses to spawn directly */
 const isWindows = process.platform === "win32";
@@ -46,9 +51,9 @@ export function buildInstallArgs(
 /**
  * Spawns npm/pnpm. On Windows the .cmd shim needs a shell, so the whole command
  * goes through as a single string — passing an argv array alongside `shell` would
- * concatenate it unescaped. Every token here is a compile-time constant: the
- * manager is a two-value union and the package name is hard-coded, so nothing
- * user-controlled ever reaches the shell.
+ * concatenate it unescaped. The manager is a two-value union, the release URL is
+ * fixed, and the only remote input, the version from the GitHub API, must match
+ * plain semver (`versionFromReleaseTag`), so no shell syntax can reach the shell.
  */
 function spawnManager(
 	manager: PackageManager,
@@ -60,35 +65,22 @@ function spawnManager(
 		: spawn(manager, args, options);
 }
 
-/** Asks the registry for the newest published version */
-function fetchLatestVersion(manager: PackageManager): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const child = spawnManager(manager, ["view", PACKAGE_NAME, "version"], {
-			stdio: ["ignore", "pipe", "pipe"],
-			timeout: 60_000,
-		});
-		let stdout = "";
-		let stderr = "";
-		child.stdout?.on("data", (chunk: Buffer) => {
-			stdout += chunk.toString();
-		});
-		child.stderr?.on("data", (chunk: Buffer) => {
-			stderr += chunk.toString();
-		});
-		child.on("error", reject);
-		child.on("close", (code) => {
-			if (code !== 0) {
-				reject(new Error(stderr.trim().split("\n").pop() ?? `exit ${code}`));
-				return;
-			}
-			const version = stdout.trim().split("\n").pop()?.trim();
-			if (!version) {
-				reject(new Error("Registry returned no version"));
-				return;
-			}
-			resolve(version);
-		});
+/** Reads the version of the latest Tunelo release from the GitHub API */
+export async function fetchLatestVersion(
+	fetchImpl: typeof fetch = fetch,
+): Promise<string> {
+	const response = await fetchImpl(TUNELO_LATEST_RELEASE_API, {
+		headers: { Accept: "application/vnd.github+json" },
+		signal: AbortSignal.timeout(30_000),
 	});
+	if (!response.ok) throw new Error(`GitHub answered ${response.status}`);
+	const body = (await response.json()) as { tag_name?: unknown };
+	const version =
+		typeof body.tag_name === "string"
+			? versionFromReleaseTag(body.tag_name)
+			: null;
+	if (!version) throw new Error("the latest release is not a Tunelo release");
+	return version;
 }
 
 /** Runs the install and resolves with the child's exit code */
@@ -112,17 +104,17 @@ export function registerUpdateCommand(program: Command): void {
 
 			let latest: string;
 			try {
-				console.log(chalk.gray("  Checking registry..."));
-				latest = await fetchLatestVersion(manager);
+				console.log(chalk.gray("  Checking the latest release..."));
+				latest = await fetchLatestVersion();
 			} catch (err) {
 				console.log(
 					chalk.red(
-						`  Error: cannot reach registry — ${(err as Error).message}`,
+						`  Error: cannot read the latest release — ${(err as Error).message}`,
 					),
 				);
 				console.log(
 					chalk.gray(
-						`  Update manually: ${manager} ${buildInstallArgs(manager, `${PACKAGE_NAME}@latest`).join(" ")}`,
+						`  Update manually: ${manager} ${buildInstallArgs(manager, tuneloTarballUrl()).join(" ")}`,
 					),
 				);
 				process.exitCode = 1;
@@ -148,7 +140,7 @@ export function registerUpdateCommand(program: Command): void {
 			console.log(chalk.gray(`  Installing via ${manager}...`));
 			let code: number;
 			try {
-				code = await runInstall(manager, `${PACKAGE_NAME}@latest`);
+				code = await runInstall(manager, tuneloTarballUrl(latest));
 			} catch (err) {
 				console.log(
 					chalk.red(

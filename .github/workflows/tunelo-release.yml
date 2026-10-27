@@ -1,0 +1,86 @@
+# Release the `tunelo` CLI as a GitHub release when a version tag is pushed.
+#
+# Release:
+#   pnpm --filter tunelo exec npm version <patch|minor|major> --no-git-tag-version   # bump packages/tunelo-cli
+#   then set the same version in packages/tunelo-cli/src/version.ts (VERSION; a test checks they match)
+#   and add the version's section to packages/tunelo-cli/CHANGELOG.md (it becomes the release notes)
+#   git commit -am "chore(tunelo): release X.Y.Z" && git tag tunelo-vX.Y.Z && git push && git push --tags
+# Tags are prefixed `tunelo-v` so they never collide with Localman versions.
+# The release is marked latest and carries the npm tarball as `tunelo.tgz`:
+# users install https://github.com/achoo254/localman-next/releases/latest/download/tunelo.tgz
+# and `tunelo update` reads the latest release. Another release in this repo
+# must be created with --latest=false, or it would hijack that URL.
+#
+# The CLI is no longer on npm. 1.10.0 is also published there once, as the
+# last npm version, so `tunelo update` of 1.9.x installs a CLI that updates
+# from GitHub; that step is allowed to fail (the npm account is suspended).
+name: tunelo-release
+
+on:
+  push:
+    tags: ["tunelo-v*"]
+
+permissions:
+  # gh release create
+  contents: write
+  # npm trusted publishing of the last npm version (see above).
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Check tag matches package version
+        run: |
+          version="$(node -p "require('./packages/tunelo-cli/package.json').version")"
+          [ "tunelo-v${version}" = "${GITHUB_REF_NAME}" ] || { echo "Tag ${GITHUB_REF_NAME} != package version tunelo-v${version}"; exit 1; }
+
+      - run: pnpm install --frozen-lockfile
+      # Lint and test only Tunelo so unrelated Localman work cannot block a CLI release.
+      - run: pnpm exec biome check apps/tunelo-server packages/tunelo-cli packages/tunelo-shared tests/tunelo scripts/tunelo
+      - run: pnpm --filter @tunelo/shared --filter @tunelo/server --filter tunelo test
+      - run: pnpm test:tunelo-e2e
+      - run: pnpm build:tunelo-cli
+
+      # build:tunelo-cli emits a self-contained package.json in packages/tunelo-cli/dist
+      # (explicit `files` list), so pack from there.
+      - name: Pack tunelo.tgz
+        working-directory: packages/tunelo-cli/dist
+        run: |
+          npm pack --pack-destination "$RUNNER_TEMP"
+          mv "$RUNNER_TEMP"/tunelo-*.tgz "$RUNNER_TEMP/tunelo.tgz"
+          tar -tzf "$RUNNER_TEMP/tunelo.tgz"
+
+      - name: Release notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#tunelo-v}"
+          awk -v v="$version" '$0 ~ "^## "v" " {on=1; next} on && /^## / {exit} on' \
+            packages/tunelo-cli/CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          [ -s "$RUNNER_TEMP/notes.md" ] || { echo "CHANGELOG.md has no section for $version"; exit 1; }
+
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "$RUNNER_TEMP/tunelo.tgz" \
+            --title "Tunelo CLI ${GITHUB_REF_NAME#tunelo-v}" \
+            --notes-file "$RUNNER_TEMP/notes.md" --latest --verify-tag
+
+      # Last npm version only (see the header). Trusted publishing needs npm CLI 11.5.1+.
+      - name: Publish the last npm version
+        if: github.ref_name == 'tunelo-v1.10.0'
+        continue-on-error: true
+        working-directory: packages/tunelo-cli/dist
+        run: |
+          npm install -g npm@11
+          npm publish --access public

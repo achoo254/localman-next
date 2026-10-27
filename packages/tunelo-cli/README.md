@@ -4,14 +4,14 @@ Expose dịch vụ local ra internet qua HTTPS wildcard subdomain — `https://<
 
 ## Cài đặt
 
-Yêu cầu: **Node.js 20+** (kèm npm; hoặc pnpm 9+). Không cần clone repo, không cần cấu hình registry hay token — CLI phát hành công khai trên [npmjs](https://www.npmjs.com/package/tunelo). Lệnh chạy được trên **macOS / Windows / Linux** (cmd, PowerShell, bash, zsh).
+Yêu cầu: **Node.js 20+** (kèm npm; hoặc pnpm 9+). CLI phát hành ở [GitHub Releases](https://github.com/achoo254/localman-next/releases) của repo `localman-next` (tag `tunelo-v<phiên bản>`, file `tunelo.tgz`), **không còn trên npm**; npm hay pnpm cài thẳng từ đường dẫn, không cần clone repo, registry hay token. Lệnh chạy được trên **macOS / Windows / Linux** (cmd, PowerShell, bash, zsh).
 
 ```bash
 # npm
-npm install -g tunelo
+npm install -g https://github.com/achoo254/localman-next/releases/latest/download/tunelo.tgz
 
 # hoặc pnpm (chạy `pnpm setup` 1 lần để có global bin trên PATH)
-pnpm setup && pnpm add -g tunelo
+pnpm setup && pnpm add -g https://github.com/achoo254/localman-next/releases/latest/download/tunelo.tgz
 ```
 
 Kiểm tra:
@@ -27,20 +27,13 @@ tunelo update           # kiểm tra rồi cài bản mới nhất
 tunelo update --check   # chỉ xem có bản mới không, không cài
 ```
 
-Lệnh này tự nhận biết bạn cài bằng npm hay pnpm và gọi đúng trình quản lý. Nếu registry không truy cập được, nó in ra lệnh cài thủ công tương ứng.
+Lệnh này đọc bản mới nhất trên GitHub Releases, tự nhận biết bạn cài bằng npm hay pnpm và gọi đúng trình quản lý. Nếu không đọc được GitHub, nó in ra lệnh cài thủ công tương ứng.
 
 Tunnel đang chạy vẫn giữ code cũ trong bộ nhớ — khởi động lại để dùng bản mới.
 
-### Chuyển từ bản cũ `@dattqh/tunelo` (cài từ GitLab registry)
+### Chuyển từ bản cài qua npm (1.9.1 trở xuống)
 
-Bản cũ không tự cập nhật sang tên gói mới. Làm một lần: gỡ bản cũ, xóa cấu hình registry cũ, rồi cài lại như trên. Thông tin đăng nhập trong `~/.tunelo/config.json` được giữ nguyên, không cần `tunelo login` lại.
-
-```bash
-npm uninstall -g @dattqh/tunelo          # hoặc: pnpm remove -g @dattqh/tunelo
-npm config delete @dattqh:registry
-npm config delete "//gitlabs.inet.vn/api/v4/projects/343/packages/npm/:_authToken"
-npm install -g tunelo
-```
+Gói `tunelo` trên npm dừng ở 1.9.1 (hoặc 1.10.0, bản cuối trỏ sang chỗ mới); `tunelo update` của bản 1.9.1 chỉ hỏi npm nên không thấy bản mới. Cài đè một lần bằng lệnh ở trên; từ 1.10.0 trở đi `tunelo update` lấy bản từ GitHub. Thông tin đăng nhập trong `~/.tunelo/config.json` được giữ nguyên.
 
 ### Từ 1.6.x lên 1.7.0
 

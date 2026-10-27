@@ -7,31 +7,29 @@ Tunelo nằm trong monorepo `localman-next` (GitHub `achoo254/localman-next`): s
 (xem [system-architecture.md](../system-architecture.md)). Repo riêng `achoo254/tunelo` cũ đã xoá.
 CLI và server được phát hành theo hai đường riêng.
 
-### CLI — publish lên npm (GitHub Actions)
+### CLI — GitHub Releases (GitHub Actions)
 
-CLI phát hành công khai trên npm với tên gói **`tunelo`**
-(<https://www.npmjs.com/package/tunelo>). Workflow
-`.github/workflows/tunelo-publish-cli.yml` chạy khi đẩy git tag `tunelo-vX.Y.Z`: kiểm tra tag
-khớp version → `pnpm lint` → `pnpm test` → `pnpm build:tunelo-cli` → `npm publish`
-từ `packages/tunelo-cli/dist`.
+CLI phát hành ở GitHub Releases của repo `localman-next`, **không còn trên npm** (chốt
+27/10/2026: chỉ chủ hệ sinh thái dùng Tunelo, tài khoản npm đang bị tạm khoá). Workflow
+`.github/workflows/tunelo-release.yml` chạy khi đẩy git tag `tunelo-vX.Y.Z`: kiểm tra tag khớp
+version → lint, test, E2E của Tunelo → `pnpm build:tunelo-cli` → `npm pack` từ
+`packages/tunelo-cli/dist` thành `tunelo.tgz` → `gh release create` (đánh dấu latest, ghi chú lấy
+từ mục của version trong `packages/tunelo-cli/CHANGELOG.md`).
 
 Quy trình phát hành:
 
 ```bash
 npm version <patch|minor|major> --workspace tunelo --no-git-tag-version   # bump packages/tunelo-cli
 # đặt cùng version vào packages/tunelo-cli/src/version.ts (VERSION) — test version.test.ts kiểm tra khớp
+# thêm mục "## X.Y.Z — <ngày>" vào packages/tunelo-cli/CHANGELOG.md
 git commit -am "chore(tunelo): release X.Y.Z" && git tag tunelo-vX.Y.Z && git push && git push --tags
 ```
 
-- Xác thực bằng npm trusted publishing (OIDC), không token: npmjs.com → gói `tunelo` →
-  Settings → Trusted Publisher (user `achoo254`, repo `localman-next`, workflow
-  `tunelo-publish-cli.yml`, cho phép `npm publish`). Workflow có `id-token: write` và
-  nâng npm lên 11 (cần ≥ 11.5.1). Recovery code 2FA của npm nằm ở iCloud
-  `ENV production/npmjs/`.
-- Một version đã lên npm không publish lại được — luôn bump version trước khi tag.
-- Người dùng cài bằng `npm install -g tunelo`, cập nhật bằng `tunelo update`
-  (xem `README.md`). Bản cũ `@dattqh/tunelo` từng phát hành trên GitLab registry
-  đã ngừng; hướng dẫn chuyển nằm trong `README.md`.
+- Người dùng cài bằng `npm install -g https://github.com/achoo254/localman-next/releases/latest/download/tunelo.tgz`, cập nhật bằng `tunelo update` (đọc release mới nhất
+  qua GitHub API rồi cài `tunelo.tgz` của đúng tag đó). Địa chỉ cài nằm ở `packages/tunelo-shared/src/release.ts`.
+- `releases/latest` phải luôn là bản Tunelo: release khác trong repo này phải tạo với `--latest=false`.
+- Gói `tunelo` trên npm dừng ở bản cuối (xem `packages/tunelo-cli/CHANGELOG.md`); recovery code 2FA
+  của npm nằm ở iCloud `ENV production/npmjs/`.
 
 ### Server — deploy thủ công lên staging
 
