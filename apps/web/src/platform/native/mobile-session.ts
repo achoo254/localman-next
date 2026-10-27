@@ -5,20 +5,33 @@
  * build never sets it, so it keeps using its same-origin session cookie.
  */
 
+import type { SecureStorage as SecureStorageType } from "@aparajita/capacitor-secure-storage";
+
 /** Key of the token in the secure store. */
 const TOKEN_KEY = "localman.session";
 
 let token: string | null = null;
 
-async function secureStorage() {
+type SecureStore = typeof SecureStorageType;
+
+/**
+ * Runs `use` on the secure store. The store is a Capacitor plugin proxy, which
+ * answers every property, `then` included, with a native call: returned from
+ * an async function it would be taken for a promise and its `then()` throws
+ * ("not implemented"), so it never leaves this function.
+ */
+async function withSecureStorage<T>(
+	use: (storage: SecureStore) => Promise<T>,
+): Promise<T> {
 	const { SecureStorage } = await import("@aparajita/capacitor-secure-storage");
-	return SecureStorage;
+	return use(SecureStorage);
 }
 
 /** Reads the stored token once, before the first render. */
 export async function loadMobileSession(): Promise<void> {
-	const storage = await secureStorage();
-	const value: unknown = await storage.get(TOKEN_KEY);
+	const value: unknown = await withSecureStorage((storage) =>
+		storage.get(TOKEN_KEY),
+	);
 	token = typeof value === "string" && value !== "" ? value : null;
 }
 
@@ -28,15 +41,13 @@ export function mobileSessionToken(): string | null {
 }
 
 export async function saveMobileSession(value: string): Promise<void> {
-	const storage = await secureStorage();
-	await storage.set(TOKEN_KEY, value);
+	await withSecureStorage((storage) => storage.set(TOKEN_KEY, value));
 	token = value;
 }
 
 export async function forgetMobileSession(): Promise<void> {
 	token = null;
-	const storage = await secureStorage();
-	await storage.remove(TOKEN_KEY);
+	await withSecureStorage((storage) => storage.remove(TOKEN_KEY));
 }
 
 /** Headers that authenticate a request of the shell; empty without a session. */
