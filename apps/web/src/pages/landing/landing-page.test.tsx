@@ -16,12 +16,11 @@ import { ALL_FEATURES, renderWithFeatures } from "./landing-test-helpers";
 
 /** Top-level landing blocks of the spec, in the order they appear. */
 const BLOCKS = new Set([
-	"landing-hero",
+	"hero",
 	"landing-live-sync",
 	"landing-modeling",
 	"landing-relations",
 	"landing-features",
-	"landing-cta",
 ]);
 
 function sectionOrder(container: HTMLElement): string[] {
@@ -42,14 +41,13 @@ describe("LandingPage", () => {
 		expect(container.querySelector('[data-id="landing-live-sync"]')).toBeNull();
 	});
 
-	it("follows the phase order with one h1 and points 'See how it works' at the relations demo", () => {
+	it("follows the phase order with one h1 and one call to action, the sign-in card", () => {
 		const { container } = renderWithFeatures(<LandingPage />);
 		expect(sectionOrder(container)).toEqual([
-			"landing-hero",
+			"hero",
 			"landing-modeling",
 			"landing-relations",
 			"landing-features",
-			"landing-cta",
 		]);
 		expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
 		expect(
@@ -59,8 +57,17 @@ describe("LandingPage", () => {
 			}),
 		).not.toHaveTextContent(/plan|pricing/i);
 		expect(
-			screen.getByRole("link", { name: "See how it works" }),
-		).toHaveAttribute("href", "#relations");
+			screen.getByRole("link", { name: "Sign in with hoandat.com" }),
+		).toHaveAttribute(
+			"href",
+			`/auth/login?returnTo=${encodeURIComponent("/projects")}`,
+		);
+		expect(container.querySelectorAll('[data-id="sign-in-cta"]')).toHaveLength(
+			1,
+		);
+		expect(container).not.toHaveTextContent(
+			/Get started|Start free|See how it works/,
+		);
 	});
 
 	it("switches the hero and loads Live Mock Sync once the flags are on", async () => {
@@ -71,12 +78,6 @@ describe("LandingPage", () => {
 			}),
 		).toBeInTheDocument();
 		expect(container).toHaveTextContent("Localhost right in your browser");
-		expect(
-			screen.getByRole("link", { name: "See how it works" }),
-		).toHaveAttribute("href", "#live-sync");
-		expect(
-			container.querySelector('[data-id="landing-hero-preview-tunnel"]'),
-		).toHaveTextContent("via Tunelo");
 	});
 
 	it("names the tab after the hero message of the current flags", () => {

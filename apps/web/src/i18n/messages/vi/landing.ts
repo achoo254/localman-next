@@ -16,7 +16,6 @@ export const landing: Messages["landing"] = {
 			"Khai báo resource, sinh dữ liệu giả bằng một click và có ngay endpoint CRUD đầy đủ. Frontend không phải chờ backend nữa.",
 		subLocalhost:
 			"<b>Không cần cài app hay extension, chỉ một lệnh Tunelo.</b> Chạy <code>tunelo http 3000</code>, Localman tự nhận tunnel theo port và gửi request tới <code>localhost</code> hay máy trong mạng LAN. Kèm mock REST API có trạng thái để frontend không phải chờ backend.",
-		howItWorks: "Xem cách hoạt động",
 		noteMock:
 			"Đăng nhập là dùng được ngay: {projects} project, tổng cộng {resources} resource, có sẵn custom response.",
 		noteLocalhost:
@@ -111,14 +110,6 @@ export const landing: Messages["landing"] = {
 			title: "Webhook",
 			description: "Gọi URL của bạn mỗi khi dữ liệu thay đổi.",
 		},
-	},
-	cta: {
-		title: "Dựng mock API đầu tiên trong vài phút",
-		text: "Tạo tài khoản miễn phí, thêm resource, bấm thanh sinh dữ liệu là có endpoint chạy được.",
-		startFree: "Bắt đầu miễn phí",
-	},
-	midCta: {
-		title: "Thấy hợp rồi? Thử ngay với API của bạn",
 	},
 	perks: {
 		free: "Miễn phí",

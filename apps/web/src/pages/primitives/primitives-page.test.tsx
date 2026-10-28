@@ -28,9 +28,9 @@ describe("PrimitivesPage", () => {
 	it("renders the shell and every page-level block with a data-id", () => {
 		const { container } = renderPage();
 		for (const id of [
-			"topbar",
-			"topbar-home",
-			"app-footer-theme",
+			"public-header",
+			"public-home",
+			"theme-switch",
 			"primitives",
 			"primitives-buttons",
 			"primitives-forms",
@@ -41,22 +41,19 @@ describe("PrimitivesPage", () => {
 			expect(container.querySelector(`[data-id="${id}"]`)).not.toBeNull();
 		}
 		expect(
-			screen.getByRole("link", { name: "Localman, home" }),
+			container.querySelector('[data-id="public-home"]'),
 		).toHaveTextContent("Localman");
 	});
 
 	it("switches the theme attribute on <html>", async () => {
 		const { container } = renderPage();
-		// The theme switch is in the footer, as on the account app.
-		const toggle = container.querySelector('[data-id="app-footer-theme"]');
-		if (!(toggle instanceof HTMLElement))
-			throw new Error("no app-footer-theme");
-		await userEvent.click(
-			within(toggle).getByRole("button", { name: "Dark theme" }),
-		);
+		// The shared theme switch is in the footer, as on the account app.
+		const toggle = container.querySelector('[data-id="theme-switch"]');
+		if (!(toggle instanceof HTMLElement)) throw new Error("no theme-switch");
+		await userEvent.click(within(toggle).getByRole("button", { name: "Dark" }));
 		expect(document.documentElement.dataset.theme).toBe("dark");
 		await userEvent.click(
-			within(toggle).getByRole("button", { name: "Match system" }),
+			within(toggle).getByRole("button", { name: "System" }),
 		);
 		expect(document.documentElement.dataset.theme).toBeUndefined();
 	});

@@ -1,30 +1,30 @@
+import { matchShellLocale } from "@achoo254/app-shell";
+import {
+	readPreferences,
+	writePreference,
+} from "@achoo254/app-shell/preferences";
 import {
 	DEFAULT_LOCALE,
 	type Locale,
 	isLocale,
 } from "@localman/shared/constants";
-
-export const LOCALE_STORAGE_KEY = "localman-locale";
+import { LOCALES, PREFERENCE_OPTIONS } from "../lib/shared-preferences";
 
 /** Query parameter that picks a language from a shared link: `?lang=vi`. */
 export const LOCALE_QUERY_PARAM = "lang";
 
-/** The saved choice; storage may be unavailable (privacy mode). */
+/**
+ * The visitor's chosen language: the shared `hd_lang` choice of the
+ * hoandat.com apps, else Localman's own key from before it. Null when none
+ * of Localman's languages was chosen.
+ */
 export function readStoredLocale(): Locale | null {
-	try {
-		const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
-		return isLocale(stored) ? stored : null;
-	} catch {
-		return null;
-	}
+	return readPreferences(PREFERENCE_OPTIONS).lang ?? null;
 }
 
+/** Remembers the choice for every hoandat.com app in this browser. */
 export function storeLocale(locale: Locale): void {
-	try {
-		window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
-	} catch {
-		// Storage unavailable: the choice still applies for this page view.
-	}
+	writePreference("lang", locale, PREFERENCE_OPTIONS);
 }
 
 /** `?lang=` of a query string when it names a supported language. */
@@ -33,10 +33,16 @@ export function localeFromSearch(search: string): Locale | null {
 	return isLocale(value) ? value : null;
 }
 
+/** The browser's language when Localman has it ("vi-VN" is vi). */
+function browserLocale(): Locale | undefined {
+	if (typeof navigator === "undefined") return undefined;
+	return matchShellLocale(navigator.language, LOCALES);
+}
+
 /**
  * Language of this visit: `?lang=` (remembered, so it survives the
- * sign-in round trip), then the saved choice, then English. The browser's
- * own language is deliberately ignored: English is the product default.
+ * sign-in round trip), then the saved choice, then the browser's language,
+ * then English.
  */
 export function resolvePreferredLocale(search: string): Locale {
 	const fromQuery = localeFromSearch(search);
@@ -44,5 +50,5 @@ export function resolvePreferredLocale(search: string): Locale {
 		storeLocale(fromQuery);
 		return fromQuery;
 	}
-	return readStoredLocale() ?? DEFAULT_LOCALE;
+	return readStoredLocale() ?? browserLocale() ?? DEFAULT_LOCALE;
 }

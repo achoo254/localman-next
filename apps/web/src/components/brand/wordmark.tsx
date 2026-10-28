@@ -2,7 +2,7 @@ import type { ComponentProps } from "react";
 import { cn } from "../../lib/cn";
 
 /** Served from public/: a fixed URL, so the prerendered landing page and the client agree. */
-const MARK_URL = "/brand/localman-mark-128.webp";
+export const MARK_URL = "/brand/localman-mark-128.webp";
 
 export type WordmarkProps = Omit<ComponentProps<"span">, "children">;
 

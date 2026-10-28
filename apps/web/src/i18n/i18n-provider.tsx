@@ -1,3 +1,4 @@
+import { subscribePreferences } from "@achoo254/app-shell/preferences";
 import { DEFAULT_LOCALE, type Locale } from "@localman/shared/constants";
 import {
 	type ReactNode,
@@ -11,7 +12,11 @@ import { useAccountLocaleSync } from "./account-locale-sync";
 import { setActiveTranslator } from "./active-translator";
 import { I18nContext, type I18nValue } from "./i18n-context";
 import { loadMessages } from "./load-messages";
-import { resolvePreferredLocale, storeLocale } from "./locale-preference";
+import {
+	readStoredLocale,
+	resolvePreferredLocale,
+	storeLocale,
+} from "./locale-preference";
 import type { Messages } from "./message-types";
 import { en } from "./messages/en/dictionary";
 import { createTranslator } from "./translate";
@@ -88,6 +93,21 @@ export function I18nProvider({
 			// The chunk did not load: stay in the language on screen.
 		});
 	}, [switchTo]);
+
+	// The language is shared by the hoandat.com apps: a choice made on this
+	// page by the footer switch, or in another app and noticed when this
+	// page comes back into view, applies here without a reload.
+	useEffect(
+		() =>
+			subscribePreferences(() => {
+				const stored = readStoredLocale();
+				if (stored === null || stored === wanted.current) return;
+				switchTo(stored).catch(() => {
+					// The chunk did not load: stay in the language on screen.
+				});
+			}),
+		[switchTo],
+	);
 
 	useEffect(() => {
 		shown.current = current.locale;

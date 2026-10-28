@@ -95,12 +95,10 @@ describe("public legal pages", () => {
 	it("links every legal page from the footer", async () => {
 		renderAsGuest("/terms");
 		await screen.findByRole("heading", { level: 1, name: "Terms of Use" });
-		const footer = document.querySelector('[data-id="app-footer-legal"]');
-		expect(footer?.querySelectorAll("a")).toHaveLength(3);
-		expect(
-			[...(footer?.querySelectorAll("a") ?? [])].map((a) =>
-				a.getAttribute("href"),
-			),
-		).toEqual(["/privacy", "/terms", "/account/delete"]);
+		const footer = document.querySelector('[data-id="public-footer"]');
+		const legal = ["foot-privacy", "foot-terms", "foot-delete-account"].map(
+			(id) => footer?.querySelector(`[data-id="${id}"]`)?.getAttribute("href"),
+		);
+		expect(legal).toEqual(["/privacy", "/terms", "/account/delete"]);
 	});
 });

@@ -6,10 +6,7 @@ export const layout = {
 	projects: "Projects",
 	home: "Localman home",
 	publicHeader: {
-		home: "Localman, home",
-		nav: "Main navigation",
 		features: "Features",
-		signIn: "Sign in",
 	},
 	appHeader: {
 		home: "Localman, go to Projects",
@@ -34,11 +31,5 @@ export const layout = {
 	footer: {
 		ecosystem: "An app from {domain}",
 		feedback: "Feedback / Contact",
-	},
-	theme: {
-		legend: "Color mode",
-		light: "Light theme",
-		dark: "Dark theme",
-		system: "Match system",
 	},
 } as const;

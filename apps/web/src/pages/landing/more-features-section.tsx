@@ -1,3 +1,4 @@
+import { type FeatureItem, FeatureList } from "@achoo254/app-shell";
 import { MAX_GENERATE_COUNT } from "@localman/shared/constants";
 import { FAKER_METHOD_IDS } from "@localman/shared/faker-catalog";
 import {
@@ -13,12 +14,10 @@ import {
 } from "@tabler/icons-react";
 import { Link } from "react-router";
 import { Badge } from "../../components/ui/badge";
-import { cardClassName } from "../../components/ui/card";
 import { useT } from "../../i18n/i18n-context";
 import type { en } from "../../i18n/messages/en/dictionary";
 import { renderRich } from "../../i18n/rich-text";
 import { cn } from "../../lib/cn";
-import { LandingSection } from "./landing-section";
 
 type FeatureKey = keyof Omit<
 	typeof en.landing.features,
@@ -94,74 +93,69 @@ const FEATURES: readonly Feature[] = [
 	},
 ];
 
-/** "And more": what the mock already does, plus two announced cards. */
+/**
+ * "And more": what the mock already does, plus two announced cards, as the
+ * shared feature list (`#features`, the header's "Features" link).
+ */
 export function MoreFeaturesSection() {
 	const t = useT();
 	const generator = {
 		methods: FAKER_METHOD_IDS.length,
 		max: MAX_GENERATE_COUNT,
 	};
+	const items: FeatureItem[] = FEATURES.map((feature) => {
+		const title = t(`landing.features.${feature.key}.title`);
+		const description =
+			feature.key === "generator"
+				? t("landing.features.generator.description", generator)
+				: t(`landing.features.${feature.key}.description`);
+		return {
+			id: feature.slug,
+			icon: <feature.icon size={20} aria-hidden="true" />,
+			title: (
+				<>
+					{title}
+					{feature.comingSoon ? (
+						<Badge tone="accent" className="ml-auto">
+							{t("landing.features.comingSoon")}
+						</Badge>
+					) : null}
+				</>
+			),
+			description: (
+				<>
+					{renderRich(description)}{" "}
+					<code
+						// Announced cards dim their code with the muted text token
+						// rather than opacity, so it keeps 4.5:1 contrast.
+						className={cn(
+							"block break-all pt-2 text-[0.8125rem]",
+							feature.comingSoon ? "text-muted" : "text-primary",
+						)}
+					>
+						{feature.code}
+					</code>
+					{feature.docs ? (
+						<Link
+							to={feature.docs}
+							data-id={`feature-${feature.slug}-docs`}
+							className="inline-block pt-2 font-mono font-semibold text-[0.8125rem]"
+						>
+							{t("landing.features.seeExample")}
+							<span className="sr-only">: {title}</span>
+						</Link>
+					) : null}
+				</>
+			),
+		};
+	});
 	return (
-		<LandingSection
+		<FeatureList
 			id="features"
-			data-id="landing-features"
+			dataId="landing-features"
 			eyebrow={t("landing.features.eyebrow")}
 			title={t("landing.features.title")}
-		>
-			<ul className="m-0 grid list-none gap-4 p-0 sm:grid-cols-2 lg:grid-cols-4">
-				{FEATURES.map((feature) => {
-					const title = t(`landing.features.${feature.key}.title`);
-					const description =
-						feature.key === "generator"
-							? t("landing.features.generator.description", generator)
-							: t(`landing.features.${feature.key}.description`);
-					return (
-						<li key={feature.slug} className="grid">
-							<article
-								data-id={`feature-${feature.slug}`}
-								className={cn(cardClassName, "grid content-start gap-3 p-6")}
-							>
-								<div className="flex items-center justify-between gap-2">
-									<feature.icon
-										size={24}
-										aria-hidden="true"
-										className="text-primary"
-									/>
-									{feature.comingSoon ? (
-										<Badge tone="accent">
-											{t("landing.features.comingSoon")}
-										</Badge>
-									) : null}
-								</div>
-								<h3 className="m-0 font-bold font-mono text-base">{title}</h3>
-								<p className="m-0 text-muted text-sm">
-									{renderRich(description)}
-								</p>
-								<code
-									// Announced cards dim their code with the muted text token
-									// rather than opacity, so it keeps 4.5:1 contrast.
-									className={cn(
-										"break-all text-[0.8125rem]",
-										feature.comingSoon ? "text-muted" : "text-primary",
-									)}
-								>
-									{feature.code}
-								</code>
-								{feature.docs ? (
-									<Link
-										to={feature.docs}
-										data-id={`feature-${feature.slug}-docs`}
-										className="justify-self-start font-mono font-semibold text-[0.8125rem]"
-									>
-										{t("landing.features.seeExample")}
-										<span className="sr-only">: {title}</span>
-									</Link>
-								) : null}
-							</article>
-						</li>
-					);
-				})}
-			</ul>
-		</LandingSection>
+			items={items}
+		/>
 	);
 }

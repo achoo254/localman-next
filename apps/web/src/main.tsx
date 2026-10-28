@@ -1,9 +1,13 @@
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { App } from "./app";
 import { loadInitialLocale } from "./i18n/i18n-provider";
+import { watchSharedTheme } from "./lib/shared-preferences";
 import { loadMobileSession } from "./platform/native/mobile-session";
 import { isNativeBuild } from "./platform/native/native-build";
 import "./styles/global.css";
+
+// The head script set the theme before first paint; from now on follow it.
+watchSharedTheme();
 
 const container = document.getElementById("app");
 if (!container) {

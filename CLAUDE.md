@@ -9,7 +9,7 @@ apps/web/                # React 19 + Vite 7 + Tailwind 4 (:5173)
 apps/api/                # Express 5: dashboard API (:4000) và mock runtime (:4100)
 packages/operations/     # defineOperation → route REST, MCP tool, OpenAPI 3.1
 packages/shared/         # @localman/shared, plan-limits.ts là nguồn duy nhất của hạn mức
-packages/design-tokens/  # tokens.css, nơi duy nhất chứa literal màu (kèm SVG icon và badge)
+packages/design-tokens/  # tokens.css gốc (web nạp bản của @achoo254/app-shell, test giữ hai bản bằng nhau), SVG icon và badge
 packages/brand/generated/ # manifest + icon do pnpm brand:gen sinh (scripts/brand-gen.ts, gói @achoo254/brand)
 scripts/                 # check-mcp-coverage.ts, check-tokens.ts, brand-gen.ts
 e2e/                     # Playwright: whole stack on fixed ports 46xx (support/stack.ts)

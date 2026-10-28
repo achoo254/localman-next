@@ -14,6 +14,7 @@ import { brandInstallAssets } from "./src/config/brand-install-assets";
 import { apiProxy } from "./src/config/dev-api-proxy";
 import { parseFeatureFlags } from "./src/config/feature-flags";
 import { runButtonBadge } from "./src/config/run-button-badge";
+import { themeBootstrap } from "./src/config/theme-bootstrap";
 
 /**
  * Vendor chunks, so the app chunk stays small and libraries are cached
@@ -157,6 +158,7 @@ export default defineConfig(({ mode }) => {
 		plugins: [
 			react(),
 			tailwindcss(),
+			themeBootstrap(),
 			prerenderPages(),
 			runButtonBadge(),
 			// Off ("webInstall": false in brand.config.json) until the icon is designed.

@@ -7,6 +7,11 @@ export const publicRoutes: RouteObject[] = [
 	// The landing stays reachable once signed in: its header and hero
 	// turn into "Open app" instead of moving the user away.
 	{ index: true, element: <LandingPage /> },
+	// The shared sign-in card; `?returnTo=` names where sign-in comes back.
+	{
+		path: "login",
+		element: lazyPage(() => import("../pages/login/login-page"), "LoginPage"),
+	},
 	// No pricing while the product is not sold; old links land home.
 	{ path: "pricing", element: <Navigate to="/" replace /> },
 	// Public on purpose: anonymous visitors choose sign-in or sign-up

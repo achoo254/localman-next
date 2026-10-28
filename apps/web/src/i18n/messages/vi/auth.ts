@@ -1,6 +1,11 @@
 import type { Messages } from "../../message-types";
 
 export const auth: Messages["auth"] = {
+	/** The sign-in page (`/login`): the shared sign-in card. */
+	signInPage: {
+		title: "Đăng nhập vào Localman",
+		description: "Mọi thứ bạn tạo trong Localman được lưu theo tài khoản.",
+	},
 	status: {
 		loading: "Đang kiểm tra phiên đăng nhập…",
 		redirecting: "Đang chuyển tới trang đăng nhập…",

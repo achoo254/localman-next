@@ -18,7 +18,6 @@ export const landing = {
 			"Declare resources, generate fake data in one click and get full CRUD endpoints right away. Your frontend no longer waits for the backend.",
 		subLocalhost:
 			"<b>No app or extension to install, just one Tunelo command.</b> Run <code>tunelo http 3000</code> and Localman picks up the tunnel by port, then sends requests to <code>localhost</code> or machines on your LAN. Stateful mock REST APIs included, so the frontend never waits for the backend.",
-		howItWorks: "See how it works",
 		noteMock:
 			"Sign in and start right away: {projects} projects, {resources} resources in total and custom responses included.",
 		noteLocalhost:
@@ -121,14 +120,6 @@ export const landing = {
 			title: "Webhooks",
 			description: "Call your URL whenever the data changes.",
 		},
-	},
-	cta: {
-		title: "Build your first mock API in minutes",
-		text: "Create a free account, add a resource, click the generator bar and you have a working endpoint.",
-		startFree: "Start free",
-	},
-	midCta: {
-		title: "Seen enough? Try it on your own API",
 	},
 	perks: {
 		free: "Free",

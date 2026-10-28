@@ -59,6 +59,12 @@ if (hasDom) {
 
 afterEach(() => {
 	cleanup();
+	if (!hasDom) return;
 	// The login redirect-loop counter lives here; keep tests independent.
-	if (hasDom) window.sessionStorage.clear();
+	window.sessionStorage.clear();
+	// The shared language and theme choices (@achoo254/app-shell) live in
+	// cookies, which jsdom keeps for the whole file.
+	for (const name of ["hd_lang", "hd_theme"]) {
+		document.cookie = `${name}=; Max-Age=0; Path=/`;
+	}
 });

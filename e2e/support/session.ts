@@ -19,15 +19,13 @@ export function uniqueUsername(label: string, suffix = uniqueSuffix()): string {
 }
 
 /**
- * Signs `username` in through the sign-in link of the landing page. The
+ * Signs `username` in through the sign-in card of the landing page (its one
+ * call to action, "Sign in with hoandat.com"; the IdP creates the account
+ * on a first sign-in). The
  * fake IdP completes the login as that account (cookie on the IdP origin),
  * then Localman returns to /projects.
  */
-export async function signIn(
-	page: Page,
-	username: string,
-	link: "topbar-login" | "topbar-signup" = "topbar-login",
-): Promise<void> {
+export async function signIn(page: Page, username: string): Promise<void> {
 	// The login routes are rate limited per client IP, and every test runs from
 	// 127.0.0.1. The E2E stack trusts its loopback proxy, so the sign-in
 	// requests carry their own forwarded address: each test gets its own bucket,
@@ -41,13 +39,13 @@ export async function signIn(
 	await page
 		.context()
 		.addCookies([{ name: IDP_USER_COOKIE, value: username, url: IDP_ORIGIN }]);
-	// The sign-in links show while the session probe still runs; clicking
+	// The sign-in link shows while the session probe still runs; clicking
 	// only after it answered keeps the test on the one redirect it waits for.
 	const probe = page.waitForResponse(
 		(response) => new URL(response.url()).pathname === "/api/v1/users/me",
 	);
 	await page.goto("/");
 	await probe;
-	await page.getByTestId(link).click();
+	await page.getByTestId("sign-in-cta").click();
 	await page.waitForURL("**/projects");
 }

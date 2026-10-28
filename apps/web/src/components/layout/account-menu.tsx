@@ -45,19 +45,6 @@ export interface AccountMenuProps {
 	compact?: boolean;
 }
 
-/**
- * Empty box of the compact trigger's size, for a layout that keeps its
- * room before the user is known.
- */
-export function AccountTriggerSpacer() {
-	return (
-		<span className={TRIGGER}>
-			<span className="size-7" />
-			<span className="size-4" />
-		</span>
-	);
-}
-
 /** Avatar button and the account menu of the signed-in top bar. */
 export function AccountMenu({
 	user,

@@ -1,105 +1,84 @@
+import { Hero, SignInCard } from "@achoo254/app-shell";
 import { limitsFor } from "@localman/shared/constants";
-import { Link } from "react-router";
-import { Badge } from "../../components/ui/badge";
-import { buttonClassName } from "../../components/ui/button";
+import { SHELL_BRAND } from "../../components/layout/shell-brand";
 import { useFeatures } from "../../config/features";
-import { useT } from "../../i18n/i18n-context";
+import { SignUpLegalNote } from "../../features/auth/sign-up-legal-note";
+import { useCurrentUser } from "../../features/auth/use-current-user";
+import { useI18n } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
-import { cn } from "../../lib/cn";
-import { LEGAL_PATHS } from "../../lib/legal";
+import { loginUrl } from "../../lib/api-url";
+import { navigateToLogin } from "../../platform/navigation";
 import { AuthErrorAlert } from "./auth-error-alert";
 import { CtaPerks } from "./cta-perks";
 import { HeroPreview } from "./hero-preview";
-import { StartCta } from "./start-cta";
-
-/** Terms and Privacy links in the sign-up note under the hero's buttons. */
-const LEGAL_LINK = "text-fg underline underline-offset-4 hover:no-underline";
 
 const CODE_WORD = "font-mono text-primary";
 
 const codeWord = (chunk: string) => <span className={CODE_WORD}>{chunk}</span>;
 
+/** Where sign-in from the landing comes back to. */
+const RETURN_TO = "/projects";
+
 /**
- * Hero with two messages: the mock pitch until the API client is in
- * production, then "Localhost right in your browser".
+ * Hero of the shared shell with two messages: the mock pitch until the API
+ * client is in production, then "Localhost right in your browser". Beside
+ * it a guest gets the shared sign-in card, the landing's one call to
+ * action; a signed-in visitor, who has "Open app" in the header, sees the
+ * product preview instead. The prerendered page does not know the session,
+ * so it shows the card.
  */
-export function HeroSection({ howItWorksHref }: { howItWorksHref: string }) {
+export function HeroSection() {
 	const { apiClient } = useFeatures();
-	const t = useT();
+	const { locale, t } = useI18n();
+	const signedIn = useCurrentUser().status === "authenticated";
 	const free = limitsFor("free");
 	const proxy = free.proxyRequestsPerMonth;
 	const limits = { projects: free.projects, resources: free.resources };
 	return (
-		<section
-			data-id="landing-hero"
-			aria-labelledby="landing-hero-title"
-			className="grid items-center gap-8 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:py-24"
-		>
-			<div data-id="landing-hero-copy" className="grid min-w-0 gap-6">
-				<AuthErrorAlert />
-				<Badge tone="primary" className="justify-self-start">
-					{t(
-						apiClient
-							? "landing.hero.badgeLocalhost"
-							: "landing.hero.badgeMock",
-					)}
-				</Badge>
-				<h1
-					id="landing-hero-title"
-					className="m-0 font-bold text-[clamp(1.875rem,4.4vw,2.875rem)] leading-tight tracking-[-0.02em]"
-				>
-					{renderRich(
-						apiClient
-							? t("landing.hero.titleLocalhost")
-							: t("landing.hero.titleMock"),
-						{ code: codeWord },
-					)}
-				</h1>
-				<p data-id="landing-hero-sub" className="m-0 text-lg text-muted">
-					{apiClient
-						? renderRich(t("landing.hero.subLocalhost"), {
-								b: (chunk) => <b className="text-fg">{chunk}</b>,
-							})
-						: t("landing.hero.subMock")}
-				</p>
-				<div className="flex flex-wrap gap-3">
-					<StartCta data-id="landing-hero-cta" />
-					<a
-						href={howItWorksHref}
-						data-id="landing-hero-how"
-						className={cn(
-							buttonClassName({ variant: "secondary", size: "lg" }),
-							"no-underline max-sm:w-full",
-						)}
+		<Hero
+			eyebrow={t(
+				apiClient ? "landing.hero.badgeLocalhost" : "landing.hero.badgeMock",
+			)}
+			title={renderRich(
+				apiClient
+					? t("landing.hero.titleLocalhost")
+					: t("landing.hero.titleMock"),
+				{ code: codeWord },
+			)}
+			lede={
+				apiClient
+					? renderRich(t("landing.hero.subLocalhost"), {
+							b: (chunk) => <b className="text-fg">{chunk}</b>,
+						})
+					: t("landing.hero.subMock")
+			}
+			aside={
+				signedIn ? (
+					<HeroPreview localhost={apiClient} />
+				) : (
+					<SignInCard
+						brand={SHELL_BRAND}
+						locale={locale}
+						signInHref={loginUrl({ returnTo: RETURN_TO })}
+						onSignIn={() => navigateToLogin({ returnTo: RETURN_TO })}
+						title={t("auth.signInPage.title")}
+						headingLevel={2}
 					>
-						{t("landing.hero.howItWorks")}
-					</a>
-				</div>
-				<CtaPerks data-id="landing-hero-perks" />
-				<p className="m-0 text-[0.8125rem] text-muted">
-					{apiClient && proxy !== null
-						? t("landing.hero.noteLocalhost", { ...limits, proxy })
-						: t("landing.hero.noteMock", limits)}
-				</p>
-				<p
-					data-id="landing-hero-legal"
-					className="m-0 text-[0.8125rem] text-muted"
-				>
-					{renderRich(t("legal.signUpNote"), {
-						terms: (chunk) => (
-							<Link to={LEGAL_PATHS.terms} className={LEGAL_LINK}>
-								{chunk}
-							</Link>
-						),
-						privacy: (chunk) => (
-							<Link to={LEGAL_PATHS.privacy} className={LEGAL_LINK}>
-								{chunk}
-							</Link>
-						),
-					})}
-				</p>
-			</div>
-			<HeroPreview localhost={apiClient} />
-		</section>
+						<AuthErrorAlert />
+						<SignUpLegalNote data-id="landing-hero-legal" />
+					</SignInCard>
+				)
+			}
+		>
+			<CtaPerks data-id="landing-hero-perks" />
+			<p
+				data-id="landing-hero-note"
+				className="m-0 text-[0.8125rem] text-muted"
+			>
+				{apiClient && proxy !== null
+					? t("landing.hero.noteLocalhost", { ...limits, proxy })
+					: t("landing.hero.noteMock", limits)}
+			</p>
+		</Hero>
 	);
 }

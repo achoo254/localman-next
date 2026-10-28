@@ -60,11 +60,12 @@ describe("landing prerender", () => {
 	it("renders the whole landing for an anonymous visitor, flags off", async () => {
 		const html = await renderPageHtml("/");
 		for (const id of [
-			"topbar-signup",
-			"landing-hero",
+			"public-sign-in",
+			"hero",
+			"sign-in-cta",
 			"landing-relations",
-			"landing-cta",
-			"app-footer",
+			"public-footer",
+			"theme-switch",
 		]) {
 			expect(html).toContain(`data-id="${id}"`);
 		}
@@ -92,9 +93,8 @@ describe("landing prerender", () => {
 	it("is written in English", async () => {
 		const html = await renderPageHtml("/");
 		expect(html).toContain("REST APIs with relations and Faker");
-		expect(html).toContain("Get started now");
-		expect(html).toContain("Start free");
-		expect(html).not.toMatch(/Bắt đầu ngay|立即开始/);
+		expect(html).toContain("Sign in with hoandat.com");
+		expect(html).not.toMatch(/Đăng nhập bằng|使用 hoandat\.com 登录/);
 	});
 
 	it("hydrates in English, then switches to the saved language without a mismatch", async () => {
@@ -131,9 +131,6 @@ describe("landing prerender", () => {
 		const openApp = await screen.findAllByRole("link", { name: "Open app" });
 		expect(openApp.map((link) => link.getAttribute("data-id"))).toEqual([
 			"topbar-projects",
-			"landing-hero-cta",
-			"landing-mid-cta-button",
-			"landing-cta-button",
 		]);
 		expect(router.state.location.pathname).toBe("/");
 		expect(recoverable).toEqual([]);

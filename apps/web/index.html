@@ -40,14 +40,10 @@
 		<meta property="og:image:height" content="630" />
 		<meta name="twitter:card" content="summary_large_image" />
 		<meta name="twitter:image" content="https://localman.hoandat.com/og-image.jpg" />
-		<script>
-			// Apply the saved theme before first paint (key: THEME_STORAGE_KEY in src/lib/theme.ts).
-			// Phase 09: allow this script by CSP hash, like the #app script below.
-			try {
-				var theme = localStorage.getItem("localman-theme");
-				if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
-			} catch (error) {}
-		</script>
+		<!-- The shared theme script of @achoo254/app-shell sets data-theme
+		     before first paint (vite.config.ts puts it here; deploy.sh allows
+		     it in the CSP by its hash, src/lib/theme-bootstrap.test.ts). -->
+		<!--theme-bootstrap-->
 	</head>
 	<body>
 		<div id="app"></div>

@@ -4,12 +4,13 @@ import { RouterProvider, createMemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "../app-providers";
 import { resetCurrentUserCache } from "../features/auth/use-current-user";
+import { LEGACY_LOCALE_KEY } from "../lib/shared-preferences";
 import { routes } from "../routes";
 import { seriousViolations } from "../test/axe";
 import { makeUser } from "../test/fixtures";
 import { type MockRoute, UNAUTHENTICATED, mockFetch } from "../test/mock-fetch";
 import { createTestQueryClient } from "../test/render-app";
-import { LOCALE_STORAGE_KEY } from "./locale-preference";
+import { readStoredLocale } from "./locale-preference";
 import { USER_LOCALE_PATH } from "./save-user-locale";
 
 const SIGNED_IN: Record<string, MockRoute> = {
@@ -80,8 +81,26 @@ describe("interface language", () => {
 		).toHaveAttribute("aria-pressed", "true");
 	});
 
+	it("follows the browser's language on a first visit", async () => {
+		vi.spyOn(navigator, "language", "get").mockReturnValue("vi-VN");
+		renderApp("/", { "GET /api/v1/users/me": UNAUTHENTICATED });
+		await waitFor(() => expect(document.documentElement.lang).toBe("vi"));
+		expect(await heroHeading()).toHaveTextContent(/có trạng thái/);
+	});
+
+	it("follows a language picked in another hoandat.com app when the page is back in view", async () => {
+		renderApp("/", { "GET /api/v1/users/me": UNAUTHENTICATED });
+		await heroHeading();
+		expect(document.documentElement.lang).toBe("en");
+		document.cookie = "hd_lang=zh-CN; Path=/";
+		act(() => {
+			window.dispatchEvent(new Event("focus"));
+		});
+		await waitFor(() => expect(document.documentElement.lang).toBe("zh-CN"));
+	});
+
 	it("restores the saved language", async () => {
-		window.localStorage.setItem(LOCALE_STORAGE_KEY, "vi");
+		window.localStorage.setItem(LEGACY_LOCALE_KEY, "vi");
 		renderApp("/", { "GET /api/v1/users/me": UNAUTHENTICATED });
 		await waitFor(() => expect(document.documentElement.lang).toBe("vi"));
 		expect(await heroHeading()).toHaveTextContent(/có trạng thái/);
@@ -91,7 +110,7 @@ describe("interface language", () => {
 		renderApp("/?lang=zh-CN", { "GET /api/v1/users/me": UNAUTHENTICATED });
 		await waitFor(() => expect(document.documentElement.lang).toBe("zh-CN"));
 		expect(await heroHeading()).toHaveTextContent(/带状态/);
-		expect(window.localStorage.getItem(LOCALE_STORAGE_KEY)).toBe("zh-CN");
+		expect(readStoredLocale()).toBe("zh-CN");
 	});
 
 	it("switches from the footer pill, without calling the API anonymously", async () => {
@@ -109,7 +128,7 @@ describe("interface language", () => {
 		expect(
 			screen.getByRole("link", { name: "Bỏ qua tới nội dung" }),
 		).toBeInTheDocument();
-		expect(window.localStorage.getItem(LOCALE_STORAGE_KEY)).toBe("vi");
+		expect(readStoredLocale()).toBe("vi");
 		expect(calls.some((call) => call.path === USER_LOCALE_PATH)).toBe(false);
 	});
 
@@ -160,6 +179,6 @@ describe("interface language", () => {
 				"未能将语言保存到账号。当前浏览器仍会使用所选语言。",
 			),
 		).toBeInTheDocument();
-		expect(window.localStorage.getItem(LOCALE_STORAGE_KEY)).toBe("zh-CN");
+		expect(readStoredLocale()).toBe("zh-CN");
 	});
 });

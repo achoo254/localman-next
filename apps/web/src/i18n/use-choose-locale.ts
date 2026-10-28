@@ -9,7 +9,7 @@ import { createTranslator } from "./translate";
 /**
  * Switches the interface language: remembered in this browser and, for a
  * signed-in user, on the account. Failures are told in a toast. Shared by
- * the top-bar menu and the footer pill.
+ * the top-bar menu and the footer switch of @achoo254/app-shell.
  */
 export function useChooseLocale(): (value: string) => Promise<void> {
 	const { locale, setLocale, t } = useI18n();

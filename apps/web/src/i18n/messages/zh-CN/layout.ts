@@ -7,10 +7,7 @@ export const layout: Messages["layout"] = {
 	projects: "Projects",
 	home: "Localman 首页",
 	publicHeader: {
-		home: "Localman，返回首页",
-		nav: "主导航",
 		features: "功能",
-		signIn: "登录",
 	},
 	appHeader: {
 		home: "Localman，返回 Projects",
@@ -35,11 +32,5 @@ export const layout: Messages["layout"] = {
 	footer: {
 		ecosystem: "{domain} 旗下应用",
 		feedback: "反馈 / 联系",
-	},
-	theme: {
-		legend: "颜色模式",
-		light: "浅色主题",
-		dark: "深色主题",
-		system: "跟随系统",
 	},
 };

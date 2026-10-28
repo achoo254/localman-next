@@ -38,7 +38,8 @@ export function unreleasedMentions(root: Element): string[] {
 	if (!(copy instanceof Element)) return [];
 	for (const badge of copy.querySelectorAll("span")) {
 		if (badge.textContent?.trim() !== COMING_SOON) continue;
-		badge.closest("article")?.remove();
+		// A card of a page (article) or of the shared feature list (li).
+		badge.closest("article, li")?.remove();
 	}
 	const attributes = [copy, ...copy.querySelectorAll("*")].flatMap((element) =>
 		NAMED_ATTRIBUTES.map((name) => element.getAttribute(name) ?? ""),

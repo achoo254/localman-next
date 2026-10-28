@@ -16,7 +16,6 @@ export const landing: Messages["landing"] = {
 			"声明 resource，一键生成模拟数据，立即获得完整的 CRUD endpoint。前端不必再等后端。",
 		subLocalhost:
 			"<b>无需安装应用或扩展，只要一条 Tunelo 命令。</b>运行 <code>tunelo http 3000</code>，Localman 会按端口自动识别 tunnel，并把 request 发到 <code>localhost</code> 或局域网内的机器。还附带带状态的 mock REST API，前端不必等后端。",
-		howItWorks: "了解工作原理",
 		noteMock:
 			"登录即可开始使用：{projects} 个 project、合计 {resources} 个 resource，并支持 custom response。",
 		noteLocalhost:
@@ -110,14 +109,6 @@ export const landing: Messages["landing"] = {
 			title: "Webhook",
 			description: "数据变化时调用你的 URL。",
 		},
-	},
-	cta: {
-		title: "几分钟内搭建你的第一个 mock API",
-		text: "免费创建账号，添加 resource，点击数据生成条，即可得到一个可用的 endpoint。",
-		startFree: "免费开始",
-	},
-	midCta: {
-		title: "看够了？在你自己的 API 上试试",
 	},
 	perks: {
 		free: "免费",

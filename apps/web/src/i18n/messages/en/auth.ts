@@ -1,5 +1,10 @@
 /** Session check, sign-in errors and account names (`features/auth`). */
 export const auth = {
+	/** The sign-in page (`/login`): the shared sign-in card. */
+	signInPage: {
+		title: "Sign in to Localman",
+		description: "Everything you build in Localman is kept on your account.",
+	},
 	status: {
 		loading: "Checking your session…",
 		redirecting: "Redirecting to sign-in…",

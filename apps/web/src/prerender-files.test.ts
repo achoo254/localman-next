@@ -20,7 +20,7 @@ describe("prerendered files", () => {
 		expect(files.map((entry) => entry.file)).toEqual(["index.html"]);
 		const landing = fileNamed(files, "index.html");
 		expect(landing).toContain('<div id="app" data-prerendered="/">');
-		expect(landing).toContain('data-id="landing-hero"');
+		expect(landing).toContain('data-id="hero"');
 		expect(landing).toContain(`<title>${en.landing.meta.titleMock}</title>`);
 		expect(landing).not.toMatch(/pricing|Free plan/i);
 	});

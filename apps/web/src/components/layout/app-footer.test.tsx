@@ -1,4 +1,5 @@
 import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetCurrentUserCache } from "../../features/auth/use-current-user";
 import { routes } from "../../routes";
@@ -26,7 +27,7 @@ const CASES: [string, Record<string, MockRoute>, () => Promise<unknown>][] = [
 	[
 		"/",
 		{ "GET /api/v1/users/me": UNAUTHENTICATED },
-		() => screen.findAllByRole("link", { name: "Get started now" }),
+		() => screen.findByRole("heading", { level: 1 }),
 	],
 	[
 		"/docs/quick-start",
@@ -56,18 +57,42 @@ describe("AppFooter placement", () => {
 	});
 
 	it.each(CASES)(
-		"%s has exactly one footer with the feedback link",
+		"%s has exactly one footer with the feedback entry",
 		async (path, api, pageReady) => {
 			mockFetch(api);
 			renderRoutes(routes, path);
 			await pageReady();
-			const footers = document.querySelectorAll('[data-id="app-footer"]');
+			const footers = document.querySelectorAll(
+				'[data-id="app-footer"], [data-id="public-footer"]',
+			);
 			expect(footers).toHaveLength(1);
 			const [footer] = footers;
 			if (!(footer instanceof HTMLElement)) throw new Error("no footer");
+			// The signed-in footer has a button; the shared public footer only
+			// has links, so there it is a link the layout turns into the form.
+			const signedIn = footer.dataset.id === "app-footer";
 			expect(
-				within(footer).getByRole("button", { name: "Feedback / Contact" }),
+				within(footer).getByRole(signedIn ? "button" : "link", {
+					name: "Feedback / Contact",
+				}),
 			).toBeVisible();
+			// The shared language and theme switches, signed in or not.
+			expect(within(footer).getByRole("group", { name: "Language" })).toBe(
+				footer.querySelector('[data-id="lang-switch"]'),
+			);
+			expect(
+				footer.querySelector('[data-id="theme-switch"]'),
+			).toBeInTheDocument();
 		},
 	);
+
+	it("opens the feedback form from the public footer's link", async () => {
+		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
+		renderRoutes(routes, "/docs/quick-start");
+		await screen.findByRole("heading", { level: 1 });
+		const link = document.querySelector('[data-id="foot-feedback"]');
+		if (!(link instanceof HTMLElement)) throw new Error("no feedback link");
+		await userEvent.click(link);
+		expect(await screen.findByRole("dialog")).toBeInTheDocument();
+	});
 });

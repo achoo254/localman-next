@@ -5,11 +5,7 @@ import { seriousViolations } from "../../test/axe";
 import { LandingPage } from "./landing-page";
 import { ALL_FEATURES, renderWithFeatures } from "./landing-test-helpers";
 
-const ORDER = new Set([
-	"landing-hero",
-	"landing-live-sync",
-	"landing-mock-mcp",
-]);
+const ORDER = new Set(["hero", "landing-live-sync", "landing-mock-mcp"]);
 
 describe("landing block 'Instant Mock MCP'", () => {
 	beforeEach(() => {
@@ -31,11 +27,7 @@ describe("landing block 'Instant Mock MCP'", () => {
 		const order = [...container.querySelectorAll("[data-id]")]
 			.map((element) => element.getAttribute("data-id") ?? "")
 			.filter((id) => ORDER.has(id));
-		expect(order).toEqual([
-			"landing-hero",
-			"landing-live-sync",
-			"landing-mock-mcp",
-		]);
+		expect(order).toEqual(["hero", "landing-live-sync", "landing-mock-mcp"]);
 		expect(
 			container.querySelector('[data-id="landing-mock-mcp-snippet"] code'),
 		).toHaveTextContent(

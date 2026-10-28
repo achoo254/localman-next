@@ -7,10 +7,7 @@ export const layout: Messages["layout"] = {
 	projects: "Projects",
 	home: "Trang chủ Localman",
 	publicHeader: {
-		home: "Localman, về trang chủ",
-		nav: "Điều hướng chính",
 		features: "Tính năng",
-		signIn: "Đăng nhập",
 	},
 	appHeader: {
 		home: "Localman, về Projects",
@@ -35,11 +32,5 @@ export const layout: Messages["layout"] = {
 	footer: {
 		ecosystem: "Một app của {domain}",
 		feedback: "Góp ý / Liên hệ",
-	},
-	theme: {
-		legend: "Chế độ màu",
-		light: "Giao diện sáng",
-		dark: "Giao diện tối",
-		system: "Theo hệ thống",
 	},
 };

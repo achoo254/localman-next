@@ -2,7 +2,6 @@ import { Suspense, lazy } from "react";
 import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
 import { useDocumentTitle } from "../../lib/use-document-title";
-import { CtaBand, MidCta } from "./cta-band";
 import { DataModelingDemo } from "./data-modeling-demo";
 import { HeroSection } from "./hero-section";
 import { MoreFeaturesSection } from "./more-features-section";
@@ -24,11 +23,10 @@ const VnFakeDataTeaser = lazy(async () => ({
 }));
 
 /**
- * Public landing: hero, flagged feature blocks (Live Mock Sync, Mock MCP,
- * secrets staying in the browser), schema,
- * relations, a call to action right after the demos, "And more", the fake data tool link (flagged) and the
- * closing call to action. The footer comes
- * from `AppLayout`. The tab title follows the hero message; `index.html`
+ * Public landing: the shared hero with the sign-in card (the one call to
+ * action), flagged feature blocks (Live Mock Sync, Mock MCP, secrets
+ * staying in the browser), schema, relations, "And more" and the fake data
+ * tool link (flagged). Header and footer come from `AppLayout`. The tab title follows the hero message; `index.html`
  * carries the English one statically for crawlers (checked by a test).
  */
 export function LandingPage() {
@@ -43,9 +41,7 @@ export function LandingPage() {
 	);
 	return (
 		<>
-			<HeroSection
-				howItWorksHref={flags.liveMockSync ? "#live-sync" : "#relations"}
-			/>
+			<HeroSection />
 			{flags.liveMockSync ? (
 				<Suspense fallback={null}>
 					<LiveMockSyncSection />
@@ -63,14 +59,12 @@ export function LandingPage() {
 			) : null}
 			<DataModelingDemo />
 			<RelationsDemo />
-			<MidCta />
 			<MoreFeaturesSection />
 			{flags.vnFakeData ? (
 				<Suspense fallback={null}>
 					<VnFakeDataTeaser />
 				</Suspense>
 			) : null}
-			<CtaBand />
 		</>
 	);
 }

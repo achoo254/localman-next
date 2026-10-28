@@ -3,6 +3,13 @@ import { type LoginOptions, loginUrl } from "../../lib/api-url";
 import { isPlainLeftClick } from "../../lib/is-plain-left-click";
 import { navigateToLogin } from "../../platform/navigation";
 
+/**
+ * The app's sign-in page: the shared sign-in card, and the target of the
+ * public header's "Sign in" where sign-in has nowhere particular to return.
+ * `?returnTo=` names the in-app path to come back to.
+ */
+export const LOGIN_PAGE_PATH = "/login";
+
 export interface LoginLinkProps
 	extends Omit<ComponentProps<"a">, "href">,
 		LoginOptions {}

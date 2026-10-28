@@ -1,3 +1,4 @@
+import { SHELL_LOCALE_NAMES } from "@achoo254/app-shell";
 import { IconChevronDown, IconLanguage } from "@tabler/icons-react";
 import { buttonClassName } from "../components/ui/button";
 import {
@@ -8,8 +9,8 @@ import {
 	DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import { cn } from "../lib/cn";
+import { LOCALES } from "../lib/shared-preferences";
 import { useI18n } from "./i18n-context";
-import { LOCALE_NAMES } from "./locale-names";
 import { useChooseLocale } from "./use-choose-locale";
 
 export interface LanguageSwitcherProps {
@@ -28,7 +29,7 @@ export function LanguageSwitcher({
 }: LanguageSwitcherProps) {
 	const { locale, t } = useI18n();
 	const choose = useChooseLocale();
-	const current = LOCALE_NAMES[locale];
+	const current = SHELL_LOCALE_NAMES[locale];
 
 	return (
 		<DropdownMenu>
@@ -55,14 +56,14 @@ export function LanguageSwitcher({
 					value={locale}
 					onValueChange={(value) => void choose(value)}
 				>
-					{Object.entries(LOCALE_NAMES).map(([code, name]) => (
+					{LOCALES.map((code) => (
 						<DropdownMenuRadioItem
 							key={code}
 							value={code}
 							lang={code}
 							data-id={`${dataId}-${code}`}
 						>
-							{name}
+							{SHELL_LOCALE_NAMES[code]}
 						</DropdownMenuRadioItem>
 					))}
 				</DropdownMenuRadioGroup>

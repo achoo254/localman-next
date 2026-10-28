@@ -20,10 +20,13 @@ const SIGNED_IN: Record<string, MockRoute> = {
 	"GET /api/v1/projects": { body: { items: [] } },
 };
 
-const SIGN_UP_HREF = "/auth/login?returnTo=%2Fprojects&prompt=create";
+const SIGN_IN_HREF = `/auth/login?returnTo=${encodeURIComponent("/projects")}`;
 
+/** The public top bar of the shared shell, or the signed-in one. */
 function topbar(): HTMLElement {
-	const bar = document.querySelector('header[data-id="topbar"]');
+	const bar = document.querySelector(
+		'header[data-id="public-header"], header[data-id="topbar"]',
+	);
 	if (!(bar instanceof HTMLElement)) throw new Error("no top bar");
 	return bar;
 }
@@ -58,35 +61,28 @@ describe("landing at / by session", () => {
 			bar.getByRole("button", { name: "Minh Anh · Account" }),
 		).toBeVisible();
 		expect(bar.queryByRole("link", { name: "Sign in" })).toBeNull();
-		for (const id of [
-			"landing-hero-cta",
-			"landing-mid-cta-button",
-			"landing-cta-button",
-		]) {
-			expect(byDataId(id)).toHaveAttribute("href", "/projects");
-			expect(byDataId(id)).toHaveAccessibleName("Open app");
-		}
-		// No call to action invites an existing account to sign up again.
-		expect(
-			screen.queryByRole("link", { name: /Get started|Start free/ }),
-		).toBeNull();
+		// The sign-in card gives way to the product preview.
+		expect(document.querySelector('[data-id="sign-in-card"]')).toBeNull();
+		expect(byDataId("landing-hero-preview")).toBeInTheDocument();
 		expect(router.state.location.pathname).toBe("/");
 	});
 
-	it("keeps Sign in and the sign-up calls to action for visitors", async () => {
+	it("offers visitors Sign in and the one sign-in card", async () => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		renderRoutes(routes, "/");
 		const bar = within(topbar());
-		expect(await bar.findByRole("link", { name: "Sign in" })).toBeVisible();
+		expect(await bar.findByRole("link", { name: "Sign in" })).toHaveAttribute(
+			"href",
+			"/login",
+		);
 		expect(bar.queryByRole("link", { name: "Open app" })).toBeNull();
-		for (const id of [
-			"landing-hero-cta",
-			"landing-mid-cta-button",
-			"landing-cta-button",
-		]) {
-			expect(byDataId(id)).toHaveAttribute("href", SIGN_UP_HREF);
-			expect(byDataId(id)).toHaveAccessibleName("Start free");
-		}
+		expect(byDataId("sign-in-cta")).toHaveAttribute("href", SIGN_IN_HREF);
+		expect(byDataId("sign-in-cta")).toHaveAccessibleName(
+			"Sign in with hoandat.com",
+		);
+		expect(
+			screen.queryByRole("link", { name: /Get started|Start free/ }),
+		).toBeNull();
 	});
 
 	it("paints the visitor's landing at once while the session loads", async () => {
@@ -100,7 +96,7 @@ describe("landing at / by session", () => {
 		expect(
 			within(topbar()).getByRole("link", { name: "Sign in" }),
 		).toBeVisible();
-		expect(byDataId("landing-hero-cta")).toHaveAccessibleName("Start free");
+		expect(byDataId("sign-in-cta")).toBeInTheDocument();
 	});
 
 	it("has no serious axe violations once signed in", async () => {

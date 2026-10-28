@@ -15,6 +15,12 @@ vi.mock("./platform/navigation", async (importOriginal) => ({
 
 const EMPTY_BELL = { body: { items: [], nextCursor: null, unreadCount: 0 } };
 
+const SIGNED_IN_FOR_LOGIN = {
+	"GET /api/v1/users/me": { body: makeUser() },
+	"GET /api/v1/notifications": EMPTY_BELL,
+	"GET /api/v1/projects": { body: { items: [] } },
+};
+
 describe("route guards", () => {
 	beforeEach(() => resetCurrentUserCache());
 	afterEach(() => {
@@ -48,35 +54,53 @@ describe("route guards", () => {
 		expect(navigateToLogin).not.toHaveBeenCalled();
 	});
 
-	it("shows the landing with login and sign-up links to anonymous visitors", async () => {
+	it("shows the landing with one sign-in call to action to anonymous visitors", async () => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		renderRoutes(routes, "/");
-		const login = await screen.findByRole("link", { name: "Sign in" });
-		const signUps = screen.getAllByRole("link", {
-			name: /^(Get started now|Start free)$/,
+		const header = await screen.findByRole("link", { name: "Sign in" });
+		// The header goes to the sign-in card of /login; the landing's own
+		// card signs in at once and comes back to the projects.
+		expect(header).toHaveAttribute("data-id", "public-sign-in");
+		expect(header).toHaveAttribute("href", "/login");
+		const cta = screen.getByRole("link", { name: "Sign in with hoandat.com" });
+		expect(cta).toHaveAttribute("href", "/auth/login?returnTo=%2Fprojects");
+		expect(
+			screen.queryByRole("link", { name: /Get started|Start free/ }),
+		).toBeNull();
+		await userEvent.click(cta);
+		expect(navigateToLogin).toHaveBeenCalledWith({ returnTo: "/projects" });
+	});
+
+	it("shows the sign-in card at /login and comes back to ?returnTo=", async () => {
+		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
+		renderRoutes(routes, "/login?returnTo=%2Finvite%2Fabc");
+		expect(
+			await screen.findByRole("heading", {
+				level: 1,
+				name: "Sign in to Localman",
+			}),
+		).toBeInTheDocument();
+		const cta = screen.getByRole("link", { name: "Sign in with hoandat.com" });
+		expect(cta).toHaveAttribute("href", "/auth/login?returnTo=%2Finvite%2Fabc");
+		await userEvent.click(cta);
+		expect(navigateToLogin).toHaveBeenCalledWith({ returnTo: "/invite/abc" });
+	});
+
+	it("ignores a ?returnTo= on /login that is not an in-app path", async () => {
+		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
+		renderRoutes(routes, "/login?returnTo=%2F%2Fevil.example");
+		const cta = await screen.findByRole("link", {
+			name: "Sign in with hoandat.com",
 		});
-		// Top bar, hero, the block after the demos and closing band all sign up the same way.
-		expect(login).toHaveAttribute("data-id", "topbar-login");
-		expect(signUps.map((link) => link.getAttribute("data-id"))).toEqual([
-			"topbar-signup",
-			"landing-hero-cta",
-			"landing-mid-cta-button",
-			"landing-cta-button",
-		]);
-		for (const link of signUps) {
-			expect(link).toHaveAttribute(
-				"href",
-				"/auth/login?returnTo=%2Fprojects&prompt=create",
-			);
-		}
-		const [signUp] = signUps;
-		if (!signUp) throw new Error("no sign-up link");
-		expect(login).toHaveAttribute("href", "/auth/login?returnTo=%2Fprojects");
-		await userEvent.click(signUp);
-		expect(navigateToLogin).toHaveBeenCalledWith({
-			returnTo: "/projects",
-			prompt: "create",
-		});
+		expect(cta).toHaveAttribute("href", "/auth/login?returnTo=%2Fprojects");
+	});
+
+	it("sends a signed-in visitor of /login on to ?returnTo=", async () => {
+		mockFetch(SIGNED_IN_FOR_LOGIN);
+		const { router } = renderRoutes(routes, "/login?returnTo=%2Fprojects");
+		await waitFor(() =>
+			expect(router.state.location.pathname).toBe("/projects"),
+		);
 	});
 
 	it("shows an error instead of looping when login keeps bouncing back", async () => {

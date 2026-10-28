@@ -17,7 +17,7 @@ test("a new user signs up, builds users and posts, and calls the mock API @smoke
 	page,
 }) => {
 	const suffix = uniqueSuffix();
-	await signIn(page, uniqueUsername("signup", suffix), "topbar-signup");
+	await signIn(page, uniqueUsername("signup", suffix));
 
 	await createProject(page, `Shop ${suffix}`);
 	await openProject(page, `Shop ${suffix}`);

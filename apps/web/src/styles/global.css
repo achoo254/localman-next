@@ -1,8 +1,13 @@
-/* Global stylesheet: Tailwind + Localman design tokens + base rules.
+/* Global stylesheet: Tailwind + the design tokens + base rules.
    No colour literal or raw spacing px lives here — everything resolves to a
-   custom property from @localman/design-tokens (enforced by check:tokens). */
+   custom property of tokens.css (enforced by check:tokens). tokens.css
+   comes from @achoo254/app-shell, the shared copy of every hoandat.com app
+   (packages/design-tokens/tokens.css was its origin and must stay equal,
+   scripts/check-tokens/shared-tokens.test.ts); app-shell.css styles the
+   shared signed-out pages and the footer switches (classes `shell-*`). */
 @import "tailwindcss";
-@import "@localman/design-tokens/tokens.css";
+@import "@achoo254/app-shell/tokens.css";
+@import "@achoo254/app-shell/app-shell.css";
 
 /* Self-hosted fonts (latin, latin-ext, vietnamese), declared by hand so
    Vietnamese pages do not also download the latin-ext files. See the

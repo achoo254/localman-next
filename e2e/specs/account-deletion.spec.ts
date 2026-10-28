@@ -28,12 +28,12 @@ test("a user deletes their account from Account and stays signed out @smoke", as
 	const probe = page.waitForResponse("**/api/v1/users/me");
 	await page.goto("/docs/quick-start");
 	expect((await probe).status()).toBe(401);
-	await expect(page.getByTestId("topbar-login")).toBeVisible();
+	await expect(page.getByTestId("public-sign-in")).toBeVisible();
 	expect(new URL(page.url()).pathname).toBe("/docs/quick-start");
 
 	// Signing in again with the live IdP session stops at a choice; only the
 	// click makes a new, empty account.
-	await page.getByTestId("topbar-login").click();
+	await page.getByTestId("public-sign-in").click();
 	await page.waitForURL("**/?authError=account_deleted");
 	await expect(page.getByTestId("landing-auth-error")).toBeVisible();
 	await page.getByTestId("landing-auth-error-recreate").click();
@@ -57,6 +57,6 @@ test("the legal pages and the deletion page open without signing in @smoke", asy
 	// Sign-up shows the terms; every page footer links all three pages.
 	await page.goto("/");
 	await expect(page.getByTestId("landing-hero-legal")).toContainText("Terms");
-	await page.getByTestId("app-footer-legal-privacy").click();
+	await page.getByTestId("foot-privacy").click();
 	await page.waitForURL("**/privacy");
 });
