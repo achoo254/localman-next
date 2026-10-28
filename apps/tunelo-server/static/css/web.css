@@ -1,5 +1,7 @@
-/* Tunelo web console. Colours, spacing, radii and fonts come only from
-   tokens.css (a verbatim copy of packages/design-tokens/tokens.css). */
+/* Tunelo web console: the page bodies. The header, page frame, footer and
+   switches come from @achoo254/app-shell (app-shell.css), loaded before
+   this file with its tokens.css; colours, spacing, radii and fonts come
+   only from those tokens. */
 
 *,
 *::before,
@@ -12,29 +14,19 @@ html {
 	text-size-adjust: 100%;
 }
 
+/* the shell (.shell) draws the page and its grid; the body only frames it */
 body {
 	margin: 0;
-	min-height: 100vh;
-	display: flex;
-	flex-direction: column;
-	font-family: var(--font-sans);
-	font-size: 1rem;
-	line-height: 1.55;
-	color: var(--c-text);
 	background-color: var(--c-bg);
-	background-image:
-		linear-gradient(var(--c-grid) 1px, transparent 1px),
-		linear-gradient(90deg, var(--c-grid) 1px, transparent 1px);
-	background-size: var(--grid-size) var(--grid-size);
-	overflow-wrap: anywhere;
 }
 
 a {
 	color: var(--c-primary);
 }
 
-a:focus-visible,
-button:focus-visible {
+/* the page's own links and buttons; the shell rings its own */
+.page a:focus-visible,
+.page button:focus-visible {
 	outline: none;
 	box-shadow: var(--shadow-focus-primary);
 	border-radius: var(--radius-sm);
@@ -52,13 +44,6 @@ pre {
 	font-family: var(--font-mono);
 }
 
-.container {
-	width: 100%;
-	max-width: var(--container);
-	margin: 0 auto;
-	padding: 0 var(--gutter);
-}
-
 .muted {
 	color: var(--c-text-muted);
 	font-size: 0.875rem;
@@ -73,82 +58,7 @@ pre {
 	white-space: nowrap;
 }
 
-/* Top bar, as on the account app (auth-next static/css/app.css): the mark
-   (24px) and the bold name, small mono links with the sign-in as a tinted pill */
-.topbar {
-	position: sticky;
-	top: 0;
-	z-index: 30;
-	background: color-mix(in srgb, var(--c-bg) 82%, transparent);
-	backdrop-filter: blur(10px);
-	border-bottom: 1px solid var(--c-border-subtle);
-}
-
-.topbar-inner {
-	min-height: var(--topbar-h);
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: var(--space-3);
-}
-
-.brand {
-	display: inline-flex;
-	align-items: center;
-	gap: var(--space-2);
-	min-height: 44px;
-	color: var(--c-text);
-	font-family: var(--font-sans);
-	font-size: 1rem;
-	text-decoration: none;
-}
-
-.brand b {
-	color: var(--c-primary);
-}
-
-.brand-mark {
-	display: block;
-	flex: none;
-	width: 24px;
-	height: 24px;
-}
-
-.topbar-actions {
-	display: flex;
-	align-items: center;
-	gap: var(--space-1);
-	min-width: 0;
-}
-
-.topbar-link {
-	font-family: var(--font-mono);
-	font-size: 13px;
-	font-weight: 600;
-	color: var(--c-text-muted);
-	text-decoration: none;
-	white-space: nowrap;
-	padding: var(--space-2) var(--space-3);
-	border: 0;
-	border-radius: var(--radius-sm);
-	background: transparent;
-	cursor: pointer;
-	transition:
-		background-color var(--dur-fast) var(--ease-standard),
-		color var(--dur-fast) var(--ease-standard);
-}
-
-.topbar-link:hover {
-	color: var(--c-text);
-	background: color-mix(in srgb, var(--c-text) 6%, transparent);
-}
-
-.topbar-cta,
-.topbar-cta:hover {
-	color: var(--c-primary);
-	background: color-mix(in srgb, var(--c-primary) 10%, transparent);
-}
-
+/* "Signed in as …" before the sign-out button (from 480px up) */
 .topbar-user {
 	color: var(--c-text-muted);
 	font-size: 0.875rem;
@@ -157,27 +67,6 @@ pre {
 	white-space: nowrap;
 	max-width: 280px;
 	padding-inline: var(--space-2);
-}
-
-/* touch screens and phones: every header and footer link is a 44px target */
-@media (pointer: coarse), (max-width: 479px) {
-	.topbar-link,
-	.foot-link,
-	.lang-option {
-		display: inline-flex;
-		align-items: center;
-		min-height: 44px;
-	}
-}
-
-@media (max-width: 479px) {
-	.topbar-link {
-		padding-inline: var(--space-2);
-	}
-}
-
-.inline-form {
-	margin: 0;
 }
 
 /* Buttons */
@@ -227,12 +116,12 @@ pre {
 
 /* Page */
 .page {
-	flex: 1;
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-6);
 	padding-top: var(--space-6);
 	padding-bottom: var(--space-7);
+	overflow-wrap: anywhere;
 }
 
 .notice {
@@ -461,71 +350,7 @@ pre {
 	font-weight: 600;
 }
 
-/* Footer, as on the account app: the language pill, then one quiet row */
-.page-foot {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: var(--space-3);
-	padding-bottom: var(--space-7);
-}
-
-.lang-switch {
-	display: inline-flex;
-	flex-wrap: wrap;
-	justify-content: center;
-	gap: 2px;
-	padding: 2px;
-	border: 1px solid var(--c-border);
-	border-radius: var(--radius-full);
-	background: var(--c-surface);
-}
-
-.lang-option {
-	font-family: var(--font-mono);
-	font-size: 13px;
-	font-weight: 600;
-	color: var(--c-text-muted);
-	text-decoration: none;
-	padding: var(--space-1) var(--space-3);
-	border: 1px solid transparent;
-	border-radius: var(--radius-full);
-}
-
-.lang-option:hover {
-	color: var(--c-text);
-}
-
-.lang-option[aria-current="true"] {
-	color: var(--c-primary);
-	background: color-mix(in srgb, var(--c-primary) 8%, var(--c-surface));
-	border-color: color-mix(in srgb, var(--c-primary) 30%, var(--c-surface));
-}
-
-.foot-links {
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: center;
-	column-gap: var(--space-4);
-}
-
-.foot-link {
-	font-size: 13px;
-	color: var(--c-text-muted);
-	text-decoration: none;
-}
-
-.foot-link:hover {
-	color: var(--c-text);
-	text-decoration: underline;
-	text-underline-offset: 2px;
-}
-
 @media (max-width: 479px) {
-	.hide-sm {
-		display: none;
-	}
-
 	.card {
 		padding: var(--space-4);
 	}

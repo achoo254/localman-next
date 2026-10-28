@@ -3,10 +3,7 @@ import type { Messages } from "./messages.js";
 export const vi: Messages = {
 	"meta.homeTitle": "Tunelo: URL công khai cho server trên máy bạn",
 	"meta.tunnelsTitle": "Tunnel của bạn · Tunelo",
-	"nav.home": "Trang chủ Tunelo",
-	"nav.signIn": "Đăng nhập",
 	"nav.signOut": "Đăng xuất",
-	"nav.language": "Ngôn ngữ",
 	"nav.account": "Đã đăng nhập: {name}",
 	"home.eyebrow": "Tunnel cho lập trình viên",
 	"home.title": "Đưa server trên máy bạn lên internet bằng một lệnh",
@@ -51,10 +48,6 @@ export const vi: Messages = {
 	"error.idp_unavailable":
 		"Dịch vụ đăng nhập tạm thời không truy cập được. Vui lòng thử lại sau ít phút.",
 	"error.csrf": "Yêu cầu đã hết hạn. Tải lại trang rồi thử lại.",
-	"nav.accountNav": "Tài khoản",
 	"meta.description":
 		"Tunelo cấp cho ứng dụng đang chạy trên máy bạn một địa chỉ HTTPS công khai, hoặc một cổng TCP, chỉ bằng một lệnh.",
-	"footer.ecosystem": "Một app của {domain}",
-	"footer.privacy": "Chính sách quyền riêng tư",
-	"footer.terms": "Điều khoản sử dụng",
 };

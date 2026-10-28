@@ -3,10 +3,7 @@ import type { Messages } from "./messages.js";
 export const zhCn: Messages = {
 	"meta.homeTitle": "Tunelo：为本地服务提供公网 URL",
 	"meta.tunnelsTitle": "你的隧道 · Tunelo",
-	"nav.home": "Tunelo 首页",
-	"nav.signIn": "登录",
 	"nav.signOut": "退出登录",
-	"nav.language": "语言",
 	"nav.account": "已登录：{name}",
 	"home.eyebrow": "面向开发者的隧道",
 	"home.title": "一条命令，把本地服务放到互联网上",
@@ -47,10 +44,6 @@ export const zhCn: Messages = {
 	"error.access_denied": "登录已取消。",
 	"error.idp_unavailable": "登录服务暂时无法访问，请稍后重试。",
 	"error.csrf": "请求已过期。请刷新页面后重试。",
-	"nav.accountNav": "账号",
 	"meta.description":
 		"Tunelo 只需一条命令，就能为你机器上运行的应用提供一个公开的 HTTPS 地址或一个 TCP 端口。",
-	"footer.ecosystem": "{domain} 旗下应用",
-	"footer.privacy": "隐私政策",
-	"footer.terms": "使用条款",
 };

@@ -1,11 +1,14 @@
 import { execSync } from "node:child_process";
 import {
+	copyFileSync,
 	cpSync,
 	existsSync,
+	mkdirSync,
 	readFileSync,
 	rmSync,
 	writeFileSync,
 } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
@@ -78,6 +81,23 @@ cpSync(resolve(root, "apps/tunelo-server/static"), resolve(distDir, "static"), {
 	recursive: true,
 });
 console.log("Copied web console assets to dist/tunelo-server/static");
+
+// The shared shell's files (@achoo254/app-shell is bundled into server.mjs,
+// not installed on the VPS): static/app-shell, served at /assets/app-shell.
+const serverRequire = createRequire(
+	resolve(root, "apps/tunelo-server/package.json"),
+);
+const appShellOut = resolve(distDir, "static/app-shell");
+mkdirSync(appShellOut, { recursive: true });
+for (const file of ["tokens.css", "app-shell.css", "app-shell-enhance.js"]) {
+	copyFileSync(
+		serverRequire.resolve(`@achoo254/app-shell/${file}`),
+		resolve(appShellOut, file),
+	);
+}
+console.log(
+	"Copied @achoo254/app-shell assets to dist/tunelo-server/static/app-shell",
+);
 
 console.log(
 	"Build complete: dist/tunelo-server/server.mjs + package.json + static/",

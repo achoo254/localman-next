@@ -172,6 +172,8 @@ describe("signed-out home", () => {
 		expect(failed.body).toContain('data-id="page-notice"');
 		const odd = await harness.request("/?error=%3Cscript%3E");
 		expect(odd.body).not.toContain("page-notice");
-		expect(odd.body).not.toContain("<script");
+		// The only script tag is the shell's own file.
+		expect(odd.body.match(/<script/g)).toHaveLength(1);
+		expect(odd.body).not.toMatch(/<script>|&lt;script&gt;/);
 	});
 });

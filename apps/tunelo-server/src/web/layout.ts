@@ -1,8 +1,12 @@
+import { PublicPage } from "@achoo254/app-shell";
+import { type ReactElement, createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { currentTenant } from "../tenancy/tunnel-tenant.js";
+import { APP_SHELL_PATH } from "./app-shell-assets.js";
 import { BRAND_ICON_LINKS } from "./brand-icons.js";
 import { footLinks } from "./brand.js";
-import { type HtmlValue, type SafeHtml, html } from "./html.js";
-import { LOCALES, LOCALE_NAMES } from "./i18n/locale.js";
+import { type HtmlValue, SafeHtml, html } from "./html.js";
+import { LOCALES, type Locale } from "./i18n/locale.js";
 import type { Translator } from "./i18n/messages.js";
 
 /** Path of the language switcher (see page-routes.ts). */
@@ -27,47 +31,83 @@ export interface LayoutOptions {
 
 /** The Tunelo mark, AI-drawn (static/img); decorative, the name follows it. */
 export const BRAND_MARK_PATH = "/assets/img/tunelo-mark-128.webp";
-const BRAND_MARK = html`<img class="brand-mark" src="${BRAND_MARK_PATH}" width="24" height="24" alt="">`;
 
 /** Link preview picture (static/img), AI-drawn, 1200 × 630. */
 export const OG_IMAGE_PATH = "/assets/img/og-image.jpg";
 
-function accountActions(
-	i18n: Translator,
-	account: SignedInChrome | null,
-): SafeHtml {
-	if (!account) {
-		return html`<a class="topbar-link topbar-cta" href="${LOGIN_PATH}" data-id="topbar-sign-in">${i18n.t("nav.signIn")}</a>`;
-	}
-	return html`${
+/**
+ * In place of the sign-in pill once signed in: who (from 480px up) and a
+ * sign-out button posting the CSRF token, no script.
+ */
+function accountSlot(i18n: Translator, account: SignedInChrome): ReactElement {
+	return createElement(
+		"form",
+		{
+			className: "shell-topbar-form",
+			method: "post",
+			action: LOGOUT_PATH,
+			"data-id": "topbar-sign-out-form",
+		},
 		account.label
-			? html`<span class="topbar-user hide-sm" data-id="topbar-user">${i18n.t("nav.account", { name: account.label })}</span>`
-			: ""
-	}<form class="inline-form" method="post" action="${LOGOUT_PATH}" data-id="topbar-sign-out-form">
-<input type="hidden" name="csrf" value="${account.csrfToken}">
-<button class="topbar-link" type="submit" data-id="topbar-sign-out">${i18n.t("nav.signOut")}</button>
-</form>`;
-}
-
-/** Plain links, no script: each one sets the language cookie and comes back. */
-function languageSwitcher(i18n: Translator): SafeHtml {
-	return html`<nav class="lang-switch" aria-label="${i18n.t("nav.language")}" data-id="lang-switch">${LOCALES.map(
-		(locale) =>
-			html`<a class="lang-option" href="${LANGUAGE_PATH}?set=${locale}" lang="${locale}" hreflang="${locale}"${
-				locale === i18n.locale ? html` aria-current="true"` : ""
-			} data-id="lang-${locale}">${LOCALE_NAMES[locale]}</a>`,
-	)}</nav>`;
+			? createElement(
+					"span",
+					{
+						className: "topbar-user shell-hide-phone",
+						"data-id": "topbar-user",
+					},
+					i18n.t("nav.account", { name: account.label }),
+				)
+			: null,
+		createElement("input", {
+			type: "hidden",
+			name: "csrf",
+			value: account.csrfToken,
+		}),
+		createElement(
+			"button",
+			{
+				type: "submit",
+				className: "shell-topbar-link",
+				"data-id": "topbar-sign-out",
+			},
+			i18n.t("nav.signOut"),
+		),
+	);
 }
 
 /**
- * Under every page, as on the account app (auth-next layout.ts): the
- * language pill, then "An app from <domain>", and the privacy policy and
- * terms. Tunelo has none of its own: it is part of the Localman suite, so
- * they are Localman's.
+ * Header, page frame and footer of the shared app shell
+ * (@achoo254/app-shell), rendered here without client React: language
+ * links to /lang, the theme switch run by app-shell-enhance.js, and the
+ * privacy policy and terms of Localman, whose suite Tunelo belongs to.
  */
-function pageFoot(i18n: Translator): SafeHtml {
+function shellPage(options: LayoutOptions): string {
+	const { i18n, account } = options;
 	const { domain, localmanUrl } = footLinks();
-	return html`<footer class="page-foot container">${languageSwitcher(i18n)}<p class="foot-links"><a class="foot-link" href="https://${domain}" data-id="foot-home">${i18n.t("footer.ecosystem", { domain })}</a><a class="foot-link" href="${localmanUrl}/privacy" data-id="foot-privacy">${i18n.t("footer.privacy")}</a><a class="foot-link" href="${localmanUrl}/terms" data-id="foot-terms">${i18n.t("footer.terms")}</a></p></footer>`;
+	const body = html`${
+		options.notice
+			? html`<p class="notice" role="alert" data-id="page-notice">${options.notice}</p>`
+			: ""
+	}${options.body}`;
+	return renderToStaticMarkup(
+		createElement(PublicPage<Locale>, {
+			brand: { appName: "Tunelo", domain, markSrc: BRAND_MARK_PATH },
+			locale: i18n.locale,
+			locales: LOCALES,
+			languageHref: (locale) =>
+				`${LANGUAGE_PATH}?${new URLSearchParams({ set: locale }).toString()}`,
+			signInHref: LOGIN_PATH,
+			accountSlot: account ? accountSlot(i18n, account) : undefined,
+			privacyHref: `${localmanUrl}/privacy`,
+			termsHref: `${localmanUrl}/terms`,
+			// biome-ignore lint/correctness/noChildrenProp: PublicPageProps requires children among the props
+			children: createElement("div", {
+				className: "page",
+				// biome-ignore lint/security/noDangerouslySetInnerHtml: the body is SafeHtml, built by the escaping `html` template
+				dangerouslySetInnerHTML: { __html: body.value },
+			}),
+		}),
+	);
 }
 
 /** Link previews: title, description and the share image by absolute URL. */
@@ -86,11 +126,15 @@ function shareTags(i18n: Translator, title: string): SafeHtml {
 }
 
 /**
- * Shared shell of every console page: token CSS, the Tunelo wordmark, the
- * account actions, the language switcher and no script at all.
+ * Every console page: the shell's theme script first (an external file
+ * that applies the stored theme before the first paint; the CSP allows no
+ * inline script), fonts, the shell's tokens and stylesheet, the console's
+ * own CSS, then the page in the shared header, frame and footer.
  */
 export function renderLayout(options: LayoutOptions): string {
 	const { i18n } = options;
+	// React escapes every value it renders, so its markup is safe as is.
+	const shell = new SafeHtml(shellPage(options));
 	const page = html`<!DOCTYPE html>
 <html lang="${i18n.locale}">
 <head>
@@ -101,20 +145,14 @@ export function renderLayout(options: LayoutOptions): string {
 <title>${options.title}</title>
 ${shareTags(i18n, options.title)}
 ${BRAND_ICON_LINKS}
+<script src="${APP_SHELL_PATH}/app-shell-enhance.js"></script>
 <link rel="stylesheet" href="/assets/css/fonts.css">
-<link rel="stylesheet" href="/assets/css/tokens.css">
+<link rel="stylesheet" href="${APP_SHELL_PATH}/tokens.css">
+<link rel="stylesheet" href="${APP_SHELL_PATH}/app-shell.css">
 <link rel="stylesheet" href="/assets/css/web.css">
 </head>
 <body>
-<header class="topbar"><div class="topbar-inner container">
-<a class="brand" href="/" aria-label="${i18n.t("nav.home")}" data-id="topbar-brand">${BRAND_MARK}<b>Tunelo</b></a>
-<nav class="topbar-actions" aria-label="${i18n.t("nav.accountNav")}">${accountActions(i18n, options.account)}</nav>
-</div></header>
-<main class="page container">
-${options.notice ? html`<p class="notice" role="alert" data-id="page-notice">${options.notice}</p>` : ""}
-${options.body}
-</main>
-${pageFoot(i18n)}
+${shell}
 </body>
 </html>`;
 	return page.value;

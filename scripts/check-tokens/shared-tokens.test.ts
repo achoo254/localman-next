@@ -5,9 +5,9 @@ import { describe, expect, it } from "vitest";
 /*
  * The web app loads tokens.css from @achoo254/app-shell, the copy every
  * hoandat.com app shares. packages/design-tokens/tokens.css, where that copy
- * came from, still feeds check:tokens, the contrast tests and the Tunelo
- * console (apps/tunelo-server/static/css/tokens.css); while both exist they
- * must be the same file, or the checks would pass on colours the web app
+ * came from, still feeds check:tokens and the contrast tests (the Tunelo
+ * console serves the shell's copy too); while both exist they must be the
+ * same file, or the checks would pass on colours the web app
  * does not use. A token change goes into shared-next first.
  */
 const webRequire = createRequire(

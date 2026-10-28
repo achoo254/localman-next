@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { useTestDatabase } from "../../test-support/test-mongo.js";
@@ -28,29 +29,57 @@ function page(cookie?: string) {
 }
 
 describe("headers and assets", () => {
-	test("CSP, no script, no inline style on every page", async () => {
+	test("CSP, only the shell's script file, no inline script or style on every page", async () => {
 		for (const res of [await page(), await page(session)]) {
 			expect(res.headers["content-security-policy"]).toBe(
 				CONTENT_SECURITY_POLICY,
 			);
 			expect(res.headers["x-content-type-options"]).toBe("nosniff");
 			expect(res.headers["cache-control"]).toBe("no-store");
-			expect(res.body).not.toMatch(/<script|<style| style=|\son\w+=/i);
+			expect(res.body.match(/<script\b[^>]*>[^<]*<\/script>/g)).toEqual([
+				'<script src="/assets/app-shell/app-shell-enhance.js"></script>',
+			]);
+			expect(res.body).not.toMatch(/<style| style=|\son\w+=/i);
 		}
 	});
 
-	test("serves tokens.css verbatim from packages/design-tokens", async () => {
-		const res = await harness.request("/assets/css/tokens.css");
-		expect(res.status).toBe(200);
-		expect(res.headers["content-type"]).toMatch(/text\/css/);
-		const source = fileURLToPath(
-			new URL(
-				"../../../../../packages/design-tokens/tokens.css",
-				import.meta.url,
-			),
+	test("the CSP runs scripts of this origin, never inline ones", () => {
+		const directives = new Map(
+			CONTENT_SECURITY_POLICY.split(";").map((part) => {
+				const [name = "", ...values] = part.trim().split(" ");
+				return [name, values] as const;
+			}),
 		);
-		expect(res.body).toBe(readFileSync(source, "utf8"));
-		expect((await harness.request("/assets/css/missing.css")).status).toBe(404);
+		expect(directives.get("script-src")).toEqual([
+			"'self'",
+			"https://static.cloudflareinsights.com",
+		]);
+		expect(directives.get("script-src-attr")).toEqual(["'none'"]);
+		expect(directives.get("style-src")).toEqual(["'self'"]);
+	});
+
+	test("serves the shared shell's tokens, stylesheet and theme script from the package", async () => {
+		const shell = createRequire(import.meta.url);
+		for (const [file, type] of [
+			["tokens.css", /text\/css/],
+			["app-shell.css", /text\/css/],
+			["app-shell-enhance.js", /javascript/],
+		] as const) {
+			const res = await harness.request(`/assets/app-shell/${file}`);
+			expect(res.status, file).toBe(200);
+			expect(res.headers["content-type"], file).toMatch(type);
+			expect(res.body, file).toBe(
+				readFileSync(shell.resolve(`@achoo254/app-shell/${file}`), "utf8"),
+			);
+		}
+		for (const other of [
+			"/assets/app-shell/index.js",
+			"/assets/app-shell/package.json",
+			"/assets/css/tokens.css",
+			"/assets/css/missing.css",
+		]) {
+			expect((await harness.request(other)).status, other).toBe(404);
+		}
 	});
 
 	test("serves the brand mark the layout shows", async () => {
@@ -79,10 +108,10 @@ describe("headers and assets", () => {
 			'href="https://hoandat.com" data-id="foot-home">An app from hoandat.com</a>',
 		);
 		expect(body).toContain(
-			'href="https://localman.hoandat.com/privacy" data-id="foot-privacy"',
+			'href="https://localman.hoandat.com/privacy" class="shell-foot-link" data-id="foot-privacy"',
 		);
 		expect(body).toContain(
-			'href="https://localman.hoandat.com/terms" data-id="foot-terms"',
+			'href="https://localman.hoandat.com/terms" class="shell-foot-link" data-id="foot-terms"',
 		);
 	});
 

@@ -6,6 +6,11 @@ import express, {
 	Router,
 } from "express";
 import type pino from "pino";
+import {
+	APP_SHELL_FILES,
+	APP_SHELL_PATH,
+	findAppShellDir,
+} from "./app-shell-assets.js";
 import { createAuthRouter } from "./auth-routes.js";
 import { describeError } from "./oidc-errors.js";
 import { createPageRouter } from "./page-routes.js";
@@ -18,13 +23,14 @@ import {
 import { type WebContextOptions, createWebContext } from "./web-context.js";
 
 /**
- * The console runs no script of its own. The one script allowed is the
- * Cloudflare Web Analytics beacon that Cloudflare injects (cookie-less page
- * views, as on every hoandat app; Localman's privacy page says so), with its
- * report endpoint.
+ * Scripts: only files of this origin (the shared shell's theme switch,
+ * /assets/app-shell/app-shell-enhance.js) and the Cloudflare Web Analytics
+ * beacon that Cloudflare injects (cookie-less page views, as on every
+ * hoandat app; Localman's privacy page says so), with its report endpoint.
+ * No inline script, no event-handler attribute.
  */
 export const CONTENT_SECURITY_POLICY =
-	"default-src 'self'; script-src https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; style-src 'self'; img-src 'self' data:; frame-ancestors 'none'";
+	"default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; script-src-attr 'none'; connect-src 'self' https://cloudflareinsights.com; style-src 'self'; img-src 'self' data:; frame-ancestors 'none'";
 
 /** `/`, `/lang`, `/auth/*`, `/assets/*`; case-insensitive like Express routes. */
 const CONSOLE_PATH = /^\/(?:lang\/?|auth\/.*|assets\/.*)?$/i;
@@ -58,6 +64,13 @@ export function createWebConsole(options: WebContextOptions): Router {
 	if (!staticDir) {
 		options.logger.error("Web console assets not found; pages render unstyled");
 	}
+	const appShellDir = findAppShellDir(staticDir);
+	if (!appShellDir) {
+		options.logger.error("App shell assets not found; pages render unstyled");
+	}
+	const appShellFiles: ReadonlySet<string> = new Set(
+		APP_SHELL_FILES.map((name) => `/${name}`),
+	);
 
 	const router = Router();
 	router.use((req, _res, next) => {
@@ -67,6 +80,13 @@ export function createWebConsole(options: WebContextOptions): Router {
 		next(mine ? undefined : "router");
 	});
 	router.use(securityHeaders);
+	if (appShellDir) {
+		const serve = express.static(appShellDir, { index: false, maxAge: "1h" });
+		router.use(APP_SHELL_PATH, (req, res, next) => {
+			if (appShellFiles.has(req.path)) serve(req, res, next);
+			else next();
+		});
+	}
 	if (staticDir) {
 		router.use(
 			"/assets",

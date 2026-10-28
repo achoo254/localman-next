@@ -89,6 +89,11 @@ Missing or invalid values only turn the console off (log line names the variable
 the API, relay and WebSockets keep running. Startup logs `Web console enabled`.
 Sessions are in the `web_sessions` collection (TTL); refresh tokens are bound to the
 IdP session, so signing out at `auth.hoandat.com` ends console sessions.
+The header, page frame, footer, language links and theme switch come from
+`@achoo254/app-shell` (bundled into `server.mjs`); `pnpm build:tunelo-server` copies
+its `tokens.css`, `app-shell.css` and `app-shell-enhance.js` to `static/app-shell/`,
+served at `/assets/app-shell/`. The console's CSP (set by the app, not nginx) allows
+scripts from `'self'` for that file plus the Cloudflare beacon, never inline script.
 Rollback: remove the two variables and restart `tunelo`, or restore
 `server.mjs.bak-pre-web-console` and `package.json.bak-pre-web-console`.
 

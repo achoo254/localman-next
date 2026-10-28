@@ -6,10 +6,7 @@
 export const en = {
 	"meta.homeTitle": "Tunelo: public URLs for your local servers",
 	"meta.tunnelsTitle": "Your tunnels · Tunelo",
-	"nav.home": "Tunelo home",
-	"nav.signIn": "Sign in",
 	"nav.signOut": "Sign out",
-	"nav.language": "Language",
 	"nav.account": "Signed in as {name}",
 	"home.eyebrow": "Tunnels for developers",
 	"home.title": "Put a local server on the internet with one command",
@@ -54,10 +51,6 @@ export const en = {
 	"error.idp_unavailable":
 		"The sign-in service is not reachable right now. Please try again shortly.",
 	"error.csrf": "That request expired. Reload the page and try again.",
-	"nav.accountNav": "Account",
 	"meta.description":
 		"Tunelo gives the app running on your machine a public HTTPS address, or a TCP port, with one command.",
-	"footer.ecosystem": "An app from {domain}",
-	"footer.privacy": "Privacy policy",
-	"footer.terms": "Terms of use",
 } as const;
