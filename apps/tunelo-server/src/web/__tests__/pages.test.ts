@@ -123,8 +123,8 @@ describe("signed-in tunnel list", () => {
 		"renders in %s with every placeholder filled",
 		async (locale) => {
 			for (const cookie of [
-				`${session}; tunelo_lang=${locale}`,
-				`tunelo_lang=${locale}`,
+				`${session}; hd_lang=${locale}`,
+				`hd_lang=${locale}`,
 			]) {
 				const res = await page(cookie);
 				expect(res.body).toContain(`<html lang="${locale}">`);
@@ -132,7 +132,7 @@ describe("signed-in tunnel list", () => {
 			}
 			http = [];
 			tcp = [];
-			const empty = await page(`${session}; tunelo_lang=${locale}`);
+			const empty = await page(`${session}; hd_lang=${locale}`);
 			expect(empty.body).not.toMatch(/\{\w+\}/);
 		},
 	);
@@ -162,9 +162,20 @@ describe("signed-out home", () => {
 		const set = await harness.request("/lang?set=vi");
 		expect(set.status).toBe(303);
 		expect(set.headers.location).toBe("/");
-		expect(set.cookies.get("tunelo_lang")).toBe("vi");
+		expect(set.cookies.get("hd_lang")).toBe("vi");
 		const bogus = await harness.request("/lang?set=fr");
-		expect(bogus.cookies.has("tunelo_lang")).toBe(false);
+		expect(bogus.cookies.has("hd_lang")).toBe(false);
+	});
+
+	test("the shared language cookie wins over Tunelo's older one", async () => {
+		const both = await harness.request("/", {
+			headers: { cookie: "tunelo_lang=zh-CN; hd_lang=vi" },
+		});
+		expect(both.body).toContain('<html lang="vi">');
+		const legacy = await harness.request("/", {
+			headers: { cookie: "tunelo_lang=zh-CN" },
+		});
+		expect(legacy.body).toContain('<html lang="zh-CN">');
 	});
 
 	test("a sign-in error is explained, unknown codes are ignored", async () => {

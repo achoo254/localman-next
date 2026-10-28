@@ -14,7 +14,10 @@ export interface WebCookies {
 	readonly session: CookieSpec;
 	/** Sealed state, nonce and PKCE verifier of one sign-in in progress. */
 	readonly auth: CookieSpec;
+	/** The language every hoandat.com app shares (`hd_lang`); readable by their pages, so not HttpOnly. */
 	readonly lang: CookieSpec;
+	/** Tunelo's own language cookie before the shared one, still read when the shared one is absent. */
+	readonly legacyLang: string;
 }
 
 /**
@@ -41,7 +44,11 @@ export function webCookies(publicUrl: string): WebCookies {
 			name: `${prefix}tunelo_auth`,
 			options: { ...base, maxAge: AUTH_TRANSACTION_TTL_MS },
 		},
-		lang: { name: "tunelo_lang", options: { ...base, maxAge: YEAR_MS } },
+		lang: {
+			name: "hd_lang",
+			options: { ...base, httpOnly: false, maxAge: YEAR_MS },
+		},
+		legacyLang: "tunelo_lang",
 	};
 }
 

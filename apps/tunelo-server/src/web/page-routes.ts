@@ -1,4 +1,6 @@
+import { cookieDomainFor } from "@achoo254/app-shell/preferences";
 import { type Request, type Response, Router } from "express";
+import { footLinks } from "./brand.js";
 import { renderHomePage } from "./home-page.js";
 import { isLocale, pickLocale } from "./i18n/locale.js";
 import {
@@ -40,7 +42,8 @@ export function redirectWithNotice(res: Response, code: NoticeCode): void {
 export function requestTranslator(ctx: WebContext, req: Request): Translator {
 	return translator(
 		pickLocale(
-			readCookie(req, ctx.cookies.lang.name),
+			readCookie(req, ctx.cookies.lang.name) ??
+				readCookie(req, ctx.cookies.legacyLang),
 			req.headers["accept-language"],
 		),
 	);
@@ -88,7 +91,18 @@ export function createPageRouter(ctx: WebContext): Router {
 	// A GET that only stores a language preference; the console has one page.
 	router.get(LANGUAGE_PATH, (req, res) => {
 		const locale = req.query.set;
-		if (isLocale(locale)) setCookie(res, ctx.cookies.lang, locale);
+		if (isLocale(locale)) {
+			// On the root domain, so every hoandat.com app shows the same language.
+			const domain = cookieDomainFor(req.hostname, footLinks().domain);
+			const { lang } = ctx.cookies;
+			setCookie(
+				res,
+				domain === undefined
+					? lang
+					: { ...lang, options: { ...lang.options, domain } },
+				locale,
+			);
+		}
 		res.set("cache-control", "no-store");
 		res.redirect(303, "/");
 	});

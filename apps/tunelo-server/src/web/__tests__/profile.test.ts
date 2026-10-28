@@ -28,7 +28,7 @@ async function topBarUser(
 	locale = "en",
 ): Promise<string | null> {
 	const page = await harness.request("/", {
-		cookie: `${cookie}; tunelo_lang=${locale}`,
+		cookie: `${cookie}; hd_lang=${locale}`,
 	});
 	expect(page.body).toContain('action="/auth/logout"');
 	return TOP_BAR_USER.exec(page.body)?.[1] ?? null;
