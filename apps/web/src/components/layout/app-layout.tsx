@@ -1,9 +1,10 @@
 import {
 	PublicPage,
+	type ShellAction,
 	type ShellLink,
 	type ShellLinkComponent,
 } from "@achoo254/app-shell";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import { useFeatures } from "../../config/features";
 import { LOGIN_PAGE_PATH } from "../../features/auth/login-link";
@@ -31,33 +32,6 @@ const RouterLink: ShellLinkComponent = ({ href, ...rest }) =>
 		<Link to={href} {...rest} />
 	);
 
-/** `data-id` of the footer's "Feedback / Contact", which opens the form. */
-const FEEDBACK_LINK_ID = "foot-feedback";
-/** The same link's href: `#feedback` on any public page opens the form. */
-const FEEDBACK_HASH = "#feedback";
-
-/**
- * The footer's "Feedback / Contact" is a link of the shared footer (its
- * links are anchors); a click on it, or a page opened at `#feedback`, opens
- * the feedback form instead of following it.
- */
-function useFeedbackLink(): [boolean, (open: boolean) => void] {
-	const [open, setOpen] = useState(false);
-	useEffect(() => {
-		if (window.location.hash === FEEDBACK_HASH) setOpen(true);
-		function onClick(event: MouseEvent): void {
-			const target = event.target;
-			if (!(target instanceof Element)) return;
-			if (!target.closest(`a[data-id="${FEEDBACK_LINK_ID}"]`)) return;
-			event.preventDefault();
-			setOpen(true);
-		}
-		document.addEventListener("click", onClick);
-		return () => document.removeEventListener("click", onClick);
-	}, []);
-	return [open, setOpen];
-}
-
 /**
  * Public layout (landing, sign-in, invitations, docs, tools, legal, shared
  * collections): the shared header, footer and frame of every hoandat.com
@@ -73,7 +47,7 @@ export function AppLayout() {
 	const { secretVault } = useFeatures();
 	const { pathname, search } = useLocation();
 	const session = useCurrentUser();
-	const [feedbackOpen, setFeedbackOpen] = useFeedbackLink();
+	const [feedbackOpen, setFeedbackOpen] = useState(false);
 	const onLanding = pathname === "/";
 	const onLogin = pathname === LOGIN_PAGE_PATH;
 	const onDocs = pathname === "/docs" || pathname.startsWith("/docs/");
@@ -99,7 +73,7 @@ export function AppLayout() {
 			hideOnPhones: true,
 		},
 	];
-	const footerLinks: ShellLink[] = [
+	const footerLinks: (ShellLink | ShellAction)[] = [
 		{
 			href: LEGAL_PATHS.accountDelete,
 			label: t("legal.nav.deleteAccount"),
@@ -117,10 +91,11 @@ export function AppLayout() {
 				]
 			: []),
 		{ href: "/docs", label: t("layout.docs"), dataId: "foot-docs" },
+		// A button of the footer: "Feedback / Contact" opens the form in place.
 		{
-			href: FEEDBACK_HASH,
 			label: t("layout.footer.feedback"),
-			dataId: FEEDBACK_LINK_ID,
+			dataId: "foot-feedback",
+			onClick: () => setFeedbackOpen(true),
 		},
 	];
 

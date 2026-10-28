@@ -68,13 +68,9 @@ describe("AppFooter placement", () => {
 			expect(footers).toHaveLength(1);
 			const [footer] = footers;
 			if (!(footer instanceof HTMLElement)) throw new Error("no footer");
-			// The signed-in footer has a button; the shared public footer only
-			// has links, so there it is a link the layout turns into the form.
-			const signedIn = footer.dataset.id === "app-footer";
+			// A button in both footers: it opens the form, it goes nowhere.
 			expect(
-				within(footer).getByRole(signedIn ? "button" : "link", {
-					name: "Feedback / Contact",
-				}),
+				within(footer).getByRole("button", { name: "Feedback / Contact" }),
 			).toBeVisible();
 			// The shared language and theme switches, signed in or not.
 			expect(within(footer).getByRole("group", { name: "Language" })).toBe(
@@ -86,13 +82,16 @@ describe("AppFooter placement", () => {
 		},
 	);
 
-	it("opens the feedback form from the public footer's link", async () => {
+	it("opens the feedback form from the public footer's button", async () => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		renderRoutes(routes, "/docs/quick-start");
 		await screen.findByRole("heading", { level: 1 });
-		const link = document.querySelector('[data-id="foot-feedback"]');
-		if (!(link instanceof HTMLElement)) throw new Error("no feedback link");
-		await userEvent.click(link);
+		const button = document.querySelector('[data-id="foot-feedback"]');
+		if (!(button instanceof HTMLButtonElement)) {
+			throw new Error("no feedback button");
+		}
+		expect(button.type).toBe("button");
+		await userEvent.click(button);
 		expect(await screen.findByRole("dialog")).toBeInTheDocument();
 	});
 });
