@@ -60,7 +60,7 @@ export function ShellSessionLoading() {
 		<>
 			<div
 				data-id="auth-loading-topbar"
-				className="border-border-subtle border-b"
+				className="border-border-subtle border-b pt-[env(safe-area-inset-top)]"
 			>
 				<div className="mx-auto flex min-h-(--topbar-h) w-full max-w-page items-center justify-between gap-3 px-gutter">
 					<Skeleton className="h-6 w-28" />

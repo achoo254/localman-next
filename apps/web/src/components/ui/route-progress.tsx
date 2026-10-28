@@ -58,7 +58,7 @@ export function RouteProgress() {
 	return shown ? (
 		<ProgressBar
 			data-id="route-progress"
-			className="fixed inset-x-0 top-0 z-100"
+			className="fixed inset-x-0 top-[env(safe-area-inset-top)] z-100"
 		/>
 	) : null;
 }

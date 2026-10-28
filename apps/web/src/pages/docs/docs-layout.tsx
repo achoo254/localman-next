@@ -116,7 +116,7 @@ export function DocsLayout() {
 			data-id="docs"
 			className="grid gap-8 md:grid-cols-[13rem_minmax(0,1fr)] lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12"
 		>
-			<aside className="md:sticky md:top-[calc(var(--topbar-h)+var(--space-6))] md:self-start">
+			<aside className="md:sticky md:top-[calc(var(--header-h)+var(--space-6))] md:self-start">
 				<DocsToc pages={pages} />
 			</aside>
 			<div className="grid min-w-0 max-w-192 gap-12">

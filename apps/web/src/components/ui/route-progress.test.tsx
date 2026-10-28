@@ -44,7 +44,7 @@ describe("RouteProgress", () => {
 		await userEvent.click(screen.getByRole("link", { name: "Slow page" }));
 		await waitFor(() => expect(bar()).not.toBeNull());
 		expect(bar()).toHaveAttribute("aria-hidden", "true");
-		expect(bar()).toHaveClass("fixed", "top-0", "h-1");
+		expect(bar()).toHaveClass("fixed", "top-[env(safe-area-inset-top)]", "h-1");
 		act(() => finish());
 		expect(await screen.findByText("Slow done")).toBeInTheDocument();
 		await waitFor(() => expect(bar()).toBeNull());

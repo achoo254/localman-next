@@ -100,7 +100,7 @@ export function TreeCanvasFrame<T extends TreeItem>({
 				data-id={`${dataId}-viewport`}
 				className={cn(
 					"overflow-auto px-3 pt-4 pb-6 sm:px-6",
-					zoomable && "max-h-[calc(100dvh-var(--topbar-h))] cursor-grab",
+					zoomable && "max-h-[calc(100dvh-var(--header-h))] cursor-grab",
 					pan.panning && "cursor-grabbing select-none",
 				)}
 				onPointerDown={pan.onPointerDown}

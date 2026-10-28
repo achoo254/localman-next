@@ -220,7 +220,7 @@
 @layer base {
 	html {
 		-webkit-text-size-adjust: 100%;
-		scroll-padding-top: calc(var(--topbar-h) + var(--space-4));
+		scroll-padding-top: calc(var(--header-h) + var(--space-4));
 		/* In-page anchors (landing "Xem cách hoạt động") glide; the reduced
 		   motion block below turns this off. */
 		scroll-behavior: smooth;

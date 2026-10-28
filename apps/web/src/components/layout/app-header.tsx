@@ -42,7 +42,7 @@ export function AppHeader({
 			data-id="topbar"
 			// z-60: above the mobile drawers below the bar (z-40/z-50), so the
 			// app switcher's panel opens over them; below menus (z-80), modals.
-			className="sticky top-0 z-60 border-border-subtle border-b bg-bg/82 backdrop-blur-md"
+			className="sticky top-0 z-60 border-border-subtle border-b bg-bg/82 pt-[env(safe-area-inset-top)] backdrop-blur-md"
 		>
 			<div
 				className={cn(

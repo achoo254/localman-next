@@ -71,8 +71,10 @@
 	--gutter: 16px;
 	--container: 1120px;
 	--topbar-h: 64px;
-	/* Modals sit this far below the viewport top. */
-	--modal-offset-top: min(8vh, 72px);
+	/* The top bar plus the iPhone status bar above it (0 in a browser without one; needs viewport-fit=cover). */
+	--header-h: calc(var(--topbar-h) + env(safe-area-inset-top, 0px));
+	/* Modals sit this far below the viewport top, clear of the iPhone status bar. */
+	--modal-offset-top: calc(min(8vh, 72px) + env(safe-area-inset-top, 0px));
 	/* Tabler outline icons render at this stroke width. */
 	--icon-stroke: 1.5;
 	/* Signature background grid cell. */

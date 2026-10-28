@@ -94,7 +94,7 @@ export const RightRail = memo(function RightRail({
 						type="button"
 						tabIndex={-1}
 						aria-label={t("collections.rightRail.backdrop")}
-						className="fixed inset-x-0 top-(--topbar-h) bottom-0 z-40 cursor-default border-0 bg-backdrop md:hidden"
+						className="fixed inset-x-0 top-(--header-h) bottom-0 z-40 cursor-default border-0 bg-backdrop md:hidden"
 						onClick={() => setPanel(null)}
 					/>
 					<aside
@@ -102,7 +102,7 @@ export const RightRail = memo(function RightRail({
 						id={panelId}
 						aria-label={labels[panel]}
 						data-id={`right-panel-${panel}`}
-						className="flex w-85 min-h-0 flex-col border-border-subtle border-l bg-surface max-md:fixed max-md:top-(--topbar-h) max-md:right-0 max-md:bottom-0 max-md:z-50 max-md:max-w-[calc(100vw-3rem)] max-md:shadow-lg"
+						className="flex w-85 min-h-0 flex-col border-border-subtle border-l bg-surface max-md:fixed max-md:top-(--header-h) max-md:right-0 max-md:bottom-0 max-md:z-50 max-md:max-w-[calc(100vw-3rem)] max-md:shadow-lg"
 					>
 						<header className="flex items-center gap-2 border-border-subtle border-b py-2 pr-2 pl-3">
 							<h2 className="m-0 min-w-0 flex-1 truncate font-bold font-mono text-sm">

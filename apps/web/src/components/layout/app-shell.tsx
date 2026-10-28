@@ -18,7 +18,7 @@ function isWorkbench(handle: unknown): boolean {
 }
 
 const WORKBENCH_MAIN_CLASS =
-	"flex h-[calc(100dvh-var(--topbar-h)-1px)] min-h-0 w-full flex-col focus:outline-none";
+	"flex h-[calc(100dvh-var(--header-h)-1px)] min-h-0 w-full flex-col focus:outline-none";
 
 /**
  * Layout for signed-in pages (header, page, footer with the feedback

@@ -98,7 +98,7 @@ export function WorkbenchSidebar({
 					tabIndex={-1}
 					aria-label={t("apiClient.sidebar.close")}
 					data-id="sidebar-backdrop"
-					className="fixed inset-x-0 top-(--topbar-h) bottom-0 z-40 cursor-default border-0 bg-backdrop md:hidden"
+					className="fixed inset-x-0 top-(--header-h) bottom-0 z-40 cursor-default border-0 bg-backdrop md:hidden"
 					onClick={onDrawerClose}
 				/>
 			) : null}
@@ -108,7 +108,7 @@ export function WorkbenchSidebar({
 				data-id="sidebar-drawer"
 				className={cn(
 					"flex min-h-0 flex-none",
-					"max-md:fixed max-md:top-(--topbar-h) max-md:bottom-0 max-md:left-0 max-md:z-50 max-md:bg-surface max-md:shadow-lg",
+					"max-md:fixed max-md:top-(--header-h) max-md:bottom-0 max-md:left-0 max-md:z-50 max-md:bg-surface max-md:shadow-lg",
 					!drawerOpen && "max-md:hidden",
 				)}
 				onKeyDown={onKeyDown}
