@@ -12,8 +12,8 @@ export const en = {
 	"home.title": "Put a local server on the internet with one command",
 	"home.lead":
 		"Tunelo gives the app running on your machine a public HTTPS address under {domain}, or a TCP port for anything else. Sign in with your {brand} account to see every tunnel your machines have open.",
-	"home.cta": "Sign in with {brand}",
-	"home.ctaHint": "Google or GitHub, through {idpHost}.",
+	"home.signInTitle": "Sign in to Tunelo",
+	"home.signInBody": "See and manage every tunnel your machines have open.",
 	"steps.title": "Get started",
 	"steps.install.title": "Install the CLI",
 	"steps.install.body": "Needs Node.js 20 or later.",

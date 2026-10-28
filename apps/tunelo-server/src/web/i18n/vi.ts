@@ -9,8 +9,8 @@ export const vi: Messages = {
 	"home.title": "Đưa server trên máy bạn lên internet bằng một lệnh",
 	"home.lead":
 		"Tunelo cấp cho ứng dụng đang chạy trên máy bạn một địa chỉ HTTPS công khai dưới {domain}, hoặc một cổng TCP cho mọi thứ khác. Đăng nhập bằng tài khoản {brand} để xem mọi tunnel các máy của bạn đang mở.",
-	"home.cta": "Đăng nhập bằng {brand}",
-	"home.ctaHint": "Bằng Google hoặc GitHub, qua {idpHost}.",
+	"home.signInTitle": "Đăng nhập vào Tunelo",
+	"home.signInBody": "Xem và quản lý mọi tunnel các máy của bạn đang mở.",
 	"steps.title": "Bắt đầu",
 	"steps.install.title": "Cài CLI",
 	"steps.install.body": "Cần Node.js 20 trở lên.",

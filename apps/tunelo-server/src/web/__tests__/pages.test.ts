@@ -139,11 +139,16 @@ describe("signed-in tunnel list", () => {
 });
 
 describe("signed-out home", () => {
-	test("introduction, getting started and the sign-in button", async () => {
+	test("introduction, getting started and the shared sign-in card", async () => {
 		const res = await page();
 		expect(res.status).toBe(200);
 		expect(res.headers["content-type"]).toMatch(/text\/html/);
-		expect(res.body).toContain('href="/auth/login"');
+		// One call to action, the shared card's, worded like every hoandat.com app.
+		expect(res.body.match(/data-id="sign-in-cta"/g)).toHaveLength(1);
+		expect(res.body).toMatch(
+			/<a[^>]*href="\/auth\/login"[^>]*data-id="sign-in-cta"|<a[^>]*data-id="sign-in-cta"[^>]*href="\/auth\/login"/,
+		);
+		expect(res.body).not.toContain('data-id="home-sign-in"');
 		for (const command of [
 			"npm install -g https://github.com/achoo254/localman-next/releases/latest/download/tunelo.tgz",
 			"tunelo login",

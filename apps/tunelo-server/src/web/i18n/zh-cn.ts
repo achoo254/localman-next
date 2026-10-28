@@ -9,8 +9,8 @@ export const zhCn: Messages = {
 	"home.title": "一条命令，把本地服务放到互联网上",
 	"home.lead":
 		"Tunelo 为你电脑上运行的应用提供 {domain} 下的公网 HTTPS 地址，其他服务则可使用 TCP 端口。使用 {brand} 账号登录，即可查看你的各台机器当前打开的所有隧道。",
-	"home.cta": "使用 {brand} 登录",
-	"home.ctaHint": "通过 {idpHost} 使用 Google 或 GitHub 登录。",
+	"home.signInTitle": "登录 Tunelo",
+	"home.signInBody": "查看和管理你的设备正在开放的所有隧道。",
 	"steps.title": "快速开始",
 	"steps.install.title": "安装 CLI",
 	"steps.install.body": "需要 Node.js 20 或更高版本。",

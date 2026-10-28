@@ -1,4 +1,4 @@
-import { PublicPage } from "@achoo254/app-shell";
+import { PublicPage, SignInCard } from "@achoo254/app-shell";
 import { type ReactElement, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { currentTenant } from "../tenancy/tunnel-tenant.js";
@@ -156,4 +156,28 @@ ${shell}
 </body>
 </html>`;
 	return page.value;
+}
+
+/**
+ * The sign-in card every hoandat.com app shows to signed-out visitors
+ * (@achoo254/app-shell), rendered here as static HTML: its one call to
+ * action goes to /login, the note under it names the IdP's providers.
+ */
+export function signInCard(
+	i18n: Translator,
+	content: { readonly title: string; readonly description: string },
+): SafeHtml {
+	const { domain } = footLinks();
+	return new SafeHtml(
+		renderToStaticMarkup(
+			createElement(SignInCard, {
+				brand: { appName: "Tunelo", domain, markSrc: BRAND_MARK_PATH },
+				locale: i18n.locale,
+				signInHref: LOGIN_PATH,
+				title: content.title,
+				description: content.description,
+				headingLevel: 2,
+			}),
+		),
+	);
 }
