@@ -155,13 +155,13 @@ describe("inferSchema from a JSON sample", () => {
 		);
 	});
 
-	it("refuses input over 2 MB, before parsing", () => {
+	it("refuses input over 5 MB, before parsing", () => {
 		const big = `[${'{"a":"x"},'.repeat(MAX_INFERENCE_BYTES / 10)}{"a":"x"}]`;
 		expect(errorOf(inferSchema(big))).toBe("INPUT_TOO_LARGE");
 		expect(errorOf(inferSchema("é".repeat(MAX_INFERENCE_BYTES / 2 + 1)))).toBe(
 			"INPUT_TOO_LARGE",
 		);
-		const parsed = Array.from({ length: 300 }, () => ({ a: "x".repeat(8000) }));
+		const parsed = Array.from({ length: 700 }, () => ({ a: "x".repeat(8000) }));
 		expect(errorOf(inferSchema(parsed))).toBe("INPUT_TOO_LARGE");
 	});
 

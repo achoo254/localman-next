@@ -54,7 +54,7 @@ export function nameFromFile(fileName: string): string {
 		.slice(0, RESOURCE_NAME_MAX);
 }
 
-/** A pasted sample: an object or a non-empty array of objects, at most 2 MB. */
+/** A pasted sample: an object or a non-empty array of objects, at most 5 MB. */
 export function checkSample(
 	text: string,
 	t: Translate,

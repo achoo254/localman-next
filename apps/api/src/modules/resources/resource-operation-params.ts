@@ -18,8 +18,8 @@ export const SIZE_NOTE =
 export const RESOURCE_DATA_BODY_LIMIT = MAX_RESOURCE_BYTES + 512 * 1024;
 /**
  * Body limit of the imports. The source travels as a JSON string, where
- * quotes, backslashes and line breaks take two bytes: room for 2 MB of
+ * quotes, backslashes and line breaks take two bytes: room for 5 MB of
  * escaped CSV or JSON text, plus the other fields. The importer still
- * refuses a source over 2 MB itself (413 `INPUT_TOO_LARGE`).
+ * refuses a source over 5 MB itself (413 `INPUT_TOO_LARGE`).
  */
 export const IMPORT_BODY_LIMIT = 2 * MAX_INFERENCE_BYTES + 512 * 1024;

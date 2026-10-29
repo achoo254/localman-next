@@ -31,7 +31,7 @@ import { resourceView, toResourceView } from "./resource-view.js";
 const importInput = z.object({
 	projectId: projectIdParam,
 	format: z.enum(IMPORT_FORMATS),
-	// Text is measured by the importer (413 past 2 MB), not cut here.
+	// Text is measured by the importer (413 past 5 MB), not cut here.
 	input: z.union([
 		z.string().min(1),
 		z.array(z.unknown()),
@@ -53,7 +53,7 @@ export const importResources = defineOperation({
 	method: "POST",
 	path: `${RESOURCES_PATH}/import`,
 	summary: "Create resources with seed data from sample JSON, OpenAPI or CSV",
-	description: `Infers resources from \`input\` and creates them at the root in one go. format "json": an object or an array of objects (each object a record; arrays of objects inside become nested resources; an object of such arrays makes one resource per key). format "csv": the header names the fields, types come from the first 100 rows (UTF-8, quoted cells may hold commas). format "openapi": an OpenAPI 3.x JSON document; \`schema\` picks the components.schemas entry (default: the first top-level one) and includeRelated (default true) also creates the schemas it nests through array $ref; OpenAPI resources start empty. Input up to 2 MB; $ref outside the document is refused, never fetched. Field types and Faker methods are guessed from values and names; up to ${MAX_RECORDS_PER_RESOURCE} records per resource are kept. \`name\` renames the main (first) resource, \`names\` the others by the name a preview gave them. Call with dryRun first: it returns the resources (fields, up to 5 sample records), warnings with a code, \`resourcesLeft\` on the owner's plan and, for OpenAPI, \`schemaNames\`; nothing is created. Fails with 400/413 SCHEMA_IMPORT_FAILED (details.reason and its params, e.g. REF_CYCLE with cycle, EXTERNAL_REF with ref, CSV_QUOTE with row), 409 RESOURCE_NAME_TAKEN and 429 RATE_LIMITED (previews count too). ${PLAN_NOTE} ${SIZE_NOTE}`,
+	description: `Infers resources from \`input\` and creates them at the root in one go. format "json": an object or an array of objects (each object a record; arrays of objects inside become nested resources; an object of such arrays makes one resource per key). format "csv": the header names the fields, types come from the first 100 rows (UTF-8, quoted cells may hold commas). format "openapi": an OpenAPI 3.x JSON document; \`schema\` picks the components.schemas entry (default: the first top-level one) and includeRelated (default true) also creates the schemas it nests through array $ref; OpenAPI resources start empty. Input up to 5 MB; $ref outside the document is refused, never fetched. Field types and Faker methods are guessed from values and names; up to ${MAX_RECORDS_PER_RESOURCE} records per resource are kept. \`name\` renames the main (first) resource, \`names\` the others by the name a preview gave them. Call with dryRun first: it returns the resources (fields, up to 5 sample records), warnings with a code, \`resourcesLeft\` on the owner's plan and, for OpenAPI, \`schemaNames\`; nothing is created. Fails with 400/413 SCHEMA_IMPORT_FAILED (details.reason and its params, e.g. REF_CYCLE with cycle, EXTERNAL_REF with ref, CSV_QUOTE with row), 409 RESOURCE_NAME_TAKEN and 429 RATE_LIMITED (previews count too). ${PLAN_NOTE} ${SIZE_NOTE}`,
 	input: importInput,
 	output: z.object({
 		dryRun: z.boolean(),

@@ -12,7 +12,7 @@ export const resourceImport: Messages["resourceImport"] = {
 	openapi: {
 		label: "Tài liệu OpenAPI",
 		chooseFile: "Chọn file",
-		hint: "OpenAPI 3.0 hoặc 3.1 dạng JSON, tối đa 2 MB. Hãy chuyển YAML sang JSON trước. Chỉ đọc tham chiếu trong chính tài liệu (<code>#/components/…</code>).",
+		hint: "OpenAPI 3.0 hoặc 3.1 dạng JSON, tối đa 5 MB. Hãy chuyển YAML sang JSON trước. Chỉ đọc tham chiếu trong chính tài liệu (<code>#/components/…</code>).",
 		schema: "Schema",
 		schemaHint: {
 			other:
@@ -25,7 +25,7 @@ export const resourceImport: Messages["resourceImport"] = {
 	},
 	file: {
 		choose: "Chọn file CSV hoặc JSON",
-		drop: "hoặc thả file vào đây · tối đa 2 MB",
+		drop: "hoặc thả file vào đây · tối đa 5 MB",
 		hint: "CSV: dòng đầu là tiêu đề cột, giá trị ngăn bằng dấu phẩy, mã hoá UTF-8. Kiểu dữ liệu được đoán từ 100 dòng đầu.",
 		chosen: "{name} · {size} KB",
 		remove: "Bỏ file",
@@ -62,9 +62,9 @@ export const resourceImport: Messages["resourceImport"] = {
 	submit: "Tạo resource",
 	errors: {
 		tooLarge:
-			"File nặng {size} KB, vượt giới hạn 2 MB. Hãy dùng file nhỏ hơn hoặc tách file.",
-		pastedTooLarge: "Nội dung dán vào vượt 2 MB. Hãy dán mẫu nhỏ hơn.",
-		inputTooLarge: "Nguồn vượt 2 MB. Hãy dùng nguồn nhỏ hơn.",
+			"File nặng {size} KB, vượt giới hạn 5 MB. Hãy dùng file nhỏ hơn hoặc tách file.",
+		pastedTooLarge: "Nội dung dán vào vượt 5 MB. Hãy dán mẫu nhỏ hơn.",
+		inputTooLarge: "Nguồn vượt 5 MB. Hãy dùng nguồn nhỏ hơn.",
 		payloadTooLarge:
 			"Nguồn quá lớn để gửi sau khi mã hoá, ví dụ vì có nhiều dấu ngoặc kép hoặc xuống dòng. Hãy dùng nguồn nhỏ hơn.",
 		fileType: "Hãy chọn file .csv hoặc .json.",

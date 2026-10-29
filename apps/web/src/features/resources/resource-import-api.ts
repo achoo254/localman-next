@@ -17,7 +17,7 @@ export type ImportFormat = "json" | "openapi" | "csv";
 /** Body of the import, preview (dry run) and create alike. */
 export interface ImportRequest {
 	format: ImportFormat;
-	/** The source text (2 MB at most). */
+	/** The source text (5 MB at most). */
 	input: string;
 	/** Name of the main (first) resource. */
 	name?: string;

@@ -62,6 +62,18 @@
         proxy_pass http://127.0.0.1:4000;
     }
 
+    # Resource imports (…/resources/import, …/resources/from-schema: a 5 MB
+    # source, up to 10.5 MiB once JSON-escaped, IMPORT_BODY_LIMIT in
+    # resource-operation-params.ts) and PUT …/resources/:id/data (2.5 MiB,
+    # RESOURCE_DATA_BODY_LIMIT); 16m leaves the API its own JSON 413 past
+    # those caps instead of nginx's HTML page.
+    location ~ ^/api/v1/projects/[^/]+/resources/ {
+        limit_req zone=localman_api_large burst=40 nodelay;
+        client_max_body_size 16m;
+        add_header X-Robots-Tag "noindex" always;
+        proxy_pass http://127.0.0.1:4000;
+    }
+
     # API client proxy (client.sendRequest): a JSON envelope of up to 15 MiB
     # (MAX_PROXY_ENVELOPE_BYTES in packages/shared/src/api-client/limits.ts:
     # a 10 MB body in base64), 16m so the API answers past it with its own
