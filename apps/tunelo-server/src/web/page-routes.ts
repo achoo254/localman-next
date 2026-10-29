@@ -74,16 +74,23 @@ export function createPageRouter(ctx: WebContext): Router {
 			);
 			return;
 		}
+		const { profile } = session;
+		const idpAccountUrl = `${ctx.config.issuer}/account`;
 		res.send(
 			renderTunnelsPage({
 				i18n,
 				notice,
 				account: {
-					label: session.profile.name ?? session.profile.username,
+					user: {
+						name: profile.name ?? profile.username,
+						email: profile.email,
+						picture: profile.picture,
+					},
 					csrfToken: ctx.csrf.issue(session.id),
+					idpAccountUrl,
 				},
 				tunnels: ctx.listTunnels(session.sub),
-				devicesUrl: `${ctx.config.issuer}/account`,
+				devicesUrl: idpAccountUrl,
 			}),
 		);
 	});

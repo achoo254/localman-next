@@ -52,7 +52,7 @@ describe("sign-in", () => {
 		expect(params.get("client_id")).toBe("tunelo-web");
 		expect(params.get("redirect_uri")).toBe(`${PUBLIC_URL}/auth/callback`);
 		// No offline_access: refresh tokens live with the IdP session.
-		expect(params.get("scope")).toBe("openid profile");
+		expect(params.get("scope")).toBe("openid profile email");
 		expect(params.has("prompt")).toBe(false);
 		// No resource: the IdP issues an opaque token, usable at userinfo only.
 		expect(params.has("resource")).toBe(false);

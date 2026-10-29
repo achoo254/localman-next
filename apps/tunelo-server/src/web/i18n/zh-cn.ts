@@ -3,8 +3,6 @@ import type { Messages } from "./messages.js";
 export const zhCn: Messages = {
 	"meta.homeTitle": "Tunelo：为本地服务提供公网 URL",
 	"meta.tunnelsTitle": "你的隧道 · Tunelo",
-	"nav.signOut": "退出登录",
-	"nav.account": "已登录：{name}",
 	"home.eyebrow": "面向开发者的隧道",
 	"home.title": "一条命令，把本地服务放到互联网上",
 	"home.lead":

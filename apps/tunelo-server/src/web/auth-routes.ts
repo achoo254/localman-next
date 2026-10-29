@@ -17,7 +17,7 @@ import { ipRateLimit } from "./sign-in-guards.js";
 import type { WebContext } from "./web-context.js";
 import { clearCookie, readCookie, setCookie } from "./web-cookies.js";
 import { CALLBACK_PATH } from "./web-oidc-client.js";
-import type { WebProfile } from "./web-session-store.js";
+import { EMPTY_PROFILE, type WebProfile } from "./web-session-store.js";
 
 /** `/auth/*`: sign-in, its callback, sign-out and back-channel logout. */
 export function createAuthRouter(ctx: WebContext): Router {
@@ -107,8 +107,8 @@ export function createAuthRouter(ctx: WebContext): Router {
 					"ID token without sid; back-channel logout cannot end this session",
 				);
 			}
-			// The name is cosmetic: without userinfo the session still starts.
-			let profile: WebProfile = { username: null, name: null };
+			// The profile is cosmetic: without userinfo the session still starts.
+			let profile: WebProfile = EMPTY_PROFILE;
 			try {
 				profile = await oidc.profile(tokens.accessToken, tokens.sub);
 			} catch (error) {

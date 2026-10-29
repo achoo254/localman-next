@@ -79,7 +79,7 @@ export async function startFakeIssuer(publicUrl: string): Promise<FakeIssuer> {
 			expires_in: 900,
 			refresh_token: refreshToken,
 			id_token: await signer.idToken({ ...grant, nonce }),
-			scope: "openid profile",
+			scope: "openid profile email",
 		};
 	}
 

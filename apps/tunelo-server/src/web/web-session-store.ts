@@ -8,10 +8,22 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const SESSION_MAX_MS = 90 * DAY_MS;
 const COOKIE_VALUE = /^[A-Za-z0-9_-]{43}$/;
 
+/** What userinfo said at sign-in, shown in the account menu. */
 export interface WebProfile {
 	readonly username: string | null;
 	readonly name: string | null;
+	readonly email: string | null;
+	/** IdP picture URL (Google, GitHub); the menu shows only `https:` ones. */
+	readonly picture: string | null;
 }
+
+/** A session from before email and picture were kept has neither. */
+export const EMPTY_PROFILE: WebProfile = {
+	username: null,
+	name: null,
+	email: null,
+	picture: null,
+};
 
 export interface WebSession {
 	/** SHA-256 of the cookie value; safe to log. */
@@ -169,6 +181,8 @@ export class WebSessionStore {
 			profile: {
 				username: stored.profile?.username ?? null,
 				name: stored.profile?.name ?? null,
+				email: stored.profile?.email ?? null,
+				picture: stored.profile?.picture ?? null,
 			},
 			refreshToken: tokens.refreshToken,
 			idToken: tokens.idToken,

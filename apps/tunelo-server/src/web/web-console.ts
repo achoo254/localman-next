@@ -27,10 +27,11 @@ import { type WebContextOptions, createWebContext } from "./web-context.js";
  * /assets/app-shell/app-shell-enhance.js) and the Cloudflare Web Analytics
  * beacon that Cloudflare injects (cookie-less page views, as on every
  * hoandat app; Localman's privacy page says so), with its report endpoint.
- * No inline script, no event-handler attribute.
+ * No inline script, no event-handler attribute. Images: this origin, plus
+ * the IdP account pictures (Google, GitHub) of the account menu's avatar.
  */
 export const CONTENT_SECURITY_POLICY =
-	"default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; script-src-attr 'none'; connect-src 'self' https://cloudflareinsights.com; style-src 'self'; img-src 'self' data:; frame-ancestors 'none'";
+	"default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; script-src-attr 'none'; connect-src 'self' https://cloudflareinsights.com; style-src 'self'; img-src 'self' data: https://lh3.googleusercontent.com https://avatars.githubusercontent.com; frame-ancestors 'none'";
 
 /** `/`, `/lang`, `/auth/*`, `/assets/*`; case-insensitive like Express routes. */
 const CONSOLE_PATH = /^\/(?:lang\/?|auth\/.*|assets\/.*)?$/i;

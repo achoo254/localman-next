@@ -3,8 +3,6 @@ import type { Messages } from "./messages.js";
 export const vi: Messages = {
 	"meta.homeTitle": "Tunelo: URL công khai cho server trên máy bạn",
 	"meta.tunnelsTitle": "Tunnel của bạn · Tunelo",
-	"nav.signOut": "Đăng xuất",
-	"nav.account": "Đã đăng nhập: {name}",
 	"home.eyebrow": "Tunnel cho lập trình viên",
 	"home.title": "Đưa server trên máy bạn lên internet bằng một lệnh",
 	"home.lead":

@@ -6,8 +6,6 @@
 export const en = {
 	"meta.homeTitle": "Tunelo: public URLs for your local servers",
 	"meta.tunnelsTitle": "Your tunnels · Tunelo",
-	"nav.signOut": "Sign out",
-	"nav.account": "Signed in as {name}",
 	"home.eyebrow": "Tunnels for developers",
 	"home.title": "Put a local server on the internet with one command",
 	"home.lead":

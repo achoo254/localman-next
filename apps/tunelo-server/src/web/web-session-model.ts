@@ -17,6 +17,8 @@ const webSessionSchema = new Schema(
 		profile: {
 			username: { type: String, default: null },
 			name: { type: String, default: null },
+			email: { type: String, default: null },
+			picture: { type: String, default: null },
 		},
 		refreshEnc: { type: String, default: null },
 		idTokenEnc: { type: String, default: null },
@@ -35,7 +37,12 @@ export interface StoredWebSession {
 	_id: string;
 	sub: string;
 	sid: string | null;
-	profile?: { username?: string | null; name?: string | null } | null;
+	profile?: {
+		username?: string | null;
+		name?: string | null;
+		email?: string | null;
+		picture?: string | null;
+	} | null;
 	refreshEnc: string | null;
 	idTokenEnc: string | null;
 	accessExp: Date;

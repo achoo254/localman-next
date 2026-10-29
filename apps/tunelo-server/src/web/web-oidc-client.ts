@@ -11,12 +11,13 @@ export type { IssuedTokens } from "./issued-tokens.js";
 
 /**
  * No API scope and no `resource`: the console reads tunnels in process by
- * `sub`, so the opaque access token only serves userinfo. No
+ * `sub`, so the opaque access token only serves userinfo (name, picture and
+ * email for the account menu). No
  * `offline_access` either: the IdP binds this client's refresh tokens to the
  * IdP session, so signing out there ends the console session at the next
  * refresh (within 15 minutes) even if the back-channel logout is lost.
  */
-export const LOGIN_SCOPE = "openid profile";
+export const LOGIN_SCOPE = "openid profile email";
 export const CALLBACK_PATH = "/auth/callback";
 const DISCOVERY_TIMEOUT_SECONDS = 10;
 const REQUEST_TIMEOUT_SECONDS = 10;
@@ -113,13 +114,15 @@ export class WebOidcClient {
 		return toIssuedTokens(response);
 	}
 
-	/** `preferred_username` and `name` from userinfo (checked against `sub`). */
+	/** Profile claims from userinfo (checked against `sub`). */
 	async profile(accessToken: string, expectedSub: string): Promise<WebProfile> {
 		const config = await this.load();
 		const claims = await oidc.fetchUserInfo(config, accessToken, expectedSub);
 		return {
 			username: stringClaim(claims, "preferred_username"),
 			name: stringClaim(claims, "name"),
+			email: stringClaim(claims, "email"),
+			picture: stringClaim(claims, "picture"),
 		};
 	}
 

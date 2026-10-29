@@ -20,52 +20,91 @@ beforeEach(async () => {
 	harness.idp.userinfoCount = 0;
 });
 
-const TOP_BAR_USER = /data-id="topbar-user">([^<]*)</;
+const MENU_NAME = /<span class="shell-account-name">([^<]*)</;
+const AVATAR = /<img class="shell-avatar" src="([^"]*)"/;
 
-/** The top-bar account label of `/` for a session, in one language. */
-async function topBarUser(
+/** The account menu of `/` for a session, in one language. */
+async function accountMenu(
 	cookie: string,
 	locale = "en",
-): Promise<string | null> {
+): Promise<{ name: string | null; picture: string | null; body: string }> {
 	const page = await harness.request("/", {
 		cookie: `${cookie}; hd_lang=${locale}`,
 	});
+	expect(page.body).toContain('data-id="account-menu"');
 	expect(page.body).toContain('action="/auth/logout"');
-	return TOP_BAR_USER.exec(page.body)?.[1] ?? null;
+	return {
+		name: MENU_NAME.exec(page.body)?.[1] ?? null,
+		picture: AVATAR.exec(page.body)?.[1] ?? null,
+		body: page.body,
+	};
 }
 
-test("the name comes from userinfo at sign-in and shows in all three languages", async () => {
+test("name, email and picture come from userinfo at sign-in and show in the account menu", async () => {
 	harness.idp.account.userinfo = {
 		preferred_username: "alice",
 		name: "Alice Nguyễn",
+		email: "alice@example.com",
+		picture: "https://lh3.googleusercontent.com/a/alice",
 	};
 	const cookie = await harness.signIn();
 	expect(harness.idp.userinfoCount).toBe(1);
 	const stored = await WebSessionModel.findOne().lean();
-	expect(stored?.profile).toEqual({ username: "alice", name: "Alice Nguyễn" });
+	expect(stored?.profile).toEqual({
+		username: "alice",
+		name: "Alice Nguyễn",
+		email: "alice@example.com",
+		picture: "https://lh3.googleusercontent.com/a/alice",
+	});
 
-	expect(await topBarUser(cookie, "en")).toBe("Signed in as Alice Nguyễn");
-	expect(await topBarUser(cookie, "zh-CN")).toBe("已登录：Alice Nguyễn");
-	expect(await topBarUser(cookie, "vi")).toBe("Đã đăng nhập: Alice Nguyễn");
-});
-
-test("falls back to the username, and escapes what the IdP sends", async () => {
-	harness.idp.account.userinfo = { preferred_username: "<b>alice</b>" };
-	const cookie = await harness.signIn();
-	expect(await topBarUser(cookie)).toBe(
-		"Signed in as &lt;b&gt;alice&lt;/b&gt;",
+	for (const locale of ["en", "zh-CN", "vi"]) {
+		const menu = await accountMenu(cookie, locale);
+		expect(menu.name).toBe("Alice Nguyễn");
+		expect(menu.picture).toBe("https://lh3.googleusercontent.com/a/alice");
+		expect(menu.body).toContain(
+			'<span class="shell-account-head-email">alice@example.com</span>',
+		);
+	}
+	const vi = await accountMenu(cookie, "vi");
+	expect(vi.body).toContain("Đăng xuất");
+	expect(vi.body).toContain(
+		`href="${harness.idp.issuer}/account#account-sign-in"`,
 	);
 });
 
-test("without profile claims the top bar shows only the sign-out button", async () => {
+test("falls back to the username, and escapes what the IdP sends", async () => {
+	harness.idp.account.userinfo = {
+		preferred_username: "<b>alice</b>",
+		picture: 'https://avatars.githubusercontent.com/u/1?"x',
+	};
 	const cookie = await harness.signIn();
-	expect(await topBarUser(cookie)).toBeNull();
+	const menu = await accountMenu(cookie);
+	expect(menu.name).toBe("&lt;b&gt;alice&lt;/b&gt;");
+	expect(menu.picture).toBe(
+		"https://avatars.githubusercontent.com/u/1?&quot;x",
+	);
+});
+
+test("a picture that is not https is not shown: the initial is", async () => {
+	harness.idp.account.userinfo = {
+		name: "Alice",
+		picture: "http://example.com/alice.png",
+	};
+	const cookie = await harness.signIn();
+	const menu = await accountMenu(cookie);
+	expect(menu.picture).toBeNull();
+	expect(menu.body).toContain('data-initial="A"');
+});
+
+test("without profile claims the menu says Account", async () => {
+	const cookie = await harness.signIn();
+	expect((await accountMenu(cookie)).name).toBe("Account");
 });
 
 test("a failing userinfo still signs in, without a name", async () => {
 	harness.idp.userinfoFails = true;
 	const cookie = await harness.signIn();
-	expect(await topBarUser(cookie)).toBeNull();
+	expect((await accountMenu(cookie)).name).toBe("Account");
 	expect(harness.logs()).toContain("Userinfo at sign-in failed");
 });
 
@@ -76,7 +115,7 @@ test("refreshes keep the profile and do not call userinfo again", async () => {
 		{},
 		{ $set: { accessExp: new Date(Date.now() - 1000) } },
 	);
-	expect(await topBarUser(cookie)).toBe("Signed in as Alice");
+	expect((await accountMenu(cookie)).name).toBe("Alice");
 	expect(harness.idp.refreshCount).toBeGreaterThan(0);
 	expect(harness.idp.userinfoCount).toBe(1);
 });
@@ -85,10 +124,18 @@ test("the profile never reaches the logs", async () => {
 	harness.idp.account.userinfo = {
 		preferred_username: "secret-handle-42",
 		name: "Very Private Name",
+		email: "private@example.com",
+		picture: "https://lh3.googleusercontent.com/a/private-picture",
 	};
 	await harness.signIn();
 	const logs = harness.logs();
 	expect(logs).toContain("Web session started");
-	expect(logs).not.toContain("secret-handle-42");
-	expect(logs).not.toContain("Very Private Name");
+	for (const value of [
+		"secret-handle-42",
+		"Very Private Name",
+		"private@example.com",
+		"private-picture",
+	]) {
+		expect(logs).not.toContain(value);
+	}
 });

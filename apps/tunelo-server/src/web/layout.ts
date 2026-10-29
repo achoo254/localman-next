@@ -1,4 +1,9 @@
-import { PublicPage, SignInCard } from "@achoo254/app-shell";
+import {
+	AccountMenu,
+	PublicPage,
+	type ShellUser,
+	SignInCard,
+} from "@achoo254/app-shell";
 import { type ReactElement, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { currentTenant } from "../tenancy/tunnel-tenant.js";
@@ -15,9 +20,11 @@ export const LOGIN_PATH = "/auth/login";
 export const LOGOUT_PATH = "/auth/logout";
 
 export interface SignedInChrome {
-	/** Name or username from the ID token; `null` when it carried neither. */
-	readonly label: string | null;
+	/** Name (or username), email and picture from userinfo at sign-in. */
+	readonly user: ShellUser;
 	readonly csrfToken: string;
+	/** The IdP account page (`<issuer>/account`) the menu links to. */
+	readonly idpAccountUrl: string;
 }
 
 export interface LayoutOptions {
@@ -36,43 +43,23 @@ export const BRAND_MARK_PATH = "/assets/img/tunelo-mark-128.webp";
 export const OG_IMAGE_PATH = "/assets/img/og-image.jpg";
 
 /**
- * In place of the sign-in pill once signed in: who (from 480px up) and a
- * sign-out button posting the CSRF token, no script.
+ * In place of the sign-in pill once signed in: the shared account menu
+ * (avatar and name, then the IdP account pages and sign-out). A `<details>`,
+ * so it opens with no script; app-shell-enhance.js closes it on an outside
+ * click or Escape. Sign-out stays the CSRF-checked POST form.
  */
-function accountSlot(i18n: Translator, account: SignedInChrome): ReactElement {
-	return createElement(
-		"form",
-		{
-			className: "shell-topbar-form",
-			method: "post",
-			action: LOGOUT_PATH,
-			"data-id": "topbar-sign-out-form",
-		},
-		account.label
-			? createElement(
-					"span",
-					{
-						className: "topbar-user shell-hide-phone",
-						"data-id": "topbar-user",
-					},
-					i18n.t("nav.account", { name: account.label }),
-				)
-			: null,
-		createElement("input", {
-			type: "hidden",
-			name: "csrf",
-			value: account.csrfToken,
-		}),
-		createElement(
-			"button",
-			{
-				type: "submit",
-				className: "shell-topbar-link",
-				"data-id": "topbar-sign-out",
-			},
-			i18n.t("nav.signOut"),
-		),
-	);
+function accountSlot(
+	i18n: Translator,
+	domain: string,
+	account: SignedInChrome,
+): ReactElement {
+	return createElement(AccountMenu, {
+		user: account.user,
+		locale: i18n.locale,
+		domain,
+		idpAccountUrl: account.idpAccountUrl,
+		signOut: { action: LOGOUT_PATH, fields: { csrf: account.csrfToken } },
+	});
 }
 
 /**
@@ -97,7 +84,7 @@ function shellPage(options: LayoutOptions): string {
 			languageHref: (locale) =>
 				`${LANGUAGE_PATH}?${new URLSearchParams({ set: locale }).toString()}`,
 			signInHref: LOGIN_PATH,
-			accountSlot: account ? accountSlot(i18n, account) : undefined,
+			accountSlot: account ? accountSlot(i18n, domain, account) : undefined,
 			privacyHref: `${localmanUrl}/privacy`,
 			termsHref: `${localmanUrl}/terms`,
 			// biome-ignore lint/correctness/noChildrenProp: PublicPageProps requires children among the props

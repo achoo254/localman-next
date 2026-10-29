@@ -5,6 +5,7 @@ import { useTestDatabase } from "../../test-support/test-mongo.js";
 import { TokenCipher } from "../token-cipher.js";
 import { WebSessionModel } from "../web-session-model.js";
 import {
+	EMPTY_PROFILE,
 	SESSION_MAX_MS,
 	type SessionTokens,
 	WebSessionStore,
@@ -20,6 +21,13 @@ const store = new WebSessionStore(
 	pino({ level: "silent" }),
 );
 
+const ALICE = {
+	username: "alice",
+	name: "Alice",
+	email: "alice@example.com",
+	picture: "https://lh3.googleusercontent.com/a/alice",
+};
+
 function tokens(overrides: Partial<SessionTokens> = {}): SessionTokens {
 	return {
 		refreshToken: `rt-${randomBytes(8).toString("hex")}`,
@@ -34,7 +42,7 @@ function create(sub: string, sid: string) {
 	return store.create({
 		sub,
 		sid,
-		profile: { username: null, name: null },
+		profile: EMPTY_PROFILE,
 		tokens: tokens(),
 	});
 }
@@ -68,7 +76,7 @@ describe("WebSessionStore", () => {
 		const { cookieValue } = await store.create({
 			sub: "acc_alice",
 			sid: "sid-1",
-			profile: { username: "alice", name: null },
+			profile: ALICE,
 			tokens: input,
 		});
 		const raw = await WebSessionModel.findOne().lean();
@@ -81,7 +89,26 @@ describe("WebSessionStore", () => {
 		const found = await store.findByCookie(cookieValue);
 		expect(found?.refreshToken).toBe(input.refreshToken);
 		expect(found?.idToken).toBe(input.idToken);
-		expect(found?.profile).toEqual({ username: "alice", name: null });
+		expect(found?.profile).toEqual(ALICE);
+	});
+
+	test("a session stored before email and picture were kept reads them as null", async () => {
+		const { cookieValue, session } = await store.create({
+			sub: "acc_alice",
+			sid: "sid-old",
+			profile: ALICE,
+			tokens: tokens(),
+		});
+		await WebSessionModel.updateOne(
+			{ _id: session.id },
+			{ $unset: { "profile.email": 1, "profile.picture": 1 } },
+		);
+		const found = await store.findByCookie(cookieValue);
+		expect(found?.profile).toEqual({
+			...ALICE,
+			email: null,
+			picture: null,
+		});
 	});
 
 	test("each cookie reads only its own account", async () => {

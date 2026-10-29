@@ -35,14 +35,47 @@ describe("console frame", () => {
 		);
 	});
 
-	test("signed in: who, then a sign-out form posting the CSRF token, no sign-in pill", () => {
+	test("signed in: the shared account menu, sign-out posting the CSRF token, no sign-in pill", () => {
 		const page = render({
-			account: { label: "Alice <a>", csrfToken: "token-1" },
+			account: {
+				user: {
+					name: "Alice <a>",
+					email: "alice@example.com",
+					picture: "https://lh3.googleusercontent.com/a/alice",
+				},
+				csrfToken: "token-1",
+				idpAccountUrl: "https://auth.example.com/account",
+			},
 		});
 		expect(page).not.toContain('data-id="public-sign-in"');
 		expect(page).toContain(
-			'<form class="shell-topbar-form" data-id="topbar-sign-out-form" action="/auth/logout" method="post"><span class="topbar-user shell-hide-phone" data-id="topbar-user">Signed in as Alice &lt;a&gt;</span><input type="hidden" name="csrf" value="token-1"/><button type="submit" class="shell-topbar-link" data-id="topbar-sign-out">Sign out</button></form>',
+			'<details class="shell-account" data-id="account-menu">',
 		);
+		expect(page).toContain(
+			'<img class="shell-avatar" src="https://lh3.googleusercontent.com/a/alice" width="28" height="28" alt="" referrerPolicy="no-referrer"/><span class="shell-account-name">Alice &lt;a&gt;</span>',
+		);
+		expect(page).toContain(
+			'<span class="shell-account-head-email">alice@example.com</span>',
+		);
+		expect(page).toContain(
+			'href="https://auth.example.com/account#account-email" target="_blank" rel="noopener noreferrer"',
+		);
+		expect(page).toContain(
+			'<form class="shell-account-form" action="/auth/logout" method="post"><input type="hidden" name="csrf" value="token-1"/><button type="submit" class="shell-account-item" data-id="account-menu-sign-out">',
+		);
+	});
+
+	test("signed in without a picture or a name: an initial, then the word Account", () => {
+		const page = render({
+			account: {
+				user: { name: null, email: null, picture: null },
+				csrfToken: "token-1",
+				idpAccountUrl: "https://auth.example.com/account",
+			},
+		});
+		expect(page).not.toContain('<img class="shell-avatar"');
+		expect(page).toContain('data-initial="A"');
+		expect(page).toContain('<span class="shell-account-name">Account</span>');
 	});
 
 	test.each(LOCALES)(

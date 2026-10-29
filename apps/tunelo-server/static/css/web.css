@@ -58,17 +58,6 @@ pre {
 	white-space: nowrap;
 }
 
-/* "Signed in as …" before the sign-out button (from 480px up) */
-.topbar-user {
-	color: var(--c-text-muted);
-	font-size: 0.875rem;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	max-width: 280px;
-	padding-inline: var(--space-2);
-}
-
 /* Buttons */
 .btn {
 	display: inline-flex;
