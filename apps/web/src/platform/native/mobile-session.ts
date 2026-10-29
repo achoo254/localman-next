@@ -27,11 +27,18 @@ async function withSecureStorage<T>(
 	return use(SecureStorage);
 }
 
-/** Reads the stored token once, before the first render. */
+/**
+ * Reads the stored token once, before the first render. The first render
+ * waits on this, so it never rejects: a store that cannot be read counts as
+ * signed out, and the app opens on its sign-in page instead of a blank screen.
+ */
 export async function loadMobileSession(): Promise<void> {
-	const value: unknown = await withSecureStorage((storage) =>
-		storage.get(TOKEN_KEY),
-	);
+	let value: unknown = null;
+	try {
+		value = await withSecureStorage((storage) => storage.get(TOKEN_KEY));
+	} catch {
+		value = null;
+	}
 	token = typeof value === "string" && value !== "" ? value : null;
 }
 

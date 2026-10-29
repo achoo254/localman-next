@@ -4,13 +4,17 @@ import { describe, expect, it, vi } from "vitest";
 // call, `then` included, and that call throws on a method the plugin lacks:
 // the store must never be awaited or returned from an async function.
 const stored = new Map<string, string>();
+let unreadable = false;
 vi.mock("@aparajita/capacitor-secure-storage", () => ({
 	SecureStorage: new Proxy(
 		{},
 		{
 			get(_target, property) {
 				if (property === "get")
-					return async (key: string) => stored.get(key) ?? null;
+					return async (key: string) => {
+						if (unreadable) throw new Error("keychain unavailable");
+						return stored.get(key) ?? null;
+					};
 				if (property === "set")
 					return async (key: string, value: string) =>
 						void stored.set(key, value);
@@ -44,5 +48,16 @@ describe("mobile session", () => {
 		await forgetMobileSession();
 		await loadMobileSession();
 		expect(mobileSessionToken()).toBeNull();
+	});
+
+	it("treats an unreadable store as signed out instead of failing the first render", async () => {
+		await saveMobileSession("tok");
+		unreadable = true;
+		try {
+			await expect(loadMobileSession()).resolves.toBeUndefined();
+			expect(mobileSessionToken()).toBeNull();
+		} finally {
+			unreadable = false;
+		}
 	});
 });
