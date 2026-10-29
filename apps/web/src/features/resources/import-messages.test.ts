@@ -10,10 +10,10 @@ describe("importErrorText for a 413", () => {
 	it("tells an oversized source from an oversized request", () => {
 		const source = new ApiError(413, "SCHEMA_IMPORT_FAILED", "too large", {
 			reason: "INPUT_TOO_LARGE",
-			max: 5 * 1024 * 1024,
+			max: 2 * 1024 * 1024,
 		});
 		expect(importErrorText(source, "csv", t)).toBe(
-			"The source is over 5 MB. Use a smaller one.",
+			"The source is over 2 MB. Use a smaller one.",
 		);
 		const body = new ApiError(
 			413,

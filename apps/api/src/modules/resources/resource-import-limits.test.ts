@@ -1,4 +1,3 @@
-import { MAX_INFERENCE_BYTES } from "@localman/shared";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
 	as,
@@ -53,10 +52,10 @@ describe("import_resources: names, refusals and plan limits", () => {
 		expect(unknown.body.error.code).toBe("VALIDATION_ERROR");
 	});
 
-	it("refuses input over 5 MB, external and looping $ref with a reason and params", async () => {
+	it("refuses input over 2 MB, external and looping $ref with a reason and params", async () => {
 		const projectId = await createProject(ALICE);
 		// Spaces need no JSON escape, so the body stays under its own limit.
-		const big = `[${" ".repeat(MAX_INFERENCE_BYTES)}]`;
+		const big = `[${" ".repeat(2 * 1024 * 1024)}]`;
 		const tooLarge = await importAs(
 			ALICE,
 			projectId,
@@ -66,7 +65,7 @@ describe("import_resources: names, refusals and plan limits", () => {
 		expect(tooLarge.status).toBe(413);
 		expect(tooLarge.body.error).toMatchObject({
 			code: "SCHEMA_IMPORT_FAILED",
-			details: { reason: "INPUT_TOO_LARGE", max: MAX_INFERENCE_BYTES },
+			details: { reason: "INPUT_TOO_LARGE", max: 2 * 1024 * 1024 },
 		});
 		const doc = (schemas: object) => ({
 			openapi: "3.1.0",
@@ -124,12 +123,12 @@ describe("import_resources: names, refusals and plan limits", () => {
 		expect(items.body.items).toEqual([]);
 	});
 
-	it("accepts 5 MB of CSV whose JSON escapes double the body", async () => {
+	it("accepts 2 MB of CSV whose JSON escapes double the body", async () => {
 		const projectId = await createProject(ALICE);
 		const row = `"${'""'.repeat(400)}"\n`;
-		const rows = Math.floor((MAX_INFERENCE_BYTES - 8) / row.length);
+		const rows = Math.floor((2 * 1024 * 1024 - 8) / row.length);
 		const csv = `quote\n${row.repeat(rows)}`;
-		expect(JSON.stringify(csv).length).toBeGreaterThan(9.9 * 1024 * 1024);
+		expect(JSON.stringify(csv).length).toBeGreaterThan(3.9 * 1024 * 1024);
 		const preview = await importAs(
 			ALICE,
 			projectId,

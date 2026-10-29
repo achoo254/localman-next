@@ -12,7 +12,7 @@ export const resourceImport: Messages["resourceImport"] = {
 	openapi: {
 		label: "OpenAPI 文档",
 		chooseFile: "选择文件",
-		hint: "JSON 格式的 OpenAPI 3.0 或 3.1，最大 5 MB。请先将 YAML 转为 JSON。只读取文档内部的引用（<code>#/components/…</code>）。",
+		hint: "JSON 格式的 OpenAPI 3.0 或 3.1，最大 2 MB。请先将 YAML 转为 JSON。只读取文档内部的引用（<code>#/components/…</code>）。",
 		schema: "Schema",
 		schemaHint: {
 			other:
@@ -24,7 +24,7 @@ export const resourceImport: Messages["resourceImport"] = {
 	},
 	file: {
 		choose: "选择 CSV 或 JSON 文件",
-		drop: "或拖放到这里 · 最大 5 MB",
+		drop: "或拖放到这里 · 最大 2 MB",
 		hint: "CSV：第一行为表头，值以逗号分隔，UTF-8 编码。类型根据前 100 行推断。",
 		chosen: "{name} · {size} KB",
 		remove: "移除文件",
@@ -58,9 +58,9 @@ export const resourceImport: Messages["resourceImport"] = {
 	submit: "创建 resource",
 	errors: {
 		tooLarge:
-			"文件大小为 {size} KB，超过 5 MB 的上限。请使用更小的文件或拆分文件。",
-		pastedTooLarge: "粘贴的内容超过 5 MB，请粘贴更小的示例。",
-		inputTooLarge: "来源超过 5 MB，请使用更小的来源。",
+			"文件大小为 {size} KB，超过 2 MB 的上限。请使用更小的文件或拆分文件。",
+		pastedTooLarge: "粘贴的内容超过 2 MB，请粘贴更小的示例。",
+		inputTooLarge: "来源超过 2 MB，请使用更小的来源。",
 		payloadTooLarge:
 			"来源编码后过大，无法发送（例如引号或换行过多）。请使用更小的来源。",
 		fileType: "请选择 .csv 或 .json 文件。",

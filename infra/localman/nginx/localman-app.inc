@@ -62,8 +62,8 @@
         proxy_pass http://127.0.0.1:4000;
     }
 
-    # Resource imports (…/resources/import, …/resources/from-schema: a 5 MB
-    # source, up to 10.5 MiB once JSON-escaped, IMPORT_BODY_LIMIT in
+    # Resource imports (…/resources/import, …/resources/from-schema: a 2 MB
+    # source, up to 4.5 MiB once JSON-escaped, IMPORT_BODY_LIMIT in
     # resource-operation-params.ts) and PUT …/resources/:id/data (2.5 MiB,
     # RESOURCE_DATA_BODY_LIMIT); 16m leaves the API its own JSON 413 past
     # those caps instead of nginx's HTML page.

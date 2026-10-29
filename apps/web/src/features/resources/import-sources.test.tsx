@@ -84,7 +84,7 @@ describe("Import sources, errors and plan room", () => {
 			}),
 			apiError(413, "SCHEMA_IMPORT_FAILED", {
 				reason: "INPUT_TOO_LARGE",
-				max: 5 * 1024 * 1024,
+				max: 2097152,
 			}),
 		];
 		const { dialog } = await openImport(
@@ -115,13 +115,13 @@ describe("Import sources, errors and plan room", () => {
 		await waitFor(
 			() =>
 				expect(within(dialog).getByRole("alert")).toHaveTextContent(
-					"The source is over 5 MB.",
+					"The source is over 2 MB.",
 				),
 			{ timeout: 3000 },
 		);
 	});
 
-	it("reads a CSV or JSON file of at most 5 MB, named after the file", async () => {
+	it("reads a CSV or JSON file of at most 2 MB, named after the file", async () => {
 		const user = userEvent.setup({ applyAccept: false });
 		const { dialog, calls } = await openImport(
 			importRoute(() => ({ body: importJson() })),
@@ -142,9 +142,9 @@ describe("Import sources, errors and plan room", () => {
 		expect(within(dialog).getByRole("alert")).toHaveTextContent(
 			"Choose a .csv or .json file.",
 		);
-		await pick(new File([new Uint8Array(6 * 1024 * 1024)], "big.csv"));
+		await pick(new File([new Uint8Array(3 * 1024 * 1024)], "big.csv"));
 		expect(within(dialog).getByRole("alert")).toHaveTextContent(
-			"The file is 6,144 KB, over the 5 MB limit.",
+			"The file is 3,072 KB, over the 2 MB limit.",
 		);
 		await pick(
 			new File(["name,age\nAda,36\n"], "Users List.csv", { type: "text/csv" }),

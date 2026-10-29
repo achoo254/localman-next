@@ -5,7 +5,7 @@ export const MAX_CACHED_PREVIEWS = 5;
 
 /**
  * Short cache key of a request: its JSON length and a 53-bit hash
- * (cyrb53) of it, so the cache holds no copy of up to 5 MB of source.
+ * (cyrb53) of it, so the cache holds no copy of up to 2 MB of source.
  * A clash would only show another preview; creating sends the request.
  */
 export function previewKey(request: ImportRequest): string {

@@ -1,7 +1,7 @@
 /**
  * Resources (schema, parent and seed records) inferred from a JSON sample,
  * an OpenAPI 3.x document or a CSV file, for the resource import of the
- * web app and MCP. Pure and bounded: input up to 5 MB, JSON depth and
+ * web app and MCP. Pure and bounded: input up to 2 MB, JSON depth and
  * node caps, at most `MAX_INFERRED_RESOURCES` resources, the schema rules
  * of `FieldCollector` (field names, `MAX_SCHEMA_FIELDS`, forbidden keys).
  * OpenAPI goes through `schemaFromOpenApi`; `$ref` is never fetched.
@@ -40,7 +40,7 @@ export {
 	normalizeResourceName,
 } from "./schema-inference-context.js";
 
-export const MAX_INFERENCE_BYTES = 5 * 1024 * 1024;
+export const MAX_INFERENCE_BYTES = 2 * 1024 * 1024;
 /** Like the OpenAPI importer: deep enough for real data, bounded work. */
 const SAMPLE_LIMITS: JsonLimits = { maxDepth: 64, maxNodes: 200_000 };
 
@@ -68,7 +68,7 @@ const fail = (
 	params: ImportParams = {},
 ): SchemaImportFailure => new SchemaImportFailure(code, message, params);
 const tooLarge = (): SchemaImportFailure =>
-	fail("INPUT_TOO_LARGE", "The input is larger than 5 MB", {
+	fail("INPUT_TOO_LARGE", "The input is larger than 2 MB", {
 		max: MAX_INFERENCE_BYTES,
 	});
 
