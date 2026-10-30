@@ -29,3 +29,22 @@ export function targetSubdomain(
 		return undefined;
 	}
 }
+
+export type HttpRunPick =
+	| { kind: "none" }
+	| { kind: "several"; matches: RunRecord[] }
+	| { kind: "one"; run: RunRecord };
+
+/** The one running HTTP tunnel `target` names, or the only one when no
+ *  target is given (`tunelo watch`, and request inspection over MCP). */
+export function pickHttpRun(
+	records: readonly RunRecord[],
+	target: string | undefined,
+): HttpRunPick {
+	const running = records.filter((record) => record.kind === "http");
+	const matches = target ? matchRuns(running, target) : running;
+	const [only, ...rest] = matches;
+	if (!only) return { kind: "none" };
+	if (rest.length > 0) return { kind: "several", matches };
+	return { kind: "one", run: only };
+}

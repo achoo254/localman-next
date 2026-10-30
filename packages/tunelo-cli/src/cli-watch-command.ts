@@ -1,7 +1,11 @@
 import type { Command } from "commander";
-import type { InspectorEntry, InspectorEntrySummary } from "./request-store.js";
+import {
+	fetchInspectorRequest,
+	fetchInspectorRequests,
+} from "./inspector-client.js";
+import type { InspectorEntrySummary } from "./request-store.js";
 import { type RunRecord, listRecords } from "./run-registry.js";
-import { matchRuns, targetSubdomain } from "./run-target.js";
+import { pickHttpRun, targetSubdomain } from "./run-target.js";
 import {
 	type WatchFilter,
 	formatDetails,
@@ -25,25 +29,21 @@ function fail(message: string): never {
 
 /** The one running HTTP tunnel `target` names (or the only one running). */
 function pickRun(target: string | undefined): RunRecord {
-	const running = listRecords().filter((record) => record.kind === "http");
-	const matches = target ? matchRuns(running, target) : running;
-	const [only, ...rest] = matches;
-	if (!only) {
+	const pick = pickHttpRun(listRecords(), target);
+	if (pick.kind === "one") return pick.run;
+	if (pick.kind === "none") {
 		fail(
 			target
 				? `No running HTTP tunnel matches "${target}" (see: tunelo status).`
 				: "No HTTP tunnel is running. Start one with: tunelo http <port>",
 		);
 	}
-	if (rest.length > 0) {
-		console.error("  Several tunnels are running; name one:");
-		for (const record of matches) {
-			const urls = record.tunnels.map((tunnel) => tunnel.url).join(", ");
-			console.error(`    PID ${record.pid}  ${urls || "(connecting…)"}`);
-		}
-		fail("Run: tunelo watch <PID|subdomain|URL>");
+	console.error("  Several tunnels are running; name one:");
+	for (const record of pick.matches) {
+		const urls = record.tunnels.map((tunnel) => tunnel.url).join(", ");
+		console.error(`    PID ${record.pid}  ${urls || "(connecting…)"}`);
 	}
-	return only;
+	fail("Run: tunelo watch <PID|subdomain|URL>");
 }
 
 /** Prints each new SSE `data:` event of the inspector until it closes. */
@@ -102,7 +102,8 @@ export function registerWatchCommand(program: Command): void {
 					"This tunnel has no inspector to read (started with --no-inspect, or by a CLI older than 1.9.0).",
 				);
 			}
-			const base = `http://127.0.0.1:${run.inspectorPort}`;
+			const inspectorPort = run.inspectorPort;
+			const base = `http://127.0.0.1:${inspectorPort}`;
 			const subdomain = target ? targetSubdomain(run, target) : undefined;
 			const filter: WatchFilter = {
 				subdomain,
@@ -119,11 +120,9 @@ export function registerWatchCommand(program: Command): void {
 				if (!matchesFilter(entry, filter)) return;
 				console.log(formatLine(entry, showSubdomain));
 				if (!details.headers && !details.body) return;
-				const full = await fetch(`${base}/api/requests/${entry.id}`)
-					.then((res) =>
-						res.ok ? (res.json() as Promise<InspectorEntry>) : null,
-					)
-					.catch(() => null);
+				const full = await fetchInspectorRequest(inspectorPort, entry.id).catch(
+					() => null,
+				);
 				if (full)
 					for (const line of formatDetails(full, details)) console.log(line);
 			};
@@ -134,9 +133,7 @@ export function registerWatchCommand(program: Command): void {
 					`  Watching ${urls || `PID ${run.pid}`} (Ctrl+C to stop)`,
 				);
 				if (count > 0) {
-					const recent = await fetch(`${base}/api/requests`).then(
-						(res) => res.json() as Promise<InspectorEntrySummary[]>,
-					);
+					const recent = await fetchInspectorRequests(inspectorPort);
 					const shown = recent.filter((entry) => matchesFilter(entry, filter));
 					for (const entry of shown.slice(0, count).reverse())
 						await print(entry);

@@ -1,36 +1,24 @@
-import type { CallToolResult } from "@modelcontextprotocol/server";
 import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { getApiBaseUrl, listAccountTunnels } from "../api-client.js";
 import { VERSION } from "../version.js";
 import { whoAmI } from "../whoami.js";
+import { registerLinkTools } from "./link-tools.js";
 import { LocalTunnels } from "./local-tunnels.js";
 import type { McpContext } from "./mcp-context.js";
+import { attempt } from "./mcp-result.js";
+import { listTunnelProcesses, registerProcessTools } from "./process-tools.js";
+import { registerRequestTools } from "./request-tools.js";
 
 const port = z.number().int().min(1).max(65535).describe("Local port");
 const MAX_HTTP_TTL_S = 24 * 60 * 60;
 const MAX_TCP_TTL_S = 8 * 60 * 60;
 
-function ok(value: unknown): CallToolResult {
-	return { content: [{ type: "text", text: JSON.stringify(value, null, 2) }] };
-}
-
-function failure(err: unknown): CallToolResult {
-	const message = err instanceof Error ? err.message : String(err);
-	return { isError: true, content: [{ type: "text", text: message }] };
-}
-
-async function attempt(run: () => Promise<unknown>): Promise<CallToolResult> {
-	try {
-		return ok(await run());
-	} catch (err) {
-		return failure(err);
-	}
-}
-
 /**
  * `tunelo mcp`: lets an agent open, list and close tunnels on this machine
- * with the CLI's own sign-in. Tunnels belong to this process.
+ * with the CLI's own sign-in, read the requests through them, stop other
+ * local tunnel processes and manage the machine's links. Tunnels it opens
+ * belong to this process.
  */
 export function createTuneloMcpServer(context: McpContext): {
 	server: McpServer;
@@ -103,11 +91,16 @@ export function createTuneloMcpServer(context: McpContext): {
 	server.registerTool(
 		"list_local_tunnels",
 		{
-			title: "List tunnels opened here",
-			description: "Tunnels this MCP server has open, with their ids.",
+			title: "List tunnels on this machine",
+			description:
+				"`tunnels`: those this MCP server has open, with their ids. `processes`: `tunelo http`/`tcp` processes running on this machine, with their PIDs.",
 			annotations: { readOnlyHint: true, openWorldHint: false },
 		},
-		() => attempt(async () => ({ tunnels: tunnels.list() })),
+		() =>
+			attempt(async () => ({
+				tunnels: tunnels.list(),
+				processes: listTunnelProcesses(),
+			})),
 	);
 
 	server.registerTool(
@@ -162,6 +155,10 @@ export function createTuneloMcpServer(context: McpContext): {
 		},
 		() => attempt(() => whoAmI(context.serverUrl)),
 	);
+
+	registerRequestTools(server, tunnels);
+	registerProcessTools(server);
+	registerLinkTools(server, context);
 
 	return { server, tunnels };
 }

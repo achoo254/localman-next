@@ -9,9 +9,9 @@ import { type TuneloConfig, loadConfig } from "./config.js";
 import { acceptsAccountToken } from "./credentials.js";
 import { printServerMigration, resolveServerUrl } from "./server-url.js";
 
-const NOT_NEEDED =
+export const LINKS_NOT_NEEDED_MESSAGE =
 	"Not needed: you are signed in, so Localman sees this machine's tunnels through your account.";
-const OTHER_SERVER_SESSION =
+export const OTHER_SERVER_SESSION_MESSAGE =
 	"Your sign-in is for another Tunelo server, so this machine's tunnels use its anonymous token. Run `tunelo login` to use your account here.";
 
 /** Names come from the server; never let them drive the terminal. */
@@ -24,6 +24,9 @@ function fail(message: string): never {
 	console.error(`  ${message}`);
 	process.exit(1);
 }
+
+export const NO_ANONYMOUS_TOKEN_MESSAGE =
+	"No anonymous token on this machine. Run `tunelo login`.";
 
 export type LinkContext =
 	| { kind: "not-needed" }
@@ -62,13 +65,14 @@ function anonymousContext(): { baseUrl: string; key: string } {
 		process.env.TUNELO_KEY,
 	);
 	if (context.kind === "not-needed") {
-		console.log(`  ${NOT_NEEDED}`);
+		console.log(`  ${LINKS_NOT_NEEDED_MESSAGE}`);
 		process.exit(0);
 	}
 	if (context.kind === "no-key") {
-		fail("No anonymous token on this machine. Run `tunelo login`.");
+		fail(NO_ANONYMOUS_TOKEN_MESSAGE);
 	}
-	if (context.otherServerSession) console.log(`  ${OTHER_SERVER_SESSION}`);
+	if (context.otherServerSession)
+		console.log(`  ${OTHER_SERVER_SESSION_MESSAGE}`);
 	return { baseUrl: getApiBaseUrl(serverUrl), key: context.key };
 }
 

@@ -140,11 +140,26 @@ Press `Ctrl+C` to stop.
 | `tunelo watch [pid\|subdomain\|URL]` | Follow a running tunnel's requests from another terminal (`-n`, `--status 5xx`, `--path <text>`, `--headers`, `--body`). Since 1.9.0 |
 | `tunelo link <code>` | Let Localman see this machine's tunnels without an account (anonymous machines only) |
 | `tunelo links` / `tunelo links revoke <id>` | List or revoke this machine's links |
-| `tunelo mcp` | Run an MCP server (stdio) so AI agents can open tunnels |
+| `tunelo mcp` | Run an MCP server (stdio) for AI agents, e.g. `claude mcp add tunelo -- tunelo mcp` (tools below) |
 | `tunelo update [--check]` | Update to the latest version |
 | `tunelo config --server <url>` / `--key <token>` / `--show` | Set the default server, set an anonymous token, show config |
 
 Config priority: CLI flags (`--key`, `--server`) > env vars (`TUNELO_KEY`, `TUNELO_SERVER`) > `~/.tunelo/config.json`.
+
+### MCP tools (`tunelo mcp`)
+
+The server uses this machine's sign-in. Tunnels it opens close when the agent disconnects.
+
+| Tool | What it does |
+|------|--------------|
+| `open_http_tunnel`, `open_tcp_tunnel` | Open a tunnel to a local port (TCP needs a `ttl`) |
+| `list_local_tunnels` | Tunnels this server opened, and other `tunelo http`/`tcp` processes on this machine |
+| `close_tunnel` | Close a tunnel this server opened |
+| `close_local_tunnel_process` | Stop another tunnel process on this machine, like `tunelo kill` (destructive) |
+| `list_tunnel_requests`, `get_tunnel_request` | Requests through a tunnel and one request's headers and bodies, like `tunelo watch` (bodies cut at 16 KB) |
+| `list_linked_machines` | Clients linked with `tunelo link` |
+| `revoke_linked_machine` | Revoke a link: `dry_run: true` returns a preview and a `confirm_token`, the second call with that token revokes |
+| `tunnel_status`, `whoami` | Server, sign-in and the account's live tunnels |
 
 Changes per version: [CHANGELOG.md](./CHANGELOG.md).
 

@@ -4,6 +4,7 @@
  */
 import { randomUUID } from "node:crypto";
 import type { TcpRegisterResult } from "@tunelo/shared";
+import { type InspectorEntry, RequestStore } from "../request-store.js";
 import { TcpProxy } from "../tcp-proxy.js";
 import { TunnelClient, type TunnelClientOptions } from "../tunnel-client.js";
 import type { McpContext } from "./mcp-context.js";
@@ -24,6 +25,8 @@ interface Entry {
 	info: LocalTunnel;
 	client: TunnelClient;
 	timer: ReturnType<typeof setTimeout> | null;
+	/** Requests through an HTTP tunnel, as `tunelo http`'s inspector keeps them. */
+	requests: RequestStore | null;
 }
 
 export class LocalTunnels {
@@ -53,6 +56,14 @@ export class LocalTunnels {
 		return [...this.entries.values()].map((entry) => entry.info);
 	}
 
+	/** The tunnel with this id and its request log (null for TCP). */
+	requestLog(
+		id: string,
+	): { info: LocalTunnel; requests: RequestStore | null } | undefined {
+		const entry = this.entries.get(id);
+		return entry && { info: entry.info, requests: entry.requests };
+	}
+
 	async openHttp(options: {
 		port: number;
 		subdomain?: string;
@@ -64,6 +75,10 @@ export class LocalTunnels {
 			subdomain: options.subdomain,
 			auth: options.auth,
 		});
+		const requests = new RequestStore();
+		client.on("inspector-entry", (entry: InspectorEntry) =>
+			requests.add(entry),
+		);
 		const result = await client.connect().catch((err: unknown) => {
 			client.disconnect();
 			throw err;
@@ -74,6 +89,7 @@ export class LocalTunnels {
 			result.url,
 			options.port,
 			options.ttlSeconds,
+			requests,
 		);
 	}
 
@@ -98,6 +114,7 @@ export class LocalTunnels {
 				result.url,
 				options.port,
 				options.ttlSeconds,
+				null,
 			);
 		} catch (err) {
 			client.disconnect();
@@ -143,7 +160,8 @@ export class LocalTunnels {
 		protocol: LocalTunnel["protocol"],
 		url: string,
 		localPort: number,
-		ttlSeconds?: number,
+		ttlSeconds: number | undefined,
+		requests: RequestStore | null,
 	): LocalTunnel {
 		const id = randomUUID().slice(0, 8);
 		const now = Date.now();
@@ -164,7 +182,7 @@ export class LocalTunnels {
 		client.on("error", () => {
 			if (!client.isActive()) this.close(id);
 		});
-		this.entries.set(id, { info, client, timer });
+		this.entries.set(id, { info, client, timer, requests });
 		return info;
 	}
 }

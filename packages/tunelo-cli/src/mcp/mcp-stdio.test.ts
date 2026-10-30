@@ -1,58 +1,28 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import http from "node:http";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { Client } from "@modelcontextprotocol/client";
-import {
-	StdioClientTransport,
-	getDefaultEnvironment,
-} from "@modelcontextprotocol/client/stdio";
-import { build } from "esbuild";
+import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import {
 	type FakeTunnelServer,
 	startFakeTunnelServer,
 } from "../test-support/fake-tunnel-server.js";
+import {
+	TEST_KEY,
+	buildCliBundle,
+	mcpClient,
+	textOf,
+	waitFor,
+} from "../test-support/mcp-harness.js";
 
-const here = dirname(fileURLToPath(import.meta.url));
-const cliRoot = resolve(here, "../..");
-// Inside the package so the bundle resolves its runtime deps like the real one.
-const bundle = join(cliRoot, "node_modules/.cache/tunelo-mcp-test/cli.js");
-
+let bundle: string;
 let tunnelServer: FakeTunnelServer;
 let app: http.Server;
 let appPort: number;
 let home: string;
 
-function textOf(result: unknown): string {
-	const content = (result as { content?: { type: string; text?: string }[] })
-		.content;
-	return content?.[0]?.text ?? "";
-}
-
-async function waitFor(check: () => boolean, ms = 5000): Promise<void> {
-	const deadline = Date.now() + ms;
-	while (!check()) {
-		if (Date.now() > deadline) throw new Error("condition not met in time");
-		await new Promise((r) => setTimeout(r, 25));
-	}
-}
-
 beforeAll(async () => {
-	await build({
-		entryPoints: [join(cliRoot, "src/cli.ts")],
-		bundle: true,
-		platform: "node",
-		format: "esm",
-		target: "node20",
-		outfile: bundle,
-		packages: "external",
-		alias: {
-			"@tunelo/shared": resolve(cliRoot, "../tunelo-shared/src/index.ts"),
-		},
-		logLevel: "silent",
-	});
+	bundle = await buildCliBundle("tunelo-mcp-test");
 	tunnelServer = await startFakeTunnelServer();
 	app = http.createServer((_req, res) => res.end("hello from the local app"));
 	await new Promise<void>((r) => app.listen(0, "127.0.0.1", r));
@@ -67,18 +37,8 @@ afterAll(async () => {
 	rmSync(home, { recursive: true, force: true });
 });
 
-function connectClient(): { client: Client; transport: StdioClientTransport } {
-	const transport = new StdioClientTransport({
-		command: process.execPath,
-		args: [bundle, "mcp", "--server", tunnelServer.wsUrl],
-		env: {
-			...getDefaultEnvironment(),
-			HOME: home,
-			TUNELO_KEY: "tunelo_mcp_test",
-		},
-		stderr: "ignore",
-	});
-	return { client: new Client({ name: "test", version: "0.0.0" }), transport };
+function connectClient(): ReturnType<typeof mcpClient> {
+	return mcpClient(bundle, tunnelServer.wsUrl, home);
 }
 
 describe("tunelo mcp over stdio", () => {
@@ -87,10 +47,15 @@ describe("tunelo mcp over stdio", () => {
 		await client.connect(transport);
 		const tools = await client.listTools();
 		expect(tools.tools.map((t) => t.name).sort()).toEqual([
+			"close_local_tunnel_process",
 			"close_tunnel",
+			"get_tunnel_request",
+			"list_linked_machines",
 			"list_local_tunnels",
+			"list_tunnel_requests",
 			"open_http_tunnel",
 			"open_tcp_tunnel",
+			"revoke_linked_machine",
 			"tunnel_status",
 			"whoami",
 		]);
@@ -106,7 +71,7 @@ describe("tunelo mcp over stdio", () => {
 		});
 		const tunnel = JSON.parse(textOf(opened)) as { id: string; url: string };
 		expect(tunnel.url).toMatch(/\/t\/agent-app$/);
-		expect(tunnelServer.authKeys).toContain("tunelo_mcp_test");
+		expect(tunnelServer.authKeys).toContain(TEST_KEY);
 
 		const res = await fetch(`${tunnel.url}/`);
 		expect(await res.text()).toBe("hello from the local app");

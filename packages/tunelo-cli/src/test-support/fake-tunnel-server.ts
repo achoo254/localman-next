@@ -1,6 +1,7 @@
 import http from "node:http";
 import type { ClientToServerMessage, TunnelRequest } from "@tunelo/shared";
 import { type WebSocket, WebSocketServer } from "ws";
+import type { LinkInfo } from "../api-client.js";
 
 export interface FakeTunnelServer {
 	/** ws:// URL for `--server`. */
@@ -9,6 +10,8 @@ export interface FakeTunnelServer {
 	openSockets(): number;
 	/** Keys sent in `auth` messages. */
 	authKeys: string[];
+	/** Links `GET /api/links` lists and `DELETE /api/links/:id` removes. */
+	links: LinkInfo[];
 	close(): Promise<void>;
 }
 
@@ -25,10 +28,15 @@ export async function startFakeTunnelServer(): Promise<FakeTunnelServer> {
 	const sockets = new Map<string, WebSocket>();
 	const pending = new Map<string, Pending>();
 	const authKeys: string[] = [];
+	const links: LinkInfo[] = [];
 	let seq = 0;
 	let base = "";
 
 	const server = http.createServer((req, res) => {
+		if (req.url?.startsWith("/api/links")) {
+			handleLinks(req, res, links);
+			return;
+		}
 		const match = req.url?.match(/^\/t\/([^/]+)(\/.*)?$/);
 		const ws = match?.[1] ? sockets.get(match[1]) : undefined;
 		if (!match || !ws) {
@@ -93,6 +101,7 @@ export async function startFakeTunnelServer(): Promise<FakeTunnelServer> {
 		wsUrl: `ws://127.0.0.1:${port}`,
 		openSockets: () => sockets.size,
 		authKeys,
+		links,
 		close: () =>
 			new Promise((resolve) => {
 				for (const ws of wss.clients) ws.terminate();
@@ -100,4 +109,32 @@ export async function startFakeTunnelServer(): Promise<FakeTunnelServer> {
 				server.close(() => resolve());
 			}),
 	};
+}
+
+/** The machine side of the link API: list and revoke, Bearer token required. */
+function handleLinks(
+	req: http.IncomingMessage,
+	res: http.ServerResponse,
+	links: LinkInfo[],
+): void {
+	const send = (status: number, body: unknown): void => {
+		res.writeHead(status, { "content-type": "application/json" });
+		res.end(JSON.stringify(body));
+	};
+	if (!req.headers.authorization?.startsWith("Bearer ")) {
+		send(401, { error: { code: "TUNELO_AUTH_002", message: "Key required" } });
+		return;
+	}
+	if (req.method === "GET" && req.url === "/api/links") {
+		send(200, { links });
+		return;
+	}
+	const id = decodeURIComponent(req.url?.split("/")[3] ?? "");
+	const index = links.findIndex((link) => link.id === id);
+	if (req.method === "DELETE" && index !== -1) {
+		links.splice(index, 1);
+		send(200, { ok: true });
+		return;
+	}
+	send(404, { error: { code: "TUNELO_LINK_005", message: "Link not found" } });
 }

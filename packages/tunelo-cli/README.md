@@ -85,7 +85,7 @@ tunelo tcp 5432                  # tunnel TCP (vd PostgreSQL)
 | `tunelo watch [pid\|subdomain\|URL]` | Xem request qua một tunnel đang chạy theo thời gian thực (từ terminal khác): in 10 request gần nhất (`-n`), lọc `--status 5xx`/`--path <chữ>`, thêm `--headers`/`--body`. Từ 1.9.0 |
 | `tunelo link <code>` | Cho Localman thấy tunnel của máy chưa đăng nhập (không cần tài khoản) |
 | `tunelo links` / `tunelo links revoke <id>` | Xem hoặc thu hồi các liên kết của máy |
-| `tunelo mcp` | Chạy MCP server (stdio) để agent AI mở tunnel |
+| `tunelo mcp` | Chạy MCP server (stdio) cho agent AI, vd `claude mcp add tunelo -- tunelo mcp`: mở/đóng tunnel, xem request qua tunnel, dừng tunnel khác trên máy, xem và thu hồi liên kết (thu hồi cần `dry_run` rồi `confirm_token`) |
 | `tunelo update [--check]` | Cập nhật lên bản mới nhất |
 | `tunelo config --server <url>` / `--key <token>` / `--show` | Đổi server mặc định, đặt token ẩn danh, xem cấu hình |
 
