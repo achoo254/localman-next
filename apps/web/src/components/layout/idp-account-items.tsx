@@ -11,7 +11,7 @@ import { DropdownMenuItem, DropdownMenuLabel } from "../ui/dropdown-menu";
 
 /**
  * Account pages of the IdP. Email and the linked sign-in methods (Google,
- * GitHub) are IdP data that Localman only syncs at sign-in, so the menu
+ * GitHub, Apple) are IdP data that Localman only syncs at sign-in, so the menu
  * links to them instead of editing them here. The IdP has no email change flow yet; the email entry
  * opens the section that shows it.
  */

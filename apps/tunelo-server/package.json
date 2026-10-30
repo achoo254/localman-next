@@ -31,7 +31,7 @@
 		"zod": "^4.3.6"
 	},
 	"devDependencies": {
-		"@achoo254/app-shell": "github:achoo254/shared-next#v0.11.0&path:/packages/app-shell",
+		"@achoo254/app-shell": "github:achoo254/shared-next#v0.11.1&path:/packages/app-shell",
 		"@achoo254/brand": "github:achoo254/shared-next#v0.11.0&path:/packages/brand",
 		"@types/bcrypt": "^6.0.0",
 		"@types/cors": "^2.8.19",

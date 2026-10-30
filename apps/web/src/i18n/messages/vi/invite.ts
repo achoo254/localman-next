@@ -39,9 +39,9 @@ export const invite: Messages["invite"] = {
 		ineligibleOther:
 			"Lời mời này gửi cho một tài khoản khác. Hãy đăng nhập bằng tài khoản được mời.",
 		ineligibleUnverified:
-			"Lời mời gửi cho {email}. Email của tài khoản này chưa được xác minh: hãy đăng nhập bằng Google/GitHub có email đã xác minh trùng với email này.",
+			"Lời mời gửi cho {email}. Email của tài khoản này chưa được xác minh: hãy đăng nhập bằng Google, GitHub hoặc Apple có email đã xác minh trùng với email này.",
 		ineligibleWrongAccount:
-			"Lời mời gửi cho {email}. Hãy đăng nhập bằng tài khoản được mời, hoặc liên kết Google/GitHub có email đã xác minh trùng với email này.",
+			"Lời mời gửi cho {email}. Hãy đăng nhập bằng tài khoản được mời, hoặc liên kết Google, GitHub hoặc Apple có email đã xác minh trùng với email này (với Apple, chọn chia sẻ email thay vì ẩn email).",
 		accept: "Tham gia",
 	},
 	switchAccount: {

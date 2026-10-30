@@ -38,9 +38,9 @@ export const invite: Messages["invite"] = {
 		ineligibleTitle: "此账号无法接受邀请",
 		ineligibleOther: "此邀请发给了另一个账号。请使用受邀账号登录。",
 		ineligibleUnverified:
-			"邀请发给了 {email}。此账号的邮箱尚未验证：请使用邮箱已验证且与之相同的 Google/GitHub 登录。",
+			"邀请发给了 {email}。此账号的邮箱尚未验证：请使用邮箱已验证且与之相同的 Google、GitHub 或 Apple 登录。",
 		ineligibleWrongAccount:
-			"邀请发给了 {email}。请使用受邀账号登录，或关联邮箱已验证且与之相同的 Google/GitHub。",
+			"邀请发给了 {email}。请使用受邀账号登录，或关联邮箱已验证且与之相同的 Google、GitHub 或 Apple（使用 Apple 时请选择共享邮箱，而不是隐藏邮箱）。",
 		accept: "加入",
 	},
 	switchAccount: {

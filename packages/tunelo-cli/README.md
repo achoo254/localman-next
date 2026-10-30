@@ -1,6 +1,6 @@
 # Tunelo CLI
 
-Expose dịch vụ local ra internet qua HTTPS wildcard subdomain — `https://<tên>.tunnel.hoandat.com` chuyển tiếp về `localhost` của bạn. Đăng nhập bằng tài khoản hoandat.com (Google hoặc GitHub qua `auth.hoandat.com`); xem tunnel của tài khoản tại [tunnel.hoandat.com](https://tunnel.hoandat.com).
+Expose dịch vụ local ra internet qua HTTPS wildcard subdomain — `https://<tên>.tunnel.hoandat.com` chuyển tiếp về `localhost` của bạn. Đăng nhập bằng tài khoản hoandat.com (Google, GitHub hoặc Apple qua `auth.hoandat.com`); xem tunnel của tài khoản tại [tunnel.hoandat.com](https://tunnel.hoandat.com).
 
 ## Cài đặt
 
@@ -52,7 +52,7 @@ tunelo login
 #   Waiting for approval...
 ```
 
-Trình duyệt mở trang của `auth.hoandat.com`: đăng nhập bằng Google hoặc GitHub (đã có phiên thì bỏ qua), kiểm mã trùng với mã trên terminal, rồi bấm cho phép máy này. CLI lưu refresh token vào `~/.tunelo/config.json` (quyền 600) và tự làm mới token khi mở tunnel. Mỗi máy là một thiết bị riêng, xem và đăng xuất từng máy ở [auth.hoandat.com/account](https://auth.hoandat.com/account).
+Trình duyệt mở trang của `auth.hoandat.com`: đăng nhập bằng Google, GitHub hoặc Apple (đã có phiên thì bỏ qua), kiểm mã trùng với mã trên terminal, rồi bấm cho phép máy này. CLI lưu refresh token vào `~/.tunelo/config.json` (quyền 600) và tự làm mới token khi mở tunnel. Mỗi máy là một thiết bị riêng, xem và đăng xuất từng máy ở [auth.hoandat.com/account](https://auth.hoandat.com/account).
 
 Đã đăng nhập rồi thì `tunelo login` báo và dừng (`--force` để làm lại). Dùng một server Tunelo khác: `tunelo login --server https://tunnel.<domain>`; CLI đăng nhập ở `https://auth.<domain>` (suy từ tên server, không hỏi server) và đặt server đó làm mặc định. Token tài khoản chỉ được gửi tới Tunelo cùng domain với tài khoản. Máy truy cập qua SSH (box lab chạy tunnel dài hạn): chạy `tunelo login` ngay trên máy đó rồi mở URL đã in và duyệt mã từ trình duyệt ở máy khác; phiên nằm trong `~/.tunelo/config.json` của user đã đăng nhập, nên chạy tiến trình tunnel bằng đúng user đó. Không có người duyệt (CI): `tunelo login --legacy-key <token>` hoặc biến `TUNELO_KEY` (token ẩn danh).
 

@@ -40,9 +40,9 @@ export const invite = {
 		ineligibleOther:
 			"This invitation was sent to another account. Sign in with the invited account.",
 		ineligibleUnverified:
-			"The invitation was sent to {email}. This account's email isn't verified: sign in with Google/GitHub using a verified email that matches it.",
+			"The invitation was sent to {email}. This account's email isn't verified: sign in with Google, GitHub or Apple using a verified email that matches it.",
 		ineligibleWrongAccount:
-			"The invitation was sent to {email}. Sign in with the invited account, or link Google/GitHub with a verified email that matches it.",
+			"The invitation was sent to {email}. Sign in with the invited account, or link Google, GitHub or Apple with a verified email that matches it (with Apple, share your email instead of hiding it).",
 		accept: "Join",
 	},
 	switchAccount: {

@@ -31,7 +31,7 @@ export async function refusal(
 		return new OperationError(
 			403,
 			"EMAIL_NOT_VERIFIED",
-			"Your email matches the invitation but is not verified; link Google or GitHub with this email, or sign in with the invited account",
+			"Your email matches the invitation but is not verified; link Google, GitHub or Apple with this email, or sign in with the invited account",
 		);
 	}
 	return new OperationError(

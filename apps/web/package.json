@@ -11,7 +11,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@achoo254/app-shell": "github:achoo254/shared-next#v0.9.1&path:/packages/app-shell",
+		"@achoo254/app-shell": "github:achoo254/shared-next#v0.11.1&path:/packages/app-shell",
 		"@achoo254/app-switcher": "github:achoo254/shared-next#v0.10.0&path:/packages/app-switcher",
 		"@achoo254/brand": "github:achoo254/shared-next#v0.8.0&path:/packages/brand",
 		"@achoo254/capacitor-system-auth": "github:achoo254/shared-next#v0.8.0&path:/packages/capacitor-system-auth",

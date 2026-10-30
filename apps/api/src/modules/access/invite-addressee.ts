@@ -13,7 +13,7 @@ export type AddresseeProblem = "NOT_INVITEE" | "EMAIL_NOT_VERIFIED";
  * or a share was addressed to:
  * - addressed to an account: that account only;
  * - addressed to an email without an account: an account whose email the
- *   IdP verified (Google/GitHub) and that equals it, lower-cased. An
+ *   IdP verified (Google, GitHub or Apple) and that equals it, lower-cased. An
  *   unverified email that merely reads the same is not enough, or anyone
  *   could register the address and take the seat.
  */

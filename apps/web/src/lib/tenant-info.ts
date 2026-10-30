@@ -89,7 +89,7 @@ export function useLoadedTenantInfo(): TenantInfo | null {
 	);
 }
 
-/** IdP page for linked sign-in methods (Google, GitHub, Telegram) and sessions. */
+/** IdP page for linked sign-in methods (Google, GitHub, Apple, Telegram) and sessions. */
 export function idpAccountUrlOf(info: TenantInfo): string {
 	return `${info.idpOrigin}/account`;
 }
