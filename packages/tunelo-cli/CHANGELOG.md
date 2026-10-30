@@ -3,6 +3,16 @@
 Changes to the `tunelo` CLI. Each version is released from the tag `tunelo-vX.Y.Z`: a GitHub release of
 `achoo254/localman-next` with the package as `tunelo.tgz` (npm up to 1.9.1).
 
+## 1.11.0 — 2026-10-30
+
+### Added
+
+- `tunelo mcp` gives agents more of the CLI:
+  - `list_tunnel_requests` and `get_tunnel_request` read the requests through a tunnel, like `tunelo watch`: those the MCP server opened, or a `tunelo http` running on the machine (by PID, subdomain or URL). Text bodies come decoded, cut at 16 KB.
+  - `close_local_tunnel_process` stops another `tunelo http`/`tcp` on the machine, like `tunelo kill`.
+  - `list_linked_machines` and `revoke_linked_machine` list and revoke the machine's links, like `tunelo links`. Revoking takes two calls: `dry_run: true` returns a preview and a `confirm_token`, then the call with that token revokes.
+  - `list_local_tunnels` also lists the other tunnel processes on the machine (`processes`).
+
 ## 1.10.0 — 2026-10-27
 
 ### Changed
