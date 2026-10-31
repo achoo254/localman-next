@@ -91,13 +91,16 @@ describe("EcosystemAppSwitcher", () => {
 		const panel = await openPanel();
 		const links = within(panel).getAllByRole("link");
 		expect(links.map((link) => link.getAttribute("href"))).toEqual([
+			`https://tuvi.hoandat.com/?${UTM}`,
+			`https://miu.hoandat.com/?${UTM}`,
+			`https://webnhanh.hoandat.com/?${UTM}`,
 			`https://chat.hoandat.com/?${UTM}`,
+			`https://tieude.hoandat.com/?${UTM}`,
 			`https://scribe.hoandat.com/?${UTM}`,
 			`https://tunnel.hoandat.com/?${UTM}`,
-			`https://webnhanh.hoandat.com/?${UTM}`,
-			`https://tieude.hoandat.com/?${UTM}`,
 			`https://auth.hoandat.com/account?${UTM}`,
 		]);
+		expect(within(panel).getByText("For developers")).toBeVisible();
 	});
 
 	it("links every app under the domain of the IdP", async () => {
@@ -109,11 +112,13 @@ describe("EcosystemAppSwitcher", () => {
 				.getAllByRole("link")
 				.map((link) => new URL(link.getAttribute("href") ?? "").host),
 		).toEqual([
+			"tuvi.acme.example",
+			"miu.acme.example",
+			"webnhanh.acme.example",
 			"chat.acme.example",
+			"tieude.acme.example",
 			"scribe.acme.example",
 			"tunnel.acme.example",
-			"webnhanh.acme.example",
-			"tieude.acme.example",
 			"auth.acme.example",
 		]);
 	});
@@ -151,7 +156,7 @@ describe("EcosystemAppSwitcher", () => {
 		const panel = await openPanel();
 		await userEvent.click(within(panel).getAllByRole("link")[0] as Element);
 		expect(open).toHaveBeenCalledWith(
-			`https://chat.hoandat.com/?${UTM}`,
+			`https://tuvi.hoandat.com/?${UTM}`,
 			"_blank",
 			"noopener,noreferrer",
 		);
