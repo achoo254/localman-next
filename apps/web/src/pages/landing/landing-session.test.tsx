@@ -12,6 +12,9 @@ import {
 } from "../../test/mock-fetch";
 import { renderRoutes } from "../../test/render-app";
 
+// The shared header's guest button: "Sign up free", the short "Sign up" for phones beside it (CSS picks one).
+const SIGN_UP = /^Sign up free/;
+
 const SIGNED_IN: Record<string, MockRoute> = {
 	"GET /api/v1/users/me": { body: makeUser() },
 	"GET /api/v1/notifications": {
@@ -60,7 +63,7 @@ describe("landing at / by session", () => {
 		expect(
 			bar.getByRole("button", { name: "Minh Anh · Account" }),
 		).toBeVisible();
-		expect(bar.queryByRole("link", { name: "Sign in" })).toBeNull();
+		expect(bar.queryByRole("link", { name: SIGN_UP })).toBeNull();
 		// The sign-in card gives way to the product preview.
 		expect(document.querySelector('[data-id="sign-in-card"]')).toBeNull();
 		expect(byDataId("landing-hero-preview")).toBeInTheDocument();
@@ -71,7 +74,7 @@ describe("landing at / by session", () => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		renderRoutes(routes, "/");
 		const bar = within(topbar());
-		expect(await bar.findByRole("link", { name: "Sign in" })).toHaveAttribute(
+		expect(await bar.findByRole("link", { name: SIGN_UP })).toHaveAttribute(
 			"href",
 			"/login",
 		);
@@ -93,9 +96,7 @@ describe("landing at / by session", () => {
 		expect(
 			await screen.findByRole("heading", { level: 1 }),
 		).toBeInTheDocument();
-		expect(
-			within(topbar()).getByRole("link", { name: "Sign in" }),
-		).toBeVisible();
+		expect(within(topbar()).getByRole("link", { name: SIGN_UP })).toBeVisible();
 		expect(byDataId("sign-in-cta")).toBeInTheDocument();
 	});
 

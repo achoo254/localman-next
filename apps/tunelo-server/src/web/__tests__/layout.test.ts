@@ -29,9 +29,9 @@ describe("console frame", () => {
 		expect(page).toMatch(/data-id="theme-switch" data-domain="hoandat.com"/);
 	});
 
-	test("signed out: the sign-in pill goes to /auth/login", () => {
+	test("signed out: the sign-up pill goes to /auth/login, short on phones", () => {
 		expect(render()).toContain(
-			'<a href="/auth/login" class="shell-topbar-link shell-topbar-cta" data-id="public-sign-in">Sign in</a>',
+			'<a href="/auth/login" class="shell-topbar-link shell-topbar-cta" data-id="public-sign-in"><span class="shell-hide-phone">Sign up free</span><span class="shell-only-phone-label">Sign up</span></a>',
 		);
 	});
 

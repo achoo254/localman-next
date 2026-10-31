@@ -16,6 +16,9 @@ import {
 	tokenError,
 } from "./accept-invite-test-helpers";
 
+// The shared header's guest button: "Sign up free", the short "Sign up" for phones beside it (CSS picks one).
+const SIGN_UP = /^Sign up free/;
+
 describe("/invite/:token", () => {
 	beforeEach(() => {
 		resetCurrentUserCache();
@@ -37,7 +40,7 @@ describe("/invite/:token", () => {
 		// The public top bar signs in back to this invite as well.
 		expect(
 			within(screen.getByRole("banner")).getByRole("link", {
-				name: "Sign in",
+				name: SIGN_UP,
 			}),
 		).toHaveAttribute("href", `/auth/login?returnTo=${back}`);
 		const page = within(screen.getByRole("main"));

@@ -14,6 +14,9 @@ import {
 } from "../../test/mock-fetch";
 import { renderRoutes } from "../../test/render-app";
 
+// The shared header's guest button: "Sign up free", the short "Sign up" for phones beside it (CSS picks one).
+const SIGN_UP = /^Sign up free/;
+
 type SessionCase = "loading" | "anonymous" | "authenticated";
 
 const ME: Record<SessionCase, MockRoute> = {
@@ -65,7 +68,7 @@ describe("account slot of the shared public header", () => {
 		async (state) => {
 			await renderPublic(state);
 			const bar = within(topbar());
-			expect(bar.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+			expect(bar.getByRole("link", { name: SIGN_UP })).toHaveAttribute(
 				"href",
 				"/login",
 			);
@@ -77,7 +80,7 @@ describe("account slot of the shared public header", () => {
 	it("signs in from a docs page straight back to that page", async () => {
 		await renderPublic("anonymous", "/docs/quick-start");
 		expect(
-			within(topbar()).getByRole("link", { name: "Sign in" }),
+			within(topbar()).getByRole("link", { name: SIGN_UP }),
 		).toHaveAttribute(
 			"href",
 			`/auth/login?returnTo=${encodeURIComponent("/docs/quick-start")}`,
@@ -93,7 +96,7 @@ describe("account slot of the shared public header", () => {
 			"href",
 			"/projects",
 		);
-		expect(bar.queryByRole("link", { name: "Sign in" })).toBeNull();
+		expect(bar.queryByRole("link", { name: SIGN_UP })).toBeNull();
 	});
 
 	it.each<SessionCase>(["loading", "anonymous", "authenticated"])(

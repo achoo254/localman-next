@@ -8,6 +8,9 @@ import { makeUser } from "./test/fixtures";
 import { UNAUTHENTICATED, mockFetch } from "./test/mock-fetch";
 import { renderRoutes } from "./test/render-app";
 
+// The shared header's guest button: "Sign up free", the short "Sign up" for phones beside it (CSS picks one).
+const SIGN_UP = /^Sign up free/;
+
 vi.mock("./platform/navigation", async (importOriginal) => ({
 	...(await importOriginal<typeof import("./platform/navigation")>()),
 	navigateToLogin: vi.fn(),
@@ -57,7 +60,7 @@ describe("route guards", () => {
 	it("shows the landing with one sign-in call to action to anonymous visitors", async () => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		renderRoutes(routes, "/");
-		const header = await screen.findByRole("link", { name: "Sign in" });
+		const header = await screen.findByRole("link", { name: SIGN_UP });
 		// The header goes to the sign-in card of /login; the landing's own
 		// card signs in at once and comes back to the projects.
 		expect(header).toHaveAttribute("data-id", "public-sign-in");
@@ -160,7 +163,7 @@ describe("route guards", () => {
 	it("ignores unknown authError values", async () => {
 		mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 		renderRoutes(routes, "/?authError=<script>");
-		await screen.findByRole("link", { name: "Sign in" });
+		await screen.findByRole("link", { name: SIGN_UP });
 		expect(screen.queryByRole("alert")).toBeNull();
 	});
 
