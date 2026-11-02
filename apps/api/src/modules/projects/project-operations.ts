@@ -21,7 +21,7 @@ import { projectView, toProjectView, toProjectViews } from "./project-view.js";
 
 const projectId = z.string().min(1).max(64);
 const PLAN_LIMIT_NOTE =
-	"Fails with 403 PLAN_LIMIT_REACHED (details: limit, max, used) when the caller already owns as many projects as their plan allows.";
+	"Fails with 403 PLAN_LIMIT_REACHED (details: limit, max, used) when the caller already owns as many projects as the limit allows.";
 
 export const listProjects = defineOperation({
 	id: "mock.listProjects",

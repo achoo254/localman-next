@@ -52,7 +52,6 @@ export interface SyncKind {
 	): Promise<MergeFollowUp>;
 }
 
-const PRO = "Pro only (403 PLAN_FEATURE_UNAVAILABLE).";
 const CONFLICTS =
 	"`resolutions` maps each conflict id of the preview to `source` (keep the side the changes come from) or `destination` (keep the side being written); 409 MERGE_CONFLICTS while any lacks one. 404 FORK_NOT_FOUND when it is not a fork, FORK_SOURCE_UNAVAILABLE when its source is gone or out of reach.";
 
@@ -130,7 +129,7 @@ export function syncOperations(kind: SyncKind): AnyOperation[] {
 					direction === "pull"
 						? "Preview pulling the source's changes into a fork"
 						: "Preview merging a fork's changes into its source",
-				description: `What would change on the ${direction === "pull" ? "fork" : "source"} and the conflicts to choose for. ${direction === "pull" ? "Editors of the fork" : "Editors of the source"}. ${PRO} ${noun === "Collection" ? `${AGENT_PREVIEW} ` : ""}${note}`,
+				description: `What would change on the ${direction === "pull" ? "fork" : "source"} and the conflicts to choose for. ${direction === "pull" ? "Editors of the fork" : "Editors of the source"}. ${noun === "Collection" ? `${AGENT_PREVIEW} ` : ""}${note}`,
 				input: idInput,
 				output: mergePreviewView,
 				annotations: readOnly,
@@ -150,7 +149,7 @@ export function syncOperations(kind: SyncKind): AnyOperation[] {
 			method: "POST",
 			path: `${path}/pull`,
 			summary: "Pull the source's changes into a fork",
-			description: `Editors of the fork; recorded as one change. ${CONFLICTS} ${PRO} ${note}`,
+			description: `Editors of the fork; recorded as one change. ${CONFLICTS} ${note}`,
 			input: z.object({ [param]: id, resolutions: resolutionsSchema }),
 			output: z.object({ done: z.boolean() }),
 			annotations: write,
@@ -169,7 +168,7 @@ export function syncOperations(kind: SyncKind): AnyOperation[] {
 			method: "POST",
 			path: `${path}/merge`,
 			summary: "Merge a fork's changes into its source",
-			description: `Editors of the source; \`option\` \`mergeAndUpdate\` (also pulls the merged source back into the fork) and \`mergeAndDelete\` (then deletes the fork${noun === "Collection" ? " to the trash" : " for good"}) need Editor on the fork too; \`followUp\` is \`failed\` when that step could not run after the merge was written (the merge stands). ${CONFLICTS} ${PRO} ${note}`,
+			description: `Editors of the source; \`option\` \`mergeAndUpdate\` (also pulls the merged source back into the fork) and \`mergeAndDelete\` (then deletes the fork${noun === "Collection" ? " to the trash" : " for good"}) need Editor on the fork too; \`followUp\` is \`failed\` when that step could not run after the merge was written (the merge stands). ${CONFLICTS} ${note}`,
 			input: z.object({
 				[param]: id,
 				option: mergeOptionSchema,

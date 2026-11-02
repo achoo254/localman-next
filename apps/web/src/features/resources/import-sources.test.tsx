@@ -21,7 +21,7 @@ const PETSTORE = '{"openapi":"3.0.3","components":{"schemas":{}}}';
 const generated = (name: string) =>
 	importedJson(name, { sampleKind: "generated" });
 
-describe("Import sources, errors and plan room", () => {
+describe("Import sources, errors and room left", () => {
 	beforeEach(() => {
 		resetCurrentUserCache();
 		vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);

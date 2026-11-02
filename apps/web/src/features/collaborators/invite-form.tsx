@@ -19,7 +19,7 @@ export interface InviteFormProps {
 	disabled: boolean;
 	inputRef: RefObject<HTMLInputElement | null>;
 	onInvited: (result: InviteResult, message: string) => void;
-	onPlanLimit: () => void;
+	onLimitReached: () => void;
 }
 
 /**
@@ -31,11 +31,11 @@ export function InviteForm({
 	disabled,
 	inputRef,
 	onInvited,
-	onPlanLimit,
+	onLimitReached,
 }: InviteFormProps) {
 	const { t, formatDate } = useI18n();
 	const idpName = useTenantInfo().displayName;
-	const flow = useInviteFlow({ projectId, onInvited, onPlanLimit });
+	const flow = useInviteFlow({ projectId, onInvited, onLimitReached });
 	const { candidate, created } = flow;
 	const copyField = useRef<CopyFieldHandle>(null);
 

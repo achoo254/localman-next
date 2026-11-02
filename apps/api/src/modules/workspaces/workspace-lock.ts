@@ -55,7 +55,7 @@ export async function inWorkspaceTransaction<T>(
 
 /**
  * Runs `work` in a transaction holding the lock of the user `ownerSub`,
- * for counts of what they own (team workspaces against their plan).
+ * for counts of what they own (team workspaces against the limit).
  */
 export async function inOwnerTransaction<T>(
 	ownerSub: string,

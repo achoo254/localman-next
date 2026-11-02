@@ -6,11 +6,11 @@ import { MobileHandoffModel } from "../../auth/mobile-handoff-model.js";
 import { SessionModel } from "../../auth/session-model.js";
 import { UsageCounterModel } from "../../billing/usage-counter-model.js";
 import { ContactMessageModel } from "../../feedback/contact-message-model.js";
-import { FeedbackModel } from "../../feedback/feedback-model.js";
 import { NotificationModel } from "../../notifications/notification-model.js";
 import { NotificationPreferencesModel } from "../../notifications/notification-preferences-model.js";
 import { PushSubscriptionModel } from "../../notifications/push-subscription-model.js";
-import { TrialExtensionModel } from "../../trial/trial-extension-model.js";
+import { FeedbackModel } from "../retired-feature-models.js";
+import { TrialExtensionModel } from "../retired-feature-models.js";
 import type { OwnRow } from "./own-rows-fixture.js";
 
 /** TEST ONLY. Identity, settings and personal history rows. */
@@ -91,13 +91,7 @@ export const PERSONAL_ROWS: readonly OwnRow[] = [
 	],
 	[
 		"trial_extension_requests",
-		(sub) =>
-			TrialExtensionModel.create({
-				userSub: sub,
-				reason: "More time",
-				status: "pending",
-				requestedAt: new Date(),
-			}),
+		(sub) => TrialExtensionModel.create({ userSub: sub }),
 		(sub) => TrialExtensionModel.countDocuments({ userSub: sub }),
 	],
 	[
@@ -107,9 +101,6 @@ export const PERSONAL_ROWS: readonly OwnRow[] = [
 				type: "pro_interest",
 				email: `${sub}@example.test`,
 				userSub: sub,
-				name: sub,
-				source: "landing",
-				consentAt: new Date(),
 			}),
 		(sub) =>
 			FeedbackModel.countDocuments({ type: "pro_interest", userSub: sub }),

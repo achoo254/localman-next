@@ -1,3 +1,4 @@
+import { LIMITS } from "@localman/shared";
 import { Types } from "mongoose";
 import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
@@ -47,8 +48,8 @@ describe("traffic settings", () => {
 		expect(set.body).toMatchObject({
 			upstream: { kind: "tunnel", port: 3000 },
 			tunnelUrl: null,
-			plan: "free",
-			logDays: 7,
+			plan: "pro",
+			logDays: LIMITS.requestLogDays,
 			canManage: true,
 		});
 		const read = await as(COLLAB).get(`/projects/${id}/traffic-settings`);

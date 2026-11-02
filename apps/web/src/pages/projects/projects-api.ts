@@ -166,6 +166,6 @@ export async function rotateSecret(id: string): Promise<Project> {
 	return parseProject((await requestRotateSecret(id, false)).project);
 }
 
-export function isPlanLimitError(error: unknown): boolean {
+export function isLimitReachedError(error: unknown): boolean {
 	return error instanceof ApiError && error.code === "PLAN_LIMIT_REACHED";
 }

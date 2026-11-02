@@ -2,7 +2,7 @@ import {
 	CONTACT_STATUSES,
 	type ContactStatus,
 } from "@localman/shared/constants";
-import { apiRequest } from "../../lib/api-client";
+import { ApiError, apiRequest } from "../../lib/api-client";
 import {
 	InvalidResponseError,
 	type JsonRecord,
@@ -114,4 +114,9 @@ export async function deleteContactMessage(
 	await apiRequest(`${BASE}/${encodeURIComponent(id)}${query}`, {
 		method: "DELETE",
 	});
+}
+
+/** The API refuses admin calls from anyone but the owner. */
+export function isForbidden(error: unknown): boolean {
+	return error instanceof ApiError && error.status === 403;
 }

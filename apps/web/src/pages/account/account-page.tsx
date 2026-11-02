@@ -10,10 +10,9 @@ import { NOTIFICATION_SETTINGS_PATH } from "../../features/notifications/notific
 import {
 	type AccountUsage,
 	fetchAccountUsage,
-} from "../../features/subscription/account-usage-api";
-import { OverLimitsBanner } from "../../features/subscription/over-limits-banner";
-import { UsageMetersSkeleton } from "../../features/subscription/usage-meters-skeleton";
-import { useI18n } from "../../i18n/i18n-context";
+} from "../../features/usage/account-usage-api";
+import { UsageMetersSkeleton } from "../../features/usage/usage-meters-skeleton";
+import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
 import { useDelayedFlag } from "../../lib/use-delayed-flag";
@@ -26,12 +25,11 @@ type UsageState =
 	| { status: "error"; error: unknown };
 
 /**
- * `/account`: until when the extended limits last (when they do), the
- * limits the account is above, this month's meters and, last, deleting
- * the account. No plan, price or upgrade: the product is not sold yet.
+ * `/account`: this month's meters and, last, deleting the account.
+ * Every account has the same limits: no plan, price or upgrade.
  */
 export function AccountPage() {
-	const { t, formatDate } = useI18n();
+	const t = useT();
 	useAppTitle(t("account.title"));
 	const flags = useFeatures();
 	const session = useCurrentUser();
@@ -53,8 +51,6 @@ export function AccountPage() {
 	}, [load]);
 
 	const usage = state.status === "ready" ? state.usage : null;
-	const until =
-		usage?.plan === "pro" && usage.planExpiresAt ? usage.planExpiresAt : null;
 	return (
 		<section data-id="account" className="grid gap-5">
 			<div className="flex flex-wrap items-center justify-between gap-3">
@@ -70,14 +66,6 @@ export function AccountPage() {
 					{t("account.notificationChannels")}
 				</Link>
 			</div>
-			{until && !skeleton ? (
-				<p data-id="account-limits-until" className="m-0 text-muted text-sm">
-					{t("account.limitsUntil", { date: formatDate(until) })}
-				</p>
-			) : null}
-			{usage && !skeleton ? (
-				<OverLimitsBanner overLimits={usage.overLimits} />
-			) : null}
 			{skeleton ? (
 				<UsageMetersSkeleton
 					data-id="account-meters-loading"

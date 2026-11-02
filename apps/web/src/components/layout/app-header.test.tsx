@@ -51,7 +51,7 @@ describe("AppHeader", () => {
 	});
 
 	it("shows the wordmark, bell and account trigger, and no plan", () => {
-		const { container } = renderHeader(makeUser({ plan: "pro" }));
+		const { container } = renderHeader(makeUser());
 		expect(
 			screen.getByRole("link", { name: "Localman, go to Projects" }),
 		).toHaveAttribute("href", "/projects");
@@ -192,15 +192,17 @@ describe("AppHeader", () => {
 		expect(menu).toHaveTextContent("minhanh@example.com");
 	});
 
-	it.each([
-		["Admin · Pro interest", "/admin/pro-interest"],
-		["Admin · Feedback inbox", "/admin/feedback"],
-	])("shows '%s' to the owner only", async (label, path) => {
-		const { router } = renderHeader(makeUser({ isOwner: true }));
-		await openAccountMenu("Minh Anh");
-		await userEvent.click(await screen.findByRole("menuitem", { name: label }));
-		expect(router.state.location.pathname).toBe(path);
-	});
+	it.each([["Admin · Feedback inbox", "/admin/feedback"]])(
+		"shows '%s' to the owner only",
+		async (label, path) => {
+			const { router } = renderHeader(makeUser({ isOwner: true }));
+			await openAccountMenu("Minh Anh");
+			await userEvent.click(
+				await screen.findByRole("menuitem", { name: label }),
+			);
+			expect(router.state.location.pathname).toBe(path);
+		},
+	);
 
 	it("hides the admin entry from other users", async () => {
 		renderHeader();

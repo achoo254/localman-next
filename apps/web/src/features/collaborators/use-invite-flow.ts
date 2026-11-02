@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
-import { isPlanLimitError } from "../../pages/projects/projects-api";
+import { isLimitReachedError } from "../../pages/projects/projects-api";
 import { appPageUrl } from "../../platform/navigation";
 import {
 	type InviteResult,
@@ -24,7 +24,7 @@ export interface InviteFlowOptions {
 	projectId: string;
 	/** `message`: what was done, e.g. "Invited Lan", for announcements. */
 	onInvited: (result: InviteResult, message: string) => void;
-	onPlanLimit: () => void;
+	onLimitReached: () => void;
 }
 
 /**
@@ -35,7 +35,7 @@ export interface InviteFlowOptions {
 export function useInviteFlow({
 	projectId,
 	onInvited,
-	onPlanLimit,
+	onLimitReached,
 }: InviteFlowOptions) {
 	const toast = useToast();
 	const t = useT();
@@ -56,7 +56,7 @@ export function useInviteFlow({
 	}
 
 	function fail(cause: unknown) {
-		if (isPlanLimitError(cause)) onPlanLimit();
+		if (isLimitReachedError(cause)) onLimitReached();
 		setError(inviteErrorMessage(cause, t));
 	}
 

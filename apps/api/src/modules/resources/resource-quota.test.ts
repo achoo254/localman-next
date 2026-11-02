@@ -1,4 +1,4 @@
-import { limitsFor } from "@localman/shared";
+import { LIMITS } from "@localman/shared";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
 	as,
@@ -17,7 +17,7 @@ import {
 
 const ALICE = "acc_quota_alice";
 const BOB = "acc_quota_bob";
-const FREE_MAX = limitsFor("free").resources;
+const MAX = LIMITS.resources;
 
 useDashboardTestDb();
 beforeEach(async () => {
@@ -34,7 +34,7 @@ describe("resource quota", () => {
 	it("counts resources over every owned project and answers 403 at the limit", async () => {
 		const first = await createProject(ALICE, "One");
 		const second = await createProject(ALICE, "Two");
-		for (let i = 0; i < FREE_MAX; i += 1) {
+		for (let i = 0; i < MAX; i += 1) {
 			const res = await post(ALICE, i % 2 === 0 ? first : second, `r${i}`);
 			expect(res.status).toBe(201);
 		}
@@ -42,19 +42,10 @@ describe("resource quota", () => {
 		expect(blocked.status).toBe(403);
 		expect(blocked.body.error).toMatchObject({
 			code: "PLAN_LIMIT_REACHED",
-			details: { limit: "resources", max: FREE_MAX, used: FREE_MAX },
+			details: { limit: "resources", max: MAX, used: MAX },
 		});
 		const bobs = await createProject(BOB);
 		expect((await post(BOB, bobs, "mine")).status).toBe(201);
-	});
-
-	it("applies the Pro limit", async () => {
-		await UserModel.updateOne({ sub: ALICE }, { plan: "pro" });
-		const project = await createProject(ALICE);
-		for (let i = 0; i <= FREE_MAX; i += 1) {
-			expect((await post(ALICE, project, `r${i}`)).status).toBe(201);
-		}
-		expect(limitsFor("pro").resources).toBeGreaterThan(FREE_MAX);
 	});
 
 	it("never exceeds the limit under concurrent creates in several projects", async () => {
@@ -64,22 +55,20 @@ describe("resource quota", () => {
 			await createProject(ALICE, "C"),
 		];
 		const results = await Promise.all(
-			Array.from({ length: FREE_MAX + 5 }, (_, i) =>
+			Array.from({ length: MAX + 5 }, (_, i) =>
 				post(ALICE, projects[i % projects.length] ?? "", `r${i}`),
 			),
 		);
 		const statuses = results.map((res) => res.status);
-		expect(statuses.filter((s) => s === 201)).toHaveLength(FREE_MAX);
+		expect(statuses.filter((s) => s === 201)).toHaveLength(MAX);
 		expect(statuses.filter((s) => s === 403)).toHaveLength(5);
-		expect(await ResourceModel.countDocuments({ ownerSub: ALICE })).toBe(
-			FREE_MAX,
-		);
+		expect(await ResourceModel.countDocuments({ ownerSub: ALICE })).toBe(MAX);
 	});
 
 	it("frees a slot when a resource or its project is deleted", async () => {
 		const project = await createProject(ALICE);
 		const ids: string[] = [];
-		for (let i = 0; i < FREE_MAX; i += 1) {
+		for (let i = 0; i < MAX; i += 1) {
 			ids.push((await createResource(ALICE, project, { name: `r${i}` })).id);
 		}
 		await as(ALICE).send("delete", resourcesPath(project, `/${ids[0]}`));
@@ -128,7 +117,7 @@ describe("cloning a project with resources", () => {
 	});
 
 	it("bills the copy to the cloner and rolls the clone back when over quota", async () => {
-		const half = Math.floor(FREE_MAX / 2);
+		const half = Math.floor(MAX / 2);
 		const project = await createProject(ALICE);
 		for (let i = 0; i < half + 1; i += 1) {
 			await createResource(ALICE, project, { name: `r${i}` });
@@ -137,7 +126,7 @@ describe("cloning a project with resources", () => {
 		expect(over.status).toBe(403);
 		expect(over.body.error.details).toEqual({
 			limit: "resources",
-			max: FREE_MAX,
+			max: MAX,
 			used: half + 1,
 		});
 		expect(await ProjectModel.countDocuments({ owner: ALICE })).toBe(1);

@@ -1,4 +1,4 @@
-import { limitsFor } from "@localman/shared";
+import { LIMITS } from "@localman/shared";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
 	as,
@@ -58,7 +58,7 @@ describe("deleting a project while its resources are written", () => {
 		}
 		expect(await ResourceModel.countDocuments({ ownerSub: ALICE })).toBe(0);
 		const project = await createProject(ALICE, "After");
-		for (let i = 0; i < limitsFor("free").resources; i += 1) {
+		for (let i = 0; i < LIMITS.resources; i += 1) {
 			const res = await as(ALICE).send("post", resourcesPath(project), {
 				name: `r${i}`,
 			});

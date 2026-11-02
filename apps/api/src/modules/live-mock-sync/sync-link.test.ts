@@ -1,6 +1,5 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
-import { UserModel } from "../users/user-model.js";
 import {
 	EVE,
 	VIC,
@@ -118,13 +117,6 @@ describe("turning the sync off", () => {
 });
 
 describe("forks of a synced collection", () => {
-	beforeEach(async () => {
-		await UserModel.updateMany(
-			{},
-			{ $set: { plan: "pro", planExpiresAt: null } },
-		);
-	});
-
 	it("leaves the fork alone: only the original follows the mock", async () => {
 		const s = await syncedUsers();
 		const res = await as(EVE).send(

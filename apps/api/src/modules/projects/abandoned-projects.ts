@@ -1,8 +1,5 @@
 import { parseArgs } from "node:util";
-import type { PlanId } from "@localman/shared";
 import type { Logger } from "../../logger.js";
-import { effectivePlan } from "../billing/plan-guard.js";
-import { UserModel } from "../users/user-model.js";
 import { type ActivitySource, projectActivities } from "./project-activity.js";
 import {
 	LIVE_PROJECT,
@@ -44,7 +41,7 @@ export function parseCleanupArgs(argv: readonly string[]): CleanupArgs {
 	};
 }
 
-/** A live project of a Free owner without activity in the window. */
+/** A live project without activity in the window. */
 export interface AbandonedProject {
 	readonly projectId: string;
 	readonly owner: string;
@@ -57,30 +54,8 @@ export interface AbandonedProject {
 	readonly resources: number;
 }
 
-/** Owners whose effective plan is Free (expired Pro and unknown users too). */
-async function freeOwners(
-	owners: readonly string[],
-	now: Date,
-): Promise<Set<string>> {
-	const users = await UserModel.find({ sub: { $in: owners } })
-		.select("sub plan planExpiresAt")
-		.lean<{ sub: string; plan?: PlanId; planExpiresAt?: Date | null }[]>();
-	const paid = users.filter(
-		(user) =>
-			effectivePlan(
-				{
-					plan: user.plan ?? "free",
-					planExpiresAt: user.planExpiresAt ?? null,
-				},
-				now,
-			) !== "free",
-	);
-	const paidSubs = new Set(paid.map((user) => user.sub));
-	return new Set(owners.filter((owner) => !paidSubs.has(owner)));
-}
-
 /**
- * Live projects of Free owners whose last activity (mock request, edit of
+ * Live projects whose last activity (mock request, edit of
  * the project or of one of its resources, else creation) is older than
  * `idleDays`, oldest first. Mongo narrows on the project's own dates; the
  * resource edits are checked on that shortlist.
@@ -104,11 +79,9 @@ export async function findAbandonedProjects(
 	})
 		.sort({ createdAt: 1 })
 		.lean<StoredProject[]>();
-	const free = await freeOwners([...new Set(idle.map((p) => p.owner))], now);
-	const ofFree = idle.filter((p) => free.has(p.owner));
-	const activities = await projectActivities(ofFree);
+	const activities = await projectActivities(idle);
 	const found: AbandonedProject[] = [];
-	for (const project of ofFree) {
+	for (const project of idle) {
 		const projectId = project._id.toHexString();
 		const activity = activities.get(projectId);
 		if (!activity || activity.at >= cutoff) continue;
@@ -128,8 +101,8 @@ export async function findAbandonedProjects(
 
 /**
  * Deletes the project through the regular cascade (tombstone, dependents,
- * document) after checking again that it is still live, idle and owned
- * by a Free user: the list may be minutes old. False when skipped.
+ * document) after checking again that it is still live and idle: the
+ * list may be minutes old. False when skipped.
  */
 async function deleteIfStillAbandoned(
 	projectId: string,
@@ -141,9 +114,6 @@ async function deleteIfStillAbandoned(
 	const activity = (await projectActivities([project])).get(projectId);
 	const cutoff = now.getTime() - idleDays * DAY_MS;
 	if (!activity || activity.at.getTime() >= cutoff) return false;
-	if (!(await freeOwners([project.owner], now)).has(project.owner)) {
-		return false;
-	}
 	await deleteProjectCascade(project);
 	return true;
 }
@@ -176,7 +146,7 @@ export async function runAbandonedCleanup(
 				logger.info(project, "Deleted abandoned project");
 			} else {
 				skipped += 1;
-				logger.info(project, "Skipped project: active again or not Free");
+				logger.info(project, "Skipped project: active again");
 			}
 		} catch (error) {
 			failed += 1;

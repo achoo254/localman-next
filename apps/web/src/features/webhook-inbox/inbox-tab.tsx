@@ -28,8 +28,8 @@ export interface InboxTabProps {
 	project: Project;
 	/** Opens the request log tab with this filter. */
 	onShowLogs: (filter: InboxLogFilter) => void;
-	/** The owner's plan has no room for another inbox: open the plans. */
-	onPlanLimit: () => void;
+	/** The project has no room for another inbox: tell the user. */
+	onLimitReached: () => void;
 }
 
 type Dialog =
@@ -39,10 +39,14 @@ type Dialog =
 
 /**
  * The Inbox tab of the endpoint card: the project's webhook inboxes with
- * their count against the plan, create, edit and delete for the owner,
+ * their count against the limit, create, edit and delete for the owner,
  * read only for collaborators.
  */
-export function InboxTab({ project, onShowLogs, onPlanLimit }: InboxTabProps) {
+export function InboxTab({
+	project,
+	onShowLogs,
+	onLimitReached,
+}: InboxTabProps) {
 	const t = useT();
 	const titleId = useId();
 	const [dialog, setDialog] = useState<Dialog>({ kind: "none" });
@@ -76,7 +80,7 @@ export function InboxTab({ project, onShowLogs, onPlanLimit }: InboxTabProps) {
 		const { items, used, max, canManage } = query.data;
 		manage = canManage;
 		const create = () =>
-			used >= max ? onPlanLimit() : setDialog({ kind: "form", inbox: null });
+			used >= max ? onLimitReached() : setDialog({ kind: "form", inbox: null });
 		body = (
 			<>
 				<div className="flex flex-wrap items-center gap-3">
@@ -166,9 +170,9 @@ export function InboxTab({ project, onShowLogs, onPlanLimit }: InboxTabProps) {
 						inbox={dialog.inbox}
 						urlBase={inboxUrlBase(project)}
 						onOpenChange={(open) => !open && close()}
-						onPlanLimit={() => {
+						onLimitReached={() => {
 							close();
-							onPlanLimit();
+							onLimitReached();
 						}}
 					/>
 				</Suspense>

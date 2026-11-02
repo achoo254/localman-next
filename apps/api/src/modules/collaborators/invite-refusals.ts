@@ -1,5 +1,5 @@
 import { OperationError } from "@localman/operations";
-import { PlanLimitError } from "../billing/plan-guard.js";
+import { LimitReachedError } from "../billing/limit-guard.js";
 import type { IneligibleReason, ResolvedToken } from "./invite-eligibility.js";
 import { memberSeats } from "./member-seats.js";
 
@@ -24,7 +24,7 @@ export async function refusal(
 ): Promise<OperationError> {
 	if (reason === "MEMBER_LIMIT") {
 		const seats = await memberSeats(token.project);
-		return new PlanLimitError("members", seats.max, seats.used);
+		return new LimitReachedError("members", seats.max, seats.used);
 	}
 	if (reason === "REMOVED_BY_OWNER") return removedByOwner();
 	if (reason === "EMAIL_NOT_VERIFIED") {

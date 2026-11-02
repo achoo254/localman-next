@@ -1,3 +1,4 @@
+import { LIMITS } from "./account-limits.js";
 /**
  * Where the data of the API client lives, what the proxy logs and what
  * Localman measures: the one source of the public page "Where your data
@@ -7,7 +8,6 @@
  * cannot drift from what the server does.
  */
 import { HISTORY_MAX_ENTRIES, HISTORY_TTL_DAYS } from "./api-client/limits.js";
-import { FREE_LIMITS, PRO_LIMITS } from "./plan-limits.js";
 
 /**
  * - `device`: never leaves the browser.
@@ -44,9 +44,9 @@ export interface DataItem {
 	readonly place: DataPlace;
 	/**
 	 * How long the server keeps it, in days; `null` while you keep it (until
-	 * you delete it or your account). Two values: standard and extended limits.
+	 * you delete it or your account).
 	 */
-	readonly keptDays: number | readonly [number, number] | null;
+	readonly keptDays: number | null;
 	/** Newest entries kept per account, when capped. */
 	readonly maxEntries: number | null;
 }
@@ -94,7 +94,7 @@ export const DATA_ITEMS: readonly DataItem[] = [
 	{
 		id: "mockLogs",
 		place: "server",
-		keptDays: [FREE_LIMITS.requestLogDays, PRO_LIMITS.requestLogDays],
+		keptDays: LIMITS.requestLogDays,
 		maxEntries: null,
 	},
 	{

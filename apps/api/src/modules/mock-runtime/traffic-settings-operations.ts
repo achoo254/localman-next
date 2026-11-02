@@ -3,11 +3,12 @@ import {
 	OperationError,
 	defineOperation,
 } from "@localman/operations";
+import { LIMITS } from "@localman/shared";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
 import { messagesFor } from "../../i18n/server-messages.js";
 import type { SsrfGuard } from "../api-client/ssrf-guard.js";
-import { effectivePlan, storedPlanOf } from "../billing/plan-guard.js";
+import { LEGACY_PLAN, legacyPlanSchema } from "../billing/legacy-plan-field.js";
 import {
 	LIVE_PROJECT,
 	ProjectModel,
@@ -15,7 +16,7 @@ import {
 } from "../projects/project-model.js";
 import { requireProject } from "../projects/project-service.js";
 import { readUserLocale } from "../users/user-locale.js";
-import { DEFAULT_REDACTED_HEADERS, logDaysOf } from "./request-log-entry.js";
+import { DEFAULT_REDACTED_HEADERS } from "./request-log-entry.js";
 import { forgetMockProject } from "./resolve-project.js";
 import {
 	type ProjectUpstream,
@@ -35,8 +36,8 @@ const settingsView = z.object({
 	tunnelUrl: z.string().nullable(),
 	redactHeaders: z.array(z.string()),
 	defaultRedactedHeaders: z.array(z.string()),
-	/** The owner's effective plan and the days a line written now is kept. */
-	plan: z.enum(["free", "pro"]),
+	plan: legacyPlanSchema,
+	/** Days a line written now is kept. */
 	logDays: z.number(),
 	/** The caller may change the upstream and masked headers (owner only). */
 	canManage: z.boolean(),
@@ -44,8 +45,6 @@ const settingsView = z.object({
 
 async function viewOf(project: StoredProject, sub: string) {
 	const upstream = upstreamOf(project.upstream);
-	const now = new Date();
-	const ownerPlan = await storedPlanOf(project.owner);
 	return {
 		upstream,
 		tunnelUrl:
@@ -54,8 +53,8 @@ async function viewOf(project: StoredProject, sub: string) {
 				: null,
 		redactHeaders: [...(project.redactHeaders ?? [])],
 		defaultRedactedHeaders: [...DEFAULT_REDACTED_HEADERS],
-		plan: effectivePlan(ownerPlan, now),
-		logDays: logDaysOf(ownerPlan, now),
+		plan: LEGACY_PLAN,
+		logDays: LIMITS.requestLogDays,
 		canManage: project.owner === sub,
 	};
 }
@@ -116,7 +115,7 @@ export function createTrafficSettingsOperations(
 		path: "/projects/:projectId/traffic-settings",
 		summary: "Get a mock project's upstream and request log settings",
 		description:
-			"Hybrid mock upstream (none, tunnel of the owner's localhost:<port>, or an https base URL) with tunnelUrl (the owner's enabled tunnel URL of that port; null when unmapped or not a tunnel), the extra header names masked in the request log, the headers always masked, the owner's plan and logDays (how long new log lines are kept), and canManage (only the owner changes these settings). Members of the project only (404 otherwise).",
+			"Hybrid mock upstream (none, tunnel of the owner's localhost:<port>, or an https base URL) with tunnelUrl (the owner's enabled tunnel URL of that port; null when unmapped or not a tunnel), the extra header names masked in the request log, the headers always masked, plan (deprecated, always `pro`) and logDays (how long new log lines are kept), and canManage (only the owner changes these settings). Members of the project only (404 otherwise).",
 		input: z.object({ projectId }),
 		output: settingsView,
 		scopes: [USER_SCOPE],

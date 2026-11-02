@@ -1,5 +1,5 @@
 import type { CollectionDetail, ForkStatus } from "@localman/shared/api-client";
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
 import { ElementRoleModel } from "../access/element-role-model.js";
 import { ADA, EVE, VIC, patchAs } from "../access/testing/access-fixture.js";
@@ -8,16 +8,8 @@ import {
 	teamOfThree,
 	useCollectionTestDb,
 } from "../collections/testing/collection-fixture.js";
-import { UserModel } from "../users/user-model.js";
 
 useCollectionTestDb();
-
-beforeEach(async () => {
-	await UserModel.updateMany(
-		{},
-		{ $set: { plan: "pro", planExpiresAt: null } },
-	);
-});
 
 /** Ada's team collection forked by Eve into the team, where Vic is a Viewer. */
 async function forked() {
@@ -72,15 +64,6 @@ describe("permissions on a fork", () => {
 		expect(await canMerge(VIC, fork)).toBe(false);
 		await editorOn(source);
 		expect(await canMerge(VIC, fork)).toBe(true);
-	});
-
-	it("does not offer the merge to a lapsed Pro", async () => {
-		const { fork } = await forked();
-		await UserModel.updateOne(
-			{ sub: EVE },
-			{ $set: { plan: "pro", planExpiresAt: new Date(Date.now() - 60_000) } },
-		);
-		expect(await canMerge(EVE, fork)).toBe(false);
 	});
 
 	it("lets a Viewer of the fork merge plainly but not update or delete it", async () => {

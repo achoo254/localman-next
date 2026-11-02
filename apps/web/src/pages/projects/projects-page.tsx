@@ -1,12 +1,11 @@
-import { limitsFor } from "@localman/shared/constants";
+import { LIMITS } from "@localman/shared/constants";
 import { IconPlus } from "@tabler/icons-react";
 import { useCallback, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { IconButton } from "../../components/ui/icon-button";
 import { useToast } from "../../components/ui/toast";
-import { useCurrentUser } from "../../features/auth/use-current-user";
 import { ProjectMemberDialogs } from "../../features/collaborators/project-member-dialogs";
-import { useLimitNotice } from "../../features/subscription/use-limit-notice";
+import { useLimitNotice } from "../../features/usage/use-limit-notice";
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { useAppTitle } from "../../lib/use-document-title";
@@ -21,7 +20,7 @@ import {
 	type ProjectInput,
 	cloneProject,
 	createProject,
-	isPlanLimitError,
+	isLimitReachedError,
 	updateProject,
 } from "./projects-api";
 import { ProjectsList, focusAfterRow } from "./projects-list";
@@ -43,8 +42,6 @@ const CLOSED: Dialog = { kind: "none" };
 export function ProjectsPage() {
 	const t = useT();
 	useAppTitle(t("projects.title"));
-	const session = useCurrentUser();
-	const plan = session.status === "authenticated" ? session.user.plan : "free";
 	const toast = useToast();
 	const navigate = useNavigate();
 	const limitNotice = useLimitNotice();
@@ -72,7 +69,7 @@ export function ProjectsPage() {
 	}
 
 	function openNew() {
-		if (owned >= limitsFor(plan).projects) hitLimit();
+		if (owned >= LIMITS.projects) hitLimit();
 		else setDialog({ kind: "form", project: null });
 	}
 
@@ -106,7 +103,7 @@ export function ProjectsPage() {
 			});
 			toast.show({ title: t("projects.toast.cloned", { name: copy.name }) });
 		} catch (error) {
-			if (isPlanLimitError(error)) hitLimit();
+			if (isLimitReachedError(error)) hitLimit();
 			else toast.show({ tone: "error", title: errorMessage(error) });
 		}
 	}
@@ -158,7 +155,7 @@ export function ProjectsPage() {
 					sampleBaseUrl={sample ? maskSecretHost(sample) : null}
 					onOpenChange={(open) => !open && setDialog(CLOSED)}
 					onSave={(input) => save(dialog.project, input)}
-					onPlanLimit={hitLimit}
+					onLimitReached={hitLimit}
 				/>
 			) : null}
 			{dialog.kind === "delete" ? (

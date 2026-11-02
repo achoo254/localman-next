@@ -20,12 +20,12 @@ describe("createTranslator", () => {
 		expect(english.t("layout.accountMenu.trigger", { name: "Minh Anh" })).toBe(
 			"Minh Anh · Account",
 		);
-		const limits = { projects: 3, resources: 10, proxy: 10_000 };
-		expect(english.t("landing.hero.noteLocalhost", limits)).toContain(
-			"10,000 proxy requests",
+		const limits = { projects: 10_000, resources: 50 };
+		expect(english.t("landing.hero.noteMock", limits)).toContain(
+			"10,000 projects",
 		);
-		expect(vietnamese.t("landing.hero.noteLocalhost", limits)).toContain(
-			"10.000 request qua proxy",
+		expect(vietnamese.t("landing.hero.noteMock", limits)).toContain(
+			"10.000 project",
 		);
 	});
 

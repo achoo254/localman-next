@@ -17,7 +17,7 @@ import {
 	paramText,
 } from "./schema-import-errors.js";
 
-/** Resources one import may propose; the plan quota applies when saving. */
+/** Resources one import may propose; the account quota applies when saving. */
 export const MAX_INFERRED_RESOURCES = 50;
 /** Warnings kept; later ones are only counted. */
 export const MAX_INFERENCE_WARNINGS = 100;

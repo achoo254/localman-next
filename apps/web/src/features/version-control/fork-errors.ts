@@ -2,7 +2,6 @@ import { useT } from "../../i18n/i18n-context";
 import { ApiError, errorMessage } from "../../lib/api-client";
 
 const CODES = {
-	PLAN_FEATURE_UNAVAILABLE: "planFeature",
 	FORK_TARGET_NOT_ALLOWED: "target",
 	MERGE_CONFLICTS: "conflicts",
 	FORK_SOURCE_UNAVAILABLE: "sourceGone",

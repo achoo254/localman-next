@@ -35,10 +35,9 @@ describe("syncUserFromUserInfo", () => {
 			username: "dat",
 			email: "dat@example.com",
 			emailVerified: true,
-			plan: "pro",
 			telegram: { chatId: "100", username: "dat_tg" },
 		});
-		// Only profile, plan and chat: credentials stay at the IdP.
+		// Only profile and chat: credentials stay at the IdP.
 		expect(Object.keys(user ?? {}).sort()).toEqual([
 			"_id",
 			"createdAt",
@@ -46,12 +45,9 @@ describe("syncUserFromUserInfo", () => {
 			"emailVerified",
 			"name",
 			"picture",
-			"plan",
-			"planExpiresAt",
 			"sub",
 			"telegram",
 			"tenantId",
-			"trialStartedAt",
 			"updatedAt",
 			"username",
 		]);
@@ -75,15 +71,14 @@ describe("syncUserFromUserInfo", () => {
 		expect(user?.telegram?.username).toBeUndefined();
 	});
 
-	it("keeps the plan and the chosen locale, and drops malformed optional claims", async () => {
+	it("keeps the chosen locale, and drops malformed optional claims", async () => {
 		await syncUserFromUserInfo(claims, SUB);
-		await UserModel.updateOne({ sub: SUB }, { plan: "pro", locale: "vi" });
+		await UserModel.updateOne({ sub: SUB }, { locale: "vi" });
 		await syncUserFromUserInfo(
 			{ ...claims, picture: "javascript:alert(1)", email: 42 },
 			SUB,
 		);
 		const user = await UserModel.findOne({ sub: SUB }).lean();
-		expect(user?.plan).toBe("pro");
 		expect(user?.locale).toBe("vi");
 		expect(user?.picture).toBeUndefined();
 		expect(user?.email).toBeUndefined();

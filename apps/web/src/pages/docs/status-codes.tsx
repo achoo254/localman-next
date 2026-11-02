@@ -4,7 +4,6 @@ import {
 	MAX_RECORDS_PER_RESOURCE,
 	MAX_RECORD_BYTES,
 	MAX_RESOURCE_BYTES,
-	limitsFor,
 } from "@localman/shared/constants";
 import type { ReactNode } from "react";
 import { useFeatures } from "../../config/features";
@@ -14,7 +13,6 @@ import { DocsTable, InlineCode, docsRich } from "./docs-content";
 import { PARENT_ID } from "./query-params";
 
 const KB = 1024;
-const freeMonthly = limitsFor("free").mockRequestsPerMonth;
 const NOT_FOUND_BODY = '{ "error": { "code": "NOT_FOUND", … } }';
 
 function Code({ code }: { code: string }) {
@@ -134,15 +132,6 @@ function statusRows(t: Translate, chaos: boolean): StatusRow[] {
 			"429",
 			"RATE_LIMITED",
 			docsRich(t("docs.reference.statusCodes.rateLimited")),
-		],
-		[
-			"429",
-			"MONTHLY_QUOTA_EXCEEDED",
-			freeMonthly === null
-				? t("docs.reference.statusCodes.monthlyQuota")
-				: t("docs.reference.statusCodes.monthlyQuotaFree", {
-						requests: freeMonthly,
-					}),
 		],
 		[
 			"500",

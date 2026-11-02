@@ -1,3 +1,4 @@
+import { LIMITS } from "@localman/shared";
 import type { Client } from "@modelcontextprotocol/client";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { useDashboardTestDb } from "../../test-support/dashboard-test-app.js";
@@ -144,7 +145,7 @@ describe("Localman MCP (OAuth) over Streamable HTTP", () => {
 			"revoke_magic_link",
 			"get_me",
 			"list_notifications",
-			"list_pro_interests",
+			"list_contact_messages",
 		]) {
 			expect(names).not.toContain(hidden);
 		}
@@ -185,16 +186,16 @@ describe("Localman MCP (OAuth) over Streamable HTTP", () => {
 		expect(JSON.stringify(result.content)).toContain("NOT_FOUND");
 	});
 
-	it("keeps the plan limits of the token's user", async () => {
-		const client = await connect("mock:read mock:write", "acc_free");
-		for (const name of ["A", "B", "C"]) {
-			await call(client, "create_project", { name });
+	it("keeps the limits of the token's user", async () => {
+		const client = await connect("mock:read mock:write", "acc_limited");
+		for (let i = 0; i < LIMITS.projects; i += 1) {
+			await call(client, "create_project", { name: `P${i}` });
 		}
-		const fourth = await client.callTool({
+		const over = await client.callTool({
 			name: "create_project",
-			arguments: { name: "D" },
+			arguments: { name: "Over" },
 		});
-		expect(fourth.isError).toBe(true);
-		expect(JSON.stringify(fourth.content)).toContain("PLAN_LIMIT_REACHED");
+		expect(over.isError).toBe(true);
+		expect(JSON.stringify(over.content)).toContain("PLAN_LIMIT_REACHED");
 	});
 });

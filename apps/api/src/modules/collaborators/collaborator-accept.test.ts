@@ -147,22 +147,6 @@ describe("invite links", () => {
 		).toBe(400);
 	});
 
-	it("re-checks the owner's plan at accept time (owner downgraded meanwhile)", async () => {
-		await UserModel.updateOne({ sub: OWNER }, { $set: { plan: "pro" } });
-		const projectId = await createProject(OWNER);
-		await addMember(OWNER, projectId, BOB, "bob");
-		await addMember(OWNER, projectId, DAVE, "dave");
-		const token = await inviteToken(OWNER, projectId, "erin");
-		await UserModel.updateOne({ sub: OWNER }, { $set: { plan: "free" } });
-		expect((await preview(ERIN, token)).body.reason).toBe("MEMBER_LIMIT");
-		const res = await accept(ERIN, token);
-		expect(res.status).toBe(403);
-		expect(res.body.error).toMatchObject({
-			code: "PLAN_LIMIT_REACHED",
-			details: { limit: "members", max: 3, used: 4 },
-		});
-	});
-
 	it("requires sign-in and rate-limits token checks per account", async () => {
 		await startClearOfRateWindowEdge(10 * 60_000, 10_000);
 		const res = await as(BOB)

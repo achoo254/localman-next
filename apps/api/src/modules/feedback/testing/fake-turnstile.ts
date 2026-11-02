@@ -6,8 +6,8 @@ export const TURNSTILE_TEST_HOSTNAME = "localman.test";
 
 /** Tokens the fake understands; anything else fails verification. */
 export const TURNSTILE_TOKENS = {
-	/** Solved on the Pro interest form (action `pro_interest`). */
-	valid: "turnstile-pass",
+	/** Solved on another form (action `other_form`). */
+	otherForm: "turnstile-other-form",
 	/** Solved on the contact form (action `contact`). */
 	contact: "turnstile-contact",
 	/** Solved on another site that shares the site key. */
@@ -38,14 +38,14 @@ async function readJson(
 }
 
 function replyFor(token: unknown): Record<string, unknown> {
-	const base = { hostname: TURNSTILE_TEST_HOSTNAME, action: "pro_interest" };
+	const base = { hostname: TURNSTILE_TEST_HOSTNAME, action: "contact" };
 	switch (token) {
-		case TURNSTILE_TOKENS.valid:
-			return { success: true, ...base };
+		case TURNSTILE_TOKENS.otherForm:
+			return { success: true, ...base, action: "other_form" };
 		case TURNSTILE_TOKENS.otherHost:
 			return { success: true, ...base, hostname: "evil.example" };
 		case TURNSTILE_TOKENS.contact:
-			return { success: true, ...base, action: "contact" };
+			return { success: true, ...base };
 		case TURNSTILE_TOKENS.noAction:
 			return { success: true, hostname: TURNSTILE_TEST_HOSTNAME };
 		default:

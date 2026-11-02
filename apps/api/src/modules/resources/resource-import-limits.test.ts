@@ -1,3 +1,4 @@
+import { LIMITS } from "@localman/shared";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
 	as,
@@ -141,9 +142,9 @@ describe("import_resources: names, refusals and plan limits", () => {
 		expect(preview.body.resources[0]).toMatchObject({ name: "quotes" });
 	});
 
-	it("keeps the owner's plan limit and creates nothing past it", async () => {
+	it("keeps the owner's resource limit and creates nothing past it", async () => {
 		const projectId = await createProject(ALICE);
-		for (let i = 0; i < 9; i += 1) {
+		for (let i = 0; i < LIMITS.resources - 1; i += 1) {
 			await createResource(ALICE, projectId, { name: `r${i}` });
 		}
 		const body = {
@@ -157,6 +158,6 @@ describe("import_resources: names, refusals and plan limits", () => {
 		expect(refused.status).toBe(403);
 		expect(refused.body.error.code).toBe("PLAN_LIMIT_REACHED");
 		const items = await as(ALICE).get(resourcesPath(projectId));
-		expect(items.body.items).toHaveLength(9);
+		expect(items.body.items).toHaveLength(LIMITS.resources - 1);
 	});
 });

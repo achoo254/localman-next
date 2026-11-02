@@ -1,6 +1,6 @@
 import type { Project } from "../../pages/projects/projects-api";
 import { useShowRequestLog } from "../request-log/use-show-request-log";
-import { useLimitNotice } from "../subscription/use-limit-notice";
+import { useLimitNotice } from "../usage/use-limit-notice";
 import { InboxTab } from "./inbox-tab";
 
 /**
@@ -15,7 +15,7 @@ export function ProjectInboxTab({ project }: { project: Project }) {
 		<InboxTab
 			project={project}
 			onShowLogs={showRequestLog}
-			onPlanLimit={() => limitNotice("webhookInboxes")}
+			onLimitReached={() => limitNotice("webhookInboxes")}
 		/>
 	);
 }

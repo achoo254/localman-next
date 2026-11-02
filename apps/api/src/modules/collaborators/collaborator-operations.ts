@@ -29,7 +29,7 @@ export const listCollaboratorsOperation = defineOperation({
 	path: PATH,
 	summary: "List the members of a mock project",
 	description:
-		"The owner, member seats used against the owner's plan (owner, accepted members and pending invitations; max null = unlimited) and the rows. The owner sees pending and expired invitations with the invited email; a collaborator sees only accepted members.",
+		"The owner, member seats used against the member limit (owner, accepted members and pending invitations; max null = unlimited) and the rows. The owner sees pending and expired invitations with the invited email; a collaborator sees only accepted members.",
 	input: z.object({ projectId }),
 	output: collaboratorList,
 	scopes: [USER_SCOPE],
@@ -73,7 +73,7 @@ export const inviteCollaboratorOperation = defineOperation({
 	method: "POST",
 	path: PATH,
 	summary: "Invite someone to a mock project",
-	description: `Invites by username or email. A matching account is bound to the invitation and notified (in-app, Web Push, Telegram as it chose); an email without an account gets a link only an account with that IdP-verified email can accept. Returns the one-time \`inviteLink\` (\`/invite/:token\`, valid 7 days) once: it is never shown again. Inviting the same person again issues a new link. 404 INVITEE_NOT_FOUND for an unknown username; 403 PLAN_LIMIT_REACHED (limit: members) when the owner's plan has no free seat. ${OWNER_NOTE}`,
+	description: `Invites by username or email. A matching account is bound to the invitation and notified (in-app, Web Push, Telegram as it chose); an email without an account gets a link only an account with that IdP-verified email can accept. Returns the one-time \`inviteLink\` (\`/invite/:token\`, valid 7 days) once: it is never shown again. Inviting the same person again issues a new link. 404 INVITEE_NOT_FOUND for an unknown username; 403 PLAN_LIMIT_REACHED (limit: members) when the owner has no free member seat. ${OWNER_NOTE}`,
 	input: z.object({ projectId, usernameOrEmail: usernameOrEmailSchema }),
 	output: z.object({
 		collaborator: collaboratorView,

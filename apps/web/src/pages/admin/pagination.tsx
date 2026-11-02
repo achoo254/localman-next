@@ -14,7 +14,7 @@ export function Pagination({ page, pages, onPage }: PaginationProps) {
 	return (
 		<nav
 			aria-label={t("admin.pagination.label")}
-			data-id="admin-pro-pagination"
+			data-id="admin-pagination"
 			className="flex items-center justify-end gap-2 border-border-subtle border-t px-5 py-3"
 		>
 			<Button size="sm" disabled={page <= 1} onClick={() => onPage(page - 1)}>

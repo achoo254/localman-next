@@ -4,7 +4,7 @@ import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
 import { errorMessage } from "../../lib/api-client";
-import { isPlanLimitError } from "../../pages/projects/projects-api";
+import { isLimitReachedError } from "../../pages/projects/projects-api";
 import {
 	type InboxView,
 	createInbox,
@@ -30,8 +30,8 @@ export interface InboxFormOptions {
 	inbox: InboxView | null;
 	form: RefObject<HTMLFormElement | null>;
 	onDone: () => void;
-	/** The owner's plan has no room for another inbox. */
-	onPlanLimit: () => void;
+	/** The project has no room for another inbox. */
+	onLimitReached: () => void;
 }
 
 /** Errors a change of each field makes stale. */
@@ -61,7 +61,7 @@ export function useInboxForm({
 	inbox,
 	form,
 	onDone,
-	onPlanLimit,
+	onLimitReached,
 }: InboxFormOptions) {
 	const t = useT();
 	const toast = useToast();
@@ -137,7 +137,7 @@ export function useInboxForm({
 		try {
 			await save(result.value, stored);
 		} catch (error) {
-			if (isPlanLimitError(error)) onPlanLimit();
+			if (isLimitReachedError(error)) onLimitReached();
 			else if (isNameTaken(error)) {
 				setErrors({ name: t("webhookInbox.form.errors.nameTaken") });
 				focusFirstInvalid(form);

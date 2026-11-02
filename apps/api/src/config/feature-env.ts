@@ -40,7 +40,7 @@ export const featureEnvShape = {
 		.default(20 * 1024 * 1024),
 	/** IdP `sub` of the Localman owners (admin pages). */
 	OWNER_SUBS: subjectList,
-	/** Chat that receives owner alerts (Pro interest) from Localman's bot. */
+	/** Chat that receives owner alerts (contact form) from Localman's bot. */
 	OWNER_TELEGRAM_CHAT_ID: z
 		.string()
 		.regex(/^-?\d{1,20}$/, "must be a numeric Telegram chat id")

@@ -1,6 +1,6 @@
 /**
- * Fixed caps of the API client, the same for every plan. Plan quotas (the
- * monthly proxy counter) live in `plan-limits.ts`; these are the technical
+ * Fixed caps of the API client. Account quotas live in
+ * `account-limits.ts`; these are the technical
  * bounds that the browser, the proxy and the MCP tool must agree on.
  */
 

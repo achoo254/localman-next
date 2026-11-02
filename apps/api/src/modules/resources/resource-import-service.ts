@@ -1,13 +1,12 @@
 import { validationError } from "@localman/operations";
 import {
+	LIMITS,
 	type ResourceField,
 	completeEndpoints,
-	limitsFor,
 	parentKeyOf,
 	resourceCreateSchema,
 } from "@localman/shared";
 import { Types } from "mongoose";
-import { currentPlanOf } from "../billing/plan-guard.js";
 import type { StoredProject } from "../projects/project-model.js";
 import { type PreparedRecords, prepareRecords } from "./record-input.js";
 import { emitResourceChanged } from "./resource-events.js";
@@ -24,14 +23,14 @@ import {
 import { type TreeNode, attachProblem } from "./resource-tree.js";
 
 /**
- * Resources the project owner may still create on their plan (over all
- * their projects), `null` when the plan has no cap: `Infinity` would turn
- * into `null` in JSON anyway, so it is mapped here on purpose.
+ * Resources the project owner may still create (over all their
+ * projects), `null` when there is no cap: `Infinity` would turn into
+ * `null` in JSON anyway, so it is mapped here on purpose.
  */
 export async function resourcesLeftFor(
 	project: StoredProject,
 ): Promise<number | null> {
-	const max = limitsFor(await currentPlanOf(project.owner)).resources;
+	const max = LIMITS.resources;
 	if (!Number.isFinite(max)) return null;
 	const used = await ResourceModel.countDocuments({ ownerSub: project.owner });
 	return Math.max(0, max - used);
@@ -89,7 +88,7 @@ function prepare(
 
 /**
  * Creates the planned resources in one project transaction, billed to the
- * owner's resource quota (403 `PLAN_LIMIT_REACHED` past the plan): the
+ * owner's resource quota (403 `PLAN_LIMIT_REACHED` past the limit): the
  * top-level ones under `parentId` (`null`: the root), the others under
  * their planned parent, each with its Child Resource fields and its seed
  * records (`prepareRecords`: ids, parent links, the 32 KB / 2 MB caps).

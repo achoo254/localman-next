@@ -4,7 +4,7 @@ import type {
 	MergePreview,
 	PullRequestDetail,
 } from "@localman/shared/api-client";
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
 import { ADA, EVE, patchAs } from "../access/testing/access-fixture.js";
 import {
@@ -12,20 +12,12 @@ import {
 	useCollectionTestDb,
 } from "../collections/testing/collection-fixture.js";
 import { callAsAgent } from "../environments/testing/agent-caller.js";
-import { UserModel } from "../users/user-model.js";
 import { forkOperations } from "./fork-operations.js";
 import { getPullRequestChangeDiffOperation } from "./pull-request-diff.js";
 import { getPullRequestOperation } from "./pull-request-operations.js";
 import { changedFork, open } from "./testing/pull-request-fixture.js";
 
 useCollectionTestDb();
-
-beforeEach(async () => {
-	await UserModel.updateMany(
-		{},
-		{ $set: { plan: "pro", planExpiresAt: null } },
-	);
-});
 
 const SOURCE_SECRET = "source-s3cret-41b7";
 const FORK_SECRET = "fork-s3cret-c09e";

@@ -1,5 +1,5 @@
 import { OperationError } from "@localman/operations";
-import { limitsFor } from "@localman/shared";
+import { LIMITS } from "@localman/shared";
 import {
 	type WorkspaceRole,
 	workspaceRoleAllows,
@@ -14,14 +14,9 @@ import { CollectionModel, type StoredCollection } from "./collection-model.js";
 
 /**
  * Days a collection stays in the trash before the job deletes it for
- * good: the longest `trashDays` of any plan (30 for Free and Pro alike).
- * One value for every collection, so nothing is purged before its owner's
- * plan says, whichever plan that owner holds when the job runs.
+ * good.
  */
-export const TRASH_RETENTION_DAYS = Math.max(
-	limitsFor("free").trashDays,
-	limitsFor("pro").trashDays,
-);
+export const TRASH_RETENTION_DAYS = LIMITS.trashDays;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const IN_TRASH = { deletedAt: { $exists: true } } as const;

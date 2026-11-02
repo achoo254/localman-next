@@ -7,7 +7,7 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it, vi } from "vitest";
-import { UsageMeter } from "../../features/subscription/usage-meter";
+import { UsageMeter } from "../../features/usage/usage-meter";
 import { makeProject } from "../../test/fixtures";
 import { ProjectRow } from "./project-row";
 

@@ -65,7 +65,7 @@ export interface ImportPreview {
 	schemaNames: string[];
 	selectedSchema: string | null;
 	relatedCount: number;
-	/** Resources the owner's plan still allows; `null` without a cap. */
+	/** Resources the owner may still create; `null` without a cap. */
 	resourcesLeft: number | null;
 }
 

@@ -3,7 +3,6 @@ import { backfillExampleSearchNames } from "./modules/collections/example-search
 import { CollectionTrashJob } from "./modules/collections/trash-purge-job.js";
 import { LiveMockSyncJob } from "./modules/live-mock-sync/sync-job.js";
 import { TombstoneSweeper } from "./modules/projects/tombstone-sweeper.js";
-import { TrialReminderJob } from "./modules/trial/trial-reminders.js";
 import { WatchDigestJob } from "./modules/watch/watch-digest-job.js";
 import { runInPrimaryTenant } from "./tenancy/primary-tenant-job.js";
 
@@ -28,8 +27,6 @@ export function createBackgroundJobs(
 ): BackgroundJobs {
 	// Finishes project deletions cut off by an error or a restart.
 	const tombstoneSweeper = new TombstoneSweeper(logger);
-	// Trial reminders (7 days, 1 day, ended), once per trial end.
-	const trialReminders = new TrialReminderJob(logger);
 	// Collections past their days in the trash are deleted for good.
 	const collectionTrash = new CollectionTrashJob(logger);
 	// Watchers hear about others' collection changes, about once a minute.
@@ -41,7 +38,6 @@ export function createBackgroundJobs(
 	return {
 		start() {
 			tombstoneSweeper.start();
-			trialReminders.start();
 			collectionTrash.start();
 			watchDigest?.start();
 			liveMockSync.start();
@@ -52,7 +48,6 @@ export function createBackgroundJobs(
 		async stop() {
 			await Promise.all([
 				tombstoneSweeper.stop(),
-				trialReminders.stop(),
 				collectionTrash.stop(),
 				watchDigest?.stop(),
 				liveMockSync.stop(),

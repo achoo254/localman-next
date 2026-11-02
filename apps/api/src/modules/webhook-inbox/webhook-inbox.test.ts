@@ -1,3 +1,4 @@
+import { LIMITS } from "@localman/shared";
 import { Types } from "mongoose";
 import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
@@ -87,7 +88,11 @@ describe("webhook inbox", () => {
 		expect(auth?.value).toBe("[redacted]");
 
 		const list = await as(OWNER).get(inboxes(id));
-		expect(list.body).toMatchObject({ used: 1, max: 2, canManage: true });
+		expect(list.body).toMatchObject({
+			used: 1,
+			max: LIMITS.webhookInboxes,
+			canManage: true,
+		});
 		expect(list.body.items[0]).toMatchObject({
 			name: "stripe",
 			url: `https://${secret}.localman.test/_inbox/stripe`,

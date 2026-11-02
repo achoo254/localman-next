@@ -2,7 +2,7 @@ import type {
 	CollectionDetail,
 	PullRequestDetail,
 } from "@localman/shared/api-client";
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
 import {
 	ADA,
@@ -12,17 +12,9 @@ import {
 	patchAs,
 } from "../access/testing/access-fixture.js";
 import { useCollectionTestDb } from "../collections/testing/collection-fixture.js";
-import { UserModel } from "../users/user-model.js";
 import { changedFork, open, review } from "./testing/pull-request-fixture.js";
 
 useCollectionTestDb();
-
-beforeEach(async () => {
-	await UserModel.updateMany(
-		{},
-		{ $set: { plan: "pro", planExpiresAt: null } },
-	);
-});
 
 describe("pull requests", () => {
 	it("asks Editors of the source to review and tells them", async () => {
@@ -141,20 +133,6 @@ describe("pull requests", () => {
 		expect(twice.status).toBe(409);
 		const listed = await as(EVE).get(`/collections/${fork}/pull-requests`);
 		expect(listed.body.items).toMatchObject([{ id: pr.id, status: "merged" }]);
-	});
-
-	it("needs Pro to open one", async () => {
-		const { fork } = await changedFork();
-		await UserModel.updateMany({}, { $set: { plan: "free" } });
-		const res = await as(EVE).send(
-			"post",
-			`/collections/${fork}/pull-requests`,
-			{
-				title: "x",
-			},
-		);
-		expect(res.status).toBe(403);
-		expect(res.body.error.code).toBe("PLAN_FEATURE_UNAVAILABLE");
 	});
 
 	it("hides a pull request from people who cannot open its source", async () => {

@@ -181,13 +181,29 @@ describe("route guards", () => {
 		expect(navigateToLogin).not.toHaveBeenCalled();
 	});
 
-	it.each(["/account", "/admin/pro-interest"])(
+	it.each(["/account", "/admin/feedback"])(
 		"keeps %s behind sign-in",
 		async (path) => {
 			mockFetch({ "GET /api/v1/users/me": UNAUTHENTICATED });
 			renderRoutes(routes, path);
 			await screen.findByText("Redirecting to sign-in…");
 			expect(navigateToLogin).toHaveBeenCalledWith({ returnTo: path });
+		},
+	);
+
+	it.each(["/admin/pro-interest", "/admin/trial-extensions"])(
+		"sends the removed admin page %s to the feedback inbox",
+		async (path) => {
+			mockFetch({
+				"GET /api/v1/users/me": { body: makeUser({ isOwner: true }) },
+				"GET /api/v1/admin/contact-messages": {
+					body: { items: [], total: 0, page: 1, pageSize: 20 },
+				},
+			});
+			const { router } = renderRoutes(routes, path);
+			await waitFor(() =>
+				expect(router.state.location.pathname).toBe("/admin/feedback"),
+			);
 		},
 	);
 

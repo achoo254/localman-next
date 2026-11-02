@@ -138,3 +138,18 @@ export async function magicToken(
 	expect(res.status, JSON.stringify(res.body)).toBe(201);
 	return tokenOf(res.body.link as string);
 }
+
+/**
+ * Takes `count` more member seats of the project with pending email
+ * invitations (`seat-<n>@example.test`), so a test reaches the member
+ * limit without one account per seat.
+ */
+export async function fillSeats(
+	ownerSub: string,
+	projectId: string,
+	count: number,
+): Promise<void> {
+	for (let i = 0; i < count; i += 1) {
+		await inviteToken(ownerSub, projectId, `seat-${i}@example.test`);
+	}
+}

@@ -177,7 +177,7 @@ describe("request log, rows", () => {
 		renderLogPanel({
 			[`GET ${LOGS_PATH}`]: page([logRow("a")]),
 			[`GET ${SETTINGS_PATH}`]: {
-				body: settingsJson({ canManage: false, plan: "pro", logDays: 30 }),
+				body: settingsJson({ canManage: false }),
 			},
 		});
 		await screen.findByText("/users/a");

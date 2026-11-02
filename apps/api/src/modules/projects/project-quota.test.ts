@@ -1,4 +1,4 @@
-import { limitsFor } from "@localman/shared";
+import { LIMITS } from "@localman/shared";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
 	as,
@@ -36,8 +36,8 @@ const create = (sub: string) =>
 	as(sub).send("post", "/projects", { name: "Next" });
 
 describe("project quota", () => {
-	it("lets a Free user create the plan's projects, then answers 403 PLAN_LIMIT_REACHED", async () => {
-		const max = limitsFor("free").projects;
+	it("lets a user create the allowed projects, then answers 403 PLAN_LIMIT_REACHED", async () => {
+		const max = LIMITS.projects;
 		for (let i = 0; i < max; i += 1) {
 			expect((await create(USER)).status).toBe(201);
 		}
@@ -56,37 +56,13 @@ describe("project quota", () => {
 		expect(await ProjectModel.countDocuments({ owner: USER })).toBe(max);
 	});
 
-	it("applies the Pro limit, and Free again once Pro has expired", async () => {
-		const max = limitsFor("pro").projects;
-		await UserModel.updateOne({ sub: USER }, { plan: "pro" });
-		await seedOwned(USER, max - 1);
-		expect((await create(USER)).status).toBe(201);
-		const blocked = await create(USER);
-		expect(blocked.status).toBe(403);
-		expect(blocked.body.error.details).toEqual({
-			limit: "projects",
-			max,
-			used: max,
-		});
-
-		await ProjectModel.deleteMany({ owner: USER });
-		await UserModel.updateOne(
-			{ sub: USER },
-			{ planExpiresAt: new Date(Date.now() - DAY_MS) },
-		);
-		await seedOwned(USER, limitsFor("free").projects);
-		expect((await create(USER)).body.error.details.max).toBe(
-			limitsFor("free").projects,
-		);
-	});
-
 	it("counts only owned projects, not other users'", async () => {
-		await seedOwned(OTHER, limitsFor("free").projects);
+		await seedOwned(OTHER, LIMITS.projects);
 		expect((await create(USER)).status).toBe(201);
 	});
 
 	it("never exceeds the limit under concurrent creates", async () => {
-		const max = limitsFor("free").projects;
+		const max = LIMITS.projects;
 		const results = await Promise.all(
 			Array.from({ length: max + 5 }, () => create(USER)),
 		);
@@ -97,7 +73,7 @@ describe("project quota", () => {
 	});
 
 	it("frees a slot when a project is deleted", async () => {
-		const max = limitsFor("free").projects;
+		const max = LIMITS.projects;
 		for (let i = 0; i < max; i += 1) await create(USER);
 		const [first] = (await as(USER).get("/projects")).body.items;
 		await as(USER).send("delete", `/projects/${first.id}`);

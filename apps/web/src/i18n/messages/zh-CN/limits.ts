@@ -16,4 +16,10 @@ export const limits: Messages["limits"] = {
 		teamWorkspaces: "此账户无法再创建团队 workspace。",
 	},
 	feedback: "需要更多？请通过反馈表告诉我们。",
+	usage: {
+		unlimited: "本月<b>不限次数</b>，仅有每秒速率限制。",
+		valueText: "{used} / {max}",
+		reached: "已达到额度。",
+		usedPercent: "已使用 {percent}%。",
+	},
 };

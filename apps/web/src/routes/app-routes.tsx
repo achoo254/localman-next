@@ -1,4 +1,4 @@
-import type { RouteObject } from "react-router";
+import { Navigate, type RouteObject } from "react-router";
 import { WORKBENCH_HANDLE } from "../components/layout/app-shell";
 import { lazyPage } from "./lazy-page";
 import { workspaceRoutes } from "./workspace-routes";
@@ -42,12 +42,10 @@ export const appRoutes: RouteObject[] = [
 			"NotificationSettingsPage",
 		),
 	},
+	// Admin pages of the plans, removed with them: old links open the inbox.
 	{
 		path: "admin/pro-interest",
-		element: lazyPage(
-			() => import("../pages/admin/pro-interest-page"),
-			"ProInterestPage",
-		),
+		element: <Navigate to="/admin/feedback" replace />,
 	},
 	{
 		path: "admin/feedback",
@@ -58,10 +56,7 @@ export const appRoutes: RouteObject[] = [
 	},
 	{
 		path: "admin/trial-extensions",
-		element: lazyPage(
-			() => import("../pages/admin/trial-extensions-page"),
-			"TrialExtensionsPage",
-		),
+		element: <Navigate to="/admin/feedback" replace />,
 	},
 	// Guest link of a collection: its redacted copy, signed in (`publicSharing`).
 	{

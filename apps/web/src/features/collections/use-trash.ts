@@ -1,11 +1,10 @@
-import { limitsFor } from "@localman/shared/constants";
+import { LIMITS } from "@localman/shared/constants";
 import {
 	keepPreviousData,
 	useMutation,
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
-import { useCurrentUser } from "../auth/use-current-user";
 import {
 	type TrashFilters,
 	type TrashListing,
@@ -26,12 +25,8 @@ export function daysLeft(purgeAt: string, now: Date): number {
 /** At or below this many days left, the count shows in the warning colour. */
 export const TRASH_WARNING_DAYS = 7;
 
-/** Days a deleted collection stays in the Trash, on the caller's plan. */
-export function useTrashDays(): number {
-	const session = useCurrentUser();
-	const plan = session.status === "authenticated" ? session.user.plan : "free";
-	return limitsFor(plan).trashDays;
-}
+/** Days a deleted collection stays in the Trash. */
+export const TRASH_DAYS = LIMITS.trashDays;
 
 export function useTrash(filters: TrashFilters) {
 	return useQuery({

@@ -1,4 +1,4 @@
-import { MAX_GENERATE_COUNT, limitsFor } from "@localman/shared/constants";
+import { LIMITS, MAX_GENERATE_COUNT } from "@localman/shared/constants";
 import { useT } from "../../i18n/i18n-context";
 import {
 	DocsArticle,
@@ -15,8 +15,6 @@ import {
 	QuerySection,
 	StatusSection,
 } from "./quick-start-sections";
-
-const FREE = limitsFor("free");
 
 /** `/docs/quick-start`: from an empty project to a callable mock API. */
 export function QuickStartPage() {
@@ -43,8 +41,8 @@ export function QuickStartPage() {
 				<Prose>
 					{docsRich(
 						t("docs.quickStart.createProject.body", {
-							projects: FREE.projects,
-							resources: FREE.resources,
+							projects: LIMITS.projects,
+							resources: LIMITS.resources,
 						}),
 					)}
 				</Prose>

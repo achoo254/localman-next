@@ -6,7 +6,7 @@ describe("loadTurnstile", () => {
 		window.turnstile = undefined;
 	});
 
-	it.each(["pro_interest", "contact"] as const)(
+	it.each(["contact"] as const)(
 		"renders with the site key and the %s action",
 		async (action) => {
 			const render = vi.fn(() => "w1");

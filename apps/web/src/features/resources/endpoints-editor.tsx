@@ -48,7 +48,7 @@ function isLabelled(key: string): key is keyof typeof LABEL_KEYS {
 /**
  * The five generated endpoints: each can be switched off (the mock then
  * answers 404) and has a response template, then (released with the
- * `mockPowerUps` flag) conditional rules and chaos. Open on every plan.
+ * `mockPowerUps` flag) conditional rules and chaos. Open to every account.
  */
 export function EndpointsEditor({
 	endpoints,

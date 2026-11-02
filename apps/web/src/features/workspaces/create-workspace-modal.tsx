@@ -10,7 +10,7 @@ import { Textarea } from "../../components/ui/textarea";
 import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { WORKSPACES_KEY, useSelectWorkspace } from "./current-workspace";
-import { planLimitOf, workspaceErrorMessage } from "./workspace-errors";
+import { limitReachedOf, workspaceErrorMessage } from "./workspace-errors";
 import { type Workspace, createWorkspace } from "./workspaces-api";
 
 const FORM_ID = "create-workspace-form";
@@ -24,8 +24,8 @@ export interface CreateWorkspaceModalProps {
 
 /**
  * Name and description of a new team workspace. It becomes the current
- * workspace; past the plan's team workspace limit, the "Requires Pro" card
- * explains why and links to the plans.
+ * workspace; past the team workspace limit, an alert says so and points
+ * to the feedback form.
  */
 export function CreateWorkspaceModal({
 	open,
@@ -56,7 +56,7 @@ export function CreateWorkspaceModal({
 			onCreated?.(workspace);
 		},
 	});
-	const limited = planLimitOf(create.error) === "teamWorkspaces";
+	const limited = limitReachedOf(create.error) === "teamWorkspaces";
 
 	function changeOpen(next: boolean) {
 		if (!next) {

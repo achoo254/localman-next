@@ -1,6 +1,5 @@
 import type { ServerMessages } from "./en.js";
 import { mobileSignInZhCN } from "./mobile-sign-in-zh-cn.js";
-import { trialZhCN } from "./trial-zh-cn.js";
 
 const monthName = new Intl.DateTimeFormat("zh-CN", {
 	year: "numeric",
@@ -17,11 +16,6 @@ export const zhCN: ServerMessages = {
 		"project.invitation": "Project 协作邀请",
 		"project.mockUrlChanged": "共享 project 的 mock URL 已更改",
 		"usage.quota": "每月 mock request 额度提醒",
-		"trial.ending": "扩展额度即将结束",
-		"trial.ended": "扩展额度已结束",
-		"trial.extension.requested": "Pro 试用延期申请（所有者）",
-		"trial.extension.approved": "扩展额度已延长",
-		"trial.extension.declined": "扩展额度未获延长",
 		"workspace.invitation": "Workspace 邀请",
 		"element.shared": "与你共享的 collection 和 environment",
 		"access.requested": "对你的 collection 和 environment 的访问请求",
@@ -149,14 +143,13 @@ export const zhCN: ServerMessages = {
 			"该地址指向私有网络，Localman 无法向其发送 callback。请改用 Tunelo tunnel 暴露本地服务器。",
 		callbackDns: "无法解析 callback 的主机名。",
 	},
-	trial: trialZhCN,
 	mobileSignIn: mobileSignInZhCN,
 	ownerAlerts: {
 		suppressed: (count) => `（另有 ${count} 条因超出提醒上限未发送）`,
 		contactCategories: {
 			feedback: "反馈",
 			bug: "错误报告",
-			plan_question: "套餐咨询",
+			plan_question: "额度咨询",
 		},
 		contact: (p) =>
 			[
@@ -164,19 +157,6 @@ export const zhCN: ServerMessages = {
 				`内容：${p.excerpt}`,
 				`联系方式：${p.contact ?? "未留下"}`,
 				`发送者：${p.signedIn ? "已登录" : "访客"}`,
-				`来源：${p.source}`,
-			].join("\n"),
-		proInterestHeadlines: {
-			created: "Pro 套餐意向：新登记",
-			updated: "Pro 套餐意向：已更新",
-			recorded: "Pro 套餐意向：他人再次提交（仅记录历史）",
-		},
-		proInterest: (p) =>
-			[
-				p.headline,
-				`邮箱：${p.email}`,
-				`需求：${p.needs}`,
-				`团队规模：${p.teamSize}`,
 				`来源：${p.source}`,
 			].join("\n"),
 	},

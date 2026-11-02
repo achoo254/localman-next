@@ -1,7 +1,6 @@
 import {
 	IconBell,
 	IconBook,
-	IconChartBar,
 	IconChevronDown,
 	IconGauge,
 	IconHome,
@@ -137,12 +136,6 @@ export function AccountMenu({
 					{user.isOwner ? (
 						<>
 							<DropdownMenuSeparator />
-							{item(
-								"account-menu-admin-pro",
-								<IconChartBar {...ICON} />,
-								t("layout.accountMenu.adminProInterest"),
-								() => navigate("/admin/pro-interest"),
-							)}
 							{item(
 								"account-menu-admin-feedback",
 								<IconInbox {...ICON} />,

@@ -7,7 +7,6 @@ import {
 	OWNER,
 	useCollaboratorTestDb,
 } from "../collaborators/testing/collaborator-fixture.js";
-import { FeedbackModel } from "../feedback/feedback-model.js";
 import { UserModel } from "../users/user-model.js";
 import {
 	addWorkspaceMember,
@@ -18,6 +17,7 @@ import {
 	takeDeletionLock,
 	wasAccountDeleted,
 } from "./deleted-account-model.js";
+import { FeedbackModel } from "./retired-feature-models.js";
 import {
 	OWN_ROW_COLLECTIONS,
 	countOwnRows,
@@ -126,22 +126,11 @@ describe("DELETE /users/me", () => {
 	});
 
 	it("removes its Pro interest submissions from rows it does not own", async () => {
-		const submission = (userSub: string) => ({
-			at: new Date(),
-			userSub,
-			name: userSub,
-			source: "landing",
-			applied: true,
-			emailMatchesAccount: false,
-		});
 		const theirs = await FeedbackModel.create({
 			type: "pro_interest",
 			email: "shared@example.test",
 			userSub: BOB,
-			name: "Bob",
-			source: "landing",
-			consentAt: new Date(),
-			submissions: [submission(BOB), submission(OWNER)],
+			submissions: [{ userSub: BOB }, { userSub: OWNER }],
 		});
 		expect((await deleteAs(OWNER, { confirm: "owner" })).status).toBe(200);
 		const kept = await FeedbackModel.findById(theirs._id).lean();

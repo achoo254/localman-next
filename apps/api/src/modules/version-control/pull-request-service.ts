@@ -8,7 +8,7 @@ import {
 import { takeOperationSlot } from "../../lib/operation-rate-limit.js";
 import { applyMerge } from "./collection-merge-service.js";
 import { sidesOf } from "./collection-sync.js";
-import { notAFork, requireForkPlan } from "./fork-access.js";
+import { notAFork } from "./fork-access.js";
 import type { MergeFollowUp } from "./merge-follow-up.js";
 import {
 	PullRequestModel,
@@ -35,7 +35,7 @@ export interface PullRequestInput {
 const OPENED = { type: "pullRequest.opened" } as const;
 
 /**
- * Opens a pull request from a fork (Editors of the fork, Pro) into its
+ * Opens a pull request from a fork (Editors of the fork) into its
  * source, asking Editors of the source to review; they are told. 409
  * `PULL_REQUEST_LIMIT` past `PULL_REQUESTS_OPEN_MAX` open ones on the source.
  */
@@ -157,7 +157,7 @@ export async function reviewPullRequest(
 }
 
 /**
- * Merges an open or approved pull request (Editors of the source, Pro):
+ * Merges an open or approved pull request (Editors of the source):
  * the fork's merge with its option and choices, marking it merged in the
  * same transaction. A plain merge needs no access to the fork; the other
  * options act on it, so they need Editor there. Its author is told.
@@ -169,7 +169,6 @@ export async function mergePullRequest(
 	resolutions: Readonly<Record<string, ConflictSide>>,
 ): Promise<{ pullRequest: PullRequestView; followUp: MergeFollowUp }> {
 	const { pr, source } = await requirePullRequest(sub, id, "mergeFork");
-	await requireForkPlan(sub);
 	const forkId = pr.forkId.toHexString();
 	const sides =
 		option === "merge"

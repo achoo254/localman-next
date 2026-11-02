@@ -22,7 +22,7 @@ import {
 } from "../environments/variable-store.js";
 import { inWorkspaceTransaction } from "../workspaces/workspace-lock.js";
 import { envStateOf } from "./environment-state.js";
-import { requireForkPlan, requireForkTarget } from "./fork-access.js";
+import { requireForkTarget } from "./fork-access.js";
 import { forkStatusOf, forksOf } from "./fork-listing.js";
 import { ForkModel } from "./fork-model.js";
 
@@ -105,14 +105,13 @@ export async function prepareEnvironmentFork(
 		);
 }
 
-/** Forks an environment (Pro); see `prepareEnvironmentFork`. */
+/** Forks an environment; see `prepareEnvironmentFork`. */
 export async function forkEnvironment(
 	sub: string,
 	id: string,
 	input: { label: string; workspaceId: string },
 ): Promise<EnvironmentDetail> {
 	const access = await requireEnvironment(sub, id, "fork");
-	await requireForkPlan(sub);
 	await takeOperationSlot("fork", sub, access.element.id);
 	const workspace = await requireForkTarget(
 		sub,

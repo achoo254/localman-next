@@ -81,7 +81,7 @@ export const acceptInvite = defineOperation({
 	method: "POST",
 	path: "/invites/accept",
 	summary: "Accept an invite or magic link",
-	description: `Makes the signed-in caller an accepted collaborator and returns \`projectId\` for the redirect to /projects/:id. An invitation bound to an account only admits that account; one sent to an email only an account whose IdP-verified email matches it (403 NOT_INVITEE, 403 EMAIL_NOT_VERIFIED). A magic link admits anyone signed in. 403 PLAN_LIMIT_REACHED (limit: members) when the owner's plan has no free seat. The owner and members get \`alreadyMember: true\` and nothing changes. ${TOKEN_ERRORS}`,
+	description: `Makes the signed-in caller an accepted collaborator and returns \`projectId\` for the redirect to /projects/:id. An invitation bound to an account only admits that account; one sent to an email only an account whose IdP-verified email matches it (403 NOT_INVITEE, 403 EMAIL_NOT_VERIFIED). A magic link admits anyone signed in. 403 PLAN_LIMIT_REACHED (limit: members) when the owner has no free member seat. The owner and members get \`alreadyMember: true\` and nothing changes. ${TOKEN_ERRORS}`,
 	input: z.object({ token: inviteTokenSchema }),
 	output: z.object({ projectId: z.string(), alreadyMember: z.boolean() }),
 	scopes: [USER_SCOPE],

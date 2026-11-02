@@ -42,13 +42,7 @@ export function keptText(t: Translate, item: DataItem): string {
 	if (item.place === "passing") return t("dataTransparency.kept.notStored");
 	const { keptDays, maxEntries } = item;
 	if (keptDays === null) return t("dataTransparency.kept.untilDeleted");
-	const days =
-		typeof keptDays === "number"
-			? t("dataTransparency.kept.days", { count: keptDays })
-			: t("dataTransparency.kept.daysByLimits", {
-					standard: keptDays[0],
-					extended: keptDays[1],
-				});
+	const days = t("dataTransparency.kept.days", { count: keptDays });
 	return maxEntries === null
 		? days
 		: `${days}, ${t("dataTransparency.kept.cap", { count: maxEntries })}`;

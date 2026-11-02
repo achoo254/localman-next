@@ -9,7 +9,7 @@ Mọi tính năng nghiệp vụ của Localman phải có REST API, MCP tool và
 | Bảng operation → tool theo toolset (markdown) | `renderMcpToolTable(operations)` | `pnpm check:mcp-coverage [--markdown <path>]` |
 | Tài liệu OpenAPI 3.1 | `buildOpenApiDocument(operations, info, servers)` | `GET /api/v1/openapi.json` |
 
-**Quy tắc:** từ phase 02 trở đi, không viết route Express tay cho nghiệp vụ. Hạ tầng như `/healthz` không thuộc diện này.
+**Quy tắc:** từ phase 02 trở đi, không viết route Express tay cho nghiệp vụ. Hạ tầng như `/healthz` không thuộc diện này, cũng như `http/retired-routes.ts`: đường dẫn của tính năng đã gỡ (dùng thử, quan tâm Pro, ADR-0011) chỉ trả 410 `GONE` cho client cũ, không có operation hay tool MCP.
 
 ## Khai báo
 
@@ -115,9 +115,8 @@ Operation có `mcp: { exempt }` vì chỉ trình duyệt dùng được:
 - `notifications.getVapidPublicKey`, `notifications.createPushSubscription`, `notifications.deletePushSubscription`: subscription Web Push do service worker tạo, agent không có push endpoint.
 - `mock.previewInvite`, `mock.acceptInvite`: người được mời mở link `/invite/:token` trên trình duyệt; nhận lời mời là quyết định của chính người đó, không phải của agent.
 - `sharing.previewWorkspaceInvite`, `sharing.acceptWorkspaceInvite`: như lời mời project, nhưng cho workspace (link `/workspace-invite/:token`). Token đi trong body POST, không nằm trong URL của API, để log nginx không ghi lại.
-- `feedback.submitProInterest`, `feedback.getProInterestFormConfig`: form quan tâm gói Pro là form công khai cho người. Khách phải qua Cloudflare Turnstile (agent không giải được), và việc để lại email liên hệ phải do chính người đó đồng ý.
+- `feedback.getFormConfig`, `feedback.getProInterestFormConfig` (alias đường dẫn cũ, giữ cho client đã phát hành): chỉ widget Turnstile trên trình duyệt cần site key.
 - `feedback.submitContactMessage`: form "Góp ý / Liên hệ" là form công khai cho người. Khách phải qua Cloudflare Turnstile (widget khai action `contact`, agent không giải được), và góp ý gửi owner phải do chính người dùng viết. Hộp thư của owner (`admin.listContactMessages`, `admin.updateContactMessageStatus`) có MCP tool.
-- `users.startTrial`, `users.requestTrialExtension`, `admin.listTrialExtensions`, `admin.approveTrialExtension`, `admin.declineTrialExtension`, `admin.extendUserTrial`: quyết định về gói (bắt đầu dùng thử Pro, xin gia hạn, owner duyệt, từ chối hay gia hạn thẳng) do người làm trên giao diện, không phải agent. Đọc gói và trạng thái dùng thử qua `get_me`, `get_account_usage` vẫn có tool MCP.
 - `client.recordHistory`: trình duyệt ghi history sau mỗi lần gửi; tool `send_request` tự ghi history của nó.
 - `client.favoriteCollection`, `client.unfavoriteCollection`: đánh dấu sao chỉ là trạng thái hiển thị của sidebar (collection yêu thích lên đầu) của từng người.
 - `client.listDrafts`, `client.saveDraft`, `client.reorderDrafts`, `client.deleteDraft`: trạng thái tab của giao diện API client.

@@ -143,7 +143,7 @@ Bundle có `api/create-tenant-indexes.mjs`; `activate-release.sh` chạy nó (us
 
 ## Dọn project bỏ hoang
 
-Bundle có thêm `api/cleanup-abandoned-projects.mjs`: project của chủ gói Free không có request mock trong N ngày (mặc định 90). Chạy bằng cùng Node, cùng user và cùng env file với pm2, **luôn dry-run trước**, đọc danh sách trong log, rồi mới `--apply`. Không có cron tự xoá.
+Bundle có thêm `api/cleanup-abandoned-projects.mjs`: project (của mọi chủ, không phân gói: ADR-0011) không có hoạt động trong N ngày (mặc định 90). Chạy bằng cùng Node, cùng user và cùng env file với pm2, **luôn dry-run trước**, đọc danh sách trong log, rồi mới `--apply`. Không có cron tự xoá.
 
 ```bash
 cd /opt/localman/current/api

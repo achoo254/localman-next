@@ -185,11 +185,10 @@
         expires -1;
     }
 
-    # No pricing page while Localman is not sold: old links go to the
-    # landing. 302, not 301, so browsers do not cache it for good and the
-    # page can come back (docs/decisions/0002-*).
+    # There are no plans or pricing page (docs/decisions/0011-*): old
+    # links go to the landing for good.
     location = /pricing {
-        return 302 /;
+        return 301 /;
     }
 
     # Prerendered public tool page; builds without the `vnFakeData` flag have

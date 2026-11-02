@@ -21,7 +21,7 @@ const KEYS: Readonly<Record<string, ErrorKey>> = {
 };
 
 /** The quota a 403 `PLAN_LIMIT_REACHED` names, if any. */
-export function planLimitOf(
+export function limitReachedOf(
 	error: unknown,
 ): "members" | "teamWorkspaces" | null {
 	if (!(error instanceof ApiError) || error.code !== "PLAN_LIMIT_REACHED") {
@@ -38,7 +38,7 @@ export function planLimitOf(
  */
 export function workspaceErrorMessage(error: unknown, t: Translate): string {
 	if (!(error instanceof ApiError)) return errorMessage(error);
-	const limit = planLimitOf(error);
+	const limit = limitReachedOf(error);
 	if (limit === "members") return t("workspaces.errors.membersLimit");
 	if (limit === "teamWorkspaces") return t("workspaces.errors.workspacesLimit");
 	const key = Object.hasOwn(KEYS, error.code) ? KEYS[error.code] : undefined;

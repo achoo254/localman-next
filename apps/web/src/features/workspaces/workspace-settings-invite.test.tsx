@@ -138,7 +138,7 @@ describe("workspace settings · inviting", () => {
 		expect(screen.getByRole("button", { name: "Invite" })).toBeDisabled();
 	});
 
-	it("refreshes the seats when an invitation hits the plan limit", async () => {
+	it("refreshes the seats when an invitation hits the member limit", async () => {
 		let full = false;
 		renderSettings(
 			{

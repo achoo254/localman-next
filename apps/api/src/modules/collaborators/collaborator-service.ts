@@ -1,6 +1,6 @@
 import { OperationError } from "@localman/operations";
 import { z } from "zod";
-import { toJsonLimit } from "../billing/plan-guard.js";
+import { toJsonLimit } from "../billing/limit-guard.js";
 import { can } from "../projects/project-access.js";
 import { inProjectTransaction } from "../projects/project-lock.js";
 import type { StoredProject } from "../projects/project-model.js";
@@ -21,7 +21,7 @@ import { memberSeats } from "./member-seats.js";
 
 export const collaboratorList = z.object({
 	owner: memberProfile,
-	/** Owner, accepted members and pending invitations, against the plan. */
+	/** Owner, accepted members and pending invitations, against the limit. */
 	seats: z.object({ used: z.number(), max: z.number().nullable() }),
 	/** The caller is the owner: may invite, remove and manage the link. */
 	canManage: z.boolean(),

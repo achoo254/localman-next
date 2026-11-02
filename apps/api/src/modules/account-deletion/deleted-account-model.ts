@@ -11,8 +11,7 @@ const DELETION_LOCK_MS = 10 * 60_000;
  * tenant (docs/decisions/0007): only the SHA-256 of the IdP subject, never
  * the subject or anything else. `lockedUntil` serializes concurrent
  * deletions of one account; `deletedAt` marks a finished one, so the same
- * IdP account signing in later is asked before a new account is made and
- * gets no second automatic extended-limits period.
+ * IdP account signing in later is asked before a new account is made.
  */
 const deletedAccountSchema = new Schema(
 	{

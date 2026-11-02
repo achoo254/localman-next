@@ -12,13 +12,12 @@ import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
 import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { useAppTitle } from "../../lib/use-document-title";
-import { AdminNav } from "./admin-nav";
+import { AdminForbidden } from "./admin-forbidden";
 import { AdminListSkeleton } from "./admin-skeletons";
 import type { ContactMessage } from "./feedback-inbox-api";
 import { FeedbackInboxFilters } from "./feedback-inbox-filters";
 import { FeedbackInboxItem, senderLabel } from "./feedback-inbox-item";
 import { Pagination } from "./pagination";
-import { AdminForbidden } from "./pro-interest-page";
 import { useFeedbackInbox } from "./use-feedback-inbox";
 
 /** `/admin/feedback`: messages from the "Feedback / Contact" form. */
@@ -50,7 +49,6 @@ function FeedbackInbox() {
 				</h1>
 				<Badge tone="accent">{t("admin.ownerOnly")}</Badge>
 			</div>
-			<AdminNav />
 			<section
 				data-id="admin-feedback-list"
 				aria-label={t("admin.nav.feedback")}

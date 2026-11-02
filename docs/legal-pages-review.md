@@ -11,7 +11,7 @@ Tên miền, tên tài khoản IdP và host Tunelo trong chữ là tham số the
 | # | Claim | Nguồn |
 |---|---|---|
 | P1 | Không giữ mật khẩu; thông tin tài khoản đến từ IdP khi đăng nhập và mỗi lần làm mới phiên: account ID (`sub`), username, tên, link ảnh, email, `emailVerified`, chat Telegram đã liên kết | `apps/api/src/modules/users/user-model.ts`; `docs/system-architecture.md` mục "Đăng nhập và phiên" (callback, refresh đọc lại `userinfo`) |
-| P2 | Lưu hạn mức đang áp dụng, hạn mức mở rộng tới khi nào, ngôn ngữ giao diện | `user-model.ts` (`plan`, `planExpiresAt`, `trialStartedAt`, `locale`) |
+| P2 | Lưu ngôn ngữ giao diện (không còn gói hay hạn mức riêng từng tài khoản, ADR-0011) | `user-model.ts` (`locale`) |
 | P3 | Cookie phiên; token đăng nhập mã hoá trên server | `system-architecture.md` "Phiên" (AES-256-GCM); `modules/auth/session-store.ts` |
 | P4 | Lưu nội dung người dùng tạo: project, resource, dữ liệu, rule, inbox, callback, collection, request, example, environment, biến (secret mã hoá), comment, fork, PR, tab, lịch sử, cài đặt | các model dưới `apps/api/src/modules/*/*-model.ts`; secret: `system-architecture.md` "Environments và biến" |
 | P5 | Log request mock và inbox: thời điểm, method, path, query, status, thời gian, header và body request/response; body cắt 64 KB; Authorization, Cookie, Set-Cookie, X-API-Key và header tự chọn thành `[redacted]` | `system-architecture.md` "Mock runtime", gạch "Log request"; `modules/mock-runtime/request-log-model.ts` |
@@ -31,17 +31,17 @@ Tên miền, tên tài khoản IdP và host Tunelo trong chữ là tham số the
 | P19 | Dịch vụ push của trình duyệt chỉ khi bật Web Push | `system-architecture.md` "Thông báo" (Web Push) |
 | P20 | Tunelo: chỉ khi dùng cùng Localman, đọc danh sách tunnel và gửi request tới app local qua tunnel | `system-architecture.md` "Đích nội bộ qua tunnel", "Tunnel theo tài khoản Tunelo" |
 | P21 | Request proxy, upstream, callback, forward inbox đi tới địa chỉ người dùng đặt | `system-architecture.md` "Proxy của API client", "Mock lai", "Mock callback", "Webhook inbox" |
-| P22 | Thời hạn: log mock 7 ngày (hạn mức thường) / 30 ngày (mở rộng), tối đa 20.000 dòng mỗi project | `requestLogDays` trong `packages/shared/src/plan-limits.ts`; `system-architecture.md` "Log request" |
+| P22 | Thời hạn: log mock 30 ngày, tối đa 20.000 dòng mỗi project | `LIMITS.requestLogDays` trong `packages/shared/src/account-limits.ts`; `system-architecture.md` "Log request" |
 | P23 | Lịch sử API client 90 ngày, 500 mục; thông báo 90 ngày | `system-architecture.md` "Dữ liệu API client theo user", "Thông báo" |
 | P24 | Phiên hết sau 30 ngày không dùng, tối đa 90 ngày | `system-architecture.md` "Phiên" |
 | P25 | Thùng rác collection 30 ngày | `system-architecture.md` "Collections" (Thùng rác, `trashDays`) |
 | P26 | Tin góp ý giữ tới khi owner xoá | `system-architecture.md` "Form góp ý / liên hệ" ("Không có TTL") |
-| P27 | Project không hoạt động 90 ngày có thể bị owner xoá khi chủ có hạn mức thường | `system-architecture.md` "Dọn project bỏ hoang" (`cleanup:abandoned`, mặc định 90 ngày, chạy tay) |
+| P27 | Project không hoạt động 90 ngày có thể bị người vận hành xoá (mọi chủ project như nhau) | `system-architecture.md` "Dọn project bỏ hoang" (`cleanup:abandoned`, mặc định 90 ngày, chạy tay) |
 | P28 | Backup mỗi đêm, giữ 14 bản trên server, dữ liệu đã xoá còn tối đa 14 ngày | `docs/deployment-guide.md` bảng đầu, dòng Backup (cron 02:45, 14 bản, `/opt/localman/backups`) |
 | P29 | Quyền: xuất collection/environment, sửa/xoá, chọn kênh thông báo, xoá tài khoản ở Tài khoản; xoá tài khoản IdP ở trang IdP | `system-architecture.md` (export v2.1, `exportEnvironment`, tuỳ chọn thông báo); ADR-0007; `auth-next/src/account-portal/account-delete-page.ts` (`/account/delete`) |
 | P31 | "Máy chủ đặt tại Việt Nam", chỉ hiện cho dịch vụ hoandat.com (`isPrimaryService`) | Jev duyệt 20/10/2026: whois `<SERVER_65_IP>` → VN, iNET; cách lấy IP thật ở đầu `docs/deployment-guide.md` |
 | P32 | Email liên hệ `quocdat254@gmail.com` (trên `/privacy`, `/terms`, `/account/delete`) | Jev duyệt 20/10/2026: địa chỉ công khai sẵn trên trang quyền riêng tư của Miu và trang của chat; `SUPPORT_EMAIL` ở `apps/web/src/lib/legal.ts` |
-| P33 | Sau khi xoá chỉ giữ mã băm của account ID, để đăng nhập lại được hỏi trước khi tạo tài khoản mới và không được thêm hạn mức mở rộng | ADR-0007 mục 9 (Jev 20/10/2026); `apps/api/src/modules/account-deletion/deleted-account-model.ts` |
+| P33 | Sau khi xoá chỉ giữ mã băm của account ID, để đăng nhập lại được hỏi trước khi tạo tài khoản mới | ADR-0007 mục 9 (Jev 20/10/2026); `apps/api/src/modules/account-deletion/deleted-account-model.ts` |
 | P30 | Bảo mật: HTTPS; cookie phiên HttpOnly; token đăng nhập, secret, link token Tunelo mã hoá; token lời mời, access key, MCP token chỉ lưu hash | `system-architecture.md` "Phiên", "Environments và biến", "`tunelo_links`", "Cộng tác viên" (SHA-256), "Chia sẻ công khai" (`collection_access_keys` chỉ SHA-256); `mcp/mcp-token-model.ts` |
 
 ## Điều khoản (`legalTerms`)
@@ -49,7 +49,7 @@ Tên miền, tên tài khoản IdP và host Tunelo trong chữ là tham số the
 | # | Claim | Nguồn |
 |---|---|---|
 | T1 | Đăng nhập bằng tài khoản IdP, không giữ mật khẩu; AI agent được cấp quyền hành động với quyền của user | P1; `system-architecture.md` "Localman MCP" (tool chạy dưới quyền user của token) |
-| T2 | Localman miễn phí; hạn mức và mức dùng ở trang Tài khoản; có thể có hạn mức mở rộng một thời gian; hết thì không xoá gì, chỉ chặn mục mới vượt hạn mức | ADR-0002; `system-architecture.md` "Dùng thử Pro" ("Sau khi hết hạn") |
+| T2 | Localman miễn phí, mọi tài khoản cùng hạn mức, không có gói trả phí; hạn mức và mức dùng ở trang Tài khoản; vượt hạn mức không xoá gì, chỉ chặn mục mới | ADR-0011; `system-architecture.md` "Một mức cho mọi tài khoản" |
 | T3 | "Hạn mức có thể thay đổi" | **owner** |
 | T4 | Người dùng giữ quyền với nội dung; Localman chỉ xử lý để chạy tính năng | **owner** (khớp P15) |
 | T5 | Ai biết URL mock gọi được mock API, kể cả thành viên đã gỡ; đổi URL để chặn | `system-architecture.md` "Projects" (Phân quyền, `rotateProjectSecret`) |
@@ -112,4 +112,4 @@ Không có căn cứ trong repo hay quyết định nào, nên trang chỉ liệ
 4. **Luật áp dụng và giải quyết tranh chấp** — `/terms`.
 5. **Thời gian giữ log server** (pm2-logrotate chưa ghi số ngày; nginx access log có IP chưa được mô tả) — `/privacy`.
 
-Khi có quyết định: thêm section, bỏ mục tương ứng khỏi `pending` trong `pages/legal/legal-page.tsx`, đổi `LEGAL_EFFECTIVE_DATE`, và thêm dòng nguồn vào bảng trên. Văn bản tránh nhắc gói/giá theo ADR-0002; khi thương mại hoá phải sửa T2, P2, P22, P27.
+Khi có quyết định: thêm section, bỏ mục tương ứng khỏi `pending` trong `pages/legal/legal-page.tsx`, đổi `LEGAL_EFFECTIVE_DATE`, và thêm dòng nguồn vào bảng trên. Văn bản không nhắc gói/giá (ADR-0011: không có gói); khi thương mại hoá phải sửa T2, P2, P22, P27.

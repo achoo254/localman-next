@@ -1,4 +1,7 @@
-/** A limit reached while creating something; no plan or price wording. */
+/**
+ * A limit reached while creating something, and the account's usage
+ * meters. Every account has the same limits; no plan or price wording.
+ */
 export const limits = {
 	reached: {
 		projects: {
@@ -19,4 +22,11 @@ export const limits = {
 		teamWorkspaces: "This account can't create more team workspaces.",
 	},
 	feedback: "Need more? Tell us with the feedback form.",
+	usage: {
+		unlimited:
+			"<b>Unlimited</b> this month, with only a per-second rate limit.",
+		valueText: "{used} of {max}",
+		reached: "Limit reached.",
+		usedPercent: "{percent}% used.",
+	},
 } as const;

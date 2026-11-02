@@ -9,7 +9,6 @@ import {
 	proxyBusy,
 } from "../api-client/proxy-concurrency.js";
 import { encodeBody } from "../api-client/proxy-response-body.js";
-import { storedPlanOf } from "../billing/plan-guard.js";
 import { requireProject } from "../projects/project-service.js";
 import {
 	RecordModel,
@@ -167,7 +166,6 @@ export function createTestCallbackOperation(deps: OutboundDeps): AnyOperation {
 				const owner = {
 					id: project._id,
 					owner: project.owner,
-					ownerPlan: await storedPlanOf(project.owner),
 					redactHeaders: project.redactHeaders ?? [],
 				};
 				recordCallbackLine(owner, at, callback.on, rendered.message, result);

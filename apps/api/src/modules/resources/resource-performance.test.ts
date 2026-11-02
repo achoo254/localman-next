@@ -1,5 +1,5 @@
 import { performance } from "node:perf_hooks";
-import { limitsFor } from "@localman/shared";
+import { LIMITS } from "@localman/shared";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
 	as,
@@ -13,19 +13,19 @@ import {
 	resourcesPath,
 } from "./testing/resource-fixture.js";
 
-const PRO = "acc_perf_pro";
+const PRO = "acc_perf_owner";
 const RESOURCES = 50;
 const RECORDS = 100;
 const BUDGET_MS = 3_000;
 
 useDashboardTestDb();
 beforeEach(async () => {
-	await UserModel.create({ sub: PRO, username: "pro", plan: "pro" });
+	await UserModel.create({ sub: PRO, username: "pro" });
 });
 
 describe("generate_all performance", () => {
 	it(`fills ${RESOURCES} resources × ${RECORDS} records within ${BUDGET_MS} ms`, async () => {
-		expect(limitsFor("pro").resources).toBeGreaterThanOrEqual(RESOURCES);
+		expect(LIMITS.resources).toBeGreaterThanOrEqual(RESOURCES);
 		const project = await createProject(PRO);
 		// 10 roots, each with a chain of 4 nested resources: parents matter.
 		for (let root = 0; root < RESOURCES / 5; root += 1) {

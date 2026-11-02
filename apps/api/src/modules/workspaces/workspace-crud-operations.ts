@@ -41,7 +41,7 @@ export const createWorkspaceOperation = defineOperation({
 	path: "/workspaces",
 	summary: "Create a team workspace",
 	description:
-		"Creates a team workspace; the caller becomes its first Admin and its members count against the caller's plan. 403 PLAN_LIMIT_REACHED (limit: teamWorkspaces) when the caller already owns as many team workspaces as the plan allows (Free 1, Pro unlimited).",
+		"Creates a team workspace; the caller becomes its first Admin and its members count against the member limit. 403 PLAN_LIMIT_REACHED (limit: teamWorkspaces) when the caller already owns as many team workspaces as the plan allows (Free 1, Pro unlimited).",
 	input: z.object({
 		name: nameSchema,
 		description: descriptionSchema.optional(),

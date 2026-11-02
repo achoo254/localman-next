@@ -33,7 +33,6 @@ export const dataTransparency = {
 		untilDeleted: "Until you delete it",
 		notStored: "Not stored",
 		days: { one: "{count} day", other: "{count} days" },
-		daysByLimits: "{standard} days, {extended} with extended limits",
 		cap: "at most {count} entries",
 	},
 	items: {

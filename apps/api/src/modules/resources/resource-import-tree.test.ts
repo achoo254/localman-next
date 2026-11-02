@@ -1,3 +1,4 @@
+import { LIMITS } from "@localman/shared";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
 	as,
@@ -33,7 +34,7 @@ describe("import_resources (POST …/resources/import)", () => {
 		expect(preview.body).toMatchObject({
 			dryRun: true,
 			created: [],
-			resourcesLeft: 10,
+			resourcesLeft: LIMITS.resources,
 			schemaNames: [],
 			selectedSchema: null,
 		});
@@ -67,7 +68,7 @@ describe("import_resources (POST …/resources/import)", () => {
 
 		const created = await importAs(ALICE, projectId, body);
 		expect(created.status, JSON.stringify(created.body)).toBe(200);
-		expect(created.body.resourcesLeft).toBe(9);
+		expect(created.body.resourcesLeft).toBe(LIMITS.resources - 1);
 		const [resource] = created.body.created;
 		expect(resource).toMatchObject({ name: "users", count: 3, revision: 0 });
 		expect(await dataOf(ALICE, projectId, resource.id)).toEqual(

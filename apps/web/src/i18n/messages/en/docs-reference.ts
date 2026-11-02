@@ -48,9 +48,6 @@ export const docsReference = {
 			"The response body would exceed {mb} MB; fetch fewer records with <code>limit</code>.",
 		rateLimited:
 			"Sending too fast (limits per IP and per project). Wait the number of seconds in the <code>Retry-After</code> header, then send again.",
-		monthlyQuota: "The project owner has used up the monthly request quota.",
-		monthlyQuotaFree:
-			"The project owner has used up the monthly request quota ({requests} mock requests per month by default, shared across all their projects).",
 		chaosError:
 			"Error injected by the endpoint's chaos settings (its error rate). The status is the one picked there.",
 		chaosTimeout:

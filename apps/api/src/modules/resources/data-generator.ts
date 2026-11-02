@@ -127,7 +127,7 @@ export function recordData(
  * random over `parentRecordIds` (the user's choice: N records in total,
  * not N per parent) and needs at least one parent record. Throws 413
  * `DATA_TOO_LARGE` as soon as a record or the running total passes the
- * byte caps of `plan-limits`.
+ * byte caps of `account-limits`.
  */
 export function generateRecords(
 	spec: GenerationSpec,

@@ -47,7 +47,6 @@ export class MongoKeyStore implements KeyStore {
 			keyId,
 			keyHash,
 			maxTunnels: apiKey.maxTunnels ?? 3,
-			plan: "free",
 			role: "user",
 			scopes,
 			deviceId: apiKey.deviceId ?? undefined,

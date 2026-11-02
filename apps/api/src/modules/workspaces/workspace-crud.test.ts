@@ -72,34 +72,17 @@ describe("team workspaces", () => {
 		expect(bobList.body.items[1].memberCount).toBe(2);
 	});
 
-	it("allows a Free user one team workspace, then answers 403 PLAN_LIMIT_REACHED", async () => {
-		await createWorkspace(OWNER);
-		const second = await as(OWNER).send("post", "/workspaces", { name: "B" });
-		expect(second.status).toBe(403);
-		expect(second.body.error).toMatchObject({
-			code: "PLAN_LIMIT_REACHED",
-			details: { limit: "teamWorkspaces", max: 1, used: 1 },
-		});
-		// Being a member of someone else's workspace does not count.
-		await createWorkspace(BOB);
-		expect((await as(BOB).get("/workspaces")).body.items).toHaveLength(2);
-	});
-
-	it("lets a Pro user create many team workspaces", async () => {
-		await UserModel.updateOne({ sub: OWNER }, { $set: { plan: "pro" } });
+	it("lets every user create many team workspaces", async () => {
 		for (let i = 0; i < 4; i += 1) await createWorkspace(OWNER, `T${i}`);
 		expect((await as(OWNER).get("/workspaces")).body.items).toHaveLength(5);
-	});
-
-	it("never passes the Free limit when two creations race", async () => {
 		const results = await Promise.all([
 			as(OWNER).send("post", "/workspaces", { name: "A" }),
 			as(OWNER).send("post", "/workspaces", { name: "B" }),
 		]);
-		expect(results.map((res) => res.status).sort()).toEqual([201, 403]);
+		expect(results.map((res) => res.status)).toEqual([201, 201]);
 		expect(
 			await WorkspaceModel.countDocuments({ ownerId: OWNER, type: "team" }),
-		).toBe(1);
+		).toBe(6);
 	});
 
 	it("answers 400 for an empty name", async () => {
@@ -165,7 +148,6 @@ describe("DELETE /workspaces/:workspaceId", () => {
 			0,
 		);
 		expect((await as(BOB).get(workspacePath(id))).status).toBe(404);
-		// The deleted workspace frees the Free plan's team workspace.
 		await createWorkspace(OWNER, "Again");
 	});
 

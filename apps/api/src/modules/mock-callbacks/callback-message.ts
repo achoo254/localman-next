@@ -75,7 +75,6 @@ export function recordCallbackLine(
 	const { response } = result;
 	requestLog.record({
 		projectId: project.id,
-		ownerPlan: project.ownerPlan,
 		redactHeaders: [
 			...project.redactHeaders,
 			...maskedCallbackHeaders(message.headers),

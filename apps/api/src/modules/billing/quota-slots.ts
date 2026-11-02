@@ -1,7 +1,7 @@
 /**
  * Counted quotas (projects, resources) number each owned item with a
  * `quotaSlot` under a unique `(owner, quotaSlot)` index. Creators read the
- * taken slots, check the plan, then claim the lowest free ones: racers that
+ * taken slots, check the limit, then claim the lowest free ones: racers that
  * read the same state claim the same slots, so only one insert wins and the
  * others re-read and re-check instead of all passing the limit.
  */

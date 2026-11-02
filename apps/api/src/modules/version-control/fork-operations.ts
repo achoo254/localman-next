@@ -48,7 +48,7 @@ import { pullRequestCoreOperations } from "./pull-request-operations.js";
 import { syncOperations } from "./sync-operations.js";
 
 const FORK =
-	"Pro only (403 PLAN_FEATURE_UNAVAILABLE). Any role on the source; a Viewer forks into their personal workspace only (403 FORK_TARGET_NOT_ALLOWED), others into a workspace where they are Admin or Editor. The fork keeps the source's name and gets `label`; pull_*_changes and merge_*_fork keep the two in step.";
+	"Any role on the source; a Viewer forks into their personal workspace only (403 FORK_TARGET_NOT_ALLOWED), others into a workspace where they are Admin or Editor. The fork keeps the source's name and gets `label`; pull_*_changes and merge_*_fork keep the two in step.";
 
 export const forkCollectionOperation = defineOperation({
 	id: "client.forkCollection",

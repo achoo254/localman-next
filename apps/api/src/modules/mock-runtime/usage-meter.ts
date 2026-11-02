@@ -46,7 +46,7 @@ export interface UsageMeterOptions {
  * memory and added to the owner's `usage_counters` document every 5
  * seconds (and on shutdown) with one atomic `$inc`, so the hot path never
  * writes to Mongo. Admission compares the stored total plus what this
- * process counted with the plan's `mockRequestsPerMonth`. One process
+ * process counted with `LIMITS.mockRequestsPerMonth`. One process
  * serves the mock runtime; with several, each would admit up to the
  * last total it read (an overshoot bounded by one flush interval).
  *

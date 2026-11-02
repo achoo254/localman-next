@@ -1,5 +1,5 @@
 import type { CollectionDetail } from "@localman/shared/api-client";
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
 import { ADA, EVE, patchAs } from "../access/testing/access-fixture.js";
 import {
@@ -9,16 +9,8 @@ import {
 	teamOfThree,
 	useCollectionTestDb,
 } from "../collections/testing/collection-fixture.js";
-import { UserModel } from "../users/user-model.js";
 
 useCollectionTestDb();
-
-beforeEach(async () => {
-	await UserModel.updateMany(
-		{},
-		{ $set: { plan: "pro", planExpiresAt: null } },
-	);
-});
 
 async function forked() {
 	const ws = (await teamOfThree()).toHexString();

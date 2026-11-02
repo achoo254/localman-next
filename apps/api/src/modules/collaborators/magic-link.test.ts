@@ -1,3 +1,4 @@
+import { LIMITS } from "@localman/shared";
 import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
 import { CollaboratorModel } from "./collaborator-model.js";
@@ -12,12 +13,15 @@ import {
 	accept,
 	addMember,
 	createProject,
+	fillSeats,
 	inviteToken,
 	magicLinkPath,
 	magicToken,
 	preview,
 	useCollaboratorTestDb,
 } from "./testing/collaborator-fixture.js";
+
+const SEATS = LIMITS.membersPerWorkspace;
 
 useCollaboratorTestDb();
 
@@ -111,18 +115,20 @@ describe("magic link", () => {
 		expect(list.body.seats.used).toBe(1);
 		await addMember(OWNER, projectId, BOB, "bob");
 		expect((await accept(DAVE, token)).status).toBe(200);
+		await fillSeats(OWNER, projectId, SEATS - 3);
 		expect((await preview(ERIN, token)).body.reason).toBe("MEMBER_LIMIT");
 		const full = await accept(ERIN, token);
 		expect(full.status).toBe(403);
 		expect(full.body.error).toMatchObject({
 			code: "PLAN_LIMIT_REACHED",
-			details: { limit: "members", max: 3, used: 3 },
+			details: { limit: "members", max: SEATS, used: SEATS },
 		});
 	});
 
 	it("never passes the limit when two people join for the last seat", async () => {
 		const projectId = await createProject(OWNER);
 		await addMember(OWNER, projectId, BOB, "bob");
+		await fillSeats(OWNER, projectId, SEATS - 3);
 		const token = await magicToken(OWNER, projectId);
 		const results = await Promise.all([
 			accept(DAVE, token),

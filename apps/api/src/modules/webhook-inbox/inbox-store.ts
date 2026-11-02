@@ -1,8 +1,7 @@
 import { OperationError } from "@localman/operations";
-import { limitsFor } from "@localman/shared";
+import { LIMITS } from "@localman/shared";
 import type { Types } from "mongoose";
 import { isDuplicateKeyError } from "../../db/mongo-errors.js";
-import { currentPlanOf } from "../billing/plan-guard.js";
 import { RequestLogModel } from "../mock-runtime/request-log-model.js";
 import { requestLog } from "../mock-runtime/request-log-service.js";
 import { LOG_QUERY_MAX_MS } from "../mock-runtime/request-log-store.js";
@@ -54,12 +53,7 @@ export async function requestCounts(
 	return new Map(rows.map((row) => [row._id, row.n]));
 }
 
-/** Inboxes the owner's plan allows in one project. */
-export async function inboxLimitOf(owner: string): Promise<number> {
-	return limitsFor(await currentPlanOf(owner)).webhookInboxes;
-}
-
-/** 403 `PLAN_LIMIT_REACHED`, the shape of the other plan limits. */
+/** 403 `PLAN_LIMIT_REACHED`, the shape of the other limits. */
 function limitReached(max: number, used: number): OperationError {
 	return new OperationError(
 		403,
@@ -70,18 +64,17 @@ function limitReached(max: number, used: number): OperationError {
 }
 
 /**
- * Creates an inbox within the owner plan's `webhookInboxes` per project.
+ * Creates an inbox within `LIMITS.webhookInboxes` per project.
  * Creates racing for the last slot may both insert; then the newer one
  * removes itself and gets 403 too. A taken
  * name answers 409 `INBOX_NAME_TAKEN`.
  */
 export async function createInbox(
 	projectId: Types.ObjectId,
-	owner: string,
 	name: string,
 	response: InboxResponse,
 ): Promise<StoredInbox> {
-	const max = await inboxLimitOf(owner);
+	const max = LIMITS.webhookInboxes;
 	const used = await InboxModel.countDocuments({ projectId });
 	if (used >= max) throw limitReached(max, used);
 	let created: StoredInbox;

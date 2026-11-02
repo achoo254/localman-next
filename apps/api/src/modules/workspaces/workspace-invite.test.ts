@@ -1,3 +1,4 @@
+import { LIMITS } from "@localman/shared";
 import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
 import { hashInviteToken } from "../collaborators/invite-token.js";
@@ -15,6 +16,7 @@ import {
 	addWorkspaceMember,
 	createLink,
 	createWorkspace,
+	fillWorkspaceSeats,
 	inviteTo,
 	inviteTokenTo,
 	previewWorkspace,
@@ -22,6 +24,8 @@ import {
 	workspaceTokenOf,
 } from "./testing/workspace-fixture.js";
 import { WorkspaceMemberModel } from "./workspace-member-model.js";
+
+const SEATS = LIMITS.membersPerWorkspace;
 
 useCollaboratorTestDb();
 
@@ -103,15 +107,16 @@ describe("POST /workspaces/:workspaceId/invitations", () => {
 		});
 	});
 
-	it("gives a Free owner 3 seats (creator included), then answers 403 PLAN_LIMIT_REACHED", async () => {
+	it("counts the creator, invitations and links as seats, then answers 403 PLAN_LIMIT_REACHED", async () => {
 		const id = await createWorkspace(OWNER);
 		expect((await inviteTo(OWNER, id, "bob")).status).toBe(201);
 		expect((await createLink(OWNER, id)).status).toBe(201);
-		const fourth = await inviteTo(OWNER, id, "dave");
-		expect(fourth.status).toBe(403);
-		expect(fourth.body.error).toMatchObject({
+		await fillWorkspaceSeats(OWNER, id, SEATS - 3);
+		const over = await inviteTo(OWNER, id, "dave");
+		expect(over.status).toBe(403);
+		expect(over.body.error).toMatchObject({
 			code: "PLAN_LIMIT_REACHED",
-			details: { limit: "members", max: 3, used: 3 },
+			details: { limit: "members", max: SEATS, used: SEATS },
 		});
 		expect((await createLink(OWNER, id)).status).toBe(403);
 	});
@@ -127,31 +132,17 @@ describe("POST /workspaces/:workspaceId/invitations", () => {
 		expect((await inviteTo(OWNER, id, "dave")).status).toBe(201);
 	});
 
-	it("applies the owner's Pro plan of 10 seats, whoever invites", async () => {
-		await UserModel.updateOne({ sub: OWNER }, { $set: { plan: "pro" } });
-		const id = await createWorkspace(OWNER);
-		await addWorkspaceMember(OWNER, id, BOB, "bob", "admin");
-		for (let i = 1; i <= 8; i += 1) {
-			expect((await inviteTo(BOB, id, `p${i}@example.com`)).status).toBe(201);
-		}
-		const eleventh = await inviteTo(BOB, id, "p9@example.com");
-		expect(eleventh.body.error.details).toEqual({
-			limit: "members",
-			max: 10,
-			used: 10,
-		});
-	});
-
 	it("never passes the limit when two invitations race for the last seat", async () => {
 		const id = await createWorkspace(OWNER);
 		await inviteTokenTo(OWNER, id, "bob");
+		await fillWorkspaceSeats(OWNER, id, SEATS - 3);
 		const results = await Promise.all([
 			inviteTo(OWNER, id, "dave"),
 			createLink(OWNER, id),
 		]);
 		expect(results.map((res) => res.status).sort()).toEqual([201, 403]);
 		expect(await WorkspaceMemberModel.countDocuments({ workspaceId: id })).toBe(
-			3,
+			SEATS,
 		);
 	});
 
@@ -195,6 +186,6 @@ describe("invite links and revocation", () => {
 		expect((await previewWorkspace(BOB, token)).status).toBe(404);
 		expect((await as(OWNER).send("delete", path)).status).toBe(404);
 		const list = await as(OWNER).get(workspacePath(id, "/members"));
-		expect(list.body.seats).toEqual({ used: 1, max: 3 });
+		expect(list.body.seats).toEqual({ used: 1, max: SEATS });
 	});
 });

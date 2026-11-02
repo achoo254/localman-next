@@ -12,7 +12,7 @@ export const legalTerms = {
 	},
 	limits: {
 		title: "Limits",
-		body: "Localman is free to use. Your limits and this month's usage are shown on the Account page; for a time an account may have extended limits, and the page shows until when. When extended limits end, nothing is deleted: only new items above a limit are refused. Limits may change.",
+		body: "Localman is free to use, and every account has the same limits; there are no paid plans. Your limits and this month's usage are shown on the Account page. Over a limit, nothing is deleted: only new items above it are refused. Limits may change.",
 	},
 	content: {
 		title: "Your content",
@@ -24,11 +24,11 @@ export const legalTerms = {
 	},
 	use: {
 		title: "Fair use",
-		body: "Localman applies rate limits and monthly quotas, and refuses to send requests to private networks and mail ports. Do not try to get around them, overload the service, or use it to attack or reach systems you are not allowed to reach.",
+		body: "Localman applies rate limits and usage limits, and refuses to send requests to private networks and mail ports. Do not try to get around them, overload the service, or use it to attack or reach systems you are not allowed to reach.",
 	},
 	cleanup: {
 		title: "Inactive and deleted data",
-		body: "Projects with no activity for 90 days may be deleted while their owner has standard limits. Deleted collections stay in the trash for 30 days, then are deleted for good. Request logs and history expire as the Privacy Policy says.",
+		body: "Projects with no activity for 90 days may be deleted. Deleted collections stay in the trash for 30 days, then are deleted for good. Request logs and history expire as the Privacy Policy says.",
 	},
 	service: {
 		title: "The service",

@@ -69,7 +69,7 @@ export interface RuntimeSettings {
 	readonly localmanMcpRateLimit: RateLimitWindow;
 	/**
 	 * API client proxy (`client.sendRequest`, MCP `send_request`) calls
-	 * per account, on top of the plan's monthly `proxyRequestsPerMonth`.
+	 * per account, on top of the monthly `LIMITS.proxyRequestsPerMonth`.
 	 */
 	readonly proxyRateLimit: RateLimitWindow;
 	/**

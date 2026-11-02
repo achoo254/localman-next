@@ -2,7 +2,6 @@ import type { Messages } from "../../message-types";
 
 export const account: Messages["account"] = {
 	title: "Tài khoản",
-	limitsUntil: "Hạn mức mở rộng của bạn kéo dài tới {date}.",
 	notificationChannels: "Kênh thông báo",
 	usage: {
 		loading: "Đang tải hạn mức…",

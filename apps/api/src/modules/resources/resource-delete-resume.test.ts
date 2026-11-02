@@ -1,4 +1,4 @@
-import { limitsFor } from "@localman/shared";
+import { LIMITS } from "@localman/shared";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	as,
@@ -16,8 +16,8 @@ import {
 } from "./testing/resource-fixture.js";
 
 const ALICE = "acc_resume_alice";
-const FREE_RESOURCES = limitsFor("free").resources;
-const FREE_PROJECTS = limitsFor("free").projects;
+const MAX_RESOURCES = LIMITS.resources;
+const MAX_PROJECTS = LIMITS.projects;
 
 useDashboardTestDb();
 beforeEach(async () => {
@@ -59,7 +59,7 @@ describe("a project deletion that fails midway", () => {
 
 		// Slots stay taken while the deletion is unfinished.
 		const other = await createProject(ALICE, "Other");
-		for (let i = 0; i < FREE_RESOURCES - 1; i += 1) {
+		for (let i = 0; i < MAX_RESOURCES - 1; i += 1) {
 			await createResource(ALICE, other, { name: `r${i}` });
 		}
 		const blocked = await as(ALICE).send("post", resourcesPath(other), {
@@ -81,7 +81,7 @@ describe("a project deletion that fails midway", () => {
 			name: "one-more",
 		});
 		expect(freed.status).toBe(201);
-		for (let i = 1; i < FREE_PROJECTS; i += 1) {
+		for (let i = 1; i < MAX_PROJECTS; i += 1) {
 			expect(
 				(await as(ALICE).send("post", "/projects", { name: `P${i}` })).status,
 			).toBe(201);

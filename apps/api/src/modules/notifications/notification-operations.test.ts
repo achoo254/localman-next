@@ -175,11 +175,6 @@ describe("notification operations", () => {
 				},
 				...[
 					"usage.quota",
-					// Not "trial.extension.requested": owners only.
-					"trial.ending",
-					"trial.ended",
-					"trial.extension.approved",
-					"trial.extension.declined",
 					"workspace.invitation",
 					"element.shared",
 					"access.requested",

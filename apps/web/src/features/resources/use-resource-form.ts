@@ -6,7 +6,7 @@ import {
 	useState,
 } from "react";
 import { useT } from "../../i18n/i18n-context";
-import { isPlanLimitError } from "../../pages/projects/projects-api";
+import { isLimitReachedError } from "../../pages/projects/projects-api";
 import type { CallbacksController } from "../mock-callbacks/use-callbacks-editor";
 import {
 	changedParentKey,
@@ -40,7 +40,7 @@ export interface ResourceFormOptions {
 	/** The `<form>`, searched for the first invalid control after a failed submit. */
 	form: RefObject<HTMLFormElement | null>;
 	onSaved: (resource: Resource, created: boolean) => void;
-	onPlanLimit: () => void;
+	onLimitReached: () => void;
 }
 
 /** The resource was saved but its callbacks were not (`reason` says why). */
@@ -68,7 +68,7 @@ export function useResourceForm({
 	resources,
 	form,
 	onSaved,
-	onPlanLimit,
+	onLimitReached,
 }: ResourceFormOptions) {
 	const t = useT();
 	const cache = useResourceCache(projectId);
@@ -130,7 +130,7 @@ export function useResourceForm({
 			saved = await writeResource(result.input);
 		} catch (error) {
 			const placed = placedErrors(error);
-			if (isPlanLimitError(error)) onPlanLimit();
+			if (isLimitReachedError(error)) onLimitReached();
 			else if (placed) fail(placed);
 			else setSubmitError(resourceErrorMessage(error, t));
 			setBusy(false);

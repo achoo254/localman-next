@@ -15,6 +15,7 @@ import {
 	type SessionAuthenticator,
 	createSessionAuthResolver,
 } from "./http/require-auth.js";
+import { createRetiredRoutesRouter } from "./http/retired-routes.js";
 import { runInChannel } from "./lib/call-channel.js";
 import type { Logger } from "./logger.js";
 import { MCP_PATH } from "./modules/mcp/mcp-resource-metadata.js";
@@ -138,7 +139,8 @@ export function createDashboardApp(options: DashboardAppOptions): Express {
 			// Live request log (SSE), before the operation router's 404.
 			app.use(createLogStreamRouter({ resolveAuth }));
 			// API answers are per user: never let a browser or proxy cache them.
-			app.use(API_PREFIX, noStore, router);
+			// Removed features answer 410 before the router's 404.
+			app.use(API_PREFIX, noStore, createRetiredRoutesRouter(), router);
 		},
 	});
 }

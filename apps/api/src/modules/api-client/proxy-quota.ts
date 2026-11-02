@@ -1,8 +1,7 @@
 import { OperationError } from "@localman/operations";
-import { limitsFor } from "@localman/shared";
+import { LIMITS } from "@localman/shared";
 import { runtimeSettings } from "../../config/runtime-settings.js";
 import { takeRateLimitSlot } from "../../lib/rate-limit-windows.js";
-import { currentPlanOf } from "../billing/plan-guard.js";
 import { incrementUsage } from "../billing/usage-counter-model.js";
 
 function rateLimited(): OperationError {
@@ -24,8 +23,8 @@ function monthlyQuotaExceeded(max: number): OperationError {
 
 /**
  * Admits one proxied request of `sub`: first the per-user rate window
- * (`proxyRateLimit`), then the monthly `proxyRequestsPerMonth` of the
- * user's effective plan (Asia/Saigon month, `null` = no cap). The month
+ * (`proxyRateLimit`), then the monthly `LIMITS.proxyRequestsPerMonth`
+ * (Asia/Saigon month, `null` = no cap). The month
  * counter is incremented atomically and given back when the request is
  * refused, so racing requests never pass the cap and the account page
  * never shows more than the cap. Every admitted request counts, whatever
@@ -36,7 +35,7 @@ export async function admitProxyRequest(sub: string): Promise<void> {
 	if (!(await takeRateLimitSlot("proxy:user", sub, window))) {
 		throw rateLimited();
 	}
-	const max = limitsFor(await currentPlanOf(sub)).proxyRequestsPerMonth;
+	const max = LIMITS.proxyRequestsPerMonth;
 	// One instant for both writes, so a refusal at midnight on the last
 	// day of a month gives the slot back to the month it took it from.
 	const at = new Date();

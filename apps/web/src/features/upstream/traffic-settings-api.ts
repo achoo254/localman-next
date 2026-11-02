@@ -19,8 +19,6 @@ export type ProjectUpstream =
 	| { kind: "tunnel"; port: number }
 	| { kind: "url"; baseUrl: string };
 
-export type TrafficPlan = "free" | "pro";
-
 /** `GET /projects/:projectId/traffic-settings`. */
 export interface TrafficSettings {
 	upstream: ProjectUpstream;
@@ -30,7 +28,6 @@ export interface TrafficSettings {
 	redactHeaders: string[];
 	/** Header names always masked. */
 	defaultRedactedHeaders: string[];
-	plan: TrafficPlan;
 	/** Days a log line written now is kept. */
 	logDays: number;
 	/** The caller may change these settings (owner only today). */
@@ -61,16 +58,11 @@ function stringList(data: JsonRecord, key: string): string[] {
 
 export function parseTrafficSettings(value: unknown): TrafficSettings {
 	const data = expectRecord(value, "traffic settings");
-	const plan = expectString(data, "plan");
-	if (plan !== "free" && plan !== "pro") {
-		throw new InvalidResponseError(`plan "${plan}"`);
-	}
 	return {
 		upstream: parseUpstream(data.upstream),
 		tunnelUrl: optionalString(data, "tunnelUrl"),
 		redactHeaders: stringList(data, "redactHeaders"),
 		defaultRedactedHeaders: stringList(data, "defaultRedactedHeaders"),
-		plan,
 		logDays: expectNumber(data, "logDays"),
 		canManage: expectBoolean(data, "canManage"),
 	};

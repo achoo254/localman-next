@@ -1,6 +1,6 @@
 import { OperationError } from "@localman/operations";
 import { addresseeProblem } from "../access/invite-addressee.js";
-import { PlanLimitError } from "../billing/plan-guard.js";
+import { LimitReachedError } from "../billing/limit-guard.js";
 import { verifiedEmailOf } from "../collaborators/caller-rows.js";
 import { hashInviteToken } from "../collaborators/invite-token.js";
 import { inWorkspaceTransaction } from "./workspace-lock.js";
@@ -91,7 +91,7 @@ export async function workspaceIneligibility(
 		const problem = await addresseeProblem(sub, { userId, email });
 		if (problem) return problem;
 	}
-	// The invitation holds its seat already; the owner's plan may have shrunk.
+	// The invitation holds its seat already; the seats may have filled up.
 	const seats = await workspaceSeats(token.workspace, null, now);
 	return seats.used > seats.max ? "MEMBER_LIMIT" : null;
 }
@@ -102,7 +102,7 @@ async function refusal(
 ): Promise<OperationError> {
 	if (reason === "MEMBER_LIMIT") {
 		const seats = await workspaceSeats(token.workspace);
-		return new PlanLimitError("members", seats.max, seats.used);
+		return new LimitReachedError("members", seats.max, seats.used);
 	}
 	if (reason === "EMAIL_NOT_VERIFIED") {
 		return new OperationError(

@@ -12,7 +12,7 @@ export interface TurnstileConfig {
  */
 export async function fetchTurnstileConfig(): Promise<TurnstileConfig> {
 	const data = expectRecord(
-		await apiRequest("/api/v1/feedback/pro-interest/config", {
+		await apiRequest("/api/v1/feedback/config", {
 			redirectOnUnauthorized: false,
 		}),
 		"turnstile config",

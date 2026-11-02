@@ -10,7 +10,6 @@
  * solved for another form.
  */
 export const TURNSTILE_ACTIONS = {
-	proInterest: "pro_interest",
 	contact: "contact",
 } as const;
 export type TurnstileAction =

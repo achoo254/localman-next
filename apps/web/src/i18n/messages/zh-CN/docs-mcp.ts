@@ -13,9 +13,7 @@ export const docsMcp: Messages["docs"]["mcp"] = {
 		token:
 			"和 REST 一样，拿到 URL 的人都能调用这个 endpoint。Project 所有者可以在 MCP 标签页中要求 MCP 使用 token：开启后调用需要 <code>Authorization: Bearer lmmcp_…</code>，token 缺失或错误返回 401。Token 只在创建时显示一次。",
 		limits:
-			"每次工具调用计为 project 所有者每月 mock 额度中的 1 次 request，并与 REST 共用速率限制；超出限制时工具返回错误 <code>RATE_LIMITED</code> 或 <code>MONTHLY_QUOTA_EXCEEDED</code>。Custom response 不适用于 MCP 结果。",
-		limitsFree:
-			"每次工具调用计为 project 所有者每月 mock 额度中的 1 次 request（默认每月 {requests} 次 request），并与 REST 共用速率限制；超出限制时工具返回错误 <code>RATE_LIMITED</code> 或 <code>MONTHLY_QUOTA_EXCEEDED</code>。Custom response 不适用于 MCP 结果。",
+			"每次工具调用计入 project 所有者每月用量中的 1 次 request，并与 REST 共用速率限制；超出限制时工具返回错误 <code>RATE_LIMITED</code>。Custom response 不适用于 MCP 结果。",
 	},
 	localman: {
 		title: "Localman MCP",

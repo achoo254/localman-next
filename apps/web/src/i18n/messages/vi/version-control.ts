@@ -97,7 +97,6 @@ export const versionControl: Messages["versionControl"] = {
 		noAccess: "Bạn không mở được fork này.",
 	},
 	errors: {
-		planFeature: "Fork và merge thuộc gói Pro.",
 		target: "Với vai trò Viewer, bạn chỉ fork được vào workspace cá nhân.",
 		conflicts: "Hãy chọn bản cho mọi xung đột trước.",
 		sourceGone: "Bản gốc không còn, hoặc bạn không mở được nó.",

@@ -84,7 +84,7 @@ const ERROR_SCHEMA: JsonSchema = {
 						},
 						{
 							description:
-								"Structured facts of a domain error, e.g. the plan limit reached",
+								"Structured facts of a domain error, e.g. the limit reached",
 							type: "object",
 						},
 					],

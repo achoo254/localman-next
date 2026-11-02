@@ -10,7 +10,6 @@ export function makeUser(overrides: Partial<CurrentUser> = {}): CurrentUser {
 		emailVerified: true,
 		name: "Minh Anh",
 		picture: null,
-		plan: "free",
 		isOwner: false,
 		telegram: { linked: false, username: null },
 		locale: "en",

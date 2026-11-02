@@ -1,3 +1,4 @@
+import { LIMITS } from "@localman/shared";
 import type { Client } from "@modelcontextprotocol/client";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { operations } from "../../operations/registry.js";
@@ -86,7 +87,11 @@ describe("traffic tools over Localman MCP with OAuth", () => {
 				arguments: { projectId: project.id },
 			}),
 		);
-		expect(inboxes).toMatchObject({ items: [], used: 0, max: 2 });
+		expect(inboxes).toMatchObject({
+			items: [],
+			used: 0,
+			max: LIMITS.webhookInboxes,
+		});
 
 		await expect(
 			reader.callTool({

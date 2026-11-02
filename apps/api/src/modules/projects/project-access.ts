@@ -61,7 +61,7 @@ export async function roleIn(
  * The single authorization rule of projects, read from the shared
  * permission table: the owner is an Editor who also manages the project,
  * a collaborator an Editor who works on resources and data (within the
- * owner's plan) and may copy it, but never renames, re-prefixes or deletes
+ * owner's limits) and may copy it, but never renames, re-prefixes or deletes
  * it, nor manages its members.
  */
 export function roleAllows(

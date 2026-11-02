@@ -1,3 +1,4 @@
+import { LIMITS } from "@localman/shared";
 import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
 import { UserModel } from "../users/user-model.js";
@@ -10,12 +11,15 @@ import {
 	addMember,
 	collaboratorsPath,
 	createProject,
+	fillSeats,
 	invite,
 	inviteToken,
 	preview,
 	tokenOf,
 	useCollaboratorTestDb,
 } from "./testing/collaborator-fixture.js";
+
+const SEATS = LIMITS.membersPerWorkspace;
 
 useCollaboratorTestDb();
 
@@ -99,15 +103,15 @@ describe("POST /projects/:projectId/collaborators", () => {
 		expect((await preview(BOB, second)).body.eligible).toBe(true);
 	});
 
-	it("lets a Free owner fill 3 seats with pending invitations, then answers 403 PLAN_LIMIT_REACHED", async () => {
+	it("lets the owner fill every seat with pending invitations, then answers 403 PLAN_LIMIT_REACHED", async () => {
 		const projectId = await createProject(OWNER);
 		expect((await invite(OWNER, projectId, "bob")).status).toBe(201);
-		expect((await invite(OWNER, projectId, "x@example.com")).status).toBe(201);
-		const fourth = await invite(OWNER, projectId, "dave");
-		expect(fourth.status).toBe(403);
-		expect(fourth.body.error).toMatchObject({
+		await fillSeats(OWNER, projectId, SEATS - 2);
+		const over = await invite(OWNER, projectId, "dave");
+		expect(over.status).toBe(403);
+		expect(over.body.error).toMatchObject({
 			code: "PLAN_LIMIT_REACHED",
-			details: { limit: "members", max: 3, used: 3 },
+			details: { limit: "members", max: SEATS, used: SEATS },
 		});
 	});
 
@@ -121,38 +125,25 @@ describe("POST /projects/:projectId/collaborators", () => {
 		);
 		expect((await invite(OWNER, projectId, "dave")).status).toBe(201);
 		const list = await as(OWNER).get(collaboratorsPath(projectId));
-		expect(list.body.seats).toEqual({ used: 3, max: 3 });
+		expect(list.body.seats).toEqual({ used: 3, max: SEATS });
 		const statuses = list.body.items.map(
 			(item: { status: string }) => item.status,
 		);
 		expect(statuses).toEqual(["expired", "pending", "pending"]);
 	});
 
-	it("applies the owner's Pro plan of 10 seats", async () => {
-		await UserModel.updateOne({ sub: OWNER }, { $set: { plan: "pro" } });
-		const projectId = await createProject(OWNER);
-		for (let i = 1; i <= 9; i += 1) {
-			expect((await invite(OWNER, projectId, `p${i}@example.com`)).status).toBe(
-				201,
-			);
-		}
-		const eleventh = await invite(OWNER, projectId, "p10@example.com");
-		expect(eleventh.body.error.details).toEqual({
-			limit: "members",
-			max: 10,
-			used: 10,
-		});
-	});
-
 	it("never passes the limit when two invitations race for the last seat", async () => {
 		const projectId = await createProject(OWNER);
 		await inviteToken(OWNER, projectId, "bob");
+		await fillSeats(OWNER, projectId, SEATS - 3);
 		const results = await Promise.all([
 			invite(OWNER, projectId, "dave"),
 			invite(OWNER, projectId, "y@example.com"),
 		]);
 		const statuses = results.map((res) => res.status).sort();
 		expect(statuses).toEqual([201, 403]);
-		expect(await CollaboratorModel.countDocuments({ projectId })).toBe(2);
+		expect(await CollaboratorModel.countDocuments({ projectId })).toBe(
+			SEATS - 1,
+		);
 	});
 });

@@ -20,8 +20,6 @@ export const landing = {
 			"<b>No app or extension to install, just one Tunelo command.</b> Run <code>tunelo http 3000</code> and Localman picks up the tunnel by port, then sends requests to <code>localhost</code> or machines on your LAN. Stateful mock REST APIs included, so the frontend never waits for the backend.",
 		noteMock:
 			"Sign in and start right away: {projects} projects, {resources} resources in total and custom responses included.",
-		noteLocalhost:
-			"Sign in and start right away: {projects} mock projects, {resources} resources in total and {proxy} proxy requests per month.",
 	},
 	preview: {
 		viaTunelo: "via Tunelo",

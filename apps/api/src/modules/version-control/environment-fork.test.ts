@@ -1,5 +1,5 @@
 import type { EnvironmentDetail } from "@localman/shared/api-client";
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
 import {
 	ADA,
@@ -14,16 +14,8 @@ import {
 	useEnvironmentTestDb,
 	variableInput,
 } from "../environments/testing/environment-fixture.js";
-import { UserModel } from "../users/user-model.js";
 
 useEnvironmentTestDb();
-
-beforeEach(async () => {
-	await UserModel.updateMany(
-		{},
-		{ $set: { plan: "pro", planExpiresAt: null } },
-	);
-});
 
 const sharedOf = (env: EnvironmentDetail, key: string) =>
 	env.variables.find((variable) => variable.key === key)?.sharedValue;

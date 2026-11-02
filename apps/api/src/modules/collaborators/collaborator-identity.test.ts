@@ -106,25 +106,4 @@ describe("who an invitation belongs to", () => {
 		const rows = await CollaboratorModel.find({ projectId }).lean();
 		expect(rows.map((row) => row.status)).toEqual(["accepted"]);
 	});
-
-	it("keeps every member after a downgrade, refusing only new ones until under the cap", async () => {
-		await UserModel.updateOne({ sub: OWNER }, { $set: { plan: "pro" } });
-		const projectId = await createProject(OWNER);
-		await addMember(OWNER, projectId, BOB, "bob");
-		await addMember(OWNER, projectId, DAVE, "dave");
-		await addMember(OWNER, projectId, ERIN, "erin");
-		await UserModel.updateOne({ sub: OWNER }, { $set: { plan: "free" } });
-		for (const sub of [BOB, DAVE, ERIN]) {
-			expect((await as(sub).get(`/projects/${projectId}`)).status).toBe(200);
-		}
-		const refused = await invite(OWNER, projectId, "carol");
-		expect(refused.status).toBe(403);
-		expect(refused.body.error.details).toEqual({
-			limit: "members",
-			max: 3,
-			used: 4,
-		});
-		const token = await magicToken(OWNER, projectId);
-		expect((await accept(CAROL, token)).status).toBe(403);
-	});
 });

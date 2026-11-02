@@ -8,7 +8,7 @@ Monorepo `localman-next`: bộ Localman (mock API, API client trên web, MCP, De
 apps/web/                # React 19 + Vite 7 + Tailwind 4 (:5173)
 apps/api/                # Express 5: dashboard API (:4000) và mock runtime (:4100)
 packages/operations/     # defineOperation → route REST, MCP tool, OpenAPI 3.1
-packages/shared/         # @localman/shared, plan-limits.ts là nguồn duy nhất của hạn mức
+packages/shared/         # @localman/shared, account-limits.ts là nguồn duy nhất của hạn mức
 packages/design-tokens/  # tokens.css gốc (web nạp bản của @achoo254/app-shell, test giữ hai bản bằng nhau), SVG icon và badge
 packages/brand/generated/ # manifest + icon do pnpm brand:gen sinh (scripts/brand-gen.ts, gói @achoo254/brand)
 scripts/                 # check-mcp-coverage.ts, check-tokens.ts, brand-gen.ts
@@ -25,7 +25,7 @@ E2E Playwright (`e2e/specs/`) chỉ giữ hành trình quan trọng:
 
 Quy tắc:
 - **API nghiệp vụ chỉ khai báo qua `defineOperation`** rồi thêm vào `apps/api/src/operations/registry.ts`; không viết route Express tay. Mọi operation có MCP tool, hoặc `mcp: { exempt: "<lý do>" }`. Xem `docs/operation-registry.md`.
-- **Hạn mức gói** chỉ đọc qua `limitsFor(plan)` từ `@localman/shared`. `Infinity` thành `null` khi `JSON.stringify`, nên map tường minh trước khi trả cho client.
+- **Hạn mức** (một mức cho mọi tài khoản, không có gói: ADR-0011) chỉ đọc qua `LIMITS` từ `@localman/shared`. `Infinity` thành `null` khi `JSON.stringify`, nên map tường minh trước khi trả cho client.
 - **UI** chỉ dùng token và utility Tailwind đã map (`bg-surface`, `text-fg`, `text-muted`…), không hex/rgb/px khoảng cách. Dùng primitive trong `apps/web/src/components/ui/` trước khi tạo mới. Xem `docs/design-system.md`.
 - **Chữ người dùng thấy** đi qua `t()` (`apps/web/src/i18n/`): English là nguồn và mặc định, kèm `zh-CN` và `vi`; không hard-code chuỗi, không nêu tên đối thủ. Xem `docs/i18n.md`.
 - **Tên sản phẩm, bundle id, mẫu host** chỉ khai trong `brand.config.json`; code đọc `brand.appName` từ `@localman/shared/brand`, không viết cứng `"Localman"` (`check:brand`, CLI của `@achoo254/brand`, chặn). Mã thương hiệu (schema, generator, check) nằm ở gói dùng chung `@achoo254/brand` (repo `shared-next`), không sửa tại chỗ; desktop chỉ là PWA. Xem `docs/decisions/0006-brand-config-and-product-name.md`.

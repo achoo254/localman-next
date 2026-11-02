@@ -1,4 +1,3 @@
-import { FREE_LIMITS } from "@localman/shared";
 import { afterEach, describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
 import { UsageCounterModel, yyyymmOf } from "../billing/usage-counter-model.js";
@@ -148,16 +147,16 @@ describe("Bearer token on the MCP endpoint", () => {
 });
 
 describe("limits of the MCP endpoint", () => {
-	it("answers MONTHLY_QUOTA_EXCEEDED once the owner's quota is used", async () => {
+	it("has no monthly cap: a heavy month still gets answers", async () => {
 		const { url } = await usersProject();
 		await UsageCounterModel.create({
 			ownerSub: OWNER,
 			yyyymm: yyyymmOf(new Date()),
-			mockRequests: FREE_LIMITS.mockRequestsPerMonth ?? 0,
+			mockRequests: 1_000_000,
 		});
 		const client = await connectMockMcp(url);
 		const result = await client.callTool({ name: "list_users", arguments: {} });
-		expect(errorCodeOf(result)).toBe("MONTHLY_QUOTA_EXCEEDED");
+		expect(errorCodeOf(result)).toBeNull();
 	});
 
 	it("refuses a resource named mcp, and serves MCP over an older one", async () => {

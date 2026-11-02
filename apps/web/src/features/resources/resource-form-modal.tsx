@@ -24,8 +24,8 @@ export interface ResourceFormModalProps {
 	resources: readonly Resource[];
 	onOpenChange: (open: boolean) => void;
 	onSaved: (resource: Resource, created: boolean) => void;
-	/** The owner's plan has no room for another resource. */
-	onPlanLimit: () => void;
+	/** The owner has no room for another resource. */
+	onLimitReached: () => void;
 }
 
 /** "New resource" / "Edit resource": name, schema, template, endpoints. */
@@ -35,7 +35,7 @@ export function ResourceFormModal({
 	resources,
 	onOpenChange,
 	onSaved,
-	onPlanLimit,
+	onLimitReached,
 }: ResourceFormModalProps) {
 	const t = useT();
 	const { mockPowerUps, hybridMock } = useFeatures();
@@ -62,7 +62,7 @@ export function ResourceFormModal({
 		resources,
 		form,
 		onSaved,
-		onPlanLimit,
+		onLimitReached,
 	});
 	const editing = resource !== null;
 

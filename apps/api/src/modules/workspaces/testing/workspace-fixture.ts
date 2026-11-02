@@ -113,3 +113,18 @@ export async function memberIdOf(
 	if (!member) throw new Error(`${sub} is not a member`);
 	return member.id;
 }
+
+/**
+ * Takes `count` more member seats of the workspace with pending email
+ * invitations (`seat-<n>@example.test`), so a test reaches the member
+ * limit without one account per seat.
+ */
+export async function fillWorkspaceSeats(
+	adminSub: string,
+	workspaceId: string,
+	count: number,
+): Promise<void> {
+	for (let i = 0; i < count; i += 1) {
+		await inviteTokenTo(adminSub, workspaceId, `seat-${i}@example.test`);
+	}
+}

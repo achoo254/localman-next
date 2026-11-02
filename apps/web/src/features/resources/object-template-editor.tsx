@@ -18,7 +18,7 @@ const PLACEHOLDER = `{
 
 /**
  * Optional JSON object rendered once per generated record instead of the
- * schema. Open on every plan (Localman's Free plan includes it).
+ * schema. Open to every account.
  */
 export function ObjectTemplateEditor({
 	value,

@@ -1,10 +1,9 @@
 import { setTimeout as sleep } from "node:timers/promises";
-import { limitsFor } from "@localman/shared";
+import { LIMITS } from "@localman/shared";
 import { type Logger, createLogger } from "../../logger.js";
 import { acrossTenants, runInTenant } from "../../tenancy/tenant-context.js";
 import { tenantDirectory } from "../../tenancy/tenant-directory.js";
 import { storedTenantId } from "../../tenancy/tenant-scope-plugin.js";
-import { effectivePlan } from "../billing/plan-guard.js";
 import type { UsageMeter } from "../mock-runtime/usage-meter.js";
 import type { JobProject } from "./job-project.js";
 import { OwnerSlots, claimDueJob, takeExpiredJob } from "./outbound-claims.js";
@@ -123,9 +122,11 @@ export class OutboundQueue {
 
 	private charge = (project: JobProject): Promise<boolean> => {
 		if (!this.meter) return Promise.resolve(true);
-		const plan = effectivePlan(project.ownerPlan);
-		const limit = limitsFor(plan).mockRequestsPerMonth;
-		return this.meter.admit(project.owner, limit, project.id.toHexString());
+		return this.meter.admit(
+			project.owner,
+			LIMITS.mockRequestsPerMonth,
+			project.id.toHexString(),
+		);
 	};
 
 	/** Runs `work` in the job's tenant; a job of no known tenant is skipped. */

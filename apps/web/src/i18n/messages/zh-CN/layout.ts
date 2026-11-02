@@ -18,7 +18,6 @@ export const layout: Messages["layout"] = {
 		trigger: "{name} · 账号",
 		account: "账号与额度",
 		notifications: "通知渠道",
-		adminProInterest: "管理 · Pro 意向",
 		adminFeedback: "管理 · 反馈收件箱",
 		signOut: "退出登录",
 	},

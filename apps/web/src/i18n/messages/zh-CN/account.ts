@@ -2,7 +2,6 @@ import type { Messages } from "../../message-types";
 
 export const account: Messages["account"] = {
 	title: "账号",
-	limitsUntil: "你的扩展额度有效期至 {date}。",
 	notificationChannels: "通知渠道",
 	usage: {
 		loading: "正在加载额度…",

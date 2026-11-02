@@ -12,7 +12,6 @@ export class FakeKeyStore implements KeyStore {
 			keyId: `key-${this.keys.size}`,
 			keyHash,
 			maxTunnels: 3,
-			plan: "free",
 			role: "user",
 			scopes: [],
 			...info,

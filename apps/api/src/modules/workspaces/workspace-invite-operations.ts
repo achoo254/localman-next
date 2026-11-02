@@ -1,4 +1,5 @@
 import { defineOperation } from "@localman/operations";
+import { LIMITS } from "@localman/shared";
 import { WORKSPACE_ROLES } from "@localman/shared/access";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
@@ -13,8 +14,7 @@ import { invitationView, toInvitationView } from "./workspace-member-view.js";
 import { requireWorkspace } from "./workspace-roles.js";
 
 const role = z.enum(WORKSPACE_ROLES);
-const SEATS =
-	"Every accepted member and every invitation that can still be accepted takes a seat of the workspace owner's plan (Free 3, Pro 10): 403 PLAN_LIMIT_REACHED (limit: members) when none is free. A personal workspace has no members (409 PERSONAL_WORKSPACE).";
+const SEATS = `Every accepted member and every invitation that can still be accepted takes one of the workspace's member seats (${LIMITS.membersPerWorkspace}): 403 PLAN_LIMIT_REACHED (limit: members) when none is free. A personal workspace has no members (409 PERSONAL_WORKSPACE).`;
 const issuedInvitation = z.object({
 	invitation: invitationView,
 	/** `/workspace-invite/:token`, valid 7 days; shown once, never again. */

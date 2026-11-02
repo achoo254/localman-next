@@ -1,3 +1,4 @@
+import { LIMITS } from "@localman/shared/constants";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -97,7 +98,7 @@ describe("Resource form", () => {
 			within(dialog).getByRole("button", { name: "Create resource" }),
 		);
 		const notice = await findToast(
-			"Your projects have reached their limit of 10 resources in total.",
+			`Your projects have reached their limit of ${LIMITS.resources} resources in total.`,
 		);
 		expect(notice).toHaveTextContent("Tell us with the feedback form.");
 		expect(notice).not.toHaveTextContent(/plan|Pro/);

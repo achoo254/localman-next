@@ -2,7 +2,7 @@ import { OperationError } from "@localman/operations";
 import { PROJECT_NAME_MAX, type ProjectInput } from "@localman/shared";
 import { customAlphabet } from "nanoid";
 import { isDuplicateKeyError } from "../../db/mongo-errors.js";
-import { assertProjectQuota, currentPlanOf } from "../billing/plan-guard.js";
+import { assertProjectQuota } from "../billing/limit-guard.js";
 import { MAX_QUOTA_ATTEMPTS, lowestFreeSlots } from "../billing/quota-slots.js";
 import { forgetMockProject } from "../mock-runtime/resolve-project.js";
 import { emitResourceChanged } from "../resources/resource-events.js";
@@ -29,7 +29,7 @@ export const newProjectSecret = customAlphabet(
 const COPY_SUFFIX = " (copy)";
 
 /**
- * Creates a project owned by `ownerSub` within the plan's project quota.
+ * Creates a project owned by `ownerSub` within the project quota.
  * Concurrent creates are serialized by the unique `(owner, quotaSlot)`
  * index: each attempt reads the owned slots, refuses at the limit and takes
  * the lowest free slot. Racers that read the same projects pick the same
@@ -40,12 +40,11 @@ export async function createOwnedProject(
 	ownerSub: string,
 	input: ProjectInput,
 ): Promise<StoredProject> {
-	const plan = await currentPlanOf(ownerSub);
 	for (let attempt = 0; attempt < MAX_QUOTA_ATTEMPTS; attempt += 1) {
 		const owned = await ProjectModel.find({ owner: ownerSub })
 			.select("quotaSlot")
 			.lean<{ quotaSlot: number }[]>();
-		assertProjectQuota(plan, owned.length);
+		assertProjectQuota(owned.length);
 		try {
 			const created = await ProjectModel.create({
 				name: input.name,

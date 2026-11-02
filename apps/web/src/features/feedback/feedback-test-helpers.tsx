@@ -9,7 +9,7 @@ import { resetCurrentUserCache } from "../auth/use-current-user";
 
 export const CREATED = { status: 201, body: { received: true } };
 export const SUBMIT = "POST /api/v1/feedback/contact";
-export const CONFIG = "GET /api/v1/feedback/pro-interest/config";
+export const CONFIG = "GET /api/v1/feedback/config";
 
 /**
  * TEST ONLY. Fresh session cache and Turnstile fake per test; axe needs

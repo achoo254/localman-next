@@ -11,11 +11,11 @@ import { EnvironmentModel } from "../environments/environment-model.js";
 import { GlobalVariablesModel } from "../environments/global-variables-model.js";
 import { SyncLinkModel } from "../live-mock-sync/sync-link-model.js";
 import { DocsLinkModel } from "../project-docs/docs-link-model.js";
-import { TrialExtensionModel } from "../trial/trial-extension-model.js";
 import { ForkModel } from "../version-control/fork-model.js";
 import { PullRequestModel } from "../version-control/pull-request-model.js";
 import { WorkspaceMemberModel } from "../workspaces/workspace-member-model.js";
 import type { ErasedCount } from "./account-own-rows.js";
+import { TrialExtensionModel } from "./retired-feature-models.js";
 
 /**
  * Who a deleted account becomes in team content it leaves behind

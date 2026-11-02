@@ -18,7 +18,7 @@ Ký tự đếm bằng số ký tự Unicode (App Store Connect đếm như vậ
 | URL chính sách quyền riêng tư | `https://localman.hoandat.com/privacy` (200) |
 | URL điều khoản (EULA tuỳ chỉnh, không bắt buộc) | `https://localman.hoandat.com/terms` (200) |
 | Bản quyền | `2026 hoandat` |
-| Giá | Miễn phí, không mua trong app, không quảng cáo. Hạn mức mở rộng do người vận hành cấp. Trong app không có trang giá, nút nâng cấp hay link mua: `/pricing` chuyển về trang chủ (`apps/web/src/routes/public-routes.tsx`), trang Tài khoản chỉ hiện hạn mức và đồng hồ đo, "No plan, price or upgrade" (`apps/web/src/pages/account/account-page.tsx`), báo vượt hạn mức chỉ bảo xoá bớt (`i18n/messages/*/limits.ts`, `trial.ts`). Trang "Quan tâm gói Pro" (có khoảng giá VND) chỉ là trang quản trị `/admin/pro-interest`, menu chỉ hiện cho admin. Giữ như vậy để không vướng guideline 3.1.1 |
+| Giá | Miễn phí, không mua trong app, không quảng cáo. Mọi tài khoản cùng một hạn mức, không có gói (ADR-0011). Trong app không có trang giá, nút nâng cấp hay link mua: `/pricing` chuyển về trang chủ (`apps/web/src/routes/public-routes.tsx`), trang Tài khoản chỉ hiện đồng hồ đo, "no plan, price or upgrade" (`apps/web/src/pages/account/account-page.tsx`), báo vượt hạn mức chỉ bảo xoá bớt (`i18n/messages/*/limits.ts`). Trang "Quan tâm gói Pro" đã gỡ. Giữ như vậy để không vướng guideline 3.1.1 |
 | Thiết bị | iPhone **và iPad** (`TARGETED_DEVICE_FAMILY = "1,2"` trong `apps/mobile/ios/App/App.xcodeproj/project.pbxproj`), xem mục Rủi ro |
 | iOS tối thiểu | iOS 17.4 (`IPHONEOS_DEPLOYMENT_TARGET = 17.4`, cần cho callback https của `ASWebAuthenticationSession`) |
 | Phiên bản | `MARKETING_VERSION = 1.0` |

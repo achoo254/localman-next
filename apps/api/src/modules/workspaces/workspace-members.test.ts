@@ -1,3 +1,4 @@
+import { LIMITS } from "@localman/shared";
 import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
 import {
@@ -43,7 +44,10 @@ describe("GET /workspaces/:workspaceId/members", () => {
 		expect(admin.body.invitations).toEqual([
 			expect.objectContaining({ kind: "account", username: "dave" }),
 		]);
-		expect(admin.body.seats).toEqual({ used: 3, max: 3 });
+		expect(admin.body.seats).toEqual({
+			used: 3,
+			max: LIMITS.membersPerWorkspace,
+		});
 		const viewer = await as(BOB).get(membersPath(id));
 		expect(viewer.body.members).toHaveLength(2);
 		expect(viewer.body.invitations).toEqual([]);

@@ -38,7 +38,7 @@ export type UsageTotals = Readonly<Record<UsageCounter, number>>;
 
 /**
  * Atomically adds `by` to a counter of the owner's current month and
- * returns the new total, so the caller can compare it with the plan limit.
+ * returns the new total, so the caller can compare it with the monthly limit.
  */
 export async function incrementUsage(
 	ownerSub: string,

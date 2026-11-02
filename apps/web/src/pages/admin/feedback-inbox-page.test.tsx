@@ -46,9 +46,6 @@ describe("FeedbackInboxPage", () => {
 		expect(
 			document.querySelector('[data-id="admin-feedback-item-m1-status"]'),
 		).toHaveTextContent("New");
-		expect(
-			screen.getByRole("link", { name: "Pro plan interest" }),
-		).toBeVisible();
 	});
 
 	it("filters by status and category through query parameters", async () => {

@@ -1,9 +1,8 @@
 import { OperationError } from "@localman/operations";
-import { limitsFor } from "@localman/shared";
+import { LIMITS } from "@localman/shared";
 import type { Request, RequestHandler, Response } from "express";
 import { requestIdOf } from "../../http/request-log.js";
 import type { Logger } from "../../logger.js";
-import { effectivePlan } from "../billing/plan-guard.js";
 import { isInboxAddress, serveInbox } from "../webhook-inbox/inbox-route.js";
 import { answeredByBehavior } from "./mock-behavior-rest.js";
 import { runEndpoint } from "./mock-endpoints.js";
@@ -45,10 +44,11 @@ export function admitMonthly(
 	meter: UsageMeter,
 	project: MockProject,
 ): Promise<boolean> {
-	const limit = limitsFor(
-		effectivePlan(project.ownerPlan),
-	).mockRequestsPerMonth;
-	return meter.admit(project.owner, limit, project.id.toHexString());
+	return meter.admit(
+		project.owner,
+		LIMITS.mockRequestsPerMonth,
+		project.id.toHexString(),
+	);
 }
 
 /** What the router needs besides the request. */

@@ -24,14 +24,14 @@ export interface ImportPreviewProps {
 }
 
 /** Room left in the project when the import needs more, else -1. */
-export function overPlan(preview: Preview): number {
+export function overLimit(preview: Preview): number {
 	const left = preview.resourcesLeft;
 	return left !== null && preview.resources.length > left ? left : -1;
 }
 
 /**
  * Read-only preview of what the import creates: names (editable), the
- * schema, up to 5 records, then plan room, truncation and notes.
+ * schema, up to 5 records, then room left, truncation and notes.
  */
 export function ImportPreview({
 	state,
@@ -59,7 +59,7 @@ export function ImportPreview({
 	const records = main
 		? t("resources.records", { count: main.recordCount })
 		: "";
-	const left = preview ? overPlan(preview) : -1;
+	const left = preview ? overLimit(preview) : -1;
 	const caption =
 		main?.sampleKind === "generated"
 			? t("resourceImport.preview.sample")

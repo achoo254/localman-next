@@ -1,10 +1,8 @@
 /**
- * `/account`: until when the extended limits last, this month's quota
- * meters and deleting the account.
+ * `/account`: this month's quota meters and deleting the account.
  */
 export const account = {
 	title: "Account",
-	limitsUntil: "Your extended limits last until {date}.",
 	notificationChannels: "Notification channels",
 	usage: {
 		loading: "Loading quotas…",

@@ -24,7 +24,6 @@ import {
 } from "./environment-state.js";
 import {
 	conflictsLeft,
-	requireForkPlan,
 	requireLink,
 	sourceUnavailable,
 } from "./fork-access.js";
@@ -41,7 +40,6 @@ async function sides(
 	sourceAction: "view" | "mergeFork",
 ) {
 	const fork = await requireEnvironment(sub, forkId, forkAction);
-	await requireForkPlan(sub);
 	await takeOperationSlot("sync", sub, fork.element.id);
 	const link = await requireLink("environment", fork.environmentId);
 	const source = await requireEnvironment(

@@ -17,7 +17,6 @@ export const layout = {
 		trigger: "{name} · Account",
 		account: "Account and limits",
 		notifications: "Notification channels",
-		adminProInterest: "Admin · Pro interest",
 		adminFeedback: "Admin · Feedback inbox",
 		signOut: "Sign out",
 	},

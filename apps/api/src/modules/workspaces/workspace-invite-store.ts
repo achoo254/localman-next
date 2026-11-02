@@ -42,7 +42,7 @@ export interface InvitationFields {
  * Stores the invitation under the workspace lock: refuses the target's
  * membership, re-issues (new token, expiry and role, same seat) the oldest
  * pending invitation of the same person or address, drops the others, and
- * otherwise takes a free seat of the owner's plan.
+ * otherwise takes a free member seat.
  */
 export function storeAddressed(
 	workspace: StoredWorkspace,

@@ -1,3 +1,4 @@
+import { MAX_RECORD_BYTES, MAX_RESOURCE_BYTES } from "./account-limits.js";
 /**
  * Seed records of an inferred resource: the sample objects rebuilt with
  * `id`, the `{parent}Id` link and the schema fields only, within the caps
@@ -10,7 +11,6 @@ import {
 	checkJson,
 	jsonSize,
 } from "./json-value.js";
-import { MAX_RECORD_BYTES, MAX_RESOURCE_BYTES } from "./plan-limits.js";
 import {
 	MAX_RECORDS_PER_RESOURCE,
 	OBJECT_ID_FIELD,

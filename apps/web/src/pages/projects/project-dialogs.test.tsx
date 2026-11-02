@@ -1,4 +1,4 @@
-import { limitsFor } from "@localman/shared/constants";
+import { LIMITS } from "@localman/shared/constants";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -75,7 +75,7 @@ describe("project dialogs", () => {
 		await openMenu("Project p1");
 		await userEvent.click(screen.getByRole("menuitem", { name: "Duplicate" }));
 		const notice = await findToast(
-			`You've reached the limit of ${limitsFor("free").projects} projects on this account.`,
+			`You've reached the limit of ${LIMITS.projects} projects on this account.`,
 		);
 		expect(notice).toHaveTextContent("Tell us with the feedback form.");
 		expect(notice).not.toHaveTextContent(/plan|Pro/);
@@ -102,8 +102,8 @@ describe("project dialogs", () => {
 		expect(calls.filter((c) => c.method === "POST")).toHaveLength(1);
 	});
 
-	it("skips the form when the plan is already full", async () => {
-		const full = Array.from({ length: limitsFor("free").projects }, (_, i) =>
+	it("skips the form when the account is already at its project limit", async () => {
+		const full = Array.from({ length: LIMITS.projects }, (_, i) =>
 			makeProject(`p${i}`),
 		);
 		renderPage({ "GET /api/v1/projects": { body: { items: full } } });

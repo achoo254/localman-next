@@ -57,7 +57,7 @@ export interface StoredRequestLog {
 	readonly source: RequestLogSource;
 	readonly request: StoredLogMessage;
 	readonly response: StoredLogMessage;
-	/** TTL: `at` plus the owner plan's `requestLogDays` when written. */
+	/** TTL: `at` plus `LIMITS.requestLogDays` when written. */
 	readonly expiresAt: Date;
 	/** Inbox lines: the inbox name. */
 	readonly inbox?: string;
@@ -88,8 +88,8 @@ const messageSchema = new Schema(
 /**
  * Live log of a project's mock runtime traffic, written in batches by
  * `RequestLogService`. Each line expires on its own `expiresAt`, fixed
- * from the owner's plan when it was written (a later upgrade does not
- * extend older lines).
+ * from `LIMITS.requestLogDays` when it was written (a later change of
+ * the limit does not touch older lines).
  */
 const attemptSchema = new Schema(
 	{

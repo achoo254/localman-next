@@ -1,4 +1,5 @@
 import { type AnyOperation, defineOperation } from "@localman/operations";
+import { LIMITS } from "@localman/shared";
 import { z } from "zod";
 import { USER_SCOPE, requireSubject } from "../../http/require-auth.js";
 import { requireProject } from "../projects/project-service.js";
@@ -7,7 +8,6 @@ import { InboxModel, type StoredInbox } from "./inbox-model.js";
 import { inboxNameSchema, inboxResponseSchema } from "./inbox-schema.js";
 import {
 	createInbox,
-	inboxLimitOf,
 	inboxNotFound,
 	listInboxes,
 	requestCounts,
@@ -24,7 +24,7 @@ export const listWebhookInboxes = defineOperation({
 	path: "/projects/:projectId/inboxes",
 	summary: "List a mock project's webhook inboxes",
 	description:
-		"Public URLs ({mock base}/_inbox/<name>) that accept any method, answer with the inbox's response and log the request with source inbox. Each item has the response, forward (tunnel:<port><path> or null), lastForward (attempts of the latest forward) and requestCount (its requests still in the request log); used/max is the count against the owner plan's webhook inboxes per project; canManage says whether the caller may change them (owner only). Members of the project only.",
+		"Public URLs ({mock base}/_inbox/<name>) that accept any method, answer with the inbox's response and log the request with source inbox. Each item has the response, forward (tunnel:<port><path> or null), lastForward (attempts of the latest forward) and requestCount (its requests still in the request log); used/max is the count against the webhook inbox limit per project; canManage says whether the caller may change them (owner only). Members of the project only.",
 	input: z.object({ projectId }),
 	output: z.object({
 		items: z.array(inboxView),
@@ -46,7 +46,7 @@ export const listWebhookInboxes = defineOperation({
 				toInboxView(inbox, project.secret, counts.get(inbox.name) ?? 0),
 			),
 			used: inboxes.length,
-			max: await inboxLimitOf(project.owner),
+			max: LIMITS.webhookInboxes,
 			canManage: project.owner === sub,
 		};
 	},
@@ -57,7 +57,7 @@ export const createWebhookInbox = defineOperation({
 	method: "POST",
 	path: "/projects/:projectId/inboxes",
 	summary: "Create a webhook inbox in a mock project",
-	description: `${OWNER_ONLY} name: lowercase letters, digits and -, up to 32, unique in the project (409 INBOX_NAME_TAKEN). response (optional): status 200-599 (default 200), contentType (application/json or text/plain, JSON variants such as application/problem+json and a charset allowed; default application/json) and body up to 64 KB (default {"received":true}). Past the owner plan's inboxes per project: 403 PLAN_LIMIT_REACHED with details { limit: "webhookInboxes", max, used }. Forwarding to a tunnel is set from the Localman UI only.`,
+	description: `${OWNER_ONLY} name: lowercase letters, digits and -, up to 32, unique in the project (409 INBOX_NAME_TAKEN). response (optional): status 200-599 (default 200), contentType (application/json or text/plain, JSON variants such as application/problem+json and a charset allowed; default application/json) and body up to 64 KB (default {"received":true}). Past the webhook inbox limit per project: 403 PLAN_LIMIT_REACHED with details { limit: "webhookInboxes", max, used }. Forwarding to a tunnel is set from the Localman UI only.`,
 	input: z.object({
 		projectId,
 		name: inboxNameSchema,
@@ -73,12 +73,7 @@ export const createWebhookInbox = defineOperation({
 		const sub = requireSubject(ctx);
 		const project = await requireProject(sub, "update", input.projectId);
 		const response = input.response ?? inboxResponseSchema.parse({});
-		const inbox = await createInbox(
-			project._id,
-			project.owner,
-			input.name,
-			response,
-		);
+		const inbox = await createInbox(project._id, input.name, response);
 		return toInboxView(inbox, project.secret, 0);
 	},
 });

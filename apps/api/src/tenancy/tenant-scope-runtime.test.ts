@@ -36,7 +36,6 @@ function logInput(projectId: Types.ObjectId): RequestLogInput {
 	const body = { bytes: Buffer.from("{}"), size: 2 };
 	return {
 		projectId,
-		ownerPlan: { plan: "free", planExpiresAt: null },
 		redactHeaders: [],
 		at: new Date(),
 		method: "GET",

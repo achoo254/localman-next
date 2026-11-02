@@ -2,7 +2,7 @@ import type { ComponentProps } from "react";
 import { cn } from "../../lib/cn";
 
 /**
- * Surface used by list rows, meters, plan cards and dashboard tiles:
+ * Surface used by list rows, meters and dashboard tiles:
  * 24px radius, token border and background, small shadow. Use the class on
  * semantic elements (`li`, `article`, `section`) and `Card` for a plain div.
  */

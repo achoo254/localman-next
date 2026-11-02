@@ -43,7 +43,7 @@ export function renderInboxTab(
 ) {
 	const api = mockFetch({ [`GET ${BASE}`]: { body: list }, ...routes });
 	const onShowLogs = vi.fn();
-	const onPlanLimit = vi.fn();
+	const onLimitReached = vi.fn();
 	const view = renderRoutes(
 		[
 			{
@@ -52,14 +52,14 @@ export function renderInboxTab(
 					<InboxTab
 						project={makeProject("p1")}
 						onShowLogs={onShowLogs}
-						onPlanLimit={onPlanLimit}
+						onLimitReached={onLimitReached}
 					/>
 				),
 			},
 		],
 		"/projects/p1",
 	);
-	return { ...api, ...view, onShowLogs, onPlanLimit };
+	return { ...api, ...view, onShowLogs, onLimitReached };
 }
 
 export const byId = (id: string) =>

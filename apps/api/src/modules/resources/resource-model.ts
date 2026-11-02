@@ -42,7 +42,7 @@ const endpointSchema = new Schema(
  *   created record gets (ids are "1", "2", … like the source).
  * - `ownerSub` and `quotaSlot` bill the resource to the project owner: the
  *   unique `(ownerSub, quotaSlot)` index makes concurrent creates race on
- *   one slot instead of all passing the plan check (as for projects).
+ *   one slot instead of all passing the quota check (as for projects).
  * - `minimize: false` keeps `{}` values of templates and responses.
  */
 const resourceSchema = new Schema(

@@ -1,3 +1,4 @@
+import { LIMITS } from "@localman/shared";
 import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
 import {
@@ -61,17 +62,18 @@ describe("webhook inbox response", () => {
 		expect(list.body.items[0].response.contentType).toBe("text/plain");
 	});
 
-	it("caps inboxes per project by the owner's plan", async () => {
+	it("caps inboxes per project", async () => {
 		const { id } = await createMockProject();
-		for (const name of ["a", "b"]) {
-			const res = await as(OWNER).send("post", inboxes(id), { name });
+		const max = LIMITS.webhookInboxes;
+		for (let i = 0; i < max; i += 1) {
+			const res = await as(OWNER).send("post", inboxes(id), { name: `i${i}` });
 			expect(res.status).toBe(201);
 		}
-		const third = await as(OWNER).send("post", inboxes(id), { name: "c" });
-		expect(third.status).toBe(403);
-		expect(third.body.error).toMatchObject({
+		const over = await as(OWNER).send("post", inboxes(id), { name: "over" });
+		expect(over.status).toBe(403);
+		expect(over.body.error).toMatchObject({
 			code: "PLAN_LIMIT_REACHED",
-			details: { limit: "webhookInboxes", max: 2, used: 2 },
+			details: { limit: "webhookInboxes", max, used: max },
 		});
 		const other = await createMockProject();
 		const elsewhere = await as(OWNER).send("post", inboxes(other.id), {

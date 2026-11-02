@@ -14,7 +14,7 @@ import { translatedError } from "./collection-errors";
 import { previewTrash } from "./trash-api";
 import { useTrashCollection } from "./use-collection-mutations";
 import { collectionKey } from "./use-collections";
-import { useTrashDays } from "./use-trash";
+import { TRASH_DAYS } from "./use-trash";
 
 export interface DeleteCollectionModalProps {
 	summary: CollectionSummary;
@@ -35,7 +35,7 @@ export function DeleteCollectionModal({
 }: DeleteCollectionModalProps) {
 	const t = useT();
 	const toast = useToast();
-	const days = useTrashDays();
+	const days = TRASH_DAYS;
 	const trash = useTrashCollection();
 	const [word, setWord] = useState("");
 	// The list may be stale: the server says now whether requests go too.

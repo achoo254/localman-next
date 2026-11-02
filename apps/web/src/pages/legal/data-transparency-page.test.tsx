@@ -2,7 +2,7 @@ import {
 	HISTORY_MAX_ENTRIES,
 	HISTORY_TTL_DAYS,
 } from "@localman/shared/api-client";
-import { FREE_LIMITS, PRO_LIMITS } from "@localman/shared/constants";
+import { LIMITS } from "@localman/shared/constants";
 import {
 	DATA_ITEMS,
 	PROXY_LOG_FIELDS,
@@ -76,9 +76,7 @@ describe("the page on where your data lives", () => {
 		expect(keptOf(container, "history")).toBe(
 			`${HISTORY_TTL_DAYS} days, at most ${HISTORY_MAX_ENTRIES} entries`,
 		);
-		expect(keptOf(container, "mockLogs")).toBe(
-			`${FREE_LIMITS.requestLogDays} days, ${PRO_LIMITS.requestLogDays} with extended limits`,
-		);
+		expect(keptOf(container, "mockLogs")).toBe(`${LIMITS.requestLogDays} days`);
 		expect(keptOf(container, "vaultPassphrase")).toBe("Never sent");
 		expect(keptOf(container, "proxySends")).toBe("Not stored");
 	});

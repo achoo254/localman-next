@@ -99,7 +99,6 @@ export const versionControl = {
 		noAccess: "You can't open this fork.",
 	},
 	errors: {
-		planFeature: "Forks and merges are part of the Pro plan.",
 		target: "As a Viewer, you can fork into your personal workspace only.",
 		conflicts: "Choose a version for every conflict first.",
 		sourceGone: "The source no longer exists, or you can't open it.",

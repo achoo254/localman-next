@@ -41,7 +41,7 @@ export const createPullRequestOperation = defineOperation({
 	method: "POST",
 	path: `${COLLECTION_PATH}/pull-requests`,
 	summary: "Open a pull request from a collection fork into its source",
-	description: `\`collectionId\` is the fork; Editors of it, Pro only (403 PLAN_FEATURE_UNAVAILABLE). \`reviewerIds\` (from list_pull_request_reviewers) must be Editors of the source (400 INVALID_REVIEWER); they are told and only they approve or decline. Approval is not required to merge. A fork may have several open pull requests. 404 FORK_NOT_FOUND when it is not a fork. ${ACCESS_NOTE}`,
+	description: `\`collectionId\` is the fork; Editors of it. \`reviewerIds\` (from list_pull_request_reviewers) must be Editors of the source (400 INVALID_REVIEWER); they are told and only they approve or decline. Approval is not required to merge. A fork may have several open pull requests. 404 FORK_NOT_FOUND when it is not a fork. ${ACCESS_NOTE}`,
 	input: z.object({
 		collectionId: collectionIdSchema,
 		title: titleSchema,
@@ -80,7 +80,7 @@ export const listPullRequestReviewersOperation = defineOperation({
 	method: "GET",
 	path: `${COLLECTION_PATH}/pull-request-reviewers`,
 	summary: "List who a pull request from a fork can ask to review",
-	description: `Editors of the fork's source, except the caller. Editors of the fork, Pro only. ${ACCESS_NOTE}`,
+	description: `Editors of the fork's source, except the caller. Editors of the fork. ${ACCESS_NOTE}`,
 	input: z.object({ collectionId: collectionIdSchema }),
 	output: reviewerListView,
 	scopes: [USER_SCOPE],
@@ -160,7 +160,7 @@ export const mergePullRequestOperation = defineOperation({
 	method: "POST",
 	path: `${PULL_REQUEST_PATH}/merge`,
 	summary: "Merge a pull request into its source",
-	description: `Editors of the source, Pro only, whether or not it is approved; the same merge as merge_collection_fork (\`option\`, \`resolutions\` for the conflicts of get_pull_request, 409 MERGE_CONFLICTS while any lacks one). Its author is told. ${CLOSED} ${PR_ACCESS}`,
+	description: `Editors of the source, whether or not it is approved; the same merge as merge_collection_fork (\`option\`, \`resolutions\` for the conflicts of get_pull_request, 409 MERGE_CONFLICTS while any lacks one). Its author is told. ${CLOSED} ${PR_ACCESS}`,
 	input: z.object({
 		pullRequestId: pullRequestIdSchema,
 		option: mergeOptionSchema,

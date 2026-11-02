@@ -26,17 +26,12 @@ import {
 	useEnvironmentTestDb,
 	variableInput,
 } from "../environments/testing/environment-fixture.js";
-import { UserModel } from "../users/user-model.js";
 import { ForkModel } from "./fork-model.js";
 
 useEnvironmentTestDb();
 
 beforeEach(async () => {
 	registerCollectionAdapter();
-	await UserModel.updateMany(
-		{},
-		{ $set: { plan: "pro", planExpiresAt: null } },
-	);
 });
 
 /** Ada's team collection and one environment, plus Eve's personal workspace. */

@@ -11,8 +11,7 @@ import { AccountPage } from "./account-page";
 
 function usage(overrides: Record<string, unknown> = {}) {
 	return {
-		plan: "free",
-		planExpiresAt: null,
+		plan: "pro",
 		period: "2026-12",
 		projects: { used: 1, max: 3 },
 		mockRequests: { used: 8_420, max: 10_000 },
@@ -107,8 +106,6 @@ describe("AccountPage quota meters", () => {
 	it("shows 'Unlimited' instead of a bar for uncapped counters", async () => {
 		renderAccount(
 			usage({
-				plan: "pro",
-				planExpiresAt: "2026-12-31T17:30:00.000Z",
 				projects: { used: 4, max: 20 },
 				mockRequests: { used: 52_000, max: null },
 				proxyRequests: { used: 0, max: null },
@@ -119,10 +116,6 @@ describe("AccountPage quota meters", () => {
 		const mock = meter("account-meter-mock-requests");
 		expect(mock).toHaveTextContent("Unlimited");
 		expect(mock).toHaveAttribute("data-state", "ok");
-		// Asia/Saigon: 17:30Z on the 31st is already 1 January.
-		expect(meter("account-limits-until")).toHaveTextContent(
-			"Your extended limits last until Jan 1, 2027.",
-		);
 	});
 
 	it("links to notification settings and names no plan or price", async () => {
@@ -130,9 +123,6 @@ describe("AccountPage quota meters", () => {
 		expect(
 			await screen.findByRole("link", { name: "Notification channels" }),
 		).toHaveAttribute("href", "/account/notifications");
-		expect(
-			document.querySelector('[data-id="account-limits-until"]'),
-		).toBeNull();
 		expect(screen.queryByRole("button", { name: /plan|pro/i })).toBeNull();
 		expect(document.body).not.toHaveTextContent(
 			/\b(plan|pricing|upgrade|Pro)\b/i,

@@ -23,7 +23,7 @@ export const listWorkspaceMembersOperation = defineOperation({
 	method: "GET",
 	path: PATH,
 	summary: "List the members of a workspace",
-	description: `Accepted members with their role, the seats used against the owner's plan (members and invitations that can still be accepted; max null = unlimited) and, for Admins only, the pending invitations (kind account, email or link; expired ones flagged). A personal workspace has no members and \`seats: null\`. ${MEMBER_ONLY}`,
+	description: `Accepted members with their role, the seats used against the member limit (members and invitations that can still be accepted; max null = unlimited) and, for Admins only, the pending invitations (kind account, email or link; expired ones flagged). A personal workspace has no members and \`seats: null\`. ${MEMBER_ONLY}`,
 	input: z.object({ workspaceId: workspaceIdSchema }),
 	output: memberList,
 	scopes: [USER_SCOPE],

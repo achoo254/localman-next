@@ -17,7 +17,7 @@ import {
 import {
 	type Project,
 	type ProjectInput,
-	isPlanLimitError,
+	isLimitReachedError,
 } from "./projects-api";
 
 export interface ProjectFormModalProps {
@@ -27,8 +27,8 @@ export interface ProjectFormModalProps {
 	sampleBaseUrl: string | null;
 	onOpenChange: (open: boolean) => void;
 	onSave: (input: ProjectInput) => Promise<void>;
-	/** The plan has no room for another project. */
-	onPlanLimit: () => void;
+	/** The account has no room for another project. */
+	onLimitReached: () => void;
 }
 
 /** "New project" / "Edit project". Mount it only while open. */
@@ -37,7 +37,7 @@ export function ProjectFormModal({
 	sampleBaseUrl,
 	onOpenChange,
 	onSave,
-	onPlanLimit,
+	onLimitReached,
 }: ProjectFormModalProps) {
 	const t = useT();
 	const formId = useId();
@@ -61,7 +61,7 @@ export function ProjectFormModal({
 		try {
 			await onSave(result.input);
 		} catch (error) {
-			if (isPlanLimitError(error)) onPlanLimit();
+			if (isLimitReachedError(error)) onLimitReached();
 			else setSubmitError(errorMessage(error));
 		} finally {
 			setBusy(false);

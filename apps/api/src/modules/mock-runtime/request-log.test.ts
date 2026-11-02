@@ -1,3 +1,4 @@
+import { LIMITS } from "@localman/shared";
 import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
 import {
@@ -80,17 +81,14 @@ describe("request log", () => {
 		expect(line?.request.body.length).toBe(LOG_BODY_LIMIT);
 	});
 
-	it("sets the expiry from the owner's plan when written", async () => {
+	it("sets the expiry from the request log days when written", async () => {
 		const { mock } = await usersProject();
 		await mock.get("/users");
-		await UserModel.updateOne({ sub: OWNER }, { plan: "pro" });
-		clearMockProjectCache();
-		await mock.get("/users");
-		const [free, pro] = await lines();
-		const days = (line?: StoredRequestLog) =>
-			line ? (line.expiresAt.getTime() - line.at.getTime()) / DAY_MS : 0;
-		expect(days(free)).toBe(7);
-		expect(days(pro)).toBe(30);
+		const [line] = await lines();
+		const days = line
+			? (line.expiresAt.getTime() - line.at.getTime()) / DAY_MS
+			: 0;
+		expect(days).toBe(LIMITS.requestLogDays);
 		const indexes = await RequestLogModel.collection.indexes();
 		expect(indexes).toContainEqual(
 			expect.objectContaining({ key: { expiresAt: 1 }, expireAfterSeconds: 0 }),

@@ -6,7 +6,7 @@ import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
  * (`{secret}.localman.hoandat.com`), so it is unique and unguessable.
  * `quotaSlot` numbers the owner's projects from 0: together with the
  * unique `(owner, quotaSlot)` index it makes concurrent creates race on
- * the same slot instead of all passing the plan check (see project-service).
+ * the same slot instead of all passing the quota check (see project-service).
  */
 const projectSchema = new Schema(
 	{

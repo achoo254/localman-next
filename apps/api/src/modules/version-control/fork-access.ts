@@ -1,23 +1,11 @@
 import { OperationError } from "@localman/operations";
-import { limitsFor } from "@localman/shared";
 import type { ElementRole } from "@localman/shared/access";
 import type { ClientSession, Types } from "mongoose";
-import { currentPlanOf } from "../billing/plan-guard.js";
 import {
 	findWorkspaceById,
 	requireWorkspace,
 } from "../workspaces/workspace-roles.js";
 import { type ForkKind, ForkModel, type StoredFork } from "./fork-model.js";
-
-/** 403 `PLAN_FEATURE_UNAVAILABLE` unless the caller's plan has forks. */
-export async function requireForkPlan(sub: string): Promise<void> {
-	if (limitsFor(await currentPlanOf(sub)).forkPrPublic) return;
-	throw new OperationError(
-		403,
-		"PLAN_FEATURE_UNAVAILABLE",
-		"Forks, merges and pull requests are part of the Pro plan",
-	);
-}
 
 export function notAFork(): OperationError {
 	return new OperationError(404, "FORK_NOT_FOUND", "This is not a fork");

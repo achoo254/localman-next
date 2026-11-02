@@ -5,8 +5,8 @@ import { useDelayedFlag } from "../../lib/use-delayed-flag";
 const FIELDS = [0, 1, 2];
 
 /**
- * A modal form whose code or session is still loading (Pro interest,
- * feedback): labelled fields and a message box. Mounted as a Suspense
+ * A modal form whose code or session is still loading (feedback):
+ * labelled fields and a message box. Mounted as a Suspense
  * fallback, so it waits 150 ms itself and fast loads show nothing.
  */
 export function FormSkeleton({ "data-id": dataId }: { "data-id": string }) {

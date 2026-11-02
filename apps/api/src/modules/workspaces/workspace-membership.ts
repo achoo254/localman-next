@@ -5,7 +5,7 @@ import {
 } from "@localman/shared/access";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
-import { toJsonLimit } from "../billing/plan-guard.js";
+import { toJsonLimit } from "../billing/limit-guard.js";
 import { inWorkspaceTransaction } from "./workspace-lock.js";
 import {
 	type StoredWorkspaceMember,

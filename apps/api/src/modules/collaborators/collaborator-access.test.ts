@@ -1,7 +1,7 @@
+import { LIMITS } from "@localman/shared";
 import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
 import { ResourceModel } from "../resources/resource-model.js";
-import { UserModel } from "../users/user-model.js";
 import { CollaboratorModel } from "./collaborator-model.js";
 import { MagicLinkModel } from "./magic-link-model.js";
 import {
@@ -69,24 +69,22 @@ describe("collaborator role", () => {
 		]);
 	});
 
-	it("bills resources created by a collaborator to the owner's plan", async () => {
+	it("bills resources created by a collaborator to the owner's limit", async () => {
 		const projectId = await sharedProject();
-		// The collaborator's own Pro plan does not lift the owner's Free limit.
-		await UserModel.updateOne({ sub: BOB }, { $set: { plan: "pro" } });
 		const create = (name: string) =>
 			as(BOB).send("post", `/projects/${projectId}/resources`, { name });
 		const first = await create("r0");
 		expect(first.status).toBe(201);
 		const stored = await ResourceModel.findById(first.body.id).lean();
 		expect(stored?.ownerSub).toBe(OWNER);
-		for (let i = 1; i < 10; i += 1) {
+		for (let i = 1; i < LIMITS.resources; i += 1) {
 			expect((await create(`r${i}`)).status).toBe(201);
 		}
-		const over = await create("r10");
+		const over = await create("over");
 		expect(over.status).toBe(403);
 		expect(over.body.error.details).toMatchObject({
 			limit: "resources",
-			max: 10,
+			max: LIMITS.resources,
 		});
 	});
 
@@ -97,7 +95,7 @@ describe("collaborator role", () => {
 		expect(seen.status).toBe(200);
 		expect(seen.body).toMatchObject({
 			owner: { sub: OWNER, username: "owner" },
-			seats: { used: 3, max: 3 },
+			seats: { used: 3, max: LIMITS.membersPerWorkspace },
 			canManage: false,
 		});
 		expect(seen.body.items).toHaveLength(1);

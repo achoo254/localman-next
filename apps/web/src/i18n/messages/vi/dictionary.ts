@@ -39,9 +39,7 @@ import { resourceTree } from "./resource-tree";
 import { resources } from "./resources";
 import { secretVault } from "./secret-vault";
 import { sharing } from "./sharing";
-import { subscription } from "./subscription";
 import { trafficLog } from "./traffic-log";
-import { trial } from "./trial";
 import { ui } from "./ui";
 import { upstream } from "./upstream";
 import { variables } from "./variables";
@@ -71,8 +69,6 @@ export const vi: Messages = {
 	invite,
 	mcp,
 	notifications,
-	subscription,
-	trial,
 	docs,
 	feedback,
 	admin,

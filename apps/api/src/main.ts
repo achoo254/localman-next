@@ -216,7 +216,7 @@ try {
 		{ host: env.HOST, port: env.MOCK_PORT },
 		"Mock runtime listening",
 	);
-	// Tombstone sweep, trial reminders, trash purge, watch digest.
+	// Tombstone sweep, trash purge, watch digest.
 	backgroundJobs.start();
 } catch (error) {
 	logger.fatal({ err: error }, "Startup failed");

@@ -69,7 +69,7 @@ describe("inbox form", () => {
 	});
 
 	it("opens the plans when the API refuses past the limit", async () => {
-		const { onPlanLimit } = renderInboxTab(listJson([]), {
+		const { onLimitReached } = renderInboxTab(listJson([]), {
 			[`POST ${BASE}`]: {
 				status: 403,
 				body: {
@@ -88,7 +88,7 @@ describe("inbox form", () => {
 		await user.click(
 			within(dialog).getByRole("button", { name: "Create inbox" }),
 		);
-		await vi.waitFor(() => expect(onPlanLimit).toHaveBeenCalledTimes(1));
+		await vi.waitFor(() => expect(onLimitReached).toHaveBeenCalledTimes(1));
 	});
 
 	it("keeps the form and marks the name when it is taken", async () => {

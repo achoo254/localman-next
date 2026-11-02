@@ -20,7 +20,7 @@ export interface InboxFormModalProps {
 	/** `https://{secret}.{mock host}/_inbox/`, for the URL preview. */
 	urlBase: string;
 	onOpenChange: (open: boolean) => void;
-	onPlanLimit: () => void;
+	onLimitReached: () => void;
 }
 
 /**
@@ -33,7 +33,7 @@ export function InboxFormModal({
 	inbox,
 	urlBase,
 	onOpenChange,
-	onPlanLimit,
+	onLimitReached,
 }: InboxFormModalProps) {
 	const t = useT();
 	const formId = useId();
@@ -45,7 +45,7 @@ export function InboxFormModal({
 			inbox,
 			form,
 			onDone: () => onOpenChange(false),
-			onPlanLimit,
+			onLimitReached,
 		});
 	const editing = stored !== null;
 

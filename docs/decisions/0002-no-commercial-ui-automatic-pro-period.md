@@ -1,7 +1,7 @@
 # ADR-0002: Chưa thương mại: web không hiện gói hay giá, Pro 30 ngày tự động
 
 - **Ngày:** 2026-10-12
-- **Trạng thái:** Đã chốt
+- **Trạng thái:** Superseded bởi [ADR-0011](0011-one-level-for-everyone.md) (02/11/2026: bỏ hẳn gói, dùng thử và form quan tâm Pro)
 - **Người quyết định:** dattqh (gia hạn, nhắc hạn, thông báo chạm giới hạn do model Jev chọn; ghi ở Validation Log của `plans/dattqh/261008-1123-localman-core/plan.md`)
 
 ## Bối cảnh

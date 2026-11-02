@@ -23,13 +23,13 @@ Checklist cho mọi chữ người dùng thấy: landing, nút, lỗi, toast, mo
 
 - [ ] Chỉ mô tả cái đã chạy trên production. Mục gắn cờ trong `apps/web/src/config/features.ts` phải ẩn khi cờ tắt, kể cả mục trong meter và ghi chú ("REST và MCP đều tính" chỉ đúng khi Mock MCP đã bật).
 - [ ] "Sắp có" chỉ là badge trong khối "Và nhiều hơn", và không hứa thời điểm ra mắt.
-- [ ] Chưa thương mại ([ADR-0002](decisions/0002-no-commercial-ui-automatic-pro-period.md)): ngoài trang admin, không nhắc gói, giá, Pro, dùng thử, nâng cấp hay thanh toán. Chạm giới hạn thì nêu giới hạn và gợi ý form góp ý.
+- [ ] Một mức cho mọi tài khoản ([ADR-0011](decisions/0011-one-level-for-everyone.md)): không nhắc gói, giá, Pro, dùng thử, nâng cấp hay thanh toán, kể cả trang admin. Chạm giới hạn thì nêu giới hạn và gợi ý form góp ý.
 - [ ] Không cam kết số đo chưa đo được ("chỉ mất một phút", "41 ms"); dùng "vài phút" hoặc bỏ đi.
 - [ ] Hộp thoại và trang xác nhận chỉ hứa điều hệ thống thật sự làm. Chưa có chức năng trả lời qua chuông thì không viết "phản hồi sẽ hiện trong chuông".
 
 ## 4. Số liệu
 
-- [ ] Hạn mức đọc từ `limitsFor()` trong `@localman/shared`, không gõ tay. `null` viết thành "Không giới hạn … mỗi tháng"; nếu có rate-limit theo giây thì nói rõ ở ghi chú.
+- [ ] Hạn mức đọc từ `LIMITS` trong `@localman/shared`, không gõ tay; mọi tài khoản cùng một mức, không nhắc gói, Pro hay nâng cấp. `null` viết thành "Không giới hạn … mỗi tháng"; nếu có rate-limit theo giây thì nói rõ ở ghi chú.
 - [ ] Số và ngày định dạng qua `formatNumber` / `formatDate` của `useI18n()` (theo ngôn ngữ đang chọn): vi là "10.000" và `dd/mm/yyyy`, en "10,000" và "Oct 9, 2026", zh-CN "10,000" và "2026年10月9日". Số trong `t()` tự định dạng. Chu kỳ viết "mỗi tháng" / "per month" / "每月".
 - [ ] Không nêu tên sản phẩm khác (đối thủ) ở bất kỳ chữ nào người dùng thấy, kể cả title và meta của `index.html`; `pnpm check:i18n` chặn các tên đã biết.
 

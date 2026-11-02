@@ -18,7 +18,6 @@ export const layout: Messages["layout"] = {
 		trigger: "{name} · Tài khoản",
 		account: "Tài khoản và hạn mức",
 		notifications: "Kênh thông báo",
-		adminProInterest: "Quản trị · Quan tâm gói Pro",
 		adminFeedback: "Quản trị · Hộp thư góp ý",
 		signOut: "Đăng xuất",
 	},

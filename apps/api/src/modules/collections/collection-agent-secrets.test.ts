@@ -7,7 +7,6 @@ import {
 	useEnvironmentTestDb,
 	variableInput,
 } from "../environments/testing/environment-fixture.js";
-import { UserModel } from "../users/user-model.js";
 import {
 	forkCollectionOperation,
 	forkEnvironmentOperation,
@@ -22,10 +21,6 @@ import { createAs, teamOfThree } from "./testing/collection-fixture.js";
 useEnvironmentTestDb();
 beforeEach(async () => {
 	registerCollectionAdapter();
-	await UserModel.updateMany(
-		{},
-		{ $set: { plan: "pro", planExpiresAt: null } },
-	);
 });
 
 const SECRET = "collection-s3cret-77d1";

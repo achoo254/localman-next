@@ -138,7 +138,7 @@ export function CollaboratorsModal({
 						members.add(result.collaborator);
 						setAnnouncement(message);
 					}}
-					onPlanLimit={() => {
+					onLimitReached={() => {
 						// Refresh the seats so the form locks with the reason shown.
 						void members.load({ background: true });
 					}}

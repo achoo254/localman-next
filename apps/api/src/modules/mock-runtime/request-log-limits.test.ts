@@ -13,7 +13,6 @@ const BODY = Buffer.alloc(LOG_BODY_LIMIT, "a");
 function input(projectId: Types.ObjectId, n = 0): RequestLogInput {
 	return {
 		projectId,
-		ownerPlan: { plan: "free", planExpiresAt: null },
 		redactHeaders: [],
 		at: new Date(),
 		method: "POST",

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MAX_RECORD_BYTES } from "./account-limits.js";
 import { isFakerMethodId } from "./faker-method-catalog.js";
 import { fakerMethodMaxBytes } from "./faker-method-sizes.js";
 import { runFakerMethod } from "./faker-methods.js";
@@ -13,7 +14,6 @@ import {
 	estimateTemplateBytes,
 } from "./json-template.js";
 import { type JsonValue, jsonSize } from "./json-value.js";
-import { MAX_RECORD_BYTES } from "./plan-limits.js";
 
 const variables = new Map<string, JsonValue>([["count", 2]]);
 const resolveMethod = (): JsonValue | undefined => undefined;

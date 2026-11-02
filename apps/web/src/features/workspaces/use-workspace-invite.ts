@@ -5,7 +5,7 @@ import { useToast } from "../../components/ui/toast";
 import { useT } from "../../i18n/i18n-context";
 import { appPageUrl } from "../../platform/navigation";
 import { membersKey } from "./current-workspace";
-import { planLimitOf, workspaceErrorMessage } from "./workspace-errors";
+import { limitReachedOf, workspaceErrorMessage } from "./workspace-errors";
 import { DEFAULT_INVITE_ROLE, invitationLabel } from "./workspace-labels";
 import {
 	type IssuedInvitation,
@@ -26,7 +26,7 @@ export interface IssuedLink {
  * State of the invite form: invite by username or email with a role, or
  * issue a one-use link with that role. A full workspace (403
  * `PLAN_LIMIT_REACHED`) refreshes the member list so the seats line and
- * the "Requires Pro" card catch up.
+ * the full-workspace card catch up.
  */
 export function useWorkspaceInvite(workspaceId: string) {
 	const t = useT();
@@ -72,7 +72,7 @@ export function useWorkspaceInvite(workspaceId: string) {
 		},
 		onError: (cause) => {
 			setError(workspaceErrorMessage(cause, t));
-			if (planLimitOf(cause)) void refresh();
+			if (limitReachedOf(cause)) void refresh();
 		},
 	});
 
@@ -88,7 +88,7 @@ export function useWorkspaceInvite(workspaceId: string) {
 		},
 		onError: (cause) => {
 			toast.show({ tone: "error", title: workspaceErrorMessage(cause, t) });
-			if (planLimitOf(cause)) void refresh();
+			if (limitReachedOf(cause)) void refresh();
 		},
 	});
 

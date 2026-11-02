@@ -11,12 +11,12 @@ import {
 } from "../../components/ui/tabs";
 import { useT } from "../../i18n/i18n-context";
 import { renderRich } from "../../i18n/rich-text";
-import { isPlanLimitError } from "../../pages/projects/projects-api";
+import { isLimitReachedError } from "../../pages/projects/projects-api";
 import { ImportFileDrop } from "./import-file-drop";
 import { ImportJsonTab } from "./import-json-tab";
 import { importErrorText } from "./import-messages";
 import { ImportOpenApiTab } from "./import-openapi-tab";
-import { ImportPreview, overPlan } from "./import-preview";
+import { ImportPreview, overLimit } from "./import-preview";
 import { type ImportTab, importNameErrors, renamesOf } from "./import-source";
 import {
 	type ImportPreview as Preview,
@@ -33,7 +33,7 @@ export interface ImportResourceDialogProps {
 	onOpenChange: (open: boolean) => void;
 	/** Created resources (the root first). */
 	onImported: (result: Preview) => void;
-	onPlanLimit: () => void;
+	onLimitReached: () => void;
 	/** Where focus goes on close when the button that opened the dialog is gone. */
 	fallbackFocus: () => HTMLElement | null;
 }
@@ -46,7 +46,7 @@ export function ImportResourceDialog({
 	resources,
 	onOpenChange,
 	onImported,
-	onPlanLimit,
+	onLimitReached,
 	fallbackFocus,
 }: ImportResourceDialogProps) {
 	const t = useT();
@@ -77,7 +77,7 @@ export function ImportResourceDialog({
 		!busy &&
 		request !== null &&
 		preview !== null &&
-		overPlan(preview) < 0 &&
+		overLimit(preview) < 0 &&
 		Object.keys(nameErrors).length === 0;
 
 	async function create() {
@@ -93,7 +93,7 @@ export function ImportResourceDialog({
 			);
 			onImported(created);
 		} catch (error) {
-			if (isPlanLimitError(error)) onPlanLimit();
+			if (isLimitReachedError(error)) onLimitReached();
 			else setSubmitError(importErrorText(error, request.format, t));
 		} finally {
 			setBusy(false);

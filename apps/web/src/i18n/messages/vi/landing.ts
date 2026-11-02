@@ -18,8 +18,6 @@ export const landing: Messages["landing"] = {
 			"<b>Không cần cài app hay extension, chỉ một lệnh Tunelo.</b> Chạy <code>tunelo http 3000</code>, Localman tự nhận tunnel theo port và gửi request tới <code>localhost</code> hay máy trong mạng LAN. Kèm mock REST API có trạng thái để frontend không phải chờ backend.",
 		noteMock:
 			"Đăng nhập là dùng được ngay: {projects} project, tổng cộng {resources} resource, có sẵn custom response.",
-		noteLocalhost:
-			"Đăng nhập là dùng được ngay: {projects} project mock, tổng cộng {resources} resource, {proxy} request qua proxy mỗi tháng.",
 	},
 	preview: {
 		viaTunelo: "qua Tunelo",

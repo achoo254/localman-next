@@ -29,7 +29,6 @@ export const dataTransparency: Messages["dataTransparency"] = {
 		untilDeleted: "直到你删除",
 		notStored: "不保存",
 		days: { one: "{count} 天", other: "{count} 天" },
-		daysByLimits: "{standard} 天，扩展额度下 {extended} 天",
 		cap: "最多 {count} 条",
 	},
 	items: {

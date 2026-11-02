@@ -9,7 +9,7 @@ Monorepo của bộ công cụ API Localman và Tunelo, chạy tại <https://lo
 ## Quyết định và ràng buộc
 
 - **Đơn tenant.** Localman và Tunelo chỉ phục vụ host của `hoandat.com` cấu hình trong env, host khác nhận 421. Dữ liệu vẫn mang `tenantId: "primary"`, không migrate ([ADR-0003](docs/decisions/0003-tenant-scoped-data.md), superseded, mục "Sau khi bỏ đa tenant").
-- **Chưa thương mại.** Web không hiện giá hay gói; mọi tài khoản tự nhận Pro 30 ngày, backend hạn mức vẫn giữ để bật lại được ([ADR-0002](docs/decisions/0002-no-commercial-ui-automatic-pro-period.md)).
+- **Một mức cho mọi tài khoản.** Không có gói, giá hay dùng thử; mọi tài khoản dùng chung một bộ hạn mức `LIMITS` (mức Pro cũ) ở `packages/shared/src/account-limits.ts` ([ADR-0011](docs/decisions/0011-one-level-for-everyone.md)).
 - **Tính năng chỉ hiện khi đã phát hành.** Web bật tính năng bằng cờ build `VITE_FEATURES` ([`apps/web/src/config/feature-flags.ts`](apps/web/src/config/feature-flags.ts)); danh sách cờ đang chạy production là [`infra/localman/released-features`](infra/localman/released-features), file mà [`infra/localman/deploy.sh`](infra/localman/deploy.sh) đọc khi build.
 - **Một khai báo cho REST, MCP và OpenAPI.** API nghiệp vụ khai qua operation registry, mỗi operation là một MCP tool hoặc có lý do miễn trừ ([docs/operation-registry.md](docs/operation-registry.md)).
 - **Tên sản phẩm ở một file.** Tên, bundle id và mẫu host chỉ khai trong [`brand.config.json`](brand.config.json), mã thương hiệu nằm ở gói dùng chung `@achoo254/brand` ([ADR-0006](docs/decisions/0006-brand-config-and-product-name.md)).

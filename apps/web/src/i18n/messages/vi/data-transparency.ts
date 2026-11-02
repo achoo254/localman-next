@@ -29,7 +29,6 @@ export const dataTransparency: Messages["dataTransparency"] = {
 		untilDeleted: "Tới khi bạn xoá",
 		notStored: "Không lưu",
 		days: { one: "{count} ngày", other: "{count} ngày" },
-		daysByLimits: "{standard} ngày, {extended} ngày với hạn mức mở rộng",
 		cap: "tối đa {count} mục",
 	},
 	items: {

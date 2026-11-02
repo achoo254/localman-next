@@ -1,7 +1,6 @@
 import { MOCK_MCP_SEGMENT } from "@localman/shared";
 import type { Types } from "mongoose";
 import { tenantKey } from "../../tenancy/tenant-context.js";
-import { type StoredPlan, storedPlanOf } from "../billing/plan-guard.js";
 import {
 	LIVE_PROJECT,
 	ProjectModel,
@@ -111,8 +110,6 @@ export interface MockProject {
 	readonly name: string;
 	readonly prefix: string;
 	readonly owner: string;
-	/** The owner's stored plan; its expiry is checked on every request. */
-	readonly ownerPlan: StoredPlan;
 	/** Hybrid mock: where unmatched requests go. */
 	readonly upstream: ProjectUpstream;
 	/** Extra header names (lowercase) masked in the request log. */
@@ -123,8 +120,7 @@ export interface MockProject {
  * Projects by tenant and secret for 60 seconds, unknown secrets included (a flood of
  * random secrets costs one lookup each, then hits the bounded cache). The
  * dashboard runs in the same process and forgets a project when its
- * prefix changes, its secret is rotated or its deletion starts; other changes (the owner's plan
- * set by the CLI) show within the TTL.
+ * prefix changes, its secret is rotated or its deletion starts; other changes show within the TTL.
  */
 const cache = new TtlLruCache<Promise<MockProject | null>>(10_000, 60_000);
 
@@ -145,7 +141,6 @@ async function loadProject(secret: string): Promise<MockProject | null> {
 		name: project.name,
 		prefix: project.prefix ?? "",
 		owner: project.owner,
-		ownerPlan: await storedPlanOf(project.owner),
 		upstream: upstreamOf(project.upstream),
 		redactHeaders: project.redactHeaders ?? [],
 	};

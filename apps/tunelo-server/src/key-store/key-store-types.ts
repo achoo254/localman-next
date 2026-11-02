@@ -12,7 +12,6 @@ export interface KeyInfo {
 	keyId: string;
 	keyHash: string;
 	maxTunnels: number;
-	plan: string;
 	role: "user" | "admin";
 	/** Granted scopes; empty for `legacy` (full rights, as before scopes). */
 	scopes: string[];

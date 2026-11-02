@@ -1,11 +1,6 @@
-import { limitsFor } from "@localman/shared";
 import { Types } from "mongoose";
 import { describe, expect, it } from "vitest";
 import { incrementUsage, readUsage } from "../billing/usage-counter-model.js";
-import {
-	RequestLogModel,
-	type StoredRequestLog,
-} from "../mock-runtime/request-log-model.js";
 import { requestLog } from "../mock-runtime/request-log-service.js";
 import {
 	OWNER,
@@ -48,13 +43,6 @@ function meteredQueue(): OutboundQueue {
 	});
 }
 
-async function callbackLines(): Promise<StoredRequestLog[]> {
-	await requestLog.flush();
-	return RequestLogModel.find({ source: "callback" }).lean<
-		StoredRequestLog[]
-	>();
-}
-
 describe("outbound deliveries and the monthly quota", () => {
 	it("counts each callback and inbox forward once, whatever its attempts", async () => {
 		outbound.answer("/fail", 503);
@@ -70,21 +58,16 @@ describe("outbound deliveries and the monthly quota", () => {
 		expect((await readUsage(OWNER)).mockRequests).toBe(2);
 	});
 
-	it("sends nothing once the quota is used up and logs quota_exceeded", async () => {
+	it("keeps sending however many requests the owner made this month", async () => {
 		outbound.answer("/hook", 200);
-		const limit = limitsFor("free").mockRequestsPerMonth ?? 0;
-		await incrementUsage(OWNER, "mockRequests", limit, new Date());
+		await incrementUsage(OWNER, "mockRequests", 1_000_000, new Date());
 		await queueJob("callback", "/hook");
 		await queueJob("inbox", "/hook");
 		const queue = meteredQueue();
 		await queue.drain();
 		await queue.stop();
-		expect(outbound.received).toHaveLength(0);
-		const [line] = await callbackLines();
-		expect(line?.attempts?.map((attempt) => attempt.error)).toEqual([
-			"quota_exceeded",
-		]);
+		expect(outbound.received).toHaveLength(2);
 		await kit.meter().flush();
-		expect((await readUsage(OWNER)).mockRequests).toBe(limit);
+		expect((await readUsage(OWNER)).mockRequests).toBe(1_000_002);
 	});
 });

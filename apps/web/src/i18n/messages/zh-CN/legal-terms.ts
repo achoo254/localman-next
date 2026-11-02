@@ -10,7 +10,7 @@ export const legalTerms: Messages["legalTerms"] = {
 	},
 	limits: {
 		title: "额度",
-		body: "Localman 目前免费使用。你的额度和本月用量显示在账号页面；账号可能在一段时间内享有扩展额度，页面会显示截止时间。扩展额度结束后不会删除任何内容，只会拒绝超出额度的新内容。额度可能会调整。",
+		body: "Localman 免费使用，所有账号的额度都相同，没有付费套餐。你的额度和本月用量显示在账号页面。超出额度时不会删除任何内容，只会拒绝超出额度的新内容。额度可能会调整。",
 	},
 	content: {
 		title: "你的内容",
@@ -22,11 +22,11 @@ export const legalTerms: Messages["legalTerms"] = {
 	},
 	use: {
 		title: "合理使用",
-		body: "Localman 设有频率限制和每月额度，并拒绝向内网和邮件端口发送 request。请勿尝试绕过这些限制、使服务过载，或利用它攻击或访问你无权访问的系统。",
+		body: "Localman 设有频率限制和使用额度，并拒绝向内网和邮件端口发送 request。请勿尝试绕过这些限制、使服务过载，或利用它攻击或访问你无权访问的系统。",
 	},
 	cleanup: {
 		title: "不活跃和已删除的数据",
-		body: "账号处于标准额度时，90 天无活动的 project 可能会被删除。已删除的 collection 会在回收站保留 30 天，之后永久删除。request 日志和历史按隐私政策所述过期。",
+		body: "90 天无活动的 project 可能会被删除。已删除的 collection 会在回收站保留 30 天，之后永久删除。request 日志和历史按隐私政策所述过期。",
 	},
 	service: {
 		title: "服务",

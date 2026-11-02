@@ -16,11 +16,7 @@ import { globalsOperations } from "../modules/environments/globals-operations.js
 import { variableScopeOperations } from "../modules/environments/variable-scope-operations.js";
 import { contactMessageAdminOperations } from "../modules/feedback/contact-message-admin-operations.js";
 import { submitContactMessage } from "../modules/feedback/contact-message-operations.js";
-import { proInterestAdminOperations } from "../modules/feedback/pro-interest-admin-operations.js";
-import {
-	getProInterestFormConfig,
-	submitProInterest,
-} from "../modules/feedback/pro-interest-operations.js";
+import { feedbackFormConfigOperations } from "../modules/feedback/feedback-config-operations.js";
 import { liveMockSyncOperations } from "../modules/live-mock-sync/sync-operations.js";
 import { mcpTokenOperations } from "../modules/mcp/mcp-token-operations.js";
 import { callbackOperations } from "../modules/mock-callbacks/callback-operations.js";
@@ -53,8 +49,6 @@ import { resourceOperations } from "../modules/resources/resource-operations.js"
 import { resourceTreeOperations } from "../modules/resources/resource-tree-operations.js";
 import { secretVaultOperations } from "../modules/secret-vault/secret-vault-operations.js";
 import { getTenantInfo } from "../modules/tenant-info/tenant-info-operation.js";
-import { trialAdminOperations } from "../modules/trial/trial-admin-operations.js";
-import { trialOperations } from "../modules/trial/trial-operations.js";
 import { tuneloOperations } from "../modules/tunelo/tunelo-operations.js";
 import { getMe, setLocale } from "../modules/users/user-operations.js";
 import { forkOperations } from "../modules/version-control/fork-operations.js";
@@ -113,11 +107,7 @@ export const operations: readonly AnyOperation[] = [
 	...resourceDataOperations,
 	getMockUrls,
 	getAccountUsage,
-	...trialOperations,
-	...trialAdminOperations,
-	submitProInterest,
-	getProInterestFormConfig,
-	...proInterestAdminOperations,
+	...feedbackFormConfigOperations,
 	submitContactMessage,
 	...contactMessageAdminOperations,
 	getTenantInfo,

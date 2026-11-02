@@ -65,8 +65,8 @@ export function settingsJson(overrides: Record<string, unknown> = {}) {
 			"set-cookie",
 			"x-api-key",
 		],
-		plan: "free",
-		logDays: 7,
+		plan: "pro",
+		logDays: 30,
 		canManage: true,
 		...overrides,
 	};

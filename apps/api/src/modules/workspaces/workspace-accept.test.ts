@@ -150,24 +150,6 @@ describe("POST /workspace-invites/accept", () => {
 		]);
 	});
 
-	it("rechecks seats against the owner's plan in force", async () => {
-		await UserModel.updateOne({ sub: OWNER }, { $set: { plan: "pro" } });
-		const id = await createWorkspace(OWNER);
-		const token = await inviteTokenTo(OWNER, id, "bob");
-		await inviteTokenTo(OWNER, id, "dave");
-		await inviteTokenTo(OWNER, id, "x@example.com");
-		await UserModel.updateOne({ sub: OWNER }, { $set: { plan: "free" } });
-		expect((await previewWorkspace(BOB, token)).body.reason).toBe(
-			"MEMBER_LIMIT",
-		);
-		const res = await acceptWorkspace(BOB, token);
-		expect(res.status).toBe(403);
-		expect(res.body.error).toMatchObject({
-			code: "PLAN_LIMIT_REACHED",
-			details: { limit: "members", max: 3, used: 4 },
-		});
-	});
-
 	it("answers 404 INVITE_NOT_FOUND once the workspace is deleted", async () => {
 		const id = await createWorkspace(OWNER);
 		const token = await inviteTokenTo(OWNER, id, "bob");

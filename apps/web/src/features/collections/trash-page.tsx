@@ -18,7 +18,7 @@ import { RestoreModal } from "./restore-modal";
 import { TrashFilters } from "./trash-filters";
 import { TrashSkeleton } from "./trash-skeleton";
 import { TrashTable } from "./trash-table";
-import { useDeleteTrashed, useTrash, useTrashDays } from "./use-trash";
+import { TRASH_DAYS, useDeleteTrashed, useTrash } from "./use-trash";
 import { useDropUnknownFilters, useTrashFilters } from "./use-trash-filters";
 
 type TrashDialog = { kind: "restore" | "purge"; item: TrashedCollection };
@@ -27,7 +27,7 @@ function Trash() {
 	const t = useT();
 	useAppTitle(t("collections.trash.pageTitle"));
 	const toast = useToast();
-	const days = useTrashDays();
+	const days = TRASH_DAYS;
 	const trashFilters = useTrashFilters();
 	const { filters, text, setText, set } = trashFilters;
 	const trash = useTrash(filters);

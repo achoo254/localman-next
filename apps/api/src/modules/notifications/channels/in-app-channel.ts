@@ -1,8 +1,9 @@
 import type { Locale } from "@localman/shared";
 import { Types } from "mongoose";
-import type {
-	NotificationType,
-	ValidatedEvent,
+import {
+	NOTIFICATION_TYPES,
+	type NotificationType,
+	type ValidatedEvent,
 } from "../notification-events.js";
 import { NotificationModel } from "../notification-model.js";
 import type { NotificationText } from "../notification-template.js";
@@ -89,8 +90,18 @@ export async function storeInAppNotification(
 	return toItem(created.toObject<StoredNotification>(), locale);
 }
 
+/**
+ * The bell shows only types this version still sends: rows of retired
+ * types (the Pro trial reminders) stay stored but are not listed.
+ */
+const SHOWN_TYPES = { $in: [...NOTIFICATION_TYPES] };
+
 function countUnread(userSub: string): Promise<number> {
-	return NotificationModel.countDocuments({ userSub, readAt: null });
+	return NotificationModel.countDocuments({
+		userSub,
+		type: SHOWN_TYPES,
+		readAt: null,
+	});
 }
 
 /** Newest first; `cursor` is the id of the last item of the previous page. */
@@ -102,6 +113,7 @@ export async function listNotifications(
 	const before = page.cursor ? objectIdOrNull(page.cursor) : null;
 	const docs = await NotificationModel.find({
 		userSub,
+		type: SHOWN_TYPES,
 		...(before ? { _id: { $lt: before } } : {}),
 	})
 		.sort({ _id: -1 })

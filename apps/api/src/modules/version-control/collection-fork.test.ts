@@ -2,7 +2,7 @@ import type {
 	CollectionDetail,
 	MergePreview,
 } from "@localman/shared/api-client";
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
 import {
 	ADA,
@@ -18,16 +18,8 @@ import {
 	teamOfThree,
 	useCollectionTestDb,
 } from "../collections/testing/collection-fixture.js";
-import { UserModel } from "../users/user-model.js";
 
 useCollectionTestDb();
-
-beforeEach(async () => {
-	await UserModel.updateMany(
-		{},
-		{ $set: { plan: "pro", planExpiresAt: null } },
-	);
-});
 
 /** A team collection by Ada with one request, forked by Eve into the team. */
 async function forked() {
@@ -78,18 +70,6 @@ const preview = async (
 };
 
 describe("forking a collection", () => {
-	it("needs Pro", async () => {
-		await UserModel.updateMany({}, { $set: { plan: "free" } });
-		const ws = (await teamOfThree()).toHexString();
-		const source = await createAs(ADA, ws);
-		const res = await as(EVE).send("post", `/collections/${source.id}/forks`, {
-			label: "x",
-			workspaceId: ws,
-		});
-		expect(res.status).toBe(403);
-		expect(res.body.error.code).toBe("PLAN_FEATURE_UNAVAILABLE");
-	});
-
 	it("links the copy to its source, which counts and lists it", async () => {
 		const { source, fork } = await forked();
 		const status = await as(EVE).get(`/collections/${fork}/fork-status`);

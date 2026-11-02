@@ -1,8 +1,7 @@
-import { limitsFor } from "@localman/shared";
+import { LIMITS } from "@localman/shared";
 import type { HeaderEntry } from "@localman/shared/api-client";
 import { Types } from "mongoose";
 import { encodeBody } from "../api-client/proxy-response-body.js";
-import { type StoredPlan, effectivePlan } from "../billing/plan-guard.js";
 import type {
 	CallbackEvent,
 	RequestLogSource,
@@ -42,8 +41,6 @@ export interface LogMessageInput {
 /** What a writer hands to `RequestLogService.record`. */
 export interface RequestLogInput {
 	readonly projectId: Types.ObjectId | string;
-	/** Owner's stored plan when the line is written: its days set the TTL. */
-	readonly ownerPlan: StoredPlan;
 	/** The project's extra masked header names. */
 	readonly redactHeaders: readonly string[];
 	readonly at: Date;
@@ -135,11 +132,6 @@ export function lineBytes(line: StoredRequestLog): number {
 	);
 }
 
-/** Days a line written now is kept, from the owner's effective plan. */
-export function logDaysOf(plan: StoredPlan, at: Date): number {
-	return limitsFor(effectivePlan(plan, at)).requestLogDays;
-}
-
 /** The document of a line: masked headers, 64 KB bodies, its expiry. */
 export function toStoredLine(input: RequestLogInput): StoredRequestLog {
 	return {
@@ -157,9 +149,7 @@ export function toStoredLine(input: RequestLogInput): StoredRequestLog {
 		source: input.source,
 		request: messageOf(input.request, input.redactHeaders),
 		response: messageOf(input.response, input.redactHeaders),
-		expiresAt: new Date(
-			input.at.getTime() + logDaysOf(input.ownerPlan, input.at) * DAY_MS,
-		),
+		expiresAt: new Date(input.at.getTime() + LIMITS.requestLogDays * DAY_MS),
 		...deliveryOf(input),
 	};
 }

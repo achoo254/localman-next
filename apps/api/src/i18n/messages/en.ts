@@ -1,5 +1,4 @@
 import { mobileSignInEn } from "./mobile-sign-in-en.js";
-import { trialEn } from "./trial-en.js";
 
 /** Values of an invitation; `inviter` is `null` when the owner has no name. */
 export interface InvitationText {
@@ -67,16 +66,6 @@ export interface ContactAlertText {
 	readonly source: string;
 }
 
-/** Owner alert about the Pro interest form; email already masked. */
-export interface ProInterestAlertText {
-	/** Line from `proInterestHeadlines`. */
-	readonly headline: string;
-	readonly email: string;
-	readonly needs: string;
-	readonly teamSize: string;
-	readonly source: string;
-}
-
 const monthName = new Intl.DateTimeFormat("en", {
 	year: "numeric",
 	month: "long",
@@ -98,11 +87,6 @@ export const en = {
 		"project.invitation": "Project collaboration invitations",
 		"project.mockUrlChanged": "A shared project's mock URL changed",
 		"usage.quota": "Monthly mock request quota warnings",
-		"trial.ending": "Extended limits ending soon",
-		"trial.ended": "Extended limits ended",
-		"trial.extension.requested": "Pro trial extension requests (owners)",
-		"trial.extension.approved": "Extended limits renewed",
-		"trial.extension.declined": "Extended limits not renewed",
 		"workspace.invitation": "Workspace invitations",
 		"element.shared": "Collections and environments shared with you",
 		"access.requested":
@@ -244,8 +228,6 @@ export const en = {
 			"This address points to a private network, so Localman can't send callbacks to it. Expose a local server with a Tunelo tunnel instead.",
 		callbackDns: "The callback host name could not be resolved.",
 	},
-	/** The Pro trial: reminders, extension requests and decisions. */
-	trial: trialEn,
 	/** Native app sign-in pages (confirmation, callback fallback). */
 	mobileSignIn: mobileSignInEn,
 	ownerAlerts: {
@@ -254,7 +236,7 @@ export const en = {
 		contactCategories: {
 			feedback: "Feedback",
 			bug: "Bug report",
-			plan_question: "Plan question",
+			plan_question: "Question about limits",
 		},
 		contact: (p: ContactAlertText): string =>
 			[
@@ -262,19 +244,6 @@ export const en = {
 				`Message: ${p.excerpt}`,
 				`Contact: ${p.contact ?? "not provided"}`,
 				`Sender: ${p.signedIn ? "signed in" : "guest"}`,
-				`Source: ${p.source}`,
-			].join("\n"),
-		proInterestHeadlines: {
-			created: "Pro plan interest: new sign-up",
-			updated: "Pro plan interest: updated",
-			recorded: "Pro plan interest: sent again by someone else (history only)",
-		},
-		proInterest: (p: ProInterestAlertText): string =>
-			[
-				p.headline,
-				`Email: ${p.email}`,
-				`Needs: ${p.needs}`,
-				`Team size: ${p.teamSize}`,
 				`Source: ${p.source}`,
 			].join("\n"),
 	},

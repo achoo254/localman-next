@@ -92,7 +92,6 @@ export const versionControl: Messages["versionControl"] = {
 		noAccess: "你无法打开这个 fork。",
 	},
 	errors: {
-		planFeature: "Fork 和合并属于 Pro 套餐。",
 		target: "作为 Viewer，你只能 fork 到个人 workspace。",
 		conflicts: "请先为每一处冲突选择版本。",
 		sourceGone: "源已不存在，或你无法打开它。",

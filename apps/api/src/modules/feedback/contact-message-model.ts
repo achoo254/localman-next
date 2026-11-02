@@ -11,7 +11,7 @@ import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
 /**
  * Messages left through the "Góp ý / Liên hệ" form. They share the
- * `feedback` collection with Pro-interest entries (`type: "contact"`) but
+ * `feedback` collection with retired Pro-interest entries (`type: "contact"`) but
  * have their own model, so neither type's required fields or indexes
  * leak into the other; every query filters on `type`.
  */

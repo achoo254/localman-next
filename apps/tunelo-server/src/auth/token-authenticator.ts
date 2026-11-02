@@ -103,7 +103,6 @@ export function createTokenAuthenticator(
 				keyId: sub,
 				keyHash: hashToken(token),
 				maxTunnels: maxTunnels ?? DEFAULT_MAX_TUNNELS,
-				plan: "free",
 				role: "user",
 				scopes,
 				ownerSub: sub,

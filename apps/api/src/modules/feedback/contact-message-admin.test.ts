@@ -4,8 +4,8 @@ import {
 	guest,
 	useDashboardTestDb,
 } from "../../test-support/dashboard-test-app.js";
+import { FeedbackModel } from "../account-deletion/retired-feature-models.js";
 import { ContactMessageModel } from "./contact-message-model.js";
-import { FeedbackModel } from "./feedback-model.js";
 
 const OWNER = "acc_owner";
 const LIST = "/admin/contact-messages";
@@ -31,15 +31,10 @@ async function seed(): Promise<string[]> {
 		})),
 		{ timestamps: false },
 	);
-	// A Pro interest entry in the same collection must never show up.
+	// A retired Pro interest entry in the same collection must never show up.
 	await FeedbackModel.create({
 		type: "pro_interest",
 		email: "a@x.com",
-		name: "A",
-		needs: ["mock"],
-		teamSize: "1",
-		source: "landing",
-		consentAt: new Date(),
 	});
 	return docs.map((doc) => doc._id.toHexString());
 }
@@ -114,7 +109,7 @@ describe("contact inbox admin operations", () => {
 		});
 	});
 
-	it("answers 404 for unknown ids and Pro interest entries", async () => {
+	it("answers 404 for unknown ids and retired Pro interest entries", async () => {
 		await seed();
 		const pro = await FeedbackModel.findOne({ type: "pro_interest" }).lean();
 		const ids = ["nope", "0123456789abcdef01234567", String(pro?._id)];

@@ -1,6 +1,6 @@
 import { useFeatures } from "../../config/features";
-import type { AccountUsage } from "../../features/subscription/account-usage-api";
-import { UsageMeter } from "../../features/subscription/usage-meter";
+import type { AccountUsage } from "../../features/usage/account-usage-api";
+import { UsageMeter } from "../../features/usage/usage-meter";
 import { useI18n } from "../../i18n/i18n-context";
 
 /**

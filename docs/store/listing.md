@@ -15,7 +15,7 @@ Sửa chính sách thì sửa các bảng dưới đây cùng lúc.
 | Bundle ID / Application ID | `com.hoandat.localman` (cả hai nền tảng, `brand.config.json`) |
 | SKU (App Store) | `localman-ios` |
 | Danh mục chính / phụ | Developer Tools / Productivity (Play: Tools) |
-| Giá | Miễn phí, không mua trong app, không quảng cáo. Hạn mức mở rộng do người vận hành cấp; trong app không có chỗ mua hay link mua (giữ như vậy để không vướng guideline 3.1.1 và chính sách thanh toán của Play) |
+| Giá | Miễn phí, không mua trong app, không quảng cáo. Mọi tài khoản cùng một hạn mức, không có gói; trong app không có chỗ mua hay link mua (giữ như vậy để không vướng guideline 3.1.1 và chính sách thanh toán của Play) |
 | Thiết bị | iPhone, iOS 17.4 trở lên (`ASWebAuthenticationSession` với callback https). Android 7.0 (API 24) trở lên |
 | Bản quyền | `2026 hoandat` |
 | URL hỗ trợ | `https://localman.hoandat.com/privacy#contact` (email `quocdat254@gmail.com` và form "Góp ý / Liên hệ") |

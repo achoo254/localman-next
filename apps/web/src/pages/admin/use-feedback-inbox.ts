@@ -11,10 +11,10 @@ import {
 	type MessageStatus,
 	deleteContactMessage,
 	fetchContactMessages,
+	isForbidden,
 	setMessageStatus,
 } from "./feedback-inbox-api";
 import { statusLabel } from "./feedback-inbox-item";
-import { isForbidden } from "./pro-interest-admin-api";
 
 export type InboxListState =
 	| { status: "loading" }

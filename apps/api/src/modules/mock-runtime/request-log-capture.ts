@@ -117,7 +117,6 @@ export function trackRequestLog(
 		const raw = rawBodyOf(req);
 		log.record({
 			projectId: project.id,
-			ownerPlan: project.ownerPlan,
 			redactHeaders: project.redactHeaders,
 			at,
 			method: req.method,

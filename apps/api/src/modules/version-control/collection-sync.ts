@@ -7,11 +7,7 @@ import {
 import type { CollectionState } from "../collections/revision-patch.js";
 import { loadState } from "../collections/revision-state.js";
 import { loadBase } from "./collection-base.js";
-import {
-	requireForkPlan,
-	requireLink,
-	sourceUnavailable,
-} from "./fork-access.js";
+import { requireLink, sourceUnavailable } from "./fork-access.js";
 import { pairMaps, renameState } from "./fork-id-space.js";
 import type { StoredFork } from "./fork-model.js";
 
@@ -34,7 +30,7 @@ const isNotFound = (error: unknown): boolean =>
 
 /**
  * A collection fork (the caller needs `forkAction` on it), its link and
- * its source (`sourceAction`). Pro only. 404 `FORK_NOT_FOUND` when it is
+ * its source (`sourceAction`). 404 `FORK_NOT_FOUND` when it is
  * not a fork, `FORK_SOURCE_UNAVAILABLE` when the source is gone or out of
  * the caller's reach.
  */
@@ -45,7 +41,6 @@ export async function sidesOf(
 	sourceAction: "view" | "mergeFork",
 ): Promise<Sides> {
 	const fork = await requireCollection(sub, forkId, forkAction);
-	await requireForkPlan(sub);
 	await takeOperationSlot("sync", sub, fork.element.id);
 	const link = await requireLink("collection", fork.collectionId);
 	const source = await requireCollection(

@@ -8,7 +8,7 @@ export const RESOURCES_PATH = "/projects/:projectId/resources";
 export const ACCESS_NOTE =
 	"Unknown or inaccessible projects and resources answer 404; accepted collaborators may read and change them like the owner.";
 export const PLAN_NOTE =
-	"Fails with 403 PLAN_LIMIT_REACHED (details: limit, max, used) when the project owner already has as many resources, over all their projects, as their plan allows.";
+	"Fails with 403 PLAN_LIMIT_REACHED (details: limit, max, used) when the project owner already has as many resources, over all their projects, as the limit allows.";
 export const SIZE_NOTE =
 	"Records are capped at 32 KB of JSON each and 2 MB per resource (413 DATA_TOO_LARGE with details: limit, maxBytes, actualBytes).";
 /**

@@ -76,11 +76,11 @@ describe("inbox tab", () => {
 		expect(await seriousViolations(container)).toEqual([]);
 	});
 
-	it("opens the plans when the plan has no room left", async () => {
+	it("tells the user when the project has no room left", async () => {
 		const full = renderInboxTab(listJson([inboxJson("a"), inboxJson("b")]));
 		const user = userEvent.setup();
 		await user.click(await findCreate());
-		expect(full.onPlanLimit).toHaveBeenCalledTimes(1);
+		expect(full.onLimitReached).toHaveBeenCalledTimes(1);
 		expect(screen.queryByRole("dialog")).toBeNull();
 	});
 

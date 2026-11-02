@@ -5,14 +5,11 @@ import {
 } from "@localman/shared/constants";
 import { apiRequest } from "../../lib/api-client";
 import {
-	InvalidResponseError,
 	expectBoolean,
 	expectRecord,
 	expectString,
 	optionalString,
 } from "../../lib/json-guards";
-
-export type Plan = "free" | "pro";
 
 export interface CurrentUser {
 	sub: string;
@@ -21,7 +18,6 @@ export interface CurrentUser {
 	emailVerified: boolean;
 	name: string | null;
 	picture: string | null;
-	plan: Plan;
 	/** Localman operator: may open the admin pages. */
 	isOwner: boolean;
 	telegram: { linked: boolean; username: string | null };
@@ -31,10 +27,6 @@ export interface CurrentUser {
 
 export function parseCurrentUser(data: unknown): CurrentUser {
 	const user = expectRecord(data, "user");
-	const plan = expectString(user, "plan");
-	if (plan !== "free" && plan !== "pro") {
-		throw new InvalidResponseError(`plan "${plan}"`);
-	}
 	const telegram = expectRecord(user.telegram, "telegram");
 	return {
 		sub: expectString(user, "sub"),
@@ -43,7 +35,6 @@ export function parseCurrentUser(data: unknown): CurrentUser {
 		emailVerified: user.emailVerified === true,
 		name: optionalString(user, "name"),
 		picture: optionalString(user, "picture"),
-		plan,
 		isOwner: user.isOwner === true,
 		telegram: {
 			linked: expectBoolean(telegram, "linked"),

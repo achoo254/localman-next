@@ -1,6 +1,6 @@
-import { limitsFor } from "@localman/shared";
+import { LIMITS } from "@localman/shared";
 import type { ClientSession, Types } from "mongoose";
-import { PlanLimitError, currentPlanOf } from "../billing/plan-guard.js";
+import { LimitReachedError } from "../billing/limit-guard.js";
 import {
 	type StoredWorkspaceMember,
 	WorkspaceMemberModel,
@@ -10,7 +10,7 @@ import type { StoredWorkspace } from "./workspace-model.js";
 export interface WorkspaceSeats {
 	/** Accepted members and invitations that can still be accepted. */
 	readonly used: number;
-	/** `membersPerWorkspace` of the owner's plan in force. */
+	/** `LIMITS.membersPerWorkspace`. */
 	readonly max: number;
 }
 
@@ -41,8 +41,7 @@ export function seatHoldersFilter(
 }
 
 /**
- * Seats of a team workspace, counted against its owner's plan (a member
- * never brings their own). Pass the session of the workspace transaction
+ * Seats of a team workspace, counted against `membersPerWorkspace`. Pass the session of the workspace transaction
  * when the count guards a write.
  */
 export async function workspaceSeats(
@@ -50,16 +49,15 @@ export async function workspaceSeats(
 	session: ClientSession | null = null,
 	now: Date = new Date(),
 ): Promise<WorkspaceSeats> {
-	const plan = await currentPlanOf(workspace.ownerId);
 	const used = await WorkspaceMemberModel.countDocuments(
 		seatHoldersFilter(workspace._id, now),
 	).session(session);
-	return { used, max: limitsFor(plan).membersPerWorkspace };
+	return { used, max: LIMITS.membersPerWorkspace };
 }
 
 /**
  * Throws 403 `PLAN_LIMIT_REACHED` (`limit: "members"`) when `adding` more
- * seats would pass the owner's plan. Run it inside `inWorkspaceTransaction`
+ * seats would pass the limit. Run it inside `inWorkspaceTransaction`
  * so concurrent writers of the workspace serialize on its lock.
  */
 export async function assertWorkspaceSeats(
@@ -69,6 +67,6 @@ export async function assertWorkspaceSeats(
 ): Promise<void> {
 	const seats = await workspaceSeats(workspace, session);
 	if (seats.used + adding > seats.max) {
-		throw new PlanLimitError("members", seats.max, seats.used);
+		throw new LimitReachedError("members", seats.max, seats.used);
 	}
 }

@@ -18,13 +18,13 @@ import {
 	planEnvironmentFork,
 	prepareEnvironmentFork,
 } from "./environment-fork-service.js";
-import { requireForkPlan, requireForkTarget } from "./fork-access.js";
+import { requireForkTarget } from "./fork-access.js";
 import { renameState } from "./fork-id-space.js";
 import { forkStatusOf, forksOf } from "./fork-listing.js";
 import { ForkModel } from "./fork-model.js";
 
 /**
- * Forks a collection (Pro): a copy with new node ids in a workspace where
+ * Forks a collection: a copy with new node ids in a workspace where
  * the caller adds elements, linked to its source with the pairs of ids and
  * the copied content as the base. A Viewer of the source may fork it into
  * their personal workspace only (403 `FORK_TARGET_NOT_ALLOWED`).
@@ -39,7 +39,6 @@ export async function forkCollection(
 	input: { label: string; workspaceId: string; environmentIds?: string[] },
 ): Promise<CollectionDetail> {
 	const access = await requireCollection(sub, id, "fork");
-	await requireForkPlan(sub);
 	await takeOperationSlot("fork", sub, access.element.id);
 	const workspace = await requireForkTarget(
 		sub,

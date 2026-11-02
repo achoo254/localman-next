@@ -12,7 +12,7 @@ export const publicRoutes: RouteObject[] = [
 		path: "login",
 		element: lazyPage(() => import("../pages/login/login-page"), "LoginPage"),
 	},
-	// No pricing while the product is not sold; old links land home.
+	// There are no plans (ADR-0011): old pricing links land home.
 	{ path: "pricing", element: <Navigate to="/" replace /> },
 	// Public on purpose: anonymous visitors choose sign-in or sign-up
 	// and come back here (the shell's guard would go straight to sign-in).

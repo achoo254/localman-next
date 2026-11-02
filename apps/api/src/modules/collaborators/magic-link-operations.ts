@@ -12,7 +12,7 @@ import {
 const projectId = z.string().min(1).max(64);
 const PATH = "/projects/:projectId/magic-link";
 const NOTE =
-	"Owner only (403 for collaborators, 404 for projects the caller cannot read). The magic link is a reusable invite: anyone signed in who opens it joins as a collaborator while the owner's plan has a free member seat.";
+	"Owner only (403 for collaborators, 404 for projects the caller cannot read). The magic link is a reusable invite: anyone signed in who opens it joins as a collaborator while the owner has a free member seat.";
 
 export const getMagicLink = defineOperation({
 	id: "collab.getMagicLink",

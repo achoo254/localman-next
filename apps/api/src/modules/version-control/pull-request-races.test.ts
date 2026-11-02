@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
 import {
 	ADA,
@@ -7,17 +7,9 @@ import {
 	patchAs,
 } from "../access/testing/access-fixture.js";
 import { useCollectionTestDb } from "../collections/testing/collection-fixture.js";
-import { UserModel } from "../users/user-model.js";
 import { changedFork, open, review } from "./testing/pull-request-fixture.js";
 
 useCollectionTestDb();
-
-beforeEach(async () => {
-	await UserModel.updateMany(
-		{},
-		{ $set: { plan: "pro", planExpiresAt: null } },
-	);
-});
 
 const merge = (id: string, option = "merge") =>
 	as(ADA).send("post", `/pull-requests/${id}/merge`, { option });

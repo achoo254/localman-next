@@ -1,4 +1,4 @@
-import { FREE_LIMITS, MAX_RECORDS_PER_RESOURCE } from "@localman/shared";
+import { MAX_RECORDS_PER_RESOURCE } from "@localman/shared";
 import { describe, expect, it } from "vitest";
 import {
 	UsageCounterModel,
@@ -87,61 +87,17 @@ describe("rate limits", () => {
 	});
 });
 
-describe("monthly quota", () => {
-	it("counts requests, flushes them and refuses past the Free quota", async () => {
+describe("monthly usage", () => {
+	it("counts and flushes requests without a monthly cap or warning", async () => {
 		const { project } = await projectWithUsers();
-		const quota = FREE_LIMITS.mockRequestsPerMonth ?? 0;
-		await setUsed(quota - 2);
+		await setUsed(1_000_000);
 		const mock = kit.client(project.secret);
 		expect((await mock.get("/users")).status).toBe(200);
 		expect((await mock.get("/nope")).status).toBe(404);
-		const over = await mock.get("/users");
-		expect(over.status).toBe(429);
-		expect(over.body).toEqual({
-			error: {
-				code: "MONTHLY_QUOTA_EXCEEDED",
-				message: expect.any(String),
-			},
-		});
+		expect((await mock.get("/users")).status).toBe(200);
 		await kit.meter().flush();
-		expect((await readUsage(OWNER)).mockRequests).toBe(quota);
-		expect(kit.warn).toHaveBeenCalledTimes(1);
-		expect(kit.warn.mock.calls[0]?.[1]).toMatchObject({
-			threshold: 100,
-			limit: quota,
-		});
-		// Refused requests are not counted, so no second warning.
-		await kit.meter().flush();
-		expect((await readUsage(OWNER)).mockRequests).toBe(quota);
-		expect(kit.warn).toHaveBeenCalledTimes(1);
-	});
-
-	it("warns once at 80% and lifts the cap for a current Pro plan", async () => {
-		const { project } = await projectWithUsers();
-		const quota = FREE_LIMITS.mockRequestsPerMonth ?? 0;
-		await setUsed(Math.ceil(quota * 0.8) - 1);
-		const mock = kit.client(project.secret);
-		await mock.get("/users");
-		await mock.get("/users");
-		await kit.meter().flush();
-		await mock.get("/users");
-		await kit.meter().flush();
-		expect(kit.warn).toHaveBeenCalledTimes(1);
-		expect(kit.warn.mock.calls[0]?.[1]).toMatchObject({ threshold: 80 });
-
-		await UsageCounterModel.updateOne(
-			{ ownerSub: OWNER },
-			{ $set: { mockRequests: quota } },
-		);
-		await UserModel.updateOne(
-			{ sub: OWNER },
-			{
-				$set: { plan: "pro", planExpiresAt: new Date(Date.now() + 86_400_000) },
-			},
-		);
-		clearMockProjectCache();
-		const proMock = kit.client(project.secret);
-		expect((await proMock.get("/users")).status).toBe(200);
+		expect((await readUsage(OWNER)).mockRequests).toBe(1_000_003);
+		expect(kit.warn).not.toHaveBeenCalled();
 	});
 });
 

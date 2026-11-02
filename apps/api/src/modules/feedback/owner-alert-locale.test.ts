@@ -3,17 +3,12 @@ import { guest } from "../../test-support/dashboard-test-app.js";
 import { UserModel } from "../users/user-model.js";
 import { alertOwnerThrottled } from "./owner-alert-throttle.js";
 import { TURNSTILE_TOKENS } from "./testing/fake-turnstile.js";
-import {
-	FORM,
-	OWNER_CHAT,
-	SUBMIT,
-	useProInterestFixture,
-} from "./testing/pro-interest-fixture.js";
+import { OWNER_CHAT, useFeedbackFixture } from "./testing/feedback-fixture.js";
 
 const OWNER_A = "acc_owner_a";
 const OWNER_B = "acc_owner_b";
 
-const fx = useProInterestFixture(() => ({
+const fx = useFeedbackFixture(() => ({
 	ownerSubs: new Set([OWNER_A, OWNER_B]),
 	ownerAlertLimit: { max: 1, windowMs: 60_000 },
 }));
@@ -68,17 +63,13 @@ describe("owner alerts in the owner's language", () => {
 			{ sub: OWNER_B, username: "b", locale: "vi" },
 			{ sub: OWNER_A, username: "a", locale: "zh-CN" },
 		]);
-		const res = await guest().send("post", SUBMIT, {
-			...FORM,
-			turnstileToken: TURNSTILE_TOKENS.valid,
-		});
-		expect(res.status).toBe(201);
+		expect((await contact("保存按钮没反应")).status).toBe(201);
 		const [text = ""] = await fx.alerts();
 		expect(text.split("\n")).toEqual([
-			"Pro 套餐意向：新登记",
-			"邮箱：ng***@gm***.com",
-			"需求：mock, team",
-			"团队规模：2-5",
+			"新的反馈 / 联系：反馈",
+			"内容：保存按钮没反应",
+			"联系方式：未留下",
+			"发送者：访客",
 			"来源：landing",
 		]);
 	});

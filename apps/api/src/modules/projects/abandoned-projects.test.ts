@@ -17,9 +17,8 @@ import {
 } from "./abandoned-projects.js";
 import { ProjectModel } from "./project-model.js";
 
-const FREE = "acc_cleanup_free";
-const PRO = "acc_cleanup_pro";
-const LAPSED = "acc_cleanup_lapsed";
+const OWNER = "acc_cleanup_owner";
+const OTHER = "acc_cleanup_other";
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Projects created now are 200 days old at this instant. */
 const LATER = new Date(Date.now() + 200 * DAY_MS);
@@ -50,24 +49,22 @@ async function editedDaysAgo(
 
 async function seed() {
 	await UserModel.create([
-		{ sub: FREE, username: "free" },
-		{ sub: PRO, username: "pro", plan: "pro" },
-		{ sub: LAPSED, username: "lapsed", plan: "pro", planExpiresAt: new Date() },
+		{ sub: OWNER, username: "owner" },
+		{ sub: OTHER, username: "other" },
 	]);
-	const idle = await createProject(FREE, "Idle");
-	const users = await createResource(FREE, idle, { name: "users" });
-	await generate(FREE, idle, users.id, 3);
-	const stale = await createProject(FREE, "Stale");
+	const idle = await createProject(OWNER, "Idle");
+	const users = await createResource(OWNER, idle, { name: "users" });
+	await generate(OWNER, idle, users.id, 3);
+	const stale = await createProject(OWNER, "Stale");
 	await lastRequestDaysAgo(stale, DEFAULT_IDLE_DAYS + 30);
-	const recent = await createProject(FREE, "Recent");
+	const recent = await createProject(OWNER, "Recent");
 	await lastRequestDaysAgo(recent, 1);
-	const pro = await createProject(PRO, "Pro");
-	const lapsed = await createProject(LAPSED, "Lapsed");
-	return { idle, stale, recent, pro, lapsed };
+	const other = await createProject(OTHER, "Other owner");
+	return { idle, stale, recent, other };
 }
 
 describe("abandoned project cleanup", () => {
-	it("lists Free projects idle past the window without deleting on a dry run", async () => {
+	it("lists projects of every owner idle past the window without deleting on a dry run", async () => {
 		const ids = await seed();
 		const logs = captureLogs();
 		const summary = await runAbandonedCleanup(
@@ -78,10 +75,10 @@ describe("abandoned project cleanup", () => {
 		expect(summary).toEqual({ found: 3, deleted: 0, skipped: 0, failed: 0 });
 		const listed = logs.entries("Abandoned project (dry run)");
 		expect(listed.map((entry) => entry.projectId).sort()).toEqual(
-			[ids.idle, ids.stale, ids.lapsed].sort(),
+			[ids.idle, ids.stale, ids.other].sort(),
 		);
 		expect(listed.find((entry) => entry.projectId === ids.idle)).toMatchObject({
-			owner: FREE,
+			owner: OWNER,
 			lastRequestAt: null,
 			resources: 1,
 		});
@@ -91,11 +88,11 @@ describe("abandoned project cleanup", () => {
 				lastActivitySource: "mockRequest",
 			},
 		);
-		expect(await ProjectModel.countDocuments()).toBe(5);
+		expect(await ProjectModel.countDocuments()).toBe(4);
 		expect(await RecordModel.countDocuments()).toBe(3);
 	});
 
-	it("deletes only eligible Free projects, with their data, on --apply", async () => {
+	it("deletes only idle projects, with their data, on --apply", async () => {
 		const ids = await seed();
 		const logs = captureLogs();
 		const summary = await runAbandonedCleanup(
@@ -106,9 +103,7 @@ describe("abandoned project cleanup", () => {
 		expect(summary).toEqual({ found: 3, deleted: 3, skipped: 0, failed: 0 });
 		expect(logs.entries("Deleted abandoned project")).toHaveLength(3);
 		const left = await ProjectModel.find().select("_id").lean();
-		expect(left.map((p) => p._id.toHexString()).sort()).toEqual(
-			[ids.recent, ids.pro].sort(),
-		);
+		expect(left.map((p) => p._id.toHexString()).sort()).toEqual([ids.recent]);
 		expect(await ResourceModel.countDocuments()).toBe(0);
 		expect(await RecordModel.countDocuments()).toBe(0);
 	});
@@ -116,14 +111,14 @@ describe("abandoned project cleanup", () => {
 
 describe("abandoned project activity", () => {
 	it("counts project and resource edits, not only mock requests", async () => {
-		await UserModel.create({ sub: FREE, username: "free" });
-		const resourceEdited = await createProject(FREE, "Resource edited");
-		const users = await createResource(FREE, resourceEdited, { name: "a" });
+		await UserModel.create({ sub: OWNER, username: "owner" });
+		const resourceEdited = await createProject(OWNER, "Resource edited");
+		const users = await createResource(OWNER, resourceEdited, { name: "a" });
 		await editedDaysAgo(ResourceModel.collection, users.id, 1);
-		const renamed = await createProject(FREE, "Renamed");
+		const renamed = await createProject(OWNER, "Renamed");
 		await editedDaysAgo(ProjectModel.collection, renamed, 1);
-		const oldEdit = await createProject(FREE, "Old edit");
-		const posts = await createResource(FREE, oldEdit, { name: "b" });
+		const oldEdit = await createProject(OWNER, "Old edit");
+		const posts = await createResource(OWNER, oldEdit, { name: "b" });
 		await lastRequestDaysAgo(oldEdit, DEFAULT_IDLE_DAYS + 60);
 		await editedDaysAgo(
 			ResourceModel.collection,

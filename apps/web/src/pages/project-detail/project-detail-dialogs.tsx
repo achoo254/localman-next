@@ -48,7 +48,7 @@ export interface ProjectDetailDialogsProps {
 	resources: readonly Resource[];
 	onClose: () => void;
 	/** The project has no room for another resource. */
-	onPlanLimit: () => void;
+	onLimitReached: () => void;
 }
 
 const importButton = () =>
@@ -61,7 +61,7 @@ export function ProjectDetailDialogs({
 	dialog,
 	resources,
 	onClose,
-	onPlanLimit,
+	onLimitReached,
 }: ProjectDetailDialogsProps) {
 	const t = useT();
 	const toast = useToast();
@@ -79,7 +79,7 @@ export function ProjectDetailDialogs({
 						resource={dialog.resource}
 						resources={resources}
 						onOpenChange={closeOnFalse}
-						onPlanLimit={onPlanLimit}
+						onLimitReached={onLimitReached}
 						onSaved={(saved, created) => {
 							onClose();
 							void cache.invalidate();
@@ -104,7 +104,7 @@ export function ProjectDetailDialogs({
 						projectId={projectId}
 						resources={resources}
 						onOpenChange={closeOnFalse}
-						onPlanLimit={onPlanLimit}
+						onLimitReached={onLimitReached}
 						fallbackFocus={importButton}
 						onImported={(result) => {
 							onClose();

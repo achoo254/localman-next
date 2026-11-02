@@ -2,24 +2,16 @@ import type {
 	CollectionNode,
 	PullRequestDetail,
 } from "@localman/shared/api-client";
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
 import { ADA, EVE, VIC, patchAs } from "../access/testing/access-fixture.js";
 import {
 	draftOf,
 	useCollectionTestDb,
 } from "../collections/testing/collection-fixture.js";
-import { UserModel } from "../users/user-model.js";
 import { changedFork, open } from "./testing/pull-request-fixture.js";
 
 useCollectionTestDb();
-
-beforeEach(async () => {
-	await UserModel.updateMany(
-		{},
-		{ $set: { plan: "pro", planExpiresAt: null } },
-	);
-});
 
 const diffOf = (sub: string, pr: string, key: string) =>
 	as(sub).get(`/pull-requests/${pr}/changes/${key}/diff`);

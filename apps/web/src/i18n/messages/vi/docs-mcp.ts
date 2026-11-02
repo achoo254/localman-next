@@ -13,9 +13,7 @@ export const docsMcp: Messages["docs"]["mcp"] = {
 		token:
 			"Giống REST, ai có URL đều gọi được endpoint này. Chủ project có thể bật yêu cầu token cho MCP trong tab MCP: khi đó lời gọi cần <code>Authorization: Bearer lmmcp_…</code>, thiếu hoặc sai token nhận 401. Token chỉ hiện một lần, lúc tạo.",
 		limits:
-			"Mỗi lần gọi tool tính 1 request vào hạn mức mock hằng tháng của chủ project và qua cùng rate limit như REST; vượt giới hạn thì tool trả lỗi <code>RATE_LIMITED</code> hoặc <code>MONTHLY_QUOTA_EXCEEDED</code>. Custom response không áp dụng cho kết quả MCP.",
-		limitsFree:
-			"Mỗi lần gọi tool tính 1 request vào hạn mức mock hằng tháng của chủ project (mặc định {requests} request mỗi tháng) và qua cùng rate limit như REST; vượt giới hạn thì tool trả lỗi <code>RATE_LIMITED</code> hoặc <code>MONTHLY_QUOTA_EXCEEDED</code>. Custom response không áp dụng cho kết quả MCP.",
+			"Mỗi lần gọi tool tính 1 request vào mức dùng hằng tháng của chủ project và qua cùng rate limit như REST; vượt giới hạn thì tool trả lỗi <code>RATE_LIMITED</code>. Custom response không áp dụng cho kết quả MCP.",
 	},
 	localman: {
 		title: "Localman MCP",

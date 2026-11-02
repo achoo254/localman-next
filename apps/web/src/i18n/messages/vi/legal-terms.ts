@@ -10,7 +10,7 @@ export const legalTerms: Messages["legalTerms"] = {
 	},
 	limits: {
 		title: "Hạn mức",
-		body: "Localman đang miễn phí. Hạn mức và mức dùng tháng này hiện ở trang Tài khoản; trong một thời gian tài khoản có thể có hạn mức mở rộng, và trang đó cho biết tới khi nào. Khi hạn mức mở rộng kết thúc, không gì bị xoá: chỉ các mục mới vượt hạn mức bị từ chối. Hạn mức có thể thay đổi.",
+		body: "Localman miễn phí, và mọi tài khoản có cùng hạn mức; không có gói trả phí. Hạn mức và mức dùng tháng này hiện ở trang Tài khoản. Khi vượt hạn mức, không gì bị xoá: chỉ các mục mới vượt hạn mức bị từ chối. Hạn mức có thể thay đổi.",
 	},
 	content: {
 		title: "Nội dung của bạn",
@@ -22,11 +22,11 @@ export const legalTerms: Messages["legalTerms"] = {
 	},
 	use: {
 		title: "Dùng đúng mực",
-		body: "Localman áp giới hạn tần suất và hạn mức hằng tháng, và từ chối gửi request tới mạng nội bộ và cổng mail. Đừng tìm cách vượt qua chúng, làm quá tải dịch vụ, hay dùng nó để tấn công hoặc truy cập hệ thống bạn không được phép.",
+		body: "Localman áp giới hạn tần suất và hạn mức sử dụng, và từ chối gửi request tới mạng nội bộ và cổng mail. Đừng tìm cách vượt qua chúng, làm quá tải dịch vụ, hay dùng nó để tấn công hoặc truy cập hệ thống bạn không được phép.",
 	},
 	cleanup: {
 		title: "Dữ liệu không hoạt động và đã xoá",
-		body: "Project không hoạt động 90 ngày có thể bị xoá khi chủ project đang có hạn mức thường. Collection đã xoá nằm trong thùng rác 30 ngày rồi bị xoá hẳn. Log request và lịch sử hết hạn như Chính sách quyền riêng tư nói.",
+		body: "Project không hoạt động 90 ngày có thể bị xoá. Collection đã xoá nằm trong thùng rác 30 ngày rồi bị xoá hẳn. Log request và lịch sử hết hạn như Chính sách quyền riêng tư nói.",
 	},
 	service: {
 		title: "Dịch vụ",

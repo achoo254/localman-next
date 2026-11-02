@@ -66,12 +66,10 @@ const cleared = (res: request.Response, name: string) =>
 	);
 
 describe("signing in after the Localman account was deleted", () => {
-	it("clears the cookies, asks before making a new account, and gives it no second period", async () => {
+	it("clears the cookies and asks before making a new account", async () => {
 		const { cookie } = await harness.signIn();
 		const sub = harness.account.sub;
-		expect(
-			(await UserModel.findOne({ sub }).lean())?.trialStartedAt,
-		).toBeTruthy();
+		expect(await UserModel.exists({ sub })).not.toBeNull();
 
 		const preview = await deleteAccount(cookie, true);
 		expect(preview.status).toBe(200);
@@ -100,12 +98,10 @@ describe("signing in after the Localman account was deleted", () => {
 		expect(cookieFrom(silent, SESSION_COOKIE)).toBeUndefined();
 		expect(await UserModel.exists({ sub })).toBeNull();
 
-		// "Create a new account": a fresh, empty account without a new period.
+		// "Create a new account": a fresh, empty account.
 		const again = await harness.signIn({ recreate: "1" });
 		expect(again.callback.headers.location).toBe("/projects");
-		const user = await UserModel.findOne({ sub }).lean();
-		expect(user?.plan).toBe("free");
-		expect(user?.trialStartedAt).toBeUndefined();
+		expect(await UserModel.exists({ sub })).not.toBeNull();
 		// From then on sign-in is ordinary.
 		expect((await harness.signIn()).cookie).toBeTruthy();
 	});

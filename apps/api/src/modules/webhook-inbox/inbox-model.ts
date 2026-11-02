@@ -31,7 +31,7 @@ export interface StoredInbox {
 }
 
 /**
- * Webhook inboxes of a project, counted against the owner plan's
+ * Webhook inboxes of a project, counted against
  * `webhookInboxes` per project. The mock runtime answers
  * `/_inbox/<name>` with `response` and, when `forward` is set, queues a
  * copy of the request for the owner's tunnel.

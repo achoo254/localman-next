@@ -2,14 +2,8 @@ import { describe, expect, it } from "vitest";
 import { as, guest } from "../../test-support/dashboard-test-app.js";
 import { startClearOfRateWindowEdge } from "../../test-support/rate-window-edge.js";
 import { ContactMessageModel } from "./contact-message-model.js";
-import { FeedbackModel } from "./feedback-model.js";
 import { TURNSTILE_TOKENS } from "./testing/fake-turnstile.js";
-import {
-	OWNER_CHAT,
-	FORM as PRO_FORM,
-	SUBMIT as PRO_SUBMIT,
-	useProInterestFixture,
-} from "./testing/pro-interest-fixture.js";
+import { OWNER_CHAT, useFeedbackFixture } from "./testing/feedback-fixture.js";
 
 const SUBMIT = "/feedback/contact";
 const MESSAGE = {
@@ -20,7 +14,7 @@ const MESSAGE = {
 	source: "projects",
 };
 
-const fx = useProInterestFixture(() => ({
+const fx = useFeedbackFixture(() => ({
 	feedbackRateLimit: {
 		perIp: { max: 3, windowMs: 60_000 },
 		perUser: { max: 2, windowMs: 60_000 },
@@ -114,8 +108,9 @@ describe("POST /feedback/contact", () => {
 		expect(missing.body.error.code).toBe("TURNSTILE_FAILED");
 		const tokens = [
 			"forged",
-			// Solved on the Pro interest form, or by a widget without action.
-			TURNSTILE_TOKENS.valid,
+			// Solved on another form or site, or by a widget without action.
+			TURNSTILE_TOKENS.otherForm,
+			TURNSTILE_TOKENS.otherHost,
 			TURNSTILE_TOKENS.noAction,
 		];
 		for (const [i, token] of tokens.entries()) {
@@ -137,7 +132,7 @@ describe("POST /feedback/contact", () => {
 		expect(await fx.alerts()).toHaveLength(0);
 	});
 
-	it("rate-limits per IP (honeypot hits count) and per account, apart from the Pro form", async () => {
+	it("rate-limits per IP (honeypot hits count) and per account", async () => {
 		await startClearOfRateWindowEdge(60_000);
 		const ip = "203.0.113.7";
 		expect((await asGuest({ ...MESSAGE, website: "x" }, ip)).status).toBe(201);
@@ -146,11 +141,6 @@ describe("POST /feedback/contact", () => {
 		const limited = await asGuest(MESSAGE, ip);
 		expect(limited.status).toBe(429);
 		expect(limited.body.error.code).toBe("RATE_LIMITED");
-		const pro = await guest(ip).send("post", PRO_SUBMIT, {
-			...PRO_FORM,
-			turnstileToken: TURNSTILE_TOKENS.valid,
-		});
-		expect(pro.status).toBe(201);
 
 		const send = (n: number) =>
 			as("acc_roaming", `198.51.100.${50 + n}`).send("post", SUBMIT, MESSAGE);
@@ -166,15 +156,5 @@ describe("POST /feedback/contact", () => {
 		}
 		expect(await ContactMessageModel.countDocuments()).toBe(3);
 		expect(await fx.alerts()).toHaveLength(2);
-	});
-
-	it("keeps contact messages out of the Pro interest model", async () => {
-		await asGuest(MESSAGE);
-		expect(await FeedbackModel.countDocuments({ type: "pro_interest" })).toBe(
-			0,
-		);
-		expect(await ContactMessageModel.countDocuments({ type: "contact" })).toBe(
-			1,
-		);
 	});
 });

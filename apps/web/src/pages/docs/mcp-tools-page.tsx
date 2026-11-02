@@ -1,4 +1,3 @@
-import { limitsFor } from "@localman/shared/constants";
 import { Navigate } from "react-router";
 import { CodeBlock } from "../../components/ui/code-block";
 import { useFeatures } from "../../config/features";
@@ -14,8 +13,6 @@ import {
 } from "./docs-content";
 import { docsPath, useDocsUrls } from "./docs-pages";
 import { McpToolsTable } from "./mcp-tools-table";
-
-const freeMonthly = limitsFor("free").mockRequestsPerMonth;
 
 /** Code samples: commands and config files are never translated. */
 
@@ -71,13 +68,7 @@ export function McpToolsPage() {
 				</Prose>
 				<Prose>{docsRich(t("docs.mcp.hosted.resources"))}</Prose>
 				<Prose>{docsRich(t("docs.mcp.hosted.token"))}</Prose>
-				<Prose>
-					{docsRich(
-						freeMonthly === null
-							? t("docs.mcp.hosted.limits")
-							: t("docs.mcp.hosted.limitsFree", { requests: freeMonthly }),
-					)}
-				</Prose>
+				<Prose>{docsRich(t("docs.mcp.hosted.limits"))}</Prose>
 			</DocsSection>
 
 			<DocsSection id="localman" title={t("docs.mcp.localman.title")}>

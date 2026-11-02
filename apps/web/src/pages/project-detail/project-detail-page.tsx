@@ -8,7 +8,7 @@ import {
 } from "../../features/collaborators/project-member-dialogs";
 import type { Resource } from "../../features/resources/resource-model";
 import { useResources } from "../../features/resources/use-resources";
-import { useLimitNotice } from "../../features/subscription/use-limit-notice";
+import { useLimitNotice } from "../../features/usage/use-limit-notice";
 import { ProjectInboxTab } from "../../features/webhook-inbox/project-inbox-tab";
 import { useT } from "../../i18n/i18n-context";
 import { useDelayedFlag } from "../../lib/use-delayed-flag";
@@ -129,7 +129,7 @@ function ProjectDetail({ project }: { project: Project }) {
 				dialog={dialog}
 				resources={resources}
 				onClose={() => setDialog(NO_DIALOG)}
-				onPlanLimit={() => {
+				onLimitReached={() => {
 					setDialog(NO_DIALOG);
 					// The owner's limits apply; a collaborator only learns of them.
 					if (isOwner) limitNotice("resources");

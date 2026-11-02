@@ -123,7 +123,6 @@ describe("callback URL with a token in its query", () => {
 		const project = {
 			id: new Types.ObjectId(id),
 			owner: OWNER,
-			ownerPlan: { plan: "free" as const, planExpiresAt: null },
 			redactHeaders: [],
 		};
 		const at = new Date();

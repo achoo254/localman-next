@@ -18,8 +18,6 @@ export const landing: Messages["landing"] = {
 			"<b>无需安装应用或扩展，只要一条 Tunelo 命令。</b>运行 <code>tunelo http 3000</code>，Localman 会按端口自动识别 tunnel，并把 request 发到 <code>localhost</code> 或局域网内的机器。还附带带状态的 mock REST API，前端不必等后端。",
 		noteMock:
 			"登录即可开始使用：{projects} 个 project、合计 {resources} 个 resource，并支持 custom response。",
-		noteLocalhost:
-			"登录即可开始使用：{projects} 个 mock project、合计 {resources} 个 resource、每月 {proxy} 次 proxy request。",
 	},
 	preview: {
 		viaTunelo: "经由 Tunelo",

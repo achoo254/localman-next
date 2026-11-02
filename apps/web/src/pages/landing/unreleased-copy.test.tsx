@@ -27,8 +27,7 @@ describe("no unreleased feature in the copy while every flag is off", () => {
 			"GET /api/v1/users/me": { body: makeUser() },
 			"GET /api/v1/account/usage": {
 				body: {
-					plan: "free",
-					planExpiresAt: null,
+					plan: "pro",
 					period: "2026-12",
 					projects: { used: 1, max: 3 },
 					mockRequests: { used: 10, max: 10_000 },

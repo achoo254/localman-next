@@ -1,12 +1,10 @@
 import { type Types, mongo } from "mongoose";
-import { type StoredPlan, storedPlanOf } from "../billing/plan-guard.js";
 import { LIVE_PROJECT, ProjectModel } from "../projects/project-model.js";
 
 /** What delivering and logging a job need of its project. */
 export interface JobProject {
 	readonly id: Types.ObjectId;
 	readonly owner: string;
-	readonly ownerPlan: StoredPlan;
 	readonly redactHeaders: readonly string[];
 }
 
@@ -24,7 +22,6 @@ export async function loadJobProject(
 	return {
 		id: projectId,
 		owner: project.owner,
-		ownerPlan: await storedPlanOf(project.owner),
 		redactHeaders: project.redactHeaders ?? [],
 	};
 }

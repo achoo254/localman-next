@@ -1,7 +1,7 @@
 import { OperationError } from "@localman/operations";
-import { limitsFor } from "@localman/shared";
+import { LIMITS } from "@localman/shared";
 import type { WorkspaceRole } from "@localman/shared/access";
-import { PlanLimitError, currentPlanOf } from "../billing/plan-guard.js";
+import { LimitReachedError } from "../billing/limit-guard.js";
 import {
 	countLiveCollections,
 	trashWorkspaceCollections,
@@ -70,21 +70,21 @@ export async function listWorkspaces(sub: string): Promise<WorkspaceView[]> {
 
 /**
  * Creates a team workspace whose first Admin is the creator, within the
- * `teamWorkspaces` of their plan (team workspaces they own). Creations by
+ * `teamWorkspaces` limit (team workspaces they own). Creations by
  * one user serialize on their owner lock, so racers cannot both pass.
  */
 export async function createTeamWorkspace(
 	sub: string,
 	input: { readonly name: string; readonly description?: string | null },
 ): Promise<StoredWorkspace> {
-	const max = limitsFor(await currentPlanOf(sub)).teamWorkspaces;
+	const max = LIMITS.teamWorkspaces;
 	return inOwnerTransaction(sub, async (session) => {
 		const owned = await WorkspaceModel.countDocuments({
 			ownerId: sub,
 			type: "team",
 		}).session(session);
 		if (owned >= max) {
-			throw new PlanLimitError("teamWorkspaces", max, owned);
+			throw new LimitReachedError("teamWorkspaces", max, owned);
 		}
 		const [created] = await WorkspaceModel.create(
 			[

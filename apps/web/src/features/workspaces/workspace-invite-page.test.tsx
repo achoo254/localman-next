@@ -122,7 +122,7 @@ describe("/workspace-invite/:token", () => {
 		expect(screen.queryByRole("button", { name: "Join workspace" })).toBeNull();
 	});
 
-	it("turns a plan limit on accept into the full-workspace state", async () => {
+	it("turns a member limit on accept into the full-workspace state", async () => {
 		renderInvite({
 			[PREVIEW]: preview(),
 			[ACCEPT]: apiError(403, "PLAN_LIMIT_REACHED", { limit: "members" }),

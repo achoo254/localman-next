@@ -12,7 +12,6 @@ import { CollectionFavoriteModel } from "../collections/collection-favorite-mode
 import { ActiveEnvironmentModel } from "../environments/active-environment-model.js";
 import { LocalVariableValueModel } from "../environments/local-variable-value-model.js";
 import { ContactMessageModel } from "../feedback/contact-message-model.js";
-import { FeedbackModel } from "../feedback/feedback-model.js";
 import { NotificationModel } from "../notifications/notification-model.js";
 import { NotificationPreferencesModel } from "../notifications/notification-preferences-model.js";
 import { PushSubscriptionModel } from "../notifications/push-subscription-model.js";
@@ -22,9 +21,10 @@ import { RunButtonImportModel } from "../public-sharing/run-button-import-model.
 import { RunButtonModel } from "../public-sharing/run-button-model.js";
 import { AgentSecretUseModel } from "../secret-vault/agent-secret-use-model.js";
 import { SecretVaultModel } from "../secret-vault/secret-vault-model.js";
-import { TrialExtensionModel } from "../trial/trial-extension-model.js";
 import { CollectionWatchModel } from "../watch/watch-model.js";
 import { WorkspaceMemberModel } from "../workspaces/workspace-member-model.js";
+import { FeedbackModel } from "./retired-feature-models.js";
+import { TrialExtensionModel } from "./retired-feature-models.js";
 
 export interface ErasedCount {
 	readonly collection: string;

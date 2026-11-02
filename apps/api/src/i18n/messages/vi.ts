@@ -1,6 +1,5 @@
 import type { ServerMessages } from "./en.js";
 import { mobileSignInVi } from "./mobile-sign-in-vi.js";
-import { trialVi } from "./trial-vi.js";
 
 /** Vietnamese server texts: the wording Localman used before i18n. */
 export const vi: ServerMessages = {
@@ -10,11 +9,6 @@ export const vi: ServerMessages = {
 		"project.invitation": "Lời mời cộng tác project",
 		"project.mockUrlChanged": "URL mock của project được chia sẻ đã đổi",
 		"usage.quota": "Cảnh báo hạn mức lượt gọi mock tháng",
-		"trial.ending": "Hạn mức mở rộng sắp kết thúc",
-		"trial.ended": "Hạn mức mở rộng đã kết thúc",
-		"trial.extension.requested": "Yêu cầu gia hạn dùng thử Pro (owner)",
-		"trial.extension.approved": "Hạn mức mở rộng được gia hạn",
-		"trial.extension.declined": "Hạn mức mở rộng không được gia hạn",
 		"workspace.invitation": "Lời mời vào workspace",
 		"element.shared": "Collection và environment được chia sẻ với bạn",
 		"access.requested": "Yêu cầu truy cập collection và environment của bạn",
@@ -144,7 +138,6 @@ export const vi: ServerMessages = {
 			"Địa chỉ này trỏ vào mạng private nên Localman không gửi callback tới được. Hãy mở server local bằng tunnel Tunelo.",
 		callbackDns: "Không phân giải được tên host của URL callback.",
 	},
-	trial: trialVi,
 	mobileSignIn: mobileSignInVi,
 	ownerAlerts: {
 		suppressed: (count) =>
@@ -152,7 +145,7 @@ export const vi: ServerMessages = {
 		contactCategories: {
 			feedback: "Góp ý",
 			bug: "Báo lỗi",
-			plan_question: "Hỏi về gói",
+			plan_question: "Hỏi về hạn mức",
 		},
 		contact: (p) =>
 			[
@@ -160,19 +153,6 @@ export const vi: ServerMessages = {
 				`Nội dung: ${p.excerpt}`,
 				`Liên hệ: ${p.contact ?? "không để lại"}`,
 				`Người gửi: ${p.signedIn ? "đã đăng nhập" : "khách"}`,
-				`Nguồn: ${p.source}`,
-			].join("\n"),
-		proInterestHeadlines: {
-			created: "Quan tâm gói Pro: đăng ký mới",
-			updated: "Quan tâm gói Pro: cập nhật",
-			recorded: "Quan tâm gói Pro: gửi lại từ người khác (chỉ lưu lịch sử)",
-		},
-		proInterest: (p) =>
-			[
-				p.headline,
-				`Email: ${p.email}`,
-				`Nhu cầu: ${p.needs}`,
-				`Quy mô: ${p.teamSize}`,
 				`Nguồn: ${p.source}`,
 			].join("\n"),
 	},

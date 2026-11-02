@@ -18,8 +18,7 @@ export interface ApiCall {
 }
 
 const USAGE = {
-	plan: "free",
-	planExpiresAt: null,
+	plan: "pro",
 	period: "2026-10",
 	projects: { used: 1, max: 3 },
 	mockRequests: { used: 0, max: 10_000 },

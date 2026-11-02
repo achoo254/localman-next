@@ -16,9 +16,7 @@ export const docsMcp = {
 		token:
 			"Like REST, the endpoint is open to anyone with the URL. The project owner can require a token for MCP in the MCP tab: calls then need <code>Authorization: Bearer lmmcp_…</code>, and a missing or wrong token gets 401. The token is shown only once, when it's created.",
 		limits:
-			"Each tool call counts as 1 request toward the project owner's monthly mock quota and goes through the same rate limits as REST; over a limit, the tool returns the error <code>RATE_LIMITED</code> or <code>MONTHLY_QUOTA_EXCEEDED</code>. Custom responses don't apply to MCP results.",
-		limitsFree:
-			"Each tool call counts as 1 request toward the project owner's monthly mock quota ({requests} requests per month by default) and goes through the same rate limits as REST; over a limit, the tool returns the error <code>RATE_LIMITED</code> or <code>MONTHLY_QUOTA_EXCEEDED</code>. Custom responses don't apply to MCP results.",
+			"Each tool call counts as 1 request in the project owner's monthly usage and goes through the same rate limits as REST; over a limit, the tool returns the error <code>RATE_LIMITED</code>. Custom responses don't apply to MCP results.",
 	},
 	localman: {
 		title: "Localman MCP",

@@ -45,7 +45,7 @@ export const submitContactMessage = defineOperation({
 	path: "/feedback/contact",
 	summary: "Send feedback or a question to the Localman owner",
 	description:
-		"Public. Stores a message (category, text, optional name and email or Telegram username to reply to, the app area it was sent from) for the owner's inbox and alerts the owner on Telegram. Guests need a Turnstile token (widget action `contact`, site key from `GET /feedback/pro-interest/config`) when it is enabled; a signed-in sender is linked to the message.",
+		"Public. Stores a message (category, text, optional name and email or Telegram username to reply to, the app area it was sent from) for the owner's inbox and alerts the owner on Telegram. Guests need a Turnstile token (widget action `contact`, site key from `GET /feedback/config`) when it is enabled; a signed-in sender is linked to the message.",
 	input: contactMessageSubmissionSchema,
 	output: z.object({ received: z.boolean() }),
 	scopes: [],

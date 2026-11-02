@@ -1,4 +1,4 @@
-import { limitsFor } from "@localman/shared";
+import { LIMITS } from "@localman/shared";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
 	as,
@@ -9,7 +9,6 @@ import { UserModel } from "../users/user-model.js";
 import { incrementUsage, readUsage, yyyymmOf } from "./usage-counter-model.js";
 
 const USER = "acc_usage";
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 useDashboardTestDb();
 beforeEach(async () => {
@@ -38,44 +37,30 @@ describe("usage counters", () => {
 });
 
 describe("GET /account/usage", () => {
-	it("reports Free usage against the Free limits", async () => {
+	it("reports usage against the one set of limits, uncapped counters as null", async () => {
 		await as(USER).send("post", "/projects", { name: "One" });
 		await incrementUsage(USER, "mockRequests", 7);
 		const res = await as(USER).get("/account/usage");
 		expect(res.status).toBe(200);
-		const free = limitsFor("free");
 		expect(res.body).toEqual({
-			plan: "free",
-			planExpiresAt: null,
+			plan: "pro",
 			period: saigonMonth(new Date()),
-			projects: { used: 1, max: free.projects },
-			mockRequests: { used: 7, max: free.mockRequestsPerMonth },
-			proxyRequests: { used: 0, max: free.proxyRequestsPerMonth },
-			overLimits: [],
+			projects: { used: 1, max: LIMITS.projects },
+			mockRequests: { used: 7, max: null },
+			proxyRequests: { used: 0, max: null },
 		});
 	});
 
-	it("maps uncapped Pro counters to null and treats expired Pro as Free", async () => {
-		const expiresAt = new Date(Date.now() + DAY_MS);
-		await UserModel.updateOne(
+	it("ignores plan fields still stored on old user documents", async () => {
+		await UserModel.collection.updateOne(
 			{ sub: USER },
-			{ plan: "pro", planExpiresAt: expiresAt },
+			{ $set: { plan: "free", planExpiresAt: new Date(0) } },
 		);
-		const pro = (await as(USER).get("/account/usage")).body;
-		expect(pro.plan).toBe("pro");
-		expect(pro.planExpiresAt).toBe(expiresAt.toISOString());
-		expect(pro.projects.max).toBe(limitsFor("pro").projects);
-		expect(pro.mockRequests.max).toBe(limitsFor("pro").mockRequestsPerMonth);
-		expect(pro.proxyRequests.max).toBe(limitsFor("pro").proxyRequestsPerMonth);
-
-		await UserModel.updateOne(
-			{ sub: USER },
-			{ planExpiresAt: new Date(Date.now() - DAY_MS) },
-		);
-		const lapsed = (await as(USER).get("/account/usage")).body;
-		expect(lapsed.plan).toBe("free");
-		expect(lapsed.projects.max).toBe(limitsFor("free").projects);
+		const usage = (await as(USER).get("/account/usage")).body;
+		expect(usage.plan).toBe("pro");
+		expect(usage.projects.max).toBe(LIMITS.projects);
 		const me = (await as(USER).get("/users/me")).body;
-		expect(me.plan).toBe("free");
+		expect(me.plan).toBe("pro");
+		expect(me).not.toHaveProperty("trial");
 	});
 });

@@ -79,7 +79,7 @@ export const acceptWorkspaceInviteOperation = defineOperation({
 	method: "POST",
 	path: "/workspace-invites/accept",
 	summary: "Accept a workspace invitation",
-	description: `Makes the signed-in caller a member with the invitation's role and returns \`workspaceId\`. An invitation bound to an account admits only that account; one sent to an email only an account whose IdP-verified email matches it (403 NOT_INVITEE, 403 EMAIL_NOT_VERIFIED). A link admits anyone signed in, once. 403 PLAN_LIMIT_REACHED (limit: members) when the owner's plan has no free seat. Members get \`alreadyMember: true\` and nothing changes. ${TOKEN_ERRORS}`,
+	description: `Makes the signed-in caller a member with the invitation's role and returns \`workspaceId\`. An invitation bound to an account admits only that account; one sent to an email only an account whose IdP-verified email matches it (403 NOT_INVITEE, 403 EMAIL_NOT_VERIFIED). A link admits anyone signed in, once. 403 PLAN_LIMIT_REACHED (limit: members) when the owner has no free member seat. Members get \`alreadyMember: true\` and nothing changes. ${TOKEN_ERRORS}`,
 	input: z.object({ token: inviteTokenSchema }),
 	output: z.object({ workspaceId: z.string(), alreadyMember: z.boolean() }),
 	scopes: [USER_SCOPE],

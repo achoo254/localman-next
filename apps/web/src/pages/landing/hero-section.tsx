@@ -1,5 +1,5 @@
 import { Hero, SignInCard } from "@achoo254/app-shell";
-import { limitsFor } from "@localman/shared/constants";
+import { LIMITS } from "@localman/shared/constants";
 import { SHELL_BRAND } from "../../components/layout/shell-brand";
 import { useFeatures } from "../../config/features";
 import { SignUpLegalNote } from "../../features/auth/sign-up-legal-note";
@@ -31,9 +31,6 @@ export function HeroSection() {
 	const { apiClient } = useFeatures();
 	const { locale, t } = useI18n();
 	const signedIn = useCurrentUser().status === "authenticated";
-	const free = limitsFor("free");
-	const proxy = free.proxyRequestsPerMonth;
-	const limits = { projects: free.projects, resources: free.resources };
 	return (
 		<Hero
 			eyebrow={t(
@@ -75,9 +72,10 @@ export function HeroSection() {
 				data-id="landing-hero-note"
 				className="m-0 text-[0.8125rem] text-muted"
 			>
-				{apiClient && proxy !== null
-					? t("landing.hero.noteLocalhost", { ...limits, proxy })
-					: t("landing.hero.noteMock", limits)}
+				{t("landing.hero.noteMock", {
+					projects: LIMITS.projects,
+					resources: LIMITS.resources,
+				})}
 			</p>
 		</Hero>
 	);

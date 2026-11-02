@@ -38,7 +38,7 @@ export interface AcceptResult {
  * clears a removal mark. The caller's other pending rows (bound to them,
  * or unbound to the email their IdP verified) are dropped with their
  * seats. The invitation already holds a seat, but the count is checked
- * again in case the owner's plan shrank since.
+ * again in case the seats filled up since.
  */
 async function acceptInvitation(
 	sub: string,

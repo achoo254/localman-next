@@ -25,8 +25,7 @@ function held() {
 }
 
 const USAGE = {
-	plan: "free",
-	planExpiresAt: null,
+	plan: "pro",
 	period: "2026-12",
 	projects: { used: 1, max: 3 },
 	mockRequests: { used: 20, max: 10_000 },

@@ -17,4 +17,11 @@ export const limits: Messages["limits"] = {
 		teamWorkspaces: "Tài khoản không tạo thêm được workspace nhóm.",
 	},
 	feedback: "Cần thêm? Hãy cho chúng tôi biết qua form góp ý.",
+	usage: {
+		unlimited:
+			"<b>Không giới hạn</b> trong tháng, chỉ có rate-limit theo giây.",
+		valueText: "{used} trên {max}",
+		reached: "Đã đạt hạn mức.",
+		usedPercent: "Đã dùng {percent}%.",
+	},
 };
