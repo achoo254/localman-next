@@ -7,7 +7,7 @@ import {
 } from "@tunelo/shared";
 import type { RawData, WebSocket } from "ws";
 import { createLogger } from "./logger.js";
-import { tunnelManager } from "./tunnel-manager.js";
+import { type TunnelConnection, tunnelManager } from "./tunnel-manager.js";
 import { safeSend } from "./ws-send.js";
 
 const logger = createLogger("tunelo-ws-app");
@@ -65,10 +65,7 @@ class WsAppRelay {
 		}
 
 		// Cap concurrent browser WS per tunnel — DoS guard (mirrors TCP relay).
-		let count = 0;
-		for (const c of this.conns.values()) {
-			if (c.connectionId === tunnel.connectionId) count++;
-		}
+		const count = this.countFor(tunnel.connectionId);
 		if (count >= DEFAULTS.WS_APP_MAX_PER_TUNNEL) {
 			logger.warn({ subdomain, count }, "Browser WS cap reached");
 			safeCloseSocket(browserWs, 1013, "Too many connections");
@@ -76,6 +73,37 @@ class WsAppRelay {
 		}
 
 		const id = randomUUID();
+		this.bridge(id, browserWs, tunnel, subdomain, path);
+		safeSend(tunnel.socket, {
+			type: "ws-open",
+			id,
+			subdomain,
+			path,
+			headers,
+			protocol,
+		} satisfies WsOpenMessage);
+	}
+
+	/** Bridged browser sockets of one control connection. */
+	countFor(connectionId: string): number {
+		let count = 0;
+		for (const c of this.conns.values()) {
+			if (c.connectionId === connectionId) count++;
+		}
+		return count;
+	}
+
+	/**
+	 * Relay frames between an upgraded browser socket and the client's local
+	 * WS `id`, with keepalive; frames from either side flow from here on.
+	 */
+	bridge(
+		id: string,
+		browserWs: WebSocket,
+		tunnel: TunnelConnection,
+		subdomain: string,
+		path: string,
+	): void {
 		const conn: BrowserConn = {
 			socket: browserWs,
 			connectionId: tunnel.connectionId,
@@ -95,15 +123,6 @@ class WsAppRelay {
 		browserWs.on("pong", () => {
 			conn.alive = true;
 		});
-
-		safeSend(tunnel.socket, {
-			type: "ws-open",
-			id,
-			subdomain,
-			path,
-			headers,
-			protocol,
-		} satisfies WsOpenMessage);
 
 		browserWs.on("message", (data: RawData, isBinary: boolean) => {
 			safeSend(tunnel.socket, {

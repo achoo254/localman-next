@@ -2,6 +2,7 @@
 import {
 	type AuthMessage,
 	type AuthResult,
+	CLIENT_CAPABILITIES,
 	SUBDOMAIN_REGEX,
 	TUNNEL_SCOPES,
 	WS_CLOSE_CODES,
@@ -96,6 +97,8 @@ export async function handleAuth(
 		return;
 	}
 
+	state.wsOpenResult =
+		msg.capabilities?.includes(CLIENT_CAPABILITIES.WS_OPEN_RESULT) ?? false;
 	const owner = ownerOf(keyInfo, {
 		deviceId: msg.deviceId,
 		deviceName: cleanDisplayName(msg.deviceName),
@@ -109,6 +112,7 @@ export async function handleAuth(
 			subdomain,
 			localPort: msg.localPort ?? null,
 			auth: msg.auth,
+			wsOpenResult: state.wsOpenResult,
 		});
 	if (!registered) {
 		refuseAuth(

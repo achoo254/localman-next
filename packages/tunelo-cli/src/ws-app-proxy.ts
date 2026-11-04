@@ -1,19 +1,34 @@
+import type http from "node:http";
 import {
 	DEFAULTS,
 	type WsCloseMessage,
 	type WsDataMessage,
 	type WsOpenMessage,
+	type WsOpenResultMessage,
 	stripHopByHopHeaders,
 } from "@tunelo/shared";
 import WebSocket, { type RawData } from "ws";
+import {
+	type WsOpenRefusal,
+	readRefusal,
+	unreachableRefusal,
+} from "./ws-app-refusal.js";
 
-export type WsAppSend = (msg: WsDataMessage | WsCloseMessage) => void;
+export type WsAppSend = (
+	msg: WsDataMessage | WsCloseMessage | WsOpenResultMessage,
+) => void;
 
 interface LocalConn {
 	ws: WebSocket;
 	ready: boolean;
 	/** Frames from the browser that arrived before the local WS finished opening. */
 	queue: WsDataMessage[];
+	/** Caps the whole opening handshake, TCP connect included. */
+	deadline: ReturnType<typeof setTimeout>;
+	/** Set by the deadline, so the failure that follows reads as a timeout. */
+	timedOut: boolean;
+	/** The app's non-101 answer, once its headers arrived. */
+	refusal?: WsOpenRefusal;
 }
 
 function toBuffer(data: RawData): Buffer {
@@ -31,7 +46,9 @@ function safeClose(ws: WebSocket, code?: number, reason?: string): void {
 	}
 }
 
-/** Handshake headers the `ws` client sets itself — must not be forwarded. */
+/** Handshake headers the `ws` client sets itself — must not be forwarded.
+ *  `accept-encoding` too: a compressed refusal body would not survive the
+ *  4 KiB cut on its way back to the browser. */
 const WS_HANDSHAKE_HEADERS = [
 	"host",
 	"sec-websocket-key",
@@ -39,11 +56,24 @@ const WS_HANDSHAKE_HEADERS = [
 	"sec-websocket-extensions",
 	"sec-websocket-protocol",
 	"content-length",
+	"accept-encoding",
 ];
+
+/** Close code reported for a local WS that never opened (what `ws` reports). */
+const ABNORMAL_CLOSURE = 1006;
+
+export interface WsAppProxyOptions {
+	/** Cap on the local handshake (ms). Overridden only by tests. */
+	handshakeTimeoutMs?: number;
+}
 
 /**
  * Client side of the WebSocket-to-app relay: opens a local WS per `ws-open`
  * and bridges frames both ways. Mirrors the server's connection model.
+ *
+ * Every `ws-open` gets one `ws-open-result`: a server that knows the message
+ * answers the browser with it; an older server ignores it and acts on the
+ * `ws-close` that follows a failure, exactly as before.
  */
 export class WsAppProxy {
 	private conns = new Map<string, LocalConn>();
@@ -51,6 +81,7 @@ export class WsAppProxy {
 	constructor(
 		private readonly send: WsAppSend,
 		private readonly resolvePort: (subdomain: string) => number,
+		private readonly options: WsAppProxyOptions = {},
 	) {}
 
 	open(msg: WsOpenMessage): void {
@@ -65,23 +96,46 @@ export class WsAppProxy {
 					.map((s) => s.trim())
 					.filter(Boolean)
 			: undefined;
-		const opts = {
-			headers,
-			handshakeTimeout: DEFAULTS.WS_APP_HANDSHAKE_TIMEOUT_MS,
-		};
 		const local = protocols
-			? new WebSocket(url, protocols, opts)
-			: new WebSocket(url, opts);
+			? new WebSocket(url, protocols, { headers })
+			: new WebSocket(url, { headers });
 
-		const conn: LocalConn = { ws: local, ready: false, queue: [] };
+		const timeoutMs =
+			this.options.handshakeTimeoutMs ?? DEFAULTS.WS_APP_HANDSHAKE_TIMEOUT_MS;
+		const conn: LocalConn = {
+			ws: local,
+			ready: false,
+			queue: [],
+			timedOut: false,
+			// Past it, an app still sending its refusal body is answered with
+			// what arrived; one that never answered gets 504 from the close.
+			deadline: setTimeout(() => {
+				conn.timedOut = true;
+				if (conn.refusal) this.fail(msg.id, conn.refusal);
+				else local.terminate();
+			}, timeoutMs),
+		};
 		this.conns.set(msg.id, conn);
 
 		local.on("open", () => {
+			clearTimeout(conn.deadline);
 			conn.ready = true;
+			// First, so the server answers the browser before any app frame.
+			this.send({
+				type: "ws-open-result",
+				id: msg.id,
+				ok: true,
+				...(local.protocol ? { protocol: local.protocol } : {}),
+			});
 			for (const q of conn.queue) {
 				local.send(Buffer.from(q.data, "base64"), { binary: q.binary });
 			}
 			conn.queue = [];
+		});
+		local.on("unexpected-response", (_req, res: http.IncomingMessage) => {
+			conn.refusal = readRefusal(msg.id, res, (refusal) =>
+				this.fail(msg.id, refusal),
+			);
 		});
 		local.on("message", (data: RawData, isBinary: boolean) => {
 			this.send({
@@ -92,6 +146,13 @@ export class WsAppProxy {
 			});
 		});
 		local.on("close", (code: number, reason: Buffer) => {
+			if (!conn.ready) {
+				this.fail(
+					msg.id,
+					conn.refusal ?? unreachableRefusal(msg.id, conn.timedOut),
+				);
+				return;
+			}
 			if (!this.conns.delete(msg.id)) return;
 			this.send({
 				type: "ws-close",
@@ -100,9 +161,8 @@ export class WsAppProxy {
 				reason: reason.toString(),
 			});
 		});
-		local.on("error", () => {
-			// A close event follows; nothing to forward here.
-		});
+		// A close event follows every error; nothing to forward here.
+		local.on("error", () => undefined);
 	}
 
 	data(msg: WsDataMessage): void {
@@ -125,12 +185,31 @@ export class WsAppProxy {
 		const conn = this.conns.get(msg.id);
 		if (!conn) return;
 		this.conns.delete(msg.id);
+		clearTimeout(conn.deadline);
 		safeClose(conn.ws, msg.code, msg.reason);
 	}
 
 	/** Control socket dropped — tear down all local WS connections. */
 	closeAll(): void {
-		for (const conn of this.conns.values()) conn.ws.close();
+		for (const conn of this.conns.values()) {
+			clearTimeout(conn.deadline);
+			conn.ws.close();
+		}
 		this.conns.clear();
+	}
+
+	/**
+	 * Report a local WS that never opened: the result for servers that know
+	 * it, then the `ws-close` older servers act on. Once per connection.
+	 */
+	private fail(id: string, result: WsOpenRefusal): void {
+		const conn = this.conns.get(id);
+		if (!conn) return;
+		this.conns.delete(id);
+		clearTimeout(conn.deadline);
+		this.send(result);
+		this.send({ type: "ws-close", id, code: ABNORMAL_CLOSURE, reason: "" });
+		// Aborts a handshake still in flight; a no-op on one that is over.
+		conn.ws.terminate();
 	}
 }

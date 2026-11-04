@@ -22,6 +22,7 @@ import {
 import { tenantDirectory } from "./tenancy/tenant-directory.js";
 import { type TunnelTenant, runInTenant } from "./tenancy/tunnel-tenant.js";
 import { tunnelManager } from "./tunnel-manager.js";
+import { wsAppHandshakes } from "./ws-app-handshake.js";
 import { wsAppRelay } from "./ws-app-relay.js";
 import type { ConnectionState } from "./ws-connection-state.js";
 import { onControlChannel } from "./ws-control-channel.js";
@@ -36,52 +37,37 @@ import {
 } from "./ws-register-tunnel.js";
 import { safeSend } from "./ws-send.js";
 import { handleAuth } from "./ws-tunnel-auth.js";
+import { rejectUpgrade } from "./ws-upgrade-response.js";
 
 const logger = createLogger("tunelo-ws");
 
-/**
- * Refuse a WebSocket upgrade with a real HTTP response.
- *
- * Destroying the socket without writing anything leaves the peer reading a
- * response header that never arrives: a reverse proxy reports "upstream
- * prematurely closed connection" and the browser sees a reset instead of a
- * status it can act on. Mirrors the plain-HTTP relay, which answers the same
- * conditions with 400/502.
- */
-function rejectUpgrade(
-	socket: Duplex,
-	statusLine: string,
-	message: string,
-	extraHeaders: Record<string, string> = {},
-): void {
-	const body = `${message}\n`;
-	const headers = {
-		"content-type": "text/plain",
-		"content-length": String(Buffer.byteLength(body)),
-		connection: "close",
-		...extraHeaders,
-	};
-	const headerLines = Object.entries(headers)
-		.map(([name, value]) => `${name}: ${value}\r\n`)
-		.join("");
-	socket.write(`HTTP/1.1 ${statusLine}\r\n${headerLines}\r\n${body}`);
-	socket.destroy();
+export interface WsHandlerOptions {
+	/** Wait for a client's `ws-open-result` (ms). Overridden only by tests. */
+	wsOpenResultTimeoutMs?: number;
 }
 
 export function attachWsHandler(
 	server: http.Server,
 	authenticator: TokenAuthenticator,
+	options: WsHandlerOptions = {},
 ): void {
 	const wss = new WebSocketServer({
 		noServer: true,
 		maxPayload: DEFAULTS.MAX_BODY_SIZE,
 	});
-	// Browser→app WebSocket relay (echoes the first requested subprotocol so
-	// subprotocol-based clients — e.g. socket.io — handshake cleanly).
+	// Subprotocol the local app selected, for upgrades held until it answered.
+	const appProtocols = new WeakMap<http.IncomingMessage, string | null>();
+	// Browser→app WebSocket relay. A held upgrade answers with the app's own
+	// choice; an older client's is answered before the app is asked, so it
+	// echoes the first requested subprotocol (socket.io and the like need one).
 	const appWss = new WebSocketServer({
 		noServer: true,
 		maxPayload: DEFAULTS.MAX_BODY_SIZE,
-		handleProtocols: (protocols) => protocols.values().next().value ?? false,
+		handleProtocols: (protocols, request) => {
+			const chosen = appProtocols.get(request);
+			if (chosen === undefined) return protocols.values().next().value ?? false;
+			return chosen !== null && protocols.has(chosen) ? chosen : false;
+		},
 	});
 
 	// The tenant of each control channel, from its upgrade request's Host.
@@ -143,14 +129,27 @@ export function attachWsHandler(
 				return;
 			}
 			const proto = req.headers["sec-websocket-protocol"];
-			appWss.handleUpgrade(req, socket, head, (browserWs) => {
-				wsAppRelay.register(
-					browserWs,
+			const path = url.pathname + url.search;
+			const headers = req.headers as Record<string, string | string[]>;
+			const protocol = Array.isArray(proto) ? proto.join(", ") : proto;
+			if (tunnelManager.get(subdomain)?.wsOpenResult) {
+				wsAppHandshakes.begin({
+					socket,
+					head,
 					subdomain,
-					url.pathname + url.search,
-					req.headers as Record<string, string | string[]>,
-					Array.isArray(proto) ? proto.join(", ") : proto,
-				);
+					path,
+					headers,
+					protocol,
+					timeoutMs: options.wsOpenResultTimeoutMs,
+					accept: (fullHead, chosen, onOpen) => {
+						appProtocols.set(req, chosen ?? null);
+						appWss.handleUpgrade(req, socket, fullHead, onOpen);
+					},
+				});
+				return;
+			}
+			appWss.handleUpgrade(req, socket, head, (browserWs) => {
+				wsAppRelay.register(browserWs, subdomain, path, headers, protocol);
 			});
 			return;
 		}

@@ -2,6 +2,7 @@ import { EventEmitter } from "node:events";
 import {
 	type AuthMessage,
 	type AuthResult,
+	CLIENT_CAPABILITIES,
 	DEFAULTS,
 	type RegisterTunnelMessage,
 	type RegisterTunnelResult,
@@ -119,6 +120,7 @@ export class TunnelClient extends EventEmitter {
 					deviceId: this.options.deviceId,
 					deviceName: this.options.deviceName,
 					...(this.options.tcpOnly ? { tcpOnly: true } : {}),
+					capabilities: [CLIENT_CAPABILITIES.WS_OPEN_RESULT],
 				};
 				socket.send(JSON.stringify(authMsg));
 

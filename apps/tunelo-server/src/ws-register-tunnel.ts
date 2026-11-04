@@ -24,7 +24,12 @@ export function registerOn(
 	connectionId: string,
 	keyInfo: KeyInfo,
 	owner: TunnelOwner,
-	tunnel: { subdomain: string; localPort: number | null; auth?: string },
+	tunnel: {
+		subdomain: string;
+		localPort: number | null;
+		auth?: string;
+		wsOpenResult: boolean;
+	},
 ): boolean {
 	return tunnelManager.register({
 		...tunnel,
@@ -102,6 +107,7 @@ export function handleRegisterTunnel(
 		subdomain: requested,
 		localPort: msg.localPort,
 		auth: msg.auth,
+		wsOpenResult: state.wsOpenResult,
 	});
 	if (!registered) {
 		refuse("Subdomain already in use");

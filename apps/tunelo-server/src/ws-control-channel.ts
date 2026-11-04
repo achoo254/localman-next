@@ -17,12 +17,14 @@ import {
 	handleTcpRegister,
 } from "./tcp-ws-handler.js";
 import { tunnelManager } from "./tunnel-manager.js";
+import { wsAppHandshakes } from "./ws-app-handshake.js";
 import { wsAppRelay } from "./ws-app-relay.js";
 import type { ConnectionState } from "./ws-connection-state.js";
 import {
 	isAuthMessage,
 	isRegisterTunnelMessage,
 	isTcpRegisterMessage,
+	isWsOpenResultMessage,
 } from "./ws-message-guards.js";
 import {
 	allowTcpRegister,
@@ -64,6 +66,7 @@ export function onControlChannel(
 		pingInterval: null,
 		tcpState: createTcpState(),
 		alive: true,
+		wsOpenResult: false,
 	};
 
 	// Native ping/pong keepalive
@@ -135,12 +138,18 @@ export function onControlChannel(
 					if (!state.authenticated) return;
 					handleTcpConnectionClose(msg, state.tcpState);
 					break;
+				case "ws-open-result":
+					if (!state.authenticated || !isWsOpenResultMessage(msg)) return;
+					wsAppHandshakes.handleResult(state.id, msg);
+					break;
 				case "ws-data":
 					if (!state.authenticated) return;
+					if (wsAppHandshakes.handleData(state.id, msg)) return;
 					wsAppRelay.handleData(state.id, msg);
 					break;
 				case "ws-close":
 					if (!state.authenticated) return;
+					if (wsAppHandshakes.handleClose(state.id, msg)) return;
 					wsAppRelay.handleClose(state.id, msg);
 					break;
 				case "pong":
@@ -162,6 +171,7 @@ export function onControlChannel(
 			// Always: a `tcpOnly` channel may still have used `register-tunnel`.
 			tunnelManager.unregisterByConnectionId(state.id);
 			wsAppRelay.cleanupByConnection(state.id);
+			wsAppHandshakes.cleanupByConnection(state.id);
 		}),
 	);
 

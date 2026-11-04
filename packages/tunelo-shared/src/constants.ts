@@ -38,6 +38,17 @@ export const DEFAULTS = {
 	WS_APP_HANDSHAKE_TIMEOUT_MS: 10_000,
 	/** Max frames buffered before the local WS finishes opening */
 	WS_APP_PREOPEN_QUEUE_MAX: 64,
+	/** How long the server holds a browser upgrade for `ws-open-result`:
+	 *  the client's own handshake cap plus room for the control channel. */
+	WS_APP_OPEN_RESULT_TIMEOUT_MS: 15_000,
+	/** Max body (bytes) of an app's refusal relayed back to the browser */
+	WS_APP_REJECT_BODY_MAX: 4096,
+} as const;
+
+/** Names a client may list in `AuthMessage.capabilities`. */
+export const CLIENT_CAPABILITIES = {
+	/** Client answers every `ws-open` with a `ws-open-result`. */
+	WS_OPEN_RESULT: "ws-open-result",
 } as const;
 
 export const SUBDOMAIN_REGEX = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;

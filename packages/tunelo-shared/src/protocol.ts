@@ -68,6 +68,10 @@ export interface AuthMessage {
 	/** Authenticate only, open no HTTP tunnel (`tunelo tcp`). Servers that do
 	 *  not know the flag open one as before. */
 	tcpOnly?: boolean;
+	/** Optional protocol features this client speaks (`CLIENT_CAPABILITIES`).
+	 *  Servers ignore names they do not know, and older servers ignore the
+	 *  field altogether. */
+	capabilities?: string[];
 }
 
 export interface AuthResult {
@@ -167,6 +171,33 @@ export interface WsOpenMessage {
 	/** Requested Sec-WebSocket-Protocol subprotocol(s), if any. */
 	protocol?: string;
 }
+/**
+ * Browser WebSocket relay — outcome of opening the local WS (client → server),
+ * sent once per `ws-open` by clients declaring
+ * `CLIENT_CAPABILITIES.WS_OPEN_RESULT`. A server that saw the capability holds
+ * the browser's upgrade until this arrives, so the browser gets the app's own
+ * answer (403, 401, 404…) instead of `101` followed by a close.
+ */
+export type WsOpenResultMessage =
+	| {
+			type: "ws-open-result";
+			id: string;
+			ok: true;
+			/** Subprotocol the local app selected, if any. */
+			protocol?: string;
+	  }
+	| {
+			type: "ws-open-result";
+			id: string;
+			ok: false;
+			/** HTTP status of the app's refusal; 502 when it could not be
+			 *  reached, 504 when its handshake timed out. */
+			status: number;
+			statusText?: string;
+			headers?: Record<string, string | string[]>;
+			/** base64 body, at most `WS_APP_REJECT_BODY_MAX` bytes decoded. */
+			body?: string;
+	  };
 /** Browser WebSocket relay — frame payload (bidirectional). */
 export interface WsDataMessage {
 	type: "ws-data";
@@ -213,6 +244,7 @@ export type ClientToServerMessage =
 	| TcpRegisterMessage
 	| TcpDataMessage
 	| TcpConnectionClose
+	| WsOpenResultMessage
 	| WsDataMessage
 	| WsCloseMessage
 	| ErrorMessage

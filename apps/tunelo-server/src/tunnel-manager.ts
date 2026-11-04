@@ -41,6 +41,8 @@ export interface TunnelConnection {
 	owner: TunnelOwner;
 	/** Port on the client machine; null when an older CLI did not send it. */
 	localPort: number | null;
+	/** Client reports the local WS outcome, so browser upgrades wait for it. */
+	wsOpenResult: boolean;
 }
 
 export interface RegisterTunnelInput {
@@ -54,6 +56,8 @@ export interface RegisterTunnelInput {
 	localPort: number | null;
 	/** Basic auth "user:pass" required from visitors, if any. */
 	auth?: string;
+	/** Client declared `CLIENT_CAPABILITIES.WS_OPEN_RESULT`; default false. */
+	wsOpenResult?: boolean;
 }
 
 /**
@@ -111,6 +115,7 @@ class TunnelManager {
 			authHash,
 			owner: input.owner,
 			localPort: input.localPort,
+			wsOpenResult: input.wsOpenResult ?? false,
 		});
 
 		logger.info(

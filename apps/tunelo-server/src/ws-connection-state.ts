@@ -17,4 +17,6 @@ export interface ConnectionState {
 	pingInterval: ReturnType<typeof setInterval> | null;
 	tcpState: TcpConnectionState;
 	alive: boolean;
+	/** Client answers `ws-open` with `ws-open-result` (declared at auth). */
+	wsOpenResult: boolean;
 }

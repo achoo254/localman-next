@@ -128,6 +128,39 @@ The CLI signs in per server: `tunelo login --server https://tunnel.<domain>` sig
 that server the default; the account token is only sent to the Tunelo of its own domain.
 The production server is only `tunnel.hoandat.com`, the CLI's default.
 
+## Browser WebSockets through a tunnel
+
+A browser WebSocket to `https://<sub>.tunnel.hoandat.com` is relayed as `ws-open` →
+`ws-data`/`ws-close` frames to the CLI, which opens the WebSocket to the local app.
+How the browser's handshake is answered depends on the CLI:
+
+- **CLI that declares `capabilities: ["ws-open-result"]` in `auth`** (the next CLI release after 1.11.0):
+  the server holds the upgrade, sends `ws-open`, and waits for the CLI's
+  `ws-open-result`. `ok: true` ⟹ `101` with the subprotocol the app selected; `ok: false`
+  ⟹ the app's own status (403, 401, 404, 429…), its headers minus hop-by-hop, framing and
+  `sec-websocket-*`, and at most 4 KiB of its body; app unreachable ⟹ `502`; no answer
+  within `WS_APP_OPEN_RESULT_TIMEOUT_MS` (15 s) ⟹ `504`. A browser that hangs up while
+  held gets its local WebSocket closed (`ws-close` code 1001). Logs: `Browser WS bridged`,
+  `Browser WS rejected by app` (with `status`), `Browser WS rejected`, `Browser WS abandoned`.
+- **Older CLI**: `101` at once, then the relay closes it if the app refuses — the app's
+  status never reaches the caller.
+
+The per-tunnel cap (`WS_APP_MAX_PER_TUNNEL`, held upgrades included) and basic auth are
+checked before `ws-open` is sent. Constants: `packages/tunelo-shared/src/constants.ts`;
+messages: `packages/tunelo-shared/src/protocol.ts`.
+
+Both sides stay compatible in either order: an older server ignores the `capabilities`
+field and the `ws-open-result` message, and the new CLI still sends the `ws-close` an older
+server needs. Deploy the server first, then release the CLI; the new behaviour starts for
+each tunnel once its CLI is updated and reconnects. Check, with a tunnel on the new CLI in
+front of an app that checks `Origin`:
+
+```bash
+curl --http1.1 -si https://<sub>.tunnel.hoandat.com/<ws-path> -H 'Origin: https://evil.example' \
+  -H 'Connection: Upgrade' -H 'Upgrade: websocket' -H 'Sec-WebSocket-Version: 13' \
+  -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' | head -1     # the app's status, not 101
+```
+
 ## Database
 
 Server tự tạo collection và index lúc khởi động qua schema Mongoose (`apps/tunelo-server/src/db/models/`).
