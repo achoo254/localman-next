@@ -1,7 +1,7 @@
 ---
 title: "Localman Mobile: app iOS/Android kiểu app chat"
 description: "Vỏ Capacitor trong apps/mobile bọc một entry mobile của apps/web: danh sách kiểu chat, màn chi tiết toàn màn hình, tab đáy, API client dạng hội thoại và log/inbox theo dòng thời gian."
-status: pending
+status: paused
 priority: P2
 effort: "XL (7 phase: M, L, L, M, L, S, M)"
 branch: main
@@ -10,6 +10,8 @@ blockedBy: []
 blocks: []
 created: 2026-10-20
 ---
+
+> Tạm dừng 07/11/2026: dừng App Store từ 02/11 (Apple từ chối Scribe, Miu, Localman theo 4.3 Spam). Xét lại khi web có khoảng 100 người dùng thường xuyên. Không huỷ.
 
 # Localman Mobile: app iOS/Android kiểu app chat
 

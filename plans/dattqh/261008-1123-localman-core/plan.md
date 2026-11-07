@@ -1,7 +1,7 @@
 ---
 title: "Localman web — mô phỏng 100% mockapi.io và 100% quản lý Collections/Environments (kèm share) của Postman"
 description: "Xây SaaS mock REST API độc lập, giống mockapi.io về IA, luồng, tương tác, hạn mức gói và hợp đồng API, với design system riêng. Sản phẩm tại localman.hoandat.com."
-status: in-progress
+status: paused
 priority: P2
 effort: "XL (23 phase: 13×M, 9×L, 1×XL)"
 branch: ""
@@ -10,6 +10,8 @@ blockedBy: ["plans/dattqh/261008-1325-central-auth-idp", "plans/dattqh/261008-11
 blocks: []
 created: 2026-10-08
 ---
+
+> Tạm dừng 07/11/2026: công cụ cho lập trình viên đã ra khỏi nhóm app chủ lực từ 01/11; ưu tiên mục tiêu 1.000 / 500 / 100 tới 31/12. Không huỷ.
 
 # Localman web — Implementation Plan
 

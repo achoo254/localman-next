@@ -1,9 +1,11 @@
 ---
 title: "Fixes from the heavy-data UI review"
-status: in-progress
+status: paused
 created: 2026-10-10
 tier: L
 ---
+
+> Tạm dừng 07/11/2026: công cụ cho lập trình viên đã ra khỏi nhóm app chủ lực từ 01/11; ưu tiên mục tiêu 1.000 / 500 / 100 tới 31/12. Không huỷ.
 
 # Fixes from the heavy-data UI review
 

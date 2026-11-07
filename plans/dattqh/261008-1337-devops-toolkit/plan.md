@@ -1,7 +1,7 @@
 ---
 title: "Localman DevOps toolkit: test API trong CI bằng 1 lệnh, mock tạm, tunnel có SSO, giám sát"
 description: "Mở rộng bộ ba Localman, Tunelo và IdP cho DevOps: CLI chạy collection trong CI cùng mock tạm và tunnel, token máy, tunnel có SSO, đồng bộ biến và secret, cấu hình dạng code, audit log, giám sát."
-status: pending
+status: paused
 priority: P2
 effort: "XL (7 phase: 4×M, 3×L)"
 branch: ""
@@ -10,6 +10,8 @@ blockedBy: ["plans/dattqh/261008-1123-localman-core", "plans/dattqh/261008-1156-
 blocks: []
 created: 2026-10-08
 ---
+
+> Tạm dừng 07/11/2026: công cụ cho lập trình viên đã ra khỏi nhóm app chủ lực từ 01/11; ưu tiên mục tiêu 1.000 / 500 / 100 tới 31/12. Không huỷ.
 
 # Localman DevOps toolkit
 

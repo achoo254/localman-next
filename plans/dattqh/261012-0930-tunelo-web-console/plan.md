@@ -1,7 +1,7 @@
 ---
 title: "Tunelo web: trang đăng nhập và danh sách tunnel tại tunnel.hoandat.com"
 description: "tunnel.hoandat.com có trang thật: đăng nhập qua auth.hoandat.com bằng client tunelo-web, xem tunnel đang chạy theo máy, hướng dẫn bắt đầu."
-status: in-progress
+status: paused
 priority: P2
 effort: "L (4 phase: 2×M, 2×S)"
 branch: ""
@@ -10,6 +10,8 @@ blockedBy: []
 blocks: []
 created: 2026-10-12
 ---
+
+> Tạm dừng 07/11/2026: công cụ cho lập trình viên đã ra khỏi nhóm app chủ lực từ 01/11; ưu tiên mục tiêu 1.000 / 500 / 100 tới 31/12. Không huỷ.
 
 # Tunelo web: đăng nhập và danh sách tunnel
 

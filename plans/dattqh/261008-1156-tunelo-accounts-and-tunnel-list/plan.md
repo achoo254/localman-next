@@ -1,7 +1,7 @@
 ---
 title: "Tunelo: tài khoản qua auth.hoandat.com và API liệt kê tunnel (trong monorepo localman-next)"
 description: "Tunelo CLI và server dùng IdP chung để đăng nhập một lần; token gắn với tài khoản; Localman liệt kê tunnel theo tài khoản, giữ `tunelo link` cho máy chưa gắn tài khoản."
-status: in-progress
+status: paused
 priority: P1
 effort: "L (3 phase: 1×L, 1×M, 1×S)"
 branch: ""
@@ -10,6 +10,8 @@ blockedBy: ["plans/dattqh/261008-1325-central-auth-idp", "plans/dattqh/261008-11
 blocks: ["plans/dattqh/261008-1123-localman-core#phase-10"]
 created: 2026-10-08
 ---
+
+> Tạm dừng 07/11/2026: công cụ cho lập trình viên đã ra khỏi nhóm app chủ lực từ 01/11; ưu tiên mục tiêu 1.000 / 500 / 100 tới 31/12. Không huỷ.
 
 # Tunelo: tài khoản qua IdP chung và API liệt kê tunnel
 
