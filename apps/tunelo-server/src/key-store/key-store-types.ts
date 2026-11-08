@@ -12,6 +12,9 @@ export interface KeyInfo {
 	keyId: string;
 	keyHash: string;
 	maxTunnels: number;
+	/** Machine tunnels (background agents) the account may hold besides
+	 *  `maxTunnels`; 0 or absent for tokens without an account. */
+	maxMachineTunnels?: number;
 	role: "user" | "admin";
 	/** Granted scopes; empty for `legacy` (full rights, as before scopes). */
 	scopes: string[];

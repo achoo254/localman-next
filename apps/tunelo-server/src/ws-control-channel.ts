@@ -67,6 +67,7 @@ export function onControlChannel(
 		tcpState: createTcpState(),
 		alive: true,
 		wsOpenResult: false,
+		machine: false,
 	};
 
 	// Native ping/pong keepalive
@@ -126,7 +127,7 @@ export function onControlChannel(
 					break;
 				case "tcp-register":
 					if (!state.authenticated || !state.owner || !state.keyInfo) return;
-					if (!isTcpRegisterMessage(msg)) return;
+					if (state.machine || !isTcpRegisterMessage(msg)) return;
 					if (!allowTcpRegister(ws, state.keyInfo, msg.localPort)) return;
 					handleTcpRegister(ws, state.id, msg, state.tcpState, state.owner);
 					break;

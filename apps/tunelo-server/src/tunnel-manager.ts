@@ -3,7 +3,7 @@ import type {
 	TunnelRequest,
 	TunnelResponse,
 } from "@tunelo/shared";
-import { DEFAULTS, ErrorCode } from "@tunelo/shared";
+import { DEFAULTS, ErrorCode, type TunnelKind } from "@tunelo/shared";
 import type { WebSocket } from "ws";
 import { purgeSubdomain } from "./cache/response-cache.js";
 import { createLogger } from "./logger.js";
@@ -43,6 +43,8 @@ export interface TunnelConnection {
 	localPort: number | null;
 	/** Client reports the local WS outcome, so browser upgrades wait for it. */
 	wsOpenResult: boolean;
+	/** `machine` tunnels have their own quota and replace their stale selves. */
+	kind: TunnelKind;
 }
 
 export interface RegisterTunnelInput {
@@ -58,6 +60,8 @@ export interface RegisterTunnelInput {
 	auth?: string;
 	/** Client declared `CLIENT_CAPABILITIES.WS_OPEN_RESULT`; default false. */
 	wsOpenResult?: boolean;
+	/** Default `http`. */
+	kind?: TunnelKind;
 }
 
 /**
@@ -77,8 +81,16 @@ class TunnelManager {
 	register(input: RegisterTunnelInput): boolean {
 		const { subdomain, auth } = input;
 		const key = tenantKey(subdomain);
-		// If tunnel exists with a different socket, reject (subdomain taken)
-		if (this.tunnels.has(key)) return false;
+		const kind = input.kind ?? "http";
+		const existing = this.tunnels.get(key);
+		if (existing) {
+			// The subdomain is taken, unless it is the same account's machine
+			// coming back while its old, half-dead connection still holds it.
+			if (!this.replacesOwnMachine(existing, kind, input.owner)) return false;
+			this.unregisterKey(key);
+			existing.socket.terminate();
+			logger.info({ subdomain }, "Stale machine tunnel replaced");
+		}
 
 		const authHash = auth ? hashCredentials(auth) : undefined;
 
@@ -116,6 +128,7 @@ class TunnelManager {
 			owner: input.owner,
 			localPort: input.localPort,
 			wsOpenResult: input.wsOpenResult ?? false,
+			kind,
 		});
 
 		logger.info(
@@ -123,6 +136,19 @@ class TunnelManager {
 			"Tunnel registered",
 		);
 		return true;
+	}
+
+	private replacesOwnMachine(
+		existing: TunnelConnection,
+		kind: TunnelKind,
+		owner: TunnelOwner,
+	): boolean {
+		return (
+			kind === "machine" &&
+			existing.kind === "machine" &&
+			owner.ownerSub !== null &&
+			existing.owner.ownerSub === owner.ownerSub
+		);
 	}
 
 	/** Unregisters the tunnel stored under `key` (a `tenantKey`). */
@@ -290,11 +316,30 @@ class TunnelManager {
 		return count;
 	}
 
-	/** Count active tunnels opened by an account (any machine) */
+	/** Count the account's `tunelo http` tunnels (any machine); machine
+	 *  tunnels have a quota of their own (`countMachinesByOwner`). */
 	countByOwner(ownerSub: string): number {
 		let count = 0;
 		for (const tunnel of this.inTenant()) {
-			if (tunnel.owner.ownerSub === ownerSub) count++;
+			if (tunnel.owner.ownerSub === ownerSub && tunnel.kind !== "machine") {
+				count++;
+			}
+		}
+		return count;
+	}
+
+	/** Count the account's machine tunnels other than `exceptSubdomain`
+	 *  (the one a reconnecting machine is about to replace). */
+	countMachinesByOwner(ownerSub: string, exceptSubdomain: string): number {
+		let count = 0;
+		for (const tunnel of this.inTenant()) {
+			if (
+				tunnel.owner.ownerSub === ownerSub &&
+				tunnel.kind === "machine" &&
+				tunnel.subdomain !== exceptSubdomain
+			) {
+				count++;
+			}
 		}
 		return count;
 	}

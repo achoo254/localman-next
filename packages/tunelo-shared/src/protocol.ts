@@ -1,5 +1,7 @@
 /** WS message types for tunnel protocol — discriminated union on "type" field */
 
+import type { TunnelKind } from "./constants.js";
+
 export interface TunnelRequest {
 	type: "request";
 	id: string;
@@ -72,6 +74,11 @@ export interface AuthMessage {
 	 *  Servers ignore names they do not know, and older servers ignore the
 	 *  field altogether. */
 	capabilities?: string[];
+	/** `machine`: a background agent's tunnel. The server assigns it a
+	 *  subdomain held for the account and machine (`deviceId` required),
+	 *  counts it against a quota of its own, and lets a new connection of the
+	 *  same machine replace a stale one. Default `http`. */
+	kind?: TunnelKind;
 }
 
 export interface AuthResult {
@@ -80,7 +87,8 @@ export interface AuthResult {
 	subdomain: string;
 	url: string;
 	error?: string;
-	/** `TUNELO_*` code of a refusal, e.g. `TUNELO_AUTH_004`. */
+	/** `TUNELO_*` code of a refusal, e.g. `TUNELO_AUTH_004` or one of
+	 *  `TUNNEL_REFUSAL_CODES`. */
 	code?: string;
 	/** ISO date after which this anonymous token stops opening tunnels. */
 	legacyTokenCutoff?: string;
@@ -119,6 +127,8 @@ export interface RegisterTunnelResult {
 	localPort: number;
 	url: string;
 	error?: string;
+	/** `TUNELO_*` code of a refusal (`TUNNEL_REFUSAL_CODES`). */
+	code?: string;
 }
 
 /** TCP tunnel — register a TCP port mapping */

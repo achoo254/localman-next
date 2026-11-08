@@ -2,11 +2,12 @@
  * Shape checks for the client messages that carry user-controlled fields the
  * server stores or acts on. `parseMessage` only parses JSON; these narrow it.
  */
-import type {
-	AuthMessage,
-	RegisterTunnelMessage,
-	TcpRegisterMessage,
-	WsOpenResultMessage,
+import {
+	type AuthMessage,
+	type RegisterTunnelMessage,
+	TUNNEL_KINDS,
+	type TcpRegisterMessage,
+	type WsOpenResultMessage,
 } from "@tunelo/shared";
 
 const MAX_KEY_LENGTH = 8192;
@@ -59,6 +60,9 @@ export function isAuthMessage(msg: unknown): msg is AuthMessage {
 		optionalString(msg.deviceId, MAX_DEVICE_ID_LENGTH) &&
 		optionalString(msg.deviceName, MAX_DEVICE_NAME_LENGTH) &&
 		(msg.tcpOnly === undefined || typeof msg.tcpOnly === "boolean") &&
+		(msg.kind === undefined ||
+			msg.kind === TUNNEL_KINDS.HTTP ||
+			msg.kind === TUNNEL_KINDS.MACHINE) &&
 		(msg.capabilities === undefined || isCapabilityList(msg.capabilities))
 	);
 }

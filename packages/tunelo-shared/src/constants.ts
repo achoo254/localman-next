@@ -51,6 +51,27 @@ export const CLIENT_CAPABILITIES = {
 	WS_OPEN_RESULT: "ws-open-result",
 } as const;
 
+/** What a tunnel is for (`AuthMessage.kind`). */
+export const TUNNEL_KINDS = {
+	/** `tunelo http`: the user's own tunnels, within the account quota. */
+	HTTP: "http",
+	/** A background agent's machine tunnel, with a quota of its own. */
+	MACHINE: "machine",
+} as const;
+
+export type TunnelKind = (typeof TUNNEL_KINDS)[keyof typeof TUNNEL_KINDS];
+
+/** `code` of a refused `auth` or `register-tunnel` about the tunnel itself.
+ *  A client should report these instead of retrying the same request. */
+export const TUNNEL_REFUSAL_CODES = {
+	/** The subdomain is open on another connection. */
+	SUBDOMAIN_IN_USE: "TUNELO_TUNNEL_001",
+	/** The subdomain is held for another account or machine. */
+	SUBDOMAIN_HELD: "TUNELO_TUNNEL_004",
+	/** The account has as many tunnels of this kind open as it may. */
+	QUOTA_EXCEEDED: "TUNELO_TUNNEL_005",
+} as const;
+
 export const SUBDOMAIN_REGEX = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;
 
 /** Public URL of an HTTP tunnel. The domain is deployment config (the

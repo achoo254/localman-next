@@ -3,7 +3,8 @@ import {
 	type AuthMessage,
 	type AuthResult,
 	CLIENT_CAPABILITIES,
-	SUBDOMAIN_REGEX,
+	TUNNEL_KINDS,
+	TUNNEL_REFUSAL_CODES,
 	TUNNEL_SCOPES,
 	WS_CLOSE_CODES,
 } from "@tunelo/shared";
@@ -15,11 +16,12 @@ import { createLogger } from "./logger.js";
 import { ownerOf } from "./tunnel-owner.js";
 import type { ConnectionState } from "./ws-connection-state.js";
 import {
-	atTunnelLimit,
+	IN_USE_MESSAGE,
 	generateSubdomain,
 	registerOn,
 } from "./ws-register-tunnel.js";
 import { safeSend } from "./ws-send.js";
+import { httpTunnel, machineTunnel } from "./ws-tunnel-grant.js";
 
 const logger = createLogger("tunelo-ws-auth");
 
@@ -78,24 +80,23 @@ export async function handleAuth(
 	}
 	const { keyInfo } = outcome;
 
-	if (atTunnelLimit(keyInfo)) {
+	const machine = msg.kind === TUNNEL_KINDS.MACHINE;
+	const granted = machine
+		? machineTunnel(msg, keyInfo)
+		: httpTunnel(msg, keyInfo, requested);
+	if ("error" in granted) {
+		// As before: a quota refusal names no subdomain.
+		const quota = granted.code === TUNNEL_REFUSAL_CODES.QUOTA_EXCEEDED;
 		refuseAuth(
 			ws,
-			"",
-			"Max tunnels per key exceeded",
+			machine || quota ? "" : requested,
+			granted.error,
 			WS_CLOSE_CODES.AUTH_FAILED,
+			granted.code,
 		);
 		return;
 	}
-	if (!SUBDOMAIN_REGEX.test(requested)) {
-		refuseAuth(
-			ws,
-			requested,
-			"Invalid subdomain format",
-			WS_CLOSE_CODES.AUTH_FAILED,
-		);
-		return;
-	}
+	const { subdomain } = granted;
 
 	state.wsOpenResult =
 		msg.capabilities?.includes(CLIENT_CAPABILITIES.WS_OPEN_RESULT) ?? false;
@@ -103,27 +104,27 @@ export async function handleAuth(
 		deviceId: msg.deviceId,
 		deviceName: cleanDisplayName(msg.deviceName),
 	});
-	// `tunelo tcp` asks for no HTTP tunnel: it would be a second, live,
-	// public entry pointing at the TCP service.
-	const subdomain = msg.tcpOnly ? "" : requested;
 	const registered =
-		msg.tcpOnly ||
+		subdomain === "" ||
 		registerOn(ws, state.id, keyInfo, owner, {
 			subdomain,
 			localPort: msg.localPort ?? null,
 			auth: msg.auth,
 			wsOpenResult: state.wsOpenResult,
+			kind: machine ? TUNNEL_KINDS.MACHINE : TUNNEL_KINDS.HTTP,
 		});
 	if (!registered) {
 		refuseAuth(
 			ws,
-			requested,
-			"Subdomain already in use",
+			subdomain,
+			IN_USE_MESSAGE,
 			WS_CLOSE_CODES.SUBDOMAIN_TAKEN,
+			TUNNEL_REFUSAL_CODES.SUBDOMAIN_IN_USE,
 		);
 		return;
 	}
 
+	state.machine = machine;
 	state.authenticated = true;
 	state.subdomain = subdomain;
 	state.keyInfo = keyInfo;
@@ -139,5 +140,8 @@ export async function handleAuth(
 		url,
 		...(cutoff ? { legacyTokenCutoff: cutoff } : {}),
 	});
-	logger.info({ subdomain, url, kind: keyInfo.kind }, "Client authenticated");
+	logger.info(
+		{ subdomain, url, kind: keyInfo.kind, machine },
+		"Client authenticated",
+	);
 }

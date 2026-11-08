@@ -19,4 +19,6 @@ export interface ConnectionState {
 	alive: boolean;
 	/** Client answers `ws-open` with `ws-open-result` (declared at auth). */
 	wsOpenResult: boolean;
+	/** A machine tunnel's channel: it carries that one tunnel and nothing else. */
+	machine: boolean;
 }
