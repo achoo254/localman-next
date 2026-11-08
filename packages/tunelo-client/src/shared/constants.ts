@@ -99,3 +99,63 @@ export function generateRequestId(): string {
 	// Unguessable: a client must not be able to answer another's request.
 	return `req_${globalThis.crypto.randomUUID()}`;
 }
+
+/** Names a server may list in `AuthResult.features`. */
+export const SERVER_FEATURES = {
+	/** The server gates `LOCAL_FORWARD.PATH` on this machine tunnel and
+	 *  strips client-sent `tunelo-*` headers, so the machine may serve it. */
+	LOCAL_FORWARD: "local-forward",
+} as const;
+
+/**
+ * Requests an app linked to the machine's owner (Localman) sends to
+ * `localhost:<port>` on the machine, through its machine tunnel:
+ * `https://m-<hash>.<domain>/.tunelo/forward/<path>`.
+ */
+export const LOCAL_FORWARD = {
+	PATH: "/.tunelo/forward",
+	/** Scope of the server-minted link tokens that may forward. */
+	SCOPE: "tunnels:forward",
+	/**
+	 * Ports never forwarded, by the server and by the machine (which adds
+	 * its own ports): Chrome DevTools, Docker, Node and JVM debuggers,
+	 * JetBrains IDEs.
+	 */
+	DENY_PORTS: [2375, 2376, 5005, 9222, 9229, 63342],
+} as const;
+
+/** `tunelo-forward-error` codes of a refused forward. */
+export const LOCAL_FORWARD_ERRORS = {
+	/** No valid link token of this machine's owner (always 404). */
+	NOT_FOUND: "TUNELO_FORWARD_001",
+	/** The port is on a deny list (403). */
+	PORT_BLOCKED: "TUNELO_FORWARD_002",
+	/** Forwarding is turned off on the machine (403). */
+	DISABLED: "TUNELO_FORWARD_003",
+	/** `tunelo-local-port` is not a port (400). */
+	BAD_PORT: "TUNELO_FORWARD_004",
+	/** Nothing answers on the port (502). */
+	PORT_CLOSED: "TUNELO_FORWARD_005",
+	/** The machine tunnel is not connected (502). */
+	MACHINE_OFFLINE: "TUNELO_TUNNEL_002",
+} as const;
+
+/** Whether `path` (path and query) is under `LOCAL_FORWARD.PATH`. */
+export function isLocalForwardPath(path: string): boolean {
+	const base = LOCAL_FORWARD.PATH;
+	if (!path.toLowerCase().startsWith(base.toLowerCase())) return false;
+	const next = path.charAt(base.length);
+	return next === "" || next === "/" || next === "?";
+}
+
+/** A `tunelo-local-port` value as a port number, or null. */
+export function parseLocalPort(value: unknown): number | null {
+	if (typeof value !== "string" || !/^\d{1,5}$/.test(value)) return null;
+	const port = Number(value);
+	return port >= 1 && port <= 65_535 ? port : null;
+}
+
+/** Whether a port is on the shared deny list. */
+export function isDeniedForwardPort(port: number): boolean {
+	return (LOCAL_FORWARD.DENY_PORTS as readonly number[]).includes(port);
+}

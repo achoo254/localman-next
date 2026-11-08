@@ -82,6 +82,12 @@ export async function startDeviceAuthorization(
 export interface PollOptions {
 	/** The client that started the sign-in (default: the CLI's). */
 	clientId?: string | undefined;
+	/**
+	 * Resource of the first access token (RFC 8707). Required when the
+	 * sign-in asked for several: the IdP then refuses (and burns) a code
+	 * redeemed without one.
+	 */
+	resource?: string | undefined;
 	/** Waits between polls; tests pass a fake. */
 	sleep?: (ms: number) => Promise<void>;
 	now?: () => number;
@@ -117,6 +123,7 @@ export async function pollForTokens(
 					grant_type: DEVICE_CODE_GRANT,
 					device_code: authorization.deviceCode,
 					client_id: options.clientId ?? IDP_DEFAULTS.clientId,
+					...(options.resource ? { resource: options.resource } : {}),
 				}),
 			);
 		} catch (err) {

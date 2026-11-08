@@ -43,3 +43,28 @@ export function needsUnbufferedRelay(headers) {
     }
     return contentType.includes("text/event-stream") || !hasContentLength;
 }
+/** Headers of a local forward (`LOCAL_FORWARD`), lower case. */
+export const LOCAL_FORWARD_HEADERS = {
+    /** Link token of the machine's owner (app → server only). */
+    ACCESS: "tunelo-access",
+    /** Port on the machine's loopback (app → server → machine). */
+    LOCAL_PORT: "tunelo-local-port",
+    /** Set by the server once the link token passed (server → machine only). */
+    GRANTED: "tunelo-forward-granted",
+    /** Code of a refused forward on the response (`LOCAL_FORWARD_ERRORS`). */
+    ERROR: "tunelo-forward-error",
+};
+const TUNELO_HEADER_PREFIX = "tunelo-";
+/** Whether a header name is reserved for Tunelo (`tunelo-*`). */
+export function isTuneloHeader(name) {
+    return name.toLowerCase().startsWith(TUNELO_HEADER_PREFIX);
+}
+/** Drops every `tunelo-*` header: only the relay may set them. */
+export function stripTuneloHeaders(headers) {
+    const out = {};
+    for (const [key, value] of Object.entries(headers)) {
+        if (!isTuneloHeader(key))
+            out[key] = value;
+    }
+    return out;
+}

@@ -14,6 +14,8 @@ const STALE_MS = 30_000;
 /** Holders refresh the lock's mtime this often, so it never looks stale. */
 const HEARTBEAT_MS = 5_000;
 const RETRY_MS = 50;
+/** Breaking a stale lock takes microseconds; a breaker this old crashed. */
+const BREAKER_STALE_MS = 5_000;
 const WAIT_MS = 60_000;
 
 function sleep(ms: number): Promise<void> {
@@ -36,11 +38,29 @@ function tryAcquire(path: string, nonce: string): boolean {
 	}
 }
 
-function removeIfStale(path: string): void {
+function isStale(path: string, maxAgeMs: number): boolean {
 	try {
-		if (Date.now() - statSync(path).mtimeMs > STALE_MS) rmSync(path);
+		return Date.now() - statSync(path).mtimeMs > maxAgeMs;
 	} catch {
-		// Gone already: the next attempt will take it.
+		return false;
+	}
+}
+
+/**
+ * Removes the lock at `path` if its holder crashed. Waiters that all saw
+ * it stale take turns through a second, short-lived lock (`<path>.break`)
+ * and look again inside it: without that, a slow waiter could remove the
+ * fresh lock a faster one just took, and both would refresh the token
+ * (replay, the grant revoked). Exported for tests.
+ */
+export function breakStaleLock(path: string, nonce: string): void {
+	const breaker = `${path}.break`;
+	if (isStale(breaker, BREAKER_STALE_MS)) rmSync(breaker, { force: true });
+	if (!tryAcquire(breaker, nonce)) return;
+	try {
+		if (isStale(path, STALE_MS)) rmSync(path, { force: true });
+	} finally {
+		release(breaker, nonce);
 	}
 }
 
@@ -69,7 +89,7 @@ export async function withFileLock<T>(
 	mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
 	const deadline = Date.now() + WAIT_MS;
 	while (!tryAcquire(path, nonce)) {
-		removeIfStale(path);
+		breakStaleLock(path, nonce);
 		if (Date.now() > deadline) {
 			throw new Error(`Timed out waiting for lock ${path}`);
 		}

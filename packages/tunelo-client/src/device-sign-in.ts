@@ -36,13 +36,17 @@ export async function deviceSignIn(
 ): Promise<StoredSession> {
 	const { issuer, store } = options;
 	const endpoints = await discover(issuer);
+	const resource = resourceOfIssuer(issuer);
 	const authorization = await startDeviceAuthorization(
 		endpoints,
 		deviceNameForIdp(options.deviceName),
-		resourceOfIssuer(issuer),
+		resource,
 	);
 	await options.onCode(authorization);
-	const tokens = await pollForTokens(endpoints, authorization, options.poll);
+	const tokens = await pollForTokens(endpoints, authorization, {
+		resource,
+		...options.poll,
+	});
 	const session = sessionFromTokens(issuer, tokens, undefined, Date.now());
 	await withFileLock(store.lockPath, async () => store.save(session));
 	return session;

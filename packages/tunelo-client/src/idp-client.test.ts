@@ -96,4 +96,34 @@ describe("OAuth client of each call", () => {
 		expect(device?.get("scope")).toBe("openid chat:read");
 		expect(forms[0]?.form.get("resource")).toBe("https://chat.example/mcp");
 	});
+
+	test("polling a sign-in of several resources names the one to redeem", async () => {
+		const authorization = await startDeviceAuthorization(
+			endpoints,
+			"host",
+			["https://tunnel.example", "https://chat.example/mcp"],
+			{ clientId: "agent" },
+		);
+		await pollForTokens(endpoints, authorization, {
+			clientId: "agent",
+			resource: "https://tunnel.example",
+			sleep: async () => {},
+		});
+		const poll = forms.find((f) => f.path === "/token")?.form;
+		expect(poll?.get("grant_type")).toBe(
+			"urn:ietf:params:oauth:grant-type:device_code",
+		);
+		expect(poll?.getAll("resource")).toEqual(["https://tunnel.example"]);
+	});
+
+	test("polling without a resource sends none, as before", async () => {
+		const authorization = await startDeviceAuthorization(
+			endpoints,
+			"host",
+			"https://tunnel.example",
+		);
+		await pollForTokens(endpoints, authorization, { sleep: async () => {} });
+		const poll = forms.find((f) => f.path === "/token")?.form;
+		expect(poll?.has("resource")).toBe(false);
+	});
 });

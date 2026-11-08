@@ -82,3 +82,46 @@ export type TunnelScope = (typeof TUNNEL_SCOPES)[keyof typeof TUNNEL_SCOPES];
  *  anything else is an identity-provider JWT. */
 export declare const SERVER_TOKEN_PREFIX = "tunelo_";
 export declare function generateRequestId(): string;
+/** Names a server may list in `AuthResult.features`. */
+export declare const SERVER_FEATURES: {
+    /** The server gates `LOCAL_FORWARD.PATH` on this machine tunnel and
+     *  strips client-sent `tunelo-*` headers, so the machine may serve it. */
+    readonly LOCAL_FORWARD: "local-forward";
+};
+/**
+ * Requests an app linked to the machine's owner (Localman) sends to
+ * `localhost:<port>` on the machine, through its machine tunnel:
+ * `https://m-<hash>.<domain>/.tunelo/forward/<path>`.
+ */
+export declare const LOCAL_FORWARD: {
+    readonly PATH: "/.tunelo/forward";
+    /** Scope of the server-minted link tokens that may forward. */
+    readonly SCOPE: "tunnels:forward";
+    /**
+     * Ports never forwarded, by the server and by the machine (which adds
+     * its own ports): Chrome DevTools, Docker, Node and JVM debuggers,
+     * JetBrains IDEs.
+     */
+    readonly DENY_PORTS: readonly [2375, 2376, 5005, 9222, 9229, 63342];
+};
+/** `tunelo-forward-error` codes of a refused forward. */
+export declare const LOCAL_FORWARD_ERRORS: {
+    /** No valid link token of this machine's owner (always 404). */
+    readonly NOT_FOUND: "TUNELO_FORWARD_001";
+    /** The port is on a deny list (403). */
+    readonly PORT_BLOCKED: "TUNELO_FORWARD_002";
+    /** Forwarding is turned off on the machine (403). */
+    readonly DISABLED: "TUNELO_FORWARD_003";
+    /** `tunelo-local-port` is not a port (400). */
+    readonly BAD_PORT: "TUNELO_FORWARD_004";
+    /** Nothing answers on the port (502). */
+    readonly PORT_CLOSED: "TUNELO_FORWARD_005";
+    /** The machine tunnel is not connected (502). */
+    readonly MACHINE_OFFLINE: "TUNELO_TUNNEL_002";
+};
+/** Whether `path` (path and query) is under `LOCAL_FORWARD.PATH`. */
+export declare function isLocalForwardPath(path: string): boolean;
+/** A `tunelo-local-port` value as a port number, or null. */
+export declare function parseLocalPort(value: unknown): number | null;
+/** Whether a port is on the shared deny list. */
+export declare function isDeniedForwardPort(port: number): boolean;

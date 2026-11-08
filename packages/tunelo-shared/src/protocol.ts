@@ -92,6 +92,9 @@ export interface AuthResult {
 	code?: string;
 	/** ISO date after which this anonymous token stops opening tunnels. */
 	legacyTokenCutoff?: string;
+	/** Optional server features granted to this tunnel (`SERVER_FEATURES`).
+	 *  Absent from servers that predate the field. */
+	features?: string[];
 }
 
 export interface ErrorMessage {

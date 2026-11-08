@@ -66,6 +66,7 @@ export async function pollForTokens(endpoints, authorization, options = {}) {
                 grant_type: DEVICE_CODE_GRANT,
                 device_code: authorization.deviceCode,
                 client_id: options.clientId ?? IDP_DEFAULTS.clientId,
+                ...(options.resource ? { resource: options.resource } : {}),
             }));
         }
         catch (err) {
