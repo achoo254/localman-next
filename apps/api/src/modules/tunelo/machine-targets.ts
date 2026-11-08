@@ -1,7 +1,7 @@
 import { OperationError } from "@localman/operations";
 import type { HeaderEntry } from "@localman/shared/api-client";
 import { isValidObjectId } from "mongoose";
-import { FORWARD_HEADERS } from "./machine-forward-contract.js";
+import { FORWARD_HEADERS, FORWARD_PATH } from "./machine-forward-contract.js";
 import {
 	type StoredTunnelLink,
 	TunnelLinkModel,
@@ -150,4 +150,17 @@ export async function listOwnMachines(userSub: string): Promise<{
 			linkedAt: (row.linkedAt ?? row.createdAt ?? new Date(0)).toISOString(),
 		})),
 	};
+}
+
+/**
+ * Redirects a request to a machine may follow: back into the machine's
+ * forward path only. Anything else (another host, the machine tunnel's
+ * other paths) is answered as the 3xx itself: the request went out
+ * through the user's machine, and Localman must not carry it elsewhere.
+ */
+export function staysOnMachine(tunnel: string): (to: URL) => boolean {
+	return (to) =>
+		to.origin === tunnel &&
+		(to.pathname === FORWARD_PATH ||
+			to.pathname.startsWith(`${FORWARD_PATH}/`));
 }

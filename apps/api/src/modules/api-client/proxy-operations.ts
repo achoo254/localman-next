@@ -16,10 +16,10 @@ import {
 import { type Logger, createLogger } from "../../logger.js";
 import { localmanDomainOf } from "../../tenancy/localman-domain.js";
 import { tenantSettings } from "../../tenancy/tenant-settings.js";
-import { isForwardHeader } from "../tunelo/machine-forward-contract.js";
 import { checkMachineAnswer } from "../tunelo/machine-forward-errors.js";
 import { fillVariables } from "./agent-variable-fill.js";
 import { routeLocalTarget } from "./local-target-route.js";
+import { followsRedirect, routedHeaders } from "./machine-request.js";
 import {
 	PROXY_CONCURRENCY,
 	type ProxyConcurrency,
@@ -121,18 +121,7 @@ export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
 					request.url,
 					input.machine,
 				);
-				// A machine gets the server's link token and port, never the
-				// sender's own `tunelo-*` headers or a Host aiming elsewhere.
-				const headers = route.machine
-					? [
-							...request.headers.filter(
-								(h) =>
-									!isForwardHeader(h.name) &&
-									h.name.trim().toLowerCase() !== "host",
-							),
-							...(route.headers ?? []),
-						]
-					: request.headers;
+				const headers = routedHeaders(route, request.headers);
 				// A local target goes through a tunnel: Localman's host, never
 				// a place for a filled secret.
 				if (redirectAllowed && !redirectAllowed(new URL(route.url))) {
@@ -142,6 +131,7 @@ export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
 						"These secrets may not be sent through a tunnel",
 					);
 				}
+				const follows = followsRedirect(route, redirectAllowed);
 				const response = await forwardRequest(
 					{ ...request, url: route.url, headers },
 					{
@@ -150,7 +140,7 @@ export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
 						forwardedProto: publicScheme(),
 						// The browser or agent gave up: stop the upstream request.
 						signal: ctx.signal,
-						...(redirectAllowed ? { redirectAllowed } : {}),
+						...(follows ? { redirectAllowed: follows } : {}),
 					},
 				);
 				if (route.machine && route.machineToken) {

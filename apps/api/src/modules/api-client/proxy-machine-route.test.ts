@@ -56,36 +56,51 @@ describe("client.sendRequest to a machine's localhost", () => {
 		expect(JSON.stringify(res.body.headers)).not.toContain(TOKEN);
 	});
 
-	it("keeps the headers on a same-origin redirect, drops them elsewhere", async () => {
-		server.routes.set("/.tunelo/forward/same", (_req, res) => {
-			res.writeHead(302, { location: "/.tunelo/forward/landed" });
-			res.end();
-		});
-		server.routes.set("/.tunelo/forward/away", (_req, res) => {
-			res.writeHead(302, {
-				location: `http://echo.test:${server.port}/landed`,
+	it("follows redirects only back into the machine's forward path", async () => {
+		const redirectTo = (path: string, location: string) =>
+			server.routes.set(path, (_req, res) => {
+				res.writeHead(302, { location });
+				res.end();
 			});
-			res.end();
-		});
+		redirectTo("/.tunelo/forward/same", "/.tunelo/forward/landed");
+		redirectTo("/.tunelo/forward/away", `http://echo.test:${server.port}/x`);
+		redirectTo("/.tunelo/forward/loop", `http://127.0.0.1:${server.port}/x`);
+		redirectTo("/.tunelo/forward/root", "/e2e/channel");
+		redirectTo("/.tunelo/forward/meta", "http://169.254.169.254/latest");
 		const app = machineApp();
-		const same = await postProxy(app, {
-			method: "GET",
-			url: "http://localhost:3000/same",
-			machine: "m1",
-		});
+		const send = (path: string) =>
+			postProxy(app, {
+				method: "GET",
+				url: `http://localhost:3000${path}`,
+				machine: "m1",
+			});
+
+		const same = await send("/same");
+		expect(same.body.finalUrl).toBe(`${server.origin}/.tunelo/forward/landed`);
 		expect(headerValues(echoOf(same.body.body), "tunelo-access")).toEqual([
 			TOKEN,
 		]);
-		const away = await postProxy(app, {
-			method: "GET",
-			url: "http://localhost:3000/away",
-			machine: "m1",
+		// Elsewhere (another host, loopback, the tunnel's other paths, a
+		// private address): the 3xx is the answer, nothing is sent there.
+		for (const path of ["/away", "/loop", "/root", "/meta"]) {
+			const res = await send(path);
+			expect(res.status, JSON.stringify(res.body)).toBe(200);
+			expect(res.body.status).toBe(302);
+			expect(res.body.finalUrl).toBe(`${server.origin}/.tunelo/forward${path}`);
+		}
+	});
+
+	it("still blocks a private target at every hop of other requests", async () => {
+		server.routes.set("/hop", (_req, res) => {
+			res.writeHead(302, { location: "http://169.254.169.254/latest" });
+			res.end();
 		});
-		expect(away.status, JSON.stringify(away.body)).toBe(200);
-		const echo = echoOf(away.body.body);
-		expect(away.body.finalUrl).toContain("echo.test");
-		expect(headerValues(echo, "tunelo-access")).toEqual([]);
-		expect(headerValues(echo, "tunelo-local-port")).toEqual([]);
+		const res = await postProxy(proxyTestApp(), {
+			method: "GET",
+			url: `http://echo.test:${server.port}/hop`,
+		});
+		expect(res.status).toBe(403);
+		expect(res.body.error.code).toBe("PROXY_TARGET_BLOCKED");
 	});
 
 	it("turns the machine's refusal into an error", async () => {
