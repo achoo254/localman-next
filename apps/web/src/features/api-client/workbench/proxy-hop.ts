@@ -35,12 +35,15 @@ export async function proxyHop(
 		"followRedirects" | "timeoutMs" | "sendClientIp"
 	>,
 	signal: AbortSignal,
+	/** Send to `localhost` on this machine of the user (its link id). */
+	machine?: string,
 ): Promise<ProxyHopOutcome> {
 	let payload: unknown;
 	try {
+		const envelope = toProxyEnvelope(prepared, settings);
 		payload = await apiRequest("/api/v1/proxy", {
 			method: "POST",
-			body: toProxyEnvelope(prepared, settings),
+			body: machine ? { ...envelope, machine } : envelope,
 			signal,
 		});
 	} catch (error) {

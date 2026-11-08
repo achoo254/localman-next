@@ -41,4 +41,22 @@ export const apiClientTuneloAccounts: Messages["apiClientTunelo"]["accounts"] =
 			revoke: "Thu hồi liên kết của {name}",
 			revoked: "Đã bị thu hồi trên máy. Hãy xoá, rồi liên kết lại máy nếu cần.",
 		},
+		machines: {
+			badge: "Máy của bạn",
+			forward: "Gửi request tới localhost trên {name}",
+			forwardHint:
+				"Request tới localhost đi tới máy này qua tunnel riêng của nó. Chỉ bạn dùng được.",
+			pick: "Chọn cổng trên {name}",
+			pickTitle: "localhost trên {name}",
+			pickHint:
+				"Chọn một cổng đang mở trên máy, hoặc gõ tay. Request tới cổng localhost đó sẽ đi tới máy này.",
+			loading: "Đang hỏi máy các cổng đang mở…",
+			noPorts:
+				"Không có cổng nào đang mở, hoặc máy chưa trả lời. Bạn vẫn gõ tay được.",
+			portLabel: "Cổng",
+			use: "Dùng localhost:{port}",
+			chosen:
+				"localhost:{port} giờ đi tới {name}. Đã sao chép http://localhost:{port}/",
+			invalidPort: "Hãy gõ cổng từ 1 tới 65535.",
+		},
 	};

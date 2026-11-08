@@ -24,6 +24,8 @@ const MACHINE = {
 };
 const TUNNELS: LocalTunnel[] = [
 	{
+		source: "account",
+		linkId: null,
 		protocol: "http",
 		url: "https://a.tunnel.hoandat.com",
 		localPort: 3000,
@@ -31,6 +33,8 @@ const TUNNELS: LocalTunnel[] = [
 		basicAuth: false,
 	},
 	{
+		source: "account",
+		linkId: null,
 		protocol: "http",
 		url: "https://b.tunnel.hoandat.com",
 		localPort: 3000,

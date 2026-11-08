@@ -7,6 +7,8 @@ import {
 import type { LocalTunnel } from "./tunelo-accounts-api";
 
 const A: LocalTunnel = {
+	source: "account",
+	linkId: null,
 	protocol: "http",
 	url: "https://a.tunnel.hoandat.com",
 	localPort: 3000,

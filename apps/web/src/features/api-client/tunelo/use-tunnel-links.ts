@@ -39,3 +39,17 @@ export function useRevokeLink() {
 		},
 	});
 }
+
+/** Turns Localman's requests to one of the user's machines on or off. */
+export function useSetMachineForward() {
+	const toast = useToast();
+	const changed = useLinksChanged();
+	return useMutation({
+		mutationFn: (input: { id: string; enabled: boolean }) =>
+			tuneloAccountsApi.setForward(input.id, input.enabled),
+		onSuccess: () => changed(),
+		onError: (error) => {
+			toast.show({ tone: "error", title: errorMessage(error) });
+		},
+	});
+}

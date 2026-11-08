@@ -41,4 +41,21 @@ export const apiClientTuneloAccounts: Messages["apiClientTunelo"]["accounts"] =
 			revoke: "撤销 {name} 的关联",
 			revoked: "已在该机器上撤销。请移除它，如有需要再重新关联。",
 		},
+		machines: {
+			badge: "你的机器",
+			forward: "向 {name} 上的 localhost 发送请求",
+			forwardHint:
+				"发往 localhost 的请求通过这台机器自己的隧道到达它。只有你能使用。",
+			pick: "选择 {name} 上的端口",
+			pickTitle: "{name} 上的 localhost",
+			pickHint:
+				"选择机器上正在监听的端口，或手动输入。之后发往该 localhost 端口的请求会到达这台机器。",
+			loading: "正在向机器查询端口…",
+			noPorts: "没有正在监听的端口，或机器没有回应。你仍可手动输入。",
+			portLabel: "端口",
+			use: "使用 localhost:{port}",
+			chosen:
+				"localhost:{port} 现在会发往 {name}。已复制 http://localhost:{port}/",
+			invalidPort: "请输入 1 到 65535 之间的端口。",
+		},
 	};

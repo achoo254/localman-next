@@ -90,6 +90,9 @@ export async function viaAutoTunnel(
 	const settled = await viaTunnel(ctx, tunnel.url, why, forbidden, {
 		deviceName: tunnel.deviceName,
 		basicAuth: tunnel.basicAuth,
+		...(tunnel.source === "machine" && tunnel.linkId
+			? { machine: tunnel.linkId }
+			: {}),
 	});
 	if (!looksStopped(settled)) return settled;
 	// 404/502 may be the app's own answer: stopped only when it left the list.

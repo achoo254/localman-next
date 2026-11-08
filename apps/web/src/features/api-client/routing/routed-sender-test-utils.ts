@@ -32,7 +32,14 @@ export interface Harness {
 		routeChosen?: boolean,
 	) => Promise<SettledResponse>;
 	direct: Mock<(prepared: PreparedRequest) => Promise<DirectOutcome>>;
-	proxy: Mock<(prepared: PreparedRequest) => Promise<ProxyHopOutcome>>;
+	proxy: Mock<
+		(
+			prepared: PreparedRequest,
+			settings?: unknown,
+			signal?: AbortSignal,
+			machine?: string,
+		) => Promise<ProxyHopOutcome>
+	>;
 	asks: SecretAsk[];
 	cors: Set<string>;
 }
@@ -64,7 +71,12 @@ export function routerHarness(
 			},
 	);
 	const proxy = vi.fn(
-		async (_prepared: PreparedRequest): Promise<ProxyHopOutcome> => ({
+		async (
+			_prepared: PreparedRequest,
+			_settings?: unknown,
+			_signal?: AbortSignal,
+			_machine?: string,
+		): Promise<ProxyHopOutcome> => ({
 			kind: "response",
 			response: { ...RESPONSE, status: options.proxyStatus ?? 200 },
 		}),

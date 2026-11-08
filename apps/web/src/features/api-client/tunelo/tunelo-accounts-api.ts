@@ -16,8 +16,14 @@ import {
 
 const BASE = "/api/v1/client";
 
-/** One live tunnel of the user's account or of a linked machine. */
+/**
+ * One live tunnel of the user's account or of a linked machine, or
+ * (`source: machine`) `localhost` on one of the user's own machines.
+ */
 export interface LocalTunnel {
+	source: "account" | "link" | "machine";
+	/** The linked machine (`link` and `machine`). */
+	linkId: string | null;
 	protocol: "http" | "tcp";
 	/** Origin of an HTTP tunnel, or `tcp://host:port`. */
 	url: string;
@@ -29,6 +35,10 @@ export interface LocalTunnel {
 
 export interface LinkedMachine {
 	id: string;
+	/** `self`: the user's own machine, linked by `tunelo login`. */
+	source: "pairing" | "self";
+	/** Localman may send to its localhost (`self` only). */
+	forwardEnabled: boolean;
 	/** `null` until one of the machine's tunnels was seen. */
 	deviceName: string | null;
 	/** ISO time. */
@@ -56,7 +66,10 @@ function parseTunnel(item: unknown): LocalTunnel {
 		throw new InvalidResponseError("protocol");
 	}
 	const port = item.localPort;
+	const source = item.source;
 	return {
+		source: source === "account" || source === "machine" ? source : "link",
+		linkId: optionalString(item, "linkId"),
 		protocol,
 		url: expectString(item, "url"),
 		localPort: typeof port === "number" ? port : null,
@@ -69,10 +82,25 @@ function parseLink(item: unknown): LinkedMachine {
 	if (!isRecord(item)) throw new InvalidResponseError("links");
 	return {
 		id: expectString(item, "id"),
+		source: item.source === "self" ? "self" : "pairing",
+		forwardEnabled: item.forwardEnabled === true,
 		deviceName: optionalString(item, "deviceName"),
 		linkedAt: expectString(item, "linkedAt"),
 		revoked: item.revoked === true,
 	};
+}
+
+export interface MachinePort {
+	port: number;
+	/** Process listening there, when the machine could tell. */
+	name: string | null;
+}
+
+function parsePort(item: unknown): MachinePort {
+	if (!isRecord(item) || typeof item.port !== "number") {
+		throw new InvalidResponseError("ports");
+	}
+	return { port: item.port, name: optionalString(item, "name") };
 }
 
 function parseLinks(payload: unknown): LinkedMachine[] {
@@ -119,6 +147,18 @@ export const tuneloAccountsApi = {
 				body: {},
 			}),
 		),
+	setForward: async (id: string, forwardEnabled: boolean) =>
+		parseLink(
+			await apiRequest(`${BASE}/tunnel-links/${segment(id)}`, {
+				method: "PATCH",
+				body: { forwardEnabled },
+			}),
+		),
+	/** Loopback ports listening on one of the user's own machines. */
+	listMachinePorts: async (id: string): Promise<MachinePort[]> => {
+		const payload = await apiRequest(`${BASE}/machines/${segment(id)}/ports`);
+		return expectArray(expectRecord(payload, "ports"), "ports").map(parsePort);
+	},
 	deleteLink: async (id: string) =>
 		parseLinks(
 			await apiRequest(`${BASE}/tunnel-links/${segment(id)}`, {

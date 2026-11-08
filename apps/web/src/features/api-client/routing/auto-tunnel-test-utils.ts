@@ -10,6 +10,8 @@ export function tunnel(
 	overrides: Partial<LocalTunnel> = {},
 ): LocalTunnel {
 	return {
+		source: "account",
+		linkId: null,
 		protocol: "http",
 		url: `https://${name}.tunnel.hoandat.com`,
 		localPort: 3000,

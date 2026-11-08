@@ -161,4 +161,22 @@ describe("the user's own Tunelo tunnels", () => {
 		const sent = result(await app404.send(draftFor(LOCAL), { route: "proxy" }));
 		expect(sent.response.status).toBe(404);
 	});
+
+	it("sends to localhost on the user's own machine with the URL unchanged", async () => {
+		const machine = tunnel("m-1", {
+			source: "machine",
+			linkId: "link-1",
+			deviceName: "Laptop",
+		});
+		const { auto } = autoTunnels([[machine]]);
+		const router = routerHarness({ autoTunnels: auto });
+		const sent = result(await router.send(draftFor(LOCAL), { route: "proxy" }));
+		const [prepared, , , chosen] = router.proxy.mock.calls[0] ?? [];
+		expect(prepared?.url).toBe(LOCAL);
+		expect(chosen).toBe("link-1");
+		expect(sent.routing).toMatchObject({
+			tunnelUrl: "https://m-1.tunnel.hoandat.com",
+			tunnelDevice: "Laptop",
+		});
+	});
 });

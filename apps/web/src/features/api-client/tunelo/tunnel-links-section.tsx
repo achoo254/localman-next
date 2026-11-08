@@ -1,21 +1,31 @@
-import { IconLink, IconTrash } from "@tabler/icons-react";
+import { IconLink } from "@tabler/icons-react";
 import { useState } from "react";
 import { Button } from "../../../components/ui/button";
-import { IconButton } from "../../../components/ui/icon-button";
-import { useI18n } from "../../../i18n/i18n-context";
+import { useT } from "../../../i18n/i18n-context";
+import { MachineTargetPicker } from "./machine-target-picker";
+import type { LinkedMachine } from "./tunelo-accounts-api";
 import { TuneloConnectModal } from "./tunelo-connect-modal";
-import { useRevokeLink, useTunnelLinks } from "./use-tunnel-links";
+import { TunnelLinkItem } from "./tunnel-link-item";
+import {
+	useRevokeLink,
+	useSetMachineForward,
+	useTunnelLinks,
+} from "./use-tunnel-links";
 
 /**
  * Settings > Tunelo, with the `tuneloAccounts` flag: tunnels of the same
  * Tunelo account are found on their own; machines without an account are
- * linked here (`tunelo link <code>`) and can be revoked.
+ * linked here (`tunelo link <code>`) and can be revoked. The user's own
+ * machines (linked by `tunelo login`) also take requests for localhost:
+ * on/off, and a port picker.
  */
 export function TunnelLinksSection() {
-	const { t, formatDate } = useI18n();
+	const t = useT();
 	const [connecting, setConnecting] = useState(false);
+	const [picking, setPicking] = useState<LinkedMachine | null>(null);
 	const links = useTunnelLinks();
 	const revoke = useRevokeLink();
+	const forward = useSetMachineForward();
 	const machines = links.data ?? [];
 	return (
 		<section data-id="settings-tunelo-links" className="grid gap-2">
@@ -43,47 +53,25 @@ export function TunnelLinksSection() {
 				</p>
 			) : (
 				<ul className="m-0 grid list-none gap-2 p-0">
-					{machines.map((machine) => {
-						const name =
-							machine.deviceName ?? t("apiClientTunelo.accounts.links.unnamed");
-						return (
-							<li
-								key={machine.id}
-								data-id="settings-tunelo-link"
-								className="flex items-center justify-between gap-2 rounded-md border border-border-subtle bg-surface p-2"
-							>
-								<div className="grid min-w-0 gap-0.5">
-									<span className="truncate font-mono text-sm">{name}</span>
-									{machine.revoked ? (
-										<span
-											data-id="settings-tunelo-link-revoked"
-											className="text-warning-text text-xs"
-										>
-											{t("apiClientTunelo.accounts.links.revoked")}
-										</span>
-									) : (
-										<span className="text-muted text-xs">
-											{t("apiClientTunelo.accounts.links.linkedAt", {
-												date: formatDate(machine.linkedAt),
-											})}
-										</span>
-									)}
-								</div>
-								<IconButton
-									size="sm"
-									variant="ghost"
-									loading={revoke.isPending && revoke.variables === machine.id}
-									label={t("apiClientTunelo.accounts.links.revoke", { name })}
-									icon={<IconTrash size={16} aria-hidden="true" />}
-									data-id="settings-tunelo-link-revoke"
-									onClick={() => revoke.mutate(machine.id)}
-								/>
-							</li>
-						);
-					})}
+					{machines.map((machine) => (
+						<TunnelLinkItem
+							key={machine.id}
+							machine={machine}
+							revoking={revoke.isPending && revoke.variables === machine.id}
+							onRevoke={() => revoke.mutate(machine.id)}
+							forwardBusy={
+								forward.isPending && forward.variables?.id === machine.id
+							}
+							onForwardChange={(enabled) =>
+								forward.mutate({ id: machine.id, enabled })
+							}
+							onPick={() => setPicking(machine)}
+						/>
+					))}
 				</ul>
 			)}
 			<TuneloConnectModal open={connecting} onOpenChange={setConnecting} />
+			<MachineTargetPicker machine={picking} onClose={() => setPicking(null)} />
 		</section>
 	);
 }

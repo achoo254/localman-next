@@ -87,6 +87,8 @@ export interface RouterDeps {
 		prepared: PreparedRequest,
 		settings: RequestSettings,
 		signal: AbortSignal,
+		/** One of the user's own machines (its link id). */
+		machine?: string,
 	) => Promise<ProxyHopOutcome>;
 }
 
