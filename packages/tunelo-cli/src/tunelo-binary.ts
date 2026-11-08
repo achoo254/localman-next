@@ -6,7 +6,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { homedir } from "node:os";
+import { homedir, constants as osConstants } from "node:os";
 import { join } from "node:path";
 
 /** Set on the processes this package starts, so 2.x never hands a command back. */
@@ -34,12 +34,19 @@ export function findTunelo2(path: string = tunelo2Path()): string | null {
 	if (!existsSync(path)) return null;
 	const probe = spawnSync(path, ["--version"], {
 		encoding: "utf-8",
-		timeout: 10_000,
+		// A first run on Windows may wait for the antivirus scan of the binary.
+		timeout: 30_000,
 		windowsHide: true,
 		env: { ...process.env, [FORWARDED_ENV]: "1" },
 	});
 	if (probe.error || probe.status !== 0) return null;
 	return isTunelo2Version(probe.stdout) ? path : null;
+}
+
+/** The shell's code for a process ended by a signal: 128 + its number (SIGINT 130, SIGTERM 143). */
+export function exitCodeOfSignal(signal: NodeJS.Signals | null): number {
+	const number = signal ? osConstants.signals[signal] : undefined;
+	return number ? 128 + number : 1;
 }
 
 /**
@@ -58,7 +65,7 @@ export function runTunelo2(binary: string, argv: readonly string[]): number {
 		});
 		if (result.error) throw result.error;
 		if (result.status !== null) return result.status;
-		return result.signal === "SIGINT" ? 130 : 1;
+		return exitCodeOfSignal(result.signal);
 	} finally {
 		process.off("SIGINT", ignore);
 		process.off("SIGTERM", ignore);

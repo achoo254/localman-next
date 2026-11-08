@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { installScriptCommand, isYes } from "./cli-update-command.js";
 import {
+	exitCodeOfSignal,
 	findTunelo2,
 	isTunelo2Version,
 	runTunelo2,
@@ -42,6 +43,12 @@ describe("where tunelo 2.x lives", () => {
 				"C:\\Users\\u",
 			),
 		).toBe(path.join("C:\\Users\\u\\AppData\\Local", "tunelo", "tunelo.exe"));
+	});
+
+	it("a 2.x ended by a signal exits with the shell's code for it", () => {
+		expect(exitCodeOfSignal("SIGINT")).toBe(130);
+		expect(exitCodeOfSignal("SIGTERM")).toBe(143);
+		expect(exitCodeOfSignal(null)).toBe(1);
 	});
 
 	it("counts only a binary that says it is 2.x", () => {
