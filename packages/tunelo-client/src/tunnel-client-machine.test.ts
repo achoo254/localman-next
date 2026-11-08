@@ -41,6 +41,25 @@ async function serverAnswering(
 }
 
 describe("machine tunnels", () => {
+	test("a machine tunnel may keep its own port out of the auth frame", async () => {
+		const server = await serverAnswering({
+			success: true,
+			subdomain: "m-0123",
+			url: "https://m-0123.tunnel.example",
+		});
+		client = new TunnelClient({
+			serverUrl: server.url,
+			getApiKey: async () => "token",
+			kind: "machine",
+			deviceId: "machine-1",
+			localPort: 4000,
+			reportLocalPort: false,
+		});
+		await client.connect();
+		expect(server.auths[0]).not.toHaveProperty("localPort");
+		expect(server.auths[0]).toMatchObject({ kind: "machine" });
+	});
+
 	test("the auth frame names the kind, machine and held subdomain", async () => {
 		const server = await serverAnswering({
 			success: true,

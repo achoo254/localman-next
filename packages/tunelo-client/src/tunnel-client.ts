@@ -44,6 +44,12 @@ export interface TunnelClientOptions {
 	subdomain?: string | undefined;
 	/** Local port the tunnel forwards HTTP and WebSocket traffic to. */
 	localPort: number;
+	/**
+	 * Report `localPort` to the server in the auth frame (default true): it
+	 * lists the tunnel as serving that port of the machine. A machine tunnel
+	 * whose port is the process's own (not an app of the user) sets false.
+	 */
+	reportLocalPort?: boolean | undefined;
 	localHost?: string | undefined;
 	/** Basic auth credentials "user:pass" */
 	auth?: string | undefined;
@@ -125,7 +131,9 @@ export class TunnelClient extends EventEmitter {
 					key,
 					subdomain: this.options.subdomain ?? "",
 					auth: this.options.auth,
-					localPort: this.options.localPort,
+					...(this.options.reportLocalPort === false
+						? {}
+						: { localPort: this.options.localPort }),
 					deviceId: this.options.deviceId,
 					deviceName: this.options.deviceName,
 					...(this.options.tcpOnly ? { tcpOnly: true } : {}),

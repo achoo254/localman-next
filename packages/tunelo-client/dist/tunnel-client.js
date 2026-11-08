@@ -63,7 +63,9 @@ export class TunnelClient extends EventEmitter {
                     key,
                     subdomain: this.options.subdomain ?? "",
                     auth: this.options.auth,
-                    localPort: this.options.localPort,
+                    ...(this.options.reportLocalPort === false
+                        ? {}
+                        : { localPort: this.options.localPort }),
                     deviceId: this.options.deviceId,
                     deviceName: this.options.deviceName,
                     ...(this.options.tcpOnly ? { tcpOnly: true } : {}),
