@@ -34,14 +34,25 @@ function str(value: unknown): string | null {
 	return typeof value === "string" && value.length > 0 ? value : null;
 }
 
+/** Which OAuth client signs in, and for what (defaults: the CLI's). */
+export interface DeviceClient {
+	clientId?: string | undefined;
+	scope?: string | undefined;
+}
+
+/**
+ * Starts a device sign-in. `resource` may list several resources (RFC 8707):
+ * the grant then holds all of them, and a refresh can ask for any one.
+ */
 export async function startDeviceAuthorization(
 	endpoints: IdpEndpoints,
 	deviceName: string,
-	resource: string,
+	resource: string | readonly string[],
+	client: DeviceClient = {},
 ): Promise<DeviceAuthorization> {
 	const { status, body } = await postForm(endpoints.deviceAuthorization, {
-		client_id: IDP_DEFAULTS.clientId,
-		scope: IDP_DEFAULTS.scope,
+		client_id: client.clientId ?? IDP_DEFAULTS.clientId,
+		scope: client.scope ?? IDP_DEFAULTS.scope,
 		resource,
 		device_name: deviceName,
 	});
@@ -69,6 +80,8 @@ export async function startDeviceAuthorization(
 }
 
 export interface PollOptions {
+	/** The client that started the sign-in (default: the CLI's). */
+	clientId?: string | undefined;
 	/** Waits between polls; tests pass a fake. */
 	sleep?: (ms: number) => Promise<void>;
 	now?: () => number;
@@ -103,7 +116,7 @@ export async function pollForTokens(
 				await postForm(endpoints.token, {
 					grant_type: DEVICE_CODE_GRANT,
 					device_code: authorization.deviceCode,
-					client_id: IDP_DEFAULTS.clientId,
+					client_id: options.clientId ?? IDP_DEFAULTS.clientId,
 				}),
 			);
 		} catch (err) {

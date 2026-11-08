@@ -12,10 +12,14 @@ export function deviceNameForIdp(name = hostname()) {
 function str(value) {
     return typeof value === "string" && value.length > 0 ? value : null;
 }
-export async function startDeviceAuthorization(endpoints, deviceName, resource) {
+/**
+ * Starts a device sign-in. `resource` may list several resources (RFC 8707):
+ * the grant then holds all of them, and a refresh can ask for any one.
+ */
+export async function startDeviceAuthorization(endpoints, deviceName, resource, client = {}) {
     const { status, body } = await postForm(endpoints.deviceAuthorization, {
-        client_id: IDP_DEFAULTS.clientId,
-        scope: IDP_DEFAULTS.scope,
+        client_id: client.clientId ?? IDP_DEFAULTS.clientId,
+        scope: client.scope ?? IDP_DEFAULTS.scope,
         resource,
         device_name: deviceName,
     });
@@ -61,7 +65,7 @@ export async function pollForTokens(endpoints, authorization, options = {}) {
             return tokenSetOf(await postForm(endpoints.token, {
                 grant_type: DEVICE_CODE_GRANT,
                 device_code: authorization.deviceCode,
-                client_id: IDP_DEFAULTS.clientId,
+                client_id: options.clientId ?? IDP_DEFAULTS.clientId,
             }));
         }
         catch (err) {

@@ -36,6 +36,7 @@ export type {
 } from "./shared/protocol.js";
 export {
 	type DeviceAuthorization,
+	type DeviceClient,
 	DeviceLoginError,
 	type PollOptions,
 	deviceNameForIdp,

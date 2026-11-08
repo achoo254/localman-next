@@ -7,7 +7,7 @@ The Tunelo tunnel client and account sign-in as a library: expose a local HTTP o
 Git dependency, pinned to a tag (no npm release):
 
 ```json
-"@tunelo/client": "github:achoo254/localman-next#tunelo-client-v0.1.0&path:/packages/tunelo-client"
+"@tunelo/client": "github:achoo254/localman-next#tunelo-client-v0.2.0&path:/packages/tunelo-client"
 ```
 
 `dist/` (JS and `.d.ts`) is committed, so the package installs as is. Node ≥ 20; types need `@types/node`.
@@ -51,6 +51,8 @@ await deviceSignIn({
 	onCode: (a) => show(a.verificationUriComplete ?? a.verificationUri, a.userCode),
 });
 ```
+
+`startDeviceAuthorization`, `pollForTokens`, `refreshTokens` and `revokeToken` take the OAuth client to use (default `tunelo-cli`); `startDeviceAuthorization` also takes several resources, so one grant can hold them all and a refresh asks for any one of them.
 
 The session (rotating refresh token) stays in the file you chose, owner-only; refreshes run under a lock file beside it (`<path>.lock`), so several processes sharing the file rotate the token once. `getAccessToken(store)` throws `SessionExpiredError` when the grant is gone.
 

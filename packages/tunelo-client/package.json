@@ -1,6 +1,6 @@
 {
 	"name": "@tunelo/client",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"type": "module",
 	"description": "Tunelo tunnel client and account sign-in (OAuth device flow) as a library: expose a local HTTP or WebSocket server through a Tunelo relay",
 	"engines": {

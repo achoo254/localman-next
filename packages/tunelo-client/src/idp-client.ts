@@ -103,17 +103,26 @@ export function discover(issuer: string): Promise<IdpEndpoints> {
 	return pending;
 }
 
+/** A form field given more than once (`resource`) is a list. */
+export type FormFields = Record<string, string | readonly string[]>;
+
 export async function postForm(
 	url: string,
-	form: Record<string, string>,
+	form: FormFields,
 ): Promise<{ status: number; body: unknown }> {
+	const body = new URLSearchParams();
+	for (const [name, value] of Object.entries(form)) {
+		for (const item of typeof value === "string" ? [value] : value) {
+			body.append(name, item);
+		}
+	}
 	const res = await fetch(url, {
 		method: "POST",
 		headers: {
 			"content-type": "application/x-www-form-urlencoded",
 			accept: "application/json",
 		},
-		body: new URLSearchParams(form).toString(),
+		body: body.toString(),
 		signal: AbortSignal.timeout(HTTP_TIMEOUT_MS),
 	});
 	return { status: res.status, body: await readJson(res) };
@@ -137,17 +146,23 @@ export function tokenSetOf(reply: { status: number; body: unknown }): TokenSet {
 	};
 }
 
-/** Exchanges a refresh token. The IdP rotates it: use the new one. */
+/**
+ * Exchanges a refresh token for an access token of `resource`, which must
+ * be one the grant holds. The IdP rotates the refresh token: use the new
+ * one. `clientId` is the client the grant was made for (`tunelo-cli` by
+ * default).
+ */
 export async function refreshTokens(
 	endpoints: IdpEndpoints,
 	refreshToken: string,
 	resource: string,
+	clientId: string = IDP_DEFAULTS.clientId,
 ): Promise<TokenSet> {
 	return tokenSetOf(
 		await postForm(endpoints.token, {
 			grant_type: "refresh_token",
 			refresh_token: refreshToken,
-			client_id: IDP_DEFAULTS.clientId,
+			client_id: clientId,
 			resource,
 		}),
 	);
@@ -157,12 +172,13 @@ export async function refreshTokens(
 export async function revokeToken(
 	endpoints: IdpEndpoints,
 	refreshToken: string,
+	clientId: string = IDP_DEFAULTS.clientId,
 ): Promise<void> {
 	if (!endpoints.revocation) return;
 	const reply = await postForm(endpoints.revocation, {
 		token: refreshToken,
 		token_type_hint: "refresh_token",
-		client_id: IDP_DEFAULTS.clientId,
+		client_id: clientId,
 	});
 	if (reply.status >= 400) {
 		const error = isRecord(reply.body) ? str(reply.body.error) : null;

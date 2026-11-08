@@ -11,8 +11,19 @@ export interface DeviceAuthorization {
 }
 /** Name the IdP shows on its approval page; it allows only `[\w ._'()-]`. */
 export declare function deviceNameForIdp(name?: string): string;
-export declare function startDeviceAuthorization(endpoints: IdpEndpoints, deviceName: string, resource: string): Promise<DeviceAuthorization>;
+/** Which OAuth client signs in, and for what (defaults: the CLI's). */
+export interface DeviceClient {
+    clientId?: string | undefined;
+    scope?: string | undefined;
+}
+/**
+ * Starts a device sign-in. `resource` may list several resources (RFC 8707):
+ * the grant then holds all of them, and a refresh can ask for any one.
+ */
+export declare function startDeviceAuthorization(endpoints: IdpEndpoints, deviceName: string, resource: string | readonly string[], client?: DeviceClient): Promise<DeviceAuthorization>;
 export interface PollOptions {
+    /** The client that started the sign-in (default: the CLI's). */
+    clientId?: string | undefined;
     /** Waits between polls; tests pass a fake. */
     sleep?: (ms: number) => Promise<void>;
     now?: () => number;

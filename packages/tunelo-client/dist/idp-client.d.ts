@@ -25,7 +25,9 @@ export declare class OAuthResponseError extends Error {
     constructor(error: string, status: number);
 }
 export declare function discover(issuer: string): Promise<IdpEndpoints>;
-export declare function postForm(url: string, form: Record<string, string>): Promise<{
+/** A form field given more than once (`resource`) is a list. */
+export type FormFields = Record<string, string | readonly string[]>;
+export declare function postForm(url: string, form: FormFields): Promise<{
     status: number;
     body: unknown;
 }>;
@@ -34,9 +36,14 @@ export declare function tokenSetOf(reply: {
     status: number;
     body: unknown;
 }): TokenSet;
-/** Exchanges a refresh token. The IdP rotates it: use the new one. */
-export declare function refreshTokens(endpoints: IdpEndpoints, refreshToken: string, resource: string): Promise<TokenSet>;
+/**
+ * Exchanges a refresh token for an access token of `resource`, which must
+ * be one the grant holds. The IdP rotates the refresh token: use the new
+ * one. `clientId` is the client the grant was made for (`tunelo-cli` by
+ * default).
+ */
+export declare function refreshTokens(endpoints: IdpEndpoints, refreshToken: string, resource: string, clientId?: string): Promise<TokenSet>;
 /** Revokes a refresh token (and with it the grant of this machine). */
-export declare function revokeToken(endpoints: IdpEndpoints, refreshToken: string): Promise<void>;
+export declare function revokeToken(endpoints: IdpEndpoints, refreshToken: string, clientId?: string): Promise<void>;
 /** `sub` from an ID token. Display only: the IdP is trusted over TLS here. */
 export declare function subjectOf(idToken: string | null): string | null;
