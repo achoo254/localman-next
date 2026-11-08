@@ -1,6 +1,7 @@
 import { setTimeout as delay } from "node:timers/promises";
 import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import { normalizeTunnelUrl } from "../api-client/client-settings-input.js";
+import { machineTunnelsOf } from "./machine-targets.js";
 import { TuneloApiError, type TuneloTunnel } from "./tunelo-api.js";
 import { TunnelLinkModel, linkTokenSlot } from "./tunelo-link-model.js";
 import { type TuneloRuntime, tuneloRuntime } from "./tunelo-runtime.js";
@@ -17,7 +18,11 @@ import {
 const MAX_DEVICE_NAME = 100;
 const TCP_URL = /^tcp:\/\/[a-z0-9.-]{1,253}:\d{1,5}$/i;
 
-type Source = Pick<LocalTunnel, "source" | "linkId">;
+/** A source Tunelo lists tunnels for (machines are added apart). */
+interface Source {
+	source: "account" | "link";
+	linkId: string | null;
+}
 
 /**
  * A row of Tunelo's list as Localman serves it. An HTTP tunnel must be a
@@ -181,7 +186,10 @@ export async function listLocalTunnels(
 		list = runtime.cache.get(userSub, TUNNEL_LIST_TTL_MS) ?? (await load());
 	}
 	const { port } = options;
-	return port === undefined
-		? list
-		: { ...list, tunnels: list.tunnels.filter((t) => t.localPort === port) };
+	if (port === undefined) return list;
+	const tunnels = list.tunnels.filter((t) => t.localPort === port);
+	return {
+		...list,
+		tunnels: [...tunnels, ...(await machineTunnelsOf(userSub, port))],
+	};
 }

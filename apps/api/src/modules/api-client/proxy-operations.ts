@@ -16,6 +16,8 @@ import {
 import { type Logger, createLogger } from "../../logger.js";
 import { localmanDomainOf } from "../../tenancy/localman-domain.js";
 import { tenantSettings } from "../../tenancy/tenant-settings.js";
+import { isForwardHeader } from "../tunelo/machine-forward-contract.js";
+import { checkMachineAnswer } from "../tunelo/machine-forward-errors.js";
 import { fillVariables } from "./agent-variable-fill.js";
 import { routeLocalTarget } from "./local-target-route.js";
 import {
@@ -67,7 +69,7 @@ function publicScheme(): string {
 	return new URL(tenantSettings().publicUrl).protocol.replace(":", "");
 }
 
-const DESCRIPTION = `Sends an HTTP request from the Localman server and returns the response, like the Send button of the API client. Give method, absolute http(s) url, headers as an ordered list of {name, value} (repeated names allowed; Cookie, User-Agent, Origin and Host may be set) and body: bodyType "text" for UTF-8 text, "base64" for bytes, "none" without body (GET and HEAD carry none). options: followRedirects (default true, at most 10), timeoutMs (1000–120000, default 30000), sendClientIp (default true: adds X-Forwarded-For, X-Real-IP and Forwarded with the caller's IP). Every request also carries X-Localman-Proxy: 1, and Host is forced to the URL's host for Localman mock URLs and Tunelo tunnel URLs. The response has status, headers in arrival order (Set-Cookie included, only shown), body as UTF-8 text or base64 (bodyEncoding), size, truncated (body cut at 10 MB), timings in ms {dns, connect, tls, ttfb, total} and finalUrl after redirects. A local target (localhost, 127.x, a LAN address) goes through the user's tunnel like the Send button: the enabled tunnel URL saved for that host and port, else for localhost the one live Tunelo tunnel of that port (from machines linked with \`tunelo link\`; with an agent's token the account's own tunnels are not read); the path and query are kept and finalUrl shows the tunnel. Only HTTP tunnels count. Several tunnels for the port answer 409 PROXY_TUNNEL_AMBIGUOUS (send to one of the listed tunnel URLs directly); a Tunelo source that did not answer, with no tunnel found, 502 PROXY_TUNNEL_UNAVAILABLE; none answers 403 PROXY_TARGET_BLOCKED with how to open one (\`tunelo http <port>\`). Other private and link-local targets (169.254.169.254, fc00::/7…) and mail ports are refused with 403 PROXY_TARGET_BLOCKED. Other failures: 502 PROXY_DNS_FAILED, PROXY_CONNECTION_FAILED (details.cause), PROXY_TOO_MANY_REDIRECTS, 504 PROXY_TIMEOUT. \`logMask\` (optional) lists values to hide in Localman's own log line of the request (the browser sends the secrets it filled into the host); it is never forwarded. Every call counts toward the account's monthly proxy requests and a per-account rate limit (429 RATE_LIMITED); at most ${PROXY_CONCURRENCY.perUser} requests of an account (${PROXY_CONCURRENCY.total} in all) run at once, more answer 429 PROXY_BUSY (details.scope user or server) without counting. With \`variables\` ({workspaceId, collectionId?, environmentId?}), the server fills \`{{name}}\` in url, headers and a text body from the workspace's globals, the collection's variables and the environment, the caller's local value first, as the Send button would: secrets included, but their values never come back (echoes in the response, the final URL and errors read [secret]; copies shorter than 4 characters or transformed by the upstream are not caught). A secret the caller may not read stops the send with 409 SECRET_WITHHELD (details.keys; details.vault lists those in the user's browser vault, usable once the user turns on "Let agents use" for them); other unknown names stay as typed. A filled secret goes only to the hosts the user allowed for it: the URL's host and a Host header if one is set must be one of them (409 AGENT_USE_REQUIRED when not turned on, 409 AGENT_HOST_NOT_ALLOWED otherwise), and a redirect elsewhere is not followed (its 3xx is the answer). 404 SECRET_VAULT_DISABLED where the server does not offer it.`;
+const DESCRIPTION = `Sends an HTTP request from the Localman server and returns the response, like the Send button of the API client. Give method, absolute http(s) url, headers as an ordered list of {name, value} (repeated names allowed; Cookie, User-Agent, Origin and Host may be set) and body: bodyType "text" for UTF-8 text, "base64" for bytes, "none" without body (GET and HEAD carry none). options: followRedirects (default true, at most 10), timeoutMs (1000–120000, default 30000), sendClientIp (default true: adds X-Forwarded-For, X-Real-IP and Forwarded with the caller's IP). Every request also carries X-Localman-Proxy: 1, and Host is forced to the URL's host for Localman mock URLs and Tunelo tunnel URLs. The response has status, headers in arrival order (Set-Cookie included, only shown), body as UTF-8 text or base64 (bodyEncoding), size, truncated (body cut at 10 MB), timings in ms {dns, connect, tls, ttfb, total} and finalUrl after redirects. A local target (localhost, 127.x, a LAN address) goes through the user's tunnel like the Send button: the enabled tunnel URL saved for that host and port, else for localhost the one live Tunelo tunnel of that port (from machines linked with \`tunelo link\`; with an agent's token the account's own tunnels are not read); the path and query are kept and finalUrl shows the tunnel. Only HTTP tunnels count. With no tunnel, a localhost target goes to the user's own machine (linked by \`tunelo login\`, see list_machines) when there is one; \`machine\` (a machine id) picks it outright. Localman adds the machine's link token, which never reaches the response or a redirect to another origin; refusals answer 404 MACHINE_NOT_FOUND, 409 MACHINE_FORWARD_OFF (off in Localman), MACHINE_FORWARD_DISABLED (off on the machine), MACHINE_LINK_REVOKED, PROXY_MACHINE_AMBIGUOUS (several machines: pass \`machine\`), 403 MACHINE_PORT_BLOCKED, 502 MACHINE_OFFLINE, MACHINE_PORT_CLOSED, 400 PROXY_MACHINE_TARGET (a machine is reached on localhost only). Several tunnels for the port answer 409 PROXY_TUNNEL_AMBIGUOUS (send to one of the listed tunnel URLs directly); a Tunelo source that did not answer, with no tunnel found, 502 PROXY_TUNNEL_UNAVAILABLE; none answers 403 PROXY_TARGET_BLOCKED with how to open one (\`tunelo http <port>\`). Other private and link-local targets (169.254.169.254, fc00::/7…) and mail ports are refused with 403 PROXY_TARGET_BLOCKED. Other failures: 502 PROXY_DNS_FAILED, PROXY_CONNECTION_FAILED (details.cause), PROXY_TOO_MANY_REDIRECTS, 504 PROXY_TIMEOUT. \`logMask\` (optional) lists values to hide in Localman's own log line of the request (the browser sends the secrets it filled into the host); it is never forwarded. Every call counts toward the account's monthly proxy requests and a per-account rate limit (429 RATE_LIMITED); at most ${PROXY_CONCURRENCY.perUser} requests of an account (${PROXY_CONCURRENCY.total} in all) run at once, more answer 429 PROXY_BUSY (details.scope user or server) without counting. With \`variables\` ({workspaceId, collectionId?, environmentId?}), the server fills \`{{name}}\` in url, headers and a text body from the workspace's globals, the collection's variables and the environment, the caller's local value first, as the Send button would: secrets included, but their values never come back (echoes in the response, the final URL and errors read [secret]; copies shorter than 4 characters or transformed by the upstream are not caught). A secret the caller may not read stops the send with 409 SECRET_WITHHELD (details.keys; details.vault lists those in the user's browser vault, usable once the user turns on "Let agents use" for them); other unknown names stay as typed. A filled secret goes only to the hosts the user allowed for it: the URL's host and a Host header if one is set must be one of them (409 AGENT_USE_REQUIRED when not turned on, 409 AGENT_HOST_NOT_ALLOWED otherwise), and a redirect elsewhere is not followed (its 3xx is the answer). 404 SECRET_VAULT_DISABLED where the server does not offer it.`;
 
 /** `client.sendRequest`; tests build it with their own guard and logger. */
 export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
@@ -113,7 +115,24 @@ export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
 				// Counted like any refused target, then a local one goes
 				// through the user's tunnel.
 				await admitProxyRequest(sub);
-				const route = await routeLocal(sub, sessionIdOf(ctx), request.url);
+				const route = await routeLocal(
+					sub,
+					sessionIdOf(ctx),
+					request.url,
+					input.machine,
+				);
+				// A machine gets the server's link token and port, never the
+				// sender's own `tunelo-*` headers or a Host aiming elsewhere.
+				const headers = route.machine
+					? [
+							...request.headers.filter(
+								(h) =>
+									!isForwardHeader(h.name) &&
+									h.name.trim().toLowerCase() !== "host",
+							),
+							...(route.headers ?? []),
+						]
+					: request.headers;
 				// A local target goes through a tunnel: Localman's host, never
 				// a place for a filled secret.
 				if (redirectAllowed && !redirectAllowed(new URL(route.url))) {
@@ -124,7 +143,7 @@ export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
 					);
 				}
 				const response = await forwardRequest(
-					{ ...request, url: route.url },
+					{ ...request, url: route.url, headers },
 					{
 						guard: deps.guard,
 						clientIp: ctx.clientIp,
@@ -134,6 +153,13 @@ export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
 						...(redirectAllowed ? { redirectAllowed } : {}),
 					},
 				);
+				if (route.machine) {
+					await checkMachineAnswer(
+						sub,
+						{ machine: route.machine, tunnel: route.tunnel },
+						response,
+					);
+				}
 				const ms = Math.round(performance.now() - started);
 				// `via`: the tunnel a local target went through, for support.
 				const via = route.tunnel ? { via: route.tunnel } : {};

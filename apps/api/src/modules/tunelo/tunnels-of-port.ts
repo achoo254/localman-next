@@ -1,10 +1,12 @@
+import { machineTunnelsOf } from "./machine-targets.js";
 import { tuneloRuntimeOrNull } from "./tunelo-runtime.js";
 import type { LocalTunnelList } from "./tunelo-view.js";
 import { linkedOnlyKey } from "./tunnel-list-cache.js";
 import { fetchAll, listLocalTunnels } from "./tunnel-list-service.js";
 
 /**
- * The user's live HTTP tunnels of one local port, for the server's proxy
+ * The user's live HTTP tunnels of one local port, then the user's own
+ * machines (`source: machine`, any port), for the server's proxy
  * (a TCP tunnel cannot carry an HTTP request), with the sources that did
  * not answer. With a browser session this is `listLocalTunnels`; without
  * one (an agent's token) only linked machines answer, since the account's
@@ -27,10 +29,18 @@ export async function tunnelsOfPort(
 			runtime.cache.get(key) ??
 			(await runtime.cache.load(key, () => fetchAll(runtime, userSub, null)));
 	}
+	if (sessionId !== null) {
+		// `listLocalTunnels` already added the user's machines.
+		return {
+			tunnels: list.tunnels.filter((t) => t.protocol === "http"),
+			failures: list.failures,
+		};
+	}
+	const tunnels = list.tunnels.filter(
+		(tunnel) => tunnel.localPort === port && tunnel.protocol === "http",
+	);
 	return {
-		tunnels: list.tunnels.filter(
-			(tunnel) => tunnel.localPort === port && tunnel.protocol === "http",
-		),
+		tunnels: [...tunnels, ...(await machineTunnelsOf(userSub, port))],
 		failures: list.failures,
 	};
 }

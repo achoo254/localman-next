@@ -57,6 +57,11 @@ export const MCP_PATHS = {
 	mcpResourceMetadata: "/.well-known/oauth-protected-resource/mcp",
 } as const;
 
+/** Server-to-server calls of the user's `tunelo` process. */
+export const TUNELO_PATHS = {
+	selfLink: "/tunelo/links/self",
+} as const;
+
 /**
  * Live request log of a project (Server-Sent Events), mounted on the
  * dashboard before the operation router.
@@ -72,6 +77,15 @@ export const TRAFFIC_PATHS = {
 export const MOCK_MCP_PATH = `/m/{secret}/{prefix}/${MOCK_MCP_SEGMENT}`;
 
 export const PROTOCOL_ROUTES: readonly ProtocolRoute[] = [
+	{
+		server: "dashboard",
+		methods: ["POST"],
+		path: TUNELO_PATHS.selfLink,
+		summary:
+			"The user's tunelo process links its machine (Bearer machines:write)",
+		mcpExempt:
+			"tiến trình tunelo trên máy gọi bằng token machines:write sau `tunelo login`, không phải tool cho agent",
+	},
 	{
 		server: "dashboard",
 		methods: ["GET"],

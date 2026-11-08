@@ -110,12 +110,21 @@ const BODY_HEADERS = new Set([
 	"content-type",
 ]);
 
-/** Credentials that must not follow a redirect to another origin. */
-const CROSS_ORIGIN_DROPPED = new Set(["authorization", "cookie", "host"]);
+/**
+ * Credentials that must not follow a redirect to another origin, the
+ * link token and port Localman adds for a machine's localhost included.
+ */
+const CROSS_ORIGIN_DROPPED = new Set([
+	"authorization",
+	"cookie",
+	"host",
+	"tunelo-access",
+	"tunelo-local-port",
+]);
 
 /**
  * Envelope headers for the next hop of a redirect. Another origin loses
- * `Authorization`, `Cookie` and a `Host` override; a body dropped by the
+ * `Authorization`, `Cookie`, a `Host` override and the machine headers; a body dropped by the
  * method change takes its content headers along.
  */
 export function headersForRedirect(

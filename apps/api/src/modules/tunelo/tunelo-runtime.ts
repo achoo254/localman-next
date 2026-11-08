@@ -36,6 +36,8 @@ export interface TuneloRuntime {
 	readonly cache: TunnelListCache;
 	/** The Tunelo API (`apiUrl`, else `TUNNEL_RESOURCE`). */
 	api(): TuneloApi;
+	/** HTTP client of Tunelo calls, machine forwards included. */
+	readonly fetch: FetchLike;
 }
 
 let current: TuneloRuntime | undefined;
@@ -52,6 +54,7 @@ export function setTuneloDeps(deps: TuneloDeps): void {
 	current = {
 		deps,
 		cache: new TunnelListCache(),
+		fetch: fetchImpl,
 		api: () => createTuneloApi(deps.apiUrl ?? TUNNEL_RESOURCE, fetchImpl),
 	};
 }

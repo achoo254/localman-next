@@ -37,7 +37,10 @@ describe("linking a machine with tunelo link", () => {
 			status: "linked",
 			link: {
 				id,
+				source: "pairing",
 				deviceName: null,
+				machineId: null,
+				forwardEnabled: false,
 				linkedAt: expect.any(String),
 				revoked: false,
 			},

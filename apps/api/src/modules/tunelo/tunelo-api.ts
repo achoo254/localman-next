@@ -36,6 +36,14 @@ const linkPoll = z.discriminatedUnion("status", [
 ]);
 export type TuneloLinkPoll = z.infer<typeof linkPoll>;
 
+const selfLinkInfo = z.object({
+	linkId: z.string().min(1).max(128),
+	ownerSub: z.string().min(1).max(255),
+	deviceId: z.string().min(1).max(128),
+	forwardUrl: z.string().min(1).max(300),
+});
+export type TuneloSelfLinkInfo = z.infer<typeof selfLinkInfo>;
+
 /**
  * Tunelo did not answer as expected. `status` is the HTTP status (`null`
  * for network errors, timeouts and malformed bodies). Never carries a
@@ -59,7 +67,7 @@ export class TuneloApiError extends Error {
 export type FetchLike = (
 	input: string,
 	init: RequestInit,
-) => Promise<Pick<Response, "ok" | "status" | "json">>;
+) => Promise<Pick<Response, "ok" | "status" | "json" | "headers">>;
 
 /** Tunelo's account API, as Localman uses it (apps/tunelo-server/src/api). */
 export interface TuneloApi {
@@ -71,6 +79,8 @@ export interface TuneloApi {
 	pollLink(requestId: string): Promise<TuneloLinkPoll>;
 	/** `DELETE /api/links/self`: the link token revokes itself. */
 	revokeLink(token: string): Promise<void>;
+	/** `GET /api/links/self`: whose machine an account's link token is for. */
+	selfLinkInfo(token: string): Promise<TuneloSelfLinkInfo>;
 }
 
 /** Client of the Tunelo at `baseUrl` (`https://tunnel.<domain>`). */
@@ -122,6 +132,13 @@ export function createTuneloApi(
 				"/api/links/poll",
 				{ method: "POST", body: { requestId } },
 				linkPoll,
+			),
+		selfLinkInfo: (token) =>
+			call(
+				"link info",
+				"/api/links/self",
+				{ method: "GET", token },
+				selfLinkInfo,
 			),
 		revokeLink: async (token) => {
 			await call(

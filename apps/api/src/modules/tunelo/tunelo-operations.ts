@@ -2,6 +2,11 @@ import { type AnyOperation, defineOperation } from "@localman/operations";
 import { z } from "zod";
 import { requireSession, requireSubject } from "../../http/require-auth.js";
 import {
+	listMachinePorts,
+	listMachines,
+	setMachineForward,
+} from "./machine-operations.js";
+import {
 	LINK_EXEMPT,
 	LIST_EXEMPT,
 	TUNELO_ABOUT,
@@ -102,6 +107,9 @@ export const deleteTunnelLink = defineOperation({
 
 /** Served only while `TUNELO_ACCOUNTS_ENABLED` is on (`feature-gates.ts`). */
 export const tuneloOperations: readonly AnyOperation[] = [
+	listMachines,
+	listMachinePorts,
+	setMachineForward,
 	listLocalTunnels,
 	listTunnelLinks,
 	startTunnelLink,

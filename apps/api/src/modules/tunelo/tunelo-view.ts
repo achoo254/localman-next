@@ -3,9 +3,14 @@ import { USER_SCOPE } from "../../http/require-auth.js";
 
 /** One live tunnel of the user, from their account or a linked machine. */
 export const localTunnelView = z.object({
-	/** `account` (signed in with `tunelo login`) or `link` (`tunelo link`). */
-	source: z.enum(["account", "link"]),
-	/** Id of the linked machine (`link` only). */
+	/**
+	 * `account` (signed in with `tunelo login`), `link` (`tunelo link`), or
+	 * `machine`: no tunnel, but `localhost:<port>` on one of the user's own
+	 * machines, reached through its machine tunnel (`url` is that tunnel;
+	 * send with `machine: linkId`).
+	 */
+	source: z.enum(["account", "link", "machine"]),
+	/** Id of the linked machine (`link` and `machine`). */
 	linkId: z.string().nullable(),
 	protocol: z.enum(["http", "tcp"]),
 	/** Tunnel origin (`https://<name>.<domain>`), or `tcp://host:port`. */
@@ -40,8 +45,17 @@ export type LocalTunnelList = z.infer<typeof localTunnelListView>;
 /** A linked machine, as the settings list it. */
 export const tunnelLinkView = z.object({
 	id: z.string(),
+	/**
+	 * `pairing` (`tunelo link <code>`) or `self` (the `tunelo` process of
+	 * the user's account linked itself, and can reach its localhost).
+	 */
+	source: z.enum(["pairing", "self"]),
 	/** Learnt from the machine's tunnels; `null` until one was seen. */
 	deviceName: z.string().nullable(),
+	/** The machine's id in Chat (`self` only). */
+	machineId: z.string().nullable(),
+	/** Localman may send requests to the machine's localhost (`self` only). */
+	forwardEnabled: z.boolean(),
 	linkedAt: z.string(),
 	/** Tunelo refused its token (revoked on the machine): only removable. */
 	revoked: z.boolean(),
@@ -73,6 +87,9 @@ export const TUNELO_ABOUT =
  */
 export const LINK_EXEMPT =
 	"links or revokes the machines whose tunnels receive request credentials; only the user does it, from the UI";
+
+export const TUNELO_MACHINE_ABOUT =
+	"The user's own machines: each one's `tunelo` process linked itself after `tunelo login` on the same account, and Localman sends requests for `localhost:<port>` there through the machine's tunnel. Only the account's owner reaches them. Link tokens never leave the server.";
 
 /** Exempt reason of the tunnel list. */
 export const LIST_EXEMPT =

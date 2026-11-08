@@ -14,9 +14,13 @@ export function notFound(): OperationError {
 }
 
 export function linkView(link: StoredTunnelLink): TunnelLinkView {
+	const self = link.source === "self";
 	return {
 		id: String(link._id),
-		deviceName: link.deviceName ?? null,
+		source: self ? "self" : "pairing",
+		deviceName: (self ? link.machineName : link.deviceName) ?? null,
+		machineId: self ? (link.machineId ?? null) : null,
+		forwardEnabled: self && link.forwardEnabled !== false,
 		linkedAt: (link.linkedAt ?? link.createdAt ?? new Date(0)).toISOString(),
 		revoked: Boolean(link.deadAt),
 	};
