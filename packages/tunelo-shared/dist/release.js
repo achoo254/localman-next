@@ -14,8 +14,22 @@ export function tuneloTarballUrl(version) {
         ? `${base}/download/${TUNELO_RELEASE_TAG_PREFIX}${version}/${TUNELO_RELEASE_ASSET}`
         : `${base}/latest/download/${TUNELO_RELEASE_ASSET}`;
 }
-/** The install command shown to users. */
-export const TUNELO_INSTALL_COMMAND = `npm install -g ${tuneloTarballUrl()}`;
+/**
+ * Tunelo 2.x is the `tunelo` binary of chat-next (`apps/agent`): one process
+ * for tunnels and the machine, installed by these scripts the Chat web app
+ * serves. The npm package (1.12) only hands commands to it.
+ */
+export const TUNELO_INSTALL_SCRIPT_URLS = {
+    macos: "https://chat.hoandat.com/agent/install.sh",
+    windows: "https://chat.hoandat.com/agent/install.ps1",
+};
+/** Install commands of tunelo 2.x: a terminal on macOS, PowerShell on Windows. */
+export const TUNELO_INSTALL_COMMANDS = {
+    macos: `curl -fsSL ${TUNELO_INSTALL_SCRIPT_URLS.macos} | sh`,
+    windows: `& ([scriptblock]::Create((irm ${TUNELO_INSTALL_SCRIPT_URLS.windows})))`,
+};
+/** The install command shown where only one fits (macOS; Windows in `TUNELO_INSTALL_COMMANDS`). */
+export const TUNELO_INSTALL_COMMAND = TUNELO_INSTALL_COMMANDS.macos;
 /** GitHub API endpoint of the latest release (its `tag_name` carries the version). */
 export const TUNELO_LATEST_RELEASE_API = `https://api.github.com/repos/${TUNELO_RELEASE_REPO}/releases/latest`;
 /** Plain semver: the version ends up in an install command run through a shell on Windows. */

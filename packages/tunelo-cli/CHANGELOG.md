@@ -3,6 +3,23 @@
 Changes to the `tunelo` CLI. Each version is released from the tag `tunelo-vX.Y.Z`: a GitHub release of
 `achoo254/localman-next` with the package as `tunelo.tgz` (npm up to 1.9.1).
 
+## 1.12.0 — 2026-11-08
+
+The last release of this npm package. Tunelo now runs as **tunelo 2.x**, one binary for tunnels and the
+machine (the background process of My machines in Chat), with the same commands, options and output.
+
+### Changed
+
+- Every command goes to tunelo 2.x when it is installed (`%LOCALAPPDATA%\tunelo\tunelo.exe` on Windows,
+  `~/.local/bin/tunelo` on macOS, and only when it reports a 2.x version): same arguments, same terminal,
+  same exit code.
+- Without tunelo 2.x, `tunelo update` installs it with its install script, then asks whether to remove
+  this package (`npm uninstall -g tunelo`); any other command prints how to install it:
+  - macOS: `curl -fsSL https://chat.hoandat.com/agent/install.sh | sh`
+  - Windows (PowerShell): `& ([scriptblock]::Create((irm https://chat.hoandat.com/agent/install.ps1)))`
+- tunelo 2.x takes over the sign-in and settings of `~/.tunelo` on its first run; the refresh token moves
+  into its own folder, sealed with the Keychain or DPAPI.
+
 ## 1.11.0 — 2026-10-30
 
 ### Added

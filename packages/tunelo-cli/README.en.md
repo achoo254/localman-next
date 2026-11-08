@@ -70,7 +70,19 @@ At 5K concurrent tunnels, Tunelo uses ~15-20 MB server memory vs ~150-200 MB wit
 
 ### Install the CLI
 
-The CLI is released on the [GitHub Releases](https://github.com/achoo254/localman-next/releases) of `localman-next` (tag `tunelo-v<version>`, asset `tunelo.tgz`), **no longer on npm**. npm or pnpm install it straight from the URL: no repo clone, registry setup or token needed. Requires Node.js 20+.
+> **Since 2026-11-08 Tunelo is `tunelo` 2.x**: one binary (no Node.js needed) for tunnels and the machine
+> in Chat, with the same commands, options and output as this CLI. Install it:
+>
+> ```bash
+> curl -fsSL https://chat.hoandat.com/agent/install.sh | sh                         # macOS (Terminal)
+> & ([scriptblock]::Create((irm https://chat.hoandat.com/agent/install.ps1)))   # Windows (PowerShell)
+> ```
+>
+> The npm package below ends at 1.12.0: with tunelo 2.x installed every command runs in 2.x; without it,
+> `tunelo update` installs 2.x and offers to remove the npm package. 2.x takes over the sign-in and
+> settings of `~/.tunelo`.
+
+The 1.x CLI (npm package) is released on the [GitHub Releases](https://github.com/achoo254/localman-next/releases) of `localman-next` (tag `tunelo-v<version>`, asset `tunelo.tgz`), **no longer on npm**. npm or pnpm install it straight from the URL: no repo clone, registry setup or token needed. Requires Node.js 20+.
 
 ```bash
 # npm

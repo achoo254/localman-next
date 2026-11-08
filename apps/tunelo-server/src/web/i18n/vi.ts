@@ -10,8 +10,9 @@ export const vi: Messages = {
 	"home.signInTitle": "Đăng nhập vào Tunelo",
 	"home.signInBody": "Xem và quản lý mọi tunnel các máy của bạn đang mở.",
 	"steps.title": "Bắt đầu",
-	"steps.install.title": "Cài CLI",
-	"steps.install.body": "Cần Node.js 20 trở lên.",
+	"steps.install.title": "Cài tunelo",
+	"steps.install.body":
+		"macOS: dòng đầu, chạy trong Terminal. Windows: dòng thứ hai, chạy trong PowerShell.",
 	"steps.login.title": "Đăng nhập trên máy của bạn",
 	"steps.login.body":
 		"Gắn các tunnel của máy này với tài khoản của bạn. Cần CLI 1.8.0 trở lên.",

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	TUNELO_INSTALL_COMMAND,
+	TUNELO_INSTALL_COMMANDS,
 	tuneloTarballUrl,
 	versionFromReleaseTag,
 } from "../release.js";
@@ -16,7 +17,18 @@ describe("tuneloTarballUrl", () => {
 		expect(tuneloTarballUrl()).toBe(
 			"https://github.com/achoo254/localman-next/releases/latest/download/tunelo.tgz",
 		);
-		expect(TUNELO_INSTALL_COMMAND).toBe(`npm install -g ${tuneloTarballUrl()}`);
+	});
+});
+
+describe("TUNELO_INSTALL_COMMANDS", () => {
+	it("install tunelo 2.x with the scripts of the Chat web app", () => {
+		expect(TUNELO_INSTALL_COMMANDS.macos).toBe(
+			"curl -fsSL https://chat.hoandat.com/agent/install.sh | sh",
+		);
+		expect(TUNELO_INSTALL_COMMANDS.windows).toBe(
+			"& ([scriptblock]::Create((irm https://chat.hoandat.com/agent/install.ps1)))",
+		);
+		expect(TUNELO_INSTALL_COMMAND).toBe(TUNELO_INSTALL_COMMANDS.macos);
 	});
 });
 

@@ -13,8 +13,9 @@ export const en = {
 	"home.signInTitle": "Sign in to Tunelo",
 	"home.signInBody": "See and manage every tunnel your machines have open.",
 	"steps.title": "Get started",
-	"steps.install.title": "Install the CLI",
-	"steps.install.body": "Needs Node.js 20 or later.",
+	"steps.install.title": "Install tunelo",
+	"steps.install.body":
+		"macOS: the first line in a terminal. Windows: the second line in PowerShell.",
 	"steps.login.title": "Sign in on your machine",
 	"steps.login.body":
 		"Ties the tunnels of this machine to your account. Needs CLI 1.8.0 or later.",

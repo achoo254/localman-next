@@ -1,16 +1,25 @@
-import { readFileSync } from "node:fs";
+import {
+	chmodSync,
+	mkdtempSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { installScriptCommand, isYes } from "./cli-update-command.js";
 import {
-	buildInstallArgs,
-	compareVersions,
-	detectPackageManager,
-	fetchLatestVersion,
-} from "./cli-update-command.js";
+	findTunelo2,
+	isTunelo2Version,
+	runTunelo2,
+	tunelo2Path,
+} from "./tunelo-binary.js";
 import { VERSION } from "./version.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
+const posix = process.platform === "win32" ? it.skip : it;
 
 describe("VERSION", () => {
 	it("matches the published package.json version", () => {
@@ -21,79 +30,77 @@ describe("VERSION", () => {
 	});
 });
 
-describe("compareVersions", () => {
-	it("orders by major, minor, then patch", () => {
-		expect(compareVersions("1.5.0", "1.4.1")).toBeGreaterThan(0);
-		expect(compareVersions("1.4.1", "1.5.0")).toBeLessThan(0);
-		expect(compareVersions("2.0.0", "1.99.99")).toBeGreaterThan(0);
-		expect(compareVersions("1.4.10", "1.4.9")).toBeGreaterThan(0);
-	});
-
-	it("treats equal versions as equal, with or without a v prefix", () => {
-		expect(compareVersions("1.4.1", "1.4.1")).toBe(0);
-		expect(compareVersions("v1.4.1", "1.4.1")).toBe(0);
-	});
-
-	it("ignores prerelease suffixes rather than crashing", () => {
-		expect(compareVersions("1.5.0-beta.1", "1.5.0")).toBe(0);
-		expect(compareVersions("1.5.0-beta.1", "1.4.0")).toBeGreaterThan(0);
-	});
-
-	it("tolerates short version strings", () => {
-		expect(compareVersions("2", "1.9.9")).toBeGreaterThan(0);
-		expect(compareVersions("1.4", "1.4.0")).toBe(0);
-	});
-});
-
-describe("detectPackageManager", () => {
-	it("picks pnpm when installed under a pnpm global store", () => {
-		expect(
-			detectPackageManager("/home/u/.local/share/pnpm/global/5/node_modules/x"),
-		).toBe("pnpm");
-		expect(
-			detectPackageManager("C:\\Users\\u\\AppData\\Local\\pnpm\\global\\5\\x"),
-		).toBe("pnpm");
-	});
-
-	it("defaults to npm elsewhere", () => {
-		expect(detectPackageManager("C:\\Users\\u\\AppData\\Roaming\\npm\\x")).toBe(
-			"npm",
+describe("where tunelo 2.x lives", () => {
+	it("is the path its install script uses on each OS", () => {
+		expect(tunelo2Path("darwin", {}, "/Users/u")).toBe(
+			"/Users/u/.local/bin/tunelo",
 		);
-		expect(detectPackageManager("/usr/lib/node_modules/tunelo")).toBe("npm");
+		expect(
+			tunelo2Path(
+				"win32",
+				{ LOCALAPPDATA: "C:\\Users\\u\\AppData\\Local" },
+				"C:\\Users\\u",
+			),
+		).toBe(path.join("C:\\Users\\u\\AppData\\Local", "tunelo", "tunelo.exe"));
+	});
+
+	it("counts only a binary that says it is 2.x", () => {
+		expect(isTunelo2Version("2.0.0\n")).toBe(true);
+		expect(isTunelo2Version("2.13.4")).toBe(true);
+		expect(isTunelo2Version("1.12.0")).toBe(false);
+		expect(isTunelo2Version("")).toBe(false);
 	});
 });
 
-describe("buildInstallArgs", () => {
-	it("uses the global install verb of each manager", () => {
-		expect(buildInstallArgs("npm", "https://example.test/tunelo.tgz")).toEqual([
-			"install",
-			"-g",
-			"https://example.test/tunelo.tgz",
-		]);
-		expect(buildInstallArgs("pnpm", "https://example.test/tunelo.tgz")).toEqual(
-			["add", "-g", "https://example.test/tunelo.tgz"],
+describe("running commands with tunelo 2.x", () => {
+	let dir = "";
+	beforeEach(() => {
+		dir = mkdtempSync(path.join(tmpdir(), "tunelo-npm-"));
+	});
+	afterEach(() => rmSync(dir, { recursive: true, force: true }));
+
+	function fakeBinary(version: string): string {
+		const file = path.join(dir, "tunelo");
+		writeFileSync(
+			file,
+			`#!/bin/sh\nif [ "$1" = "--version" ]; then echo ${version}; exit 0; fi\necho "$@" > "${dir}/argv"\nexit 7\n`,
+		);
+		chmodSync(file, 0o755);
+		return file;
+	}
+
+	posix("passes the same argv and returns its exit code", () => {
+		const binary = findTunelo2(fakeBinary("2.0.0"));
+		expect(binary).not.toBeNull();
+		expect(runTunelo2(binary ?? "", ["http", "3000", "-s", "app"])).toBe(7);
+		expect(readFileSync(path.join(dir, "argv"), "utf-8").trim()).toBe(
+			"http 3000 -s app",
 		);
 	});
+
+	posix("ignores another tunelo at that path (this 1.x package again)", () => {
+		expect(findTunelo2(fakeBinary("1.12.0"))).toBeNull();
+		expect(findTunelo2(path.join(dir, "missing"))).toBeNull();
+	});
 });
 
-describe("fetchLatestVersion", () => {
-	const answer = (status: number, body: unknown): typeof fetch =>
-		(async () =>
-			new Response(JSON.stringify(body), { status })) as typeof fetch;
-
-	it("reads the version from the tag of the latest release", async () => {
-		await expect(
-			fetchLatestVersion(answer(200, { tag_name: "tunelo-v1.10.0" })),
-		).resolves.toBe("1.10.0");
+describe("tunelo update without 2.x", () => {
+	it("runs the install script of each OS, and none elsewhere", () => {
+		expect(installScriptCommand("darwin")).toEqual({
+			command: "/bin/sh",
+			args: [
+				"-c",
+				"curl -fsSL https://chat.hoandat.com/agent/install.sh | sh -s -- en",
+			],
+		});
+		expect(installScriptCommand("win32")?.args.at(-1)).toBe(
+			"& ([scriptblock]::Create((irm https://chat.hoandat.com/agent/install.ps1))) en",
+		);
+		expect(installScriptCommand("linux")).toBeNull();
 	});
 
-	it("rejects a latest release that is not a Tunelo release", async () => {
-		await expect(
-			fetchLatestVersion(answer(200, { tag_name: "v2.0.0" })),
-		).rejects.toThrow("not a Tunelo release");
-	});
-
-	it("rejects an error answer from GitHub", async () => {
-		await expect(fetchLatestVersion(answer(403, {}))).rejects.toThrow("403");
+	it("removes the npm package only on an explicit yes", () => {
+		for (const yes of ["y", "Y", "yes", " YES "]) expect(isYes(yes)).toBe(true);
+		for (const no of ["", "n", "no", "maybe"]) expect(isYes(no)).toBe(false);
 	});
 });

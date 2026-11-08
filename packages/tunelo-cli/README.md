@@ -4,7 +4,18 @@ Expose dịch vụ local ra internet qua HTTPS wildcard subdomain — `https://<
 
 ## Cài đặt
 
-Yêu cầu: **Node.js 20+** (kèm npm; hoặc pnpm 9+). CLI phát hành ở [GitHub Releases](https://github.com/achoo254/localman-next/releases) của repo `localman-next` (tag `tunelo-v<phiên bản>`, file `tunelo.tgz`), **không còn trên npm**; npm hay pnpm cài thẳng từ đường dẫn, không cần clone repo, registry hay token. Lệnh chạy được trên **macOS / Windows / Linux** (cmd, PowerShell, bash, zsh).
+> **Từ 08/11/2026 Tunelo là `tunelo` 2.x**: một binary (không cần Node.js) lo cả tunnel lẫn máy trong Chat,
+> cùng lệnh, tuỳ chọn và đầu ra như CLI này. Cài:
+>
+> ```bash
+> curl -fsSL https://chat.hoandat.com/agent/install.sh | sh                         # macOS (Terminal)
+> & ([scriptblock]::Create((irm https://chat.hoandat.com/agent/install.ps1)))   # Windows (PowerShell)
+> ```
+>
+> Gói npm dưới đây dừng ở 1.12.0: có `tunelo` 2.x thì mọi lệnh chạy bằng 2.x; chưa có thì `tunelo update`
+> cài 2.x rồi hỏi gỡ gói npm. Đăng nhập và cấu hình trong `~/.tunelo` được 2.x tự nhận.
+
+Bản npm cũ (1.x) — yêu cầu: **Node.js 20+** (kèm npm; hoặc pnpm 9+). CLI phát hành ở [GitHub Releases](https://github.com/achoo254/localman-next/releases) của repo `localman-next` (tag `tunelo-v<phiên bản>`, file `tunelo.tgz`), **không còn trên npm**; npm hay pnpm cài thẳng từ đường dẫn, không cần clone repo, registry hay token. Lệnh chạy được trên **macOS / Windows / Linux** (cmd, PowerShell, bash, zsh).
 
 ```bash
 # npm

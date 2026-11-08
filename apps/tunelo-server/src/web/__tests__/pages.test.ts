@@ -150,7 +150,8 @@ describe("signed-out home", () => {
 		);
 		expect(res.body).not.toContain('data-id="home-sign-in"');
 		for (const command of [
-			"npm install -g https://github.com/achoo254/localman-next/releases/latest/download/tunelo.tgz",
+			"curl -fsSL https://chat.hoandat.com/agent/install.sh | sh",
+			"&amp; ([scriptblock]::Create((irm https://chat.hoandat.com/agent/install.ps1)))",
 			"tunelo login",
 			"tunelo http 3000",
 		]) {

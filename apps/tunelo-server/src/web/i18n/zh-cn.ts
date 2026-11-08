@@ -10,8 +10,9 @@ export const zhCn: Messages = {
 	"home.signInTitle": "登录 Tunelo",
 	"home.signInBody": "查看和管理你的设备正在开放的所有隧道。",
 	"steps.title": "快速开始",
-	"steps.install.title": "安装 CLI",
-	"steps.install.body": "需要 Node.js 20 或更高版本。",
+	"steps.install.title": "安装 tunelo",
+	"steps.install.body":
+		"macOS：在终端运行第一行。Windows：在 PowerShell 运行第二行。",
 	"steps.login.title": "在你的机器上登录",
 	"steps.login.body":
 		"将这台机器的隧道关联到你的账号。需要 CLI 1.8.0 或更高版本。",

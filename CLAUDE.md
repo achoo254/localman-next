@@ -42,7 +42,7 @@ Self-hosted ngrok alternative. WebSocket relay tunnel proxy that exposes local s
 
 ```
 apps/tunelo-server/      # Tunnel server (deployed to VPS, PM2)
-packages/tunelo-cli/     # CLI tool (npm package: tunelo), built on @tunelo/client
+packages/tunelo-cli/     # npm package tunelo, last version 1.12: hands every command to tunelo 2.x (chat-next apps/agent)
 packages/tunelo-client/  # @tunelo/client: tunnel client + device-flow sign-in as a library (built output committed)
 packages/tunelo-shared/  # Shared types & WS protocol (@tunelo/shared, built output committed)
 infra/tunelo/            # nginx, certbot, PM2 configs, deploy.sh
@@ -67,7 +67,7 @@ pnpm test:tunelo-e2e
 VPS_HOST=<ssh alias> bash infra/tunelo/deploy.sh   # Deploy server (PM2)
 ```
 
-Release CLI: tag `tunelo-vX.Y.Z` triggers `.github/workflows/tunelo-release.yml` (GitHub release with `tunelo.tgz`; the CLI is not on npm).
+Release CLI: tag `tunelo-vX.Y.Z` triggers `.github/workflows/tunelo-release.yml` (GitHub release with `tunelo.tgz`; the CLI is not on npm). 1.12.0 is the last one: the commands, inspector, portal and MCP of Tunelo now live in tunelo 2.x (chat-next `apps/agent`, released there as `tunelo-v2.*` binaries); 1.12 runs the 2.x binary at `%LOCALAPPDATA%\tunelo\tunelo.exe` / `~/.local/bin/tunelo` with the same argv, and without it `tunelo update` runs the 2.x install script (`TUNELO_INSTALL_COMMANDS` in `packages/tunelo-shared/src/release.ts`).
 
 Release `@tunelo/client`: git tag `tunelo-client-vX.Y.Z` only (no GitHub Release, so `releases/latest`, which `tunelo update` reads, stays the CLI). Consumers install `github:achoo254/localman-next#tunelo-client-vX.Y.Z&path:/packages/tunelo-client`, so the package has no `workspace:*` dependency: `src/shared/` is a copy of `@tunelo/shared` (a test fails when it drifts), and its built output is committed (CI fails when it is stale). The library never reads credentials: callers pass `getApiKey` and choose the session file (`fileSessionStore(path)`).
 

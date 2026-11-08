@@ -25,8 +25,12 @@ npm version <patch|minor|major> --workspace tunelo --no-git-tag-version   # bump
 git commit -am "chore(tunelo): release X.Y.Z" && git tag tunelo-vX.Y.Z && git push && git push --tags
 ```
 
-- Người dùng cài bằng `npm install -g https://github.com/achoo254/localman-next/releases/latest/download/tunelo.tgz`, cập nhật bằng `tunelo update` (đọc release mới nhất
-  qua GitHub API rồi cài `tunelo.tgz` của đúng tag đó). Địa chỉ cài nằm ở `packages/tunelo-shared/src/release.ts`.
+- Từ 08/11/2026 Tunelo là `tunelo` 2.x: binary của chat-next (`apps/agent`, phát hành ở GitHub Releases của chat-next với tag
+  `tunelo-v2.*`, ký minisign), cài bằng `curl -fsSL https://chat.hoandat.com/agent/install.sh | sh` (macOS) hoặc `& ([scriptblock]::Create((irm https://chat.hoandat.com/agent/install.ps1)))` (Windows PowerShell),
+  cập nhật bằng `tunelo update` của chính nó. Lệnh cài nằm ở `TUNELO_INSTALL_COMMANDS` của `packages/tunelo-shared/src/release.ts`.
+- Gói npm `tunelo` dừng ở 1.12.0 (vẫn phát hành bằng workflow trên, `tunelo.tgz`): 1.11 trở về trước `tunelo update` lên 1.12;
+  1.12 chạy binary 2.x ở `%LOCALAPPDATA%\tunelo\tunelo.exe` / `~/.local/bin/tunelo` với cùng argv và mã thoát, chưa có 2.x thì
+  `tunelo update` chạy script cài 2.x rồi hỏi `npm uninstall -g tunelo`.
 - `releases/latest` phải luôn là bản Tunelo: release khác trong repo này phải tạo với `--latest=false`.
 - Gói `tunelo` trên npm dừng ở 1.9.1 (bản 1.10.0 publish thử ngày 27/10 bị npm chặn vì tài khoản đang bị khoá); recovery code 2FA
   của npm nằm ở iCloud `ENV production/npmjs/`.

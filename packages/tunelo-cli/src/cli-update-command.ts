@@ -1,164 +1,98 @@
-/** CLI handler for `tunelo update`: self-update from the latest GitHub release */
-
-import { type SpawnOptions, spawn } from "node:child_process";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import {
-	TUNELO_LATEST_RELEASE_API,
-	tuneloTarballUrl,
-	versionFromReleaseTag,
-} from "@tunelo/shared";
-import chalk from "chalk";
-import type { Command } from "commander";
-import { VERSION } from "./version.js";
-
-/** Windows ships npm/pnpm as .cmd shims, which Node refuses to spawn directly */
-const isWindows = process.platform === "win32";
-
-export type PackageManager = "npm" | "pnpm";
-
-/** Infers the installer from where this file ended up on disk */
-export function detectPackageManager(modulePath: string): PackageManager {
-	const normalized = modulePath.split(path.win32.sep).join(path.posix.sep);
-	return normalized.includes("/pnpm/") ? "pnpm" : "npm";
-}
-
-/** Returns >0 when `a` is newer than `b`, <0 when older, 0 when equal */
-export function compareVersions(a: string, b: string): number {
-	const parse = (v: string) =>
-		v
-			.replace(/^v/, "")
-			.split("-")[0]
-			.split(".")
-			.map((part) => Number.parseInt(part, 10) || 0);
-	const left = parse(a);
-	const right = parse(b);
-	for (let i = 0; i < Math.max(left.length, right.length); i++) {
-		const diff = (left[i] ?? 0) - (right[i] ?? 0);
-		if (diff !== 0) return diff;
-	}
-	return 0;
-}
-
-/** Builds the install argv for the detected package manager */
-export function buildInstallArgs(
-	manager: PackageManager,
-	target: string,
-): string[] {
-	return manager === "pnpm" ? ["add", "-g", target] : ["install", "-g", target];
-}
-
 /**
- * Spawns npm/pnpm. On Windows the .cmd shim needs a shell, so the whole command
- * goes through as a single string — passing an argv array alongside `shell` would
- * concatenate it unescaped. The manager is a two-value union, the release URL is
- * fixed, and the only remote input, the version from the GitHub API, must match
- * plain semver (`versionFromReleaseTag`), so no shell syntax can reach the shell.
+ * `tunelo update` of 1.12 when tunelo 2.x is not installed yet: runs the
+ * install script of 2.x (pinned and checked by the script itself), then
+ * offers to remove this npm package. Once 2.x is installed, `tunelo update`
+ * goes to 2.x like every other command.
  */
-function spawnManager(
-	manager: PackageManager,
-	args: string[],
-	options: SpawnOptions,
-) {
-	return isWindows
-		? spawn([manager, ...args].join(" "), { ...options, shell: true })
-		: spawn(manager, args, options);
+import { type SpawnSyncOptions, spawnSync } from "node:child_process";
+import { createInterface } from "node:readline/promises";
+import { TUNELO_INSTALL_SCRIPT_URLS } from "@tunelo/shared";
+import { findTunelo2 } from "./tunelo-binary.js";
+
+export const NPM_UNINSTALL = "npm uninstall -g tunelo";
+
+/** The program and arguments that run the install script on this OS, or null when 2.x has no build for it. */
+export function installScriptCommand(
+	platform: NodeJS.Platform = process.platform,
+): { command: string; args: string[] } | null {
+	if (platform === "darwin") {
+		return {
+			command: "/bin/sh",
+			args: [
+				"-c",
+				`curl -fsSL ${TUNELO_INSTALL_SCRIPT_URLS.macos} | sh -s -- en`,
+			],
+		};
+	}
+	if (platform === "win32") {
+		return {
+			command: "powershell.exe",
+			args: [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				`& ([scriptblock]::Create((irm ${TUNELO_INSTALL_SCRIPT_URLS.windows}))) en`,
+			],
+		};
+	}
+	return null;
 }
 
-/** Reads the version of the latest Tunelo release from the GitHub API */
-export async function fetchLatestVersion(
-	fetchImpl: typeof fetch = fetch,
-): Promise<string> {
-	const response = await fetchImpl(TUNELO_LATEST_RELEASE_API, {
-		headers: { Accept: "application/vnd.github+json" },
-		signal: AbortSignal.timeout(30_000),
-	});
-	if (!response.ok) throw new Error(`GitHub answered ${response.status}`);
-	const body = (await response.json()) as { tag_name?: unknown };
-	const version =
-		typeof body.tag_name === "string"
-			? versionFromReleaseTag(body.tag_name)
-			: null;
-	if (!version) throw new Error("the latest release is not a Tunelo release");
-	return version;
+/** y/yes (any case) is yes; anything else, an empty answer included, is no. */
+export function isYes(answer: string): boolean {
+	return /^\s*y(es)?\s*$/i.test(answer);
 }
 
-/** Runs the install and resolves with the child's exit code */
-function runInstall(manager: PackageManager, target: string): Promise<number> {
-	return new Promise((resolve, reject) => {
-		const child = spawnManager(manager, buildInstallArgs(manager, target), {
-			stdio: "inherit",
-		});
-		child.on("error", reject);
-		child.on("close", (code) => resolve(code ?? 1));
-	});
+async function ask(question: string): Promise<string> {
+	const rl = createInterface({ input: process.stdin, output: process.stdout });
+	try {
+		return await rl.question(question);
+	} finally {
+		rl.close();
+	}
 }
 
-export function registerUpdateCommand(program: Command): void {
-	program
-		.command("update")
-		.description("Update tunelo to the latest published version")
-		.option("--check", "Only report whether an update exists")
-		.action(async (options: { check?: boolean }) => {
-			const manager = detectPackageManager(fileURLToPath(import.meta.url));
+function run(command: string, args: string[]): number {
+	const options: SpawnSyncOptions = { stdio: "inherit" };
+	// npm is a .cmd shim on Windows, which needs a shell; its arguments are fixed.
+	const result =
+		process.platform === "win32" && command === "npm"
+			? spawnSync([command, ...args].join(" "), { ...options, shell: true })
+			: spawnSync(command, args, options);
+	if (result.error) throw result.error;
+	return result.status ?? 1;
+}
 
-			let latest: string;
-			try {
-				console.log(chalk.gray("  Checking the latest release..."));
-				latest = await fetchLatestVersion();
-			} catch (err) {
-				console.log(
-					chalk.red(
-						`  Error: cannot read the latest release — ${(err as Error).message}`,
-					),
-				);
-				console.log(
-					chalk.gray(
-						`  Update manually: ${manager} ${buildInstallArgs(manager, tuneloTarballUrl()).join(" ")}`,
-					),
-				);
-				process.exitCode = 1;
-				return;
-			}
-
-			if (compareVersions(latest, VERSION) <= 0) {
-				console.log(
-					`  ${chalk.green("Already up to date")} — v${VERSION} is the latest.`,
-				);
-				return;
-			}
-
-			console.log(
-				`  Update available: ${chalk.gray(`v${VERSION}`)} → ${chalk.cyan(`v${latest}`)}`,
-			);
-
-			if (options.check) {
-				console.log(chalk.gray("  Run `tunelo update` to install it."));
-				return;
-			}
-
-			console.log(chalk.gray(`  Installing via ${manager}...`));
-			let code: number;
-			try {
-				code = await runInstall(manager, tuneloTarballUrl(latest));
-			} catch (err) {
-				console.log(
-					chalk.red(
-						`  Error: ${manager} failed to start — ${(err as Error).message}`,
-					),
-				);
-				process.exitCode = 1;
-				return;
-			}
-
-			if (code !== 0) {
-				console.log(chalk.red(`  Update failed (${manager} exited ${code}).`));
-				process.exitCode = code;
-				return;
-			}
-
-			console.log(`  ${chalk.green("Updated")} to v${latest}.`);
-			// Running tunnels keep the old code in memory — restart them to pick this up.
-			console.log(chalk.gray("  Restart any running tunnels to apply."));
-		});
+export async function runUpdate(): Promise<number> {
+	const install = installScriptCommand();
+	if (!install) {
+		console.error(
+			"  tunelo 2.x is available for macOS and Windows only; tunelo 1.x stays retired here.",
+		);
+		return 1;
+	}
+	console.log("  Installing tunelo 2.x with its install script...");
+	const code = run(install.command, install.args);
+	if (code !== 0 || !findTunelo2()) {
+		console.error(
+			`  The install did not finish (exit ${code}); nothing else was changed.`,
+		);
+		return code || 1;
+	}
+	console.log("  ✓ tunelo 2.x is installed. Open a new terminal to use it.");
+	if (!process.stdin.isTTY) {
+		console.log(
+			`  Remove this old npm package when you like: ${NPM_UNINSTALL}`,
+		);
+		return 0;
+	}
+	const answer = await ask(
+		`  Remove the old npm package now (${NPM_UNINSTALL})? [y/N] `,
+	);
+	if (!isYes(answer)) {
+		console.log(`  Kept. Remove it later with: ${NPM_UNINSTALL}`);
+		return 0;
+	}
+	return run("npm", ["uninstall", "-g", "tunelo"]);
 }
