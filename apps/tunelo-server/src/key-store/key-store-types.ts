@@ -24,8 +24,11 @@ export interface KeyInfo {
 	deviceId?: string;
 	/** Machine name recorded when the token was minted. */
 	deviceName?: string;
-	/** Anonymous device whose tunnels a `link` token may list. */
+	/** Device whose tunnels a `link` token may list. */
 	linkedDeviceId?: string;
+	/** Account owning `linkedDeviceId`, for a link an account minted for
+	 *  its own machine (`POST /api/links/self`); absent for `tunelo link`. */
+	linkedOwnerSub?: string;
 }
 
 export interface KeyStore {

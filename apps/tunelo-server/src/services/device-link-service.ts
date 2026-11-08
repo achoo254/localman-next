@@ -141,9 +141,11 @@ export async function pollLink(
 	return { status: "approved", token: link.token, linkId: link.id };
 }
 
+/** `tunelo link` pairings only: an account's own links have an owner. */
 const LINK_TOKEN_FILTER = {
 	status: "active" as const,
 	scopes: TUNNEL_SCOPES.READ,
+	linkedOwnerSub: null,
 };
 
 export async function listLinks(deviceId: string): Promise<
@@ -181,10 +183,10 @@ export async function revokeLink(deviceId: string, id: string): Promise<void> {
 	}
 }
 
-/** A link token revokes itself (the client unlinks). */
+/** A link token (pairing or an account's own) revokes itself. */
 export async function revokeOwnLink(keyId: string): Promise<void> {
 	await ApiKey.updateOne(
-		{ _id: keyId, ...LINK_TOKEN_FILTER },
+		{ _id: keyId, status: "active", scopes: TUNNEL_SCOPES.READ },
 		{ $set: { status: "revoked" } },
 	);
 }

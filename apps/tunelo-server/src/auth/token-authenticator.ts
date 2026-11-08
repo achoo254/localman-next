@@ -7,7 +7,7 @@ import { hashToken } from "./token-hash.js";
 
 const DEFAULT_MAX_TUNNELS = 3;
 /** Background-agent machines per account, apart from `tunelo http` tunnels. */
-export const DEFAULT_MAX_MACHINE_TUNNELS = 5;
+export const DEFAULT_MAX_MACHINE_TUNNELS = 20;
 
 export type AuthErrorCode =
 	| "TUNELO_AUTH_001"

@@ -52,6 +52,7 @@ export class MongoKeyStore implements KeyStore {
 			deviceId: apiKey.deviceId ?? undefined,
 			deviceName: deviceNameOf(apiKey.label),
 			linkedDeviceId: apiKey.linkedDeviceId ?? undefined,
+			linkedOwnerSub: apiKey.linkedOwnerSub ?? undefined,
 		};
 	}
 

@@ -22,6 +22,11 @@ const apiKeySchema = new Schema(
 		// tunnels of `linkedDeviceId` and can never open one.
 		scopes: { type: [String], default: [] },
 		linkedDeviceId: { type: String, default: null, index: true },
+		// Set on a link token an account minted for one of its own machines
+		// (`POST /api/links/self`): the token lists that machine's tunnels
+		// and may forward to its loopback (`LOCAL_FORWARD`). Null for the
+		// anonymous `tunelo link` pairing.
+		linkedOwnerSub: { type: String, default: null, index: true },
 		// Who holds a link token (e.g. the Localman web app), shown in `tunelo links`.
 		clientName: { type: String, default: "" },
 		status: { type: String, enum: ["active", "revoked"], default: "active" },

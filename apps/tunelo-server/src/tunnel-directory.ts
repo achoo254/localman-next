@@ -89,6 +89,21 @@ export function listByOwner(
 }
 
 /**
+ * Tunnels one machine of an account has open (an account's own link). The
+ * device id is client-reported, but only by clients signed in as `ownerSub`.
+ */
+export function listByMachine(
+	ownerSub: string,
+	deviceId: string,
+	sources: TunnelSources = liveSources,
+): TunnelListItem[] {
+	return listMatching(
+		(owner) => owner.ownerSub === ownerSub && owner.deviceId === deviceId,
+		sources,
+	);
+}
+
+/**
  * Tunnels an anonymous machine has open. Account-bound tunnels are excluded:
  * their device id is client-reported, so it must not leak into a link view.
  */

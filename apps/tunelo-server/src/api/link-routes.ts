@@ -5,9 +5,14 @@ import type { KeyInfo } from "../key-store/key-store-types.js";
 import { AttemptLimiter } from "../lib/attempt-limiter.js";
 import { cleanDisplayName } from "../lib/display-name.js";
 import * as deviceLink from "../services/device-link-service.js";
+import {
+	listAccountLinks,
+	revokeAccountLink,
+} from "../services/self-link-service.js";
 import { TUNELO_LOGIN_COMMAND } from "../tenancy/login-command.js";
 import { authenticateRequest } from "./middleware/authenticate-request.js";
 import { TuneloError } from "./middleware/error-handler.js";
+import { registerSelfLinkRoutes } from "./self-link-routes.js";
 
 const MAX_CLIENT_NAME = 80;
 const INITS_PER_WINDOW = 20;
@@ -39,9 +44,11 @@ function requireDevice(keyInfo: KeyInfo): { keyId: string; deviceId: string } {
  *   POST   /init     — a client (Localman) opens a pairing, shows the code
  *   POST   /approve  — the machine approves it (Bearer: its anonymous token)
  *   POST   /poll     — the client collects its read-only token, once
- *   GET    /         — the machine lists its links
+ *   GET    /         — the machine lists its links (an account token:
+ *                      the links of all the account's machines)
  *   DELETE /self     — a link token revokes itself
- *   DELETE /:id      — the machine revokes one of its links
+ *   DELETE /:id      — the machine (or the account) revokes one of its links
+ * plus `POST|GET /self` for an account's own machines (self-link-routes.ts).
  */
 export function createLinkRouter(authenticator: TokenAuthenticator): Router {
 	const router = Router();
@@ -50,6 +57,11 @@ export function createLinkRouter(authenticator: TokenAuthenticator): Router {
 
 	const device = (req: Request): Promise<KeyInfo> =>
 		authenticateRequest(req, authenticator, TUNNEL_SCOPES.OPEN, ["legacy"]);
+	const machineOrAccount = (req: Request): Promise<KeyInfo> =>
+		authenticateRequest(req, authenticator, TUNNEL_SCOPES.OPEN, [
+			"legacy",
+			"idp",
+		]);
 
 	router.post("/init", async (req, res, next) => {
 		try {
@@ -90,7 +102,12 @@ export function createLinkRouter(authenticator: TokenAuthenticator): Router {
 
 	router.get("/", async (req, res, next) => {
 		try {
-			const { deviceId } = requireDevice(await device(req));
+			const caller = await machineOrAccount(req);
+			if (caller.kind === "idp" && caller.ownerSub) {
+				res.json({ links: await listAccountLinks(caller.ownerSub) });
+				return;
+			}
+			const { deviceId } = requireDevice(caller);
 			res.json({ links: await deviceLink.listLinks(deviceId) });
 		} catch (err) {
 			next(err);
@@ -98,6 +115,7 @@ export function createLinkRouter(authenticator: TokenAuthenticator): Router {
 	});
 
 	// Before `/:id`, which would otherwise capture "self".
+	registerSelfLinkRoutes(router, authenticator);
 	router.delete("/self", async (req, res, next) => {
 		try {
 			const keyInfo = await authenticateRequest(
@@ -115,8 +133,14 @@ export function createLinkRouter(authenticator: TokenAuthenticator): Router {
 
 	router.delete("/:id", async (req, res, next) => {
 		try {
-			const { deviceId } = requireDevice(await device(req));
-			await deviceLink.revokeLink(deviceId, String(req.params.id));
+			const caller = await machineOrAccount(req);
+			const id = String(req.params.id);
+			if (caller.kind === "idp" && caller.ownerSub) {
+				await revokeAccountLink(caller.ownerSub, id);
+			} else {
+				const { deviceId } = requireDevice(caller);
+				await deviceLink.revokeLink(deviceId, id);
+			}
 			res.json({ ok: true });
 		} catch (err) {
 			next(err);

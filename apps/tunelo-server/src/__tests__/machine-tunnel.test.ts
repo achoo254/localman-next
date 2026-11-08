@@ -3,7 +3,10 @@ import type { AuthResult, RegisterTunnelResult } from "@tunelo/shared";
 import { afterAll, afterEach, beforeAll, describe, expect, test } from "vitest";
 import { WebSocket } from "ws";
 import { createIdpTokenVerifier } from "../auth/idp-token-verifier.js";
-import { createTokenAuthenticator } from "../auth/token-authenticator.js";
+import {
+	DEFAULT_MAX_MACHINE_TUNNELS,
+	createTokenAuthenticator,
+} from "../auth/token-authenticator.js";
 import { machineSubdomain } from "../machine-subdomain.js";
 import { FakeKeyStore } from "../test-support/fake-key-store.js";
 import {
@@ -163,12 +166,17 @@ describe("machine tunnels", () => {
 			error: "Max tunnels per key exceeded",
 		});
 
-		const ids = [1, 2, 3, 4, 5].map((n) => `machine-id-${n}-of-acc-m5`);
+		const ids = Array.from(
+			{ length: DEFAULT_MAX_MACHINE_TUNNELS },
+			(_, n) => `machine-id-${n + 1}-of-acc-m5`,
+		);
 		for (const deviceId of ids) {
 			expect((await machine(token, { deviceId })).result.success).toBe(true);
 		}
-		const sixth = await machine(token, { deviceId: "machine-id-6-of-acc-m5" });
-		expect(sixth.result).toMatchObject({
+		const over = await machine(token, {
+			deviceId: "machine-id-over-of-acc-m5",
+		});
+		expect(over.result).toMatchObject({
 			success: false,
 			code: "TUNELO_TUNNEL_005",
 		});

@@ -73,7 +73,9 @@ Release `@tunelo/client`: git tag `tunelo-client-vX.Y.Z` only (no GitHub Release
 
 Release `@tunelo/shared` the same way: git tag `tunelo-shared-vX.Y.Z`, installed as `github:achoo254/localman-next#tunelo-shared-vX.Y.Z&path:/packages/tunelo-shared`; its built output is committed too (same CI check). The `tunelo` 2.x process (chat-next `apps/agent`) uses both packages from these tags.
 
-- **Machine tunnels** (`kind: "machine"` in `auth`, used by background agents): subdomain `m-<hash>` derived from the account (`ownerSub`) and `deviceId` (`apps/tunelo-server/src/machine-subdomain.ts`), so it is the same on every connection with nothing stored; only that account opens it, no other tunnel may take a name of that shape, and a new connection of the same machine replaces its stale one. Own quota (5 per account, `DEFAULT_MAX_MACHINE_TUNNELS`), apart from the 3 `tunelo http` tunnels. One tunnel per machine channel (no `register-tunnel`/`tcp-register`).
+- **Machine tunnels** (`kind: "machine"` in `auth`, used by background agents): subdomain `m-<hash>` derived from the account (`ownerSub`) and `deviceId` (`apps/tunelo-server/src/machine-subdomain.ts`), so it is the same on every connection with nothing stored; only that account opens it, no other tunnel may take a name of that shape, and a new connection of the same machine replaces its stale one. Own quota (20 per account, `DEFAULT_MAX_MACHINE_TUNNELS`, the same as Chat's machines and Localman's `MAX_TUNNEL_LINKS`), apart from the 3 `tunelo http` tunnels. One tunnel per machine channel (no `register-tunnel`/`tcp-register`).
+
+- **Local forward** (`LOCAL_FORWARD` in `packages/tunelo-shared/src/constants.ts`): `tunelo` links its machine to Localman with `POST /api/links/self` (account token, `deviceId`, `clientName`); the link token lists that machine's tunnels and, sent as `Tunelo-Access` to `<machine tunnel>/.tunelo/forward/<path>` with `Tunelo-Local-Port`, reaches `localhost:<port>` on it. The relay drops every client-sent `tunelo-*` header on machine tunnels (`Tunelo-Forward-*` on every tunnel), answers 404 to anything but the owner's token for that machine, refuses `DENY_PORTS`, logs each forward without headers or body, and only then adds `Tunelo-Forward-Granted: 1` (`apps/tunelo-server/src/local-forward-gate.ts`). Machine tunnels get `features: ["local-forward"]` in `auth-result`: the machine serves the path only from servers that say so.
 
 - **Dữ liệu Tunelo** (mục "One domain" của `docs/tunelo/deployment-guide.md`): model mới gắn `tenantScopePlugin`; request chạy trong tenant `primary` dựng từ env khi Host thuộc `TUNNEL_DOMAINS` (hoặc loopback ngoài production), host khác nhận 421 (`apps/tunelo-server/src/tenancy/`); trạng thái trong bộ nhớ (tunnel, cache, stream) khoá theo `tenantKey(subdomain)`; frame từ client chỉ nhận từ đúng connection đã gửi request. Phần dùng chung với Localman nằm ở `packages/tenancy` (`@localman/tenancy`). CLI chỉ gửi token tới Tunelo cùng domain với issuer của phiên (`acceptsAccountToken`).
 
@@ -135,6 +137,11 @@ This is a **tunnel proxy** — it relays untrusted HTTP traffic. Critical rules:
 | `TUNELO_LINK_002` | Too many wrong link codes / link requests (rate limited) |
 | `TUNELO_LINK_003` | Link not found |
 | `TUNELO_LINK_004` | Token not bound to a machine (cannot link) |
+| `TUNELO_FORWARD_001` | Local forward: no link token of this machine's owner (404) |
+| `TUNELO_FORWARD_002` | Local forward: port on the deny list (403) |
+| `TUNELO_FORWARD_003` | Local forward: turned off on the machine (403, from `tunelo`) |
+| `TUNELO_FORWARD_004` | Local forward: `Tunelo-Local-Port` is not a port (400) |
+| `TUNELO_FORWARD_005` | Local forward: nothing listens on the port (502, from `tunelo`) |
 
 ### Architecture Reference
 

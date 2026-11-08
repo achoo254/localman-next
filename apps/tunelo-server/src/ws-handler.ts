@@ -10,6 +10,8 @@ import {
 } from "@tunelo/shared";
 import { type RawData, type WebSocket, WebSocketServer } from "ws";
 import type { TokenAuthenticator } from "./auth/token-authenticator.js";
+import { relayedHeaders } from "./local-forward-gate.js";
+import { forwardsLocally } from "./local-forward-relay.js";
 import { createLogger } from "./logger.js";
 import { extractSubdomain } from "./request-relay.js";
 import {
@@ -120,6 +122,12 @@ export function attachWsHandler(
 			return;
 		}
 
+		// Local forwards are plain HTTP: no WebSocket under that path.
+		if (subdomain && forwardsLocally(subdomain, url.pathname)) {
+			rejectUpgrade(socket, "404 Not Found", "Not found");
+			return;
+		}
+
 		// Browser WebSocket to a tunneled app → relay through the control socket.
 		if (subdomain && tunnelManager.has(subdomain)) {
 			if (!tunnelManager.checkAuth(subdomain, req.headers.authorization)) {
@@ -130,7 +138,10 @@ export function attachWsHandler(
 			}
 			const proto = req.headers["sec-websocket-protocol"];
 			const path = url.pathname + url.search;
-			const headers = req.headers as Record<string, string | string[]>;
+			const headers = relayedHeaders(
+				subdomain,
+				req.headers as Record<string, string | string[]>,
+			);
 			const protocol = Array.isArray(proto) ? proto.join(", ") : proto;
 			if (tunnelManager.get(subdomain)?.wsOpenResult) {
 				wsAppHandshakes.begin({
