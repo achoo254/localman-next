@@ -117,10 +117,33 @@ export const LOCAL_FORWARD = {
 	SCOPE: "tunnels:forward",
 	/**
 	 * Ports never forwarded, by the server and by the machine (which adds
-	 * its own ports): Chrome DevTools, Docker, Node and JVM debuggers,
-	 * JetBrains IDEs.
+	 * its own ports and the debug/IDE ports of running processes): admin,
+	 * debug and automation endpoints that run whatever a request asks, and
+	 * plain-text stores a request body can talk to across protocols.
 	 */
-	DENY_PORTS: [2375, 2376, 5005, 9222, 9229, 63342],
+	DENY_PORTS: [
+		2375, // Docker
+		2376, // Docker (TLS)
+		2379, // etcd client
+		2380, // etcd peer
+		4444, // Selenium
+		5005, // JVM debugger
+		5984, // CouchDB
+		6379, // Redis
+		8200, // Vault
+		8500, // Consul
+		9200, // Elasticsearch
+		9222, // Chrome DevTools
+		9229, // Node inspector
+		9300, // Elasticsearch transport
+		9515, // chromedriver
+		10250, // kubelet
+		10255, // kubelet read-only
+		11211, // memcached
+		11434, // Ollama
+		15672, // RabbitMQ management
+		63342, // JetBrains IDEs
+	],
 } as const;
 
 /** `tunelo-forward-error` codes of a refused forward. */
@@ -137,6 +160,8 @@ export const LOCAL_FORWARD_ERRORS = {
 	PORT_CLOSED: "TUNELO_FORWARD_005",
 	/** The machine tunnel is not connected (502). */
 	MACHINE_OFFLINE: "TUNELO_TUNNEL_002",
+	/** Too many forwards to the machine, or failed ones from the caller (429). */
+	RATE_LIMITED: "TUNELO_FORWARD_006",
 } as const;
 
 /** Whether `path` (path and query) is under `LOCAL_FORWARD.PATH`. */

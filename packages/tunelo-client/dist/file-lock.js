@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdirSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync, } from "node:fs";
+import { linkSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, utimesSync, writeFileSync, } from "node:fs";
 import { dirname } from "node:path";
 /** A lock whose holder stopped touching it this long ago has crashed. */
 const STALE_MS = 30_000;
@@ -37,6 +37,36 @@ function isStale(path, maxAgeMs) {
     }
 }
 /**
+ * Clears a breaker whose holder crashed. It is moved aside first, which
+ * only one waiter can do; a waiter that judged it stale too late may have
+ * moved a fresh one, which then goes back.
+ *
+ * Limits: if the breaker's holder crashed and a fresh breaker was taken in
+ * the microseconds between that move and the way back, two waiters may
+ * both break; and locks age by mtime, so a holder whose machine slept past
+ * `STALE_MS` counts as crashed.
+ */
+function clearStaleBreaker(breaker, nonce) {
+    if (!isStale(breaker, BREAKER_STALE_MS))
+        return;
+    const moved = `${breaker}.${nonce.replace(/[^\w.-]/g, "_")}`;
+    try {
+        renameSync(breaker, moved);
+    }
+    catch {
+        return; // Another waiter moved it first.
+    }
+    if (!isStale(moved, BREAKER_STALE_MS)) {
+        try {
+            linkSync(moved, breaker);
+        }
+        catch {
+            // A new breaker exists already; its holder goes on.
+        }
+    }
+    rmSync(moved, { force: true });
+}
+/**
  * Removes the lock at `path` if its holder crashed. Waiters that all saw
  * it stale take turns through a second, short-lived lock (`<path>.break`)
  * and look again inside it: without that, a slow waiter could remove the
@@ -45,8 +75,7 @@ function isStale(path, maxAgeMs) {
  */
 export function breakStaleLock(path, nonce) {
     const breaker = `${path}.break`;
-    if (isStale(breaker, BREAKER_STALE_MS))
-        rmSync(breaker, { force: true });
+    clearStaleBreaker(breaker, nonce);
     if (!tryAcquire(breaker, nonce))
         return;
     try {

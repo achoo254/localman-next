@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
 import {
+	linkSync,
 	mkdirSync,
 	readFileSync,
+	renameSync,
 	rmSync,
 	statSync,
 	utimesSync,
@@ -47,6 +49,34 @@ function isStale(path: string, maxAgeMs: number): boolean {
 }
 
 /**
+ * Clears a breaker whose holder crashed. It is moved aside first, which
+ * only one waiter can do; a waiter that judged it stale too late may have
+ * moved a fresh one, which then goes back.
+ *
+ * Limits: if the breaker's holder crashed and a fresh breaker was taken in
+ * the microseconds between that move and the way back, two waiters may
+ * both break; and locks age by mtime, so a holder whose machine slept past
+ * `STALE_MS` counts as crashed.
+ */
+function clearStaleBreaker(breaker: string, nonce: string): void {
+	if (!isStale(breaker, BREAKER_STALE_MS)) return;
+	const moved = `${breaker}.${nonce.replace(/[^\w.-]/g, "_")}`;
+	try {
+		renameSync(breaker, moved);
+	} catch {
+		return; // Another waiter moved it first.
+	}
+	if (!isStale(moved, BREAKER_STALE_MS)) {
+		try {
+			linkSync(moved, breaker);
+		} catch {
+			// A new breaker exists already; its holder goes on.
+		}
+	}
+	rmSync(moved, { force: true });
+}
+
+/**
  * Removes the lock at `path` if its holder crashed. Waiters that all saw
  * it stale take turns through a second, short-lived lock (`<path>.break`)
  * and look again inside it: without that, a slow waiter could remove the
@@ -55,7 +85,7 @@ function isStale(path: string, maxAgeMs: number): boolean {
  */
 export function breakStaleLock(path: string, nonce: string): void {
 	const breaker = `${path}.break`;
-	if (isStale(breaker, BREAKER_STALE_MS)) rmSync(breaker, { force: true });
+	clearStaleBreaker(breaker, nonce);
 	if (!tryAcquire(breaker, nonce)) return;
 	try {
 		if (isStale(path, STALE_MS)) rmSync(path, { force: true });

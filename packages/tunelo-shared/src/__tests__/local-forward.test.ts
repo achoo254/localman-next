@@ -28,10 +28,21 @@ describe("parseLocalPort", () => {
 		expect(parseLocalPort("1")).toBe(1);
 		expect(parseLocalPort("5173")).toBe(5173);
 		expect(parseLocalPort("65535")).toBe(65_535);
+		// Leading zeros name the same port, so the deny list still applies.
+		expect(parseLocalPort("09222")).toBe(9222);
 	});
 
 	test("refuses anything else", () => {
-		for (const value of ["0", "65536", "-1", "80a", " 80", "", "1e3"]) {
+		for (const value of [
+			"0",
+			"65536",
+			"-1",
+			"80a",
+			" 80",
+			"",
+			"1e3",
+			"80, 9222",
+		]) {
 			expect(parseLocalPort(value)).toBeNull();
 		}
 		expect(parseLocalPort(undefined)).toBeNull();
@@ -39,8 +50,11 @@ describe("parseLocalPort", () => {
 	});
 });
 
-test("the deny list holds DevTools, Docker and debugger ports", () => {
-	for (const port of [9222, 2375, 2376, 9229, 5005, 63342]) {
+test("the deny list holds admin, debug, automation and store ports", () => {
+	for (const port of [
+		2375, 2376, 2379, 2380, 4444, 5005, 5984, 6379, 8200, 8500, 9200, 9222,
+		9229, 9300, 9515, 10250, 10255, 11211, 11434, 15672, 63342,
+	]) {
 		expect(isDeniedForwardPort(port)).toBe(true);
 	}
 	expect(isDeniedForwardPort(5173)).toBe(false);

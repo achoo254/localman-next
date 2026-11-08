@@ -1,6 +1,6 @@
 {
 	"name": "@tunelo/shared",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"type": "module",
 	"description": "Tunelo wire protocol, limits and header rules shared by the server and its clients",
 	"main": "dist/index.js",
