@@ -1,7 +1,8 @@
 import { AsyncResource } from "node:async_hooks";
 import type http from "node:http";
-import { isLocalForwardPath } from "@tunelo/shared";
+import { LOCAL_FORWARD_ERRORS, isLocalForwardPath } from "@tunelo/shared";
 import type { TokenAuthenticator } from "./auth/token-authenticator.js";
+import { AttemptLimiter } from "./lib/attempt-limiter.js";
 import {
 	type ForwardDecision,
 	gateLocalForward,
@@ -12,6 +13,50 @@ import { isMachineSubdomain } from "./machine-subdomain.js";
 import { tunnelManager } from "./tunnel-manager.js";
 
 const logger = createLogger("tunelo-local-forward");
+
+/** Requests one machine takes per minute through its forward path. */
+export const FORWARDS_PER_MACHINE_MINUTE = 1200;
+/** Refused forwards (no owner's token) one caller may send per 10 minutes. */
+export const REFUSED_FORWARDS_PER_CALLER = 100;
+const perMachine = new AttemptLimiter(FORWARDS_PER_MACHINE_MINUTE, 60_000);
+const refusedByCaller = new AttemptLimiter(
+	REFUSED_FORWARDS_PER_CALLER,
+	10 * 60_000,
+);
+
+const RATE_LIMITED: ForwardDecision = {
+	ok: false,
+	status: 429,
+	code: LOCAL_FORWARD_ERRORS.RATE_LIMITED,
+	port: null,
+};
+
+/** The caller's address: Express's `req.ip` (behind nginx), else the socket's. */
+function callerOf(req: http.IncomingMessage): string {
+	const ip: unknown = Reflect.get(req, "ip");
+	return typeof ip === "string" ? ip : (req.socket.remoteAddress ?? "unknown");
+}
+
+/**
+ * Counts a decided forward against the limits: refusals per caller (token
+ * guessing), granted requests per machine (one machine's loopback cannot
+ * be flooded through the relay). Once either is used up, further
+ * requests get 429 before any token is checked.
+ */
+function limited(
+	decision: ForwardDecision,
+	caller: string,
+	subdomain: string,
+): ForwardDecision {
+	if (decision.ok) {
+		perMachine.hit(subdomain);
+		return decision;
+	}
+	if (decision.code === LOCAL_FORWARD_ERRORS.NOT_FOUND) {
+		refusedByCaller.hit(caller);
+	}
+	return decision;
+}
 
 /** A request for the machine's loopback (`LOCAL_FORWARD.PATH`). */
 export function forwardsLocally(subdomain: string, url: string): boolean {
@@ -40,7 +85,9 @@ export function handleLocalForward(
 	// A machine reconnecting counts as offline: the caller retries, rather
 	// than wait out the grace period for a plain 502.
 	const online = tunnelManager.has(subdomain);
-	const done = AsyncResource.bind((decision: ForwardDecision) => {
+	const caller = callerOf(req);
+	const done = AsyncResource.bind((decided: ForwardDecision) => {
+		const decision = limited(decided, caller, subdomain);
 		logger.info(
 			{
 				subdomain,
@@ -54,6 +101,10 @@ export function handleLocalForward(
 		if (decision.ok) relay(decision.headers);
 		else writeForwardRefusal(res, decision);
 	});
+	if (refusedByCaller.isBlocked(caller) || perMachine.isBlocked(subdomain)) {
+		done(RATE_LIMITED);
+		return;
+	}
 	gateLocalForward({
 		authenticator,
 		subdomain,

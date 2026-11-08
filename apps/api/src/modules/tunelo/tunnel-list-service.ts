@@ -16,6 +16,12 @@ import {
 } from "./tunnel-list-cache.js";
 
 const MAX_DEVICE_NAME = 100;
+/** A machine tunnel (`m-<hash>`): the `tunelo` process's own, never a target. */
+const MACHINE_TUNNEL = /^https:\/\/m-[0-9a-f]{30}\./;
+
+function isMachineTunnel(url: string): boolean {
+	return MACHINE_TUNNEL.test(url);
+}
 const TCP_URL = /^tcp:\/\/[a-z0-9.-]{1,253}:\d{1,5}$/i;
 
 /** A source Tunelo lists tunnels for (machines are added apart). */
@@ -40,7 +46,7 @@ function toLocalTunnel(
 			: TCP_URL.test(item.url)
 				? item.url.toLowerCase()
 				: null;
-	if (url === null) return null;
+	if (url === null || isMachineTunnel(url)) return null;
 	return {
 		...source,
 		protocol: item.protocol,
@@ -127,6 +133,8 @@ export async function fetchAll(
 		userSub,
 		status: "linked",
 		deadAt: null,
+		// An own machine's row exists a moment before its token does.
+		tokenSealed: { $type: "string" },
 	})
 		.select({ tokenSealed: 1, linkId: 1, deviceName: 1 })
 		.lean();

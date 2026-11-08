@@ -54,6 +54,9 @@ export const listMachinePorts = defineOperation({
 	}),
 	annotations: READ,
 	mcp: true,
+	// It probes the user's machine (and names its processes): an agent
+	// needs the grant that sends requests there, not only `client:read`.
+	mcpScope: "client:send",
 	handler: async (ctx, input) => readPorts(requireSubject(ctx), input.id),
 });
 

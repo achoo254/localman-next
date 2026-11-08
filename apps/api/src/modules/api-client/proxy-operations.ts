@@ -153,10 +153,14 @@ export function createProxyOperations(deps: ProxyDependencies): AnyOperation[] {
 						...(redirectAllowed ? { redirectAllowed } : {}),
 					},
 				);
-				if (route.machine) {
+				if (route.machine && route.machineToken) {
 					await checkMachineAnswer(
 						sub,
-						{ machine: route.machine, tunnel: route.tunnel },
+						{
+							machine: route.machine,
+							tunnel: route.tunnel,
+							token: route.machineToken,
+						},
 						response,
 					);
 				}

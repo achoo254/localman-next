@@ -15,6 +15,7 @@
 		"bench:mock-writes": "tsx scripts/bench-mock-writes.ts"
 	},
 	"dependencies": {
+		"@tunelo/shared": "workspace:*",
 		"@faker-js/faker": "^10.6.0",
 		"@localman/operations": "workspace:*",
 		"@localman/shared": "workspace:*",

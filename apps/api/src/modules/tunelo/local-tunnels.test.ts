@@ -146,6 +146,8 @@ describe("client.listLocalTunnels", () => {
 			httpTunnel("api", 3000),
 			{ ...httpTunnel("evil", 3000), url: "https://evil.example.com" },
 			{ ...httpTunnel("path", 3000), url: "https://x.tunnel.hoandat.com/p" },
+			// A `tunelo` process's own machine tunnel is never a target.
+			httpTunnel(`m-${"0a".repeat(15)}`, 3000),
 		]);
 		const res = await as(ALICE).get("/client/local-tunnels?port=3000");
 		expect(res.body.tunnels.map((t: { url: string }) => t.url)).toEqual([

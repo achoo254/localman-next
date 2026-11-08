@@ -129,6 +129,32 @@ describe("the tunelo process links its machine", () => {
 		expect(await TunnelLinkModel.countDocuments()).toBe(1);
 	});
 
+	it("two links racing for one machine leave one row", async () => {
+		await TunnelLinkModel.createIndexes();
+		const links = useFakeSelfLinks(env.tunelo);
+		const first = links.mint(ALICE, DEVICE);
+		const second = links.mint(ALICE, DEVICE);
+		const answers = await Promise.all([
+			link(ALICE, { token: first.token, ...MACHINE }),
+			link(ALICE, { token: second.token, ...MACHINE }),
+		]);
+		expect(answers.map((res) => res.status)).toEqual([200, 200]);
+		expect(answers[0]?.body.link.id).toBe(answers[1]?.body.link.id);
+		expect(await TunnelLinkModel.countDocuments({ source: "self" })).toBe(1);
+	});
+
+	it("tells a pairing token apart from a Tunelo outage", async () => {
+		env.tunelo.extend((req, res) => {
+			if (req.url !== "/api/links/self") return false;
+			res.writeHead(404, { "content-type": "application/json" });
+			res.end(JSON.stringify({ error: { code: "TUNELO_LINK_003" } }));
+			return true;
+		});
+		const res = await link(ALICE, { token: "tunelo_pairing", ...MACHINE });
+		expect(res.status).toBe(400);
+		expect(res.body.error.code).toBe("INVALID_LINK_TOKEN");
+	});
+
 	it("counts toward the limit of linked machines", async () => {
 		await TunnelLinkModel.insertMany(
 			Array.from({ length: MAX_TUNNEL_LINKS }, () => ({

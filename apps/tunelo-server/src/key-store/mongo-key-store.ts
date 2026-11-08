@@ -13,6 +13,24 @@ function deviceNameOf(label: string | null | undefined): string | undefined {
 	return label.slice(DEVICE_LABEL_PREFIX.length) || undefined;
 }
 
+const RECORD_USE_EVERY_MS = 60_000;
+const MAX_TRACKED_KEYS = 10_000;
+const lastRecorded = new Map<string, number>();
+
+/** Whether `lastUsedAt` of the key is due a write (once a minute). */
+export function shouldRecordUse(keyId: string, now = Date.now()): boolean {
+	const last = lastRecorded.get(keyId);
+	if (last !== undefined && now - last < RECORD_USE_EVERY_MS) return false;
+	if (lastRecorded.size >= MAX_TRACKED_KEYS) {
+		for (const [id, at] of lastRecorded) {
+			if (now - at >= RECORD_USE_EVERY_MS) lastRecorded.delete(id);
+		}
+		if (lastRecorded.size >= MAX_TRACKED_KEYS) lastRecorded.clear();
+	}
+	lastRecorded.set(keyId, now);
+	return true;
+}
+
 export class MongoKeyStore implements KeyStore {
 	constructor(private readonly uri: string) {}
 
@@ -29,13 +47,16 @@ export class MongoKeyStore implements KeyStore {
 			return null;
 		}
 
-		// Fire-and-forget lastUsedAt update
-		ApiKey.updateOne(
-			{ _id: apiKey._id },
-			{ $set: { lastUsedAt: new Date() } },
-		).catch((err) => {
-			logger.warn({ err }, "Failed to update lastUsedAt");
-		});
+		// Fire-and-forget lastUsedAt update, at most once a minute per key:
+		// link tokens are checked on every forwarded request.
+		if (shouldRecordUse(String(apiKey._id))) {
+			ApiKey.updateOne(
+				{ _id: apiKey._id },
+				{ $set: { lastUsedAt: new Date() } },
+			).catch((err) => {
+				logger.warn({ err }, "Failed to update lastUsedAt");
+			});
+		}
 
 		// No user accounts: the key stands alone. Its _id is the identity used
 		// for tunnel ownership/usage; limits come from the key itself.

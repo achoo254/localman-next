@@ -58,6 +58,7 @@ export interface MachineRoute {
 	readonly tunnel: string;
 	readonly headers: HeaderEntry[];
 	readonly machine: string;
+	readonly machineToken: string;
 }
 
 function machineNotFound(): OperationError {
@@ -119,6 +120,7 @@ export async function machineRoute(
 			{ name: FORWARD_HEADERS.localPort, value: String(port) },
 		],
 		machine: id,
+		machineToken: token,
 	};
 }
 

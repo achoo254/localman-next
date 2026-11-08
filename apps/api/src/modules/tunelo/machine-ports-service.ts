@@ -19,11 +19,19 @@ const portList = z.object({
 			z.object({
 				port: z.number().int().min(1).max(65_535),
 				/** Process listening there, when the machine could tell. */
-				name: z.string().max(100).nullable().optional(),
+				name: z.string().nullable().optional(),
 			}),
 		)
 		.max(MAX_PORTS),
 });
+
+/** A process name as the user (and an agent) reads it: no control characters. */
+function displayName(raw: string | null | undefined): string | null {
+	if (!raw) return null;
+	// biome-ignore lint/suspicious/noControlCharactersInRegex: stripping them is the point
+	const clean = raw.replace(/[\u0000-\u001f\u007f-\u009f]/g, "").trim();
+	return clean === "" ? null : clean.slice(0, 100);
+}
 
 export interface MachinePort {
 	port: number;
@@ -87,7 +95,7 @@ export async function listMachinePorts(
 	for (const item of parsed.data.ports) {
 		if (DENIED_PORTS.has(item.port) || seen.has(item.port)) continue;
 		seen.add(item.port);
-		ports.push({ port: item.port, name: item.name ?? null });
+		ports.push({ port: item.port, name: displayName(item.name) });
 	}
 	ports.sort((a, b) => a.port - b.port);
 	return { ports };

@@ -28,7 +28,8 @@ function tuneloRefused(error: unknown): OperationError {
 		{ call: error.call, status: error.status },
 		"Tunelo self link check failed",
 	);
-	if (error.unauthorized) {
+	// 404: a pairing token (`tunelo link`) has no machine of an account.
+	if (error.unauthorized || error.status === 404) {
 		return new OperationError(
 			400,
 			"INVALID_LINK_TOKEN",
@@ -62,6 +63,42 @@ async function linkInfo(token: string): Promise<TuneloSelfLinkInfo> {
 		});
 }
 
+const DUPLICATE_KEY = 11000;
+
+function isDuplicateKey(error: unknown): boolean {
+	return (
+		typeof error === "object" &&
+		error !== null &&
+		"code" in error &&
+		error.code === DUPLICATE_KEY
+	);
+}
+
+/**
+ * The machine's row, created or updated by its key. Two links racing to
+ * create it hit the unique index; the loser updates the winner's row.
+ */
+async function upsertOwnMachine(
+	key: { userSub: string; source: "self"; deviceId: string },
+	fields: Record<string, unknown>,
+): Promise<StoredTunnelLink> {
+	const update = () =>
+		TunnelLinkModel.findOneAndUpdate(
+			key,
+			{ $set: fields, $setOnInsert: { forwardEnabled: true } },
+			{ upsert: true, returnDocument: "after" },
+		).lean<StoredTunnelLink>();
+	let row: StoredTunnelLink | null;
+	try {
+		row = await update();
+	} catch (error) {
+		if (!isDuplicateKey(error)) throw error;
+		row = await update();
+	}
+	if (!row) throw new OperationError(500, "INTERNAL_ERROR", "Link not stored");
+	return row;
+}
+
 /**
  * The `tunelo` process of `userSub`'s account links its machine. Tunelo
  * says whose machine the token is for; a token of another account is
@@ -92,12 +129,8 @@ export async function linkOwnMachine(
 		);
 	}
 	const { cipher } = runtime.deps;
-	const existing = await TunnelLinkModel.findOne({
-		userSub,
-		source: "self",
-		deviceId: info.deviceId,
-	}).lean<StoredTunnelLink>();
-	if (!existing) {
+	const key = { userSub, source: "self" as const, deviceId: info.deviceId };
+	if (!(await TunnelLinkModel.exists(key))) {
 		const count = await TunnelLinkModel.countDocuments({ userSub });
 		if (count >= MAX_TUNNEL_LINKS) {
 			throw new OperationError(
@@ -108,40 +141,43 @@ export async function linkOwnMachine(
 			);
 		}
 	}
-	const id = existing ? String(existing._id) : new Types.ObjectId().toString();
-	const fields = {
-		userSub,
-		status: "linked" as const,
-		source: "self" as const,
-		tokenSealed: cipher.encrypt(input.token, linkTokenSlot(userSub, id)),
-		linkId: info.linkId,
-		deviceId: info.deviceId,
+	// The row first (its id seals the token), then the token.
+	const row = await upsertOwnMachine(key, {
+		status: "linked",
 		machineId: input.machineId,
 		machineName: input.machineName,
 		forwardUrl,
 		linkedAt: new Date(),
-	};
-	const row = await TunnelLinkModel.findOneAndUpdate(
+	});
+	const id = String(row._id);
+	const before = await TunnelLinkModel.findOneAndUpdate(
 		{ _id: id, userSub },
 		{
-			$set: fields,
+			$set: {
+				tokenSealed: cipher.encrypt(input.token, linkTokenSlot(userSub, id)),
+				linkId: info.linkId,
+			},
 			$unset: { deadAt: 1 },
-			$setOnInsert: { forwardEnabled: true },
 		},
-		{ upsert: true, returnDocument: "after" },
+		{ returnDocument: "before" },
 	).lean<StoredTunnelLink>();
-	if (existing?.tokenSealed && existing.linkId !== info.linkId) {
+	if (before?.tokenSealed && before.linkId !== info.linkId) {
 		let old: string | null = null;
 		try {
-			old = cipher.decrypt(existing.tokenSealed, linkTokenSlot(userSub, id));
+			old = cipher.decrypt(before.tokenSealed, linkTokenSlot(userSub, id));
 		} catch {
 			runtime.deps.logger.warn({ linkId: id }, "Old link token unreadable");
 		}
 		if (old !== null && old !== input.token) await revokeQuietly(old);
 	}
+	const linked = await TunnelLinkModel.findOne({
+		_id: id,
+		userSub,
+	}).lean<StoredTunnelLink>();
 	runtime.cache.drop(userSub);
-	if (!row) throw new OperationError(500, "INTERNAL_ERROR", "Link not stored");
-	return linkView(row);
+	if (!linked)
+		throw new OperationError(500, "INTERNAL_ERROR", "Link not stored");
+	return linkView(linked);
 }
 
 /** The user turns Localman's requests to a machine's localhost on or off. */

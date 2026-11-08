@@ -23,6 +23,7 @@ function machineApp(seen: Array<string | undefined> = []) {
 					{ name: "Tunelo-Local-Port", value: target.port },
 				],
 				machine: machine ?? "m-only",
+				machineToken: TOKEN,
 			};
 		},
 	});

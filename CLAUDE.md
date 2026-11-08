@@ -142,6 +142,7 @@ This is a **tunnel proxy** — it relays untrusted HTTP traffic. Critical rules:
 | `TUNELO_FORWARD_003` | Local forward: turned off on the machine (403, from `tunelo`) |
 | `TUNELO_FORWARD_004` | Local forward: `Tunelo-Local-Port` is not a port (400) |
 | `TUNELO_FORWARD_005` | Local forward: nothing listens on the port (502, from `tunelo`) |
+| `TUNELO_FORWARD_006` | Local forward: rate limited (1200 a minute per machine, 100 refused per caller in 10 minutes) (429) |
 
 ### Architecture Reference
 

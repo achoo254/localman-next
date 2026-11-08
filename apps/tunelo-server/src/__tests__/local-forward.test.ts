@@ -9,6 +9,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, test } from "vitest";
 import { WebSocket } from "ws";
 import { createIdpTokenVerifier } from "../auth/idp-token-verifier.js";
 import { createTokenAuthenticator } from "../auth/token-authenticator.js";
+import { REFUSED_FORWARDS_PER_CALLER } from "../local-forward-relay.js";
 import { machineSubdomain } from "../machine-subdomain.js";
 import { createRelayHandler } from "../request-relay.js";
 import { FakeKeyStore } from "../test-support/fake-key-store.js";
@@ -92,6 +93,8 @@ interface Tunnel {
 	result: AuthResult;
 	/** Requests the relay sent to this client. */
 	seen: TunnelRequest[];
+	/** Headers of browser WebSockets the relay asked this client to open. */
+	wsOpens: Record<string, string | string[]>[];
 }
 
 /** A client that answers every relayed request with 200 "ok". */
@@ -101,13 +104,18 @@ async function openTunnel(auth: Record<string, unknown>): Promise<Tunnel> {
 	});
 	open.push(ws);
 	const seen: TunnelRequest[] = [];
+	const wsOpens: Record<string, string | string[]>[] = [];
 	const result = await new Promise<AuthResult>((resolve, reject) => {
 		ws.on("open", () => ws.send(JSON.stringify({ type: "auth", ...auth })));
 		ws.once("message", (data) => resolve(JSON.parse(String(data))));
 		ws.on("error", reject);
 	});
 	ws.on("message", (data) => {
-		const msg = JSON.parse(String(data)) as { type: string };
+		const msg = JSON.parse(String(data)) as {
+			type: string;
+			headers?: Record<string, string | string[]>;
+		};
+		if (msg.type === "ws-open") wsOpens.push(msg.headers ?? {});
 		if (msg.type !== "request") return;
 		const request = msg as TunnelRequest;
 		seen.push(request);
@@ -121,7 +129,7 @@ async function openTunnel(auth: Record<string, unknown>): Promise<Tunnel> {
 			}),
 		);
 	});
-	return { result, seen };
+	return { result, seen, wsOpens };
 }
 
 async function openMachine(): Promise<Tunnel> {
@@ -137,7 +145,7 @@ interface Reply {
 
 function send(
 	path: string,
-	headers: Record<string, string>,
+	headers: Record<string, string | string[]>,
 	to = host,
 ): Promise<Reply> {
 	return new Promise((resolve, reject) => {
@@ -231,6 +239,18 @@ describe("local forward gate", () => {
 			"tunelo-local-port": "80; 9222",
 		});
 		expect(bad).toMatchObject({ status: 400, code: "TUNELO_FORWARD_004" });
+		// A repeated header arrives joined ("80, 9222"): not a port.
+		const twice = await send(FORWARD, {
+			"tunelo-access": OWN,
+			"tunelo-local-port": ["80", "9222"],
+		});
+		expect(twice).toMatchObject({ status: 400, code: "TUNELO_FORWARD_004" });
+		// Leading zeros name the same port.
+		const padded = await send(FORWARD, {
+			"tunelo-access": OWN,
+			"tunelo-local-port": "09222",
+		});
+		expect(padded).toMatchObject({ status: 403, code: "TUNELO_FORWARD_002" });
 		expect(machine.seen).toEqual([]);
 	});
 
@@ -290,5 +310,40 @@ describe("local forward gate", () => {
 			ws.on("error", () => resolve(-1));
 		});
 		expect(status).toBe(404);
+	});
+
+	test("a WebSocket on another path reaches the machine without tunelo-* headers", async () => {
+		const machine = await openMachine();
+		const ws = new WebSocket(`ws://127.0.0.1:${port}/e2e`, {
+			headers: {
+				host,
+				"tunelo-forward-granted": "1",
+				"tunelo-access": OWN,
+				"tunelo-local-port": "22",
+			},
+		});
+		ws.on("error", () => undefined);
+		open.push(ws);
+		await new Promise<void>((resolve) => {
+			const check = setInterval(() => {
+				if (machine.wsOpens.length > 0) {
+					clearInterval(check);
+					resolve();
+				}
+			}, 5);
+		});
+		const names = Object.keys(machine.wsOpens[0] ?? {});
+		expect(names.some((name) => name.startsWith("tunelo-"))).toBe(false);
+	});
+
+	// Last: it uses up the refusal budget of this test's address.
+	test("a caller sending refused forwards is slowed down", async () => {
+		let last: Reply | null = null;
+		for (let i = 0; i <= REFUSED_FORWARDS_PER_CALLER; i++) {
+			last = await send(FORWARD, { "tunelo-access": OTHER_ACCOUNT });
+		}
+		expect(last).toMatchObject({ status: 429, code: "TUNELO_FORWARD_006" });
+		const owner = await send(FORWARD, { "tunelo-access": OWN });
+		expect(owner.status).toBe(429);
 	});
 });

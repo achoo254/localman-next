@@ -71,6 +71,9 @@ importers:
       '@modelcontextprotocol/server':
         specifier: 2.3.1
         version: 2.3.1
+      '@tunelo/shared':
+        specifier: workspace:*
+        version: link:../../packages/tunelo-shared
       express:
         specifier: ^5.2.1
         version: 5.2.1

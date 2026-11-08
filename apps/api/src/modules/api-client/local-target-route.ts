@@ -18,6 +18,8 @@ export interface LocalRoute {
 	readonly headers?: readonly HeaderEntry[];
 	/** Id of the user's machine whose localhost the request goes to. */
 	readonly machine?: string;
+	/** That machine's link token (to confirm a refusal with Tunelo). */
+	readonly machineToken?: string;
 }
 
 /**
