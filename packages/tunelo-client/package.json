@@ -1,0 +1,36 @@
+{
+	"name": "@tunelo/client",
+	"version": "0.1.0",
+	"type": "module",
+	"description": "Tunelo tunnel client and account sign-in (OAuth device flow) as a library: expose a local HTTP or WebSocket server through a Tunelo relay",
+	"engines": {
+		"node": ">=20"
+	},
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"files": ["dist", "README.md"],
+	"scripts": {
+		"build": "node --eval \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -b tsconfig.json --force",
+		"sync:shared": "tsx scripts/sync-shared.ts",
+		"test": "vitest run",
+		"typecheck": "tsc -p tsconfig.check.json"
+	},
+	"dependencies": {
+		"@types/ws": "^8.5.0",
+		"ws": "^8.16.0"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/achoo254/localman-next.git",
+		"directory": "packages/tunelo-client"
+	},
+	"homepage": "https://github.com/achoo254/localman-next/tree/main/packages/tunelo-client#readme",
+	"keywords": ["tunnel", "websocket", "proxy", "tunelo"]
+}

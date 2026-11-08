@@ -1,10 +1,10 @@
+import type { TunnelClientOptions } from "@tunelo/client";
 import {
 	type Credential,
 	NO_CREDENTIAL_MESSAGE,
 	deviceInfo,
 	resolveCredential,
 } from "../credentials.js";
-import type { TunnelClientOptions } from "../tunnel-client.js";
 
 /** What the MCP tools need from the CLI, resolved per call so a
  *  `tunelo login` done while the server runs is picked up. */

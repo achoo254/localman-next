@@ -1,3 +1,4 @@
+import type { TunnelClient, TunnelClientOptions } from "@tunelo/client";
 import { loadConfig } from "./config.js";
 import {
 	type Credential,
@@ -8,7 +9,6 @@ import {
 } from "./credentials.js";
 import type { Display } from "./display.js";
 import { printServerMigration, resolveServerUrl } from "./server-url.js";
-import type { TunnelClient, TunnelClientOptions } from "./tunnel-client.js";
 
 export interface TunnelSetup {
 	serverUrl: string;

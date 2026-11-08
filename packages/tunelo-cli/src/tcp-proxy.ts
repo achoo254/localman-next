@@ -5,8 +5,8 @@ import type {
 	TcpConnectionClose,
 	TcpConnectionOpen,
 	TcpDataMessage,
-} from "@tunelo/shared";
-import type { TunnelClient } from "./tunnel-client.js";
+	TunnelClient,
+} from "@tunelo/client";
 
 interface LocalTcpConnection {
 	socket: net.Socket;

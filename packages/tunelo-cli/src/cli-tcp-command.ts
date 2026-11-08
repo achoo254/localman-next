@@ -1,11 +1,10 @@
 /** CLI handler for `tunelo tcp <port>` command */
 
-import type { TcpRegisterResult } from "@tunelo/shared";
+import { type TcpRegisterResult, TunnelClient } from "@tunelo/client";
 import type { Command } from "commander";
 import { setupTunnel, showCredentialNotices } from "./cli-tunnel-setup.js";
 import type { Display } from "./display.js";
 import { TcpProxy } from "./tcp-proxy.js";
-import { TunnelClient } from "./tunnel-client.js";
 import { VERSION } from "./version.js";
 
 export function registerTcpCommand(program: Command, display: Display): void {

@@ -1,11 +1,11 @@
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
 	DeviceLoginError,
 	deviceNameForIdp,
+	discover,
 	pollForTokens,
 	startDeviceAuthorization,
-} from "./device-login.js";
-import { discover } from "./idp-client.js";
+} from "@tunelo/client";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
 	type FakeIdp,
 	fakeJwt,

@@ -3,10 +3,13 @@
  * one, its TTL running out, or the process exiting closes the connection.
  */
 import { randomUUID } from "node:crypto";
-import type { TcpRegisterResult } from "@tunelo/shared";
+import {
+	type TcpRegisterResult,
+	TunnelClient,
+	type TunnelClientOptions,
+} from "@tunelo/client";
 import { type InspectorEntry, RequestStore } from "../request-store.js";
 import { TcpProxy } from "../tcp-proxy.js";
-import { TunnelClient, type TunnelClientOptions } from "../tunnel-client.js";
 import type { McpContext } from "./mcp-context.js";
 
 const TCP_REGISTER_TIMEOUT_MS = 15_000;

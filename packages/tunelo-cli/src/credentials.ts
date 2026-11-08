@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { hostname } from "node:os";
+import { acceptsAccountToken } from "@tunelo/client";
 import { loadConfig, updateConfig } from "./config.js";
 import { getAccessToken } from "./idp-session.js";
-import { serverIdentity } from "./server-identity.js";
 
 /**
  * What `tunelo http|tcp|mcp` authenticates with, in order: `--key`,
@@ -12,30 +12,6 @@ import { serverIdentity } from "./server-identity.js";
 export type Credential =
 	| { kind: "account"; sub: string; getKey: () => Promise<string> }
 	| { kind: "key"; anonymous: boolean; getKey: () => Promise<string> };
-
-const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
-
-/**
- * Whether the account token of `sessionIssuer` may go to `serverUrl`: only
- * to the Tunelo of the same domain (`https://auth.<d>` signs in for
- * `tunnel.<d>`), over TLS, or to loopback for local development. Any other
- * server could replay the token against the real one.
- */
-export function acceptsAccountToken(
-	serverUrl: string,
-	sessionIssuer: string,
-): boolean {
-	let url: URL;
-	try {
-		url = new URL(serverUrl);
-	} catch {
-		return false;
-	}
-	if (LOOPBACK_HOSTS.has(url.hostname)) return true;
-	const secure = url.protocol === "https:" || url.protocol === "wss:";
-	const issuer = sessionIssuer.replace(/\/+$/, "");
-	return secure && serverIdentity(serverUrl)?.issuer === issuer;
-}
 
 export const UNTRUSTED_SERVER_MESSAGE =
 	"Your sign-in is for another Tunelo server; run `tunelo login --server <url>` for this one, or use --key.";

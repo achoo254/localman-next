@@ -1,14 +1,14 @@
 import http from "node:http";
 import type { AddressInfo } from "node:net";
 import type { Duplex } from "node:stream";
-import {
-	CLIENT_CAPABILITIES,
-	type WsCloseMessage,
-	type WsDataMessage,
-	type WsOpenResultMessage,
-} from "@tunelo/shared";
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { WebSocketServer } from "ws";
+import { CLIENT_CAPABILITIES } from "./shared/constants.js";
+import type {
+	WsCloseMessage,
+	WsDataMessage,
+	WsOpenResultMessage,
+} from "./shared/protocol.js";
 import { TunnelClient } from "./tunnel-client.js";
 import { WsAppProxy } from "./ws-app-proxy.js";
 
@@ -157,7 +157,7 @@ test("the tunnel client declares that it sends ws-open-result", async () => {
 	const { port } = server.address() as AddressInfo;
 	const client = new TunnelClient({
 		serverUrl: `http://127.0.0.1:${port}`,
-		apiKey: "k",
+		getApiKey: async () => "k",
 		localPort: 1,
 	});
 	client.connect().catch(() => undefined);
@@ -166,4 +166,17 @@ test("the tunnel client declares that it sends ws-open-result", async () => {
 	]);
 	client.disconnect();
 	await new Promise<void>((resolve) => server.close(() => resolve()));
+});
+
+test("dials the configured local host", async () => {
+	const sent: Sent[] = [];
+	const proxy = new WsAppProxy(
+		(msg) => sent.push(msg),
+		() => appPort,
+		{ handshakeTimeoutMs: 300, localHost: "127.0.0.1" },
+	);
+	open(proxy, "/ok");
+	await expect.poll(() => sent[0]?.type === "ws-open-result").toBe(true);
+	expect(sent[0]).toMatchObject({ ok: true });
+	proxy.closeAll();
 });

@@ -3,7 +3,7 @@
  * flow, refresh, revocation). Endpoints always come from discovery.
  * Tokens never reach logs or error messages.
  */
-import { TUNNEL_SCOPES } from "@tunelo/shared";
+import { TUNNEL_SCOPES } from "./shared/constants.js";
 
 export const IDP_DEFAULTS = {
 	issuer: "https://auth.hoandat.com",
@@ -15,19 +15,6 @@ export const IDP_DEFAULTS = {
 
 const HTTP_TIMEOUT_MS = 10_000;
 export const DEVICE_CODE_GRANT = "urn:ietf:params:oauth:grant-type:device_code";
-
-/**
- * The IdP to sign in with for `serverIdentityIssuer` (the issuer the server
- * stands for, see server-identity.ts): `TUNELO_AUTH_ISSUER` points the CLI
- * at a staging or local IdP instead.
- */
-export function idpIssuer(serverIdentityIssuer?: string): string {
-	return (
-		process.env.TUNELO_AUTH_ISSUER ??
-		serverIdentityIssuer ??
-		IDP_DEFAULTS.issuer
-	).replace(/\/+$/, "");
-}
 
 export interface IdpEndpoints {
 	deviceAuthorization: string;

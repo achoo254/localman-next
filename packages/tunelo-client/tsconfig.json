@@ -1,0 +1,16 @@
+{
+	"$comment": "Emits dist/ (JS + .d.ts), committed: git dependencies install the repository as is. CI fails when dist differs from a fresh build.",
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"composite": true,
+		"outDir": "dist",
+		"rootDir": "src",
+		"tsBuildInfoFile": "./tsconfig.tsbuildinfo",
+		"sourceMap": false,
+		"declarationMap": false,
+		"newLine": "lf",
+		"types": ["node"]
+	},
+	"include": ["src"],
+	"exclude": ["src/**/*.test.ts", "src/shared/shared-files.ts"]
+}

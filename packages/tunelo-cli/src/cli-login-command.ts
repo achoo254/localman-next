@@ -1,15 +1,18 @@
+import {
+	IDP_DEFAULTS,
+	deviceNameForIdp,
+	discover,
+	pollForTokens,
+	resourceOfIssuer,
+	revokeToken,
+	serverIdentity,
+	startDeviceAuthorization,
+} from "@tunelo/client";
 import type { Command } from "commander";
 import { getApiBaseUrl, verifyKey } from "./api-client.js";
 import { type StoredSession, loadConfig, updateConfig } from "./config.js";
-import {
-	deviceNameForIdp,
-	pollForTokens,
-	startDeviceAuthorization,
-} from "./device-login.js";
-import { discover, idpIssuer, revokeToken } from "./idp-client.js";
 import { clearSession, saveSession, sessionFromTokens } from "./idp-session.js";
 import { openBrowser } from "./open-browser.js";
-import { resourceOfIssuer, serverIdentity } from "./server-identity.js";
 import { printServerMigration, resolveServerUrl } from "./server-url.js";
 
 /** `--server` as an origin; anything but an http(s) URL is refused. */
@@ -46,9 +49,17 @@ async function saveLegacyKey(key: string): Promise<void> {
 	console.log("  ✓ Token verified & saved. Run: tunelo http <port>");
 }
 
-/** The IdP that signs in for `serverUrl`, from its host (`tunnel.<d>` → `https://auth.<d>`). */
+/**
+ * The IdP that signs in for `serverUrl`, from its host (`tunnel.<d>` →
+ * `https://auth.<d>`); `TUNELO_AUTH_ISSUER` points the CLI at a staging or
+ * local IdP instead.
+ */
 function issuerFor(serverUrl: string): string {
-	return idpIssuer(serverIdentity(serverUrl)?.issuer);
+	return (
+		process.env.TUNELO_AUTH_ISSUER ??
+		serverIdentity(serverUrl)?.issuer ??
+		IDP_DEFAULTS.issuer
+	).replace(/\/+$/, "");
 }
 
 /**

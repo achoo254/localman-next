@@ -64,7 +64,7 @@ async function runRejectingServer(windowMs: number): Promise<number[]> {
 
 	client = new TunnelClient({
 		serverUrl: `http://127.0.0.1:${port}`,
-		apiKey: "k",
+		getApiKey: async () => "k",
 		subdomain: "repro",
 		localPort: 1,
 	});

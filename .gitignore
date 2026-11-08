@@ -1,5 +1,7 @@
 node_modules/
 dist/
+# The built @tunelo/client is committed: git dependencies install the repository as is.
+!packages/tunelo-client/dist/
 portal-dist/
 coverage/
 # E2E: web build, traces and reports of the Playwright run

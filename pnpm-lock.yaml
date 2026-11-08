@@ -461,6 +461,9 @@ importers:
       '@modelcontextprotocol/server':
         specifier: 2.3.1
         version: 2.3.1
+      '@tunelo/client':
+        specifier: workspace:*
+        version: link:../tunelo-client
       '@tunelo/shared':
         specifier: workspace:*
         version: link:../tunelo-shared
@@ -516,6 +519,15 @@ importers:
       vite:
         specifier: ^6.2.0
         version: 6.4.4(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15)
+
+  packages/tunelo-client:
+    dependencies:
+      '@types/ws':
+        specifier: ^8.5.0
+        version: 8.18.2
+      ws:
+        specifier: ^8.16.0
+        version: 8.22.0
 
   packages/tunelo-shared: {}
 

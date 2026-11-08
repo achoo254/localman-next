@@ -1,10 +1,10 @@
-import { describe, expect, test } from "vitest";
-import { loadConfig, saveConfig } from "./config.js";
 import {
 	type IdpEndpoints,
 	OAuthResponseError,
 	type TokenSet,
-} from "./idp-client.js";
+} from "@tunelo/client";
+import { describe, expect, test } from "vitest";
+import { loadConfig, saveConfig } from "./config.js";
 import { SessionExpiredError, getAccessToken } from "./idp-session.js";
 import { fakeJwt } from "./test-support/fake-idp.js";
 import { useTempHome } from "./test-support/temp-home.js";

@@ -1,9 +1,7 @@
 import type http from "node:http";
-import {
-	DEFAULTS,
-	type WsOpenResultMessage,
-	stripHopByHopHeaders,
-} from "@tunelo/shared";
+import { DEFAULTS } from "./shared/constants.js";
+import { stripHopByHopHeaders } from "./shared/http-headers.js";
+import type { WsOpenResultMessage } from "./shared/protocol.js";
 
 export type WsOpenRefusal = Extract<WsOpenResultMessage, { ok: false }>;
 

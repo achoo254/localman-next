@@ -1,3 +1,4 @@
+import { acceptsAccountToken } from "@tunelo/client";
 import type { Command } from "commander";
 import {
 	approveLink,
@@ -6,7 +7,6 @@ import {
 	revokeLink,
 } from "./api-client.js";
 import { type TuneloConfig, loadConfig } from "./config.js";
-import { acceptsAccountToken } from "./credentials.js";
 import { printServerMigration, resolveServerUrl } from "./server-url.js";
 
 export const LINKS_NOT_NEEDED_MESSAGE =

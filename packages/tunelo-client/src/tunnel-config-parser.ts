@@ -1,4 +1,4 @@
-import { SUBDOMAIN_REGEX } from "@tunelo/shared";
+import { SUBDOMAIN_REGEX } from "./shared/constants.js";
 
 export interface TunnelMapping {
 	port: number;

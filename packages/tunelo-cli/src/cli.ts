@@ -1,5 +1,10 @@
 #!/usr/bin/env node
-import type { RegisterTunnelResult } from "@tunelo/shared";
+import {
+	type RegisterTunnelResult,
+	TunnelClient,
+	type TunnelMapping,
+	parseTunnelArgs,
+} from "@tunelo/client";
 import { program } from "commander";
 import { registerLinkCommands } from "./cli-link-command.js";
 import { registerLoginCommands } from "./cli-login-command.js";
@@ -16,8 +21,6 @@ import { createInspectorIntegration } from "./inspector-integration.js";
 import { startPortalServer, stopPortalServer } from "./portal-server.js";
 import type { InspectorEntry } from "./request-store.js";
 import { type RunTunnel, startRunRecord } from "./run-registry.js";
-import { TunnelClient } from "./tunnel-client.js";
-import { parseTunnelArgs } from "./tunnel-config-parser.js";
 import { VERSION } from "./version.js";
 
 const display = new Display();
@@ -67,7 +70,7 @@ program
 				verbose?: boolean;
 			},
 		) => {
-			let tunnels: import("./tunnel-config-parser.js").TunnelMapping[];
+			let tunnels: TunnelMapping[];
 			try {
 				tunnels = parseTunnelArgs(portArgs);
 			} catch (err) {

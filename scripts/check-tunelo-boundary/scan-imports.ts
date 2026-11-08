@@ -16,6 +16,7 @@ export interface TuneloPackage {
 export const TUNELO_PACKAGES: readonly TuneloPackage[] = [
 	{ root: "apps/tunelo-server", allowedLocalman: ["@localman/tenancy"] },
 	{ root: "packages/tunelo-cli", allowedLocalman: [] },
+	{ root: "packages/tunelo-client", allowedLocalman: [] },
 	{ root: "packages/tunelo-shared", allowedLocalman: [] },
 ];
 

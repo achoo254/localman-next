@@ -28,7 +28,7 @@ export function serverIdentity(
 /**
  * The audience to ask the IdP `issuer` for: `https://tunnel.<domain>` of
  * `https://auth.<domain>`; the default one for any other issuer (a local
- * or staging IdP set with `TUNELO_AUTH_ISSUER`).
+ * or staging IdP).
  */
 export function resourceOfIssuer(issuer: string): string {
 	let host: string;
@@ -40,4 +40,28 @@ export function resourceOfIssuer(issuer: string): string {
 	return host.startsWith("auth.")
 		? `https://tunnel.${host.slice("auth.".length)}`
 		: IDP_DEFAULTS.resource;
+}
+
+const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+/**
+ * Whether the account token of `sessionIssuer` may go to `serverUrl`: only
+ * to the Tunelo of the same domain (`https://auth.<d>` signs in for
+ * `tunnel.<d>`), over TLS, or to loopback for local development. Any other
+ * server could replay the token against the real one.
+ */
+export function acceptsAccountToken(
+	serverUrl: string,
+	sessionIssuer: string,
+): boolean {
+	let url: URL;
+	try {
+		url = new URL(serverUrl);
+	} catch {
+		return false;
+	}
+	if (LOOPBACK_HOSTS.has(url.hostname)) return true;
+	const secure = url.protocol === "https:" || url.protocol === "wss:";
+	const issuer = sessionIssuer.replace(/\/+$/, "");
+	return secure && serverIdentity(serverUrl)?.issuer === issuer;
 }

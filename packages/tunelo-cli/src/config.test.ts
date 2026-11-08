@@ -1,4 +1,5 @@
 import { mkdirSync, statSync, writeFileSync } from "node:fs";
+import { acceptsAccountToken } from "@tunelo/client";
 import { describe, expect, test } from "vitest";
 import {
 	getConfigDir,
@@ -6,7 +7,7 @@ import {
 	loadConfig,
 	saveConfig,
 } from "./config.js";
-import { acceptsAccountToken, resolveCredential } from "./credentials.js";
+import { resolveCredential } from "./credentials.js";
 import { legacyReminder } from "./display.js";
 import { DEFAULT_SERVER_URL, resolveServerUrl } from "./server-url.js";
 import { useTempHome } from "./test-support/temp-home.js";

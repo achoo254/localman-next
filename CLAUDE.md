@@ -42,7 +42,8 @@ Self-hosted ngrok alternative. WebSocket relay tunnel proxy that exposes local s
 
 ```
 apps/tunelo-server/      # Tunnel server (deployed to VPS, PM2)
-packages/tunelo-cli/     # CLI tool (npm package: tunelo)
+packages/tunelo-cli/     # CLI tool (npm package: tunelo), built on @tunelo/client
+packages/tunelo-client/  # @tunelo/client: tunnel client + device-flow sign-in as a library (built output committed)
 packages/tunelo-shared/  # Shared types & WS protocol (@tunelo/shared)
 infra/tunelo/            # nginx, certbot, PM2 configs, deploy.sh
 docs/tunelo/             # Deployment guide (ADR: docs/decisions/tunelo/)
@@ -58,11 +59,18 @@ pnpm build:tunelo-server               # Bundle server into dist/tunelo-server/
 pnpm build:tunelo-cli                  # Bundle CLI into packages/tunelo-cli/dist/
 pnpm --filter @tunelo/server test
 pnpm --filter tunelo test
+pnpm --filter @tunelo/client test
+pnpm --filter @tunelo/client build        # Rebuild the committed build after changing src/
+pnpm --filter @tunelo/client sync:shared  # Re-copy @tunelo/shared sources into src/shared/
 pnpm test:tunelo-e2e
 VPS_HOST=<ssh alias> bash infra/tunelo/deploy.sh   # Deploy server (PM2)
 ```
 
 Release CLI: tag `tunelo-vX.Y.Z` triggers `.github/workflows/tunelo-release.yml` (GitHub release with `tunelo.tgz`; the CLI is not on npm).
+
+Release `@tunelo/client`: git tag `tunelo-client-vX.Y.Z` only (no GitHub Release, so `releases/latest`, which `tunelo update` reads, stays the CLI). Consumers install `github:achoo254/localman-next#tunelo-client-vX.Y.Z&path:/packages/tunelo-client`, so the package has no `workspace:*` dependency: `src/shared/` is a copy of `@tunelo/shared` (a test fails when it drifts), and its built output is committed (CI fails when it is stale). The library never reads credentials: callers pass `getApiKey` and choose the session file (`fileSessionStore(path)`).
+
+- **Machine tunnels** (`kind: "machine"` in `auth`, used by background agents): subdomain `m-<hash>` derived from the account (`ownerSub`) and `deviceId` (`apps/tunelo-server/src/machine-subdomain.ts`), so it is the same on every connection with nothing stored; only that account opens it, no other tunnel may take a name of that shape, and a new connection of the same machine replaces its stale one. Own quota (5 per account, `DEFAULT_MAX_MACHINE_TUNNELS`), apart from the 3 `tunelo http` tunnels. One tunnel per machine channel (no `register-tunnel`/`tcp-register`).
 
 - **Dữ liệu Tunelo** (mục "One domain" của `docs/tunelo/deployment-guide.md`): model mới gắn `tenantScopePlugin`; request chạy trong tenant `primary` dựng từ env khi Host thuộc `TUNNEL_DOMAINS` (hoặc loopback ngoài production), host khác nhận 421 (`apps/tunelo-server/src/tenancy/`); trạng thái trong bộ nhớ (tunnel, cache, stream) khoá theo `tenantKey(subdomain)`; frame từ client chỉ nhận từ đúng connection đã gửi request. Phần dùng chung với Localman nằm ở `packages/tenancy` (`@localman/tenancy`). CLI chỉ gửi token tới Tunelo cùng domain với issuer của phiên (`acceptsAccountToken`).
 
@@ -114,6 +122,8 @@ This is a **tunnel proxy** — it relays untrusted HTTP traffic. Critical rules:
 | `TUNELO_TUNNEL_001` | Subdomain already in use |
 | `TUNELO_TUNNEL_002` | No tunnel found for subdomain |
 | `TUNELO_TUNNEL_003` | Tunnel connection lost |
+| `TUNELO_TUNNEL_004` | Subdomain held for another account or machine (client stops reconnecting) |
+| `TUNELO_TUNNEL_005` | Tunnel quota exceeded (`tunelo http` or machine; a machine client stops reconnecting) |
 | `TUNELO_RELAY_001` | Request relay timeout |
 | `TUNELO_RELAY_002` | Response too large |
 | `TUNELO_SERVER_001` | Server startup failed |

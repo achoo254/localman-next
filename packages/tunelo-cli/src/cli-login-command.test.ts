@@ -15,8 +15,8 @@ vi.mock("./config.js", () => ({
 		state.config = update(state.config);
 	},
 }));
-vi.mock("./idp-client.js", async (importOriginal) => ({
-	...(await importOriginal<typeof import("./idp-client.js")>()),
+vi.mock("@tunelo/client", async (importOriginal) => ({
+	...(await importOriginal<typeof import("@tunelo/client")>()),
 	discover: async () => ({
 		deviceAuthorization: "https://idp.test/device",
 		token: "https://idp.test/token",
@@ -25,8 +25,6 @@ vi.mock("./idp-client.js", async (importOriginal) => ({
 	revokeToken: async (_endpoints: unknown, refreshToken: string) => {
 		state.revoked.push(refreshToken);
 	},
-}));
-vi.mock("./device-login.js", () => ({
 	deviceNameForIdp: () => "test-machine",
 	startDeviceAuthorization: async () => ({
 		verificationUri: "https://idp.test/device",

@@ -1,12 +1,13 @@
 import http from "node:http";
-import { DEFAULTS, stripHopByHopHeaders } from "@tunelo/shared";
+import { DEFAULTS } from "./shared/constants.js";
+import { stripHopByHopHeaders } from "./shared/http-headers.js";
 import type {
 	StreamDataMessage,
 	StreamEndMessage,
 	StreamErrorMessage,
 	StreamStartMessage,
 	TunnelRequest,
-} from "@tunelo/shared";
+} from "./shared/protocol.js";
 
 type StreamFrame =
 	| StreamStartMessage

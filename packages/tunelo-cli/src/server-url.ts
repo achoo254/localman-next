@@ -1,6 +1,6 @@
+import { serverIdentity } from "@tunelo/client";
 import { loadConfig, updateConfig } from "./config.js";
 import { DEFAULT_SERVER_URL } from "./default-server.js";
-import { serverIdentity } from "./server-identity.js";
 
 export { DEFAULT_SERVER_URL } from "./default-server.js";
 /** Hosts of the old domain; saved configs pointing there move over. */

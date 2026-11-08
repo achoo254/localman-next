@@ -1,0 +1,9 @@
+{
+	"$comment": "Typechecks sources, tests and scripts without emitting.",
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"types": ["node"]
+	},
+	"include": ["src", "scripts"]
+}

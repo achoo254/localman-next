@@ -1,13 +1,13 @@
 import type http from "node:http";
-import {
-	DEFAULTS,
-	type WsCloseMessage,
-	type WsDataMessage,
-	type WsOpenMessage,
-	type WsOpenResultMessage,
-	stripHopByHopHeaders,
-} from "@tunelo/shared";
 import WebSocket, { type RawData } from "ws";
+import { DEFAULTS } from "./shared/constants.js";
+import { stripHopByHopHeaders } from "./shared/http-headers.js";
+import type {
+	WsCloseMessage,
+	WsDataMessage,
+	WsOpenMessage,
+	WsOpenResultMessage,
+} from "./shared/protocol.js";
 import {
 	type WsOpenRefusal,
 	readRefusal,
@@ -65,6 +65,8 @@ const ABNORMAL_CLOSURE = 1006;
 export interface WsAppProxyOptions {
 	/** Cap on the local handshake (ms). Overridden only by tests. */
 	handshakeTimeoutMs?: number;
+	/** Host the local app listens on; default `localhost`. */
+	localHost?: string | undefined;
 }
 
 /**
@@ -89,7 +91,7 @@ export class WsAppProxy {
 		const headers = stripHopByHopHeaders(msg.headers);
 		for (const h of WS_HANDSHAKE_HEADERS) delete headers[h];
 
-		const url = `ws://localhost:${port}${msg.path}`;
+		const url = `ws://${this.options.localHost ?? "localhost"}:${port}${msg.path}`;
 		const protocols = msg.protocol
 			? msg.protocol
 					.split(",")

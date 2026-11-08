@@ -1,9 +1,14 @@
 import { EventEmitter } from "node:events";
+import WebSocket from "ws";
+import { type ActiveStream, proxyRequestStream } from "./http-stream.js";
+import {
+	CLIENT_CAPABILITIES,
+	DEFAULTS,
+	type TunnelKind,
+} from "./shared/constants.js";
 import {
 	type AuthMessage,
 	type AuthResult,
-	CLIENT_CAPABILITIES,
-	DEFAULTS,
 	type RegisterTunnelMessage,
 	type RegisterTunnelResult,
 	type ServerToClientMessage,
@@ -14,37 +19,41 @@ import {
 	type TcpRegisterResult,
 	type TunnelRequest,
 	parseMessage,
-} from "@tunelo/shared";
-import WebSocket from "ws";
-import { type ActiveStream, proxyRequestStream } from "./http-stream.js";
-import { TunnelAuthError, isFatal } from "./tunnel-auth-error.js";
+} from "./shared/protocol.js";
+import { TunnelAuthError, stopsReconnecting } from "./tunnel-auth-error.js";
 import type { TunnelMapping } from "./tunnel-config-parser.js";
 import { WsAppProxy } from "./ws-app-proxy.js";
 
 export interface TunnelClientOptions {
+	/** Tunelo server, e.g. `https://tunnel.hoandat.com`. */
 	serverUrl: string;
-	/** Fixed token; or use `getApiKey`. */
-	apiKey?: string;
 	/** Called before every connect and reconnect, e.g. to refresh an account
-	 *  access token. An error with `fatal: true` stops reconnecting. */
-	getApiKey?: () => Promise<string>;
-	/** Reported to the server so an account can tell its machines apart. */
-	deviceId?: string;
-	deviceName?: string;
+	 *  access token (`accountTokenFor`). An error with `fatal: true` stops
+	 *  reconnecting. The library never reads credentials on its own. */
+	getApiKey: () => Promise<string>;
+	/** Reported to the server so an account can tell its machines apart;
+	 *  required for `kind: "machine"`, whose subdomain it keys. */
+	deviceId?: string | undefined;
+	deviceName?: string | undefined;
+	/** `machine`: a background agent's tunnel, held for this account and
+	 *  `deviceId` under a quota of its own (see `TUNNEL_KINDS`). */
+	kind?: TunnelKind | undefined;
 	/** Authenticate without opening an HTTP tunnel (TCP-only clients). */
-	tcpOnly?: boolean;
-	subdomain?: string;
+	tcpOnly?: boolean | undefined;
+	/** Requested subdomain; for `machine`, the one granted before. */
+	subdomain?: string | undefined;
+	/** Local port the tunnel forwards HTTP and WebSocket traffic to. */
 	localPort: number;
-	localHost?: string;
+	localHost?: string | undefined;
 	/** Basic auth credentials "user:pass" */
-	auth?: string;
+	auth?: string | undefined;
 	/** Additional tunnels to register after initial auth */
-	additionalTunnels?: TunnelMapping[];
+	additionalTunnels?: TunnelMapping[] | undefined;
 	/** Keepalive probe period (ms). Overridden only by tests — the wait for a
 	 *  missed pong is two of these, and the default makes that a full minute. */
-	pingIntervalMs?: number;
+	pingIntervalMs?: number | undefined;
 	/** Cap on one connect attempt (ms). Overridden only by tests. */
-	connectTimeoutMs?: number;
+	connectTimeoutMs?: number | undefined;
 }
 
 export class TunnelClient extends EventEmitter {
@@ -59,22 +68,22 @@ export class TunnelClient extends EventEmitter {
 	/** In-flight response streams keyed by request id (for cancel/cleanup). */
 	private activeStreams = new Map<string, ActiveStream>();
 	/** Browser→app WebSocket relay: opens a local WS per `ws-open` and bridges frames. */
-	private readonly wsAppProxy = new WsAppProxy(
-		(msg) => this.socket?.send(JSON.stringify(msg)),
-		(subdomain) =>
-			this.subdomainPortMap.get(subdomain) ?? this.options.localPort,
-	);
+	private readonly wsAppProxy: WsAppProxy;
 
 	constructor(options: TunnelClientOptions) {
 		super();
 		this.options = options;
+		this.wsAppProxy = new WsAppProxy(
+			(msg) => this.socket?.send(JSON.stringify(msg)),
+			(subdomain) =>
+				this.subdomainPortMap.get(subdomain) ?? this.options.localPort,
+			{ localHost: options.localHost },
+		);
 	}
 
 	/** Resolves the token first, so each (re)connect uses a fresh one. */
 	async connect(): Promise<AuthResult> {
-		const key = this.options.getApiKey
-			? await this.options.getApiKey()
-			: this.options.apiKey;
+		const key = await this.options.getApiKey();
 		if (!key) throw new Error("No access token");
 		return this.open(key);
 	}
@@ -120,6 +129,7 @@ export class TunnelClient extends EventEmitter {
 					deviceId: this.options.deviceId,
 					deviceName: this.options.deviceName,
 					...(this.options.tcpOnly ? { tcpOnly: true } : {}),
+					...(this.options.kind ? { kind: this.options.kind } : {}),
 					capabilities: [CLIENT_CAPABILITIES.WS_OPEN_RESULT],
 				};
 				socket.send(JSON.stringify(authMsg));
@@ -390,7 +400,7 @@ export class TunnelClient extends EventEmitter {
 					await this.connect();
 					return;
 				} catch (err) {
-					if (isFatal(err)) {
+					if (stopsReconnecting(err, this.options.kind)) {
 						this.stopped = true;
 						this.emit("error", err);
 						return;

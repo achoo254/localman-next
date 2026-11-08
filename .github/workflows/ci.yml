@@ -40,6 +40,17 @@ jobs:
       - run: pnpm check:mcp-coverage
       - run: pnpm build
 
+      # @tunelo/client is installed from git, so its committed build must
+      # match its sources (rebuilt by `pnpm build` above).
+      - name: committed @tunelo/client build is current
+        run: |
+          changes=$(git status --porcelain -- packages/tunelo-client/dist)
+          if [ -n "$changes" ]; then
+            echo "$changes"
+            echo "Run pnpm --filter @tunelo/client build and commit packages/tunelo-client/dist"
+            exit 1
+          fi
+
   unit:
     name: unit and API tests (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest

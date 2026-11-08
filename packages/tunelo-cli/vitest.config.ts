@@ -12,6 +12,7 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@tunelo/shared": resolve(__dirname, "../tunelo-shared/src/index.ts"),
+			"@tunelo/client": resolve(__dirname, "../tunelo-client/src/index.ts"),
 		},
 	},
 });

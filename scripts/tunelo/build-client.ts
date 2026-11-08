@@ -20,9 +20,10 @@ await build({
 	outfile: resolve(distDir, "cli.js"),
 	sourcemap: true,
 	minify: false,
-	// Resolve @tunelo/shared from monorepo source (bundled into cli.js)
+	// Resolve @tunelo/shared and @tunelo/client from monorepo source (bundled into cli.js)
 	alias: {
 		"@tunelo/shared": resolve(root, "packages/tunelo-shared/src/index.ts"),
+		"@tunelo/client": resolve(root, "packages/tunelo-client/src/index.ts"),
 	},
 	// Externalize node builtins and heavy deps that users install
 	external: runtimeDeps,
@@ -34,7 +35,7 @@ await build({
 });
 
 // Generate a self-contained package.json inside dist/ so the CLI publishes from
-// there. @tunelo/shared is bundled in, so it must NOT stay a workspace dep; keep
+// there. @tunelo/shared and @tunelo/client are bundled in, so they must NOT stay workspace deps; keep
 // only the externalized runtime deps. Paths are relative to dist/ (publish root).
 // The explicit `files` list is a safety guard: publishing from dist/ must never
 // ship a stray .npmrc (it can hold a registry auth token).

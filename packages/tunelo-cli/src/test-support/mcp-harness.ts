@@ -30,6 +30,7 @@ export async function buildCliBundle(name: string): Promise<string> {
 		packages: "external",
 		alias: {
 			"@tunelo/shared": resolve(cliRoot, "../tunelo-shared/src/index.ts"),
+			"@tunelo/client": resolve(cliRoot, "../tunelo-client/src/index.ts"),
 		},
 		logLevel: "silent",
 	});

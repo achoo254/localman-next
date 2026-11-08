@@ -58,7 +58,7 @@ test(
 		const disconnects: number[] = [];
 		client = new TunnelClient({
 			serverUrl: `http://127.0.0.1:${port}`,
-			apiKey: "k",
+			getApiKey: async () => "k",
 			subdomain: "deaf",
 			localPort: 1,
 			pingIntervalMs: 150,
@@ -108,7 +108,7 @@ test(
 		let disconnected = 0;
 		client = new TunnelClient({
 			serverUrl: `http://127.0.0.1:${port}`,
-			apiKey: "k",
+			getApiKey: async () => "k",
 			subdomain: "healthy",
 			localPort: 1,
 			pingIntervalMs: 150,
@@ -143,7 +143,7 @@ test(
 
 		client = new TunnelClient({
 			serverUrl: `http://127.0.0.1:${port}`,
-			apiKey: "k",
+			getApiKey: async () => "k",
 			subdomain: "stalled",
 			localPort: 1,
 			connectTimeoutMs: 300,
