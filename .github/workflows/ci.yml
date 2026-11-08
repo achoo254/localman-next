@@ -40,14 +40,14 @@ jobs:
       - run: pnpm check:mcp-coverage
       - run: pnpm build
 
-      # @tunelo/client is installed from git, so its committed build must
-      # match its sources (rebuilt by `pnpm build` above).
-      - name: committed @tunelo/client build is current
+      # @tunelo/client and @tunelo/shared are installed from git, so their
+      # committed builds must match their sources (rebuilt by `pnpm build` above).
+      - name: committed @tunelo/client and @tunelo/shared builds are current
         run: |
-          changes=$(git status --porcelain -- packages/tunelo-client/dist)
+          changes=$(git status --porcelain -- packages/tunelo-client/dist packages/tunelo-shared/dist)
           if [ -n "$changes" ]; then
             echo "$changes"
-            echo "Run pnpm --filter @tunelo/client build and commit packages/tunelo-client/dist"
+            echo "Run pnpm --filter @tunelo/client --filter @tunelo/shared build and commit their dist/"
             exit 1
           fi
 

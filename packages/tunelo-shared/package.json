@@ -2,12 +2,27 @@
 	"name": "@tunelo/shared",
 	"version": "0.1.0",
 	"type": "module",
+	"description": "Tunelo wire protocol, limits and header rules shared by the server and its clients",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"files": ["dist"],
 	"scripts": {
-		"build": "tsc --build --force",
+		"build": "node --eval \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc --build --force",
 		"dev": "tsc --watch",
 		"test": "vitest run",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc -p tsconfig.check.json"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/achoo254/localman-next.git",
+		"directory": "packages/tunelo-shared"
 	}
 }

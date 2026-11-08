@@ -44,7 +44,7 @@ Self-hosted ngrok alternative. WebSocket relay tunnel proxy that exposes local s
 apps/tunelo-server/      # Tunnel server (deployed to VPS, PM2)
 packages/tunelo-cli/     # CLI tool (npm package: tunelo), built on @tunelo/client
 packages/tunelo-client/  # @tunelo/client: tunnel client + device-flow sign-in as a library (built output committed)
-packages/tunelo-shared/  # Shared types & WS protocol (@tunelo/shared)
+packages/tunelo-shared/  # Shared types & WS protocol (@tunelo/shared, built output committed)
 infra/tunelo/            # nginx, certbot, PM2 configs, deploy.sh
 docs/tunelo/             # Deployment guide (ADR: docs/decisions/tunelo/)
 tests/tunelo/            # E2E tests
@@ -61,6 +61,7 @@ pnpm --filter @tunelo/server test
 pnpm --filter tunelo test
 pnpm --filter @tunelo/client test
 pnpm --filter @tunelo/client build        # Rebuild the committed build after changing src/
+pnpm --filter @tunelo/shared build        # Same for @tunelo/shared
 pnpm --filter @tunelo/client sync:shared  # Re-copy @tunelo/shared sources into src/shared/
 pnpm test:tunelo-e2e
 VPS_HOST=<ssh alias> bash infra/tunelo/deploy.sh   # Deploy server (PM2)
@@ -69,6 +70,8 @@ VPS_HOST=<ssh alias> bash infra/tunelo/deploy.sh   # Deploy server (PM2)
 Release CLI: tag `tunelo-vX.Y.Z` triggers `.github/workflows/tunelo-release.yml` (GitHub release with `tunelo.tgz`; the CLI is not on npm).
 
 Release `@tunelo/client`: git tag `tunelo-client-vX.Y.Z` only (no GitHub Release, so `releases/latest`, which `tunelo update` reads, stays the CLI). Consumers install `github:achoo254/localman-next#tunelo-client-vX.Y.Z&path:/packages/tunelo-client`, so the package has no `workspace:*` dependency: `src/shared/` is a copy of `@tunelo/shared` (a test fails when it drifts), and its built output is committed (CI fails when it is stale). The library never reads credentials: callers pass `getApiKey` and choose the session file (`fileSessionStore(path)`).
+
+Release `@tunelo/shared` the same way: git tag `tunelo-shared-vX.Y.Z`, installed as `github:achoo254/localman-next#tunelo-shared-vX.Y.Z&path:/packages/tunelo-shared`; its built output is committed too (same CI check). The `tunelo` 2.x process (chat-next `apps/agent`) uses both packages from these tags.
 
 - **Machine tunnels** (`kind: "machine"` in `auth`, used by background agents): subdomain `m-<hash>` derived from the account (`ownerSub`) and `deviceId` (`apps/tunelo-server/src/machine-subdomain.ts`), so it is the same on every connection with nothing stored; only that account opens it, no other tunnel may take a name of that shape, and a new connection of the same machine replaces its stale one. Own quota (5 per account, `DEFAULT_MAX_MACHINE_TUNNELS`), apart from the 3 `tunelo http` tunnels. One tunnel per machine channel (no `register-tunnel`/`tcp-register`).
 
