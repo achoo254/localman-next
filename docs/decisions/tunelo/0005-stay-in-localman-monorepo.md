@@ -1,7 +1,7 @@
 # ADR-0005: Tunelo ở lại monorepo `localman-next`, dùng độc lập qua gói npm
 
 - **Ngày:** 2026-10-26
-- **Trạng thái:** Đã chốt
+- **Trạng thái:** Đã chốt. Phần CLI qua gói npm đã thay bởi [ADR-0006](0006-cli-moved-to-tunelo-agent.md)
 - **Người quyết định:** dattqh
 
 ## Bối cảnh

@@ -2,38 +2,58 @@
 
 ## Release & Deploy
 
-Tunelo nằm trong monorepo `localman-next` (GitHub `achoo254/localman-next`): server ở
-`apps/tunelo-server`, CLI ở `packages/tunelo-cli`, code dùng chung ở `packages/tunelo-shared`
-(xem [system-architecture.md](../system-architecture.md)). Repo riêng `achoo254/tunelo` cũ đã xoá.
-CLI và server được phát hành theo hai đường riêng.
+Tunelo nằm trong monorepo `localman-next` (GitHub `achoo254/localman-next`): server ở `apps/tunelo-server`, thư viện ở
+`packages/tunelo-client` và `packages/tunelo-shared`, gói CLI cũ ở `packages/tunelo-cli` (xem
+[system-architecture.md](../system-architecture.md)). Chương trình chạy trên máy người dùng là `tunelo` 2.x của chat-next
+([ADR-0006](../decisions/tunelo/0006-cli-moved-to-tunelo-agent.md)).
 
-### CLI — GitHub Releases (GitHub Actions)
+### Chương trình trên máy người dùng
 
-CLI phát hành ở GitHub Releases của repo `localman-next`, **không còn trên npm** (chốt
-27/10/2026: chỉ chủ hệ sinh thái dùng Tunelo, tài khoản npm đang bị tạm khoá). Workflow
-`.github/workflows/tunelo-release.yml` chạy khi đẩy git tag `tunelo-vX.Y.Z`: kiểm tra tag khớp
-version → lint, test, E2E của Tunelo → `pnpm build:tunelo-cli` → `npm pack` từ
-`packages/tunelo-cli/dist` thành `tunelo.tgz` → `gh release create` (đánh dấu latest, ghi chú lấy
-từ mục của version trong `packages/tunelo-cli/CHANGELOG.md`).
+- **`tunelo` 2.x** là binary của chat-next (`apps/agent`), phát hành ở GitHub Releases của `achoo254/chat-next` với tag
+  `tunelo-v2.*` (asset `tunelo-darwin-arm64`, `tunelo-darwin-x64`, `tunelo-windows-x64.exe`, kèm `.minisig` và
+  `SHA256SUMS`), cập nhật bằng `tunelo update` của chính nó. Cài: lệnh trong `TUNELO_INSTALL_COMMANDS` của
+  `packages/tunelo-shared/src/release.ts` (script `https://chat.hoandat.com/agent/install.sh` cho macOS,
+  `install.ps1` cho Windows PowerShell). Cách phát hành và gỡ: chat-next `apps/agent/README.md`.
+- **Gói `tunelo` 1.12.0** (`tunelo-v1.12.0`, file `tunelo.tgz`) là bản cuối của gói cũ; nội dung ở
+  `packages/tunelo-cli/CHANGELOG.md`. Workflow `.github/workflows/tunelo-release.yml` (đẩy tag `tunelo-vX.Y.Z`) chỉ còn
+  để sửa khẩn bản này; không phát hành tính năng mới ở đây, không dùng npm registry.
+- `releases/latest` của repo này phải luôn là `tunelo-v1.12.0`: CLI 1.11 trở về trước đọc nó để lên 1.12. Release khác
+  trong repo này tạo với `--latest=false`.
+- Thư viện `@tunelo/client`, `@tunelo/shared`: chỉ git tag `tunelo-client-vX.Y.Z` / `tunelo-shared-vX.Y.Z` (cách phát hành
+  trong `CLAUDE.md`). Đổi giao thức tunnel: tag thư viện ở đây, deploy server, rồi chat-next nâng tag và phát hành binary.
 
-Quy trình phát hành:
+### Thứ tự deploy khi đổi hợp đồng với tunelo 2.x
+
+Mỗi bước chỉ thêm, bước sau dựa vào bước trước:
+
+1. auth-next có client và scope mà binary cần (`tunelo-agent`, `machines:write`).
+2. **tunelo-server** (cửa kiểm `/.tunelo/forward`, `POST|GET /api/links/self`): phải chạy trước khi bất kỳ `tunelo` nào
+   bật chuyển tiếp. Server tương thích ngược, tunnel thường và CLI 1.x vẫn chạy.
+3. **Localman** api + web (`infra/localman/deploy.sh`, runbook [`docs/deployment-guide.md`](../deployment-guide.md)): route
+   `POST /tunelo/links/self` và nginx `location = /tunelo/links/self` trong `infra/localman/nginx/localman-app.inc`
+   (route nằm ngoài `/api/`, thiếu location thì rơi vào trang tĩnh và trả 405).
+4. Phát hành binary `tunelo` 2.x ở chat-next, rồi gói 1.12 ở đây.
+
+Sao lưu ngay trước bước 2 và 3:
+
+- Tunelo: cả DB bằng `mongodump --gzip --archive=/var/www/tunelo/backups/tunelo-<stamp>.archive.gz`, URI đọc từ tệp
+  cấu hình chứ không qua argv; chép `server.mjs`, `server.mjs.map`, `package.json`, `pnpm-lock.yaml`,
+  `ecosystem.config.cjs`, `static/` sang `/var/www/tunelo/backups/release-<stamp>/` để lùi code.
+- Localman: `bash /opt/localman/infra/backup-localman-db.sh`.
+
+Kiểm sau deploy (ngoài `/health` và `pm2 status tunelo` ở mục PM2):
 
 ```bash
-npm version <patch|minor|major> --workspace tunelo --no-git-tag-version   # bump packages/tunelo-cli
-# đặt cùng version vào packages/tunelo-cli/src/version.ts (VERSION) — test version.test.ts kiểm tra khớp
-# thêm mục "## X.Y.Z — <ngày>" vào packages/tunelo-cli/CHANGELOG.md
-git commit -am "chore(tunelo): release X.Y.Z" && git tag tunelo-vX.Y.Z && git push && git push --tags
+# Đường forward không mở cho header giả: 404 trên tunnel máy, "Tunnel not found" (502) trên subdomain không tồn tại
+curl -s -o /dev/null -w '%{http_code}\n' -H 'Tunelo-Forward-Granted: 1' -H 'Tunelo-Local-Port: 22' \
+  https://m-<hash>.tunnel.hoandat.com/.tunelo/forward/
+# Localman nhận self-link: 401 khi không có token (405 là nginx thiếu location)
+curl -s -o /dev/null -w '%{http_code}\n' -X POST https://localman.hoandat.com/tunelo/links/self
 ```
 
-- Từ 08/11/2026 Tunelo là `tunelo` 2.x: binary của chat-next (`apps/agent`, phát hành ở GitHub Releases của chat-next với tag
-  `tunelo-v2.*`, ký minisign), cài bằng `curl -fsSL https://chat.hoandat.com/agent/install.sh | sh` (macOS) hoặc `& ([scriptblock]::Create((irm https://chat.hoandat.com/agent/install.ps1)))` (Windows PowerShell),
-  cập nhật bằng `tunelo update` của chính nó. Lệnh cài nằm ở `TUNELO_INSTALL_COMMANDS` của `packages/tunelo-shared/src/release.ts`.
-- Gói npm `tunelo` dừng ở 1.12.0 (vẫn phát hành bằng workflow trên, `tunelo.tgz`): 1.11 trở về trước `tunelo update` lên 1.12;
-  1.12 chạy binary 2.x ở `%LOCALAPPDATA%\tunelo\tunelo.exe` / `~/.local/bin/tunelo` với cùng argv và mã thoát, chưa có 2.x thì
-  `tunelo update` chạy script cài 2.x rồi hỏi `npm uninstall -g tunelo`.
-- `releases/latest` phải luôn là bản Tunelo: release khác trong repo này phải tạo với `--latest=false`.
-- Gói `tunelo` trên npm dừng ở 1.9.1 (bản 1.10.0 publish thử ngày 27/10 bị npm chặn vì tài khoản đang bị khoá); recovery code 2FA
-  của npm nằm ở iCloud `ENV production/npmjs/`.
+Log của process mới phải có `MongoDB connected` và các tunnel cũ `Tunnel registered` lại; không dòng nào chứa token.
+Lùi tunelo-server: chép lại các file từ `backups/release-<stamp>/`, `pnpm install --prod`, khởi động lại pm2 app
+`tunelo`; dữ liệu chỉ cần `mongorestore` khi bản mới đã ghi vào DB.
 
 ### Server — deploy thủ công lên staging
 
@@ -127,10 +147,9 @@ The HTTP/WebSocket port listens on `TUNNEL_HOST` (`127.0.0.1` from `infra/tunelo
 only nginx reaches it, so its Host-equals-SNI check cannot be skipped by calling `:3001` directly.
 TCP tunnel ports are not affected.
 
-The CLI signs in per server: `tunelo login --server https://tunnel.<domain>` signs in at
-`https://auth.<domain>` (derived from the host, never from the server's answers) and makes
-that server the default; the account token is only sent to the Tunelo of its own domain.
-The production server is only `tunnel.hoandat.com`, the CLI's default.
+`tunelo` signs in at `auth.hoandat.com` (client `tunelo-agent`) and sends the account token only to the
+production server `tunnel.hoandat.com`, its default; a development server of your own takes the sign-in only with
+`TUNELO_DEV_ALLOW_CUSTOM_SERVER=1` (chat-next `apps/agent/src/identity/credentials.ts`).
 
 ## Browser WebSockets through a tunnel
 
@@ -138,7 +157,7 @@ A browser WebSocket to `https://<sub>.tunnel.hoandat.com` is relayed as `ws-open
 `ws-data`/`ws-close` frames to the CLI, which opens the WebSocket to the local app.
 How the browser's handshake is answered depends on the CLI:
 
-- **CLI that declares `capabilities: ["ws-open-result"]` in `auth`** (the next CLI release after 1.11.0):
+- **Client that declares `capabilities: ["ws-open-result"]` in `auth`** (`tunelo` 2.x, through `@tunelo/client`):
   the server holds the upgrade, sends `ws-open`, and waits for the CLI's
   `ws-open-result`. `ok: true` ⟹ `101` with the subprotocol the app selected; `ok: false`
   ⟹ the app's own status (403, 401, 404, 429…), its headers minus hop-by-hop, framing and
@@ -146,7 +165,7 @@ How the browser's handshake is answered depends on the CLI:
   within `WS_APP_OPEN_RESULT_TIMEOUT_MS` (15 s) ⟹ `504`. A browser that hangs up while
   held gets its local WebSocket closed (`ws-close` code 1001). Logs: `Browser WS bridged`,
   `Browser WS rejected by app` (with `status`), `Browser WS rejected`, `Browser WS abandoned`.
-- **Older CLI**: `101` at once, then the relay closes it if the app refuses — the app's
+- **CLI 1.11 and older**: `101` at once, then the relay closes it if the app refuses — the app's
   status never reaches the caller.
 
 The per-tunnel cap (`WS_APP_MAX_PER_TUNNEL`, held upgrades included) and basic auth are

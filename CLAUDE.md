@@ -67,7 +67,7 @@ pnpm test:tunelo-e2e
 VPS_HOST=<ssh alias> bash infra/tunelo/deploy.sh   # Deploy server (PM2)
 ```
 
-Release CLI: tag `tunelo-vX.Y.Z` triggers `.github/workflows/tunelo-release.yml` (GitHub release with `tunelo.tgz`; the CLI is not on npm). 1.12.0 is the last one: the commands, inspector, portal and MCP of Tunelo now live in tunelo 2.x (chat-next `apps/agent`, released there as `tunelo-v2.*` binaries); 1.12 runs the 2.x binary at `%LOCALAPPDATA%\tunelo\tunelo.exe` / `~/.local/bin/tunelo` with the same argv, and without it `tunelo update` runs the 2.x install script (`TUNELO_INSTALL_COMMANDS` in `packages/tunelo-shared/src/release.ts`).
+Release CLI: tag `tunelo-vX.Y.Z` triggers `.github/workflows/tunelo-release.yml` (GitHub release with `tunelo.tgz`; the CLI is not on npm). 1.12.0 is the last one: the commands, inspector and MCP of Tunelo now live in tunelo 2.x (chat-next `apps/agent`, released there as `tunelo-v2.*` binaries; it has no local portal, the web side is only `tunnel.hoandat.com` on tunelo-server; [ADR-0006](docs/decisions/tunelo/0006-cli-moved-to-tunelo-agent.md)); 1.12 runs the 2.x binary at `%LOCALAPPDATA%\tunelo\tunelo.exe` / `~/.local/bin/tunelo` with the same argv, and without it `tunelo update` runs the 2.x install script (`TUNELO_INSTALL_COMMANDS` in `packages/tunelo-shared/src/release.ts`).
 
 Release `@tunelo/client`: git tag `tunelo-client-vX.Y.Z` only (no GitHub Release, so `releases/latest`, which `tunelo update` reads, stays the CLI). Consumers install `github:achoo254/localman-next#tunelo-client-vX.Y.Z&path:/packages/tunelo-client`, so the package has no `workspace:*` dependency: `src/shared/` is a copy of `@tunelo/shared` (a test fails when it drifts), and its built output is committed (CI fails when it is stale). The library never reads credentials: callers pass `getApiKey` and choose the session file (`fileSessionStore(path)`).
 
@@ -75,7 +75,7 @@ Release `@tunelo/shared` the same way: git tag `tunelo-shared-vX.Y.Z`, installed
 
 - **Machine tunnels** (`kind: "machine"` in `auth`, used by background agents): subdomain `m-<hash>` derived from the account (`ownerSub`) and `deviceId` (`apps/tunelo-server/src/machine-subdomain.ts`), so it is the same on every connection with nothing stored; only that account opens it, no other tunnel may take a name of that shape, and a new connection of the same machine replaces its stale one. Own quota (20 per account, `DEFAULT_MAX_MACHINE_TUNNELS`, the same as Chat's machines and Localman's `MAX_TUNNEL_LINKS`), apart from the 3 `tunelo http` tunnels. One tunnel per machine channel (no `register-tunnel`/`tcp-register`).
 
-- **Local forward** (`LOCAL_FORWARD` in `packages/tunelo-shared/src/constants.ts`): `tunelo` links its machine to Localman with `POST /api/links/self` (account token, `deviceId`, `clientName`); the link token lists that machine's tunnels and, sent as `Tunelo-Access` to `<machine tunnel>/.tunelo/forward/<path>` with `Tunelo-Local-Port`, reaches `localhost:<port>` on it. The relay drops every client-sent `tunelo-*` header on machine tunnels (`Tunelo-Forward-*` on every tunnel), answers 404 to anything but the owner's token for that machine, refuses `DENY_PORTS`, logs each forward without headers or body, and only then adds `Tunelo-Forward-Granted: 1` (`apps/tunelo-server/src/local-forward-gate.ts`). Machine tunnels get `features: ["local-forward"]` in `auth-result`: the machine serves the path only from servers that say so.
+- **Local forward** (`LOCAL_FORWARD` in `packages/tunelo-shared/src/constants.ts`): `tunelo` gets a link token for its machine with `POST /api/links/self` (account token, `deviceId`, `clientName`) and hands it to Localman (`POST /tunelo/links/self`, `machines:write`; nginx location in `infra/localman/nginx/localman-app.inc`); the link token lists that machine's tunnels and, sent as `Tunelo-Access` to `<machine tunnel>/.tunelo/forward/<path>` with `Tunelo-Local-Port`, reaches `localhost:<port>` on it. The relay drops every client-sent `tunelo-*` header on machine tunnels (`Tunelo-Forward-*` on every tunnel), answers 404 to anything but the owner's token for that machine, refuses `DENY_PORTS`, logs each forward without headers or body, and only then adds `Tunelo-Forward-Granted: 1` (`apps/tunelo-server/src/local-forward-gate.ts`). Machine tunnels get `features: ["local-forward"]` in `auth-result`: the machine serves the path only from servers that say so.
 
 - **Dữ liệu Tunelo** (mục "One domain" của `docs/tunelo/deployment-guide.md`): model mới gắn `tenantScopePlugin`; request chạy trong tenant `primary` dựng từ env khi Host thuộc `TUNNEL_DOMAINS` (hoặc loopback ngoài production), host khác nhận 421 (`apps/tunelo-server/src/tenancy/`); trạng thái trong bộ nhớ (tunnel, cache, stream) khoá theo `tenantKey(subdomain)`; frame từ client chỉ nhận từ đúng connection đã gửi request. Phần dùng chung với Localman nằm ở `packages/tenancy` (`@localman/tenancy`). CLI chỉ gửi token tới Tunelo cùng domain với issuer của phiên (`acceptsAccountToken`).
 
@@ -146,13 +146,13 @@ This is a **tunnel proxy** — it relays untrusted HTTP traffic. Critical rules:
 
 ### Architecture Reference
 
-Decisions and boundaries: accounts via the shared IdP in `docs/decisions/tunelo/0004-accounts-via-central-idp.md`; boundary with Localman (import check, cross contracts) in `docs/decisions/tunelo/0005-stay-in-localman-monorepo.md`. Operations: `docs/tunelo/deployment-guide.md`. Current API: `apps/tunelo-server/src/api/create-api-router.ts`.
+Decisions and boundaries: accounts via the shared IdP in `docs/decisions/tunelo/0004-accounts-via-central-idp.md`; boundary with Localman (import check, cross contracts) in `docs/decisions/tunelo/0005-stay-in-localman-monorepo.md`; CLI moved to tunelo 2.x in `docs/decisions/tunelo/0006-cli-moved-to-tunelo-agent.md`. Operations: `docs/tunelo/deployment-guide.md`. Current API: `apps/tunelo-server/src/api/create-api-router.ts`.
 
 ```
 Browser → nginx (443, TLS, wildcard cert)
        → Tunnel Server (HTTP + WS)
        → WebSocket (persistent)
-       → Client CLI
+       → tunelo (2.x binary, or CLI 1.x)
        → localhost:PORT
 ```
 

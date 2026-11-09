@@ -3,7 +3,7 @@
 Monorepo của bộ công cụ API Localman và Tunelo, chạy tại <https://localman.hoandat.com>. Một app trong hệ sinh thái hoandat, đăng nhập qua IdP `auth-next` (`auth.hoandat.com`).
 
 - **Localman:** mock API có trạng thái (cùng loại với mockapi.io), API client trên web, MCP cho cả Localman lẫn từng mock project, công cụ dữ liệu giả kiểu Việt Nam. Hợp đồng mock runtime: [docs/api-contract.md](docs/api-contract.md).
-- **Tunelo:** tunnel tự host đưa dịch vụ localhost ra HTTPS qua subdomain wildcard, gộp vào repo này. CLI: [packages/tunelo-cli/README.md](packages/tunelo-cli/README.md); tài liệu riêng: [docs/tunelo/](docs/tunelo/).
+- **Tunelo:** tunnel tự host đưa dịch vụ localhost ra HTTPS qua subdomain wildcard. Server và thư viện `@tunelo/client`, `@tunelo/shared` ở repo này; chương trình trên máy người dùng là binary `tunelo` 2.x của chat-next, cài bằng script của Chat (`curl -fsSL https://chat.hoandat.com/agent/install.sh | sh` trên macOS, `& ([scriptblock]::Create((irm https://chat.hoandat.com/agent/install.ps1)))` trong PowerShell trên Windows), không qua npm. Ai còn gói 1.x: `tunelo update` lên 1.12, bản này tự cài 2.x và chuyển mọi lệnh sang đó. Lý do: [ADR-0006](docs/decisions/tunelo/0006-cli-moved-to-tunelo-agent.md); vận hành: [docs/tunelo/](docs/tunelo/).
 - **App iPhone và Android:** vỏ Capacitor (`apps/mobile`) bọc toàn bộ web app — [docs/mobile-app.md](docs/mobile-app.md).
 
 ## Quyết định và ràng buộc
