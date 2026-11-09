@@ -1,7 +1,8 @@
 // Writes the package.json installed next to the API bundle on the server,
 // from the output of `pnpm --filter @localman/api deploy --prod`:
-// - drops the workspace packages (@localman/*), which build-api.ts bundles
-//   into dist/*.mjs, and the scripts and devDependencies;
+// - drops the workspace packages (every `workspace:` dependency of
+//   apps/api/package.json: @localman/*, @tunelo/shared), which build-api.ts
+//   bundles into dist/*.mjs, and the scripts and devDependencies;
 // - keeps the exact versions pnpm deploy pinned from the workspace lockfile,
 //   minus the peer suffix it leaves in some specifiers
 //   ("8.7.1(express@5.2.1)" is a lockfile key, not a valid specifier).
@@ -37,9 +38,15 @@ if (!input || !output) {
 }
 
 const deployed = readJson(input);
+const apiManifest = readJson(join(repoRoot, "apps/api/package.json"));
+const bundled = new Set(
+	Object.entries(apiManifest.dependencies ?? {})
+		.filter(([, specifier]) => String(specifier).startsWith("workspace:"))
+		.map(([name]) => name),
+);
 const dependencies = {};
 for (const [name, specifier] of Object.entries(deployed.dependencies ?? {})) {
-	if (name.startsWith("@localman/")) continue;
+	if (bundled.has(name) || name.startsWith("@localman/")) continue;
 	const version = String(specifier).replace(PEER_SUFFIX, "");
 	if (!EXACT_VERSION.test(version)) {
 		fail(`${name}: expected an exact version from pnpm deploy`);

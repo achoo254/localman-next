@@ -40,6 +40,11 @@ jobs:
       - run: pnpm check:mcp-coverage
       - run: pnpm build
 
+      # The release step of infra/localman/deploy.sh: the API bundle carries
+      # its workspace packages and the server's package.json/lockfile install.
+      - name: API runtime package (as deploy.sh builds it)
+        run: bash infra/localman/api-runtime-package.sh "$(mktemp -d)" "$(mktemp -d)"
+
       # @tunelo/client and @tunelo/shared are installed from git, so their
       # committed builds must match their sources (rebuilt by `pnpm build` above).
       - name: committed @tunelo/client and @tunelo/shared builds are current

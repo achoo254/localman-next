@@ -56,17 +56,7 @@ echo "   features: ${VITE_FEATURES:-none}"
 pnpm --filter @localman/api --filter @localman/web build
 
 echo "== runtime manifest and lockfile (versions from the workspace lockfile)"
-pnpm --filter @localman/api deploy --prod --config.inject-workspace-packages=true "$STAGE/deploy" >/dev/null
-node infra/localman/runtime-manifest.mjs "$STAGE/deploy/package.json" "$OUT/api/package.json"
-cp "$STAGE/deploy/pnpm-lock.yaml" "$OUT/api/pnpm-lock.yaml"
-# Drops the workspace packages and everything only they used; keeps every
-# resolution. Then prove the server's --frozen-lockfile install will accept it.
-(cd "$OUT/api" && pnpm install --lockfile-only --reporter=silent &&
-	pnpm install --lockfile-only --frozen-lockfile --reporter=silent)
-if grep -Eq '@file:|type: directory' "$OUT/api/pnpm-lock.yaml"; then
-	echo "runtime lockfile still references local packages" >&2
-	exit 1
-fi
+bash infra/localman/api-runtime-package.sh "$STAGE" "$OUT/api"
 cp -R apps/api/dist/. "$OUT/api/"
 cp -R apps/web/dist "$OUT/web"
 
