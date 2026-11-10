@@ -19,7 +19,7 @@ function fakeFetch(status: number, body: unknown, seen: Seen[] = []) {
 const base = {
 	serverUrl: "https://tunnel.example.test",
 	accessToken: "jwt-of-account",
-	deviceId: "chat-agent.42",
+	deviceId: "tunelo.42",
 	clientName: "Localman",
 };
 
@@ -46,7 +46,7 @@ describe("linkMachineToApp", () => {
 		expect(seen[0]?.url).toBe("https://tunnel.example.test/api/links/self");
 		expect(seen[0]?.init?.method).toBe("POST");
 		expect(JSON.parse(String(seen[0]?.init?.body))).toEqual({
-			deviceId: "chat-agent.42",
+			deviceId: "tunelo.42",
 			clientName: "Localman",
 		});
 		const headers = new Headers(seen[0]?.init?.headers);

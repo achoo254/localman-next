@@ -22,8 +22,8 @@ import {
 import { attachWsHandler } from "../ws-handler.js";
 
 const OWNER = "acc_owner";
-const DEVICE = "chat-agent.0000-forward-test";
-const OTHER_DEVICE = "chat-agent.0000-forward-other";
+const DEVICE = "tunelo.0000-forward-test";
+const OTHER_DEVICE = "tunelo.0000-forward-other";
 const DOMAIN = "tunnel.hoandat.com";
 const SELF_SCOPES = [TUNNEL_SCOPES.READ, LOCAL_FORWARD.SCOPE];
 
@@ -34,7 +34,7 @@ const OTHER_ACCOUNT = token("c");
 const PAIRING = token("d");
 const READ_ONLY = token("e");
 const NEVER_ONLINE = token("f");
-const IDLE_DEVICE = "chat-agent.0000-forward-idle";
+const IDLE_DEVICE = "tunelo.0000-forward-idle";
 
 const keyStore = new FakeKeyStore();
 const self = (owner: string, device: string, scopes = SELF_SCOPES) => ({

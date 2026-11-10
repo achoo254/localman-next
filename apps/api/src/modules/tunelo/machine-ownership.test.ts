@@ -11,14 +11,14 @@ const BOB = "acc_bob";
 
 /** Alice's own machine, linked by her `tunelo` process. */
 async function alicesMachine(): Promise<string> {
-	const { token } = useFakeSelfLinks(env.tunelo).mint(ALICE, "chat-agent.a");
+	const { token } = useFakeSelfLinks(env.tunelo).mint(ALICE, "tunelo.a");
 	const row = await TunnelLinkModel.create({
 		userSub: ALICE,
 		status: "linked",
 		source: "self",
-		deviceId: "chat-agent.a",
+		deviceId: "tunelo.a",
 		machineName: "Alice laptop",
-		forwardUrl: fakeForwardUrl("chat-agent.a"),
+		forwardUrl: fakeForwardUrl("tunelo.a"),
 		forwardEnabled: true,
 	});
 	const id = String(row._id);

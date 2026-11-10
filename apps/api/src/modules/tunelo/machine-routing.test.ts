@@ -57,15 +57,15 @@ async function refusal(promise: Promise<unknown>): Promise<OperationError> {
 
 describe("a localhost target on the user's own machine", () => {
 	it("goes to the one machine with its token and port as headers", async () => {
-		const { id, token } = await ownMachine("chat-agent.pc");
+		const { id, token } = await ownMachine("tunelo.pc");
 		const route = await routeLocalTarget(
 			ALICE,
 			null,
 			"http://127.0.0.1:5173/api/x?y=1#frag",
 		);
 		expect(route).toEqual({
-			url: `${fakeForwardUrl("chat-agent.pc")}/api/x?y=1`,
-			tunnel: new URL(fakeForwardUrl("chat-agent.pc")).origin,
+			url: `${fakeForwardUrl("tunelo.pc")}/api/x?y=1`,
+			tunnel: new URL(fakeForwardUrl("tunelo.pc")).origin,
 			headers: [
 				{ name: "Tunelo-Access", value: token },
 				{ name: "Tunelo-Local-Port", value: "5173" },
@@ -76,7 +76,7 @@ describe("a localhost target on the user's own machine", () => {
 	});
 
 	it("prefers a tunnel the user opened for the port", async () => {
-		await ownMachine("chat-agent.pc");
+		await ownMachine("tunelo.pc");
 		env.tunelo.setAccountTunnels(ALICE, [httpTunnel("web", 5173)]);
 		const route = await routeLocalTarget(
 			ALICE,
@@ -88,8 +88,8 @@ describe("a localhost target on the user's own machine", () => {
 	});
 
 	it("asks which machine when there are several, and takes the one named", async () => {
-		await ownMachine("chat-agent.a");
-		const { id: b } = await ownMachine("chat-agent.b");
+		await ownMachine("tunelo.a");
+		const { id: b } = await ownMachine("tunelo.b");
 		const several = await refusal(
 			routeLocalTarget(ALICE, null, "http://localhost:3000/"),
 		);
@@ -104,7 +104,7 @@ describe("a localhost target on the user's own machine", () => {
 	});
 
 	it("never reaches a machine that is off, someone else's, or not on localhost", async () => {
-		const { id: off } = await ownMachine("chat-agent.off", {
+		const { id: off } = await ownMachine("tunelo.off", {
 			forwardEnabled: false,
 		});
 		expect(
@@ -116,7 +116,7 @@ describe("a localhost target on the user's own machine", () => {
 			(await refusal(routeLocalTarget(ALICE, null, "http://localhost:1/")))
 				.code,
 		).toBe("PROXY_TARGET_BLOCKED");
-		const { id: on } = await ownMachine("chat-agent.on");
+		const { id: on } = await ownMachine("tunelo.on");
 		expect(
 			(await refusal(routeLocalTarget(BOB, null, "http://localhost:1/", on)))
 				.code,
@@ -135,7 +135,7 @@ describe("a localhost target on the user's own machine", () => {
 	});
 
 	it("lists machines and their ports for agents", async () => {
-		const { id, token } = await ownMachine("chat-agent.pc");
+		const { id, token } = await ownMachine("tunelo.pc");
 		const seen: Array<{ url: string; access: string | null }> = [];
 		setTuneloDeps({
 			...env.deps,
@@ -156,7 +156,7 @@ describe("a localhost target on the user's own machine", () => {
 		});
 		const machines = await as(ALICE).get("/client/machines");
 		expect(machines.body.machines).toEqual([
-			expect.objectContaining({ id, name: "chat-agent.pc", revoked: false }),
+			expect.objectContaining({ id, name: "tunelo.pc", revoked: false }),
 		]);
 		const ports = await as(ALICE).get(`/client/machines/${id}/ports`);
 		expect(ports.body.ports).toEqual([
@@ -165,7 +165,7 @@ describe("a localhost target on the user's own machine", () => {
 		]);
 		expect(seen).toEqual([
 			{
-				url: `${fakeForwardUrl("chat-agent.pc")}/ports`,
+				url: `${fakeForwardUrl("tunelo.pc")}/ports`,
 				access: token,
 			},
 		]);
@@ -192,8 +192,8 @@ function answer(
 
 describe("refusals of Tunelo or the machine", () => {
 	it("become API errors when the code comes with its status", async () => {
-		const { id, token } = await ownMachine("chat-agent.pc");
-		const tunnel = new URL(fakeForwardUrl("chat-agent.pc")).origin;
+		const { id, token } = await ownMachine("tunelo.pc");
+		const tunnel = new URL(fakeForwardUrl("tunelo.pc")).origin;
 		const route = { machine: id, tunnel, token };
 		const at = `${tunnel}/.tunelo/forward/x`;
 		const cases: Array<[string, number, string]> = [
@@ -217,8 +217,8 @@ describe("refusals of Tunelo or the machine", () => {
 	});
 
 	it("marks a link dead only when Tunelo refuses its token", async () => {
-		const { id, token } = await ownMachine("chat-agent.pc");
-		const tunnel = new URL(fakeForwardUrl("chat-agent.pc")).origin;
+		const { id, token } = await ownMachine("tunelo.pc");
+		const tunnel = new URL(fakeForwardUrl("tunelo.pc")).origin;
 		const route = { machine: id, tunnel, token };
 		const at = `${tunnel}/.tunelo/forward/x`;
 		// The app (or a wrong status) says "revoked": Tunelo still knows the token.
@@ -243,8 +243,8 @@ describe("refusals of Tunelo or the machine", () => {
 	});
 
 	it("leave the app's own answers and other origins alone", async () => {
-		const { id, token } = await ownMachine("chat-agent.pc");
-		const tunnel = new URL(fakeForwardUrl("chat-agent.pc")).origin;
+		const { id, token } = await ownMachine("tunelo.pc");
+		const tunnel = new URL(fakeForwardUrl("tunelo.pc")).origin;
 		const route = { machine: id, tunnel, token };
 		await expect(
 			checkMachineAnswer(ALICE, route, answer(`${tunnel}/x`, null, 502)),

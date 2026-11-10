@@ -60,7 +60,7 @@ const tunnelLinkSchema = new Schema(
 tunnelLinkSchema.index({ userSub: 1, createdAt: 1 });
 // One row per own machine of the user (a new `tunelo login` replaces it),
 // even when two links race. `deviceId` is the machine key Tunelo vouched
-// for (`chat-agent.<machineId>`), not the id the process reports.
+// for (`tunelo.<machineId>`), not the id the process reports.
 tunnelLinkSchema.index(
 	{ userSub: 1, deviceId: 1 },
 	{

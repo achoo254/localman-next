@@ -17,7 +17,7 @@ import {
 const env = useTuneloTestEnv();
 const ALICE = "acc_alice";
 const BOB = "acc_bob";
-const DEVICE = "chat-agent.1111";
+const DEVICE = "tunelo.1111";
 const MACHINE = { machineId: "1111", machineName: "Laptop" };
 const PATH = "/tunelo/links/self";
 

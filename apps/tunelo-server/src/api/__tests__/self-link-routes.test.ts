@@ -77,7 +77,7 @@ async function call(
 	return { status: res.status, body, text };
 }
 
-const DEVICE = "chat-agent.11111111-2222-4333-8444-555555555555";
+const DEVICE = "tunelo.11111111-2222-4333-8444-555555555555";
 
 async function selfLink(sub: string, deviceId = DEVICE) {
 	return call("/api/links/self", {

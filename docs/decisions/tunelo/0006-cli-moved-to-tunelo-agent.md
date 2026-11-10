@@ -7,7 +7,7 @@
 ## Bối cảnh
 
 Trên máy người dùng từng có hai chương trình cùng nói chuyện với hệ sinh thái hoandat: CLI Tunelo 1.x (gói npm
-`packages/tunelo-cli`: tunnel HTTP/TCP, inspector, portal cục bộ, MCP) và tiến trình nền `hda` của tiện ích Máy của
+`packages/tunelo-cli`: tunnel HTTP/TCP, inspector, portal cục bộ, MCP) và tiến trình nền của tiện ích Máy của
 tôi trong Chat. Mỗi cái đăng nhập riêng, giữ refresh token riêng. Localman không gọi được `localhost` của máy người
 dùng, chỉ đi qua tunnel công khai do người dùng tự mở.
 
