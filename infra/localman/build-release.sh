@@ -27,7 +27,9 @@ echo "   features: ${VITE_FEATURES:-none}"
 pnpm --filter @localman/api --filter @localman/web build
 
 echo "== runtime manifest and lockfile (versions from the workspace lockfile)"
-bash infra/localman/api-runtime-package.sh "$STAGE" "$OUT/api"
+# Written outside the repository first: inside it, pnpm would see the workspace and keep local packages in the lockfile.
+bash infra/localman/api-runtime-package.sh "$STAGE/scratch" "$STAGE/api"
+cp "$STAGE/api/package.json" "$STAGE/api/pnpm-lock.yaml" "$OUT/api/"
 cp -R apps/api/dist/. "$OUT/api/"
 cp -R apps/web/dist "$OUT/web"
 
