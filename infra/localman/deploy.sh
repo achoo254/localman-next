@@ -39,9 +39,33 @@ fi
 SERVER_PUBLIC_IP="${SERVER_PUBLIC_IP:?set SERVER_PUBLIC_IP to the server public IPv4}"
 [[ "$SERVER_PUBLIC_IP" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]] || { echo "SERVER_PUBLIC_IP is not an IPv4 address" >&2; exit 2; }
 
-# Sortable and traceable: UTC time, commit, and whether the tree was dirty.
+# The release must be exactly a commit that is already on origin/main.
+if [ -n "$(git status --porcelain)" ]; then
+	echo "working tree is not clean: commit or stash first (git status)" >&2
+	exit 1
+fi
+git fetch --quiet origin main
+if ! git merge-base --is-ancestor HEAD origin/main; then
+	echo "HEAD $(git rev-parse --short HEAD) is not on origin/main: push it first" >&2
+	exit 1
+fi
+# One deploy at a time across machines and agent sessions; a lock older than 30 minutes is a crashed run.
+lock=/run/lock/localman-deploy
+owner="$(hostname -s) $(git rev-parse --short HEAD) $(date -u +%FT%TZ)"
+# Exit 3 from the server means the lock is held; anything else is ssh failing.
+rc=0
+$SSH "$SSH_TARGET" "find $lock -maxdepth 0 -mmin +30 -exec rm -rf {} + 2>/dev/null; mkdir $lock 2>/dev/null || exit 3; echo '$owner' >$lock/owner" </dev/null || rc=$?
+if [ "$rc" -eq 3 ]; then
+	echo "another deploy is running: $($SSH "$SSH_TARGET" "cat $lock/owner" </dev/null 2>/dev/null)" >&2
+	exit 1
+elif [ "$rc" -ne 0 ]; then
+	echo "could not take the deploy lock on the server (ssh exit $rc)" >&2
+	exit 1
+fi
+trap 'rm -rf "$STAGE"; $SSH "$SSH_TARGET" "rm -rf $lock" </dev/null || true' EXIT
+
+# Sortable and traceable: UTC time and commit.
 RELEASE="$(date -u +%Y%m%d-%H%M%S)-$(git rev-parse --short=12 HEAD)"
-git diff --quiet HEAD -- || RELEASE="$RELEASE-dirty"
 OUT="$STAGE/release"
 mkdir -p "$OUT/api" "$OUT/nginx"
 
