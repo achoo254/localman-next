@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { as, guest } from "../../test-support/dashboard-test-app.js";
+import { seedCodeLinkedMachine } from "./testing/code-linked-machine.js";
 import { useTuneloTestEnv } from "./testing/tunelo-test-setup.js";
 import { httpTunnel } from "./testing/tunnel-rows.js";
 import { setTuneloDeps } from "./tunelo-runtime.js";
@@ -8,12 +9,9 @@ const env = useTuneloTestEnv();
 const ALICE = "acc_alice";
 const BOB = "acc_bob";
 
-/** Links `deviceId` to `sub` through the pairing flow; answers the link id. */
-async function linkMachine(sub: string, deviceId: string): Promise<string> {
-	const start = await as(sub).send("post", "/client/tunnel-links");
-	env.tunelo.approve(start.body.code, deviceId);
-	await as(sub).send("post", `/client/tunnel-links/${start.body.id}/poll`);
-	return start.body.id;
+/** An older code link of `deviceId` for `sub`; answers the link id. */
+function linkMachine(sub: string, deviceId: string): Promise<string> {
+	return seedCodeLinkedMachine(env, sub, deviceId);
 }
 
 describe("client.listLocalTunnels", () => {

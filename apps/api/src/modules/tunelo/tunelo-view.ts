@@ -4,7 +4,8 @@ import { USER_SCOPE } from "../../http/require-auth.js";
 /** One live tunnel of the user, from their account or a linked machine. */
 export const localTunnelView = z.object({
 	/**
-	 * `account` (signed in with `tunelo login`), `link` (`tunelo link`), or
+	 * `account` (signed in with `tunelo login`), `link` (an anonymous
+	 * machine linked with a code before that flow was retired), or
 	 * `machine`: no tunnel, but `localhost:<port>` on one of the user's own
 	 * machines, reached through its machine tunnel (`url` is that tunnel;
 	 * send with `machine: linkId`).
@@ -46,8 +47,10 @@ export type LocalTunnelList = z.infer<typeof localTunnelListView>;
 export const tunnelLinkView = z.object({
 	id: z.string(),
 	/**
-	 * `pairing` (`tunelo link <code>`) or `self` (the `tunelo` process of
-	 * the user's account linked itself, and can reach its localhost).
+	 * `self` (the `tunelo` process of the user's account linked itself
+	 * after `tunelo login`, and can reach its localhost) or `pairing` (an
+	 * anonymous machine linked with a code before that flow was retired:
+	 * listed and removable, never created any more).
 	 */
 	source: z.enum(["pairing", "self"]),
 	/** Learnt from the machine's tunnels; `null` until one was seen. */
@@ -64,29 +67,16 @@ export type TunnelLinkView = z.infer<typeof tunnelLinkView>;
 
 export const tunnelLinksView = z.object({ links: z.array(tunnelLinkView) });
 
-/** A pairing waiting for `tunelo link <code>` on the machine. */
-export const pendingLinkView = z.object({
-	id: z.string(),
-	code: z.string(),
-	expiresAt: z.string(),
-});
-
-export const linkPollView = z.discriminatedUnion("status", [
-	z.object({ status: z.literal("pending") }),
-	z.object({ status: z.literal("expired") }),
-	z.object({ status: z.literal("linked"), link: tunnelLinkView }),
-]);
-
 export const TUNELO_ABOUT =
-	"Tunelo tunnels of the signed-in user, own only: the tunnels of their Tunelo account (same sign-in, `tunelo login`) and of anonymous machines they linked with `tunelo link <code>`. Tokens never leave the server.";
+	"Tunelo tunnels of the signed-in user, own only: the tunnels of their Tunelo account (same sign-in, `tunelo login`), whose machines link themselves, plus anonymous machines linked with a code before that flow was retired. Tokens never leave the server.";
 
 /**
- * Exempt reason of the operations that link machines: a link decides which
+ * Exempt reason of the operations on linked machines: a link decides which
  * tunnels the browser sends request credentials to on its own, so only
- * the user links or revokes a machine, from the UI.
+ * the user lists or revokes them, from the UI.
  */
 export const LINK_EXEMPT =
-	"links or revokes the machines whose tunnels receive request credentials; only the user does it, from the UI";
+	"lists or revokes the machines whose tunnels receive request credentials; only the user does it, from the UI";
 
 export const TUNELO_MACHINE_ABOUT =
 	"The user's own machines: each one's `tunelo` process linked itself after `tunelo login` on the same account, and Localman sends requests for `localhost:<port>` there through the machine's tunnel. Only the account's owner reaches them. Link tokens never leave the server.";

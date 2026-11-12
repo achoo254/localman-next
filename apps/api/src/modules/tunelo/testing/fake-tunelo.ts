@@ -8,24 +8,17 @@ import {
 import type { AddressInfo } from "node:net";
 import type { TuneloTunnel } from "../tunelo-api.js";
 
-const LINK_TTL_MS = 10 * 60 * 1000;
-
-interface Pairing {
-	code: string;
-	expiresAt: number;
-	deviceId: string | null;
-}
-
 export interface FakeTunelo {
 	readonly url: string;
 	/** Tunnels Tunelo lists for an account token of `sub`. */
 	setAccountTunnels(sub: string, tunnels: TuneloTunnel[]): void;
 	/** Tunnels of an anonymous machine, listed for its link tokens. */
 	setDeviceTunnels(deviceId: string, tunnels: TuneloTunnel[]): void;
-	/** `tunelo link <code>` on the machine; `false` for an unknown code. */
-	approve(code: string, deviceId: string): boolean;
-	/** Ends every open pairing as if its 10 minutes ran out. */
-	expirePairings(): void;
+	/**
+	 * A link token of an anonymous machine, as the retired code pairing
+	 * minted it: lists `deviceId`'s tunnels until revoked.
+	 */
+	mintCodeLink(deviceId: string): string;
 	/** The machine revokes its links: their tokens get 401. */
 	revokeDevice(deviceId: string): void;
 	/** While down, every API call answers 503. */
@@ -89,12 +82,11 @@ function accountOf(token: string): string | null {
 /**
  * TEST ONLY. Tunelo's account API as Localman calls it (contract of
  * apps/tunelo-server/src/api/tunnel-list-routes.ts and link-routes.ts):
- * `GET /api/tunnels`, `POST /api/links/init|poll`, `DELETE /api/links/self`.
+ * `GET /api/tunnels`, `DELETE /api/links/self`.
  */
 export async function startFakeTunelo(port = 0): Promise<FakeTunelo> {
 	const accounts = new Map<string, TuneloTunnel[]>();
 	const devices = new Map<string, TuneloTunnel[]>();
-	const pairings = new Map<string, Pairing>();
 	const linkTokens = new Map<string, string>();
 	const revokedTokens: string[] = [];
 	const authorizations: string[] = [];
@@ -123,29 +115,6 @@ export async function startFakeTunelo(port = 0): Promise<FakeTunelo> {
 				device === undefined ? accounts.get(sub ?? "") : devices.get(device);
 			return send(res, 200, { tunnels: tunnels ?? [] });
 		}
-		if (route === "POST /api/links/init") {
-			const requestId = randomBytes(24).toString("hex");
-			const raw = randomBytes(4).toString("hex").toUpperCase();
-			const code = `${raw.slice(0, 4)}-${raw.slice(4)}`;
-			const expiresAt = Date.now() + LINK_TTL_MS;
-			pairings.set(requestId, { code, expiresAt, deviceId: null });
-			const iso = new Date(expiresAt).toISOString();
-			return send(res, 200, { requestId, code, expiresAt: iso });
-		}
-		if (route === "POST /api/links/poll") {
-			const requestId = field(body, "requestId");
-			const pairing = pairings.get(requestId);
-			if (!pairing || pairing.expiresAt < Date.now()) {
-				return send(res, 200, { status: "expired" });
-			}
-			if (pairing.deviceId === null)
-				return send(res, 200, { status: "pending" });
-			pairings.delete(requestId);
-			const token = `link_${randomBytes(16).toString("hex")}`;
-			linkTokens.set(token, pairing.deviceId);
-			const linkId = randomBytes(12).toString("hex");
-			return send(res, 200, { status: "approved", token, linkId });
-		}
 		if (route === "DELETE /api/links/self") {
 			const token = bearer(req);
 			if (!linkTokens.delete(token)) return send(res, 401, { error: {} });
@@ -168,14 +137,10 @@ export async function startFakeTunelo(port = 0): Promise<FakeTunelo> {
 		url: `http://127.0.0.1:${bound}`,
 		setAccountTunnels: (sub, tunnels) => accounts.set(sub, tunnels),
 		setDeviceTunnels: (deviceId, tunnels) => devices.set(deviceId, tunnels),
-		approve: (code, deviceId) => {
-			const pairing = [...pairings.values()].find((p) => p.code === code);
-			if (!pairing) return false;
-			pairing.deviceId = deviceId;
-			return true;
-		},
-		expirePairings: () => {
-			for (const pairing of pairings.values()) pairing.expiresAt = 0;
+		mintCodeLink: (deviceId) => {
+			const token = `link_${randomBytes(16).toString("hex")}`;
+			linkTokens.set(token, deviceId);
+			return token;
 		},
 		revokeDevice: (deviceId) => {
 			for (const [token, device] of linkTokens) {

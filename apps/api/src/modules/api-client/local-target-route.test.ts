@@ -1,6 +1,7 @@
 import { OperationError } from "@localman/operations";
 import { describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
+import { seedCodeLinkedMachine } from "../tunelo/testing/code-linked-machine.js";
 import { useTuneloTestEnv } from "../tunelo/testing/tunelo-test-setup.js";
 import { httpTunnel } from "../tunelo/testing/tunnel-rows.js";
 import { clearTuneloDeps } from "../tunelo/tunelo-runtime.js";
@@ -12,11 +13,9 @@ const AGENT = null;
 const SESSION = `session-${ALICE}`;
 const LOCAL = "http://localhost:3000/users?page=2#top";
 
-/** Links `deviceId` to Alice through the pairing flow. */
+/** An older code link of `deviceId` for Alice. */
 async function linkMachine(deviceId: string): Promise<void> {
-	const start = await as(ALICE).send("post", "/client/tunnel-links");
-	env.tunelo.approve(start.body.code, deviceId);
-	await as(ALICE).send("post", `/client/tunnel-links/${start.body.id}/poll`);
+	await seedCodeLinkedMachine(env, ALICE, deviceId);
 }
 
 async function refusal(promise: Promise<unknown>): Promise<OperationError> {
@@ -115,10 +114,14 @@ describe("routing a local target through the user's tunnel", () => {
 
 	it("tells the agent and the browser the ways that reach them", async () => {
 		const agent = await refusal(routeLocalTarget(ALICE, AGENT, LOCAL));
-		expect(agent.message).toContain("linked with `tunelo link`");
-		expect(agent.message).not.toContain("tunelo login");
+		expect(agent.message).toContain(
+			"on a machine signed in with `tunelo login`",
+		);
 		const browser = await refusal(routeLocalTarget(ALICE, SESSION, LOCAL));
-		expect(browser.message).toContain("tunelo login");
+		expect(browser.message).toContain("after `tunelo login`");
+		for (const message of [agent.message, browser.message]) {
+			expect(message).not.toContain("tunelo link");
+		}
 	});
 
 	it("says Tunelo did not answer instead of 'no tunnel'", async () => {

@@ -18,24 +18,6 @@ const tunnelItem = z.object({
 export type TuneloTunnel = z.infer<typeof tunnelItem>;
 
 const tunnelList = z.object({ tunnels: z.array(tunnelItem).max(MAX_TUNNELS) });
-const linkInit = z.object({
-	requestId: z.string().min(1).max(128),
-	code: z.string().min(1).max(32),
-	expiresAt: z.iso.datetime({ offset: true }),
-});
-export type TuneloLinkInit = z.infer<typeof linkInit>;
-
-const linkPoll = z.discriminatedUnion("status", [
-	z.object({ status: z.literal("pending") }),
-	z.object({ status: z.literal("expired") }),
-	z.object({
-		status: z.literal("approved"),
-		token: z.string().min(1).max(4096),
-		linkId: z.string().min(1).max(128),
-	}),
-]);
-export type TuneloLinkPoll = z.infer<typeof linkPoll>;
-
 const selfLinkInfo = z.object({
 	linkId: z.string().min(1).max(128),
 	ownerSub: z.string().min(1).max(255),
@@ -73,10 +55,6 @@ export type FetchLike = (
 export interface TuneloApi {
 	/** `GET /api/tunnels` with an account or link token. */
 	listTunnels(token: string): Promise<TuneloTunnel[]>;
-	/** `POST /api/links/init`: a pairing code for `tunelo link <code>`. */
-	initLink(clientName: string): Promise<TuneloLinkInit>;
-	/** `POST /api/links/poll`: the link token, once, after approval. */
-	pollLink(requestId: string): Promise<TuneloLinkPoll>;
 	/** `DELETE /api/links/self`: the link token revokes itself. */
 	revokeLink(token: string): Promise<void>;
 	/** `GET /api/links/self`: whose machine an account's link token is for. */
@@ -119,20 +97,6 @@ export function createTuneloApi(
 		listTunnels: async (token) =>
 			(await call("list", "/api/tunnels", { method: "GET", token }, tunnelList))
 				.tunnels,
-		initLink: (clientName) =>
-			call(
-				"link init",
-				"/api/links/init",
-				{ method: "POST", body: { clientName } },
-				linkInit,
-			),
-		pollLink: (requestId) =>
-			call(
-				"link poll",
-				"/api/links/poll",
-				{ method: "POST", body: { requestId } },
-				linkPoll,
-			),
 		selfLinkInfo: (token) =>
 			call(
 				"link info",

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { as } from "../../test-support/dashboard-test-app.js";
+import { seedCodeLinkedMachine } from "../tunelo/testing/code-linked-machine.js";
 import { useTuneloTestEnv } from "../tunelo/testing/tunelo-test-setup.js";
 import { TunnelLinkModel } from "../tunelo/tunelo-link-model.js";
 import { UserModel } from "../users/user-model.js";
@@ -15,26 +16,20 @@ beforeEach(async () => {
 	]);
 });
 
-/** Links a machine for `sub` through the real pairing flow. */
+/** A linked machine of `sub` with a live link token at Tunelo. */
 async function linkMachine(sub: string, device: string): Promise<void> {
-	const started = await as(sub).send("post", "/client/tunnel-links");
-	expect(started.status).toBe(200);
-	expect(env.tunelo.approve(started.body.code, device)).toBe(true);
-	const polled = await as(sub).send(
-		"post",
-		`/client/tunnel-links/${started.body.id}/poll`,
-	);
-	expect(polled.status).toBe(200);
+	await seedCodeLinkedMachine(env, sub, device);
 }
 
 const deleteAlice = () =>
 	as(ALICE).send("delete", "/users/me", { confirm: "alice" });
 
 describe("account deletion and linked Tunelo machines", () => {
-	it("revokes every linked machine at Tunelo and forgets pairings", async () => {
+	it("revokes every linked machine at Tunelo and forgets leftover rows", async () => {
 		await linkMachine(ALICE, "laptop");
 		await linkMachine(ALICE, "desktop");
-		await as(ALICE).send("post", "/client/tunnel-links");
+		// A row without a token: nothing to revoke, still deleted.
+		await TunnelLinkModel.create({ userSub: ALICE, status: "linked" });
 		await linkMachine(BOB, "bob-laptop");
 
 		const res = await deleteAlice();

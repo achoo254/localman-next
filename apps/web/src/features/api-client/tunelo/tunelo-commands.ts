@@ -48,7 +48,11 @@ export function tunnelOrigin(
 	return parseHttpUrl(value)?.origin ?? null;
 }
 
-/** Links an anonymous machine to the user (the code of the connect modal). */
-export function tuneloLinkCommand(code: string): string {
-	return `tunelo link ${code}`;
+/**
+ * Chat's "Add this machine" page on `tenantDomain` (`hoandat.com`): the
+ * one-line install of `tunelo`, which then signs the machine in and links
+ * it to the user here on its own.
+ */
+export function chatAddMachineUrl(tenantDomain: string): string {
+	return `https://chat.${tenantDomain}/ai/add`;
 }

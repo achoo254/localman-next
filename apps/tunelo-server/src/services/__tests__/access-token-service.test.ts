@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vitest";
 import { hashToken } from "../../auth/token-hash.js";
 import { ApiKey } from "../../db/models/api-key-model.js";
+import { seedCodeLinkToken } from "../../test-support/code-link-token.js";
 import { useTestDatabase } from "../../test-support/test-mongo.js";
 import { TEST_TENANT } from "../../test-support/test-tenant.js";
-import { issueAccessToken, issueLinkToken } from "../access-token-service.js";
+import { issueAccessToken } from "../access-token-service.js";
 
 useTestDatabase("access-token-service");
 
@@ -15,7 +16,7 @@ async function statusOf(token: string): Promise<string | undefined> {
 describe("access token service", () => {
 	test("logging in again revokes the device's old token but not its links", async () => {
 		const first = await issueAccessToken("device:mac", { deviceId: "mac" });
-		const link = await issueLinkToken({
+		const link = await seedCodeLinkToken({
 			linkedDeviceId: "mac",
 			clientName: "Localman",
 		});
@@ -37,20 +38,5 @@ describe("access token service", () => {
 		});
 		await issueAccessToken("device:old-mac", { deviceId: "old-mac" });
 		expect(await statusOf("tunelo_old")).toBe("revoked");
-	});
-
-	test("a link token is read-only and has no deviceId", async () => {
-		const link = await issueLinkToken({
-			linkedDeviceId: "pc",
-			clientName: "Localman",
-		});
-		const row = await ApiKey.findOne({ keyHash: hashToken(link.token) }).lean();
-		expect(row).toMatchObject({
-			scopes: ["tunnels:read"],
-			linkedDeviceId: "pc",
-			deviceId: null,
-			clientName: "Localman",
-		});
-		expect(link.token.startsWith("tunelo_")).toBe(true);
 	});
 });

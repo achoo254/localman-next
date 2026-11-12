@@ -28,7 +28,7 @@ function tuneloRefused(error: unknown): OperationError {
 		{ call: error.call, status: error.status },
 		"Tunelo self link check failed",
 	);
-	// 404: a pairing token (`tunelo link`) has no machine of an account.
+	// 404: an older code link token has no machine of an account.
 	if (error.unauthorized || error.status === 404) {
 		return new OperationError(
 			400,

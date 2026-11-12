@@ -1,82 +1,23 @@
 import { describe, expect, test } from "vitest";
-import { LinkRequest } from "../../db/models/link-request-model.js";
+import { seedCodeLinkToken } from "../../test-support/code-link-token.js";
 import { useTestDatabase } from "../../test-support/test-mongo.js";
-import {
-	MAX_WRONG_CODES,
-	approveLink,
-	initLink,
-	listLinks,
-	normalizeLinkCode,
-	pollLink,
-	revokeLink,
-	revokeOwnLink,
-} from "../device-link-service.js";
+import * as deviceLink from "../device-link-service.js";
 
 useTestDatabase("device-link-service");
 
+const { listLinks, revokeLink, revokeOwnLink } = deviceLink;
+
 describe("device link service", () => {
-	test("init, approve, then poll hands the token out exactly once", async () => {
-		const { requestId, code } = await initLink("Localman");
-		expect(code).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
-		expect(await pollLink(requestId)).toEqual({ status: "pending" });
-
-		await approveLink(code.toLowerCase(), { keyId: "k-ok", deviceId: "mac" });
-		const first = await pollLink(requestId);
-		expect(first).toMatchObject({ status: "approved" });
-		expect(first.status === "approved" && first.token).toMatch(/^tunelo_/);
-		expect(await pollLink(requestId)).toEqual({ status: "expired" });
+	test("no longer opens, approves or polls code pairings", () => {
+		expect(Object.keys(deviceLink).sort()).toEqual([
+			"listLinks",
+			"revokeLink",
+			"revokeOwnLink",
+		]);
 	});
 
-	test("a code works once", async () => {
-		const { code } = await initLink("Localman");
-		await approveLink(code, { keyId: "k-once", deviceId: "mac" });
-		await expect(
-			approveLink(code, { keyId: "k-once", deviceId: "mac" }),
-		).rejects.toMatchObject({ code: "TUNELO_LINK_001" });
-	});
-
-	test("an expired code is refused", async () => {
-		const { requestId, code } = await initLink("Localman");
-		await LinkRequest.updateOne(
-			{ requestId },
-			{ expiresAt: new Date(Date.now() - 1000) },
-		);
-		await expect(
-			approveLink(code, { keyId: "k-exp", deviceId: "mac" }),
-		).rejects.toMatchObject({ code: "TUNELO_LINK_001" });
-		expect(await pollLink(requestId)).toEqual({ status: "expired" });
-	});
-
-	test("an approval nobody collects in time leaves no token behind", async () => {
-		const { requestId, code } = await initLink("Localman");
-		await approveLink(code, { keyId: "k-late", deviceId: "late-box" });
-		await LinkRequest.updateOne(
-			{ requestId },
-			{ expiresAt: new Date(Date.now() - 1000) },
-		);
-		expect(await pollLink(requestId)).toEqual({ status: "expired" });
-		expect(await listLinks("late-box")).toEqual([]);
-		expect(await LinkRequest.findOne({ requestId }).lean()).not.toHaveProperty(
-			"issuedToken",
-		);
-	});
-
-	test("five wrong codes lock the approving token, even for a right code", async () => {
-		const { code } = await initLink("Localman");
-		for (let i = 0; i < MAX_WRONG_CODES; i++) {
-			await expect(
-				approveLink("ZZZZ-ZZZZ", { keyId: "k-bad", deviceId: "mac" }),
-			).rejects.toMatchObject({ code: "TUNELO_LINK_001" });
-		}
-		await expect(
-			approveLink(code, { keyId: "k-bad", deviceId: "mac" }),
-		).rejects.toMatchObject({ code: "TUNELO_LINK_002", statusCode: 429 });
-	});
-
-	test("a machine lists and revokes its own links only", async () => {
-		const { requestId, code } = await initLink("Localman");
-		await approveLink(code, { keyId: "k-list", deviceId: "pc" });
-		await pollLink(requestId);
+	test("a machine lists and revokes its own older code links only", async () => {
+		await seedCodeLinkToken({ linkedDeviceId: "pc", clientName: "Localman" });
 
 		const links = await listLinks("pc");
 		expect(links).toHaveLength(1);
@@ -94,17 +35,11 @@ describe("device link service", () => {
 	});
 
 	test("a link token can revoke itself", async () => {
-		const { requestId, code } = await initLink("Localman");
-		await approveLink(code, { keyId: "k-self", deviceId: "box" });
-		const polled = await pollLink(requestId);
-		const linkId = polled.status === "approved" ? polled.linkId : "";
-		await revokeOwnLink(linkId);
+		const link = await seedCodeLinkToken({
+			linkedDeviceId: "box",
+			clientName: "Localman",
+		});
+		await revokeOwnLink(link.id);
 		expect(await listLinks("box")).toEqual([]);
-	});
-
-	test("normalizes typed codes", () => {
-		expect(normalizeLinkCode(" abcd efgh ")).toBe("ABCDEFGH");
-		expect(normalizeLinkCode("ABCD-EFG")).toBeNull();
-		expect(normalizeLinkCode("ABCD-EFG0")).toBeNull();
 	});
 });

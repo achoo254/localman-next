@@ -35,7 +35,10 @@ export interface LocalTunnel {
 
 export interface LinkedMachine {
 	id: string;
-	/** `self`: the user's own machine, linked by `tunelo login`. */
+	/**
+	 * `self`: the user's own machine, linked by `tunelo login`; `pairing`:
+	 * an anonymous machine linked with a code before that flow was retired.
+	 */
 	source: "pairing" | "self";
 	/** Localman may send to its localhost (`self` only). */
 	forwardEnabled: boolean;
@@ -46,18 +49,6 @@ export interface LinkedMachine {
 	/** Tunelo refused the link (revoked on the machine): only removable. */
 	revoked: boolean;
 }
-
-export interface Pairing {
-	id: string;
-	/** What the user types: `tunelo link <code>`. */
-	code: string;
-	expiresAt: string;
-}
-
-export type PairingState =
-	| { status: "pending" }
-	| { status: "expired" }
-	| { status: "linked"; link: LinkedMachine };
 
 function parseTunnel(item: unknown): LocalTunnel {
 	if (!isRecord(item)) throw new InvalidResponseError("tunnels");
@@ -107,16 +98,6 @@ function parseLinks(payload: unknown): LinkedMachine[] {
 	return expectArray(expectRecord(payload, "links"), "links").map(parseLink);
 }
 
-function parsePairingState(payload: unknown): PairingState {
-	const record = expectRecord(payload, "pairing");
-	const status = expectString(record, "status");
-	if (status === "pending" || status === "expired") return { status };
-	if (status === "linked") {
-		return { status, link: parseLink(record.link) };
-	}
-	throw new InvalidResponseError("status");
-}
-
 const segment = encodeURIComponent;
 
 export const tuneloAccountsApi = {
@@ -128,25 +109,6 @@ export const tuneloAccountsApi = {
 		return expectArray(record, "tunnels").map(parseTunnel);
 	},
 	listLinks: async () => parseLinks(await apiRequest(`${BASE}/tunnel-links`)),
-	startPairing: async (): Promise<Pairing> => {
-		const payload = await apiRequest(`${BASE}/tunnel-links`, {
-			method: "POST",
-			body: {},
-		});
-		const record = expectRecord(payload, "pairing");
-		return {
-			id: expectString(record, "id"),
-			code: expectString(record, "code"),
-			expiresAt: expectString(record, "expiresAt"),
-		};
-	},
-	pollPairing: async (id: string) =>
-		parsePairingState(
-			await apiRequest(`${BASE}/tunnel-links/${segment(id)}/poll`, {
-				method: "POST",
-				body: {},
-			}),
-		),
 	setForward: async (id: string, forwardEnabled: boolean) =>
 		parseLink(
 			await apiRequest(`${BASE}/tunnel-links/${segment(id)}`, {

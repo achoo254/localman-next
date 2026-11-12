@@ -151,7 +151,7 @@ export const SHARED_ROWS: readonly OwnRow[] = [
 	],
 	[
 		"tunelo_links",
-		(sub) => TunnelLinkModel.create({ userSub: sub, status: "pending" }),
+		(sub) => TunnelLinkModel.create({ userSub: sub, status: "linked" }),
 		(sub) => TunnelLinkModel.countDocuments({ userSub: sub }),
 	],
 ];

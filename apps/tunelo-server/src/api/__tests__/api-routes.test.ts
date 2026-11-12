@@ -6,6 +6,7 @@ import { createTokenAuthenticator } from "../../auth/token-authenticator.js";
 import type { AuthConfig } from "../../config/auth-config.js";
 import { MongoKeyStore } from "../../key-store/mongo-key-store.js";
 import { issueAccessToken } from "../../services/access-token-service.js";
+import { seedCodeLinkToken } from "../../test-support/code-link-token.js";
 import {
 	TEST_AUDIENCE,
 	TEST_ISSUER,
@@ -100,30 +101,11 @@ describe("GET /api/tunnels", () => {
 });
 
 describe("link routes", () => {
-	test("a client links an anonymous machine and lists with the link token", async () => {
-		const init = await call("/api/links/init", {
-			method: "POST",
-			body: { clientName: "Localman" },
+	test("an older code link still lists, is listed by its machine and revokes itself", async () => {
+		const { token: linkToken } = await seedCodeLinkToken({
+			linkedDeviceId: "mac",
+			clientName: "Localman",
 		});
-		expect(init.status).toBe(200);
-		const { requestId, code } = init.body as {
-			requestId: string;
-			code: string;
-		};
-
-		const approve = await call("/api/links/approve", {
-			method: "POST",
-			token: deviceToken,
-			body: { code },
-		});
-		expect(approve.body).toEqual({ clientName: "Localman" });
-
-		const poll = await call("/api/links/poll", {
-			method: "POST",
-			body: { requestId },
-		});
-		const linkToken = String(poll.body.token);
-		expect(linkToken).toMatch(/^tunelo_/);
 
 		const list = await call("/api/tunnels", { token: linkToken });
 		expect(list.status).toBe(200);
@@ -132,7 +114,7 @@ describe("link routes", () => {
 		const links = await call("/api/links", { token: deviceToken });
 		expect((links.body.links as unknown[]).length).toBe(1);
 
-		// A link token cannot approve or list links, only revoke itself.
+		// A link token cannot list links, only revoke itself.
 		expect((await call("/api/links", { token: linkToken })).status).toBe(403);
 		const self = await call("/api/links/self", {
 			method: "DELETE",
@@ -142,13 +124,15 @@ describe("link routes", () => {
 		expect((await call("/api/tunnels", { token: linkToken })).status).toBe(401);
 	});
 
-	test("approving needs the machine's anonymous token", async () => {
-		const res = await call("/api/links/approve", {
-			method: "POST",
-			token: await idp.sign(),
-			body: { code: "ABCD-EFGH" },
-		});
-		expect(res.status).toBe(403);
+	test("the code pairing routes are gone", async () => {
+		for (const path of ["init", "approve", "poll"]) {
+			const res = await call(`/api/links/${path}`, {
+				method: "POST",
+				token: deviceToken,
+				body: { clientName: "Localman", code: "ABCD-EFGH", requestId: "r" },
+			});
+			expect(res.status, path).toBe(404);
+		}
 	});
 });
 

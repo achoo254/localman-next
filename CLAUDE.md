@@ -133,8 +133,8 @@ This is a **tunnel proxy** — it relays untrusted HTTP traffic. Critical rules:
 | `TUNELO_RELAY_002` | Response too large |
 | `TUNELO_SERVER_001` | Server startup failed |
 | `TUNELO_DEVICE_004` | Anonymous device sign-in closed (`AUTH_MODE=hybrid`); update CLI and `tunelo login` |
-| `TUNELO_LINK_001` | Invalid or expired link code |
-| `TUNELO_LINK_002` | Too many wrong link codes / link requests (rate limited) |
+| `TUNELO_LINK_001` | Invalid self-link request (`clientName` missing) |
+| `TUNELO_LINK_002` | Retired with the code pairing (`/api/links/init`, `approve`, `poll`); no longer sent |
 | `TUNELO_LINK_003` | Link not found |
 | `TUNELO_LINK_004` | Token not bound to a machine (cannot link) |
 | `TUNELO_FORWARD_001` | Local forward: no link token of this machine's owner (404) |
@@ -146,7 +146,7 @@ This is a **tunnel proxy** — it relays untrusted HTTP traffic. Critical rules:
 
 ### Architecture Reference
 
-Decisions and boundaries: accounts via the shared IdP in `docs/decisions/tunelo/0004-accounts-via-central-idp.md`; boundary with Localman (import check, cross contracts) in `docs/decisions/tunelo/0005-stay-in-localman-monorepo.md`; CLI moved to tunelo 2.x in `docs/decisions/tunelo/0006-cli-moved-to-tunelo-agent.md`. Operations: `docs/tunelo/deployment-guide.md`. Current API: `apps/tunelo-server/src/api/create-api-router.ts`.
+Decisions and boundaries: accounts via the shared IdP in `docs/decisions/tunelo/0004-accounts-via-central-idp.md`; boundary with Localman (import check, cross contracts) in `docs/decisions/tunelo/0005-stay-in-localman-monorepo.md`; CLI moved to tunelo 2.x in `docs/decisions/tunelo/0006-cli-moved-to-tunelo-agent.md`. Code linking (`/api/links/init|approve|poll`) retired, machines link to Localman only through `tunelo login`: `docs/decisions/tunelo/0007-retire-code-linking.md`. Operations: `docs/tunelo/deployment-guide.md`. Current API: `apps/tunelo-server/src/api/create-api-router.ts`.
 
 ```
 Browser → nginx (443, TLS, wildcard cert)

@@ -2,7 +2,8 @@
  * - `idp`: identity-provider JWT, bound to an account (`ownerSub`).
  * - `legacy`: anonymous device token (`tunelo_…`, no scopes = full rights),
  *   accepted until `LEGACY_TOKEN_CUTOFF`.
- * - `link`: read-only token minted by `tunelo link` for one anonymous device.
+ * - `link`: read-only token of one machine for an app: an account's own
+ *   machine, or an anonymous one from the retired code pairing.
  */
 export type KeyKind = "idp" | "legacy" | "link";
 
@@ -27,7 +28,7 @@ export interface KeyInfo {
 	/** Device whose tunnels a `link` token may list. */
 	linkedDeviceId?: string;
 	/** Account owning `linkedDeviceId`, for a link an account minted for
-	 *  its own machine (`POST /api/links/self`); absent for `tunelo link`. */
+	 *  its own machine (`POST /api/links/self`); absent for an older code link. */
 	linkedOwnerSub?: string;
 }
 

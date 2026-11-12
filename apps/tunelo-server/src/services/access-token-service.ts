@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { SERVER_TOKEN_PREFIX, TUNNEL_SCOPES } from "@tunelo/shared";
+import { SERVER_TOKEN_PREFIX } from "@tunelo/shared";
 import { hashToken } from "../auth/token-hash.js";
 import { ApiKey, FULL_RIGHTS_FILTER } from "../db/models/api-key-model.js";
 
@@ -45,26 +45,4 @@ export async function issueAccessToken(
 		maxTunnels,
 	});
 	return minted;
-}
-
-/**
- * Mints a read-only link token: it lists the tunnels of `linkedDeviceId` and
- * nothing else. No `deviceId`, so device re-login never revokes it.
- */
-export async function issueLinkToken(opts: {
-	linkedDeviceId: string;
-	clientName: string;
-}): Promise<MintedToken & { id: string }> {
-	const minted = mintToken();
-	const doc = await ApiKey.create({
-		keyHash: hashToken(minted.token),
-		keyPrefix: minted.keyPrefix,
-		label: `link:${opts.clientName}`,
-		scopes: [TUNNEL_SCOPES.READ],
-		linkedDeviceId: opts.linkedDeviceId,
-		clientName: opts.clientName,
-		status: "active",
-		maxTunnels: 0,
-	});
-	return { ...minted, id: String(doc._id) };
 }

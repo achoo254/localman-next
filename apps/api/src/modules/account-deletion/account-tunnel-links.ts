@@ -4,7 +4,7 @@ import { accountDeletionLog } from "./account-deletion-log.js";
 import type { ErasedCount } from "./account-own-rows.js";
 
 /**
- * Revokes every machine linked with `tunelo link` at Tunelo (the same
+ * Revokes every linked machine at Tunelo (the same
  * path as "Revoke" in Settings), then deletes all the account's link
  * rows. Revoking is best effort: Tunelo down, or not configured on this
  * server, never keeps a row or stops the deletion; the failure is logged
@@ -24,7 +24,7 @@ export async function revokeTunnelLinks(sub: string): Promise<ErasedCount> {
 			);
 		}
 	}
-	// Rows a failed revoke left behind, and pairings started meanwhile.
+	// Rows a failed revoke left behind, and machines linked meanwhile.
 	await TunnelLinkModel.deleteMany({ userSub: sub });
 	return { collection: "tunelo_links", count: rows.length };
 }

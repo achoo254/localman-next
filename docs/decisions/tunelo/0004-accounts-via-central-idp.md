@@ -1,7 +1,8 @@
 # ADR-0004: Tài khoản Tunelo đi qua IdP chung `auth.hoandat.com`
 
 - **Ngày:** 2026-10-08 (chốt khi lập kế hoạch; ghi thành ADR ngày 2026-10-23)
-- **Trạng thái:** Đã chốt
+- **Trạng thái:** Đã chốt. Phần "Mã liên kết cho máy ẩn danh" và lý do giữ nó đã thay thế bởi
+  [ADR-0007](0007-retire-code-linking.md) (2026-11-12).
 - **Người quyết định:** dattqh
 
 ## Bối cảnh
@@ -44,7 +45,7 @@ Các phần cụ thể, kèm nơi code sở hữu:
   (`apps/tunelo-server/src/api/tunnel-list-routes.ts`, `tunnel-directory.ts`). Localman không giữ
   token Tunelo nào: nó đổi phiên của người dùng lấy một token `tunnels:read` ngắn hạn qua token
   exchange (RFC 8693) (`apps/api/src/modules/auth/token-exchange.ts`).
-- **Mã liên kết cho máy ẩn danh:** `tunelo link <code>` (`packages/tunelo-cli/src/cli-link-command.ts`,
+- **Mã liên kết cho máy ẩn danh** (đã thay thế bởi [ADR-0007](0007-retire-code-linking.md)): `tunelo link <code>` (`packages/tunelo-cli/src/cli-link-command.ts`,
   `apps/tunelo-server/src/api/link-routes.ts`, `services/device-link-service.ts`). Localman mở yêu
   cầu, máy ẩn danh duyệt bằng token của chính nó, Localman nhận một token **chỉ đọc**
   (`tunnels:read`) thấy đúng tunnel của máy đó. Mã sống 10 phút, khoá sau 5 lần sai.
@@ -64,7 +65,7 @@ Các phần cụ thể, kèm nơi code sở hữu:
   duyệt mã trên bất kỳ thiết bị nào; CLI không bao giờ thấy mật khẩu.
 - **Tách `open` và `read`.** Token Localman cầm chỉ cần đọc; nếu lộ, nó không mở được tunnel dưới tên
   người dùng. Cùng lý do đó token liên kết chỉ có `tunnels:read`.
-- **Giữ `tunelo link`** vì có máy cố ý không gắn tài khoản (máy dùng chung, CI) mà người dùng vẫn
+- **Giữ `tunelo link`** (đã thay thế bởi [ADR-0007](0007-retire-code-linking.md)) vì có máy cố ý không gắn tài khoản (máy dùng chung, CI) mà người dùng vẫn
   muốn thấy trong Localman.
 - **Thời hạn chuyển tiếp thay vì cắt ngay**, vì CLI 1.6.x không tự nâng cấp; người dùng cần thời gian
   để chạy `npm i -g tunelo@latest && tunelo login`.

@@ -28,8 +28,8 @@ export interface LocalRoute {
  */
 function noTunnel(key: string, port: number, agent: boolean): OperationError {
 	const open = agent
-		? `run \`tunelo http ${port}\` on a machine linked with \`tunelo link\``
-		: `run \`tunelo http ${port}\` (after \`tunelo login\`, or on a machine linked with \`tunelo link\`)`;
+		? `run \`tunelo http ${port}\` on a machine signed in with \`tunelo login\` on this account`
+		: `run \`tunelo http ${port}\` after \`tunelo login\` on this account`;
 	return new OperationError(
 		403,
 		"PROXY_TARGET_BLOCKED",

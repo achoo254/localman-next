@@ -10,9 +10,7 @@ import {
 	LINK_EXEMPT,
 	LIST_EXEMPT,
 	TUNELO_ABOUT,
-	linkPollView,
 	localTunnelListView,
-	pendingLinkView,
 	tuneloOperationBase,
 	tunnelLinksView,
 } from "./tunelo-view.js";
@@ -21,10 +19,6 @@ import {
 	deleteTunnelLink as removeLink,
 } from "./tunnel-link-service.js";
 import { listLocalTunnels as readTunnels } from "./tunnel-list-service.js";
-import {
-	pollTunnelLink as pollLink,
-	startTunnelLink as startLink,
-} from "./tunnel-pairing-service.js";
 
 const linkId = z.string().min(1).max(64);
 const READ = { readOnly: true, destructive: false, idempotent: true } as const;
@@ -54,7 +48,8 @@ export const listTunnelLinks = defineOperation({
 	id: "client.listTunnelLinks",
 	method: "GET",
 	path: "/client/tunnel-links",
-	summary: "List the machines the user linked with `tunelo link`",
+	summary:
+		"List the machines linked to the user (their own after `tunelo login`)",
 	description: TUNELO_ABOUT,
 	input: z.object({}),
 	output: tunnelLinksView,
@@ -63,40 +58,12 @@ export const listTunnelLinks = defineOperation({
 	handler: async (ctx) => readLinks(requireSubject(ctx)),
 });
 
-export const startTunnelLink = defineOperation({
-	...tuneloOperationBase,
-	id: "client.startTunnelLink",
-	method: "POST",
-	path: "/client/tunnel-links",
-	summary: "Open a pairing code for `tunelo link <code>`",
-	description: `${TUNELO_ABOUT} Answers the pairing id, the code to type on the machine and when it expires (10 minutes); poll it until the machine approves. 409 TUNNEL_LINK_LIMIT_REACHED past the limit of machines, 502 TUNELO_UNAVAILABLE when Tunelo does not answer.`,
-	input: z.object({}),
-	output: pendingLinkView,
-	annotations: { readOnly: false, destructive: false, idempotent: false },
-	mcp: { exempt: LINK_EXEMPT },
-	handler: async (ctx) => startLink(requireSubject(ctx)),
-});
-
-export const pollTunnelLink = defineOperation({
-	...tuneloOperationBase,
-	id: "client.pollTunnelLink",
-	method: "POST",
-	path: "/client/tunnel-links/:id/poll",
-	summary: "Check whether the machine approved a pairing",
-	description: `${TUNELO_ABOUT} \`pending\` until the machine runs \`tunelo link <code>\`, then \`linked\` with the machine; \`expired\` when the code ran out (the pairing is gone). Own pairings only (404 otherwise).`,
-	input: z.object({ id: linkId }),
-	output: linkPollView,
-	annotations: { readOnly: false, destructive: false, idempotent: true },
-	mcp: { exempt: LINK_EXEMPT },
-	handler: async (ctx, input) => pollLink(requireSubject(ctx), input.id),
-});
-
 export const deleteTunnelLink = defineOperation({
 	...tuneloOperationBase,
 	id: "client.deleteTunnelLink",
 	method: "DELETE",
 	path: "/client/tunnel-links/:id",
-	summary: "Revoke a linked machine, or cancel a pairing",
+	summary: "Revoke a linked machine",
 	description: `${TUNELO_ABOUT} Revokes the link token at Tunelo (a failure there does not keep the link) and forgets the machine; answers the remaining links. Own links only (404 otherwise).`,
 	input: z.object({ id: linkId }),
 	output: tunnelLinksView,
@@ -112,7 +79,5 @@ export const tuneloOperations: readonly AnyOperation[] = [
 	setMachineForward,
 	listLocalTunnels,
 	listTunnelLinks,
-	startTunnelLink,
-	pollTunnelLink,
 	deleteTunnelLink,
 ];

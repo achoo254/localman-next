@@ -72,7 +72,7 @@ export function registerSelfLinkRoutes(
 			);
 			const { linkedOwnerSub, linkedDeviceId } = keyInfo;
 			if (!linkedOwnerSub || !linkedDeviceId) {
-				// A `tunelo link` pairing: no account, nothing to forward to.
+				// An older code link: no account, nothing to forward to.
 				throw new TuneloError("TUNELO_LINK_003", "Link not found", 404);
 			}
 			res.set("cache-control", "no-store").json({

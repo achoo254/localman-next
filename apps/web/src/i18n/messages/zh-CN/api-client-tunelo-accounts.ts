@@ -19,27 +19,18 @@ export const apiClientTuneloAccounts: Messages["apiClientTunelo"]["accounts"] =
 			basicAuth: "Basic Auth",
 			remember: "此选择会在本浏览器中为该地址记住。",
 		},
-		connect: {
-			title: "关联机器",
-			opening: "正在获取代码…",
-			body: "在运行隧道的机器上输入此代码：",
-			command: "在那台机器上运行",
-			waiting: "正在等待机器确认… 代码 10 分钟后过期。",
-			linked: "机器已关联",
-			linkedBody:
-				"现在会为你的本地地址自动找到这台机器的隧道。你可以随时在这里撤销关联。",
-			expired: "代码在机器使用前已过期。",
-			restart: "获取新代码",
-		},
 		links: {
 			title: "已关联的机器",
-			hint: "用同一账号运行 tunelo login 后，会自动找到你 Tunelo 账号的隧道。没有账号的机器在这里关联；只有你能看到它的隧道。",
-			add: "关联机器",
+			hint: "用此账号运行过 tunelo login 的机器会自动关联并显示在这里。只有你能看到它的隧道。",
+			addSteps:
+				"要添加机器，请在该机器上运行 Chat 页面中的安装命令，然后用 <code>{command}</code> 登录。机器会自动显示在这里。",
+			openChat: "在 Chat 中打开“添加此机器”",
 			empty: "尚未关联机器。",
 			unnamed: "尚未打开隧道的机器",
 			linkedAt: "关联于 {date}",
 			revoke: "撤销 {name} 的关联",
-			revoked: "已在该机器上撤销。请移除它，如有需要再重新关联。",
+			revoked:
+				"已在该机器上撤销。请移除它，如有需要在机器上重新运行 tunelo login。",
 		},
 		machines: {
 			badge: "你的机器",

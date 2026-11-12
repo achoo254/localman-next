@@ -10,7 +10,8 @@ import { createVerifyRouter } from "./verify-routes.js";
 //   /device/*  — anonymous device pairing of tunelo CLI 1.6.x; approving is
 //                off unless AUTH_MODE=legacy (new CLIs sign in at the IdP)
 //   /verify    — check a Bearer token (anonymous, link or account JWT)
-//   /links/*   — `tunelo link`: read-only tokens for machines without an account
+//   /links/*   — link tokens of an account's machines for an app (Localman):
+//                mint (`/self`), list, revoke; no code pairing
 //   /tunnels   — list the caller's live tunnels (account JWT or link token)
 // Tunnels themselves authenticate over WebSocket with the token directly.
 export function createApiRouter(authenticator: TokenAuthenticator): Router {

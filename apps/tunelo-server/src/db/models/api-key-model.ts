@@ -25,9 +25,9 @@ const apiKeySchema = new Schema(
 		// Set on a link token an account minted for one of its own machines
 		// (`POST /api/links/self`): the token lists that machine's tunnels
 		// and may forward to its loopback (`LOCAL_FORWARD`). Null for the
-		// anonymous `tunelo link` pairing.
+		// older code link of an anonymous machine (that flow is retired).
 		linkedOwnerSub: { type: String, default: null, index: true },
-		// Who holds a link token (e.g. the Localman web app), shown in `tunelo links`.
+		// Who holds a link token (e.g. the Localman web app), shown in the link list.
 		clientName: { type: String, default: "" },
 		status: { type: String, enum: ["active", "revoked"], default: "active" },
 		maxTunnels: { type: Number, default: 3 },

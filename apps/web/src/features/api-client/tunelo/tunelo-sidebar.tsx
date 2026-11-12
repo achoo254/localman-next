@@ -27,7 +27,7 @@ const DEFAULT_PORT = 3000;
  * Tunelo section of the workbench sidebar: how to open a tunnel, the
  * form mapping a local address to it, and the user's mappings (on/off,
  * delete). Mappings live in the account's client settings. With the
- * `tuneloAccounts` flag, also the machines linked with `tunelo link`.
+ * `tuneloAccounts` flag, also the machines linked to the user.
  */
 export const TuneloSidebar = memo(function TuneloSidebar() {
 	const t = useT();

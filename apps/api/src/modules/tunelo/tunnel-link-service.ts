@@ -36,7 +36,7 @@ export async function listTunnelLinks(
 	return { links: links.map(linkView) };
 }
 
-/** The user's own link or pairing, `null` for anything else. */
+/** The user's own link, `null` for anything else. */
 export async function ownLink(
 	userSub: string,
 	id: string,
@@ -58,12 +58,17 @@ export async function revokeQuietly(token: string): Promise<void> {
 	}
 }
 
-/** Revokes a linked row's token at Tunelo (unless already dead), then drops it. */
-async function revokeAndDelete(
+/**
+ * Revokes a linked machine's token at Tunelo (best effort, unless already
+ * dead), then forgets the row. Answers the remaining links. A row left
+ * `pending` by the retired code pairing has no token and is only dropped.
+ */
+export async function deleteTunnelLink(
 	userSub: string,
-	row: StoredTunnelLink,
-): Promise<void> {
-	const id = String(row._id);
+	id: string,
+): Promise<{ links: TunnelLinkView[] }> {
+	const row = await ownLink(userSub, id);
+	if (!row) throw notFound();
 	if (row.tokenSealed && !row.deadAt) {
 		const { cipher, logger } = tuneloRuntime().deps;
 		let token: string | null = null;
@@ -74,32 +79,7 @@ async function revokeAndDelete(
 		}
 		if (token !== null) await revokeQuietly(token);
 	}
-	await TunnelLinkModel.deleteOne({ _id: id, userSub, status: "linked" });
-}
-
-/**
- * Revokes a linked machine (Tunelo first, best effort) or cancels a
- * pending pairing, then forgets it. Answers the remaining links. A
- * pairing a concurrent poll just linked is revoked, never dropped alone.
- */
-export async function deleteTunnelLink(
-	userSub: string,
-	id: string,
-): Promise<{ links: TunnelLinkView[] }> {
-	const row = await ownLink(userSub, id);
-	if (!row) throw notFound();
-	if (row.status === "linked") {
-		await revokeAndDelete(userSub, row);
-	} else {
-		const cancelled = await TunnelLinkModel.deleteOne({
-			_id: id,
-			userSub,
-			status: "pending",
-		});
-		const now =
-			cancelled.deletedCount === 0 ? await ownLink(userSub, id) : null;
-		if (now?.status === "linked") await revokeAndDelete(userSub, now);
-	}
+	await TunnelLinkModel.deleteOne({ _id: id, userSub });
 	tuneloRuntime().cache.drop(userSub);
 	return listTunnelLinks(userSub);
 }

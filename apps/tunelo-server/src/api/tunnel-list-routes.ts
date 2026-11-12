@@ -13,7 +13,7 @@ import { authenticateRequest } from "./middleware/authenticate-request.js";
  * - Account JWT with `tunnels:read` (e.g. exchanged by Localman): every
  *   tunnel of that account, on all machines.
  * - Link token: the tunnels of the one machine it was linked to (an
- *   account's own machine, or an anonymous one paired with `tunelo link`).
+ *   account's own machine, or an anonymous one from an older code link).
  */
 export function createTunnelListRouter(
 	authenticator: TokenAuthenticator,

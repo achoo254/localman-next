@@ -201,7 +201,7 @@ Fork, pull changes, merge của collection và environment, cùng pull request c
 
 ## Tunnel theo tài khoản Tunelo (`TUNELO_ACCOUNTS_ENABLED`)
 
-API client tự tìm tunnel Tunelo của user (cùng tài khoản, hoặc máy ẩn danh liên kết bằng `tunelo link <mã>`) khi **cả hai** cùng bật: cờ web `tuneloAccounts` trong [`released-features`](../infra/localman/released-features) và cổng server `TUNELO_ACCOUNTS_ENABLED=true`. Server gọi `https://tunnel.hoandat.com`, nên Tunelo đó phải có `GET /api/tunnels` và `/api/links/*`; `TUNELO_API_URL` chỉ dùng cho dev/E2E. Link token niêm phong bằng `SESSION_ENCRYPTION_KEY`.
+API client tự tìm tunnel Tunelo của user (cùng tài khoản; máy tự liên kết sau `tunelo login`) khi **cả hai** cùng bật: cờ web `tuneloAccounts` trong [`released-features`](../infra/localman/released-features) và cổng server `TUNELO_ACCOUNTS_ENABLED=true`. Server gọi `https://tunnel.hoandat.com`, nên Tunelo đó phải có `GET /api/tunnels` và `/api/links/self` (liệt kê, thu hồi; luồng mã liên kết đã bỏ, xem [ADR-0007](decisions/tunelo/0007-retire-code-linking.md)); `TUNELO_API_URL` chỉ dùng cho dev/E2E. Link token niêm phong bằng `SESSION_ENCRYPTION_KEY`.
 
 - **Bật:** thêm `tuneloAccounts` vào `released-features` và deploy; trên server đặt `TUNELO_ACCOUNTS_ENABLED=true` rồi `pm2 reload localman-api`.
 - **Kiểm sau khi bật:** `GET /api/v1/client/local-tunnels` trả 401 khi chưa đăng nhập (không phải 404); đăng nhập, chạy `tunelo http <port>` cùng tài khoản rồi gửi tới `http://localhost:<port>` thì badge "Qua Tunelo · <máy>".

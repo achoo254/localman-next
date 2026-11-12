@@ -1,4 +1,4 @@
-import { act, screen, waitFor } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { seriousViolations } from "../../../test/axe";
@@ -14,7 +14,6 @@ import { ChooseTunnelModal } from "./choose-tunnel-modal";
 import type { LocalTunnel } from "./tunelo-accounts-api";
 import { TuneloPanel } from "./tunelo-panel";
 import { TunnelLinksSection } from "./tunnel-links-section";
-import { PAIRING_POLL_MS } from "./use-pairing";
 
 const LINKS = "/api/v1/client/tunnel-links";
 const MACHINE = {
@@ -127,77 +126,20 @@ describe("Linked machines", () => {
 		expect(api.calls.some((call) => call.method === "DELETE")).toBe(true);
 	});
 
-	it("shows the code and command, polls until the machine approves", async () => {
-		let polls = 0;
-		mockFetch({
-			[`GET ${LINKS}`]: { body: { links: [] } },
-			[`POST ${LINKS}`]: {
-				body: {
-					id: "p1",
-					code: "ABCD-2345",
-					expiresAt: "2026-10-17T09:00:00.000Z",
-				},
-			},
-			[`POST ${LINKS}/p1/poll`]: () => {
-				polls += 1;
-				return {
-					body:
-						polls < 2
-							? { status: "pending" }
-							: { status: "linked", link: MACHINE },
-				};
-			},
-		});
-		vi.useFakeTimers({ shouldAdvanceTime: true });
-		const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+	it("shows how to add a machine instead of a code to type", async () => {
+		const api = mockFetch({ [`GET ${LINKS}`]: { body: { links: [] } } });
 		renderClient(<TunnelLinksSection />);
-		await user.click(
-			await screen.findByRole("button", { name: "Link a machine" }),
-		);
-		expect(await screen.findByText("ABCD-2345")).toBeVisible();
-		expect(byDataId("tunelo-connect-command")).toHaveTextContent(
-			"tunelo link ABCD-2345",
-		);
-		await act(async () => {
-			await vi.advanceTimersByTimeAsync(PAIRING_POLL_MS * 2 + 10);
-		});
-		await waitFor(() =>
-			expect(byDataId("tunelo-connect-linked")).toBeVisible(),
-		);
-		expect(polls).toBe(2);
-	});
-
-	it("offers a new code once the code expired, and cancels a waiting pairing", async () => {
-		const api = mockFetch({
-			[`GET ${LINKS}`]: { body: { links: [] } },
-			[`POST ${LINKS}`]: {
-				body: {
-					id: "p1",
-					code: "ABCD-2345",
-					expiresAt: "2026-10-17T09:00:00.000Z",
-				},
-			},
-			[`POST ${LINKS}/p1/poll`]: { body: { status: "expired" } },
-			[`DELETE ${LINKS}/p1`]: { body: { links: [] } },
-		});
-		vi.useFakeTimers({ shouldAdvanceTime: true });
-		const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-		renderClient(<TunnelLinksSection />);
-		await user.click(
-			await screen.findByRole("button", { name: "Link a machine" }),
-		);
-		await screen.findByText("ABCD-2345");
-		await act(async () => {
-			await vi.advanceTimersByTimeAsync(PAIRING_POLL_MS + 10);
-		});
-		await waitFor(() =>
-			expect(byDataId("tunelo-connect-expired")).toBeVisible(),
-		);
-		await user.click(screen.getByRole("button", { name: "Get a new code" }));
-		await screen.findByText("ABCD-2345");
-		await user.click(screen.getByRole("button", { name: "Cancel" }));
-		await waitFor(() =>
-			expect(api.calls.some((call) => call.method === "DELETE")).toBe(true),
+		expect(await screen.findByText("No machine linked.")).toBeVisible();
+		const guide = byDataId("settings-tunelo-add-guide");
+		expect(guide).toHaveTextContent("tunelo login");
+		expect(guide).not.toHaveTextContent("tunelo link");
+		expect(
+			screen.getByRole("link", { name: /Open Add this machine in Chat/ }),
+		).toHaveAttribute("href", "https://chat.hoandat.com/ai/add");
+		expect(screen.queryByRole("button", { name: "Link a machine" })).toBeNull();
+		expect(api.calls.every((call) => call.method === "GET")).toBe(true);
+		expect(await seriousViolations(byDataId("settings-tunelo-links"))).toEqual(
+			[],
 		);
 	});
 });

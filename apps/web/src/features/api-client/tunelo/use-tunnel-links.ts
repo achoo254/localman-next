@@ -15,7 +15,7 @@ export function useTunnelLinks() {
 }
 
 /**
- * After a machine is linked or revoked: its list is replaced, and the
+ * After a machine is revoked or changed: its list is replaced, and the
  * cached tunnels are read anew on the next send.
  */
 export function useLinksChanged(): (links?: LinkedMachine[]) => void {

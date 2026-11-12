@@ -57,8 +57,8 @@ Giữ Tunelo trong `localman-next`. Dùng ngoài Localman đi qua gói npm `tune
     `apps/api/src/modules/mock-runtime/upstream-tunelo.ts`;
   - `GET /api/tunnels` cùng scope `tunnels:read` (`apps/tunelo-server/src/api/tunnel-list-routes.ts`,
     [ADR-0004](0004-accounts-via-central-idp.md)), Localman đọc bằng token đổi ở IdP;
-  - luồng `tunelo link <code>` (`apps/tunelo-server/src/api/link-routes.ts`) mà Localman hiện cho máy
-    chưa có tài khoản.
+  - liệt kê và thu hồi liên kết máy (`apps/tunelo-server/src/api/link-routes.ts`); luồng mã liên kết cho máy
+    chưa có tài khoản đã bỏ ([ADR-0007](0007-retire-code-linking.md)).
 
 ## Khi nào xem lại
 

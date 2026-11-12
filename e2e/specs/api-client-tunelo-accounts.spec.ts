@@ -8,12 +8,7 @@ import {
 } from "../support/api-client-ui.js";
 import { WEB_ORIGIN } from "../support/ports.js";
 import { signIn, uniqueSuffix, uniqueUsername } from "../support/session.js";
-import {
-	approveLink,
-	httpTunnel,
-	setAccountTunnels,
-	setDeviceTunnels,
-} from "../support/tunelo-control.js";
+import { httpTunnel, setAccountTunnels } from "../support/tunelo-control.js";
 
 /** Account id the fake IdP gives `username` (and the fake Tunelo reads). */
 const subOf = (username: string) => `acc_${username}`;
@@ -118,41 +113,6 @@ test("two tunnels for the port: the user picks one, once", async ({ page }) => {
 	await send(page);
 	await expect.poll(() => calls).toEqual([second, second]);
 	await expect(modal).toBeHidden();
-});
-
-test("a linked machine's tunnel is used until the link is revoked", async ({
-	page,
-}) => {
-	const suffix = uniqueSuffix();
-	const username = uniqueUsername("tunelo-link", suffix);
-	const port = localPort();
-	const device = `device-${suffix}`;
-	await setDeviceTunnels(device, [httpTunnel(`pc${suffix}`, port, "anon-pc")]);
-	const calls = await openTab(page, username);
-
-	await page.getByTestId("sidebar-rail-tunelo").click();
-	await page.getByTestId("settings-tunelo-link-start").click();
-	const code = await page.getByTestId("tunelo-connect-code").innerText();
-	await expect(page.getByTestId("tunelo-connect-command")).toContainText(
-		`tunelo link ${code}`,
-	);
-	await approveLink(code, device);
-	await expect(page.getByTestId("tunelo-connect-linked")).toBeVisible();
-	await page.getByTestId("modal-tunelo-connect-close").click();
-	await expect(page.getByTestId("settings-tunelo-link")).toHaveCount(1);
-
-	await chooseRoute(page, "proxy");
-	await setUrl(page, `http://localhost:${port}/me`);
-	await send(page);
-	await expect
-		.poll(() => calls)
-		.toEqual([`https://pc${suffix}.tunnel.hoandat.com/me`]);
-
-	await page.getByTestId("settings-tunelo-link-revoke").click();
-	await expect(page.getByTestId("settings-tunelo-links-empty")).toBeVisible();
-	await send(page);
-	await expect(page.getByTestId("tunelo-panel")).toBeVisible();
-	expect(calls).toHaveLength(1);
 });
 
 test("another user sees none of the account's tunnels or links", async ({

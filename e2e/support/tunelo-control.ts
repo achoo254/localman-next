@@ -24,21 +24,6 @@ export function setAccountTunnels(
 	});
 }
 
-/** Tunnels of an anonymous machine, seen through its links. */
-export function setDeviceTunnels(
-	deviceId: string,
-	tunnels: TuneloTunnel[],
-): Promise<void> {
-	return control("PUT", `/devices/${encodeURIComponent(deviceId)}/tunnels`, {
-		tunnels,
-	});
-}
-
-/** The machine runs `tunelo link <code>`. */
-export function approveLink(code: string, deviceId: string): Promise<void> {
-	return control("POST", "/links/approve", { code, deviceId });
-}
-
 /** An HTTP tunnel of `localPort` at `https://<name>.tunnel.hoandat.com`. */
 export function httpTunnel(
 	name: string,
