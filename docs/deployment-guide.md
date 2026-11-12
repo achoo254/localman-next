@@ -12,7 +12,7 @@ Mọi script nằm ở [`infra/localman/`](../infra/localman/); tài liệu này
 |---|---|
 | DNS (Cloudflare, zone `hoandat.com`) | `localman` → `<SERVER_65_IP>` proxied; `*.localman` → `<SERVER_65_IP>` DNS only (Universal SSL miễn phí không phủ wildcard hai cấp) |
 | TLS | Let's Encrypt `localman.hoandat.com` + `*.localman.hoandat.com`, gia hạn bằng DNS-01 Cloudflare (`authenticator = dns-cloudflare`, `renew_hook = systemctl reload nginx`) qua [`issue-wildcard-cert.sh`](../infra/localman/issue-wildcard-cert.sh); dùng cho cả host proxied (SSL "full") lẫn wildcard |
-| Release | `/opt/localman/releases/<id>/{api,web,nginx}` (id = giờ UTC + commit; `deploy.sh` từ chối cây làm việc có sửa đổi, commit chưa lên `origin/main` hoặc khi đang có lần deploy khác giữ khoá `/run/lock/localman-deploy` trên server), symlink `/opt/localman/current` trỏ release đang chạy; giữ 5 release gần nhất. Lên release mới: [`activate-release.sh`](../infra/localman/activate-release.sh); đổi qua lại giữa các release: [`switch-release.sh`](../infra/localman/switch-release.sh) |
+| Release | `/opt/localman/releases/<id>/{api,web,nginx}` (id = giờ UTC + commit; CI upload vào `/opt/localman/ci-incoming/<id>`, `activate-incoming.sh` chuyển sang đây), symlink `/opt/localman/current` trỏ release đang chạy; giữ 5 release gần nhất. Lên release mới: [`activate-release.sh`](../infra/localman/activate-release.sh); đổi qua lại giữa các release: [`switch-release.sh`](../infra/localman/switch-release.sh) |
 | nginx | `/etc/nginx/conf.d/localman-http.conf` (zone `limit_req`/`limit_conn`, log che secret), `/etc/nginx/conf.d/localman.hoandat.com.conf` (CSP mang hash của đúng bản build), `/etc/nginx/localman/localman-app.inc` (location của dashboard). Mỗi release có bản conf riêng trong `releases/<id>/nginx/`, `switch-release.sh` cài bản đó cùng lúc với đổi symlink; bản gốc ở [`infra/localman/nginx/`](../infra/localman/nginx/), không chép tay |
 | IP client thật | Host proxied dựa vào `set_real_ip_from` (dải Cloudflare) + `real_ip_header CF-Connecting-IP` đã có ở cấp `http` trên server, Localman không lặp lại (`activate-release.sh` cảnh báo nếu thiếu). Host DNS-only `*.localman` không tin header nào (`set_real_ip_from unix:;` trong server block), `$remote_addr` là IP kết nối thật. Site chỉ chuyển `X-Forwarded-For $remote_addr` và `X-Forwarded-Host $host`, API tin proxy `127.0.0.1` (`TRUST_PROXY=127.0.0.1`) |
 | `/internal/` | Chỉ cho `<SERVER_65_IP>` (IdP trên chính server này, đi qua Cloudflare nên sau real-IP là IPv4 công khai của server), `127.0.0.1`, `::1`; nơi khác nhận 403 |
@@ -65,7 +65,9 @@ Trên máy deploy: pnpm 11.9, Node ≥ 22.12, ssh tới server qua alias (`SSH_T
    - `nginx -T 2>/dev/null | grep -E 'set_real_ip_from|real_ip_header'` có dải IP Cloudflare và `real_ip_header CF-Connecting-IP` ở cấp `http` (nếu không, mọi người dùng chung rate limit của một IP edge Cloudflare, và `/internal/` từ chối IdP). Nếu thiếu, thêm một lần ở cấp `http` cho cả server (dải IP lấy từ `https://www.cloudflare.com/ips-v4` và `ips-v6`); đây là cấu hình chung với IdP nên báo user trước.
    - SELinux enforcing: `getsebool httpd_can_network_connect` phải `on` (setup-server cảnh báo nếu tắt); `web/` của mọi release mang nhãn `httpd_sys_content_t` (setup-server khai, activate-release `restorecon`).
 7. **Env.** `HOST=127.0.0.1` có sẵn trong mẫu (file cũ thiếu thì `setup-server.sh` thêm vào). Điền `/opt/localman/.env` theo mẫu: `MONGO_URI` (mật khẩu app ở bước 3), `OIDC_CLIENT_SECRET`, `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `TELEGRAM_BOT_TOKEN`, `OWNER_TELEGRAM_CHAT_ID`, `OWNER_SUBS`, bộ VAPID, `AUDIT_CLIENT_ID`/`AUDIT_CLIENT_SECRET`. Biến thiếu hoặc sai thì API dừng ngay khi khởi động và log tên biến (không in giá trị).
-8. **Deploy.** `SSH_TARGET=<alias> SERVER_PUBLIC_IP=<SERVER_65_IP> bash infra/localman/deploy.sh` (xem mục dưới).
+8. **User deploy cho CI.** Chép `infra/localman/setup-deploy-user.sh` và `activate-incoming.sh` lên server, chạy
+   `bash infra/localman/setup-deploy-user.sh < localman-deploy.pub` bằng root. Trên GitHub: secret `DEPLOY_HOST`,
+   `DEPLOY_PORT`, `DEPLOY_SSH_KEY`, `DEPLOY_KNOWN_HOSTS`, `SERVER_PUBLIC_IP` và environment `production`.
 9. **Telegram.** Bot của Localman chỉ **gửi** tin (API không có route webhook, nên không có `setWebhook` hay `TELEGRAM_WEBHOOK_SECRET`). Owner mở `@localman_hoandat_bot` và bấm Start để bot được phép nhắn; user nhận thông báo cũng phải Start bot (chat id lấy từ IdP). Kiểm token mà không để lộ qua argv:
    ```bash
    read -rs TOKEN && printf 'url = "https://api.telegram.org/bot%s/getMe"\n' "$TOKEN" | curl -s --config -; unset TOKEN
@@ -77,17 +79,30 @@ Trên máy deploy: pnpm 11.9, Node ≥ 22.12, ssh tới server qua alias (`SSH_T
 
 ## Các lần sau
 
+**Bình thường: push `main`.** CI xanh thì `.github/workflows/deploy.yml` build bằng
+[`build-release.sh`](../infra/localman/build-release.sh) (bước 1-3 dưới đây, cộng `infra/localman` đi kèm), upload bằng
+user `localman-deploy` vào `/opt/localman/ci-incoming/<id>` rồi chạy `sudo /usr/local/sbin/localman-activate-incoming <id>`
+([`activate-incoming.sh`](../infra/localman/activate-incoming.sh): `flock` trên `/run/localman-activate.lock`, kiểm bản
+upload, chép `infra/` của release vào `/opt/localman/infra`, rồi bước 5 dưới đây). Cuối cùng kiểm từ ngoài: trang chủ 200
+và `/RELEASE` trả đúng mã release. Theo dõi bằng `gh run watch`. Quy tắc chung: `docs/deploy-standard.md` của workspace
+`hoandat-app`.
+
+**Dự phòng khi CI hỏng:**
+
 ```bash
 SSH_TARGET=<alias> SERVER_PUBLIC_IP=<SERVER_65_IP> [SSH_OPTS="-F ssh_config"] [VITE_FEATURES=...] bash infra/localman/deploy.sh
 ```
 
-[`deploy.sh`](../infra/localman/deploy.sh) chạy ở máy:
+Script từ chối cây làm việc có sửa đổi và commit chưa lên `origin/main`, build bằng cùng `build-release.sh`, upload vào
+`ci-incoming`, cài lại `activate-incoming.sh` vào `/usr/local/sbin` rồi chạy đúng bước activate như CI.
+
+Các bước của một lần deploy:
 
 1. Build `@localman/api` và `@localman/web`; cố định `VITE_*` để `.env.local` của dev không lọt vào bản production.
 2. Dựng `package.json` và `pnpm-lock.yaml` runtime: `pnpm --filter @localman/api deploy --prod` cho phiên bản đã khoá theo lockfile của workspace, [`runtime-manifest.mjs`](../infra/localman/runtime-manifest.mjs) bỏ package `@localman/*` (đã bundle), `pnpm install --lockfile-only` tỉa lockfile mà giữ nguyên mọi phiên bản, rồi kiểm lại bằng `--frozen-lockfile`.
 3. Điền vào CSP hash các script inline của `apps/web/dist/*.html` (`index.html`, trang prerender duy nhất, [`csp-hashes.mjs`](../infra/localman/csp-hashes.mjs)).
-4. rsync `-rlptz` (openrsync của macOS không có `--chown`; file thuộc root) `infra/localman` và thư mục release mới lên server.
-5. Gọi `activate-release.sh` trên server:
+4. Upload release (kèm `infra/localman`) vào `ci-incoming/<id>`; `activate-incoming.sh` chuyển nó sang `releases/<id>`.
+5. `activate-release.sh` trên server:
    - `setup-server.sh`;
    - `pnpm install --prod --frozen-lockfile` trong release;
    - mang asset web của release trước sang bằng hard link (asset quá 14 ngày bị bỏ), để tab mở trước khi deploy vẫn tải được chunk cũ;
