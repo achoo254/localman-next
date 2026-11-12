@@ -16,6 +16,9 @@ ID="${1:?usage: localman-activate-incoming <release-id>}"
 exec 9>/run/localman-activate.lock
 flock -w 600 9 || { echo "another activation still holds /run/localman-activate.lock" >&2; exit 1; }
 
+# sudo keeps only the secure path; pm2 lives in /usr/local/bin (activate-release.sh loads Node from root's nvm).
+export PATH="/usr/local/bin:$PATH"
+
 SRC="$APP_DIR/ci-incoming/$ID"
 STAGE="$APP_DIR/staging"
 DST="$APP_DIR/releases/$ID"
