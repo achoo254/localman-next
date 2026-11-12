@@ -1,17 +1,14 @@
-// PM2 ecosystem for production deploy
-// Usage on VPS:
-//   cd /var/www/tunelo
-//   pm2 start ecosystem.config.cjs --update-env
-//   pm2 save
-//
-// Loads /var/www/tunelo/.env via Node's native --env-file flag (Node 20+)
+// PM2 ecosystem for production. Each release lives in /var/www/tunelo/releases/<id> with this file;
+// infra/tunelo/activate-incoming.sh points /var/www/tunelo/current at it and runs
+//   pm2 start /var/www/tunelo/current/ecosystem.config.cjs --update-env && pm2 save
+// The env file stays in /var/www/tunelo, outside the releases, loaded with Node's --env-file flag.
 
 module.exports = {
 	apps: [
 		{
 			name: "tunelo",
 			script: "server.mjs",
-			cwd: "/var/www/tunelo",
+			cwd: "/var/www/tunelo/current",
 			node_args: "--env-file=/var/www/tunelo/.env",
 			instances: 1,
 			exec_mode: "fork",

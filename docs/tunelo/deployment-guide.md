@@ -29,7 +29,7 @@ Mỗi bước chỉ thêm, bước sau dựa vào bước trước:
 1. auth-next có client và scope mà binary cần (`tunelo-agent`, `machines:write`).
 2. **tunelo-server** (cửa kiểm `/.tunelo/forward`, `POST|GET /api/links/self`): phải chạy trước khi bất kỳ `tunelo` nào
    bật chuyển tiếp. Server tương thích ngược, tunnel thường và CLI 1.x vẫn chạy.
-3. **Localman** api + web (`infra/localman/deploy.sh`, runbook [`docs/deployment-guide.md`](../deployment-guide.md)): route
+3. **Localman** api + web (CI của repo này, runbook [`docs/deployment-guide.md`](../deployment-guide.md)): route
    `POST /tunelo/links/self` và nginx `location = /tunelo/links/self` trong `infra/localman/nginx/localman-app.inc`
    (route nằm ngoài `/api/`, thiếu location thì rơi vào trang tĩnh và trả 405).
 4. Phát hành binary `tunelo` 2.x ở chat-next, rồi gói 1.12 ở đây.
@@ -37,8 +37,7 @@ Mỗi bước chỉ thêm, bước sau dựa vào bước trước:
 Sao lưu ngay trước bước 2 và 3:
 
 - Tunelo: cả DB bằng `mongodump --gzip --archive=/var/www/tunelo/backups/tunelo-<stamp>.archive.gz`, URI đọc từ tệp
-  cấu hình chứ không qua argv; chép `server.mjs`, `server.mjs.map`, `package.json`, `pnpm-lock.yaml`,
-  `ecosystem.config.cjs`, `static/` sang `/var/www/tunelo/backups/release-<stamp>/` để lùi code.
+  cấu hình chứ không qua argv. Code không cần chép: 5 release gần nhất nằm trong `/var/www/tunelo/releases/`.
 - Localman: `bash /opt/localman/infra/backup-localman-db.sh`.
 
 Kiểm sau deploy (ngoài `/health` và `pm2 status tunelo` ở mục PM2):
@@ -52,24 +51,29 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST https://localman.hoandat.com/tu
 ```
 
 Log của process mới phải có `MongoDB connected` và các tunnel cũ `Tunnel registered` lại; không dòng nào chứa token.
-Lùi tunelo-server: chép lại các file từ `backups/release-<stamp>/`, `pnpm install --prod`, khởi động lại pm2 app
-`tunelo`; dữ liệu chỉ cần `mongorestore` khi bản mới đã ghi vào DB.
+Lùi tunelo-server: trỏ `current` về release trước (`ln -sfn releases/<id> current.next && mv -T current.next current`
+trong `/var/www/tunelo`), `pm2 delete tunelo && pm2 start current/ecosystem.config.cjs && pm2 save`; dữ liệu chỉ cần
+`mongorestore` khi bản mới đã ghi vào DB.
 
-### Server — deploy thủ công lên staging
+### Server — deploy qua CI
 
-Server **không** có pipeline tự động. Deploy từ máy có SSH tới staging:
+**Bình thường: push `main`.** CI xanh thì `.github/workflows/deploy.yml` build release
+([`infra/tunelo/build-release.sh`](../../infra/tunelo/build-release.sh): `server.mjs`, map, `static/`, `package.json`,
+`ecosystem.config.cjs`), upload bằng user `tunelo-deploy` (secret khoá `TUNELO_DEPLOY_SSH_KEY`) vào
+`/var/www/tunelo/ci-incoming/<id>` rồi chạy `sudo /usr/local/sbin/tunelo-activate-incoming <id>`
+([`activate-incoming.sh`](../../infra/tunelo/activate-incoming.sh)), trước job deploy của Localman. Activate:
 
-```bash
-VPS_HOST=<ssh alias> bash infra/tunelo/deploy.sh   # VPS_HOST bắt buộc; REMOTE_DIR override được
-```
+- `flock` trên `/run/tunelo-activate.lock`; release thành `/var/www/tunelo/releases/<id>`, symlink `current`; giữ 5 bản.
+- Release có file y hệt bản đang chạy thì bỏ, không restart: push chỉ đổi Localman không làm rớt tunnel.
+- `pnpm install --prod`, `pm2 delete` + `pm2 start current/ecosystem.config.cjs`, đợi `/health` 20 giây; hỏng thì trỏ
+  lại release trước (lần đầu: các file cũ nằm thẳng trong `/var/www/tunelo`) và thoát 1.
 
-Script build bundle (`pnpm build:tunelo-server`), rsync `dist/tunelo-server/server.mjs`, `package.json`
-và `ecosystem.config.cjs` lên server, cài dependency production rồi restart PM2.
+Push theo thứ tự deploy ở mục trên khi đổi hợp đồng: đợi deploy của repo trước xanh rồi mới push repo sau.
+Dựng user deploy (một lần): chép `infra/tunelo/setup-deploy-user.sh` và `activate-incoming.sh` lên server, chạy
+`bash infra/tunelo/setup-deploy-user.sh < tunelo-deploy.pub` bằng root.
 
-Trước đây deploy staging chạy tự động bằng GitLab CI mỗi lần push `main`; pipeline
-này đã gỡ cùng với repo GitLab. Nếu dựng lại bằng GitHub Actions, workflow cần các
-secret tương ứng: `SSH_PRIVATE_KEY`, `STAGING_HOST`, `STAGING_PORT`,
-`STAGING_USER`, `DEPLOY_PATH`.
+**Dự phòng khi CI hỏng:** `VPS_HOST=<ssh alias root> bash infra/tunelo/deploy.sh` từ chối cây chưa sạch và commit chưa
+lên `origin/main`, build bằng cùng `build-release.sh`, upload vào `ci-incoming` rồi chạy đúng bước activate như CI.
 
 Deploy **không** đồng bộ `.env` — file secret nằm sẵn trên server tại
 `/var/www/tunelo/.env` và được `infra/tunelo/ecosystem.config.cjs` nạp qua `--env-file`.
@@ -196,8 +200,8 @@ The deployed file is `infra/tunelo/nginx.conf`, installed as
 
 ## PM2
 
-pm2 app `tunelo` chạy `/var/www/tunelo/server.mjs` theo `infra/tunelo/ecosystem.config.cjs`;
-`infra/tunelo/deploy.sh` chép file đó lên và restart. Kiểm sau deploy: `pm2 status tunelo`,
+pm2 app `tunelo` chạy `/var/www/tunelo/current/server.mjs` theo `current/ecosystem.config.cjs` (đi theo release);
+`activate-incoming.sh` tạo lại app mỗi lần đổi release. Kiểm sau deploy: `pm2 status tunelo`,
 `curl http://127.0.0.1:3001/health` trên server.
 
 ## Response Cache (Valkey — optional, dev-first)
