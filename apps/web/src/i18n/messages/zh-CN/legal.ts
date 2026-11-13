@@ -28,21 +28,14 @@ export const legal: Messages["legal"] = {
 	accountDelete: {
 		title: "删除你的 Localman 账号",
 		intro:
-			"你可以随时在网页版中自行删除 Localman 账号及其数据。本页说明删除方法以及删除后会发生什么。",
-		deleted:
-			"你的 Localman 账号已删除。再次登录时，会先询问你是否创建一个新的空账号。",
+			"你使用 {idpName} 账号登录 Localman，该账号只能在 {idpName} 删除。在那里删除后，你在 Localman 以及其他所有使用该账号的应用中的数据会立即删除。本页说明你的 Localman 数据会如何处理。",
 		howTitle: "如何删除",
-		how: "- 登录 Localman。\n- 在账号菜单中打开<b>账号与额度</b>。\n- 在<b>删除账号</b>下选择<b>删除账号…</b>，查看将删除的内容，输入你的用户名并确认。",
-		openAccount: "前往账号页面",
-		whatTitle: "会删除哪些内容",
-		what: "- 你拥有的 mock project，以及其中的 resource、数据、request 日志、webhook inbox 和 callback，对你共享过的人同样删除。\n- 你的个人 workspace，以及只有你一个成员的团队 workspace，连同其中的 collection 和 environment。\n- API client 的历史、打开的标签页和设置，通知及通知设置，Web Push 设备，用量计数，与 Tunelo 设备的关联（在 Tunelo 撤销），你登录时通过反馈表单发送的消息，以及所有登录会话。\n- 在还有其他成员的团队 workspace 中，你会退出该 workspace。你在其中写的内容（collection、request、评论、变更记录）属于团队，会被保留，但会移除你的名字。",
-		blockedTitle: "需要先处理的情况",
-		blocked:
-			"如果你是某个团队 workspace 唯一的 Admin，且其中还有其他成员，请先将另一位成员设为 Admin（或移除其他成员）。删除页面会列出这些 workspace。",
+		how: "- 打开<idpDelete>你的 {idpName} 账号页面</idpDelete>并登录。\n- 在<b>删除账号</b>下按步骤操作。{idpName} 通知账号已删除后，Localman 会立即删除你的数据。",
+		openAccount: "前往 {idpName} 删除账号",
+		whatTitle: "你的 Localman 数据会如何处理",
+		what: "- 你拥有且还有其他成员的 mock project 会转给最早加入的成员，数据保持不变。其他 mock project 会连同 resource、数据、request 日志、webhook inbox 和 callback 一起删除。\n- 在还有其他成员的团队 workspace 中，你会退出该 workspace。如果你是唯一的 Admin，角色最高的成员（角色相同时为最早加入者）会成为 Admin 和所有者。你在其中写的内容（collection、request、评论、变更记录）属于团队，会被保留，但会移除你的名字。\n- 你的个人 workspace 以及只有你一个成员的团队 workspace 会被删除，连同其中的 collection 和 environment。\n- API client 的历史、打开的标签页和设置，通知及通知设置，Web Push 设备，用量计数，与 Tunelo 设备的关联（在 Tunelo 撤销），你登录时通过反馈表单发送的消息，以及所有登录会话都会被删除。",
 		keptTitle: "会保留什么，保留多久",
-		kept: "- 仅保留账号 ID 的哈希值，以便再次登录时先询问是否创建新账号。\n- 数据库每晚备份，并保留最近 14 份，因此已删除的数据最多可能在备份中保留 14 天。\n- 其他人收到的关于你操作的通知会保留发送时的文字，直到过期（90 天）。\n- 你未登录时通过反馈表单发送的消息无法与账号关联；如需删除，请通过表单提出。",
-		idpTitle: "你的 {idpName} 登录账号",
-		idp: "Localman 不保存你的密码：你使用 {idpName} 账号登录，其他应用也可能使用该账号。删除 Localman 账号不会删除它。如需一并删除，请前往<idpDelete>你的 {idpName} 账号页面</idpDelete>。",
+		kept: "- 仅保留账号 ID 的哈希值，以便在已删除的账号再次登录时识别它。\n- 数据库每晚备份，并保留最近 14 份，因此已删除的数据最多可能在备份中保留 14 天。\n- 其他人收到的关于你操作的通知会保留发送时的文字，直到过期（90 天）。\n- 你未登录时通过反馈表单发送的消息无法与账号关联；如需删除，请通过表单提出。",
 		noAccessTitle: "无需登录，通过邮件申请",
 		noAccess:
 			"如果无法登录，请发送邮件至 <email>{email}</email> 申请删除账号。请注明你的 Localman 用户名和 {idpName} 账号的邮箱地址，以便找到该账号。你也可以使用本页底部的“反馈 / 联系”。",

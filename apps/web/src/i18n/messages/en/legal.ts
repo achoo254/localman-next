@@ -34,21 +34,14 @@ export const legal = {
 	accountDelete: {
 		title: "Delete your Localman account",
 		intro:
-			"You can delete your Localman account and its data yourself, at any time, from the web app. This page explains how and what happens.",
-		deleted:
-			"Your Localman account was deleted. If you sign in again, you'll be asked before a new, empty account is created.",
+			"You sign in to Localman with your {idpName} account, and that account is deleted only at {idpName}. Deleting it there deletes your data in Localman and in every other app that uses it, at once. This page explains what happens to your Localman data.",
 		howTitle: "How to delete it",
-		how: "- Sign in to Localman.\n- In the account menu, open <b>Account and limits</b>.\n- Under <b>Delete account</b>, choose <b>Delete account…</b>, check what will be removed, type your username and confirm.",
-		openAccount: "Go to Account",
-		whatTitle: "What is deleted",
-		what: "- Mock projects you own, with their resources, data, request logs, webhook inboxes and callbacks, also for the people you shared them with.\n- Your personal workspace and team workspaces where you are the only member, with their collections and environments.\n- Your API client history, open tabs and settings, notifications and their settings, Web Push devices, usage counters, links to Tunelo machines (revoked at Tunelo), messages you sent with the feedback forms while signed in, and every sign-in session.\n- In team workspaces that have other members, you leave the workspace. What you wrote there (collections, requests, comments, changelog) belongs to the team and stays, but your name is removed from it.",
-		blockedTitle: "When deletion has to wait",
-		blocked:
-			"If you are the only Admin of a team workspace that has other members, make another member Admin (or remove the other members) first. The deletion screen lists those workspaces.",
+		how: "- Open <idpDelete>your {idpName} account page</idpDelete> and sign in.\n- Under <b>Delete account</b>, follow the steps. Localman deletes your data as soon as {idpName} tells it the account is gone.",
+		openAccount: "Delete account at {idpName}",
+		whatTitle: "What happens to your Localman data",
+		what: "- Mock projects you own that have other members go to the member who joined first, with all their data. Your other mock projects are deleted with their resources, data, request logs, webhook inboxes and callbacks.\n- In team workspaces that have other members, you leave the workspace. If you were its only Admin, the member with the highest role (the earliest to join among equals) becomes Admin and owner. What you wrote there (collections, requests, comments, changelog) belongs to the team and stays, but your name is removed from it.\n- Your personal workspace and team workspaces where you are the only member are deleted, with their collections and environments.\n- Your API client history, open tabs and settings, notifications and their settings, Web Push devices, usage counters, links to Tunelo machines (revoked at Tunelo), messages you sent with the feedback forms while signed in, and every sign-in session are deleted.",
 		keptTitle: "What is kept, and for how long",
-		kept: "- Only a hash of your account ID, so that signing in again asks before a new account is made.\n- Database backups are taken every night and the latest 14 are kept, so deleted data can remain in a backup for up to 14 days.\n- Notifications other people received about your actions keep the text they were sent with until they expire (90 days).\n- Messages you sent with the feedback form while signed out cannot be linked to your account; ask through the form to have them deleted.",
-		idpTitle: "Your {idpName} sign-in account",
-		idp: "Localman does not have your password: you sign in with your {idpName} account, which other apps may also use. Deleting your Localman account leaves it in place. To delete it as well, go to <idpDelete>your {idpName} account page</idpDelete>.",
+		kept: "- Only a hash of your account ID, so the deleted account is recognised if it ever signs in again.\n- Database backups are taken every night and the latest 14 are kept, so deleted data can remain in a backup for up to 14 days.\n- Notifications other people received about your actions keep the text they were sent with until they expire (90 days).\n- Messages you sent with the feedback form while signed out cannot be linked to your account; ask through the form to have them deleted.",
 		noAccessTitle: "Ask by email, without signing in",
 		noAccess:
 			"If you can't sign in, email <email>{email}</email> and ask for your account to be deleted. Give your Localman username and the email address of your {idpName} account, so the account can be found. You can also use “Feedback / Contact” at the bottom of this page.",

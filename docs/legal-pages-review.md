@@ -38,7 +38,7 @@ Tên miền, tên tài khoản IdP và host Tunelo trong chữ là tham số the
 | P26 | Tin góp ý giữ tới khi owner xoá | `system-architecture.md` "Form góp ý / liên hệ" ("Không có TTL") |
 | P27 | Project không hoạt động 90 ngày có thể bị người vận hành xoá (mọi chủ project như nhau) | `system-architecture.md` "Dọn project bỏ hoang" (`cleanup:abandoned`, mặc định 90 ngày, chạy tay) |
 | P28 | Backup mỗi đêm, giữ 14 bản trên server, dữ liệu đã xoá còn tối đa 14 ngày | `docs/deployment-guide.md` bảng đầu, dòng Backup (cron 02:45, 14 bản, `/opt/localman/backups`) |
-| P29 | Quyền: xuất collection/environment, sửa/xoá, chọn kênh thông báo, xoá tài khoản ở Tài khoản; xoá tài khoản IdP ở trang IdP | `system-architecture.md` (export v2.1, `exportEnvironment`, tuỳ chọn thông báo); ADR-0007; `auth-next/src/account-portal/account-delete-page.ts` (`/account/delete`) |
+| P29 | Quyền: xuất collection/environment, sửa/xoá, chọn kênh thông báo; xoá tài khoản ở trang tài khoản IdP, xoá luôn dữ liệu Localman | `system-architecture.md` (export v2.1, `exportEnvironment`, tuỳ chọn thông báo); ADR-0012; auth-next ADR 0018 (`/account#account-delete`) |
 | P31 | "Máy chủ đặt tại Việt Nam", chỉ hiện cho dịch vụ hoandat.com (`isPrimaryService`) | Jev duyệt 20/10/2026: whois `<SERVER_65_IP>` → VN, iNET; cách lấy IP thật ở đầu `docs/deployment-guide.md` |
 | P32 | Email liên hệ `quocdat254@gmail.com` (trên `/privacy`, `/terms`, `/account/delete`) | Jev duyệt 20/10/2026: địa chỉ công khai sẵn trên trang quyền riêng tư của Miu và trang của chat; `SUPPORT_EMAIL` ở `apps/web/src/lib/legal.ts` |
 | P33 | Sau khi xoá chỉ giữ mã băm của account ID, để đăng nhập lại được hỏi trước khi tạo tài khoản mới | ADR-0007 mục 9 (Jev 20/10/2026); `apps/api/src/modules/account-deletion/deleted-account-model.ts` |
@@ -59,19 +59,18 @@ Tên miền, tên tài khoản IdP và host Tunelo trong chữ là tham số the
 | T9 | Cấm vượt giới hạn, làm quá tải, tấn công | **owner** |
 | T10 | Project không hoạt động 90 ngày, thùng rác 30 ngày | P25, P27 |
 | T11 | Dịch vụ có thể thay đổi, gián đoạn, ngừng, tính năng có thể bị tắt (đã bỏ câu "như hiện có"/không bảo đảm: thuộc "giới hạn trách nhiệm", đang cập nhật) | cờ tính năng (`infra/localman/released-features`), cổng server ở `docs/deployment-guide.md`; Jev duyệt |
-| T12 | Xoá tài khoản bất cứ lúc nào; có thể khoá tài khoản vi phạm | ADR-0007; khoá tài khoản: **owner** (Localman chưa có chức năng khoá) |
+| T12 | Xoá tài khoản bất cứ lúc nào ở trang tài khoản IdP, xoá luôn dữ liệu Localman; có thể khoá tài khoản vi phạm | ADR-0012; khoá tài khoản: **owner** (Localman chưa có chức năng khoá) |
 
-## Trang xoá tài khoản (`legal.accountDelete`) và modal (`account.delete`)
+## Trang xoá tài khoản (`legal.accountDelete`) và dòng ở `/account` (`account.delete`)
 
 | # | Claim | Nguồn |
 |---|---|---|
-| D1 | Các bước: đăng nhập, menu tài khoản → "Account and limits", mục "Delete account", gõ username | `components/layout/account-menu.tsx`; `features/account-deletion/` |
-| D2 | Danh sách bị xoá (project kèm dữ liệu kể cả với người được chia sẻ, workspace cá nhân và workspace chỉ có mình, lịch sử, tab, cài đặt, thông báo, Web Push, bộ đếm, máy Tunelo thu hồi ở Tunelo, tin góp ý khi đăng nhập, mọi phiên) | ADR-0007 mục 4–5; `apps/api/src/modules/account-deletion/` và test cùng thư mục |
-| D3 | Workspace team còn người khác: rời workspace, nội dung ở lại nhưng gỡ tên | ADR-0007 mục 3, 5 (ẩn danh) |
-| D4 | Chặn khi là Admin duy nhất của workspace có thành viên khác | ADR-0007 mục 3 |
+| D1 | Xoá chỉ ở trang tài khoản IdP (`/account#account-delete`); Localman xoá dữ liệu ngay khi IdP báo | ADR-0012 mục 1, 5; auth-next ADR 0018 |
+| D2 | Project có thành viên chuyển cho người tham gia sớm nhất kèm dữ liệu; project khác bị xoá cùng resource, dữ liệu, log, webhook inbox, callback | ADR-0012 mục 4; `account-projects.ts`, `account-deletion-projects.test.ts` |
+| D3 | Workspace team còn người khác: rời workspace, nội dung ở lại nhưng gỡ tên; là Admin duy nhất thì người vai trò cao nhất, tham gia sớm nhất thành Admin và chủ | ADR-0012 mục 3; ADR-0007 mục 5 (ẩn danh); `account-workspace-heir.ts` |
+| D4 | Workspace cá nhân và workspace chỉ có mình bị xoá; lịch sử, tab, cài đặt, thông báo, Web Push, bộ đếm, máy Tunelo thu hồi ở Tunelo, tin góp ý khi đăng nhập, mọi phiên bị xoá | ADR-0007 mục 4–5; `apps/api/src/modules/account-deletion/` và test cùng thư mục |
 | D5 | Backup 14 ngày; thông báo người khác đã nhận giữ chữ tới 90 ngày; tin góp ý khi chưa đăng nhập không gắn được tài khoản | P28, P23; ADR-0007 "Đánh đổi" |
-| D6 | Tài khoản IdP không bị xoá, link tới trang xoá của IdP | ADR-0007 mục 2 |
-| D7 | Đăng nhập lại sau khi xoá được hỏi trước khi tạo tài khoản mới rỗng; giữ mã băm account ID | ADR-0007 mục 9 |
+| D7 | Chỉ giữ mã băm account ID để nhận ra tài khoản đã xoá nếu đăng nhập lại | ADR-0012 mục 7; ADR-0007 mục 9 |
 | D8 | Không đăng nhập được: gửi email tới địa chỉ liên hệ kèm username Localman và email tài khoản IdP (hoặc dùng form); không cam kết thời hạn | Jev duyệt 20/10/2026; P32 |
 | D9 | Liên hệ: email (P32) hoặc form "Góp ý / Liên hệ" | P32; `system-architecture.md` "Form góp ý / liên hệ" |
 | D10 | Modal xoá nêu số project đang chia sẻ và số người mất quyền vào chúng (`sharedProjects`, `projectMembers` của dry run) | ADR-0007 mục 4 (Jev 0.97) |

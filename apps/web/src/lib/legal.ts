@@ -13,9 +13,6 @@ export const LEGAL_PATHS = {
 	yourData: "/your-data",
 } as const;
 
-/** Query `/account/delete` gets after a deletion, to confirm it there. */
-export const ACCOUNT_DELETED_QUERY = "deleted";
-
 /**
  * Day the current privacy policy and terms take effect (ISO, Saigon):
  * the day they were approved. Change it with every change of the texts.

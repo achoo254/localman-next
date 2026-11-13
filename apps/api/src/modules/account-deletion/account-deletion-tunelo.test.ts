@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { as } from "../../test-support/dashboard-test-app.js";
 import { seedCodeLinkedMachine } from "../tunelo/testing/code-linked-machine.js";
 import { useTuneloTestEnv } from "../tunelo/testing/tunelo-test-setup.js";
 import { TunnelLinkModel } from "../tunelo/tunelo-link-model.js";
 import { UserModel } from "../users/user-model.js";
+import { deleteAccount } from "./account-deletion-service.js";
 
 const env = useTuneloTestEnv();
 const ALICE = "acc_alice";
@@ -21,9 +21,6 @@ async function linkMachine(sub: string, device: string): Promise<void> {
 	await seedCodeLinkedMachine(env, sub, device);
 }
 
-const deleteAlice = () =>
-	as(ALICE).send("delete", "/users/me", { confirm: "alice" });
-
 describe("account deletion and linked Tunelo machines", () => {
 	it("revokes every linked machine at Tunelo and forgets leftover rows", async () => {
 		await linkMachine(ALICE, "laptop");
@@ -32,8 +29,7 @@ describe("account deletion and linked Tunelo machines", () => {
 		await TunnelLinkModel.create({ userSub: ALICE, status: "linked" });
 		await linkMachine(BOB, "bob-laptop");
 
-		const res = await deleteAlice();
-		expect(res.status, JSON.stringify(res.body)).toBe(200);
+		await deleteAccount(ALICE);
 		expect(env.tunelo.revokedTokens).toHaveLength(2);
 		expect(await TunnelLinkModel.countDocuments({ userSub: ALICE })).toBe(0);
 		expect(await TunnelLinkModel.countDocuments({ userSub: BOB })).toBe(1);
@@ -42,8 +38,7 @@ describe("account deletion and linked Tunelo machines", () => {
 	it("still deletes the rows when Tunelo does not answer", async () => {
 		await linkMachine(ALICE, "laptop");
 		env.tunelo.setDown(true);
-		const res = await deleteAlice();
-		expect(res.status, JSON.stringify(res.body)).toBe(200);
+		await deleteAccount(ALICE);
 		expect(await TunnelLinkModel.countDocuments({ userSub: ALICE })).toBe(0);
 		expect(await UserModel.exists({ sub: ALICE })).toBeNull();
 	});

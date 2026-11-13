@@ -325,12 +325,12 @@ Thay cho địa chỉ email liên hệ: link "Góp ý / Liên hệ" ở `AppFoot
 
 ## Xoá tài khoản và trang pháp lý
 
-Quyết định và bảng xoá/ẩn danh theo model: [ADR-0007](decisions/0007-account-deletion.md).
+Tài khoản chỉ xoá ở IdP ([ADR-0012](decisions/0012-account-deletion-at-the-idp.md)); bảng xoá/ẩn danh theo model: [ADR-0007](decisions/0007-account-deletion.md).
 
-- **API:** `users.deleteAccount` (`DELETE /api/v1/users/me`, `apps/api/src/modules/account-deletion/`, miễn MCP). `?dryRun=true` trả số project (và số đang chia sẻ), workspace sẽ xoá/rời, collection sẽ purge và `blockedWorkspaces`. Xoá thật cần phiên trình duyệt, `confirm` bằng username, 5 lượt mỗi giờ; là Admin duy nhất của workspace team còn thành viên khác thì 409 `ACCOUNT_DELETION_BLOCKED`. Một lượt xoá mỗi tài khoản (409 `ACCOUNT_DELETION_IN_PROGRESS`); kiểm chặn trước mọi thao tác ghi, workspace trước, `users` cuối cùng; response xoá `lm_session` và `lm_sso_hint`; không đụng tài khoản IdP. Sau khi xoá chỉ giữ SHA-256 của `sub` (`deleted_accounts`): đăng nhập lại về `/?authError=account_deleted` và chỉ tạo tài khoản mới khi bấm "Create a new account" (`/auth/login?recreate=1`), không tự cấp hạn mức mở rộng.
+- **API:** không có operation xoá. IdP gửi SET `account.deleted` tới `POST /internal/account-deleted` (`account-deleted-route.ts`, chữ ký ES256 + `aud` đúng URL, không Basic; 202 khi xoá xong hoặc `sub` không có, 401 token không hợp lệ, 400 không phải SET). `deleteAccount` (`account-deletion-service.ts`) chạy ngay: workspace team còn người thì rời (thiếu Admin thì nâng người vai trò cao nhất, tham gia sớm nhất), project có thành viên chuyển cho người tham gia sớm nhất (kèm slot hạn mức và resource), còn lại xoá; một lượt mỗi tài khoản (409 `ACCOUNT_DELETION_IN_PROGRESS`), `users` cuối cùng, mọi bước idempotent. Sau khi xoá chỉ giữ SHA-256 của `sub` (`deleted_accounts`): đăng nhập lại về `/?authError=account_deleted` ("Create a new account", `/auth/login?recreate=1`, chỉ còn cho tài khoản xoá theo luồng cũ).
 - **Phân loại model:** `ACCOUNT_DATA_POLICY` (`account-data-policy.ts`); test fail khi model mới chưa được phân loại.
-- **Web:** mục "Delete account" cuối `/account` (modal chạy dry run, gõ username). Xoá xong web gỡ Web Push, trang đã lưu, cookie gợi ý SSO rồi tải `/account/delete?deleted=1`.
-- **Trang công khai** (không cần đăng nhập, `pages/legal/`): `/privacy`, `/terms`, `/account/delete` (URL xoá tài khoản cho store). Footer mọi trang và ghi chú dưới nút đăng ký ở hero link tới chúng. Chữ ở namespace `legal`, `legalPrivacy`, `legalTerms`; mọi claim và nguồn ở [legal-pages-review.md](legal-pages-review.md) (Jev duyệt 20/10/2026).
+- **Web:** cuối `/account` một dòng dẫn tới `{idpOrigin}/account#account-delete` (`idpAccountDeleteUrlOf`); link "Delete account" ở footer trỏ cùng chỗ.
+- **Trang công khai** (không cần đăng nhập, `pages/legal/`): `/privacy`, `/terms`, `/account/delete` (URL xoá tài khoản cho store; giải thích cách xoá ở IdP). Footer mọi trang và ghi chú dưới nút đăng ký ở hero link tới chúng. Chữ ở namespace `legal`, `legalPrivacy`, `legalTerms`; mọi claim và nguồn ở [legal-pages-review.md](legal-pages-review.md) (Jev duyệt 20/10/2026).
 
 ## Cấu hình sản phẩm
 

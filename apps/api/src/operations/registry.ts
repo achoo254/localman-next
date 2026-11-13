@@ -1,6 +1,5 @@
 import type { AnyOperation } from "@localman/operations";
 import { accessOperations } from "../modules/access/access-operations.js";
-import { deleteMyAccount } from "../modules/account-deletion/account-deletion-operations.js";
 import { clientStoreOperations } from "../modules/api-client/client-store-operations.js";
 import { codeSnippetOperations } from "../modules/api-client/code-snippet-operations.js";
 import { proxyOperations } from "../modules/api-client/proxy-operations.js";
@@ -65,7 +64,6 @@ import { workspaceOperations } from "../modules/workspaces/workspace-operations.
 export const operations: readonly AnyOperation[] = [
 	getMe,
 	setLocale,
-	deleteMyAccount,
 	listNotifications,
 	markNotificationRead,
 	markAllNotificationsRead,

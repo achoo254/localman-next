@@ -168,6 +168,7 @@ describe("sign-in start without the IdP", () => {
 	it.each([
 		["/auth/backchannel-logout", "application/x-www-form-urlencoded", "x=1"],
 		["/internal/audit-events", "application/secevent+jwt", "x"],
+		["/internal/account-deleted", "application/secevent+jwt", "x"],
 	])("rate limits %s per IP", async (path, type, body) => {
 		const post = () =>
 			request(app)

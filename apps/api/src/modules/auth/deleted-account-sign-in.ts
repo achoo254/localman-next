@@ -1,4 +1,4 @@
-import type { RequestHandler, Response } from "express";
+import type { Response } from "express";
 import { wasAccountDeleted } from "../account-deletion/deleted-account-model.js";
 import { UserModel } from "../users/user-model.js";
 import { type AuthCookies, clearCookie } from "./auth-cookies.js";
@@ -37,39 +37,4 @@ export async function refusedAsDeleted(
 	// The app cannot offer "Create a new account": it shows the error.
 	redirectToSignInError(res, transaction, "account_deleted");
 	return true;
-}
-
-/** The operation that deletes the signed-in account. */
-export const ACCOUNT_DELETION_ROUTE = {
-	method: "DELETE",
-	path: "/api/v1/users/me",
-} as const;
-
-/**
- * Clears the session and silent sign-in hint cookies on the response of a
- * successful account deletion (not a dry run): the operation itself has no
- * response to write cookies on, and the auth router runs before it.
- */
-export function clearCookiesOnAccountDeletion(
-	cookies: AuthCookies,
-): RequestHandler {
-	return (req, res, next) => {
-		if (
-			req.method !== ACCOUNT_DELETION_ROUTE.method ||
-			req.path !== ACCOUNT_DELETION_ROUTE.path ||
-			req.query.dryRun !== undefined
-		) {
-			next();
-			return;
-		}
-		const json = res.json.bind(res);
-		res.json = (body?: unknown) => {
-			if (res.statusCode === 200) {
-				clearCookie(res, cookies.session);
-				clearCookie(res, cookies.ssoHint);
-			}
-			return json(body);
-		};
-		next();
-	};
 }

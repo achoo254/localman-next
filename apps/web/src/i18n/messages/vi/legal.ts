@@ -28,21 +28,14 @@ export const legal: Messages["legal"] = {
 	accountDelete: {
 		title: "Xoá tài khoản Localman",
 		intro:
-			"Bạn có thể tự xoá tài khoản Localman và dữ liệu của nó bất cứ lúc nào, ngay trên web app. Trang này nói cách làm và điều gì sẽ xảy ra.",
-		deleted:
-			"Đã xoá tài khoản Localman của bạn. Nếu đăng nhập lại, bạn sẽ được hỏi trước khi tạo một tài khoản mới, trống.",
+			"Bạn đăng nhập Localman bằng tài khoản {idpName}, và tài khoản đó chỉ được xoá ở {idpName}. Xoá ở đó là xoá ngay dữ liệu của bạn trong Localman và mọi app khác dùng tài khoản này. Trang này nói điều gì xảy ra với dữ liệu Localman của bạn.",
 		howTitle: "Cách xoá",
-		how: "- Đăng nhập Localman.\n- Trong menu tài khoản, mở <b>Tài khoản và hạn mức</b>.\n- Ở mục <b>Xoá tài khoản</b>, chọn <b>Xoá tài khoản…</b>, xem lại những gì sẽ bị xoá, gõ username của bạn rồi xác nhận.",
-		openAccount: "Tới trang Tài khoản",
-		whatTitle: "Những gì bị xoá",
-		what: "- Các mock project bạn sở hữu, cùng resource, dữ liệu, log request, webhook inbox và callback của chúng, kể cả với những người bạn đã chia sẻ.\n- Workspace cá nhân và các workspace team chỉ có mình bạn, cùng collection và environment trong đó.\n- Lịch sử, tab đang mở và cài đặt của API client, thông báo và cài đặt thông báo, thiết bị Web Push, bộ đếm mức dùng, liên kết tới máy Tunelo (bị thu hồi ở Tunelo), tin bạn gửi qua form góp ý khi đã đăng nhập, và mọi phiên đăng nhập.\n- Ở workspace team còn thành viên khác, bạn rời workspace. Những gì bạn viết ở đó (collection, request, comment, changelog) thuộc về team nên được giữ lại, nhưng tên bạn bị gỡ khỏi chúng.",
-		blockedTitle: "Khi việc xoá phải chờ",
-		blocked:
-			"Nếu bạn là Admin duy nhất của một workspace team còn thành viên khác, hãy cho một thành viên khác làm Admin (hoặc gỡ các thành viên khác) trước. Màn hình xoá liệt kê các workspace đó.",
+		how: "- Mở <idpDelete>trang tài khoản {idpName}</idpDelete> và đăng nhập.\n- Ở mục <b>Xoá tài khoản</b>, làm theo các bước. Localman xoá dữ liệu của bạn ngay khi {idpName} báo tài khoản đã bị xoá.",
+		openAccount: "Xoá tài khoản ở {idpName}",
+		whatTitle: "Dữ liệu Localman của bạn",
+		what: "- Mock project bạn sở hữu mà còn thành viên khác được chuyển cho thành viên tham gia sớm nhất, giữ nguyên dữ liệu. Các mock project khác bị xoá cùng resource, dữ liệu, log request, webhook inbox và callback.\n- Ở workspace team còn thành viên khác, bạn rời workspace. Nếu bạn là Admin duy nhất, thành viên có vai trò cao nhất (cùng vai trò thì người tham gia sớm nhất) thành Admin và chủ workspace. Những gì bạn viết ở đó (collection, request, comment, changelog) thuộc về team nên được giữ lại, nhưng tên bạn bị gỡ khỏi chúng.\n- Workspace cá nhân và các workspace team chỉ có mình bạn bị xoá, cùng collection và environment trong đó.\n- Lịch sử, tab đang mở và cài đặt của API client, thông báo và cài đặt thông báo, thiết bị Web Push, bộ đếm mức dùng, liên kết tới máy Tunelo (bị thu hồi ở Tunelo), tin bạn gửi qua form góp ý khi đã đăng nhập, và mọi phiên đăng nhập đều bị xoá.",
 		keptTitle: "Những gì còn lại, và trong bao lâu",
-		kept: "- Chỉ mã băm của mã tài khoản, để khi đăng nhập lại bạn được hỏi trước khi tạo tài khoản mới.\n- Cơ sở dữ liệu được sao lưu mỗi đêm và giữ 14 bản gần nhất, nên dữ liệu đã xoá có thể còn trong bản sao lưu tối đa 14 ngày.\n- Thông báo người khác đã nhận về việc bạn làm giữ nguyên chữ lúc gửi cho tới khi hết hạn (90 ngày).\n- Tin bạn gửi qua form góp ý khi chưa đăng nhập không gắn được với tài khoản của bạn; hãy yêu cầu xoá qua form.",
-		idpTitle: "Tài khoản đăng nhập {idpName}",
-		idp: "Localman không giữ mật khẩu của bạn: bạn đăng nhập bằng tài khoản {idpName}, tài khoản mà các ứng dụng khác cũng có thể dùng. Xoá tài khoản Localman không xoá tài khoản đó. Muốn xoá cả nó, hãy vào <idpDelete>trang tài khoản {idpName}</idpDelete>.",
+		kept: "- Chỉ mã băm của mã tài khoản, để nhận ra tài khoản đã xoá nếu nó đăng nhập lại.\n- Cơ sở dữ liệu được sao lưu mỗi đêm và giữ 14 bản gần nhất, nên dữ liệu đã xoá có thể còn trong bản sao lưu tối đa 14 ngày.\n- Thông báo người khác đã nhận về việc bạn làm giữ nguyên chữ lúc gửi cho tới khi hết hạn (90 ngày).\n- Tin bạn gửi qua form góp ý khi chưa đăng nhập không gắn được với tài khoản của bạn; hãy yêu cầu xoá qua form.",
 		noAccessTitle: "Yêu cầu qua email, không cần đăng nhập",
 		noAccess:
 			"Nếu không đăng nhập được, hãy gửi email tới <email>{email}</email> để yêu cầu xoá tài khoản. Ghi rõ username Localman và địa chỉ email của tài khoản {idpName} để tìm được tài khoản. Bạn cũng có thể dùng “Góp ý / Liên hệ” ở cuối trang này.",

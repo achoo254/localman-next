@@ -7,6 +7,7 @@ import {
 	AUTH_PATHS,
 	INTERNAL_PATHS,
 } from "../../operations/protocol-routes.js";
+import { registerAccountDeletedRoute } from "../account-deletion/account-deleted-route.js";
 import { registerAuditEventsRoute } from "../audit/audit-events-route.js";
 import type { BasicCredentials } from "../audit/basic-credentials.js";
 import { logStreams } from "../mock-runtime/log-stream-registry.js";
@@ -15,7 +16,6 @@ import { syncUserFromUserInfo } from "../users/user-sync.js";
 import type { MobileAppSettings } from "./app-link-association.js";
 import { authCookies } from "./auth-cookies.js";
 import { createAuthRouter } from "./auth-routes.js";
-import { clearCookiesOnAccountDeletion } from "./deleted-account-sign-in.js";
 import { MobileHandoffStore } from "./mobile-handoff-model.js";
 import type { OidcApi } from "./oidc-api.js";
 import { OidcClient } from "./oidc-client.js";
@@ -113,15 +113,21 @@ export function createAuthModule(
 		loginLimitPerMinute: settings.loginLimitPerMinute,
 		serverLimitPerMinute: settings.serverLimitPerMinute,
 	});
-	router.use(clearCookiesOnAccountDeletion(cookies));
-	// Both authenticate otherwise (signed token, Basic + SET). The audit path
+	// They authenticate otherwise (signed token, Basic + SET, SET). The audit path
 	// is exempt even when unconfigured so it answers 404, not 403. The app
 	// redeems its code with code + PKCE verifier, without Origin or cookie.
 	const csrfExempt = [
 		`POST ${AUTH_PATHS.backchannelLogout}`,
 		`POST ${AUTH_PATHS.mobileToken}`,
 		`POST ${INTERNAL_PATHS.auditEvents}`,
+		`POST ${INTERNAL_PATHS.accountDeleted}`,
 	];
+	registerAccountDeletedRoute(router, {
+		oidc,
+		audience: new URL(INTERNAL_PATHS.accountDeleted, settings.publicUrl).href,
+		logger,
+		limitPerMinute: settings.serverLimitPerMinute,
+	});
 	if (settings.audit) {
 		registerAuditEventsRoute(router, {
 			oidc,

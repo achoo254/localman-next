@@ -36,7 +36,7 @@ export const legalTerms = {
 	},
 	end: {
 		title: "Ending",
-		body: "You can <accountDelete>delete your Localman account</accountDelete> at any time. We may block an account that breaks these terms.",
+		body: "You can delete your account at any time at <idpDelete>your {idpName} account page</idpDelete>, which also deletes your Localman data (<accountDelete>what is deleted</accountDelete>). We may block an account that breaks these terms.",
 	},
 	changes: {
 		title: "Changes",

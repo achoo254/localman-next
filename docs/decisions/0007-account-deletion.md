@@ -1,7 +1,7 @@
 # ADR-0007: Xoá tài khoản Localman: xoá dữ liệu riêng, ẩn danh nội dung team, chặn khi workspace mất Admin
 
 - **Ngày:** 2026-10-20
-- **Trạng thái:** Đã chốt; Jev duyệt ngày 20/10/2026 (owner uỷ quyền). Văn bản pháp lý: `docs/legal-pages-review.md`
+- **Trạng thái:** Thay một phần bởi [ADR-0012](0012-account-deletion-at-the-idp.md) (13/11/2026): không còn operation/UI xoá trong app, không còn "chặn", project có thành viên được chuyển chủ; bảng xoá/ẩn danh theo model bên dưới vẫn dùng. Trước đó: đã chốt; Jev duyệt ngày 20/10/2026 (owner uỷ quyền). Văn bản pháp lý: `docs/legal-pages-review.md`
 - **Người quyết định:** dattqh (yêu cầu: xoá tài khoản đạt chuẩn App Store 5.1.1(v) và chính sách xoá tài khoản của Google Play trước khi Localman mobile ra mắt). Quy tắc workspace theo mặc định Jev đề xuất; owner có thể đổi.
 
 ## Bối cảnh

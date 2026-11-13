@@ -94,7 +94,10 @@ export function idpAccountUrlOf(info: TenantInfo): string {
 	return `${info.idpOrigin}/account`;
 }
 
-/** IdP page that deletes the sign-in account itself (not Localman's data). */
+/**
+ * The only place an account is deleted: the IdP's account page. Deleting
+ * there deletes the account's data in every app, Localman included.
+ */
 export function idpAccountDeleteUrlOf(info: TenantInfo): string {
-	return `${idpAccountUrlOf(info)}/delete`;
+	return `${idpAccountUrlOf(info)}#account-delete`;
 }

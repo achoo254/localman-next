@@ -28,7 +28,7 @@ export const legalPrivacy = {
 	},
 	rights: {
 		title: "Your choices",
-		body: "- <b>See and export:</b> export collections and environments as files; see your request logs and history in the app.\n- <b>Change and delete:</b> edit or delete your projects, data, collections, environments, history and comments at any time.\n- <b>Notifications:</b> choose the channels per event, or turn them off.\n- <b>Delete your account:</b> in Account, under “Delete account”. <accountDelete>What deletion removes</accountDelete>. Your {idpName} sign-in account is deleted separately, at <idpDelete>its account page</idpDelete>.\n- Other requests about your data: see Contact below.",
+		body: "- <b>See and export:</b> export collections and environments as files; see your request logs and history in the app.\n- <b>Change and delete:</b> edit or delete your projects, data, collections, environments, history and comments at any time.\n- <b>Notifications:</b> choose the channels per event, or turn them off.\n- <b>Delete your account:</b> at <idpDelete>your {idpName} account page</idpDelete>, which deletes your data in Localman too. <accountDelete>What deletion removes</accountDelete>.\n- Other requests about your data: see Contact below.",
 	},
 	security: {
 		title: "Security",

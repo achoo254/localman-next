@@ -5,6 +5,7 @@ import { CollaboratorModel } from "../collaborators/collaborator-model.js";
 import { MemberRemovalModel } from "../collaborators/member-removal-model.js";
 import {
 	BOB,
+	CAROL,
 	OWNER,
 	accept,
 	addMember,
@@ -17,15 +18,9 @@ import { ProjectModel } from "../projects/project-model.js";
 import { RecordModel } from "../resources/record-model.js";
 import { ResourceModel } from "../resources/resource-model.js";
 import { UserModel } from "../users/user-model.js";
+import { deleteAccount } from "./account-deletion-service.js";
 
 useCollaboratorTestDb();
-
-const deleteOwner = (dryRun = false) =>
-	as(OWNER).send(
-		"delete",
-		`/users/me${dryRun ? "?dryRun=true" : ""}`,
-		dryRun ? {} : { confirm: "owner" },
-	);
 
 async function projectWithData(sub: string, name: string): Promise<string> {
 	const id = await createProject(sub, name);
@@ -43,35 +38,44 @@ async function projectWithData(sub: string, name: string): Promise<string> {
 }
 
 describe("account deletion and mock projects", () => {
-	it("deletes owned projects with their data, even shared ones, and ends memberships", async () => {
+	it("deletes owned projects nobody else uses, with their data, and ends memberships", async () => {
 		const owned = await projectWithData(OWNER, "Mine");
-		await addMember(OWNER, owned, BOB, "bob");
 		const bobs = await projectWithData(BOB, "Bob's");
 		await addMember(BOB, bobs, OWNER, "owner");
 
-		const preview = await deleteOwner(true);
-		expect(preview.status, JSON.stringify(preview.body)).toBe(200);
-		expect(preview.body).toMatchObject({
-			ownedProjects: 1,
-			sharedProjects: 1,
-			projectMembers: 1,
-		});
-
-		const res = await deleteOwner();
-		expect(res.status, JSON.stringify(res.body)).toBe(200);
+		await deleteAccount(OWNER);
 		expect(await ProjectModel.exists({ _id: owned })).toBeNull();
 		expect(await ResourceModel.countDocuments({ projectId: owned })).toBe(0);
 		expect(await RecordModel.countDocuments({ projectId: owned })).toBe(0);
-		expect(await CollaboratorModel.countDocuments({ projectId: owned })).toBe(
-			0,
-		);
 		// Bob's project keeps its data and loses only the deleted member.
 		expect((await as(BOB).get(`/projects/${bobs}`)).status).toBe(200);
 		expect(await RecordModel.countDocuments({ projectId: bobs })).toBe(3);
 		expect(
 			await CollaboratorModel.countDocuments({ inviteeUserId: OWNER }),
 		).toBe(0);
-		expect((await as(BOB).get(`/projects/${owned}`)).status).toBe(404);
+	});
+
+	it("hands a shared project to its earliest member, with its data and quota", async () => {
+		const shared = await projectWithData(OWNER, "Shared");
+		await addMember(OWNER, shared, BOB, "bob");
+		await addMember(OWNER, shared, CAROL, "carol");
+		// Bob already owns a project: the moved one takes his next free slot.
+		const bobs = await createProject(BOB, "Bob's own");
+
+		await deleteAccount(OWNER);
+		const moved = await ProjectModel.findById(shared).lean();
+		expect(moved?.owner).toBe(BOB);
+		const bobSlots = await ProjectModel.find({ owner: BOB }).lean();
+		expect(new Set(bobSlots.map((p) => p.quotaSlot)).size).toBe(2);
+		expect(bobSlots.map((p) => p._id.toHexString())).toContain(bobs);
+		const resources = await ResourceModel.find({ projectId: shared }).lean();
+		expect(resources.map((r) => r.ownerSub)).toEqual([BOB]);
+		expect(await RecordModel.countDocuments({ projectId: shared })).toBe(3);
+		// Bob is the owner now, no longer a member; Carol stays a member.
+		const members = await CollaboratorModel.find({ projectId: shared }).lean();
+		expect(members.map((m) => m.inviteeUserId)).toEqual([CAROL]);
+		expect((await as(BOB).get(`/projects/${shared}`)).body.role).toBe("owner");
+		expect((await as(CAROL).get(`/projects/${shared}`)).status).toBe(200);
 	});
 
 	it("can run again after a deletion that stopped half way", async () => {
@@ -81,8 +85,7 @@ describe("account deletion and mock projects", () => {
 			{ _id: owned },
 			{ $set: { deletingAt: new Date() } },
 		);
-		expect((await deleteOwner(true)).body.ownedProjects).toBe(0);
-		expect((await deleteOwner()).status).toBe(200);
+		await deleteAccount(OWNER);
 		expect(await ProjectModel.exists({ _id: owned })).toBeNull();
 		expect(await ResourceModel.countDocuments({ projectId: owned })).toBe(0);
 		expect(await UserModel.exists({ sub: OWNER })).toBeNull();
@@ -102,8 +105,7 @@ describe("account deletion and mock projects", () => {
 		);
 		expect(removed.status).toBe(200);
 
-		const res = await as(BOB).send("delete", "/users/me", { confirm: "bob" });
-		expect(res.status, JSON.stringify(res.body)).toBe(200);
+		await deleteAccount(BOB);
 		expect(await MemberRemovalModel.countDocuments({ userSub: BOB })).toBe(1);
 
 		// The same IdP account signs in again: the magic link still refuses it.

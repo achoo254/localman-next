@@ -60,7 +60,7 @@ LÀM VIỆC CÙNG NHAU VÀ AI AGENT
 RIÊNG TƯ
 • Không quảng cáo, không công cụ phân tích hay theo dõi trong app.
 • Đăng nhập bằng tài khoản hoandat.com qua trình duyệt của hệ thống; app không giữ mật khẩu, phiên đăng nhập nằm trong Keychain của iPhone.
-• Xoá tài khoản và dữ liệu ngay trong app, ở Tài khoản và hạn mức.
+• Xoá tài khoản và dữ liệu ở trang tài khoản hoandat.com, có link trong app.
 ```
 
 EN (1712):
@@ -163,10 +163,10 @@ WHAT TO TRY
 4. API Client: send any request and see the response.
 
 ACCOUNT DELETION (5.1.1(v))
-Account menu (avatar, top right) > "Account and limits" ("Tài khoản và hạn mức") > scroll to
-"Delete account" > "Delete account..." ("Xoá tài khoản…") > type the username shown to confirm >
-"Delete account". The Localman account and its data are deleted at once. The shared hoandat.com
-sign-in account is deleted separately on its own account page (linked in the same dialog).
+Account menu (avatar, top right) > "Account and limits" ("Tài khoản và hạn mức") > the last line,
+"Delete account at hoandat.com", opens https://auth.hoandat.com/account#account-delete (also linked
+as "Delete account" in the app footer). Deleting the hoandat.com account there deletes its
+Localman data at once.
 Public page: https://localman.hoandat.com/account/delete
 
 PRIVACY AND TERMS
@@ -179,7 +179,7 @@ Chinese (language menu in the app). Support: quocdat254@gmail.com
 
 Bản thay thế khi Apple chưa bật (đoạn SIGN-IN): thay câu bắt đầu bằng `Choose "Sign in with Apple"` bằng `On the sign-in page, below the Google and GitHub buttons, tap "App reviewer sign-in" and enter the email and password given in the Sign-In Information of this submission.` Tài khoản duyệt bật trên auth-next bằng `REVIEW_LOGIN_EMAIL` / `REVIEW_LOGIN_PASSWORD_HASH_PATH` (chi tiết ở [listing.md](listing.md#ghi-chú-cho-app-review-app-store-notes-play-app-access)); email và mật khẩu chỉ nhập vào ô **Sign-In Information** của App Store Connect, không ghi vào repo. Khi Apple đã bật thì bỏ tích "Sign-in required" hoặc ghi rõ "use Sign in with Apple, no credentials needed".
 
-Đường xoá tài khoản kiểm trong code: menu `account-menu.tsx` mục "Tài khoản và hạn mức" → `/account` (`pages/account/account-page.tsx`) → `DeleteAccountSection` (`features/account-deletion/delete-account-section.tsx`, nút "Xoá tài khoản…") → `DeleteAccountModal` (gõ đúng username mới bật nút "Xoá tài khoản").
+Đường xoá tài khoản kiểm trong code: menu `account-menu.tsx` mục "Tài khoản và hạn mức" → `/account` (`pages/account/account-page.tsx`, dòng cuối `account-delete-link`) → `{idpOrigin}/account#account-delete`; IdP báo lại Localman qua `POST /internal/account-deleted` ([ADR-0012](../decisions/0012-account-deletion-at-the-idp.md)).
 
 ## Ảnh chụp màn hình
 

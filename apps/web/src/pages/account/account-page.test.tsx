@@ -1,5 +1,4 @@
 import { screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FeaturesContext, NO_FEATURES } from "../../config/features";
 import { resetCurrentUserCache } from "../../features/auth/use-current-user";
@@ -129,31 +128,15 @@ describe("AccountPage quota meters", () => {
 		);
 	});
 
-	it("ends with deleting the account, which runs the dry run first", async () => {
+	it("ends with one line pointing to account deletion at the IdP", async () => {
 		renderAccount(usage());
-		const open = await screen.findByRole("button", { name: "Delete account…" });
-		expect(
-			screen.getByRole("link", { name: "What is deleted" }),
-		).toHaveAttribute("href", "/account/delete");
-		vi.stubGlobal(
-			"fetch",
-			vi.fn(async () =>
-				Response.json({
-					ownedProjects: 0,
-					sharedProjects: 0,
-					projectMembers: 0,
-					workspacesDeleted: 1,
-					workspacesLeft: 0,
-					collectionsDeleted: 0,
-					blockedWorkspaces: [],
-					dryRun: true,
-					deleted: false,
-				}),
-			),
+		const link = await screen.findByRole("link", {
+			name: "Delete account at hoandat.com",
+		});
+		expect(link).toHaveAttribute(
+			"href",
+			"https://auth.hoandat.com/account#account-delete",
 		);
-		await userEvent.setup().click(open);
-		expect(
-			await screen.findByLabelText(/Type your username minhanh to confirm/),
-		).toBeInTheDocument();
+		expect(screen.queryByRole("button", { name: /delete/i })).toBeNull();
 	});
 });

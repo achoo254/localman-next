@@ -34,7 +34,7 @@ export const legalTerms: Messages["legalTerms"] = {
 	},
 	end: {
 		title: "Chấm dứt",
-		body: "Bạn có thể <accountDelete>xoá tài khoản Localman</accountDelete> bất cứ lúc nào. Chúng tôi có thể khoá tài khoản vi phạm các điều khoản này.",
+		body: "Bạn có thể xoá tài khoản bất cứ lúc nào ở <idpDelete>trang tài khoản {idpName}</idpDelete>; việc này xoá cả dữ liệu Localman của bạn (<accountDelete>những gì bị xoá</accountDelete>). Chúng tôi có thể khoá tài khoản vi phạm các điều khoản này.",
 	},
 	changes: {
 		title: "Thay đổi",

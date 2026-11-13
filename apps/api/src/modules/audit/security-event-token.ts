@@ -12,11 +12,22 @@ const CLOCK_TOLERANCE_SECONDS = 30;
  */
 const MAX_AGE_SECONDS = 15 * 60;
 
-/** The SET is malformed, unsigned by the IdP or not for us (answer 400). */
+/** JOSE codes of a token that is not even a well-formed JWT. */
+const MALFORMED_CODES = new Set(["ERR_JWS_INVALID", "ERR_JWT_INVALID"]);
+
+/**
+ * The SET is malformed, unsigned by the IdP or not for us. `untrusted`:
+ * a well-formed token whose signature, issuer, audience, type or lifetime
+ * fails (an IdP misconfiguration the IdP retries after it is fixed);
+ * otherwise the body is not a usable SET at all.
+ */
 export class InvalidSecurityEventError extends Error {
-	constructor(reason: string) {
+	readonly untrusted: boolean;
+
+	constructor(reason: string, untrusted = false) {
 		super(reason);
 		this.name = "InvalidSecurityEventError";
+		this.untrusted = untrusted;
 	}
 }
 
@@ -43,7 +54,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 /**
  * Verifies a SET from the IdP: ES256 signature against its JWKS,
- * `typ: secevent+jwt`, `iss`, `aud` = our URL, `iat` at most 15 minutes
+ * `typ: secevent+jwt`, `iss`, `aud` exactly our URL (a single string),
+ * `iat` at most 15 minutes
  * old and `exp` at most 15 minutes after it (each attempt is signed afresh
  * for 10 minutes), `jti`, `sub`, and exactly one IdP event.
  * Errors reaching the JWKS are rethrown as-is (a server-side failure).
@@ -69,17 +81,24 @@ export async function verifySecurityEvent(
 			error instanceof errors.JWKSTimeout ||
 			(error instanceof errors.JOSEError && error.code === "ERR_JOSE_GENERIC");
 		if (error instanceof errors.JOSEError && !fetchFailure) {
-			throw new InvalidSecurityEventError(error.code);
+			throw new InvalidSecurityEventError(
+				error.code,
+				!MALFORMED_CODES.has(error.code),
+			);
 		}
 		throw error;
 	}
-	const { jti, sub, events, toe, iat, exp } = payload;
+	const { jti, sub, events, toe, iat, exp, aud } = payload;
+	// `jwtVerify` also accepts an array that merely contains our URL.
+	if (aud !== verifier.audience) {
+		throw new InvalidSecurityEventError("aud is not exactly ours", true);
+	}
 	if (
 		typeof iat !== "number" ||
 		typeof exp !== "number" ||
 		exp - iat > MAX_AGE_SECONDS
 	) {
-		throw new InvalidSecurityEventError("exp is too far from iat");
+		throw new InvalidSecurityEventError("exp is too far from iat", true);
 	}
 	if (typeof jti !== "string" || jti === "" || jti.length > 200) {
 		throw new InvalidSecurityEventError("invalid jti");

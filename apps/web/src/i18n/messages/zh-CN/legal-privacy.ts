@@ -26,7 +26,7 @@ export const legalPrivacy: Messages["legalPrivacy"] = {
 	},
 	rights: {
 		title: "你可以做什么",
-		body: "- <b>查看和导出：</b>将 collection 和 environment 导出为文件；在应用中查看你的 request 日志和历史。\n- <b>修改和删除：</b>随时编辑或删除你的 project、数据、collection、environment、历史和评论。\n- <b>通知：</b>按事件选择通知渠道，或全部关闭。\n- <b>删除账号：</b>在账号页面的“删除账号”中操作。<accountDelete>删除会移除哪些内容</accountDelete>。你的 {idpName} 登录账号需单独删除，请前往<idpDelete>其账号页面</idpDelete>。\n- 其他关于数据的请求：见下方的联系方式。",
+		body: "- <b>查看和导出：</b>将 collection 和 environment 导出为文件；在应用中查看你的 request 日志和历史。\n- <b>修改和删除：</b>随时编辑或删除你的 project、数据、collection、environment、历史和评论。\n- <b>通知：</b>按事件选择通知渠道，或全部关闭。\n- <b>删除账号：</b>在<idpDelete>你的 {idpName} 账号页面</idpDelete>操作，你在 Localman 中的数据也会一并删除。<accountDelete>删除会移除哪些内容</accountDelete>。\n- 其他关于数据的请求：见下方的联系方式。",
 	},
 	security: {
 		title: "安全",

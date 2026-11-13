@@ -69,7 +69,7 @@ LÀM VIỆC CÙNG NHAU VÀ AI AGENT
 RIÊNG TƯ
 • Không quảng cáo, không công cụ phân tích hay theo dõi.
 • Đăng nhập bằng tài khoản hoandat.com qua trình duyệt của hệ thống; app không giữ mật khẩu của bạn.
-• Xoá tài khoản và dữ liệu ngay trong app, ở Tài khoản và hạn mức.
+• Xoá tài khoản và dữ liệu ở trang tài khoản hoandat.com, có link trong app.
 ```
 
 EN:
@@ -166,7 +166,7 @@ User Content". Bộ đếm rate limit dùng hash của dải IP, xoá khi hết 
 |---|---|
 | App có thu thập hoặc chia sẻ dữ liệu người dùng thuộc các loại bắt buộc khai? | Có |
 | Mọi dữ liệu được mã hoá khi truyền? | Có (HTTPS tới `localman.hoandat.com`) |
-| Người dùng có thể yêu cầu xoá dữ liệu? | Có: trong app (Tài khoản và hạn mức › Xoá tài khoản) và `https://localman.hoandat.com/account/delete` |
+| Người dùng có thể yêu cầu xoá dữ liệu? | Có: xoá tài khoản ở trang tài khoản hoandat.com (link trong app, Tài khoản và hạn mức) và `https://localman.hoandat.com/account/delete` |
 | Chia sẻ với bên thứ ba | **Không**: Cloudflare là nhà cung cấp dịch vụ xử lý thay mặt (được miễn khai); thông báo Telegram và request tới địa chỉ người dùng tự đặt là hành động do người dùng khởi tạo (được miễn khai) |
 
 Dữ liệu thu thập (đều là **bắt buộc** để dùng app trừ khi ghi "tuỳ chọn"; mục đích: **App functionality**, **Account
@@ -203,7 +203,7 @@ WHAT TO TRY
 4. API client (top bar): send any request and see the response.
 
 ACCOUNT DELETION
-In the app: account menu (avatar, top right) > "Account and limits" > "Delete account…", confirm by typing the username. Public page: https://localman.hoandat.com/account/delete
+In the app: account menu (avatar, top right) > "Account and limits" > "Delete account at hoandat.com" (or "Delete account" in the footer) opens the hoandat.com account page, where deleting the account also deletes its Localman data. Public page: https://localman.hoandat.com/account/delete
 
 No in-app purchases, no ads, no tracking. Support: quocdat254@gmail.com
 ```
@@ -217,7 +217,7 @@ Localman là công cụ cho developer: dựng mock REST API, gửi request HTTP 
 Đăng nhập qua dịch vụ tài khoản auth.hoandat.com, mở trong trình duyệt của hệ thống. Bấm "Đăng nhập" trên thanh trên cùng. Ở trang đăng nhập, dưới các nút Google/GitHub/Apple, bấm "Tài khoản dành cho người duyệt ứng dụng" (tiếng Anh: "App reviewer sign-in") rồi nhập email và mật khẩu ghi trong phần thông tin đăng nhập của lần nộp này. App quay lại danh sách project. Tài khoản duyệt không có dữ liệu thật và được tắt sau khi duyệt xong.
 
 XOÁ TÀI KHOẢN
-Trong app: menu tài khoản (ảnh đại diện, góc phải trên) > "Tài khoản và hạn mức" > "Xoá tài khoản…", gõ username để xác nhận. Trang công khai: https://localman.hoandat.com/account/delete
+Trong app: menu tài khoản (ảnh đại diện, góc phải trên) > "Tài khoản và hạn mức" > "Xoá tài khoản ở hoandat.com" (hoặc "Xoá tài khoản" ở footer) mở trang tài khoản hoandat.com; xoá ở đó là xoá luôn dữ liệu Localman. Trang công khai: https://localman.hoandat.com/account/delete
 ```
 
 Tài khoản duyệt là của auth-next (repo `auth-next`, `docs/decisions/0010-review-only-password-sign-in.md`):

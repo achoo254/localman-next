@@ -34,7 +34,7 @@ export const legalTerms: Messages["legalTerms"] = {
 	},
 	end: {
 		title: "终止",
-		body: "你可以随时<accountDelete>删除你的 Localman 账号</accountDelete>。违反这些条款的账号可能会被封禁。",
+		body: "你可以随时在<idpDelete>你的 {idpName} 账号页面</idpDelete>删除账号，你的 Localman 数据也会一并删除（<accountDelete>会删除哪些内容</accountDelete>）。违反这些条款的账号可能会被封禁。",
 	},
 	changes: {
 		title: "变更",

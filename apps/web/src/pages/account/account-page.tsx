@@ -4,8 +4,6 @@ import { Link } from "react-router";
 import { Alert } from "../../components/ui/alert";
 import { Button, buttonClassName } from "../../components/ui/button";
 import { useFeatures } from "../../config/features";
-import { DeleteAccountSection } from "../../features/account-deletion/delete-account-section";
-import { useCurrentUser } from "../../features/auth/use-current-user";
 import { NOTIFICATION_SETTINGS_PATH } from "../../features/notifications/notification-bell";
 import {
 	type AccountUsage,
@@ -15,6 +13,7 @@ import { UsageMetersSkeleton } from "../../features/usage/usage-meters-skeleton"
 import { useT } from "../../i18n/i18n-context";
 import { errorMessage } from "../../lib/api-client";
 import { cn } from "../../lib/cn";
+import { idpAccountDeleteUrlOf, useTenantInfo } from "../../lib/tenant-info";
 import { useDelayedFlag } from "../../lib/use-delayed-flag";
 import { useAppTitle } from "../../lib/use-document-title";
 import { AccountMeters } from "./account-meters";
@@ -25,14 +24,15 @@ type UsageState =
 	| { status: "error"; error: unknown };
 
 /**
- * `/account`: this month's meters and, last, deleting the account.
+ * `/account`: this month's meters and, last, where the account is deleted
+ * (only at the IdP, which deletes the account's data in every app).
  * Every account has the same limits: no plan, price or upgrade.
  */
 export function AccountPage() {
 	const t = useT();
 	useAppTitle(t("account.title"));
 	const flags = useFeatures();
-	const session = useCurrentUser();
+	const tenant = useTenantInfo();
 	const [state, setState] = useState<UsageState>({ status: "loading" });
 	// Held its minimum time even when the usage comes back sooner.
 	const skeleton = useDelayedFlag(state.status === "loading");
@@ -86,9 +86,16 @@ export function AccountPage() {
 				</div>
 			) : null}
 			{usage && !skeleton ? <AccountMeters usage={usage} /> : null}
-			{session.status === "authenticated" && session.user.username ? (
-				<DeleteAccountSection username={session.user.username} />
-			) : null}
+			<p data-id="account-delete" className="m-0 text-muted text-sm">
+				{t("account.delete.body", { idpName: tenant.displayName })}{" "}
+				<a
+					href={idpAccountDeleteUrlOf(tenant)}
+					data-id="account-delete-link"
+					className="font-semibold text-primary underline underline-offset-4"
+				>
+					{t("account.delete.link", { idpName: tenant.displayName })}
+				</a>
+			</p>
 		</section>
 	);
 }

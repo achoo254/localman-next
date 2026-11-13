@@ -1,6 +1,5 @@
 import { Types } from "mongoose";
 import { describe, expect, it } from "vitest";
-import { as } from "../../test-support/dashboard-test-app.js";
 import { ADA, EVE, teamWorkspace } from "../access/testing/access-fixture.js";
 import { CollectionModel } from "../collections/collection-model.js";
 import { CollectionNodeModel } from "../collections/collection-node-model.js";
@@ -14,6 +13,7 @@ import {
 import { CommentModel } from "../comments/comment-model.js";
 import { SyncLinkModel } from "../live-mock-sync/sync-link-model.js";
 import { PullRequestModel } from "../version-control/pull-request-model.js";
+import { deleteAccount } from "./account-deletion-service.js";
 import { DELETED_USER } from "./account-references.js";
 
 useCollectionTestDb();
@@ -55,8 +55,7 @@ describe("account deletion in team content it leaves", () => {
 		});
 		const before = await CollectionModel.findById(created.id).lean();
 
-		const res = await as(ADA).send("delete", "/users/me", { confirm: "ada" });
-		expect(res.status, JSON.stringify(res.body)).toBe(200);
+		await deleteAccount(ADA);
 
 		const after = await CollectionModel.findById(created.id).lean();
 		expect(after).toMatchObject({
@@ -106,8 +105,7 @@ describe("account deletion in team content it leaves", () => {
 				{ userId: EVE },
 			],
 		});
-		const res = await as(ADA).send("delete", "/users/me", { confirm: "ada" });
-		expect(res.status, JSON.stringify(res.body)).toBe(200);
+		await deleteAccount(ADA);
 		const after = await PullRequestModel.findById(pr._id).lean();
 		expect(after?.reviewers.map((entry) => entry.userId)).toEqual([
 			DELETED_USER,

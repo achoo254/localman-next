@@ -16,17 +16,21 @@ import { useChooseLocale } from "../../i18n/use-choose-locale";
 import { loginUrl } from "../../lib/api-url";
 import { LEGAL_PATHS } from "../../lib/legal";
 import { LEGACY_THEME_KEY, LOCALES } from "../../lib/shared-preferences";
+import { idpAccountDeleteUrlOf, useTenantInfo } from "../../lib/tenant-info";
 import { navigateToLogin } from "../../platform/navigation";
 import { RouteProgress } from "../ui/route-progress";
 import { PublicAccountSlot } from "./public-account-slot";
 import { SHELL_BRAND } from "./shell-brand";
 
-/** Server routes (sign-in, API) load in the browser, not in the router. */
-const SERVER_PATH = /^\/(?:auth|api)\//;
+/**
+ * Server routes (sign-in, API) and other sites (the IdP) load in the
+ * browser, not in the router.
+ */
+const BROWSER_LOADED = /^(?:\/(?:auth|api)\/|https?:\/\/)/;
 
 /** Localman's own pages open in place, without a reload. */
 const RouterLink: ShellLinkComponent = ({ href, ...rest }) =>
-	SERVER_PATH.test(href) ? (
+	BROWSER_LOADED.test(href) ? (
 		<a href={href} {...rest} />
 	) : (
 		<Link to={href} {...rest} />
@@ -47,6 +51,7 @@ export function AppLayout() {
 	const { secretVault } = useFeatures();
 	const { pathname, search } = useLocation();
 	const session = useCurrentUser();
+	const tenant = useTenantInfo();
 	const [feedbackOpen, setFeedbackOpen] = useState(false);
 	const onLanding = pathname === "/";
 	const onLogin = pathname === LOGIN_PAGE_PATH;
@@ -74,11 +79,11 @@ export function AppLayout() {
 		},
 	];
 	const footerLinks: (ShellLink | ShellAction)[] = [
+		// Accounts are deleted only at the IdP, with every app's data.
 		{
-			href: LEGAL_PATHS.accountDelete,
+			href: idpAccountDeleteUrlOf(tenant),
 			label: t("legal.nav.deleteAccount"),
 			dataId: "foot-delete-account",
-			current: pathname === LEGAL_PATHS.accountDelete,
 		},
 		...(secretVault
 			? [

@@ -17,22 +17,16 @@ import {
 } from "../workspaces/workspace-model.js";
 import type { WorkspaceAccess } from "../workspaces/workspace-roles.js";
 import { DELETED_USER } from "./account-references.js";
-
-export interface BlockingWorkspace {
-	readonly id: string;
-	readonly name: string;
-}
+import { promoteHeir } from "./account-workspace-heir.js";
 
 export interface WorkspacePlan {
 	/** The personal workspace and team workspaces with no other member. */
 	readonly toDelete: readonly StoredWorkspace[];
-	/** Team workspaces that keep their other members and an Admin. */
-	readonly toLeave: readonly WorkspaceAccess[];
 	/**
-	 * Team workspaces where the account is the only Admin of other
-	 * members: someone must be made Admin first (Jev's default rule).
+	 * Team workspaces with other members: the account leaves, after an heir
+	 * is made Admin where it was the only one (`promoteHeir`).
 	 */
-	readonly blocked: readonly BlockingWorkspace[];
+	readonly toLeave: readonly WorkspaceAccess[];
 }
 
 interface Membership {
@@ -61,35 +55,18 @@ export async function planWorkspaces(sub: string): Promise<WorkspacePlan> {
 	);
 	const toDelete = [...personal];
 	const toLeave: WorkspaceAccess[] = [];
-	const blocked: BlockingWorkspace[] = [];
 	for (const team of teams) {
 		const role = roles.get(team._id.toHexString());
 		if (!role) continue;
-		const others = await WorkspaceMemberModel.find(
-			{ workspaceId: team._id, status: "accepted", userId: { $ne: sub } },
-			{ role: 1 },
-		).lean<{ role: StoredWorkspaceMember["role"] }[]>();
-		if (others.length === 0) {
-			toDelete.push(team);
-		} else if (
-			role === "admin" &&
-			!others.some((member) => member.role === "admin")
-		) {
-			blocked.push({ id: team._id.toHexString(), name: team.name });
-		} else {
-			toLeave.push({ workspace: team, role });
-		}
+		const others = await WorkspaceMemberModel.countDocuments({
+			workspaceId: team._id,
+			status: "accepted",
+			userId: { $ne: sub },
+		});
+		if (others === 0) toDelete.push(team);
+		else toLeave.push({ workspace: team, role });
 	}
-	return { toDelete, toLeave, blocked };
-}
-
-/** Collections (live or in the trash) that go with the deleted workspaces. */
-export function countCollectionsOf(
-	workspaces: readonly StoredWorkspace[],
-): Promise<number> {
-	return CollectionModel.countDocuments({
-		workspaceId: { $in: workspaces.map((workspace) => workspace._id) },
-	});
+	return { toDelete, toLeave };
 }
 
 /**
@@ -135,7 +112,9 @@ function workspaceChanged(): OperationError {
 /**
  * Applies `plan`: deletes the workspaces the account is alone in and
  * leaves the others the way "Leave workspace" does (ownership moves to
- * the oldest Admin). A blocked plan is refused before this runs.
+ * the oldest Admin), first making an heir Admin where the account was the
+ * only one. Promotion and leaving are two transactions: a deletion that
+ * stops in between has only added an Admin, and running it again goes on.
  */
 export async function applyWorkspacePlan(
 	sub: string,
@@ -145,6 +124,7 @@ export async function applyWorkspacePlan(
 		await deleteWorkspaceForGood(workspace._id, sub);
 	}
 	for (const access of plan.toLeave) {
+		await promoteHeir(access.workspace._id, sub);
 		await leaveWorkspace(access, sub, false);
 	}
 }

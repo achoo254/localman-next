@@ -105,6 +105,7 @@ Một số route nói giao thức (OpenID Connect, OAuth metadata, MCP) với tr
 | `POST /auth/logout` | luồng redirect OIDC trên trình duyệt |
 | `POST /auth/backchannel-logout` | IdP gọi server-to-server (OIDC Back-Channel Logout), không phải thao tác của user; miễn kiểm CSRF vì logout token đã ký là bằng chứng xác thực |
 | `POST /internal/audit-events` | IdP đẩy sự kiện audit server-to-server (SET ký ES256 + HTTP Basic), không phải thao tác của user; miễn kiểm CSRF vì xác thực bằng Basic và chữ ký |
+| `POST /internal/account-deleted` | IdP báo tài khoản đã xoá server-to-server (SET ký ES256, `aud` đúng URL, không Basic), không phải thao tác của user; miễn kiểm CSRF vì xác thực bằng chữ ký ([ADR-0012](decisions/0012-account-deletion-at-the-idp.md)) |
 | `ALL /mcp` | chính là endpoint MCP: tool của nó là các operation trong registry |
 | `GET`/`OPTIONS /.well-known/oauth-protected-resource` (và `…/mcp`) | Protected Resource Metadata (RFC 9728) công khai để agent tìm IdP trước khi có token |
 | `ALL /m/{secret}/{prefix}/mcp` (mock runtime, cả `{secret}.{MOCK_BASE_DOMAIN}/{prefix}/mcp`) | endpoint Hosted Mock MCP: tool sinh từ resource của project |

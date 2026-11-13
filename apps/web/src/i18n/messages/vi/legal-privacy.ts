@@ -26,7 +26,7 @@ export const legalPrivacy: Messages["legalPrivacy"] = {
 	},
 	rights: {
 		title: "Bạn có thể làm gì",
-		body: "- <b>Xem và xuất:</b> xuất collection và environment ra file; xem log request và lịch sử ngay trong app.\n- <b>Sửa và xoá:</b> sửa hoặc xoá project, dữ liệu, collection, environment, lịch sử và comment bất cứ lúc nào.\n- <b>Thông báo:</b> chọn kênh cho từng loại sự kiện, hoặc tắt hẳn.\n- <b>Xoá tài khoản:</b> ở trang Tài khoản, mục “Xoá tài khoản”. <accountDelete>Những gì bị xoá</accountDelete>. Tài khoản đăng nhập {idpName} được xoá riêng, ở <idpDelete>trang tài khoản của nó</idpDelete>.\n- Yêu cầu khác về dữ liệu: xem mục Liên hệ bên dưới.",
+		body: "- <b>Xem và xuất:</b> xuất collection và environment ra file; xem log request và lịch sử ngay trong app.\n- <b>Sửa và xoá:</b> sửa hoặc xoá project, dữ liệu, collection, environment, lịch sử và comment bất cứ lúc nào.\n- <b>Thông báo:</b> chọn kênh cho từng loại sự kiện, hoặc tắt hẳn.\n- <b>Xoá tài khoản:</b> ở <idpDelete>trang tài khoản {idpName}</idpDelete>; việc này xoá cả dữ liệu của bạn trong Localman. <accountDelete>Những gì bị xoá</accountDelete>.\n- Yêu cầu khác về dữ liệu: xem mục Liên hệ bên dưới.",
 	},
 	security: {
 		title: "Bảo mật",

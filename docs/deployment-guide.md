@@ -46,6 +46,7 @@ Secret (bản sao ngoài server để trong thư mục iCloud "ENV production" c
 - VAPID: `npx web-push generate-vapid-keys` (cặp khoá) và `VAPID_SUBJECT` (ví dụ `mailto:admin@hoandat.com`).
 - `OWNER_SUBS`: `sub` của tài khoản owner trên IdP.
 - `AUDIT_CLIENT_ID`/`AUDIT_CLIENT_SECRET` (bắt buộc): cặp Basic mà IdP dùng để đẩy sự kiện audit (`email.reclaimed` gỡ email IdP đã cấp cho tài khoản khác, `method.unlinked` xoá chat Telegram). Đặt cùng giá trị ở `.env` của IdP kèm `AUDIT_EVENTS_URL=https://localman.hoandat.com/internal/audit-events`. IdP ở production chỉ nhận URL https công khai; đặt `http://127.0.0.1:4000/...` làm IdP không khởi động được.
+- Xoá tài khoản (không biến env ở Localman): IdP khai `ACCOUNT_DELETED_URLS` có `https://localman.hoandat.com/internal/account-deleted`; endpoint kiểm chữ ký và `aud` của SET, không dùng Basic ([ADR-0012](decisions/0012-account-deletion-at-the-idp.md)).
 
 Trên máy deploy: pnpm 11.9, Node ≥ 22.12, ssh tới server qua alias (`SSH_TARGET`, thêm `SSH_OPTS="-F ssh_config"` nếu khoá để ngoài `~/.ssh`).
 

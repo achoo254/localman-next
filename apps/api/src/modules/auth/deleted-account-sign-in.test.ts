@@ -8,6 +8,7 @@ import {
 	DeletedAccountModel,
 	subHashOf,
 } from "../account-deletion/deleted-account-model.js";
+import { signSecurityEvent } from "../audit/testing/security-events.js";
 import { UserModel } from "../users/user-model.js";
 import {
 	type AuthHarness,
@@ -39,12 +40,23 @@ beforeEach(async () => {
 	await clearCollections();
 });
 
-const deleteAccount = (cookie: string, dryRun = false) =>
-	request(harness.app)
-		.delete(`/api/v1/users/me${dryRun ? "?dryRun=true" : ""}`)
-		.set("cookie", cookie)
-		.set("origin", PUBLIC_URL)
-		.send(dryRun ? {} : { confirm: harness.account.username });
+/** The IdP reports the account deleted (auth-next ADR 0018). */
+async function deletedAtIdp() {
+	const token = await signSecurityEvent(
+		{
+			issuer: harness.issuer,
+			audience: `${PUBLIC_URL}/internal/account-deleted`,
+			sub: harness.account.sub,
+			key: harness.idp.signingKey,
+			foreignKey: harness.idp.signingKey,
+		},
+		{ type: "account.deleted", data: {} },
+	);
+	return request(harness.app)
+		.post("/internal/account-deleted")
+		.set("content-type", "application/secevent+jwt")
+		.send(token);
+}
 
 /** A sign-in that may stop before a session (unlike `harness.signIn`). */
 async function callbackOf(query: Record<string, string> = {}) {
@@ -66,18 +78,17 @@ const cleared = (res: request.Response, name: string) =>
 	);
 
 describe("signing in after the Localman account was deleted", () => {
-	it("clears the cookies and asks before making a new account", async () => {
+	it("ends the session and asks before making a new account", async () => {
 		const { cookie } = await harness.signIn();
 		const sub = harness.account.sub;
 		expect(await UserModel.exists({ sub })).not.toBeNull();
 
-		const preview = await deleteAccount(cookie, true);
-		expect(preview.status).toBe(200);
-		expect(cleared(preview, SESSION_COOKIE)).toBe(false);
-		const deleted = await deleteAccount(cookie);
-		expect(deleted.status, JSON.stringify(deleted.body)).toBe(200);
-		expect(cleared(deleted, SESSION_COOKIE)).toBe(true);
-		expect(cleared(deleted, HINT_COOKIE)).toBe(true);
+		const deleted = await deletedAtIdp();
+		expect(deleted.status, JSON.stringify(deleted.body)).toBe(202);
+		const me = await request(harness.app)
+			.get("/api/v1/users/me")
+			.set("cookie", cookie);
+		expect(me.status).toBe(401);
 
 		// Only a hash of the subject is kept.
 		const rows = await DeletedAccountModel.find().lean();

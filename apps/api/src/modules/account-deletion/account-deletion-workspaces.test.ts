@@ -1,9 +1,9 @@
 import { Types } from "mongoose";
 import { describe, expect, it } from "vitest";
-import { as } from "../../test-support/dashboard-test-app.js";
 import {
 	ADA,
 	EVE,
+	OLLIE,
 	VIC,
 	personalWorkspace,
 	teamWorkspace,
@@ -19,35 +19,37 @@ import {
 import { UserModel } from "../users/user-model.js";
 import { WorkspaceMemberModel } from "../workspaces/workspace-member-model.js";
 import { WorkspaceModel } from "../workspaces/workspace-model.js";
+import { deleteAccount } from "./account-deletion-service.js";
 import { DELETED_USER } from "./account-references.js";
 import { applyWorkspacePlan, planWorkspaces } from "./account-workspaces.js";
 
 useCollectionTestDb();
 
-const deleteAda = (dryRun = false) =>
-	as(ADA).send(
-		"delete",
-		`/users/me${dryRun ? "?dryRun=true" : ""}`,
-		dryRun ? {} : { confirm: "ada" },
-	);
-
 describe("account deletion and workspaces", () => {
-	it("is blocked while the account is the only Admin of other members, and changes nothing", async () => {
-		const ws = await teamWorkspace({ [ADA]: "admin", [EVE]: "editor" }, "Team");
-		const preview = await deleteAda(true);
-		expect(preview.body.blockedWorkspaces).toEqual([
-			{ id: ws.toHexString(), name: "Team" },
-		]);
-		const res = await deleteAda();
-		expect(res.status).toBe(409);
-		expect(res.body.error).toMatchObject({
-			code: "ACCOUNT_DELETION_BLOCKED",
-			details: { blockedWorkspaces: 1 },
+	it("hands a workspace where it is the only Admin to the highest role, earliest to join", async () => {
+		const ws = await teamWorkspace({
+			[ADA]: "admin",
+			[VIC]: "viewer",
+			[EVE]: "editor",
+			[OLLIE]: "editor",
 		});
-		expect(await UserModel.exists({ sub: ADA })).toBeTruthy();
-		expect(await WorkspaceMemberModel.countDocuments({ workspaceId: ws })).toBe(
-			2,
-		);
+		const joined = (sub: string, day: number) =>
+			WorkspaceMemberModel.updateOne(
+				{ workspaceId: ws, userId: sub },
+				{ $set: { acceptedAt: new Date(Date.UTC(2026, 0, day)) } },
+			);
+		await joined(VIC, 1);
+		await joined(EVE, 3);
+		await joined(OLLIE, 2);
+
+		await deleteAccount(ADA);
+		expect(await UserModel.exists({ sub: ADA })).toBeNull();
+		const workspace = await WorkspaceModel.findById(ws).lean();
+		expect(workspace?.ownerId).toBe(OLLIE);
+		const roles = await WorkspaceMemberModel.find({ workspaceId: ws }).lean();
+		expect(
+			Object.fromEntries(roles.map((row) => [row.userId, row.role])),
+		).toEqual({ [VIC]: "viewer", [EVE]: "editor", [OLLIE]: "admin" });
 	});
 
 	it("leaves a workspace that keeps an Admin, which becomes its owner", async () => {
@@ -56,12 +58,7 @@ describe("account deletion and workspaces", () => {
 			[EVE]: "admin",
 			[VIC]: "viewer",
 		});
-		const res = await deleteAda();
-		expect(res.status, JSON.stringify(res.body)).toBe(200);
-		expect(res.body).toMatchObject({
-			workspacesLeft: 1,
-			blockedWorkspaces: [],
-		});
+		await deleteAccount(ADA);
 		const workspace = await WorkspaceModel.findById(ws).lean();
 		expect(workspace?.ownerId).toBe(EVE);
 		expect(
@@ -82,12 +79,7 @@ describe("account deletion and workspaces", () => {
 		await addNode(ADA, soloCollection.id, requestNode("List"));
 		await createAs(EVE, others, { name: "Eve's API" });
 
-		const preview = await deleteAda(true);
-		expect(preview.body).toMatchObject({
-			workspacesDeleted: 2,
-			collectionsDeleted: 2,
-		});
-		expect((await deleteAda()).status).toBe(200);
+		await deleteAccount(ADA);
 		expect(await WorkspaceModel.exists({ _id: personal })).toBeNull();
 		expect(await WorkspaceModel.exists({ _id: solo })).toBeNull();
 		expect(
@@ -123,7 +115,7 @@ describe("account deletion and workspaces", () => {
 		await CollectionModel.updateOne({ _id: alone.id }, trash([ADA]));
 		await CollectionModel.updateOne({ _id: shared.id }, trash([ADA, EVE]));
 
-		expect((await deleteAda()).status).toBe(200);
+		await deleteAccount(ADA);
 		expect(await CollectionModel.exists({ _id: alone.id })).toBeNull();
 		const kept = await CollectionModel.findById(shared.id).lean();
 		expect(kept).toMatchObject({

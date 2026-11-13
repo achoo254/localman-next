@@ -66,29 +66,22 @@ describe("public legal pages", () => {
 				name: "Delete your Localman account",
 			}),
 		).toBeInTheDocument();
-		expect(screen.getByRole("link", { name: "Go to Account" })).toHaveAttribute(
+		// Deletion happens only at the IdP.
+		expect(
+			screen.getByRole("link", { name: "Delete account at hoandat.com" }),
+		).toHaveAttribute(
 			"href",
-			"/account",
+			"https://auth.hoandat.com/account#account-delete",
 		);
 		expect(
-			screen.getByRole("link", { name: "your hoandat.com account page" }),
-		).toHaveAttribute("href", expect.stringMatching(/\/account\/delete$/));
-		expect(
-			document.querySelector('[data-id="legal-account-deleted"]'),
-		).toBeNull();
+			screen.getByText(/go to the member who joined first/),
+		).toBeInTheDocument();
 		// Deletion without signing in: by email, with username and IdP email.
 		expect(
 			screen.getByRole("link", { name: "quocdat254@gmail.com" }),
 		).toHaveAttribute("href", "mailto:quocdat254@gmail.com");
 		expect(
 			screen.getByText(/Localman username and the email address/),
-		).toBeInTheDocument();
-	});
-
-	it("confirms a deletion that just happened", async () => {
-		renderAsGuest("/account/delete?deleted=1");
-		expect(
-			await screen.findByText(/Your Localman account was deleted/),
 		).toBeInTheDocument();
 	});
 
@@ -99,6 +92,10 @@ describe("public legal pages", () => {
 		const legal = ["foot-privacy", "foot-terms", "foot-delete-account"].map(
 			(id) => footer?.querySelector(`[data-id="${id}"]`)?.getAttribute("href"),
 		);
-		expect(legal).toEqual(["/privacy", "/terms", "/account/delete"]);
+		expect(legal).toEqual([
+			"/privacy",
+			"/terms",
+			"https://auth.hoandat.com/account#account-delete",
+		]);
 	});
 });

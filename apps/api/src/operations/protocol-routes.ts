@@ -48,6 +48,8 @@ export const MOBILE_PATHS = {
 /** Server-to-server endpoints called by the IdP. */
 export const INTERNAL_PATHS = {
 	auditEvents: "/internal/audit-events",
+	/** The IdP's `account.deleted` SET (auth-next ADR 0018). */
+	accountDeleted: "/internal/account-deleted",
 } as const;
 
 /** Localman MCP and its Protected Resource Metadata (RFC 9728 §3.1). */
@@ -164,6 +166,15 @@ export const PROTOCOL_ROUTES: readonly ProtocolRoute[] = [
 		summary: "Credential audit events (signed SETs) pushed by the IdP",
 		mcpExempt:
 			"IdP đẩy sự kiện audit server-to-server (SET ký ES256 + HTTP Basic), không phải thao tác của user",
+	},
+	{
+		server: "dashboard",
+		methods: ["POST"],
+		path: INTERNAL_PATHS.accountDeleted,
+		summary:
+			"Account deleted at the IdP (signed SET): deletes the account's Localman data",
+		mcpExempt:
+			"IdP báo tài khoản đã xoá server-to-server (SET ký ES256, kiểm aud), không phải thao tác của user",
 	},
 	{
 		server: "dashboard",
