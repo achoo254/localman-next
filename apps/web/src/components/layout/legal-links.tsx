@@ -3,11 +3,15 @@ import { useFeatures } from "../../config/features";
 import { useT } from "../../i18n/i18n-context";
 import { cn } from "../../lib/cn";
 import { LEGAL_PATHS } from "../../lib/legal";
-import { idpAccountDeleteUrlOf, useTenantInfo } from "../../lib/tenant-info";
 
 const LINKS = [
 	{ id: "privacy", to: LEGAL_PATHS.privacy, labelKey: "legal.nav.privacy" },
 	{ id: "terms", to: LEGAL_PATHS.terms, labelKey: "legal.nav.terms" },
+	{
+		id: "delete-account",
+		to: LEGAL_PATHS.accountDelete,
+		labelKey: "legal.nav.deleteAccount",
+	},
 ] as const;
 
 const YOUR_DATA = {
@@ -17,9 +21,10 @@ const YOUR_DATA = {
 } as const;
 
 /**
- * "Privacy · Terms", "Your data" while the vault its page promises is
- * released, and "Delete account", which opens the IdP's account page (the
- * only place an account is deleted): the footer and the legal pages.
+ * "Privacy · Terms · Delete account", and "Your data" while the vault its
+ * page promises is released: the footer and the legal pages. "Delete
+ * account" is the public page that sends people to the IdP's account page,
+ * the only place an account is deleted.
  */
 export function LegalLinks({
 	linkClassName,
@@ -32,7 +37,6 @@ export function LegalLinks({
 }) {
 	const t = useT();
 	const { secretVault } = useFeatures();
-	const tenant = useTenantInfo();
 	const links = secretVault ? [...LINKS, YOUR_DATA] : LINKS;
 	return (
 		<nav
@@ -50,13 +54,6 @@ export function LegalLinks({
 					{t(labelKey)}
 				</Link>
 			))}
-			<a
-				href={idpAccountDeleteUrlOf(tenant)}
-				data-id={`${dataId}-delete-account`}
-				className={linkClassName}
-			>
-				{t("legal.nav.deleteAccount")}
-			</a>
 		</nav>
 	);
 }
