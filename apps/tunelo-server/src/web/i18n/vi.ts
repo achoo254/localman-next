@@ -3,7 +3,7 @@ import type { Messages } from "./messages.js";
 export const vi: Messages = {
 	"meta.homeTitle": "Tunelo: URL công khai cho server trên máy bạn",
 	"meta.tunnelsTitle": "Tunnel của bạn · Tunelo",
-	"home.eyebrow": "Tunnel cho lập trình viên",
+	"home.eyebrow": "Tunnel ngay trên trình duyệt",
 	"home.title": "Đưa server trên máy bạn lên internet bằng một lệnh",
 	"home.lead":
 		"Tunelo cấp cho ứng dụng đang chạy trên máy bạn một địa chỉ HTTPS công khai dưới {domain}, hoặc một cổng TCP cho mọi thứ khác. Đăng nhập bằng tài khoản {brand} để xem mọi tunnel các máy của bạn đang mở.",
