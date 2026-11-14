@@ -91,17 +91,22 @@ describe("EcosystemAppSwitcher", () => {
 		const panel = await openPanel();
 		const links = within(panel).getAllByRole("link");
 		expect(links.map((link) => link.getAttribute("href"))).toEqual([
-			`https://tuvi.hoandat.com/?${UTM}`,
-			`https://miu.hoandat.com/?${UTM}`,
 			`https://webnhanh.hoandat.com/?${UTM}`,
 			`https://chat.hoandat.com/?${UTM}`,
-			`https://kb.hoandat.com/?${UTM}`,
 			`https://tieude.hoandat.com/?${UTM}`,
 			`https://scribe.hoandat.com/?${UTM}`,
 			`https://tunnel.hoandat.com/?${UTM}`,
+			`https://tuvi.hoandat.com/?${UTM}`,
+			`https://clip.hoandat.com/?${UTM}`,
+			`https://truyen.hoandat.com/?${UTM}`,
+			`https://lockin.hoandat.com/?${UTM}`,
+			`https://miu.hoandat.com/?${UTM}`,
+			`https://kb.hoandat.com/?${UTM}`,
 			`https://auth.hoandat.com/account?${UTM}`,
 		]);
-		expect(within(panel).getByText("For developers")).toBeVisible();
+		expect(within(panel).getByText("Tools")).toBeVisible();
+		expect(within(panel).getByText("Entertainment")).toBeVisible();
+		expect(within(panel).getByText("Learning")).toBeVisible();
 	});
 
 	it("links every app under the domain of the IdP", async () => {
@@ -113,14 +118,17 @@ describe("EcosystemAppSwitcher", () => {
 				.getAllByRole("link")
 				.map((link) => new URL(link.getAttribute("href") ?? "").host),
 		).toEqual([
-			"tuvi.acme.example",
-			"miu.acme.example",
 			"webnhanh.acme.example",
 			"chat.acme.example",
-			"kb.acme.example",
 			"tieude.acme.example",
 			"scribe.acme.example",
 			"tunnel.acme.example",
+			"tuvi.acme.example",
+			"clip.acme.example",
+			"truyen.acme.example",
+			"lockin.acme.example",
+			"miu.acme.example",
+			"kb.acme.example",
 			"auth.acme.example",
 		]);
 	});
@@ -158,7 +166,7 @@ describe("EcosystemAppSwitcher", () => {
 		const panel = await openPanel();
 		await userEvent.click(within(panel).getAllByRole("link")[0] as Element);
 		expect(open).toHaveBeenCalledWith(
-			`https://tuvi.hoandat.com/?${UTM}`,
+			`https://webnhanh.hoandat.com/?${UTM}`,
 			"_blank",
 			"noopener,noreferrer",
 		);
