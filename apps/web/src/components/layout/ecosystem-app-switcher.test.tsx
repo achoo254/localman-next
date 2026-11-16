@@ -41,6 +41,9 @@ vi.mock("../../lib/tenant-info", async (importOriginal) => {
 });
 
 const UTM = "utm_source=localman&utm_medium=app_switcher";
+/** Web Nhanh is the app suggested to Localman's users (cross-sell). */
+const SUGGESTED_HREF =
+	"https://webnhanh.hoandat.com/?utm_source=cross_sell&utm_medium=app_switcher&utm_campaign=localman";
 
 function renderSwitcher(locale: "en" | "vi" = "en") {
 	const value = {
@@ -91,7 +94,7 @@ describe("EcosystemAppSwitcher", () => {
 		const panel = await openPanel();
 		const links = within(panel).getAllByRole("link");
 		expect(links.map((link) => link.getAttribute("href"))).toEqual([
-			`https://webnhanh.hoandat.com/?${UTM}`,
+			SUGGESTED_HREF,
 			`https://chat.hoandat.com/?${UTM}`,
 			`https://tieude.hoandat.com/?${UTM}`,
 			`https://scribe.hoandat.com/?${UTM}`,
@@ -105,6 +108,7 @@ describe("EcosystemAppSwitcher", () => {
 			`https://kb.hoandat.com/?${UTM}`,
 			`https://auth.hoandat.com/account?${UTM}`,
 		]);
+		expect(within(panel).getByText("Suggested")).toBeVisible();
 		expect(within(panel).getByText("Tools")).toBeVisible();
 		expect(within(panel).getByText("Entertainment")).toBeVisible();
 		expect(within(panel).getByText("Learning")).toBeVisible();
@@ -168,7 +172,7 @@ describe("EcosystemAppSwitcher", () => {
 		const panel = await openPanel();
 		await userEvent.click(within(panel).getAllByRole("link")[0] as Element);
 		expect(open).toHaveBeenCalledWith(
-			`https://webnhanh.hoandat.com/?${UTM}`,
+			SUGGESTED_HREF,
 			"_blank",
 			"noopener,noreferrer",
 		);
