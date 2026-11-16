@@ -27,6 +27,13 @@ Mọi script nằm ở [`infra/localman/`](../infra/localman/); tài liệu này
 | Database | systemd `mongod-localman` (sandbox: `ProtectSystem=full`, `ProtectHome`, `PrivateDevices`, `UMask=0077`…), `/etc/mongod-localman.conf`, dữ liệu `/var/lib/mongodb-localman`, log `/var/log/mongodb-localman`, replica set `rs-localman`, cache WiredTiger 0,25 GB; user `localman` chỉ `readWrite` trên db `localman` ([`setup-mongo-localman.sh`](../infra/localman/setup-mongo-localman.sh)) |
 | Backup | [`backup-localman-db.sh`](../infra/localman/backup-localman-db.sh), cron 02:45 (`/etc/cron.d/localman-backup`, sau backup IdP 02:30), giữ 14 bản trong `/opt/localman/backups`; lỗi thì bot Localman nhắn `OWNER_TELEGRAM_CHAT_ID` |
 
+**Kết nối ra ngoài ưu tiên IPv4.** IPv6 đi ra từ .65 không chạy và kết nối IPv4 đôi khi mất hơn 2 giây, nên với mặc
+định của Node 22 (happy eyeballs, 250 ms mỗi địa chỉ) lời gọi qua Cloudflare hay bên thứ ba (đổi mã đăng nhập ở
+`auth.hoandat.com`) hỏng với `AggregateError [ETIMEDOUT]`. Process chạy với
+`NODE_OPTIONS=--dns-result-order=ipv4first --network-family-autoselection-attempt-timeout=2500` (`env` trong `infra/localman/ecosystem.config.cjs`):
+thử IPv4 trước, đợi mỗi địa chỉ 2,5 giây; release sau khi đổi file sẽ tạo lại process pm2. Kiểm:
+\`tr '\0' '\n' < /proc/<pid>/environ | grep NODE_OPTIONS\`.
+
 ## Trạng thái hiện tại
 
 - Chứng chỉ: đã chuyển sang `dns-cloudflare` bằng `certbot reconfigure` ngày 2026-10-09, hết hạn 2027-01-07 (certbot timer gia hạn trước 30 ngày). Token Cloudflare chỉ có quyền DNS Edit trên `hoandat.com`, giới hạn IP `<SERVER_65_IP>`, nằm ở `/etc/letsencrypt/cloudflare-localman.ini` (600).

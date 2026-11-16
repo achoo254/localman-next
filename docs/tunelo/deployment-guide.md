@@ -81,6 +81,13 @@ Server **bắt buộc** `MONGO_URI` (thiếu thì process dừng lúc khởi đ�
 `apps/tunelo-server/src/key-store/create-key-store.ts`). Danh sách biến và giải thích:
 `apps/tunelo-server/.env.example`; bản sao production ở iCloud `ENV production/tunelo/.env`.
 
+**Outbound connects prefer IPv4.** IPv6 egress on .65 is broken and IPv4 connects sometimes take over 2 s, so with
+Node 22's default happy eyeballs (250 ms per address) calls through Cloudflare or to third parties fail with
+`AggregateError [ETIMEDOUT]`. The process runs with
+`NODE_OPTIONS=--dns-result-order=ipv4first --network-family-autoselection-attempt-timeout=2500` (`env` in
+`infra/tunelo/ecosystem.config.cjs`, applied when a release recreates the pm2 process): IPv4 first, 2.5 s per address.
+Check: `tr '\0' '\n' < /proc/<pid>/environ | grep NODE_OPTIONS`.
+
 ## Prerequisites
 
 - Domain: `tunnel.hoandat.com` + `*.tunnel.hoandat.com` (Cloudflare zone `hoandat.com`)
