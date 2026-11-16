@@ -21,7 +21,11 @@ export interface SessionStore {
 export declare function parseSession(value: unknown): StoredSession | undefined;
 /**
  * Writes `content` atomically (temp file + rename, so a concurrent reader
- * never sees half a file) with owner-only permissions.
+ * never sees half a file) with owner-only permissions, and durably: the
+ * file's data is flushed before the rename and the rename itself after it.
+ * A rotated refresh token that the IdP has issued but a crash or power loss
+ * then drops cannot be recovered (presenting the old one revokes the grant),
+ * so the write must not stay only in the page cache.
  */
 export declare function writePrivateFile(path: string, content: string): void;
 /**
