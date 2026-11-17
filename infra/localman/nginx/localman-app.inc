@@ -111,6 +111,15 @@
         proxy_pass http://127.0.0.1:4000;
     }
 
+    # A user's tunelo process links its machine to the account (Bearer token
+    # of the account, server to server); outside /api/, so it needs its own
+    # location or it falls through to the static site.
+    location = /tunelo/links/self {
+        limit_req zone=localman_mcp burst=10 nodelay;
+        add_header X-Robots-Tag "noindex" always;
+        proxy_pass http://127.0.0.1:4000;
+    }
+
     # RFC 9728 metadata of /mcp (and the root form), served by the API.
     location ^~ /.well-known/oauth-protected-resource {
         add_header X-Robots-Tag "noindex" always;

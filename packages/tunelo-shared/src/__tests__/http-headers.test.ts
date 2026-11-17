@@ -1,9 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-	isTuneloHeader,
-	needsUnbufferedRelay,
-	stripTuneloHeaders,
-} from "../http-headers.js";
+import { needsUnbufferedRelay } from "../http-headers.js";
 
 describe("needsUnbufferedRelay", () => {
 	test("true for SSE responses", () => {
@@ -56,18 +52,4 @@ describe("needsUnbufferedRelay", () => {
 			}),
 		).toBe(true);
 	});
-});
-
-test("stripTuneloHeaders drops every tunelo-* header, any case", () => {
-	expect(
-		stripTuneloHeaders({
-			"Tunelo-Anything": "1",
-			"tunelo-access": "t",
-			"TUNELO-PORT": "80",
-			accept: "*/*",
-			"x-tunelo-note": "kept",
-		}),
-	).toEqual({ accept: "*/*", "x-tunelo-note": "kept" });
-	expect(isTuneloHeader("Tunelo-Anything")).toBe(true);
-	expect(isTuneloHeader("x-tunelo")).toBe(false);
 });

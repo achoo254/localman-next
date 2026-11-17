@@ -20,6 +20,12 @@ export {
 } from "./tunnel-config-parser.js";
 export {
 	CLIENT_CAPABILITIES,
+	LOCAL_FORWARD,
+	LOCAL_FORWARD_ERRORS,
+	SERVER_FEATURES,
+	isDeniedForwardPort,
+	isLocalForwardPath,
+	parseLocalPort,
 	SUBDOMAIN_REGEX,
 	TUNNEL_KINDS,
 	TUNNEL_REFUSAL_CODES,
@@ -76,3 +82,14 @@ export {
 	serverIdentity,
 } from "./server-identity.js";
 export { withFileLock } from "./file-lock.js";
+export {
+	type SelfLink,
+	SelfLinkError,
+	type SelfLinkOptions,
+	linkMachineToApp,
+} from "./self-link.js";
+export {
+	LOCAL_FORWARD_HEADERS,
+	isTuneloHeader,
+	stripTuneloHeaders,
+} from "./shared/http-headers.js";

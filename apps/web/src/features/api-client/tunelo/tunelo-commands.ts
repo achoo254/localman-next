@@ -47,3 +47,12 @@ export function tunnelOrigin(
 	if (domains.length === 0 || !isTunnelUrl(value, domains)) return null;
 	return parseHttpUrl(value)?.origin ?? null;
 }
+
+/**
+ * Chat's "Add this machine" page on `tenantDomain` (`hoandat.com`): the
+ * one-line install of `tunelo`, which then signs the machine in and links
+ * it to the user here on its own.
+ */
+export function chatAddMachineUrl(tenantDomain: string): string {
+	return `https://chat.${tenantDomain}/ai/add`;
+}

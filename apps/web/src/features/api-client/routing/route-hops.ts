@@ -44,6 +44,11 @@ export interface HopContext {
 export interface FoundTunnel {
 	deviceName: string;
 	basicAuth: boolean;
+	/**
+	 * One of the user's own machines: the server sends the request, URL
+	 * unchanged, to `localhost` there through the machine's tunnel.
+	 */
+	machine?: string;
 }
 
 /** Where the proxy sends the request. */
@@ -95,7 +100,12 @@ async function viaProxyHop(
 	const { deps, input, ready, target } = ctx;
 	const found = tunnel?.found;
 	const send = deps.proxy ?? proxyHop;
-	const hop = await send(prepared, ready.toSend.settings, input.signal);
+	const hop = await send(
+		prepared,
+		ready.toSend.settings,
+		input.signal,
+		found?.machine,
+	);
 	if (hop.kind === "cancelled") return CANCELLED;
 	if (hop.kind === "failed") {
 		return failed({ ...hop.failure, preScript: ready.preScript });
@@ -140,8 +150,11 @@ export async function viaTunnel(
 	forbidden: string[],
 	found?: FoundTunnel,
 ): Promise<SettledResponse> {
-	const url = rewriteToTunnel(ctx.ready.prepared.url, tunnelUrl);
-	const tunnel = url === null ? null : parseHttpUrl(url);
+	// A machine is reached with the local URL; the server routes it.
+	const url = found?.machine
+		? ctx.ready.prepared.url
+		: rewriteToTunnel(ctx.ready.prepared.url, tunnelUrl);
+	const tunnel = url === null ? null : parseHttpUrl(tunnelUrl);
 	if (url === null || tunnel === null) {
 		const message = activeTranslator().t("apiClient.send.prepare.invalidUrl");
 		return failed({ code: "INVALID_URL", message });

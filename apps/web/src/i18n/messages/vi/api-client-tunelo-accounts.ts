@@ -21,10 +21,33 @@ export const apiClientTuneloAccounts: Messages["apiClientTunelo"]["accounts"] =
 		},
 		links: {
 			title: "Máy đã liên kết",
-			hint: "Máy đã liên kết bằng mã trước khi cách liên kết đó bị bỏ. Chỉ bạn thấy tunnel của chúng; hãy xoá máy không còn dùng.",
+			hint: "Máy đã chạy tunelo login bằng tài khoản này tự liên kết và hiện ở đây. Chỉ bạn thấy tunnel của nó.",
+			addSteps:
+				"Để thêm máy, chạy lệnh cài trên trang Chat ở máy đó, rồi đăng nhập bằng <code>{command}</code>. Máy tự hiện ở đây.",
+			openChat: "Mở trang Thêm máy này trong Chat",
+			empty: "Chưa liên kết máy nào.",
 			unnamed: "Máy chưa mở tunnel nào",
 			linkedAt: "Liên kết ngày {date}",
 			revoke: "Thu hồi liên kết của {name}",
-			revoked: "Đã bị thu hồi trên máy. Hãy xoá.",
+			revoked:
+				"Đã bị thu hồi trên máy. Hãy xoá, rồi chạy lại tunelo login trên máy nếu cần.",
+		},
+		machines: {
+			badge: "Máy của bạn",
+			forward: "Gửi request tới localhost trên {name}",
+			forwardHint:
+				"Request tới localhost đi tới máy này qua tunnel riêng của nó. Chỉ bạn dùng được.",
+			pick: "Chọn cổng trên {name}",
+			pickTitle: "localhost trên {name}",
+			pickHint:
+				"Chọn một cổng đang mở trên máy, hoặc gõ tay. Request tới cổng localhost đó sẽ đi tới máy này.",
+			loading: "Đang hỏi máy các cổng đang mở…",
+			noPorts:
+				"Không có cổng nào đang mở, hoặc máy chưa trả lời. Bạn vẫn gõ tay được.",
+			portLabel: "Cổng",
+			use: "Dùng localhost:{port}",
+			chosen:
+				"localhost:{port} giờ đi tới {name}. Đã sao chép http://localhost:{port}/",
+			invalidPort: "Hãy gõ cổng từ 1 tới 65535.",
 		},
 	};

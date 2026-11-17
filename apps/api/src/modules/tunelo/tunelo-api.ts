@@ -18,6 +18,13 @@ const tunnelItem = z.object({
 export type TuneloTunnel = z.infer<typeof tunnelItem>;
 
 const tunnelList = z.object({ tunnels: z.array(tunnelItem).max(MAX_TUNNELS) });
+const selfLinkInfo = z.object({
+	linkId: z.string().min(1).max(128),
+	ownerSub: z.string().min(1).max(255),
+	deviceId: z.string().min(1).max(128),
+	forwardUrl: z.string().min(1).max(300),
+});
+export type TuneloSelfLinkInfo = z.infer<typeof selfLinkInfo>;
 
 /**
  * Tunelo did not answer as expected. `status` is the HTTP status (`null`
@@ -50,6 +57,8 @@ export interface TuneloApi {
 	listTunnels(token: string): Promise<TuneloTunnel[]>;
 	/** `DELETE /api/links/self`: the link token revokes itself. */
 	revokeLink(token: string): Promise<void>;
+	/** `GET /api/links/self`: whose machine an account's link token is for. */
+	selfLinkInfo(token: string): Promise<TuneloSelfLinkInfo>;
 }
 
 /** Client of the Tunelo at `baseUrl` (`https://tunnel.<domain>`). */
@@ -88,6 +97,13 @@ export function createTuneloApi(
 		listTunnels: async (token) =>
 			(await call("list", "/api/tunnels", { method: "GET", token }, tunnelList))
 				.tunnels,
+		selfLinkInfo: (token) =>
+			call(
+				"link info",
+				"/api/links/self",
+				{ method: "GET", token },
+				selfLinkInfo,
+			),
 		revokeLink: async (token) => {
 			await call(
 				"link revoke",

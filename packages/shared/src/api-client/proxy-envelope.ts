@@ -84,6 +84,11 @@ export const proxyRequestSchema = z
 			.default(DEFAULT_OPTIONS),
 		variables: proxyVariablesSchema.optional(),
 		/**
+		 * Id of one of the user's own machines (`tunelo login`): a
+		 * `localhost:<port>` URL goes to that machine's localhost.
+		 */
+		machine: z.string().min(1).max(64).optional(),
+		/**
 		 * Values to hide in Localman's own log line of this request: the
 		 * browser lists the secrets it filled into the URL's host. Never
 		 * forwarded.

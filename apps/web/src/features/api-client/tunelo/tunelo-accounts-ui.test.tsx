@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { seriousViolations } from "../../../test/axe";
@@ -119,27 +119,27 @@ describe("Linked machines", () => {
 		});
 		renderClient(<TunnelLinksSection />);
 		expect(await screen.findByText("office-pc")).toBeVisible();
-		expect(await seriousViolations(byDataId("settings-tunelo-links"))).toEqual(
-			[],
-		);
 		await userEvent.click(
 			screen.getByRole("button", { name: "Revoke the link of office-pc" }),
 		);
-		await waitFor(() =>
-			expect(
-				document.querySelector('[data-id="settings-tunelo-links"]'),
-			).toBeNull(),
-		);
+		expect(await screen.findByText("No machine linked.")).toBeVisible();
 		expect(api.calls.some((call) => call.method === "DELETE")).toBe(true);
 	});
 
-	it("shows nothing once no machine is linked", async () => {
+	it("shows how to add a machine instead of a code to type", async () => {
 		const api = mockFetch({ [`GET ${LINKS}`]: { body: { links: [] } } });
 		renderClient(<TunnelLinksSection />);
-		await waitFor(() => expect(api.calls.length).toBeGreaterThan(0));
+		expect(await screen.findByText("No machine linked.")).toBeVisible();
+		const guide = byDataId("settings-tunelo-add-guide");
+		expect(guide).toHaveTextContent("tunelo login");
+		expect(guide).not.toHaveTextContent("tunelo link");
 		expect(
-			document.querySelector('[data-id="settings-tunelo-links"]'),
-		).toBeNull();
+			screen.getByRole("link", { name: /Open Add this machine in Chat/ }),
+		).toHaveAttribute("href", "https://chat.hoandat.com/ai/add");
+		expect(screen.queryByRole("button", { name: "Link a machine" })).toBeNull();
 		expect(api.calls.every((call) => call.method === "GET")).toBe(true);
+		expect(await seriousViolations(byDataId("settings-tunelo-links"))).toEqual(
+			[],
+		);
 	});
 });

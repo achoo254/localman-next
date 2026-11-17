@@ -1,12 +1,9 @@
 import { setTimeout as delay } from "node:timers/promises";
 import { tenantSettings } from "../../tenancy/tenant-settings.js";
 import { normalizeTunnelUrl } from "../api-client/client-settings-input.js";
+import { machineTunnelsOf } from "./machine-targets.js";
 import { TuneloApiError, type TuneloTunnel } from "./tunelo-api.js";
-import {
-	LIVE_LINK,
-	TunnelLinkModel,
-	linkTokenSlot,
-} from "./tunelo-link-model.js";
+import { TunnelLinkModel, linkTokenSlot } from "./tunelo-link-model.js";
 import { type TuneloRuntime, tuneloRuntime } from "./tunelo-runtime.js";
 import type {
 	LocalTunnel,
@@ -27,7 +24,7 @@ function isMachineTunnel(url: string): boolean {
 }
 const TCP_URL = /^tcp:\/\/[a-z0-9.-]{1,253}:\d{1,5}$/i;
 
-/** A source Tunelo lists tunnels for. */
+/** A source Tunelo lists tunnels for (machines are added apart). */
 interface Source {
 	source: "account" | "link";
 	linkId: string | null;
@@ -134,8 +131,9 @@ export async function fetchAll(
 	// Links Tunelo refused before are not called again (`deadAt`).
 	const links = await TunnelLinkModel.find({
 		userSub,
-		...LIVE_LINK,
+		status: "linked",
 		deadAt: null,
+		// An own machine's row exists a moment before its token does.
 		tokenSealed: { $type: "string" },
 	})
 		.select({ tokenSealed: 1, linkId: 1, deviceName: 1 })
@@ -197,5 +195,9 @@ export async function listLocalTunnels(
 	}
 	const { port } = options;
 	if (port === undefined) return list;
-	return { ...list, tunnels: list.tunnels.filter((t) => t.localPort === port) };
+	const tunnels = list.tunnels.filter((t) => t.localPort === port);
+	return {
+		...list,
+		tunnels: [...tunnels, ...(await machineTunnelsOf(userSub, port))],
+	};
 }

@@ -8,6 +8,7 @@ import { type Request, Router } from "express";
 import { USER_SCOPE } from "../../http/require-auth.js";
 import type { Logger } from "../../logger.js";
 import { operations as registeredOperations } from "../../operations/registry.js";
+import { registerTunnelSelfLinkRoute } from "../tunelo/tunnel-self-link-route.js";
 import { createConfirmTokenService } from "./confirm-token.js";
 import {
 	type McpCallerContext,
@@ -147,6 +148,7 @@ export function createLocalmanMcpRouter(options: LocalmanMcpOptions): Router {
 
 	const router = Router();
 	registerResourceMetadataRoutes(router, settings);
+	registerTunnelSelfLinkRoute(router, settings);
 	router.all(MCP_PATH, async (req, res) => {
 		options.handlers?.assertOpen();
 		assertAllowedOrigin(req, origins, settings.publicUrl);

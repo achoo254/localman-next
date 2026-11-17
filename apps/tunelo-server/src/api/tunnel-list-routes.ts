@@ -1,16 +1,19 @@
 import { TUNNEL_SCOPES } from "@tunelo/shared";
 import { Router } from "express";
 import type { TokenAuthenticator } from "../auth/token-authenticator.js";
-import { listByDeviceId, listByOwner } from "../tunnel-directory.js";
+import {
+	listByDeviceId,
+	listByMachine,
+	listByOwner,
+} from "../tunnel-directory.js";
 import { authenticateRequest } from "./middleware/authenticate-request.js";
 
 /**
  * GET /api/tunnels — live tunnels (HTTP and TCP) of the caller.
  * - Account JWT with `tunnels:read` (e.g. exchanged by Localman): every
  *   tunnel of that account, on all machines.
- * - Link token from an older code link: the tunnels of the anonymous
- *   machine it was linked to. A link token an account once minted for its
- *   own machine (`linkedOwnerSub`) lists nothing.
+ * - Link token: the tunnels of the one machine it was linked to (an
+ *   account's own machine, or an anonymous one from an older code link).
  */
 export function createTunnelListRouter(
 	authenticator: TokenAuthenticator,
@@ -28,9 +31,11 @@ export function createTunnelListRouter(
 			const { ownerSub, linkedOwnerSub, linkedDeviceId } = keyInfo;
 			const tunnels = ownerSub
 				? listByOwner(ownerSub)
-				: linkedDeviceId && !linkedOwnerSub
-					? listByDeviceId(linkedDeviceId)
-					: [];
+				: linkedOwnerSub && linkedDeviceId
+					? listByMachine(linkedOwnerSub, linkedDeviceId)
+					: linkedDeviceId
+						? listByDeviceId(linkedDeviceId)
+						: [];
 			res.set("cache-control", "no-store").json({ tunnels });
 		} catch (err) {
 			next(err);

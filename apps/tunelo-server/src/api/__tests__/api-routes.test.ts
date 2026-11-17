@@ -116,9 +116,6 @@ describe("link routes", () => {
 
 		// A link token cannot list links, only revoke itself.
 		expect((await call("/api/links", { token: linkToken })).status).toBe(403);
-		// Nor can an account: it has no links of its own machines to list.
-		const account = await idp.sign({ scope: "tunnels:open" });
-		expect((await call("/api/links", { token: account })).status).toBe(403);
 		const self = await call("/api/links/self", {
 			method: "DELETE",
 			token: linkToken,

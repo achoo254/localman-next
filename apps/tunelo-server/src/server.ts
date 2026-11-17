@@ -57,7 +57,7 @@ async function start(): Promise<void> {
 	const app = express();
 	// nginx on the same host terminates TLS; take the client IP it forwards.
 	app.set("trust proxy", "loopback");
-	const relay = createRelayHandler();
+	const relay = createRelayHandler({ authenticator });
 
 	// Everything below runs in the primary tenant; any host it does not
 	// serve gets 421.

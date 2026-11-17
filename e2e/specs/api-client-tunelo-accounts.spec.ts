@@ -138,8 +138,9 @@ test("another user sees none of the account's tunnels or links", async ({
 		await expect(otherPage.getByTestId("tunelo-panel")).toBeVisible();
 		expect(calls).toEqual([]);
 		await otherPage.getByTestId("sidebar-rail-tunelo").click();
-		await expect(otherPage.getByTestId("settings-tunelo")).toBeVisible();
-		await expect(otherPage.getByTestId("settings-tunelo-links")).toHaveCount(0);
+		await expect(
+			otherPage.getByTestId("settings-tunelo-links-empty"),
+		).toBeVisible();
 	} finally {
 		await other.close();
 	}
