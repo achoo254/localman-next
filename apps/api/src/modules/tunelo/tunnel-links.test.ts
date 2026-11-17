@@ -28,15 +28,32 @@ describe("linked machines without the code pairing", () => {
 		expect(list.body.links).toEqual([
 			{
 				id,
-				source: "pairing",
 				deviceName: null,
-				machineId: null,
-				forwardEnabled: false,
 				linkedAt: expect.any(String),
 				revoked: false,
 			},
 		]);
 		expect((await as(BOB).get("/client/tunnel-links")).body.links).toEqual([]);
+	});
+
+	it("leaves out the rows of retired own-machine links, yet revokes them", async () => {
+		const row = await TunnelLinkModel.create({
+			userSub: ALICE,
+			status: "linked",
+			source: "self",
+			tokenSealed: "sealed",
+		});
+		const list = await as(ALICE).get("/client/tunnel-links");
+		expect(list.body.links).toEqual([]);
+		const tunnels = await as(ALICE).get("/client/local-tunnels?refresh=true");
+		expect(tunnels.body.failures).toEqual([]);
+		expect(env.tunelo.authorizations.some((h) => h.includes("sealed"))).toBe(
+			false,
+		);
+		const id = String(row._id);
+		const res = await as(ALICE).send("delete", `/client/tunnel-links/${id}`);
+		expect(res.status).toBe(200);
+		expect(await TunnelLinkModel.countDocuments()).toBe(0);
 	});
 
 	it("revokes the user's own links only", async () => {

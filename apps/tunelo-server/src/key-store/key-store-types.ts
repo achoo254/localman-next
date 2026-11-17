@@ -27,8 +27,8 @@ export interface KeyInfo {
 	deviceName?: string;
 	/** Device whose tunnels a `link` token may list. */
 	linkedDeviceId?: string;
-	/** Account owning `linkedDeviceId`, for a link an account minted for
-	 *  its own machine (`POST /api/links/self`); absent for an older code link. */
+	/** Account owning `linkedDeviceId`, for a link an account once minted
+	 *  for its own machine (no longer minted); absent for an older code link. */
 	linkedOwnerSub?: string;
 }
 

@@ -15,8 +15,8 @@ export function useTunnelLinks() {
 }
 
 /**
- * After a machine is revoked or changed: its list is replaced, and the
- * cached tunnels are read anew on the next send.
+ * After a machine is revoked: its list is replaced, and the cached tunnels
+ * are read anew on the next send.
  */
 export function useLinksChanged(): (links?: LinkedMachine[]) => void {
 	const queryClient = useQueryClient();
@@ -34,20 +34,6 @@ export function useRevokeLink() {
 	return useMutation({
 		mutationFn: tuneloAccountsApi.deleteLink,
 		onSuccess: (links) => changed(links),
-		onError: (error) => {
-			toast.show({ tone: "error", title: errorMessage(error) });
-		},
-	});
-}
-
-/** Turns Localman's requests to one of the user's machines on or off. */
-export function useSetMachineForward() {
-	const toast = useToast();
-	const changed = useLinksChanged();
-	return useMutation({
-		mutationFn: (input: { id: string; enabled: boolean }) =>
-			tuneloAccountsApi.setForward(input.id, input.enabled),
-		onSuccess: () => changed(),
 		onError: (error) => {
 			toast.show({ tone: "error", title: errorMessage(error) });
 		},

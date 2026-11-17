@@ -3,7 +3,6 @@ import {
 	HISTORY_MAX_ENTRIES,
 } from "@localman/shared/api-client";
 import { Types } from "mongoose";
-import { isForwardHeader } from "../tunelo/machine-forward-contract.js";
 import { draftBytes, draftTooLarge } from "./draft-size.js";
 import {
 	HistoryModel,
@@ -112,18 +111,13 @@ async function trimHistory(userSub: string): Promise<void> {
 /**
  * Records one sent request. `draft` must still hold its `{{var}}`
  * placeholders (the browser records the tab, not the prepared request).
- * `tunelo-*` header rows are never kept: they carry a machine's link
- * token, which only the proxy adds and history must not hold.
  */
 export async function recordHistoryEntry(
 	userSub: string,
 	draft: ApiRequestDraft,
 	response: HistoryResponseInput,
 ): Promise<HistorySummary> {
-	const fitted = fitHistoryDraft({
-		...draft,
-		headers: draft.headers.filter((row) => !isForwardHeader(row.key)),
-	});
+	const fitted = fitHistoryDraft(draft);
 	const created = await HistoryModel.create({
 		userSub,
 		draft: fitted.draft,

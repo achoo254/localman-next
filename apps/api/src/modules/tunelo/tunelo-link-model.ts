@@ -1,9 +1,6 @@
 import mongoose, { Schema, type Types } from "mongoose";
 import { tenantScopePlugin } from "../../tenancy/tenant-scope-plugin.js";
 
-/** Linked machines per user. */
-export const MAX_TUNNEL_LINKS = 20;
-
 /**
  * Only `linked` rows are written. Rows of the retired code pairing could
  * be `pending`; the TTL index on `pendingUntil` already in the database
@@ -12,14 +9,20 @@ export const MAX_TUNNEL_LINKS = 20;
 export const TUNNEL_LINK_STATUSES = ["linked"] as const;
 
 /**
- * How the machine was linked: `self` (the `tunelo` process of the user's
- * own account after `tunelo login`, `POST /tunelo/links/self`), which may
- * also forward to the machine's localhost, or `pairing` (an anonymous
- * machine linked with a code before that flow was retired; such rows stay
- * until the user removes them).
+ * `source` of the rows the retired own-machine links left behind (the
+ * user's `tunelo` process linked itself so Localman could reach its
+ * localhost). They stay in the database until a cleanup removes them;
+ * Localman neither lists nor calls with them. Every other row is an anonymous machine linked
+ * with a code before that flow was retired.
  */
-export const TUNNEL_LINK_SOURCES = ["pairing", "self"] as const;
-export type TunnelLinkSource = (typeof TUNNEL_LINK_SOURCES)[number];
+const RETIRED_SOURCE = "self";
+
+/** Filter of the rows Localman lists, calls and revokes. */
+export const LIVE_LINK = {
+	status: "linked",
+	source: { $ne: RETIRED_SOURCE },
+} as const;
+
 export type TunnelLinkStatus = (typeof TUNNEL_LINK_STATUSES)[number];
 
 /**
@@ -27,14 +30,7 @@ export type TunnelLinkStatus = (typeof TUNNEL_LINK_STATUSES)[number];
  * Localman may list for that user. `tokenSealed` is the machine's link
  * token, sealed with the session keyring (`TokenCipher`, associated data
  * bound to the user and the row id: see `linkTokenSlot`). `linkId` is
- * Tunelo's id.
- *
- * A `self` row also keeps the machine (`machineId`, `machineName` as the
- * process reported them, `deviceId` as Tunelo vouched for it), where its
- * localhost is reached (`forwardUrl`) and whether the user lets Localman
- * send there (`forwardEnabled`). Rows without `source` are pairings.
- *
- * The token never leaves the server.
+ * Tunelo's id. The token never leaves the server.
  */
 const tunnelLinkSchema = new Schema(
 	{
@@ -47,28 +43,12 @@ const tunnelLinkSchema = new Schema(
 		linkedAt: { type: Date },
 		/** Tunelo refused the token (revoked on the machine): not called again. */
 		deadAt: { type: Date },
-		source: { type: String, enum: [...TUNNEL_LINK_SOURCES] },
-		machineId: { type: String },
-		machineName: { type: String },
-		deviceId: { type: String },
-		forwardUrl: { type: String },
-		forwardEnabled: { type: Boolean },
+		source: { type: String },
 	},
 	{ collection: "tunelo_links", timestamps: true, versionKey: false },
 );
 
 tunnelLinkSchema.index({ userSub: 1, createdAt: 1 });
-// One row per own machine of the user (a new `tunelo login` replaces it),
-// even when two links race. `deviceId` is the machine key Tunelo vouched
-// for (`tunelo.<machineId>`), not the id the process reports.
-tunnelLinkSchema.index(
-	{ userSub: 1, deviceId: 1 },
-	{
-		unique: true,
-		name: "own_machine",
-		partialFilterExpression: { source: "self" },
-	},
-);
 tunnelLinkSchema.plugin(tenantScopePlugin);
 export const TunnelLinkModel = mongoose.model("TunnelLink", tunnelLinkSchema);
 
@@ -81,12 +61,6 @@ export interface StoredTunnelLink {
 	deviceName?: string | null;
 	linkedAt?: Date | null;
 	deadAt?: Date | null;
-	source?: TunnelLinkSource | null;
-	machineId?: string | null;
-	machineName?: string | null;
-	deviceId?: string | null;
-	forwardUrl?: string | null;
-	forwardEnabled?: boolean | null;
 	createdAt?: Date;
 }
 

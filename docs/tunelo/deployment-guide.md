@@ -24,15 +24,15 @@ Tunelo nằm trong monorepo `localman-next` (GitHub `achoo254/localman-next`): s
 
 ### Thứ tự deploy khi đổi hợp đồng với tunelo 2.x
 
-Mỗi bước chỉ thêm, bước sau dựa vào bước trước:
+Khi thêm hợp đồng, mỗi bước chỉ thêm, bước sau dựa vào bước trước:
 
-1. auth-next có client và scope mà binary cần (`tunelo-agent`, `machines:write`).
-2. **tunelo-server** (cửa kiểm `/.tunelo/forward`, `POST|GET /api/links/self`): phải chạy trước khi bất kỳ `tunelo` nào
-   bật chuyển tiếp. Server tương thích ngược, tunnel thường và CLI 1.x vẫn chạy.
-3. **Localman** api + web (CI của repo này, runbook [`docs/deployment-guide.md`](../deployment-guide.md)): route
-   `POST /tunelo/links/self` và nginx `location = /tunelo/links/self` trong `infra/localman/nginx/localman-app.inc`
-   (route nằm ngoài `/api/`, thiếu location thì rơi vào trang tĩnh và trả 405).
+1. auth-next có client và scope mà binary cần (`tunelo-agent`).
+2. **tunelo-server**: tương thích ngược, tunnel thường và CLI 1.x vẫn chạy.
+3. **Localman** api + web (CI của repo này, runbook [`docs/deployment-guide.md`](../deployment-guide.md)).
 4. Phát hành binary `tunelo` 2.x ở chat-next, rồi gói 1.12 ở đây.
+
+Khi gỡ hợp đồng thì đi ngược: binary mới thôi dùng nó trước, rồi tunelo-server, rồi Localman (ví dụ
+[ADR-0008](../decisions/tunelo/0008-remove-localman-machine-localhost.md)).
 
 Sao lưu ngay trước bước 2 và 3:
 
@@ -40,16 +40,7 @@ Sao lưu ngay trước bước 2 và 3:
   cấu hình chứ không qua argv. Code không cần chép: 5 release gần nhất nằm trong `/var/www/tunelo/releases/`.
 - Localman: `bash /opt/localman/infra/backup-localman-db.sh`.
 
-Kiểm sau deploy (ngoài `/health` và `pm2 status tunelo` ở mục PM2):
-
-```bash
-# Đường forward không mở cho header giả: 404 trên tunnel máy, "Tunnel not found" (502) trên subdomain không tồn tại
-curl -s -o /dev/null -w '%{http_code}\n' -H 'Tunelo-Forward-Granted: 1' -H 'Tunelo-Local-Port: 22' \
-  https://m-<hash>.tunnel.hoandat.com/.tunelo/forward/
-# Localman nhận self-link: 401 khi không có token (405 là nginx thiếu location)
-curl -s -o /dev/null -w '%{http_code}\n' -X POST https://localman.hoandat.com/tunelo/links/self
-```
-
+Kiểm sau deploy: `/health` và `pm2 status tunelo` ở mục PM2.
 Log của process mới phải có `MongoDB connected` và các tunnel cũ `Tunnel registered` lại; không dòng nào chứa token.
 Lùi tunelo-server: trỏ `current` về release trước (`ln -sfn releases/<id> current.next && mv -T current.next current`
 trong `/var/www/tunelo`), `pm2 delete tunelo && pm2 start current/ecosystem.config.cjs && pm2 save`; dữ liệu chỉ cần

@@ -2,6 +2,7 @@ import { OperationError } from "@localman/operations";
 import { isValidObjectId } from "mongoose";
 import { TuneloApiError } from "./tunelo-api.js";
 import {
+	LIVE_LINK,
 	type StoredTunnelLink,
 	TunnelLinkModel,
 	linkTokenSlot,
@@ -14,13 +15,9 @@ export function notFound(): OperationError {
 }
 
 export function linkView(link: StoredTunnelLink): TunnelLinkView {
-	const self = link.source === "self";
 	return {
 		id: String(link._id),
-		source: self ? "self" : "pairing",
-		deviceName: (self ? link.machineName : link.deviceName) ?? null,
-		machineId: self ? (link.machineId ?? null) : null,
-		forwardEnabled: self && link.forwardEnabled !== false,
+		deviceName: link.deviceName ?? null,
 		linkedAt: (link.linkedAt ?? link.createdAt ?? new Date(0)).toISOString(),
 		revoked: Boolean(link.deadAt),
 	};
@@ -30,13 +27,16 @@ export function linkView(link: StoredTunnelLink): TunnelLinkView {
 export async function listTunnelLinks(
 	userSub: string,
 ): Promise<{ links: TunnelLinkView[] }> {
-	const links = await TunnelLinkModel.find({ userSub, status: "linked" })
+	const links = await TunnelLinkModel.find({ userSub, ...LIVE_LINK })
 		.sort({ createdAt: 1 })
 		.lean<StoredTunnelLink[]>();
 	return { links: links.map(linkView) };
 }
 
-/** The user's own link, `null` for anything else. */
+/**
+ * The user's own link row, `null` for anything else. Any row of the user:
+ * revoking one the lists leave out still revokes its token at Tunelo.
+ */
 export async function ownLink(
 	userSub: string,
 	id: string,

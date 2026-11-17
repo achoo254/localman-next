@@ -6,7 +6,6 @@ import { fromRawHeaders } from "../api-client/proxy-headers.js";
 import { readResponseBody } from "../api-client/proxy-response-body.js";
 import { createRuntimeSsrfGuard } from "../api-client/runtime-ssrf-guard.js";
 import type { SsrfGuard } from "../api-client/ssrf-guard.js";
-import { isForwardHeader } from "../tunelo/machine-forward-contract.js";
 
 /** Tunelo relays for 30 s; waiting longer only holds a slot. */
 export const DEFAULT_FORWARD_TIMEOUT_MS = 30_000;
@@ -87,17 +86,11 @@ export function defaultOutboundGuard(): SsrfGuard {
 	return runtimeGuard;
 }
 
-/**
- * Headers the server sends upstream: no `Host` (the URL's), and no
- * `tunelo-*`: a mock's visitor never speaks for the owner to a machine of
- * theirs (Tunelo answers 404 without the owner's link token anyway).
- */
+/** Headers the server sends upstream: no `Host` (the URL's). */
 export const outboundHeaders = (
 	headers: readonly HeaderEntry[],
 ): HeaderEntry[] =>
-	headers.filter(
-		(h) => h.name.trim().toLowerCase() !== "host" && !isForwardHeader(h.name),
-	);
+	headers.filter((h) => h.name.trim().toLowerCase() !== "host");
 
 /**
  * Sends one request from the server with the API client proxy's

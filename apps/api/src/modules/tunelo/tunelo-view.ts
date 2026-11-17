@@ -4,14 +4,11 @@ import { USER_SCOPE } from "../../http/require-auth.js";
 /** One live tunnel of the user, from their account or a linked machine. */
 export const localTunnelView = z.object({
 	/**
-	 * `account` (signed in with `tunelo login`), `link` (an anonymous
-	 * machine linked with a code before that flow was retired), or
-	 * `machine`: no tunnel, but `localhost:<port>` on one of the user's own
-	 * machines, reached through its machine tunnel (`url` is that tunnel;
-	 * send with `machine: linkId`).
+	 * `account` (signed in with `tunelo login`) or `link` (an anonymous
+	 * machine linked with a code before that flow was retired).
 	 */
-	source: z.enum(["account", "link", "machine"]),
-	/** Id of the linked machine (`link` and `machine`). */
+	source: z.enum(["account", "link"]),
+	/** Id of the linked machine (`link`). */
 	linkId: z.string().nullable(),
 	protocol: z.enum(["http", "tcp"]),
 	/** Tunnel origin (`https://<name>.<domain>`), or `tcp://host:port`. */
@@ -43,22 +40,15 @@ export const localTunnelListView = z.object({
 });
 export type LocalTunnelList = z.infer<typeof localTunnelListView>;
 
-/** A linked machine, as the settings list it. */
+/**
+ * A linked machine, as the settings list it: an anonymous machine linked
+ * with a code before that flow was retired, listed and removable, never
+ * created any more.
+ */
 export const tunnelLinkView = z.object({
 	id: z.string(),
-	/**
-	 * `self` (the `tunelo` process of the user's account linked itself
-	 * after `tunelo login`, and can reach its localhost) or `pairing` (an
-	 * anonymous machine linked with a code before that flow was retired:
-	 * listed and removable, never created any more).
-	 */
-	source: z.enum(["pairing", "self"]),
 	/** Learnt from the machine's tunnels; `null` until one was seen. */
 	deviceName: z.string().nullable(),
-	/** The machine's id in Chat (`self` only). */
-	machineId: z.string().nullable(),
-	/** Localman may send requests to the machine's localhost (`self` only). */
-	forwardEnabled: z.boolean(),
 	linkedAt: z.string(),
 	/** Tunelo refused its token (revoked on the machine): only removable. */
 	revoked: z.boolean(),
@@ -68,7 +58,7 @@ export type TunnelLinkView = z.infer<typeof tunnelLinkView>;
 export const tunnelLinksView = z.object({ links: z.array(tunnelLinkView) });
 
 export const TUNELO_ABOUT =
-	"Tunelo tunnels of the signed-in user, own only: the tunnels of their Tunelo account (same sign-in, `tunelo login`), whose machines link themselves, plus anonymous machines linked with a code before that flow was retired. Tokens never leave the server.";
+	"Tunelo tunnels of the signed-in user, own only: the tunnels of their Tunelo account (same sign-in, `tunelo login`), plus anonymous machines linked with a code before that flow was retired. Tokens never leave the server.";
 
 /**
  * Exempt reason of the operations on linked machines: a link decides which
@@ -77,9 +67,6 @@ export const TUNELO_ABOUT =
  */
 export const LINK_EXEMPT =
 	"lists or revokes the machines whose tunnels receive request credentials; only the user does it, from the UI";
-
-export const TUNELO_MACHINE_ABOUT =
-	"The user's own machines: each one's `tunelo` process linked itself after `tunelo login` on the same account, and Localman sends requests for `localhost:<port>` there through the machine's tunnel. Only the account's owner reaches them. Link tokens never leave the server.";
 
 /** Exempt reason of the tunnel list. */
 export const LIST_EXEMPT =

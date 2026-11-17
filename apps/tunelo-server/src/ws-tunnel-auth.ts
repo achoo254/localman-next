@@ -3,7 +3,6 @@ import {
 	type AuthMessage,
 	type AuthResult,
 	CLIENT_CAPABILITIES,
-	SERVER_FEATURES,
 	TUNNEL_KINDS,
 	TUNNEL_REFUSAL_CODES,
 	TUNNEL_SCOPES,
@@ -140,8 +139,6 @@ export async function handleAuth(
 		subdomain,
 		url,
 		...(cutoff ? { legacyTokenCutoff: cutoff } : {}),
-		// The machine may serve local forwards: this server gates them.
-		...(machine ? { features: [SERVER_FEATURES.LOCAL_FORWARD] } : {}),
 	});
 	logger.info(
 		{ subdomain, url, kind: keyInfo.kind, machine },

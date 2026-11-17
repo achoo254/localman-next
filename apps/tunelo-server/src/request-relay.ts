@@ -1,9 +1,6 @@
 import type http from "node:http";
-import { DEFAULTS } from "@tunelo/shared";
-import type { TokenAuthenticator } from "./auth/token-authenticator.js";
+import { DEFAULTS, stripTuneloHeaders } from "@tunelo/shared";
 import { tunnelDomains } from "./config/tunnel-domains.js";
-import { relayedHeaders } from "./local-forward-gate.js";
-import { forwardsLocally, handleLocalForward } from "./local-forward-relay.js";
 import { createLogger } from "./logger.js";
 import { relayBody } from "./relay-body.js";
 import { tunnelManager } from "./tunnel-manager.js";
@@ -32,14 +29,7 @@ export function extractSubdomain(
 	return null;
 }
 
-export interface RelayOptions {
-	/** Checks link tokens of local forwards; without it they all get 404. */
-	authenticator?: TokenAuthenticator;
-}
-
-export function createRelayHandler(
-	options: RelayOptions = {},
-): http.RequestListener {
+export function createRelayHandler(): http.RequestListener {
 	return (req, res) => {
 		const host = req.headers.host ?? "";
 		const subdomain = extractSubdomain(host);
@@ -57,19 +47,6 @@ export function createRelayHandler(
 			}
 			res.writeHead(400, { "content-type": "text/plain" });
 			res.end("Bad Request: no tunnel subdomain in Host header");
-			return;
-		}
-
-		// Gated before the tunnel lookup: a stranger gets the same 404
-		// whether the machine is online or not.
-		if (forwardsLocally(subdomain, req.url ?? "/")) {
-			handleLocalForward(
-				req,
-				res,
-				subdomain,
-				options.authenticator,
-				(headers) => relayBody(req, res, subdomain, headers, false),
-			);
 			return;
 		}
 
@@ -97,14 +74,13 @@ export function createRelayHandler(
 			return;
 		}
 
+		// `tunelo-*` headers are reserved for Tunelo: none sent by a client
+		// reaches a tunnel.
 		relayBody(
 			req,
 			res,
 			subdomain,
-			relayedHeaders(
-				subdomain,
-				req.headers as Record<string, string | string[]>,
-			),
+			stripTuneloHeaders(req.headers as Record<string, string | string[]>),
 			true,
 		);
 	};

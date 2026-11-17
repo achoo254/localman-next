@@ -114,8 +114,9 @@ describe("routing a local target through the user's tunnel", () => {
 
 	it("tells the agent and the browser the ways that reach them", async () => {
 		const agent = await refusal(routeLocalTarget(ALICE, AGENT, LOCAL));
+		// An agent never reads the account's tunnels: only a saved URL helps.
 		expect(agent.message).toContain(
-			"on a machine signed in with `tunelo login`",
+			"save the tunnel URL it prints for localhost:3000",
 		);
 		const browser = await refusal(routeLocalTarget(ALICE, SESSION, LOCAL));
 		expect(browser.message).toContain("after `tunelo login`");
