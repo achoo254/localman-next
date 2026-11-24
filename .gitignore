@@ -24,3 +24,7 @@ e2e/test-results/
 
 # Web build packaged into the iOS/Android shell (apps/mobile)
 apps/web/dist-native/
+
+# The committed tunelo-shared build holds only the runtime files: no source maps, no compiled tests.
+packages/tunelo-shared/dist/**/*.map
+packages/tunelo-shared/dist/__tests__/
