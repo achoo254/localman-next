@@ -57,7 +57,7 @@ trong `/var/www/tunelo`), `pm2 delete tunelo && pm2 start current/ecosystem.conf
 
 ### Server — deploy qua CI
 
-**Bình thường: push `main`.** CI xanh thì `.github/workflows/deploy.yml` build release
+**Deploy khi gọi (từ 25/11/2026):** push lên `main` chỉ chạy `ci`. Xong một việc thì chạy `tools/deploy-prod.sh` của workspace `hoandat-app` (hoặc `gh workflow run deploy.yml`); mỗi tối 22:05 workflow tự chạy nếu `main` đi trước lần deploy thành công gần nhất. Workflow lấy đầu `main`, chờ `ci` của commit đó xanh rồi `.github/workflows/deploy.yml` build release
 ([`infra/tunelo/build-release.sh`](../../infra/tunelo/build-release.sh): `server.mjs`, map, `static/`, `package.json`,
 `ecosystem.config.cjs`), upload bằng user `tunelo-deploy` (secret khoá `TUNELO_DEPLOY_SSH_KEY`) vào
 `/var/www/tunelo/ci-incoming/<id>` rồi chạy `sudo /usr/local/sbin/tunelo-activate-incoming <id>`
@@ -68,7 +68,7 @@ trong `/var/www/tunelo`), `pm2 delete tunelo && pm2 start current/ecosystem.conf
 - `pnpm install --prod`, `pm2 delete` + `pm2 start current/ecosystem.config.cjs`, đợi `/health` 20 giây; hỏng thì trỏ
   lại release trước (lần đầu: các file cũ nằm thẳng trong `/var/www/tunelo`) và thoát 1.
 
-Push theo thứ tự deploy ở mục trên khi đổi hợp đồng: đợi deploy của repo trước xanh rồi mới push repo sau.
+Deploy theo thứ tự ở mục trên khi đổi hợp đồng: đợi deploy của repo trước xanh rồi mới deploy repo sau.
 Dựng user deploy (một lần): chép `infra/tunelo/setup-deploy-user.sh` và `activate-incoming.sh` lên server, chạy
 `bash infra/tunelo/setup-deploy-user.sh < tunelo-deploy.pub` bằng root.
 

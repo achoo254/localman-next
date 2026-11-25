@@ -87,12 +87,12 @@ Trên máy deploy: pnpm 11.9, Node ≥ 22.12, ssh tới server qua alias (`SSH_T
 
 ## Các lần sau
 
-**Bình thường: push `main`.** CI xanh thì `.github/workflows/deploy.yml` build bằng
+**Deploy khi gọi (từ 25/11/2026):** push lên `main` chỉ chạy `ci`. Xong một việc thì chạy `tools/deploy-prod.sh` của workspace `hoandat-app` (hoặc `gh workflow run deploy.yml`); mỗi tối 22:05 workflow tự chạy nếu `main` đi trước lần deploy thành công gần nhất. Workflow lấy đầu `main`, chờ `ci` của commit đó xanh rồi `.github/workflows/deploy.yml` build bằng
 [`build-release.sh`](../infra/localman/build-release.sh) (bước 1-3 dưới đây, cộng `infra/localman` đi kèm), upload bằng
 user `localman-deploy` vào `/opt/localman/ci-incoming/<id>` rồi chạy `sudo /usr/local/sbin/localman-activate-incoming <id>`
 ([`activate-incoming.sh`](../infra/localman/activate-incoming.sh): `flock` trên `/run/localman-activate.lock`, kiểm bản
 upload, chép `infra/` của release vào `/opt/localman/infra`, rồi bước 5 dưới đây). Cuối cùng kiểm từ ngoài: trang chủ 200
-và `/RELEASE` trả đúng mã release. Theo dõi bằng `gh run watch`. Quy tắc chung: `docs/deploy-standard.md` của workspace
+và `/RELEASE` trả đúng mã release. Quy tắc chung: `docs/deploy-standard.md` của workspace
 `hoandat-app`.
 
 **Dự phòng khi CI hỏng:**
