@@ -1,5 +1,5 @@
 # Quality gates for every push to main and every pull request: the same
-# commands each phase must pass (CLAUDE.md), split into parallel jobs so
+# commands each phase must pass (AGENTS.md), split into parallel jobs so
 # the slowest one sets the time. The unit and API integration suite is
 # sharded; Playwright runs only the `@smoke` journeys against a local stack
 # (in-memory Mongo replica set, fake IdP). The whole E2E suite runs nightly

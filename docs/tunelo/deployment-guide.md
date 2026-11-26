@@ -20,7 +20,7 @@ Tunelo nằm trong monorepo `localman-next` (GitHub `achoo254/localman-next`): s
 - `releases/latest` của repo này phải luôn là `tunelo-v1.12.0`: CLI 1.11 trở về trước đọc nó để lên 1.12. Release khác
   trong repo này tạo với `--latest=false`.
 - Thư viện `@tunelo/client`, `@tunelo/shared`: chỉ git tag `tunelo-client-vX.Y.Z` / `tunelo-shared-vX.Y.Z` (cách phát hành
-  trong `CLAUDE.md`). Đổi giao thức tunnel: tag thư viện ở đây, deploy server, rồi chat-next nâng tag và phát hành binary.
+  trong `AGENTS.md`). Đổi giao thức tunnel: tag thư viện ở đây, deploy server, rồi chat-next nâng tag và phát hành binary.
 
 ### Thứ tự deploy khi đổi hợp đồng với tunelo 2.x
 
