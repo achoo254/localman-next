@@ -103,7 +103,6 @@ describe("EcosystemAppSwitcher", () => {
 			`https://clip.hoandat.com/?${UTM}`,
 			`https://lockin.hoandat.com/?${UTM}`,
 			`https://chuanho.hoandat.com/?${UTM}`,
-			`https://miu.hoandat.com/?${UTM}`,
 			`https://kb.hoandat.com/?${UTM}`,
 			`https://auth.hoandat.com/account?${UTM}`,
 		]);
@@ -131,7 +130,6 @@ describe("EcosystemAppSwitcher", () => {
 			"clip.acme.example",
 			"lockin.acme.example",
 			"chuanho.acme.example",
-			"miu.acme.example",
 			"kb.acme.example",
 			"auth.acme.example",
 		]);
